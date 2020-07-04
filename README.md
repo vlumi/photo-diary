@@ -4,6 +4,11 @@ This project is intended to create an online photo gallery, with the photos arra
 
 ## Planned Features
 
+* Photos segmented into galleries
+  + Single level -- no nesting
+  + One gallery view at a time
+  + Virtual root configuration based on URL
+    - Host/domain, path
 * (?) Yearly view
   + No thumbnails, just numbers/heat for days with photos?
   + Navigation to previous/next year
