@@ -5,10 +5,14 @@ This project is intended to create an online photo gallery, with the photos arra
 ## Planned Features
 
 * Photos segmented into galleries
+  + Each photo can be in any number of galleries
   + Single level -- no nesting
   + One gallery view at a time
   + Virtual root configuration based on URL
     - Host/domain, path
+  + Virtual galleries for more abstract concepts
+    - :all includes all photos
+    - :none includes all photos that don't belong to any galleries
 * (?) Yearly view
   + No thumbnails, just numbers/heat for days with photos?
   + Navigation to previous/next year
@@ -45,6 +49,7 @@ This project is intended to create an online photo gallery, with the photos arra
   + OAuth?
 * Authorization
   + Restricted access to galleries
+    - No access restrictions planned for the actual photo content, which may be in a CDN
   + Access to admin functions
   + (?) Multiple access levels
     - Global admin > gallery admin > user > visitor
@@ -56,7 +61,11 @@ This project is intended to create an online photo gallery, with the photos arra
   + DB
   + API
     - Gallery
+      - Read-only
+      - Modifications by admin
     - Photo
+      - Read-only
+      - Modifications by admin
     - Statistics
 * Front-end
   + Gallery view
