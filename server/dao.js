@@ -1,29 +1,29 @@
-const db = require('./dummydb');
+module.exports = (db) => {
+    return {
+        getStatistics: () => { throw "Not implemented"; },
 
-module.exports = {
-    getStatistics: () => { throw "Not implemented"; },
+        getAllGalleries: () => db.loadGalleries()
+            .filter(gallery => !gallery.id.startsWith(":")),
+        createGallery: () => { throw "Not implemented"; },
+        getGallery: (gallery) => {
+            const galleryPhotos = db.loadGalleryPhotos(gallery);
+            const map = groupPhotosByYearMonthDay(galleryPhotos);
+            return {
+                ...db.loadGallery(gallery),
+                photos: map,
+            };
+        },
+        updateGallery: (gallery) => { throw "Not implemented"; },
+        deleteGallery: () => { throw "Not implemented"; },
+        linkPhoto: (photo, gallery) => { throw "Not implemented"; },
+        unlinkPhoto: (photo, gallery) => { throw "Not implemented"; },
 
-    getAllGalleries: () => db.loadGalleries()
-        .filter(gallery => !gallery.id.startsWith(":"))        ,
-    createGallery: () => { throw "Not implemented"; },
-    getGallery: (gallery) => {
-        const galleryPhotos = db.loadGalleryPhotos(gallery);
-        const map = groupPhotosByYearMonthDay(galleryPhotos);
-        return {
-            ...db.loadGallery(gallery),
-            photos: map,
-        };
-    },
-    updateGallery: (gallery) => { throw "Not implemented"; },
-    deleteGallery: () => { throw "Not implemented"; },
-    linkPhoto: (photo, gallery) => { throw "Not implemented"; },
-    unlinkPhoto: (photo, gallery) => { throw "Not implemented"; },
-
-    getAllPhotos: () => db.loadPhotos(),
-    createPhoto: () => { throw "Not implemented"; },
-    getPhoto: (photo) => db.loadPhoto(photo),
-    updatePhoto: () => { throw "Not implemented"; },
-    deletePhoto: () => { throw "Not implemented"; },
+        getAllPhotos: () => db.loadPhotos(),
+        createPhoto: () => { throw "Not implemented"; },
+        getPhoto: (photo) => db.loadPhoto(photo),
+        updatePhoto: () => { throw "Not implemented"; },
+        deletePhoto: () => { throw "Not implemented"; },
+    }
 };
 
 const reducePhotoForList = (photo) => {

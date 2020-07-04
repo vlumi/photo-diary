@@ -10,7 +10,8 @@ app.use(express.json());
 app.use(express.static("build"));
 app.use(morgan("tiny"));
 
-const routes = require('./routes')(app);
+const db = require('./db/dummy');
+const routes = require('./routes')(app, db);
 
 const PORT = process.env.PORT || 4200;
 app.listen(PORT, () => {

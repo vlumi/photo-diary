@@ -1,7 +1,7 @@
 
 
-module.exports = (app) => {
-    const dao = require('./dao');
+module.exports = (app, db) => {
+    const dao = require('./dao')(db);
 
     registerStats(app, dao);
     registerGalleries(app, dao);
