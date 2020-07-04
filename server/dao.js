@@ -38,6 +38,7 @@ const collectStatistics = (db) => {
                 byYearMonth: {},
                 byMonthOfYear: {},
                 byDayOfWeek: {},
+                byHourOfDay: {},
             },
             byExposure: {
                 byFocalLength: {},
@@ -54,7 +55,7 @@ const collectStatistics = (db) => {
             byCountry: {},
         },
     };
-    const updateTimeDistribution = (timeDistr, year, month, day) => {
+    const updateTimeDistribution = (timeDistr, year, month, day, hour) => {
         const dow = new Date(year, month, day).getDay();
 
         timeDistr.byYear[year] = timeDistr.byYear[year] || 0;
@@ -62,11 +63,13 @@ const collectStatistics = (db) => {
         timeDistr.byYearMonth[year][month] = timeDistr.byYearMonth[year][month] || 0;
         timeDistr.byMonthOfYear[month] = timeDistr.byMonthOfYear[month] || 0;
         timeDistr.byDayOfWeek[dow] = timeDistr.byDayOfWeek[dow] || 0;
+        timeDistr.byHourOfDay[hour] = timeDistr.byHourOfDay[hour] || 0;
 
         timeDistr.byYear[year]++;
         timeDistr.byYearMonth[year][month]++;
         timeDistr.byMonthOfYear[month]++;
         timeDistr.byDayOfWeek[dow]++;
+        timeDistr.byHourOfDay[hour]++;
     };
     const updateExposureDistribution = (expDistr, photo) => {
         const focalLength = photo.exposure.focalLength;
@@ -125,7 +128,8 @@ const collectStatistics = (db) => {
             stats.distribution.byTime,
             photo.taken.year,
             photo.taken.month,
-            photo.taken.day
+            photo.taken.day,
+            photo.taken.hour
         );
         updateExposureDistribution(
             stats.distribution.byExposure,
