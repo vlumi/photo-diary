@@ -1,7 +1,6 @@
+const CONST = require("./constants");
 
-
-module.exports = (app, db) => {
-    const dao = require('./dao')(db);
+module.exports = (app, dao) => {
 
     registerStats(app, dao);
     registerGalleries(app, dao);
@@ -14,7 +13,10 @@ module.exports = (app, db) => {
     app.use(function (error, req, res, next) {
         console.error(error);
         switch (error) {
-            case "Not implemented": res.status(501).send(error); break;
+            case CONST.ERROR_NOT_IMPLEMENTED:
+            case CONST.ERROR_NOT_FOUND:
+                res.status(501).send(error);
+                break;
             default: res.status(500).send(`Error: ${error}`)
         }
     });
