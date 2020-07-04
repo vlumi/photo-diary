@@ -1,77 +1,81 @@
 
 
 module.exports = (app) => {
-    const db = require('./db');
+    const dao = require('./dao');
 
-    app.get("/api/stats", (req, res) => {
-        // TODO: implement
-    });
+    registerStats(app, dao);
+    registerGalleries(app, dao);
+    registerPhotos(app, dao);
+    registerGalleryPhotos(app, dao);
 
-    app.get("/api/galleries", (req, res) => {
-        // TODO: implement: list of galleries
-        const galleries = db.loadGalleries();
-        res.json(galleries);
+    app.use((request, response) => {
+        response.status(404).send({ error: "unknown endpoint" });
     });
+    app.use(function (error, req, res, next) {
+        console.error(error);
+        switch (error) {
+            case "Not implemented": res.status(501).send(error); break;
+            default: res.status(500).send(`Error: ${error}`)
+        }
+    });
+};
+
+const registerStats = (app, dao) => {
+    app.get("/api/stats", (req, res) => res.json(dao.getStatistics()));
+}
+const registerGalleries = (app, dao) => {
+    app.get("/api/galleries", (req, res) => res.json(dao.getAllGalleries()));
     app.post("/api/galleries", (req, res) => {
-        // TODO: implement: create new gallery
-        res.status(501).end();
+        // TODO: validate and set content from req.body
+        const gallery = {};
+        res.json(dao.createGallery(gallery));
     });
     app.get("/api/galleries/:galleryId", (req, res) => {
-        // TODO: implement: list of photos in gallery, by year/month/day
-        const gallery = db.loadGallery(req.params.galleryId);
+        const gallery = dao.getGallery(req.params.galleryId);
         res.json(gallery);
-        // res.status(501).end();
     });
     app.put("/api/galleries/:galleryId", (req, res) => {
-        // TODO: implement: update gallery meta
-        res.status(501).end();
+        // TODO: validate and set content from req.body
+        const gallery = {};
+        res.json(dao.updateGallery(gallery));
     });
     app.delete("/api/galleries/:galleryId", (req, res) => {
-        // TODO: implement: delete gallery
-        res.status(501).end();
+        dao.deleteGallery(req.params.galleryId);
+        res.status(204).end();
     });
-
-    app.post("/api/galleries/:galleryId", (req, res) => {
-        // TODO: implement: add photo to gallery
-        res.status(501).end();
-    });
-    app.get("/api/galleries/:galleryId/:photoId", (req, res) => {
-        // TODO: implement: get photo meta, in gallery context
-        res.status(501).end();
-    });
-    app.put("/api/galleries/:galleryId/:photoId", (req, res) => {
-        // TODO: implement: update photo meta, in gallery context
-        res.status(501).end();
-    });
-    app.delete("/api/galleries/:galleryId/:photoId", (req, res) => {
-        // TODO: implement: remove photo from gallery
-        res.status(501).end();
-    });
-
+}
+const registerPhotos = (app, dao) => {
     app.get("/api/photos/", (req, res) => {
-        // TODO: implement: list all photos
-        const photos = db.loadPhotos();
-        res.status(501).end();
+        const photos = dao.getAllPhotos();
+        res.json(photos);
     });
     app.post("/api/photos/", (req, res) => {
-        // TODO: implement: create new photo
-        res.status(501).end();
+        // TODO: validate and set content from req.body
+        const photo = {};
+        res.json(dao.createPhoto(photo));
     });
     app.get("/api/photos/:photoId", (req, res) => {
-        // TODO: implement: get photo meta
-        const photo = db.loadPhoto(req.params.photoId);
-        res.status(501).end();
+        const photo = dao.getPhoto(req.params.photoId);
+        res.json(photo);
     });
     app.put("/api/photos/:photoId", (req, res) => {
         // TODO: implement: update photo meta
         res.status(501).end();
     });
     app.delete("/api/photos/:photoId", (req, res) => {
-        // TODO: implement: delete photo, also removing from all galleries
-        res.status(501).end();
+        dao.deletePhoto(req.params.galleryId);
+        res.status(204).end();
     });
-
-    app.use((request, response) => {
-        response.status(404).send({ error: "unknown endpoint" });
+}
+const registerGalleryPhotos = (app, dao) => {
+    app.post("/api/galleries/:galleryId", (req, res) => {
+        // TODO: validate and set content from req.body
+        const photo = {};
+        dao.linkPhoto(photo, gallery);
+        res.status(204).end();
     });
-};
+    app.delete("/api/galleries/:galleryId/:photoId", (req, res) => {
+        dao.unlinkPhoto(photo, gallery);
+        res.status(204).end();
+    });
+}
