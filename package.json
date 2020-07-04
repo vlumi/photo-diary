@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node gallery.js",
-    "prod": "pm2 start gallery.js",
-    "dev": "nodemon gallery.js",
+    "start": "node server/index.js",
+    "prod": "pm2 start server/index.js",
+    "dev": "nodemon server/index.js",
     "dumpexif": "node dumpexif.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
