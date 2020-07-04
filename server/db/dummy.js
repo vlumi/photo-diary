@@ -59,7 +59,7 @@ const dummyPhotos = {
         id: "somephoto.jpg",
         title: "",
         description: "",
-        taken: { timestamp: "2019-05-04 13:13:03", year: 2019, month: 5, day: 4, hour: 13, minute: 13, second: 3, country: "jp", place: "", author: "Ville Misaki", },
+        taken: { timestamp: "2018-05-04 13:13:03", year: 2018, month: 5, day: 4, hour: 13, minute: 13, second: 3, country: "jp", place: "", author: "Ville Misaki", },
         camera: { make: 'FUJIFILM', model: 'X-T2', serial: '62054072' },
         lens: { make: 'FUJIFILM', model: 'XF27mmF2.8', serial: '44A07244' },
         exposure: { focalLength: 27, focalLength35mmEquiv: 41, aperture: 5.6, shutterSpeed: '1/744', iso: 200 },

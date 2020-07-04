@@ -32,10 +32,15 @@ const collectStatistics = (db) => {
     const stats = {
         galleries: db.loadGalleries(),
         photos: 0,
+        days: 0,
         distribution: {
             byTime: {
+                minDate: undefined,
+                maxDate: undefined,
                 byYear: {},
+                daysInYear: {},
                 byYearMonth: {},
+                daysInYearMonth: {},
                 byMonthOfYear: {},
                 byDayOfWeek: {},
                 byHourOfDay: {},
@@ -55,8 +60,24 @@ const collectStatistics = (db) => {
             byCountry: {},
         },
     };
+    const canonDate = (ymd) => ymd.year * 10000 + ymd.month * 100 + ymd.day;
     const updateTimeDistribution = (timeDistr, year, month, day, hour) => {
-        const dow = new Date(year, month, day).getDay();
+        if (timeDistr.minDate === undefined || canonDate({ year, month, day }) < canonDate(timeDistr.minDate)) {
+            timeDistr.minDate = {
+                year: year,
+                month: month,
+                day: day,
+            };
+        }
+        if (timeDistr.maxDate === undefined || canonDate({ year, month, day }) > canonDate(timeDistr.maxDate)) {
+            timeDistr.maxDate = {
+                year: year,
+                month: month,
+                day: day,
+            };
+        }
+
+        const dow = new Date(year, month - 1, day).getDay();
 
         timeDistr.byYear[year] = timeDistr.byYear[year] || 0;
         timeDistr.byYearMonth[year] = timeDistr.byYearMonth[year] || {};
@@ -115,31 +136,92 @@ const collectStatistics = (db) => {
         }
     };
 
-    Object.values(db.loadPhotos()).forEach(photo => {
-        stats.photos++;
+    const populateStatistics = (db, stats, updateTimeDistribution, updateExposureDistribution, updateGear) => {
+        Object.values(db.loadPhotos()).forEach(photo => {
+            stats.photos++;
 
-        stats.distribution.byCountry[photo.taken.country] = stats.distribution.byCountry[photo.taken.country] || 0;
-        stats.distribution.byCountry[photo.taken.country]++;
+            stats.distribution.byCountry[photo.taken.country] = stats.distribution.byCountry[photo.taken.country] || 0;
+            stats.distribution.byCountry[photo.taken.country]++;
 
-        stats.distribution.byAuthor[photo.taken.author] = stats.distribution.byAuthor[photo.taken.author] || 0;
-        stats.distribution.byAuthor[photo.taken.author]++;
+            stats.distribution.byAuthor[photo.taken.author] = stats.distribution.byAuthor[photo.taken.author] || 0;
+            stats.distribution.byAuthor[photo.taken.author]++;
 
-        updateTimeDistribution(
-            stats.distribution.byTime,
-            photo.taken.year,
-            photo.taken.month,
-            photo.taken.day,
-            photo.taken.hour
-        );
-        updateExposureDistribution(
-            stats.distribution.byExposure,
-            photo
-        );
-        updateGear(
-            stats.distribution.byGear,
-            photo
-        );
-    });
+            updateTimeDistribution(
+                stats.distribution.byTime,
+                photo.taken.year,
+                photo.taken.month,
+                photo.taken.day,
+                photo.taken.hour
+            );
+            updateExposureDistribution(
+                stats.distribution.byExposure,
+                photo
+            );
+            updateGear(
+                stats.distribution.byGear,
+                photo
+            );
+        });
+    }
+
+    const fillTimeDistributionGaps = (timeDistr) => {
+        const isLeap = (year) => year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+        const MONTH_LENGTH = {
+            true: [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+            false: [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+        };
+
+        for (let m = 1; m <= 12; m++) {
+            timeDistr.byMonthOfYear[m] = timeDistr.byMonthOfYear[m] || 0;
+        }
+        for (let dow = 0; dow < 7; dow++) {
+            timeDistr.byDayOfWeek[dow] = timeDistr.byDayOfWeek[dow] || 0;
+        }
+
+        const minYear = timeDistr.minDate.year;
+        const maxYear = timeDistr.maxDate.year;
+        timeDistr.daysInYear[minYear] = 0;
+        timeDistr.daysInYearMonth[minYear] = {};
+        for (let m = timeDistr.minDate.month; m <= 12; m++) {
+            timeDistr.byYearMonth[minYear][m] = timeDistr.byYearMonth[minYear][m] || 0;
+            if (m == timeDistr.minDate.month) {
+                timeDistr.daysInYear[minYear] +=
+                    timeDistr.daysInYearMonth[minYear][m] = MONTH_LENGTH[isLeap(minYear)][m] - timeDistr.minDate.day + 1;
+
+            } else {
+                timeDistr.daysInYear[minYear] +=
+                    timeDistr.daysInYearMonth[minYear][m] = MONTH_LENGTH[isLeap(minYear)][m];
+            }
+        }
+        for (let y = minYear + 1; y < maxYear; y++) {
+            const leap = isLeap(y);
+            timeDistr.byYear[y] = timeDistr.byYear[y] || 0;
+            timeDistr.daysInYear[y] = leap ? 366 : 365;
+
+            timeDistr.byYearMonth[y] = timeDistr.byYearMonth[y] || {};
+            timeDistr.daysInYearMonth[y] = {};
+            for (let m = 1; m <= 12; m++) {
+                timeDistr.byYearMonth[y][m] = timeDistr.byYearMonth[y][m] || 0;
+                timeDistr.daysInYearMonth[y][m] = MONTH_LENGTH[leap][m];
+            }
+        }
+        timeDistr.daysInYear[maxYear] = 0;
+        timeDistr.daysInYearMonth[maxYear] = {};
+        for (let m = 1; m <= timeDistr.maxDate.month; m++) {
+            timeDistr.byYearMonth[maxYear][m] = timeDistr.byYearMonth[maxYear][m] || 0;
+            if (m == timeDistr.maxDate.month) {
+                timeDistr.daysInYear[maxYear] +=
+                    timeDistr.daysInYearMonth[maxYear][m] = timeDistr.maxDate.day;
+            } else {
+                timeDistr.daysInYear[maxYear] +=
+                    timeDistr.daysInYearMonth[maxYear][m] = MONTH_LENGTH[isLeap(maxYear)][m];
+            }
+        }
+    };
+
+    populateStatistics(db, stats, updateTimeDistribution, updateExposureDistribution, updateGear);
+    fillTimeDistributionGaps(stats.distribution.byTime);
+    stats.days = Object.values(stats.distribution.byTime.daysInYear).reduce((a, b) => a + b);
     return stats;
 }
 
@@ -173,3 +255,4 @@ const groupPhotosByYearMonthDay = (galleryPhotos) => {
         });
     return photosByDate;
 }
+
