@@ -127,25 +127,25 @@ const populateStatistics = (photos, stats) => {
     photos.forEach(photo => {
         stats.count.photos++;
 
-        stats.distribution.byCountry[photo.taken.country] = stats.distribution.byCountry[photo.taken.country] || 0;
-        stats.distribution.byCountry[photo.taken.country]++;
+        stats.count.byCountry[photo.taken.country] = stats.count.byCountry[photo.taken.country] || 0;
+        stats.count.byCountry[photo.taken.country]++;
 
-        stats.distribution.byAuthor[photo.taken.author] = stats.distribution.byAuthor[photo.taken.author] || 0;
-        stats.distribution.byAuthor[photo.taken.author]++;
+        stats.count.byAuthor[photo.taken.author] = stats.count.byAuthor[photo.taken.author] || 0;
+        stats.count.byAuthor[photo.taken.author]++;
 
         updateTimeDistribution(
-            stats.distribution.byTime,
+            stats.count.byTime,
             photo.taken.year,
             photo.taken.month,
             photo.taken.day,
             photo.taken.hour
         );
         updateExposureDistribution(
-            stats.distribution.byExposure,
+            stats.count.byExposure,
             photo
         );
         updateGear(
-            stats.distribution.byGear,
+            stats.count.byGear,
             photo
         );
     });
@@ -217,8 +217,6 @@ const collectStatistics = (galleries, photos) => {
         count: {
             photos: 0,
             days: 0,
-        },
-        distribution: {
             byTime: {
                 minDate: undefined,
                 maxDate: undefined,
@@ -247,8 +245,8 @@ const collectStatistics = (galleries, photos) => {
     };
 
     populateStatistics(photos, stats);
-    fillTimeDistributionGaps(stats.distribution.byTime);
-    stats.count.days = Object.values(stats.distribution.byTime.daysInYear).reduce((a, b) => a + b, 0);
+    fillTimeDistributionGaps(stats.count.byTime);
+    stats.count.days = Object.values(stats.count.byTime.daysInYear).reduce((a, b) => a + b, 0);
     return stats;
 }
 const collectGalleryStatistics = (photos) => {
@@ -256,8 +254,6 @@ const collectGalleryStatistics = (photos) => {
         count: {
             photos: 0,
             days: 0,
-        },
-        distribution: {
             byTime: {
                 minDate: undefined,
                 maxDate: undefined,
@@ -286,9 +282,9 @@ const collectGalleryStatistics = (photos) => {
     };
 
     populateStatistics(photos, stats);
-    fillTimeDistributionGaps(stats.distribution.byTime);
+    fillTimeDistributionGaps(stats.count.byTime);
     console.log(stats);
-    stats.count.days = Object.values(stats.distribution.byTime.daysInYear).reduce((a, b) => a + b, 0);
+    stats.count.days = Object.values(stats.count.byTime.daysInYear).reduce((a, b) => a + b, 0);
     return stats;
 }
 
