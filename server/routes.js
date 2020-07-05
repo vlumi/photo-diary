@@ -28,6 +28,12 @@ const registerStats = (app, dao) => {
             stats => res.json(stats),
             err => handleError(res, err))
     );
+    app.get("/api/stats/:galleryId", (req, res) =>
+        dao.getGalleryStatistics(
+            req.params.galleryId,
+            stats => res.json(stats),
+            err => handleError(res, err))
+    );
 }
 const registerGalleries = (app, dao) => {
     app.get("/api/galleries", (req, res) =>
