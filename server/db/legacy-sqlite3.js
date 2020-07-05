@@ -2,9 +2,11 @@ const CONST = require("../constants");
 
 const sqlite3 = require('sqlite3').verbose();
 
-module.exports = (path) => {
-    console.log(path);
-    const db = new sqlite3.Database(path);
+module.exports = (opts) => {
+    if (!opts) {
+        throw "The path to the SQLite3 database must be set to DB_OPTS.";
+    }
+    const db = new sqlite3.Database(opts);
     return {
         loadGalleries: (onSuccess, onError) => {
             db.all("SELECT * FROM gallery", function (err, rows) {
