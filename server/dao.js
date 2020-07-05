@@ -125,7 +125,7 @@ const populateStatistics = (photos, stats) => {
     };
 
     photos.forEach(photo => {
-        stats.photos++;
+        stats.count.photos++;
 
         stats.distribution.byCountry[photo.taken.country] = stats.distribution.byCountry[photo.taken.country] || 0;
         stats.distribution.byCountry[photo.taken.country]++;
@@ -168,43 +168,45 @@ const fillTimeDistributionGaps = (timeDistr) => {
         timeDistr.byHourOfDay[h] = timeDistr.byHourOfDay[h] || 0;
     }
 
-    const minYear = timeDistr.minDate.year;
-    const maxYear = timeDistr.maxDate.year;
-    timeDistr.daysInYear[minYear] = 0;
-    timeDistr.daysInYearMonth[minYear] = {};
-    for (let m = timeDistr.minDate.month; m <= 12; m++) {
-        timeDistr.byYearMonth[minYear][m] = timeDistr.byYearMonth[minYear][m] || 0;
-        if (m == timeDistr.minDate.month) {
-            timeDistr.daysInYear[minYear] +=
-                timeDistr.daysInYearMonth[minYear][m] = MONTH_LENGTH[isLeap(minYear)][m] - timeDistr.minDate.day + 1;
+    if (timeDistr.minDate && timeDistr.maxDate) {
+        const minYear = timeDistr.minDate.year;
+        const maxYear = timeDistr.maxDate.year;
+        timeDistr.daysInYear[minYear] = 0;
+        timeDistr.daysInYearMonth[minYear] = {};
+        for (let m = timeDistr.minDate.month; m <= 12; m++) {
+            timeDistr.byYearMonth[minYear][m] = timeDistr.byYearMonth[minYear][m] || 0;
+            if (m == timeDistr.minDate.month) {
+                timeDistr.daysInYear[minYear] +=
+                    timeDistr.daysInYearMonth[minYear][m] = MONTH_LENGTH[isLeap(minYear)][m] - timeDistr.minDate.day + 1;
 
-        } else {
-            timeDistr.daysInYear[minYear] +=
-                timeDistr.daysInYearMonth[minYear][m] = MONTH_LENGTH[isLeap(minYear)][m];
+            } else {
+                timeDistr.daysInYear[minYear] +=
+                    timeDistr.daysInYearMonth[minYear][m] = MONTH_LENGTH[isLeap(minYear)][m];
+            }
         }
-    }
-    for (let y = minYear + 1; y < maxYear; y++) {
-        const leap = isLeap(y);
-        timeDistr.byYear[y] = timeDistr.byYear[y] || 0;
-        timeDistr.daysInYear[y] = leap ? 366 : 365;
+        for (let y = minYear + 1; y < maxYear; y++) {
+            const leap = isLeap(y);
+            timeDistr.byYear[y] = timeDistr.byYear[y] || 0;
+            timeDistr.daysInYear[y] = leap ? 366 : 365;
 
-        timeDistr.byYearMonth[y] = timeDistr.byYearMonth[y] || {};
-        timeDistr.daysInYearMonth[y] = {};
-        for (let m = 1; m <= 12; m++) {
-            timeDistr.byYearMonth[y][m] = timeDistr.byYearMonth[y][m] || 0;
-            timeDistr.daysInYearMonth[y][m] = MONTH_LENGTH[leap][m];
+            timeDistr.byYearMonth[y] = timeDistr.byYearMonth[y] || {};
+            timeDistr.daysInYearMonth[y] = {};
+            for (let m = 1; m <= 12; m++) {
+                timeDistr.byYearMonth[y][m] = timeDistr.byYearMonth[y][m] || 0;
+                timeDistr.daysInYearMonth[y][m] = MONTH_LENGTH[leap][m];
+            }
         }
-    }
-    timeDistr.daysInYear[maxYear] = 0;
-    timeDistr.daysInYearMonth[maxYear] = {};
-    for (let m = 1; m <= timeDistr.maxDate.month; m++) {
-        timeDistr.byYearMonth[maxYear][m] = timeDistr.byYearMonth[maxYear][m] || 0;
-        if (m == timeDistr.maxDate.month) {
-            timeDistr.daysInYear[maxYear] +=
-                timeDistr.daysInYearMonth[maxYear][m] = timeDistr.maxDate.day;
-        } else {
-            timeDistr.daysInYear[maxYear] +=
-                timeDistr.daysInYearMonth[maxYear][m] = MONTH_LENGTH[isLeap(maxYear)][m];
+        timeDistr.daysInYear[maxYear] = 0;
+        timeDistr.daysInYearMonth[maxYear] = {};
+        for (let m = 1; m <= timeDistr.maxDate.month; m++) {
+            timeDistr.byYearMonth[maxYear][m] = timeDistr.byYearMonth[maxYear][m] || 0;
+            if (m == timeDistr.maxDate.month) {
+                timeDistr.daysInYear[maxYear] +=
+                    timeDistr.daysInYearMonth[maxYear][m] = timeDistr.maxDate.day;
+            } else {
+                timeDistr.daysInYear[maxYear] +=
+                    timeDistr.daysInYearMonth[maxYear][m] = MONTH_LENGTH[isLeap(maxYear)][m];
+            }
         }
     }
 };
@@ -212,8 +214,10 @@ const fillTimeDistributionGaps = (timeDistr) => {
 const collectStatistics = (galleries, photos) => {
     const stats = {
         galleries: galleries,
-        photos: 0,
-        days: 0,
+        count: {
+            photos: 0,
+            days: 0,
+        },
         distribution: {
             byTime: {
                 minDate: undefined,
@@ -244,14 +248,15 @@ const collectStatistics = (galleries, photos) => {
 
     populateStatistics(photos, stats);
     fillTimeDistributionGaps(stats.distribution.byTime);
-    stats.days = Object.values(stats.distribution.byTime.daysInYear).reduce((a, b) => a + b);
+    stats.count.days = Object.values(stats.distribution.byTime.daysInYear).reduce((a, b) => a + b, 0);
     return stats;
 }
 const collectGalleryStatistics = (photos) => {
-    console.log(photos);
     const stats = {
-        photos: 0,
-        days: 0,
+        count: {
+            photos: 0,
+            days: 0,
+        },
         distribution: {
             byTime: {
                 minDate: undefined,
@@ -282,7 +287,8 @@ const collectGalleryStatistics = (photos) => {
 
     populateStatistics(photos, stats);
     fillTimeDistributionGaps(stats.distribution.byTime);
-    stats.days = Object.values(stats.distribution.byTime.daysInYear).reduce((a, b) => a + b);
+    console.log(stats);
+    stats.count.days = Object.values(stats.distribution.byTime.daysInYear).reduce((a, b) => a + b, 0);
     return stats;
 }
 
