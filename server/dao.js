@@ -2,142 +2,125 @@ const CONST = require("./constants");
 
 module.exports = (db) => {
     return {
-        getStatistics: () => collectStatistics(db),
+        getStatistics: (callback) => {
+            db.loadGalleries(galleries => {
+                db.loadPhotos(photos => {
+                    callback(collectStatistics(galleries, Object.values(photos)));
+                });
+            });
+        },
 
-        getAllGalleries: () => db.loadGalleries()
-            .filter(gallery => !gallery.id.startsWith(":")),
+        getAllGalleries: (callback) => db.loadGalleries(data => {
+            console.log("meh", data);
+            callback(
+                data.filter(gallery => !gallery.id.startsWith(":"))
+            )
+        }
+        ),
         createGallery: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
-        getGallery: (gallery) => {
-            const galleryPhotos = db.loadGalleryPhotos(gallery);
-            const map = groupPhotosByYearMonthDay(galleryPhotos);
-            return {
-                ...db.loadGallery(gallery),
-                photos: map,
-            };
+        getGallery: (gallery, callback) => {
+            db.loadGalleryPhotos(gallery, (galleryPhotos) => {
+                const photosByYearMonthDay = groupPhotosByYearMonthDay(galleryPhotos);
+                db.loadGallery(gallery, (data) => {
+                    callback({
+                        ...data,
+                        photos: photosByYearMonthDay,
+                    });
+                });
+            });
         },
         updateGallery: (gallery) => { throw CONST.ERROR_NOT_IMPLEMENTED; },
         deleteGallery: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
         linkPhoto: (photo, gallery) => { throw CONST.ERROR_NOT_IMPLEMENTED; },
         unlinkPhoto: (photo, gallery) => { throw CONST.ERROR_NOT_IMPLEMENTED; },
 
-        getAllPhotos: () => db.loadPhotos(),
+        getAllPhotos: (callback) => db.loadPhotos(callback),
         createPhoto: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
-        getPhoto: (photo) => db.loadPhoto(photo),
+        getPhoto: (photo, callback) => db.loadPhoto(photo, callback),
         updatePhoto: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
         deletePhoto: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
     }
 };
 
-const collectStatistics = (db) => {
-    const stats = {
-        galleries: db.loadGalleries(),
-        photos: 0,
-        days: 0,
-        distribution: {
-            byTime: {
-                minDate: undefined,
-                maxDate: undefined,
-                byYear: {},
-                daysInYear: {},
-                byYearMonth: {},
-                daysInYearMonth: {},
-                byMonthOfYear: {},
-                byDayOfWeek: {},
-                byHourOfDay: {},
-            },
-            byExposure: {
-                byFocalLength: {},
-                byAperture: {},
-                byShutterSpeed: {},
-                byIso: {},
-            },
-            byGear: {
-                byCamera: {},
-                byLens: {},
-                byCameraAndLens: {},
-            },
-            byAuthor: {},
-            byCountry: {},
-        },
-    };
-    const canonDate = (ymd) => ymd.year * 10000 + ymd.month * 100 + ymd.day;
-    const updateTimeDistribution = (timeDistr, year, month, day, hour) => {
-        if (timeDistr.minDate === undefined || canonDate({ year, month, day }) < canonDate(timeDistr.minDate)) {
-            timeDistr.minDate = {
-                year: year,
-                month: month,
-                day: day,
-            };
-        }
-        if (timeDistr.maxDate === undefined || canonDate({ year, month, day }) > canonDate(timeDistr.maxDate)) {
-            timeDistr.maxDate = {
-                year: year,
-                month: month,
-                day: day,
-            };
-        }
-
-        const dow = new Date(year, month - 1, day).getDay();
-
-        timeDistr.byYear[year] = timeDistr.byYear[year] || 0;
-        timeDistr.byYearMonth[year] = timeDistr.byYearMonth[year] || {};
-        timeDistr.byYearMonth[year][month] = timeDistr.byYearMonth[year][month] || 0;
-        timeDistr.byMonthOfYear[month] = timeDistr.byMonthOfYear[month] || 0;
-        timeDistr.byDayOfWeek[dow] = timeDistr.byDayOfWeek[dow] || 0;
-        timeDistr.byHourOfDay[hour] = timeDistr.byHourOfDay[hour] || 0;
-
-        timeDistr.byYear[year]++;
-        timeDistr.byYearMonth[year][month]++;
-        timeDistr.byMonthOfYear[month]++;
-        timeDistr.byDayOfWeek[dow]++;
-        timeDistr.byHourOfDay[hour]++;
-    };
-    const updateExposureDistribution = (expDistr, photo) => {
-        const focalLength = photo.exposure.focalLength;
-        const aperture = photo.exposure.aperture;
-        const shutterSpeed = photo.exposure.shutterSpeed;
-        const iso = photo.exposure.iso;
-
-        expDistr.byFocalLength[focalLength] = expDistr.byFocalLength[focalLength] || 0;
-        expDistr.byAperture[aperture] = expDistr.byAperture[aperture] || 0;
-        expDistr.byShutterSpeed[shutterSpeed] = expDistr.byShutterSpeed[shutterSpeed] || 0;
-        expDistr.byIso[iso] = expDistr.byIso[iso] || 0;
-
-        expDistr.byFocalLength[focalLength]++;
-        expDistr.byAperture[aperture]++;
-        expDistr.byShutterSpeed[shutterSpeed]++;
-        expDistr.byIso[iso]++;
-    };
-    const updateGear = (gear, photo) => {
-        const buildName = (make, model) => {
-            if (make && model) {
-                return `${make} ${model}`;
+const collectStatistics = (galleries, photos) => {
+    const populateStatistics = (photos, stats) => {
+        const updateTimeDistribution = (timeDistr, year, month, day, hour) => {
+            const canonDate = (ymd) => ymd.year * 10000 + ymd.month * 100 + ymd.day;
+            if (timeDistr.minDate === undefined || canonDate({ year, month, day }) < canonDate(timeDistr.minDate)) {
+                timeDistr.minDate = {
+                    year: year,
+                    month: month,
+                    day: day,
+                };
             }
-            if (make) {
-                return make;
+            if (timeDistr.maxDate === undefined || canonDate({ year, month, day }) > canonDate(timeDistr.maxDate)) {
+                timeDistr.maxDate = {
+                    year: year,
+                    month: month,
+                    day: day,
+                };
             }
-            return model;
+
+            const dow = new Date(year, month - 1, day).getDay();
+
+            timeDistr.byYear[year] = timeDistr.byYear[year] || 0;
+            timeDistr.byYearMonth[year] = timeDistr.byYearMonth[year] || {};
+            timeDistr.byYearMonth[year][month] = timeDistr.byYearMonth[year][month] || 0;
+            timeDistr.byMonthOfYear[month] = timeDistr.byMonthOfYear[month] || 0;
+            timeDistr.byDayOfWeek[dow] = timeDistr.byDayOfWeek[dow] || 0;
+            timeDistr.byHourOfDay[hour] = timeDistr.byHourOfDay[hour] || 0;
+
+            timeDistr.byYear[year]++;
+            timeDistr.byYearMonth[year][month]++;
+            timeDistr.byMonthOfYear[month]++;
+            timeDistr.byDayOfWeek[dow]++;
+            timeDistr.byHourOfDay[hour]++;
+        };
+        const updateExposureDistribution = (expDistr, photo) => {
+            const focalLength = photo.exposure.focalLength;
+            const aperture = photo.exposure.aperture;
+            const shutterSpeed = photo.exposure.shutterSpeed;
+            const iso = photo.exposure.iso;
+
+            expDistr.byFocalLength[focalLength] = expDistr.byFocalLength[focalLength] || 0;
+            expDistr.byAperture[aperture] = expDistr.byAperture[aperture] || 0;
+            expDistr.byShutterSpeed[shutterSpeed] = expDistr.byShutterSpeed[shutterSpeed] || 0;
+            expDistr.byIso[iso] = expDistr.byIso[iso] || 0;
+
+            expDistr.byFocalLength[focalLength]++;
+            expDistr.byAperture[aperture]++;
+            expDistr.byShutterSpeed[shutterSpeed]++;
+            expDistr.byIso[iso]++;
+        };
+        const updateGear = (gear, photo) => {
+            const buildName = (make, model) => {
+                if (make && model) {
+                    return `${make} ${model}`;
+                }
+                if (make) {
+                    return make;
+                }
+                return model;
+            };
+
+            const camera = buildName(photo.camera.make, photo.camera.model);
+            const lens = buildName(photo.lens.make, photo.lens.model);
+            if (camera) {
+                gear.byCamera[camera] = gear.byCamera[camera] || 0;
+                gear.byCamera[camera]++;
+            }
+            if (lens) {
+                gear.byLens[lens] = gear.byLens[lens] || 0;
+                gear.byLens[lens]++;
+            }
+            if (camera && lens) {
+                gear.byCameraAndLens[camera] = gear.byCameraAndLens[camera] || {};
+                gear.byCameraAndLens[camera][lens] = gear.byCameraAndLens[camera][lens] || 0;
+                gear.byCameraAndLens[camera][lens]++;
+            }
         };
 
-        const camera = buildName(photo.camera.make, photo.camera.model);
-        const lens = buildName(photo.lens.make, photo.lens.model);
-        if (camera) {
-            gear.byCamera[camera] = gear.byCamera[camera] || 0;
-            gear.byCamera[camera]++;
-        }
-        if (lens) {
-            gear.byLens[lens] = gear.byLens[lens] || 0;
-            gear.byLens[lens]++;
-        }
-        if (camera && lens) {
-            gear.byCameraAndLens[camera] = gear.byCameraAndLens[camera] || {};
-            gear.byCameraAndLens[camera][lens] = gear.byCameraAndLens[camera][lens] || 0;
-            gear.byCameraAndLens[camera][lens]++;
-        }
-    };
-
-    const populateStatistics = (db, stats, updateTimeDistribution, updateExposureDistribution, updateGear) => {
-        Object.values(db.loadPhotos()).forEach(photo => {
+        photos.forEach(photo => {
             stats.photos++;
 
             stats.distribution.byCountry[photo.taken.country] = stats.distribution.byCountry[photo.taken.country] || 0;
@@ -219,7 +202,39 @@ const collectStatistics = (db) => {
         }
     };
 
-    populateStatistics(db, stats, updateTimeDistribution, updateExposureDistribution, updateGear);
+    const stats = {
+        galleries: galleries,
+        photos: 0,
+        days: 0,
+        distribution: {
+            byTime: {
+                minDate: undefined,
+                maxDate: undefined,
+                byYear: {},
+                daysInYear: {},
+                byYearMonth: {},
+                daysInYearMonth: {},
+                byMonthOfYear: {},
+                byDayOfWeek: {},
+                byHourOfDay: {},
+            },
+            byExposure: {
+                byFocalLength: {},
+                byAperture: {},
+                byShutterSpeed: {},
+                byIso: {},
+            },
+            byGear: {
+                byCamera: {},
+                byLens: {},
+                byCameraAndLens: {},
+            },
+            byAuthor: {},
+            byCountry: {},
+        },
+    };
+
+    populateStatistics(photos, stats);
     fillTimeDistributionGaps(stats.distribution.byTime);
     stats.days = Object.values(stats.distribution.byTime.daysInYear).reduce((a, b) => a + b);
     return stats;

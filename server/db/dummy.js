@@ -1,35 +1,44 @@
 /**
  * Dummy DB, with all DB values hard-coded.
  */
-module.exports = {
-    loadGalleries: () => Object.values(dummyGalleries).sort(),
-    loadGallery: (name) => {
-        if (name in dummyGalleries) {
-            return dummyGalleries[name];
-        }
-        throw "Not found";
-    },
-    loadGalleryPhotos: (name) => {
-        switch (name) {
-            case ":all":
-                return Object.values(dummyPhotos)
-                    .sort();
-            case ":none":
-                const galleriesPhotos = Object.values(dummyGalleryPhotos).flat();
-                return Object.keys(dummyPhotos)
-                    .filter(photo => !galleriesPhotos.includes(photo))
-                    .map(photoName => dummyPhotos[photoName])
-                    .sort();
-            default:
-                if (name in dummyGalleries) {
-                    return dummyGalleryPhotos[name]
-                        .map(photoName => dummyPhotos[photoName]);
-                }
-                throw "Not found";
-        }
-    },
-    loadPhotos: () => dummyPhotos,
-    loadPhoto: (name) => dummyPhotos[name],
+module.exports = () => {
+    return {
+        loadGalleries: (callback) => callback(Object.values(dummyGalleries).sort()),
+        loadGallery: (name, callback) => {
+            if (name in dummyGalleries) {
+                callback(dummyGalleries[name]);
+                return;
+            }
+            throw "Not found";
+        },
+        loadGalleryPhotos: (name, callback) => {
+            let data = {};
+            switch (name) {
+                case ":all":
+                    data = Object.values(dummyPhotos)
+                        .sort();
+                    break;
+
+                case ":none":
+                    const galleriesPhotos = Object.values(dummyGalleryPhotos).flat();
+                    data = Object.keys(dummyPhotos)
+                        .filter(photo => !galleriesPhotos.includes(photo))
+                        .map(photoName => dummyPhotos[photoName])
+                        .sort();
+                    break;
+                default:
+                    if (name in dummyGalleries) {
+                        data = dummyGalleryPhotos[name]
+                            .map(photoName => dummyPhotos[photoName]);
+                        break;
+                    }
+                    throw "Not found";
+            }
+            callback(data);
+        },
+        loadPhotos: (callback) => callback(dummyPhotos),
+        loadPhoto: (name, callback) => callback(dummyPhotos[name]),
+    }
 };
 
 const dummyGalleries = {

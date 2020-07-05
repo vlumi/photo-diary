@@ -23,19 +23,24 @@ module.exports = (app, dao) => {
 };
 
 const registerStats = (app, dao) => {
-    app.get("/api/stats", (req, res) => res.json(dao.getStatistics()));
+    app.get("/api/stats", (req, res) =>
+        dao.getStatistics(stats => res.json(stats))
+    );
 }
 const registerGalleries = (app, dao) => {
-    app.get("/api/galleries", (req, res) => res.json(dao.getAllGalleries()));
+    app.get("/api/galleries", (req, res) =>
+        dao.getAllGalleries(galleries => res.json(galleries))
+    );
     app.post("/api/galleries", (req, res) => {
         // TODO: validate and set content from req.body
         const gallery = {};
         res.json(dao.createGallery(gallery));
     });
-    app.get("/api/galleries/:galleryId", (req, res) => {
-        const gallery = dao.getGallery(req.params.galleryId);
-        res.json(gallery);
-    });
+    app.get("/api/galleries/:galleryId", (req, res) =>
+        dao.getGallery(
+            req.params.galleryId,
+            data => res.json(data)
+        ));
     app.put("/api/galleries/:galleryId", (req, res) => {
         // TODO: validate and set content from req.body
         const gallery = {};
@@ -47,18 +52,16 @@ const registerGalleries = (app, dao) => {
     });
 }
 const registerPhotos = (app, dao) => {
-    app.get("/api/photos/", (req, res) => {
-        const photos = dao.getAllPhotos();
-        res.json(photos);
-    });
+    app.get("/api/photos/", (req, res) =>
+        dao.getAllPhotos((photos) => res.json(photos))
+    );
     app.post("/api/photos/", (req, res) => {
         // TODO: validate and set content from req.body
         const photo = {};
         res.json(dao.createPhoto(photo));
     });
     app.get("/api/photos/:photoId", (req, res) => {
-        const photo = dao.getPhoto(req.params.photoId);
-        res.json(photo);
+        dao.getPhoto(req.params.photoId, (photo) => res.json(photo));
     });
     app.put("/api/photos/:photoId", (req, res) => {
         // TODO: implement: update photo meta
