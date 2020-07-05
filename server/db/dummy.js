@@ -3,15 +3,15 @@
  */
 module.exports = () => {
     return {
-        loadGalleries: (callback) => callback(Object.values(dummyGalleries).sort()),
-        loadGallery: (name, callback) => {
+        loadGalleries: (onSuccess, onError) => onSuccess(Object.values(dummyGalleries).sort()),
+        loadGallery: (name, onSuccess, onError) => {
             if (name in dummyGalleries) {
-                callback(dummyGalleries[name]);
-                return;
+                onSuccess(dummyGalleries[name]);
+            } else {
+                onError("Not found");
             }
-            throw "Not found";
         },
-        loadGalleryPhotos: (name, callback) => {
+        loadGalleryPhotos: (name, onSuccess, onError) => {
             let data = {};
             switch (name) {
                 case ":all":
@@ -34,10 +34,10 @@ module.exports = () => {
                     }
                     throw "Not found";
             }
-            callback(data);
+            onSuccess(data);
         },
-        loadPhotos: (callback) => callback(dummyPhotos),
-        loadPhoto: (name, callback) => callback(dummyPhotos[name]),
+        loadPhotos: (onSuccess, onError) => onSuccess(dummyPhotos),
+        loadPhoto: (name, onSuccess, onError) => onSuccess(dummyPhotos[name]),
     }
 };
 

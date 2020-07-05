@@ -2,41 +2,42 @@ const CONST = require("./constants");
 
 module.exports = (db) => {
     return {
-        getStatistics: (callback) => {
+        getStatistics: (onSuccess, onError) => {
             db.loadGalleries(galleries => {
                 db.loadPhotos(photos => {
-                    callback(collectStatistics(galleries, Object.values(photos)));
-                });
-            });
+                    onSuccess(collectStatistics(galleries, Object.values(photos)));
+                }, onError);
+            }, onError);
         },
 
-        getAllGalleries: (callback) => db.loadGalleries(data => {
-            console.log("meh", data);
-            callback(
-                data.filter(gallery => !gallery.id.startsWith(":"))
-            )
-        }
+        getAllGalleries: (onSuccess, onError) => db.loadGalleries(
+            data => {
+                onSuccess(
+                    data.filter(gallery => !gallery.id.startsWith(":"))
+                )
+            },
+            onError
         ),
         createGallery: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
-        getGallery: (gallery, callback) => {
-            db.loadGalleryPhotos(gallery, (galleryPhotos) => {
-                const photosByYearMonthDay = groupPhotosByYearMonthDay(galleryPhotos);
-                db.loadGallery(gallery, (data) => {
-                    callback({
+        getGallery: (gallery, onSuccess, onError) => {
+            db.loadGallery(gallery, (data) => {
+                db.loadGalleryPhotos(gallery, (galleryPhotos) => {
+                    const photosByYearMonthDay = groupPhotosByYearMonthDay(galleryPhotos);
+                    onSuccess({
                         ...data,
                         photos: photosByYearMonthDay,
                     });
-                });
-            });
+                }), onError;
+            }, onError);
         },
         updateGallery: (gallery) => { throw CONST.ERROR_NOT_IMPLEMENTED; },
         deleteGallery: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
         linkPhoto: (photo, gallery) => { throw CONST.ERROR_NOT_IMPLEMENTED; },
         unlinkPhoto: (photo, gallery) => { throw CONST.ERROR_NOT_IMPLEMENTED; },
 
-        getAllPhotos: (callback) => db.loadPhotos(callback),
+        getAllPhotos: (onSuccess, onError) => db.loadPhotos(onSuccess, onError),
         createPhoto: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
-        getPhoto: (photo, callback) => db.loadPhoto(photo, callback),
+        getPhoto: (photo, onSuccess, onError) => db.loadPhoto(photo, onSuccess, onError),
         updatePhoto: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
         deletePhoto: () => { throw CONST.ERROR_NOT_IMPLEMENTED; },
     }

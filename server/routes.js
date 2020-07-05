@@ -24,12 +24,16 @@ module.exports = (app, dao) => {
 
 const registerStats = (app, dao) => {
     app.get("/api/stats", (req, res) =>
-        dao.getStatistics(stats => res.json(stats))
+        dao.getStatistics(
+            stats => res.json(stats),
+            err => handleError(res, err))
     );
 }
 const registerGalleries = (app, dao) => {
     app.get("/api/galleries", (req, res) =>
-        dao.getAllGalleries(galleries => res.json(galleries))
+        dao.getAllGalleries(
+            galleries => res.json(galleries),
+            err => handleError(res, err))
     );
     app.post("/api/galleries", (req, res) => {
         // TODO: validate and set content from req.body
@@ -39,7 +43,8 @@ const registerGalleries = (app, dao) => {
     app.get("/api/galleries/:galleryId", (req, res) =>
         dao.getGallery(
             req.params.galleryId,
-            data => res.json(data)
+            data => res.json(data),
+            err => handleError(res, err)
         ));
     app.put("/api/galleries/:galleryId", (req, res) => {
         // TODO: validate and set content from req.body
@@ -53,7 +58,9 @@ const registerGalleries = (app, dao) => {
 }
 const registerPhotos = (app, dao) => {
     app.get("/api/photos/", (req, res) =>
-        dao.getAllPhotos((photos) => res.json(photos))
+        dao.getAllPhotos(
+            photos => res.json(photos),
+            err => handleError(res, err))
     );
     app.post("/api/photos/", (req, res) => {
         // TODO: validate and set content from req.body
@@ -61,7 +68,11 @@ const registerPhotos = (app, dao) => {
         res.json(dao.createPhoto(photo));
     });
     app.get("/api/photos/:photoId", (req, res) => {
-        dao.getPhoto(req.params.photoId, (photo) => res.json(photo));
+        dao.getPhoto(
+            req.params.photoId,
+            photo => res.json(photo),
+            err => handleError(res, err)
+        );
     });
     app.put("/api/photos/:photoId", (req, res) => {
         // TODO: implement: update photo meta
@@ -84,3 +95,7 @@ const registerGalleryPhotos = (app, dao) => {
         res.status(204).end();
     });
 }
+const handleError = (res, err) => {
+    console.log(err);
+    res.status(500).send("Error");
+};
