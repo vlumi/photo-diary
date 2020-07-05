@@ -8,4 +8,6 @@ module.exports = {
 
     ERROR_NOT_IMPLEMENTED: "Not implemented",
     ERROR_NOT_FOUND: "Not found",
+
+    STATS_UNKNOWN: "unknown",
 };

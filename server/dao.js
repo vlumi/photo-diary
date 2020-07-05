@@ -65,35 +65,39 @@ const populateStatistics = (photos, stats) => {
             };
         }
 
-        const dow = new Date(year, month - 1, day).getDay();
-
         timeDistr.byYear[year] = timeDistr.byYear[year] || 0;
+        timeDistr.byYear[year]++;
+
         timeDistr.byYearMonth[year] = timeDistr.byYearMonth[year] || {};
         timeDistr.byYearMonth[year][month] = timeDistr.byYearMonth[year][month] || 0;
-        timeDistr.byMonthOfYear[month] = timeDistr.byMonthOfYear[month] || 0;
-        timeDistr.byDayOfWeek[dow] = timeDistr.byDayOfWeek[dow] || 0;
-        timeDistr.byHourOfDay[hour] = timeDistr.byHourOfDay[hour] || 0;
-
-        timeDistr.byYear[year]++;
         timeDistr.byYearMonth[year][month]++;
+
+        timeDistr.byMonthOfYear[month] = timeDistr.byMonthOfYear[month] || 0;
         timeDistr.byMonthOfYear[month]++;
+
+        const dow = new Date(year, month - 1, day).getDay();
+        timeDistr.byDayOfWeek[dow] = timeDistr.byDayOfWeek[dow] || 0;
         timeDistr.byDayOfWeek[dow]++;
+
+        timeDistr.byHourOfDay[hour] = timeDistr.byHourOfDay[hour] || 0;
         timeDistr.byHourOfDay[hour]++;
+
     };
     const updateExposureDistribution = (expDistr, photo) => {
-        const focalLength = photo.exposure.focalLength;
-        const aperture = photo.exposure.aperture;
-        const shutterSpeed = photo.exposure.shutterSpeed;
-        const iso = photo.exposure.iso;
-
+        const focalLength = photo.exposure.focalLength || CONST.STATS_UNKNOWN;
         expDistr.byFocalLength[focalLength] = expDistr.byFocalLength[focalLength] || 0;
-        expDistr.byAperture[aperture] = expDistr.byAperture[aperture] || 0;
-        expDistr.byShutterSpeed[shutterSpeed] = expDistr.byShutterSpeed[shutterSpeed] || 0;
-        expDistr.byIso[iso] = expDistr.byIso[iso] || 0;
-
         expDistr.byFocalLength[focalLength]++;
+
+        const aperture = photo.exposure.aperture || CONST.STATS_UNKNOWN;
+        expDistr.byAperture[aperture] = expDistr.byAperture[aperture] || 0;
         expDistr.byAperture[aperture]++;
+
+        const shutterSpeed = photo.exposure.shutterSpeed || CONST.STATS_UNKNOWN;
+        expDistr.byShutterSpeed[shutterSpeed] = expDistr.byShutterSpeed[shutterSpeed] || 0;
         expDistr.byShutterSpeed[shutterSpeed]++;
+
+        const iso = photo.exposure.iso || CONST.STATS_UNKNOWN;
+        expDistr.byIso[iso] = expDistr.byIso[iso] || 0;
         expDistr.byIso[iso]++;
     };
     const updateGear = (gear, photo) => {
@@ -104,7 +108,10 @@ const populateStatistics = (photos, stats) => {
             if (make) {
                 return make;
             }
-            return model;
+            if (model) {
+                return model;
+            }
+            return CONST.STATS_UNKNOWN;
         };
 
         const camera = buildName(photo.camera.make, photo.camera.model);
