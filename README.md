@@ -4,71 +4,109 @@ This project is intended to create an online photo gallery, with the photos arra
 
 ## Planned Features
 
-* Photos segmented into galleries
-  + Each photo can be in any number of galleries
-  + Single level -- no nesting
-  + One gallery view at a time
-  + Virtual root configuration based on URL
+- Photos segmented into galleries
+  - Each photo can be in any number of galleries
+  - Single level -- no nesting
+  - One gallery view at a time
+  - Virtual root configuration based on URL
     - Host/domain, path
-  + Virtual galleries for more abstract concepts
+  - Special galleries for more abstract concepts
     - :all includes all photos
     - :none includes all photos that don't belong to any galleries
-* (?) Yearly view
-  + No thumbnails, just numbers/heat for days with photos?
-  + Navigation to previous/next year
-* Monthly view
-  + Photos shown grouped by date, chronologically
-    - Thumbnails
-  + Navigation to previous/next month
-* Single photo view
-  + As layer above current view
-  + Navigation to previous/next photo
-    - Thumbnail preview
-    - Previous/next photo pre-load caching
-    - Automatic switch of monthly view on crossing month boundary
-* Statistics view
-  + Number of photos by year/month
-  + Weekday distribution
-  + Time-of-day distribution
-  + Camera make/model distribution
-  + Exposure value distribution
+- SPA view
+  - Fast transition between views
+    - Pre-load current gallery
+  - Yearly view
+    - No thumbnails, just heat for months/days with photos
+      - Link to open month/day
+    - Navigation to previous/next year
+  - Monthly view
+    - Photos shown grouped by date, chronologically
+      - Thumbnails
+    - Navigation to previous/next month
+  - Single photo view
+    - As layer above current view
+    - Navigation to previous/next photo
+      - Thumbnail preview
+      - Previous/next photo pre-load caching
+      - Automatic switch of monthly view on crossing month boundary
+- Statistics view
+  - Number of photos by year/month
+    - Total and average
+  - Month-of-year distribution
+  - Weekday distribution
+  - Time-of-day distribution
+  - Camera/lens make/model distribution
+  - Exposure value distribution
     - Focal length
     - Aperture
     - Shutter speed
     - ISO
-* Admin view
-  + Add new photos
+  - Author distribution
+  - Country distribution
+- Admin view
+  - Add new photos
     - Pick up from upload directory on the server
-  + Maintain photos
-    - Create thumbnail/normal size
-    - Extract EXIF
-    - Insert into DB
-    - Pick galleries for photos
-* Authentication
-  + User login
-  + OAuth?
-* Authorization
-  + Restricted access to galleries
+    - Metadata extraction from EXIF
+      - Timestamp
+      - Exposure values
+      - Camera/lens
+    - Manual input
+      - Galleries to link
+      - Author
+      - Country
+      - Override any automatically extracted values
+    - Create thumbnail and display size photos
+  - Update photo properties
+    - Update photo metadata
+    - If original file is still found
+      - Metadata extraction from EXIF
+      - Create thumbnail and display size photos
+- Authentication
+  - User login
+    - OAuth?
+  - Session management
+- Authorization
+  - Restricted access to galleries and functionality
     - No access restrictions planned for the actual photo content, which may be in a CDN
-  + Access to admin functions
-  + (?) Multiple access levels
-    - Global admin > gallery admin > user > visitor
-    - Roles
+  - Multiple access levels
+    - Guest
+      - Not logged in
+      - View access to unrestricted galleries
+    - User
+      - View access to unrestricted and granted galleries
+      - View/revoke own sessions
+      - Update own user information
+      - Delete own user
+    - Gallery admin
+      - On top of user access
+      - Admin access to granted galleries
+        - Add, update, unlink photos
+        - Remove photos that are only linked to granted galleries
+        - Grant/revoke user access to granted galleries
+    - Global admin
+      - View and admin access to all galleries
+        - Including special galleries
+      - Create, update, delete galleries
+      - Add, update, link, remove orphaned photos
+      - Add, update, remove users
 
 ## TODO
 
-* Back-end
-  + DB
-  + API
-    - Gallery
-      - Read-only
-      - Modifications by admin
-    - Photo
-      - Read-only
-      - Modifications by admin
-    - Statistics
-* Front-end
-  + Gallery view
-    - Montly
+- Back-end
+  - DB
+    - New schema
+  - API
+    - Authentication
+    - Authorization
+    - Modifications by admin
+      - Gallery
+      - Photo
+      - Gallery-photo linking
+- Front-end
+  - Gallery view
+    - Yearly
+    - Monthly
     - Individual photo
-  + Statistics
+  - Statistics
+  - Admin
