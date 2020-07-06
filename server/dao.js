@@ -59,10 +59,10 @@ module.exports = (db) => {
     deleteGallery: () => {
       onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
-    linkPhoto: (photoId, galleryId, onSuccess, onError) => {
+    linkPhoto: (galleryId, photoId, onSuccess, onError) => {
       onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
-    unlinkPhoto: (photoId, galleryId, onSuccess, onError) => {
+    unlinkPhoto: (galleryId, photoId, onSuccess, onError) => {
       onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
 
