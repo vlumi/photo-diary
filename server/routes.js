@@ -2,6 +2,7 @@ const CONST = require("./constants");
 
 module.exports = (app, dao) => {
   registerAuth(app, dao);
+  registerUser(app, dao);
   registerStats(app, dao);
   registerGalleries(app, dao);
   registerPhotos(app, dao);
@@ -88,9 +89,53 @@ const registerAuth = (app, dao) => {
     );
   });
 };
+const registerUser = (app, dao) => {
+  app.get("/api/user", (request, response) => {
+    // TODO: authorize
+    dao.getUsers(
+      (users) => response.json(users),
+      (error) => handleError(response, error)
+    );
+  });
+  app.get("/api/user/:username", (request, response) => {
+    // TODO: authorize
+    dao.getUser(
+      request.params.username,
+      (user) => response.json(user),
+      (error) => handleError(response, error)
+    );
+  });
+  app.post("/api/user", (request, response) => {
+    // TODO: authorize
+    // TODO: validate and set content from request.body
+    const user = {};
+    dao.createUser(
+      user,
+      (user) => response.json(user),
+      (error) => handleError(response, error)
+    );
+  });
+  app.put("/api/user/:username", (request, response) => {
+    // TODO: authorize
+    // TODO: validate and set content from request.body
+    const user = {};
+    dao.updateUser(
+      user,
+      (user) => response.json(user),
+      (error) => handleError(response, error)
+    );
+  });
+  app.delete("/api/user/:username", (request, response) => {
+    // TODO: authorize
+    dao.deleteUser(
+      request.params.username,
+      () => response.status(204).end(),
+      (error) => handleError(response, error)
+    );
+  });
+};
 const registerStats = (app, dao) => {
   app.get("/api/stats", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     dao.getStatistics(
       (stats) => response.json(stats),
@@ -98,7 +143,6 @@ const registerStats = (app, dao) => {
     );
   });
   app.get("/api/stats/:galleryId", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     dao.getGalleryStatistics(
       request.params.galleryId,
@@ -109,7 +153,6 @@ const registerStats = (app, dao) => {
 };
 const registerGalleries = (app, dao) => {
   app.get("/api/galleries", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     dao.getAllGalleries(
       (galleries) => response.json(galleries),
@@ -117,14 +160,12 @@ const registerGalleries = (app, dao) => {
     );
   });
   app.post("/api/galleries", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     // TODO: validate and set content from request.body
     const gallery = {};
     response.json(dao.createGallery(gallery));
   });
   app.get("/api/galleries/:galleryId", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     dao.getGallery(
       request.params.galleryId,
@@ -133,7 +174,6 @@ const registerGalleries = (app, dao) => {
     );
   });
   app.put("/api/galleries/:galleryId", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     // TODO: validate and set content from request.body
     const gallery = {};
@@ -146,7 +186,6 @@ const registerGalleries = (app, dao) => {
 };
 const registerPhotos = (app, dao) => {
   app.get("/api/photos/", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     dao.getAllPhotos(
       (photos) => response.json(photos),
@@ -154,14 +193,12 @@ const registerPhotos = (app, dao) => {
     );
   });
   app.post("/api/photos/", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     // TODO: validate and set content from request.body
     const photo = {};
     response.json(dao.createPhoto(photo));
   });
   app.get("/api/photos/:photoId", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     dao.getPhoto(
       request.params.photoId,
@@ -170,13 +207,11 @@ const registerPhotos = (app, dao) => {
     );
   });
   app.put("/api/photos/:photoId", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     // TODO: implement: update photo meta
     response.status(501).end();
   });
   app.delete("/api/photos/:photoId", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     dao.deletePhoto(request.params.galleryId);
     response.status(204).end();
@@ -184,7 +219,6 @@ const registerPhotos = (app, dao) => {
 };
 const registerGalleryPhotos = (app, dao) => {
   app.post("/api/galleries/:galleryId", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     // TODO: validate and set content from request.body
     const photo = {};
@@ -192,7 +226,6 @@ const registerGalleryPhotos = (app, dao) => {
     response.status(204).end();
   });
   app.delete("/api/galleries/:galleryId/:photoId", (request, response) => {
-    // TODO: get session
     // TODO: authorize
     dao.unlinkPhoto(photo, gallery);
     response.status(204).end();
@@ -200,5 +233,5 @@ const registerGalleryPhotos = (app, dao) => {
 };
 const handleError = (response, error, code = 500) => {
   console.log(error);
-  response.status(code).json({ error: `Error: ${error}` });
+  response.status(code).json({ error });
 };

@@ -39,18 +39,14 @@ module.exports = (db) => {
         onError(CONST.ERROR_LOGIN);
         return;
       }
-      bcrypt.compare(
-        credentials.password,
-        user.password,
-        (error, result) => {
-          if (error || !result) {
-            onError(CONST.ERROR_LOGIN);
-            return;
-          }
-          const token = createSession(credentials.username);
-          onSuccess(`${credentials.username}=${token}`);
+      bcrypt.compare(credentials.password, user.password, (error, result) => {
+        if (error || !result) {
+          onError(CONST.ERROR_LOGIN);
+          return;
         }
-      );
+        const token = createSession(credentials.username);
+        onSuccess(`${credentials.username}=${token}`);
+      });
     },
     revokeSession: (username, session, onSuccess, onError) => {
       if (username in sessions && session in sessions[username]) {
@@ -65,20 +61,32 @@ module.exports = (db) => {
         onError(CONST.ERROR_LOGIN);
         return;
       }
-      bcrypt.compare(
-        credentials.password,
-        user.password,
-        (error, result) => {
-          if (error || !result) {
-            onError(CONST.ERROR_LOGIN);
-            return;
-          }
-          if (credentials.username in sessions) {
-            delete sessions[credentials.username];
-          }
-          onSuccess();
+      bcrypt.compare(credentials.password, user.password, (error, result) => {
+        if (error || !result) {
+          onError(CONST.ERROR_LOGIN);
+          return;
         }
-      );
+        if (credentials.username in sessions) {
+          delete sessions[credentials.username];
+        }
+        onSuccess();
+      });
+    },
+
+    getUsers: (onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
+    },
+    getUser: (username, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
+    },
+    createUser: (user, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
+    },
+    updateUser: (user, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
+    },
+    deleteUser: (username, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
 
     getStatistics: (onSuccess, onError) => {
