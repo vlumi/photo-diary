@@ -23,44 +23,44 @@ module.exports = (app, dao) => {
 };
 
 const registerStats = (app, dao) => {
-  app.get("/api/stats", (request, response) =>
+  app.get("/api/stats", (request, response) => {
     // TODO: authorize
     dao.getStatistics(
       (stats) => response.json(stats),
       (error) => handleError(response, error)
-    )
-  );
-  app.get("/api/stats/:galleryId", (request, response) =>
+    );
+  });
+  app.get("/api/stats/:galleryId", (request, response) => {
     // TODO: authorize
     dao.getGalleryStatistics(
       request.params.galleryId,
       (stats) => response.json(stats),
       (error) => handleError(response, error)
-    )
-  );
+    );
+  });
 };
 const registerGalleries = (app, dao) => {
-  app.get("/api/galleries", (request, response) =>
+  app.get("/api/galleries", (request, response) => {
     // TODO: authorize
     dao.getAllGalleries(
       (galleries) => response.json(galleries),
       (error) => handleError(response, error)
-    )
-  );
+    );
+  });
   app.post("/api/galleries", (request, response) => {
     // TODO: authorize
     // TODO: validate and set content from request.body
     const gallery = {};
     response.json(dao.createGallery(gallery));
   });
-  app.get("/api/galleries/:galleryId", (request, response) =>
+  app.get("/api/galleries/:galleryId", (request, response) => {
     // TODO: authorize
     dao.getGallery(
       request.params.galleryId,
       (data) => response.json(data),
       (error) => handleError(response, error)
-    )
-  );
+    );
+  });
   app.put("/api/galleries/:galleryId", (request, response) => {
     // TODO: authorize
     // TODO: validate and set content from request.body
@@ -73,13 +73,13 @@ const registerGalleries = (app, dao) => {
   });
 };
 const registerPhotos = (app, dao) => {
-  app.get("/api/photos/", (request, response) =>
+  app.get("/api/photos/", (request, response) => {
     // TODO: authorize
     dao.getAllPhotos(
       (photos) => response.json(photos),
       (error) => handleerroor(response, error)
-    )
-  );
+    );
+  });
   app.post("/api/photos/", (request, response) => {
     // TODO: authorize
     // TODO: validate and set content from request.body
