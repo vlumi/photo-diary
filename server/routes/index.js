@@ -5,11 +5,10 @@ const handleError = (response, error) => {
   response.status(500).json({ error: error });
 };
 
-const API_ROOT = "/api";
-const routesStat = require("./stat")(API_ROOT, handleError);
-const routesGallery = require("./gallery")(API_ROOT, handleError);
-const routesPhoto = require("./photo")(API_ROOT, handleError);
-const routesGalleryPhoto = require("./gallery-photo")(API_ROOT, handleError);
+const routesStat = require("./stat")(CONST.API_ROOT, handleError);
+const routesGallery = require("./gallery")(CONST.API_ROOT, handleError);
+const routesPhoto = require("./photo")(CONST.API_ROOT, handleError);
+const routesGalleryPhoto = require("./gallery-photo")(CONST.API_ROOT, handleError);
 
 module.exports = (app, dao) => {
   routesStat(app, dao);

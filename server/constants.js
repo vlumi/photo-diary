@@ -1,4 +1,5 @@
 const DEFAULT_PORT = 4200;
+const API_ROOT = "/api";
 
 const ERROR_NOT_IMPLEMENTED = "Not implemented";
 const ERROR_NOT_FOUND = "Not found";
@@ -28,6 +29,7 @@ const SPECIAL_GALLERIES = {
 
 module.exports = {
   DEFAULT_PORT,
+  API_ROOT,
 
   ERROR_NOT_IMPLEMENTED,
   ERROR_NOT_FOUND,
