@@ -6,14 +6,14 @@ const handleError = (response, error) => {
 };
 
 const API_ROOT = "/api";
-const routesAuth = require("./auth")(API_ROOT);
+const routesSession = require("./session")(API_ROOT, handleError);
 const routesStat = require("./stat")(API_ROOT, handleError);
 const routesGallery = require("./gallery")(API_ROOT, handleError);
 const routesPhoto = require("./photo")(API_ROOT, handleError);
 const routesGalleryPhoto = require("./gallery-photo")(API_ROOT, handleError);
 
 module.exports = (app, dao) => {
-  routesAuth(app, dao);
+  routesSession(app, dao);
   routesStat(app, dao);
   routesGallery(app, dao);
   routesPhoto(app, dao);

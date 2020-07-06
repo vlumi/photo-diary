@@ -1,4 +1,4 @@
-module.exports = (root) => {
+module.exports = (root, handleError) => {
   const endPoint = `${root}/session`;
   return (app, dao) => {
     app.post(endPoint, (request, response) => {
