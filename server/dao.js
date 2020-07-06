@@ -22,8 +22,8 @@ module.exports = (db) => {
         onSuccess([...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)]);
       }, onError);
     },
-    createGallery: () => {
-      throw CONST.ERROR_NOT_IMPLEMENTED;
+    createGallery: (gallery, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
     getGallery: (galleryId, onSuccess, onError) => {
       const loadGalleryPhotos = (gallery) => {
@@ -53,30 +53,30 @@ module.exports = (db) => {
         );
       }
     },
-    updateGallery: (gallery) => {
-      throw CONST.ERROR_NOT_IMPLEMENTED;
+    updateGallery: (gallery, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
     deleteGallery: () => {
-      throw CONST.ERROR_NOT_IMPLEMENTED;
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
-    linkPhoto: (photo, gallery) => {
-      throw CONST.ERROR_NOT_IMPLEMENTED;
+    linkPhoto: (photoId, galleryId, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
-    unlinkPhoto: (photo, gallery) => {
-      throw CONST.ERROR_NOT_IMPLEMENTED;
+    unlinkPhoto: (photoId, galleryId, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
 
     getAllPhotos: (onSuccess, onError) => db.loadPhotos(onSuccess, onError),
     createPhoto: () => {
-      throw CONST.ERROR_NOT_IMPLEMENTED;
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
     getPhoto: (photoId, onSuccess, onError) =>
       db.loadPhoto(photoId, onSuccess, onError),
-    updatePhoto: () => {
-      throw CONST.ERROR_NOT_IMPLEMENTED;
+    updatePhoto: (photo, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
-    deletePhoto: () => {
-      throw CONST.ERROR_NOT_IMPLEMENTED;
+    deletePhoto: (photoId, onSuccess, onError) => {
+      onError(CONST.ERROR_NOT_IMPLEMENTED);
     },
   };
 };
