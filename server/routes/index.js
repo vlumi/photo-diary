@@ -2,7 +2,7 @@ const CONST = require("../constants");
 
 const handleError = (response, error) => {
   console.log(error);
-  response.status(500).json({ error: `Error: ${error}` });
+  response.status(500).json({ error: error });
 };
 
 const API_ROOT = "/api";
