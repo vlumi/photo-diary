@@ -1,0 +1,7 @@
+POST http://localhost:4200/api/revoke-all
+Content-type: application/json
+
+{
+    "username": "admin",
+    "password": "foobar"
+}

@@ -1,15 +1,17 @@
 const CONST = require("./constants");
-const DB_DRIVERS = require("./db/drivers")
+const DB_DRIVERS = require("./db/drivers");
 
 const express = require("express");
-const morgan = require("morgan");
-const compression = require("compression");
 const cors = require("cors");
+const compression = require("compression");
+const cookieParser = require("cookie-parser");
+const morgan = require("morgan");
 
 const app = express();
 app.use(cors());
 app.use(compression());
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static("build"));
 app.use(morgan("tiny"));
 

@@ -24,16 +24,68 @@ module.exports = (app, dao) => {
 };
 
 const registerAuth = (app, dao) => {
-  app.post("api/login", (request, response) => {
-    // TODO: authenticate
-    // TODO: create session token
-    // TODO: set token to cookie
-    // TODO: return token
+  app.post("/api/login", (request, response) => {
+    const credentials = {
+      username: request.body.username,
+      password: request.body.password,
+    };
+    if (!credentials.username || !credentials.password) {
+      handleError(response, CONST.ERROR_LOGIN, 400);
+      return;
+    }
+    dao.authenticateUser(
+      credentials,
+      (token) => {
+        console.log(`User "${credentials.username}" logged in successfully.`);
+        const encodedToken = Buffer.from(token).toString("base64");
+        response.cookie("token", encodedToken);
+        response.status(204).end();
+      },
+      (error) => {
+        handleError(response, error, 401);
+      }
+    );
   });
-  app.get("api/logout", (request, response) => {
-    // TODO: get session
-    // TODO: delete session
-    // TODO: clear token
+  app.delete("/api/logout", (request, response) => {
+    const encodedToken = request.cookies["token"];
+    const token = new Buffer(encodedToken, "base64").toString("ascii");
+    const [username, session] = token.split("=", 2);
+    if (!username || !session) {
+      response.clearCookie("token");
+      response.status(204).end();
+    }
+    dao.revokeSession(
+      username,
+      session,
+      () => {
+        response.clearCookie("token");
+        response.status(204).end();
+      },
+      (error) => {
+        response.clearCookie("token");
+        handleError(reponse, error);
+      }
+    );
+  });
+  app.post("/api/revoke-all", (request, response) => {
+    const credentials = {
+      username: request.body.username,
+      password: request.body.password,
+    };
+    if (!credentials.username || !credentials.password) {
+      handleError(response, CONST.ERROR_LOGIN, 400);
+      return;
+    }
+    dao.revokeAllSessions(
+      credentials,
+      () => {
+        response.clearCookie("token");
+        response.status(204).end();
+      },
+      (error) => {
+        handleError(response, error, 401);
+      }
+    );
   });
 };
 const registerStats = (app, dao) => {
@@ -146,7 +198,7 @@ const registerGalleryPhotos = (app, dao) => {
     response.status(204).end();
   });
 };
-const handleError = (response, error) => {
+const handleError = (response, error, code = 500) => {
   console.log(error);
-  response.status(500).json({ error: `Error: ${error}` });
+  response.status(code).json({ error: `Error: ${error}` });
 };

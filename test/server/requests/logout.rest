@@ -1,0 +1,3 @@
+DELETE http://localhost:4200/api/logout
+Content-type: application/json
+Cookie: token=YWRtaW49MmNlMWFkMDgtMzY4Ni00Y2EwLTliMzEtYzQxYTRjZjhjMDFl; Path=/

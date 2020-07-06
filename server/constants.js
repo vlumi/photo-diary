@@ -2,6 +2,7 @@ const DEFAULT_PORT = 4200;
 
 const ERROR_NOT_IMPLEMENTED = "Not implemented";
 const ERROR_NOT_FOUND = "Not found";
+const ERROR_LOGIN = "Login failed";
 
 const STATS_UNKNOWN = "unknown";
 
@@ -31,6 +32,7 @@ module.exports = {
 
   ERROR_NOT_IMPLEMENTED,
   ERROR_NOT_FOUND,
+  ERROR_LOGIN,
 
   STATS_UNKNOWN,
 

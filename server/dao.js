@@ -1,7 +1,86 @@
 const CONST = require("./constants");
 
+const { v4: uuidv4 } = require("uuid");
+const bcrypt = require("bcrypt");
+
+const sessions = {};
+
+// TODO: to db
+const DUMMY_USERS = {
+  admin: {
+    password: "foobar",
+  },
+};
+const dummyGetUser = (username) => DUMMY_USERS[username];
+{
+  const saltRounds = 10;
+  bcrypt.hash("foobar", saltRounds, function (err, hash) {
+    DUMMY_USERS["admin"].password = hash;
+  });
+}
+
+const createSession = (username) => {
+  const session = uuidv4();
+  sessions[username] = sessions[username] || {};
+  const now = new Date().toISOString();
+  sessions[username][session] = {
+    created: now,
+    updated: now,
+  };
+  return session;
+};
+
 module.exports = (db) => {
   return {
+    authenticateUser: (credentials, onSuccess, onError) => {
+      // TODO: from db
+      const user = dummyGetUser(credentials.username);
+      if (!user) {
+        onError(CONST.ERROR_LOGIN);
+        return;
+      }
+      bcrypt.compare(
+        credentials.password,
+        user.password,
+        (error, result) => {
+          if (error || !result) {
+            onError(CONST.ERROR_LOGIN);
+            return;
+          }
+          const token = createSession(credentials.username);
+          onSuccess(`${credentials.username}=${token}`);
+        }
+      );
+    },
+    revokeSession: (username, session, onSuccess, onError) => {
+      if (username in sessions && session in sessions[username]) {
+        delete sessions[username][session];
+      }
+      onSuccess();
+    },
+    revokeAllSessions: (credentials, onSuccess, onError) => {
+      // TODO: from db
+      const user = dummyGetUser(credentials.username);
+      if (!user) {
+        onError(CONST.ERROR_LOGIN);
+        return;
+      }
+      bcrypt.compare(
+        credentials.password,
+        user.password,
+        (error, result) => {
+          if (error || !result) {
+            onError(CONST.ERROR_LOGIN);
+            return;
+          }
+          if (credentials.username in sessions) {
+            delete sessions[credentials.username];
+          }
+          onSuccess();
+        }
+      );
+    },
+
     getStatistics: (onSuccess, onError) => {
       db.loadPhotos((photos) => {
         onSuccess(collectStatistics(Object.values(photos)));
