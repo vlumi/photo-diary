@@ -1,4 +1,4 @@
-const CONST = require("./constants");
+const CONST = require("../constants");
 
 module.exports = (app, dao) => {
   registerStats(app, dao);
