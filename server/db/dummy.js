@@ -5,6 +5,13 @@ const CONST = require("../constants");
  */
 module.exports = () => {
   return {
+    loadUserAccessControl: (username, onSuccess, onError) => {
+      if (username in dummyAccessControl) {
+        onSuccess(dummyAccessControl[username]);
+      } else {
+        onError(CONST.ERROR_NOT_FOUND);
+      }
+    },
     loadUser: (username, onSuccess, onError) => {
       if (username in dummyUsers) {
         onSuccess(dummyUsers[username]);
@@ -69,7 +76,43 @@ const dummyUsers = {
   admin: {
     password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
   },
+  gallery1Admin: {
+    password: "",
+  },
+  gallery1User: {
+    password: "",
+  },
+  gallery12User: {
+    password: "",
+  },
+  plainUser: {
+    password: "",
+  },
 };
+const dummyAccessControl = {
+  admin: {
+    [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_ADMIN,
+  },
+  gallery1Admin: {
+    [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+    gallery1: CONST.ACCESS_ADMIN,
+  },
+  gallery1User: {
+    gallery1: CONST.ACCESS_VIEW,
+  },
+  gallery12User: {
+    gallery1: CONST.ACCESS_VIEW,
+    gallery2: CONST.ACCESS_VIEW,
+  },
+  plainUser: {
+    [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+  },
+  guest: {},
+};
+
+const dummyAdmins = ["admin"];
+const dummyGalleryAdmins = {};
+const dummyGalleryUsers = {};
 const dummyGalleries = {
   gallery1: {
     id: "gallery1",

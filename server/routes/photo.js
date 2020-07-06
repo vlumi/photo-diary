@@ -1,9 +1,14 @@
+const CONST = require("../constants");
+
 module.exports = (root, handleError) => {
   const resource = `${root}/photo`;
-  return (app, dao) => {
+
+  return (app, db) => {
+    const photoManager = require("../manager/photo")(db);
+
     app.get(resource, (request, response) => {
       // TODO: authorize request.session.username
-      dao.getAllPhotos(
+      photoManager.getAllPhotos(
         (photos) => response.json(photos),
         (error) => handleerroor(response, error)
       );
@@ -12,11 +17,11 @@ module.exports = (root, handleError) => {
       // TODO: authorize request.session.username
       // TODO: validate and set content from request.body
       const photo = {};
-      response.json(dao.createPhoto(photo));
+      response.json(photoManager.createPhoto(photo));
     });
     app.get(`${resource}/:photoId`, (request, response) => {
       // TODO: authorize request.session.username
-      dao.getPhoto(
+      photoManager.getPhoto(
         request.params.photoId,
         (photo) => response.json(photo),
         (error) => handleError(response, error)
@@ -29,7 +34,7 @@ module.exports = (root, handleError) => {
     });
     app.delete(`${resource}/:photoId`, (request, response) => {
       // TODO: authorize request.session.username
-      dao.deletePhoto(request.params.galleryId);
+      photoManager.deletePhoto(request.params.galleryId);
       response.status(204).end();
     });
   };

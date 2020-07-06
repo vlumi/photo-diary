@@ -1,9 +1,14 @@
+const CONST = require("../constants");
+
 module.exports = (root, handleError) => {
   const resource = `${root}/gallery`;
-  return (app, dao) => {
+
+  return (app, db) => {
+    const galleryManager = require("../manager/gallery")(db);
+
     app.get(resource, (request, response) => {
       // TODO: authorize request.session.username
-      dao.getAllGalleries(
+      galleryManager.getAllGalleries(
         (galleries) => response.json(galleries),
         (error) => handleError(response, error)
       );
@@ -12,11 +17,11 @@ module.exports = (root, handleError) => {
       // TODO: authorize request.session.username
       // TODO: validate and set content from request.body
       const gallery = {};
-      response.json(dao.createGallery(gallery));
+      response.json(galleryManager.createGallery(gallery));
     });
     app.get(`${resource}/:galleryId`, (request, response) => {
       // TODO: authorize request.session.username
-      dao.getGallery(
+      galleryManager.getGallery(
         request.params.galleryId,
         (data) => response.json(data),
         (error) => handleError(response, error)
@@ -26,11 +31,11 @@ module.exports = (root, handleError) => {
       // TODO: authorize request.session.username
       // TODO: validate and set content from request.body
       const gallery = {};
-      response.json(dao.updateGallery(gallery));
+      response.json(galleryManager.updateGallery(gallery));
     });
     app.delete(`${resource}/:galleryId`, (request, response) => {
       // TODO: authorize request.session.username
-      dao.deleteGallery(request.params.galleryId);
+      galleryManager.deleteGallery(request.params.galleryId);
       response.status(204).end();
     });
   };

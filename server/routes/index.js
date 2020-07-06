@@ -1,6 +1,6 @@
 const CONST = require("../constants");
 
-module.exports = (app, dao, handleError) => {
+module.exports = (app, db, handleError) => {
   const routesSession = require("./session")(CONST.API_ROOT, handleError);
   const routesStat = require("./stat")(CONST.API_ROOT, handleError);
   const routesGallery = require("./gallery")(CONST.API_ROOT, handleError);
@@ -10,11 +10,11 @@ module.exports = (app, dao, handleError) => {
     handleError
   );
 
-  routesSession(app, dao);
-  routesStat(app, dao);
-  routesGallery(app, dao);
-  routesPhoto(app, dao);
-  routesGalleryPhoto(app, dao);
+  routesSession(app, db);
+  routesStat(app, db);
+  routesGallery(app, db);
+  routesPhoto(app, db);
+  routesGalleryPhoto(app, db);
 
   app.use((request, response) => {
     response.status(404).send({ error: CONST.ERROR_NOT_FOUND });

@@ -13,13 +13,15 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static("build"));
 
-const dbDriver = process.env.DB_DRIVER;
-if (!dbDriver) {
-  throw "The DB_DRIVER environment variable must be set.";
-}
-const dbOptions = process.env.DB_OPTS;
-const db = DB_DRIVERS[dbDriver](dbOptions);
-const dao = require("./dao")(db);
+const connectDb = () => {
+  const dbDriver = process.env.DB_DRIVER;
+  if (!dbDriver) {
+    throw "The DB_DRIVER environment variable must be set.";
+  }
+  const dbOptions = process.env.DB_OPTS;
+  return DB_DRIVERS[dbDriver](dbOptions);
+};
+const db = connectDb();
 
 const handleError = (response, error) => {
   if (CONST.DEBUG) console.log(error);
@@ -36,9 +38,9 @@ const handleError = (response, error) => {
   }
 };
 
-require("./session")(app, dao, handleError);
+require("./session-filter")(app, db, handleError);
 require("./logger")(app);
-require("./routes")(app, dao, handleError);
+require("./routes")(app, db, handleError);
 
 const PORT = process.env.PORT || CONST.DEFAULT_PORT;
 app.listen(PORT, () => {

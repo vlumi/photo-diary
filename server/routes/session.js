@@ -2,7 +2,10 @@ const CONST = require("../constants");
 
 module.exports = (root, handleError) => {
   const endPoint = `${root}/session`;
-  return (app, dao) => {
+
+  return (app, db) => {
+    const sessionManager = require("../manager/session")(db);
+
     app.post(endPoint, (request, response) => {
       const credentials = {
         username: request.body.username,
@@ -12,7 +15,7 @@ module.exports = (root, handleError) => {
         handleError(response, CONST.ERROR_LOGIN, 400);
         return;
       }
-      dao.authenticateUser(
+      sessionManager.authenticateUser(
         credentials,
         (session, token) => {
           if (CONST.DEBUG)
@@ -32,7 +35,7 @@ module.exports = (root, handleError) => {
       );
     });
     app.delete(endPoint, (request, response) => {
-      dao.revokeSession(
+      sessionManager.revokeSession(
         request.cookies["token"],
         () => {
           response.clearCookie("token");
@@ -53,7 +56,7 @@ module.exports = (root, handleError) => {
         handleError(response, CONST.ERROR_LOGIN, 400);
         return;
       }
-      dao.revokeAllSessions(
+      sessionManager.revokeAllSessions(
         credentials,
         () => {
           response.clearCookie("token");

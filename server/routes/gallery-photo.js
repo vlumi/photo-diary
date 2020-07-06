@@ -1,11 +1,16 @@
+const CONST = require("../constants");
+
 module.exports = (root, handleError) => {
   const resource = `${root}/gallery-photo`;
-  return (app, dao) => {
+
+  return (app, db) => {
+    const galleryPhotoManager = require("../manager/gallery-photo")(db);
+
     app.put(`${resource}/:galleryId/:photoId`, (request, response) => {
       // TODO: authorize request.session.username
       // TODO: validate and set content from request.body
       const photo = {};
-      dao.linkPhoto(
+      galleryPhotoManager.linkPhoto(
         galleryId,
         photoId,
         () => {
@@ -18,7 +23,7 @@ module.exports = (root, handleError) => {
     });
     app.delete(`${resource}/:galleryId/:photoId`, (request, response) => {
       // TODO: authorize request.session.username
-      dao.unlinkPhoto(
+      galleryPhotoManager.unlinkPhoto(
         galleryId,
         photoId,
         () => {

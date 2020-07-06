@@ -9,12 +9,17 @@ const ERROR_NOT_IMPLEMENTED = "Not implemented";
 const ERROR_NOT_FOUND = "Not found";
 const ERROR_LOGIN = "Login failed";
 const ERROR_SESSION_EXPIRED = "Session expired";
+const ERROR_ACCESS = "Access denied";
 
 const STATS_UNKNOWN = "unknown";
 
 const SPECIAL_GALLERY_PREFIX = ":";
 const SPECIAL_GALLERY_ALL = `${SPECIAL_GALLERY_PREFIX}all`;
 const SPECIAL_GALLERY_NONE = `${SPECIAL_GALLERY_PREFIX}none`;
+
+const ACCESS_ADMIN = 2;
+const ACCESS_VIEW = 1;
+const ACCESS_NONE = 0;
 
 const SPECIAL_GALLERIES = {
   [SPECIAL_GALLERY_ALL]: {
@@ -43,6 +48,7 @@ module.exports = {
   ERROR_NOT_FOUND,
   ERROR_LOGIN,
   ERROR_SESSION_EXPIRED,
+  ERROR_ACCESS,
 
   STATS_UNKNOWN,
 
@@ -50,4 +56,8 @@ module.exports = {
   SPECIAL_GALLERY_ALL,
   SPECIAL_GALLERY_NONE,
   SPECIAL_GALLERIES,
+
+  ACCESS_ADMIN,
+  ACCESS_VIEW,
+  ACCESS_NONE,
 };
