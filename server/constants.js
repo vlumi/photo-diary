@@ -1,9 +1,14 @@
+const DEBUG = false;
+
 const DEFAULT_PORT = 4200;
+const SESSION_LENGTH_MS = 1000 * 60 * 60 * 24 * 7;
+
 const API_ROOT = "/api";
 
 const ERROR_NOT_IMPLEMENTED = "Not implemented";
 const ERROR_NOT_FOUND = "Not found";
 const ERROR_LOGIN = "Login failed";
+const ERROR_SESSION_EXPIRED = "Session expired";
 
 const STATS_UNKNOWN = "unknown";
 
@@ -30,11 +35,14 @@ const SPECIAL_GALLERIES = {
 
 module.exports = {
   DEFAULT_PORT,
+  SESSION_LENGTH_MS,
+
   API_ROOT,
 
   ERROR_NOT_IMPLEMENTED,
   ERROR_NOT_FOUND,
   ERROR_LOGIN,
+  ERROR_SESSION_EXPIRED,
 
   STATS_UNKNOWN,
 

@@ -5,7 +5,6 @@ const express = require("express");
 const cors = require("cors");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
-const morgan = require("morgan");
 
 const app = express();
 app.use(cors());
@@ -13,7 +12,6 @@ app.use(compression());
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static("build"));
-app.use(morgan("tiny"));
 
 const dbDriver = process.env.DB_DRIVER;
 if (!dbDriver) {
@@ -22,7 +20,25 @@ if (!dbDriver) {
 const dbOptions = process.env.DB_OPTS;
 const db = DB_DRIVERS[dbDriver](dbOptions);
 const dao = require("./dao")(db);
-const routes = require("./routes")(app, dao);
+
+const handleError = (response, error) => {
+  if (CONST.DEBUG) console.log(error);
+  switch (error) {
+    case CONST.ERROR_SESSION_EXPIRED:
+      // TODO: notify user, but ok...
+      break;
+    case CONST.ERROR_NOT_IMPLEMENTED:
+    case CONST.ERROR_NOT_FOUND:
+    case CONST.ERROR_LOGIN:
+    default:
+      response.status(500).json({ error: error });
+      break;
+  }
+};
+
+require("./session")(app, dao, handleError);
+require("./logger")(app);
+require("./routes")(app, dao, handleError);
 
 const PORT = process.env.PORT || CONST.DEFAULT_PORT;
 app.listen(PORT, () => {

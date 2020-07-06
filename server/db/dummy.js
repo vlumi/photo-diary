@@ -5,6 +5,21 @@ const CONST = require("../constants");
  */
 module.exports = () => {
   return {
+    loadUser: (username, onSuccess, onError) => {
+      if (username in dummyUsers) {
+        onSuccess(dummyUsers[username]);
+      } else {
+        onError(CONST.ERROR_NOT_FOUND);
+      }
+    },
+    // TODO: something like this for create/update user to hash the password:
+    // const dummyGetUser = (username) => DUMMY_USERS[username];
+    // {
+    //   const saltRounds = 10;
+    //   bcrypt.hash("foobar", saltRounds, function (err, hash) {
+    //     DUMMY_USERS["admin"].password = hash;
+    //   });
+    // }
     loadGalleries: (onSuccess, onError) =>
       onSuccess(Object.values(dummyGalleries).sort()),
     loadGallery: (galleryId, onSuccess, onError) => {
@@ -50,6 +65,11 @@ module.exports = () => {
   };
 };
 
+const dummyUsers = {
+  admin: {
+    password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+  },
+};
 const dummyGalleries = {
   gallery1: {
     id: "gallery1",

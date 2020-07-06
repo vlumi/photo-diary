@@ -1,3 +1,5 @@
+const CONST = require("../constants");
+
 module.exports = (root, handleError) => {
   const endPoint = `${root}/session`;
   return (app, dao) => {
@@ -12,9 +14,15 @@ module.exports = (root, handleError) => {
       }
       dao.authenticateUser(
         credentials,
-        (token) => {
-          console.log(`User "${credentials.username}" logged in successfully.`);
+        (session, token) => {
+          if (CONST.DEBUG)
+            console.log(
+              `User "${credentials.username}" logged in successfully.`
+            );
+
+          request.session = session;
           const encodedToken = Buffer.from(token).toString("base64");
+          // TODO: set cookie expiration
           response.cookie("token", encodedToken);
           response.status(204).end();
         },
@@ -24,16 +32,8 @@ module.exports = (root, handleError) => {
       );
     });
     app.delete(endPoint, (request, response) => {
-      const encodedToken = request.cookies["token"];
-      const token = Buffer.from(encodedToken, "base64").toString("ascii");
-      const [username, session] = token.split("=", 2);
-      if (!username || !session) {
-        response.clearCookie("token");
-        response.status(204).end();
-      }
       dao.revokeSession(
-        username,
-        session,
+        request.cookies["token"],
         () => {
           response.clearCookie("token");
           response.status(204).end();

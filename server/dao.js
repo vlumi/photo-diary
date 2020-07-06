@@ -2,75 +2,93 @@ const CONST = require("./constants");
 
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
-
-const sessions = {};
-
-// TODO: to db
-const DUMMY_USERS = {
-  admin: {
-    password: "foobar",
-  },
-};
-const dummyGetUser = (username) => DUMMY_USERS[username];
-{
-  const saltRounds = 10;
-  bcrypt.hash("foobar", saltRounds, function (err, hash) {
-    DUMMY_USERS["admin"].password = hash;
-  });
-}
-
-const createSession = (username) => {
-  const session = uuidv4();
-  sessions[username] = sessions[username] || {};
-  const now = new Date().toISOString();
-  sessions[username][session] = {
-    created: now,
-    updated: now,
-  };
-  return session;
-};
+const { on } = require("nodemon");
 
 module.exports = (db) => {
-  return {
-    authenticateUser: (credentials, onSuccess, onError) => {
-      // TODO: from db
-      const user = dummyGetUser(credentials.username);
-      if (!user) {
-        onError(CONST.ERROR_LOGIN);
-        return;
-      }
+  const sessions = {};
+
+  const checkUserPassword = (credentials, onSuccess, onError) => {
+    const verifyPassword = (user) =>
       bcrypt.compare(credentials.password, user.password, (error, result) => {
         if (error || !result) {
           onError(CONST.ERROR_LOGIN);
-          return;
+        } else {
+          onSuccess();
         }
-        const token = createSession(credentials.username);
-        onSuccess(`${credentials.username}=${token}`);
       });
+
+    db.loadUser(
+      credentials.username,
+      (user) => verifyPassword(user),
+      (error) => onError(CONST.ERROR_LOGIN)
+    );
+  };
+  const decodeSessionToken = (encodedToken) => {
+    const token = Buffer.from(encodedToken, "base64").toString("ascii");
+    const [username, session] = token.split("=", 2);
+    return [username, session];
+  };
+
+  return {
+    authenticateUser: (credentials, onSuccess, onError) => {
+      const createSession = (username) => {
+        const token = uuidv4();
+        sessions[username] = sessions[username] || {};
+        const now = new Date();
+        sessions[username][token] = {
+          username,
+          created: now,
+          updated: now,
+        };
+        return token;
+      };
+      const handleSuccess = () => {
+        const token = createSession(credentials.username);
+        if (CONST.DEBUG) console.log(sessions);
+        onSuccess(
+          sessions[credentials.username][token],
+          `${credentials.username}=${token}`
+        );
+      };
+      checkUserPassword(credentials, handleSuccess, onError);
     },
-    revokeSession: (username, session, onSuccess, onError) => {
+    revokeSession: (encodedToken, onSuccess, onError) => {
+      const [username, session] = decodeSessionToken(encodedToken);
+      if (!username || !session) {
+        onSuccess();
+        return;
+      }
+
       if (username in sessions && session in sessions[username]) {
         delete sessions[username][session];
       }
+      if (CONST.DEBUG) console.log(sessions);
       onSuccess();
     },
     revokeAllSessions: (credentials, onSuccess, onError) => {
-      // TODO: from db
-      const user = dummyGetUser(credentials.username);
-      if (!user) {
-        onError(CONST.ERROR_LOGIN);
-        return;
-      }
-      bcrypt.compare(credentials.password, user.password, (error, result) => {
-        if (error || !result) {
-          onError(CONST.ERROR_LOGIN);
-          return;
-        }
+      const handleSuccess = () => {
         if (credentials.username in sessions) {
           delete sessions[credentials.username];
         }
+        if (CONST.DEBUG) console.log(sessions);
         onSuccess();
-      });
+      };
+      checkUserPassword(credentials, handleSuccess, onError);
+    },
+    verifySession: (encodedToken, onSuccess, onError) => {
+      const [username, session] = decodeSessionToken(encodedToken);
+      if (!(username in sessions) || !(session in sessions[username])) {
+        onError(CONST.ERROR_LOGIN);
+        return;
+      }
+      const now = new Date();
+      if (sessions[username][session].updated < now - CONST.SESSION_LENGTH_MS) {
+        onError(CONST.ERROR_SESSION_EXPIRED);
+      } else {
+        sessions[username][session].updated = now;
+        if (CONST.DEBUG) console.log(sessions);
+        onSuccess(sessions[username][session]);
+      }
     },
 
     getUsers: (onSuccess, onError) => {

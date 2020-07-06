@@ -1,17 +1,15 @@
 const CONST = require("../constants");
 
-const handleError = (response, error) => {
-  console.log(error);
-  response.status(500).json({ error: error });
-};
+module.exports = (app, dao, handleError) => {
+  const routesSession = require("./session")(CONST.API_ROOT, handleError);
+  const routesStat = require("./stat")(CONST.API_ROOT, handleError);
+  const routesGallery = require("./gallery")(CONST.API_ROOT, handleError);
+  const routesPhoto = require("./photo")(CONST.API_ROOT, handleError);
+  const routesGalleryPhoto = require("./gallery-photo")(
+    CONST.API_ROOT,
+    handleError
+  );
 
-const routesSession = require("./session")(CONST.API_ROOT, handleError);
-const routesStat = require("./stat")(CONST.API_ROOT, handleError);
-const routesGallery = require("./gallery")(CONST.API_ROOT, handleError);
-const routesPhoto = require("./photo")(CONST.API_ROOT, handleError);
-const routesGalleryPhoto = require("./gallery-photo")(CONST.API_ROOT, handleError);
-
-module.exports = (app, dao) => {
   routesSession(app, dao);
   routesStat(app, dao);
   routesGallery(app, dao);

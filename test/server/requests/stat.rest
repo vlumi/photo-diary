@@ -1,0 +1,3 @@
+GET http://localhost:4200/api/stat
+Content-type: application/json
+Cookie: token=YWRtaW49N2VmMDZmNzctZmVkOS00MWQwLTk1NzktMmJjNTMzYTY0OTg5; Path=/
