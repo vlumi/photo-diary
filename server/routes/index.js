@@ -1,7 +1,10 @@
 const CONST = require("../constants");
 
+const API_ROOT = "/api";
+const routesAuth = require("./auth")(API_ROOT);
+
 module.exports = (app, dao) => {
-  registerAuth(app, dao);
+  routesAuth(app, dao);
   registerUser(app, dao);
   registerStats(app, dao);
   registerGalleries(app, dao);
@@ -24,71 +27,6 @@ module.exports = (app, dao) => {
   });
 };
 
-const registerAuth = (app, dao) => {
-  app.post("/api/login", (request, response) => {
-    const credentials = {
-      username: request.body.username,
-      password: request.body.password,
-    };
-    if (!credentials.username || !credentials.password) {
-      handleError(response, CONST.ERROR_LOGIN, 400);
-      return;
-    }
-    dao.authenticateUser(
-      credentials,
-      (token) => {
-        console.log(`User "${credentials.username}" logged in successfully.`);
-        const encodedToken = Buffer.from(token).toString("base64");
-        response.cookie("token", encodedToken);
-        response.status(204).end();
-      },
-      (error) => {
-        handleError(response, error, 401);
-      }
-    );
-  });
-  app.delete("/api/logout", (request, response) => {
-    const encodedToken = request.cookies["token"];
-    const token = new Buffer(encodedToken, "base64").toString("ascii");
-    const [username, session] = token.split("=", 2);
-    if (!username || !session) {
-      response.clearCookie("token");
-      response.status(204).end();
-    }
-    dao.revokeSession(
-      username,
-      session,
-      () => {
-        response.clearCookie("token");
-        response.status(204).end();
-      },
-      (error) => {
-        response.clearCookie("token");
-        handleError(reponse, error);
-      }
-    );
-  });
-  app.post("/api/revoke-all", (request, response) => {
-    const credentials = {
-      username: request.body.username,
-      password: request.body.password,
-    };
-    if (!credentials.username || !credentials.password) {
-      handleError(response, CONST.ERROR_LOGIN, 400);
-      return;
-    }
-    dao.revokeAllSessions(
-      credentials,
-      () => {
-        response.clearCookie("token");
-        response.status(204).end();
-      },
-      (error) => {
-        handleError(response, error, 401);
-      }
-    );
-  });
-};
 const registerUser = (app, dao) => {
   app.get("/api/user", (request, response) => {
     // TODO: authorize

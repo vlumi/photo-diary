@@ -1,4 +1,4 @@
-POST http://localhost:4200/api/login
+POST http://localhost:4200/api/session
 Content-type: application/json
 
 {
