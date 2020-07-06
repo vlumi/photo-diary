@@ -17,10 +17,11 @@ module.exports = (db) => {
       );
     },
 
-    getAllGalleries: (onSuccess, onError) =>
+    getAllGalleries: (onSuccess, onError) => {
       db.loadGalleries((galleries) => {
         onSuccess([...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)]);
-      }, onError),
+      }, onError);
+    },
     createGallery: () => {
       throw CONST.ERROR_NOT_IMPLEMENTED;
     },

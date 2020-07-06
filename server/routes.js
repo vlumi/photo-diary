@@ -7,113 +7,119 @@ module.exports = (app, dao) => {
   registerGalleryPhotos(app, dao);
 
   app.use((request, response) => {
-    response.status(404).send({ error: "unknown endpoint" });
+    response.status(404).send({ error: CONST.ERROR_NOT_FOUND });
   });
-  app.use(function (error, req, res, next) {
+  app.use(function (error, request, response, next) {
     console.error(error);
     switch (error) {
       case CONST.ERROR_NOT_IMPLEMENTED:
       case CONST.ERROR_NOT_FOUND:
-        res.status(501).send(error);
+        response.status(501).send(error);
         break;
       default:
-        res.status(500).send(`Error: ${error}`);
+        response.status(500).send(`Error: ${error}`);
     }
   });
 };
 
 const registerStats = (app, dao) => {
-  app.get("/api/stats", (req, res) =>
+  app.get("/api/stats", (request, response) =>
+    // TODO: authorize
     dao.getStatistics(
-      (stats) => res.json(stats),
-      (err) => handleError(res, err)
+      (stats) => response.json(stats),
+      (error) => handleError(response, error)
     )
   );
-  app.get("/api/stats/:galleryId", (req, res) =>
+  app.get("/api/stats/:galleryId", (request, response) =>
+    // TODO: authorize
     dao.getGalleryStatistics(
-      req.params.galleryId,
-      (stats) => res.json(stats),
-      (err) => handleError(res, err)
+      request.params.galleryId,
+      (stats) => response.json(stats),
+      (error) => handleError(response, error)
     )
   );
 };
 const registerGalleries = (app, dao) => {
-  app.get("/api/galleries", (req, res) =>
+  app.get("/api/galleries", (request, response) =>
+    // TODO: authorize
     dao.getAllGalleries(
-      (galleries) => res.json(galleries),
-      (err) => handleError(res, err)
+      (galleries) => response.json(galleries),
+      (error) => handleError(response, error)
     )
   );
-  app.post("/api/galleries", (req, res) => {
+  app.post("/api/galleries", (request, response) => {
     // TODO: authorize
-    // TODO: validate and set content from req.body
+    // TODO: validate and set content from request.body
     const gallery = {};
-    res.json(dao.createGallery(gallery));
+    response.json(dao.createGallery(gallery));
   });
-  app.get("/api/galleries/:galleryId", (req, res) =>
+  app.get("/api/galleries/:galleryId", (request, response) =>
+    // TODO: authorize
     dao.getGallery(
-      req.params.galleryId,
-      (data) => res.json(data),
-      (err) => handleError(res, err)
+      request.params.galleryId,
+      (data) => response.json(data),
+      (error) => handleError(response, error)
     )
   );
-  app.put("/api/galleries/:galleryId", (req, res) => {
+  app.put("/api/galleries/:galleryId", (request, response) => {
     // TODO: authorize
-    // TODO: validate and set content from req.body
+    // TODO: validate and set content from request.body
     const gallery = {};
-    res.json(dao.updateGallery(gallery));
+    response.json(dao.updateGallery(gallery));
   });
-  app.delete("/api/galleries/:galleryId", (req, res) => {
-    dao.deleteGallery(req.params.galleryId);
-    res.status(204).end();
+  app.delete("/api/galleries/:galleryId", (request, response) => {
+    dao.deleteGallery(request.params.galleryId);
+    response.status(204).end();
   });
 };
 const registerPhotos = (app, dao) => {
-  app.get("/api/photos/", (req, res) =>
+  app.get("/api/photos/", (request, response) =>
+    // TODO: authorize
     dao.getAllPhotos(
-      (photos) => res.json(photos),
-      (err) => handleError(res, err)
+      (photos) => response.json(photos),
+      (error) => handleerroor(response, error)
     )
   );
-  app.post("/api/photos/", (req, res) => {
+  app.post("/api/photos/", (request, response) => {
     // TODO: authorize
-    // TODO: validate and set content from req.body
+    // TODO: validate and set content from request.body
     const photo = {};
-    res.json(dao.createPhoto(photo));
+    response.json(dao.createPhoto(photo));
   });
-  app.get("/api/photos/:photoId", (req, res) => {
+  app.get("/api/photos/:photoId", (request, response) => {
+    // TODO: authorize
     dao.getPhoto(
-      req.params.photoId,
-      (photo) => res.json(photo),
-      (err) => handleError(res, err)
+      request.params.photoId,
+      (photo) => response.json(photo),
+      (error) => handleError(response, error)
     );
   });
-  app.put("/api/photos/:photoId", (req, res) => {
+  app.put("/api/photos/:photoId", (request, response) => {
     // TODO: authorize
     // TODO: implement: update photo meta
-    res.status(501).end();
+    response.status(501).end();
   });
-  app.delete("/api/photos/:photoId", (req, res) => {
+  app.delete("/api/photos/:photoId", (request, response) => {
     // TODO: authorize
-    dao.deletePhoto(req.params.galleryId);
-    res.status(204).end();
+    dao.deletePhoto(request.params.galleryId);
+    response.status(204).end();
   });
 };
 const registerGalleryPhotos = (app, dao) => {
-  app.post("/api/galleries/:galleryId", (req, res) => {
+  app.post("/api/galleries/:galleryId", (request, response) => {
     // TODO: authorize
-    // TODO: validate and set content from req.body
+    // TODO: validate and set content from request.body
     const photo = {};
     dao.linkPhoto(photo, gallery);
-    res.status(204).end();
+    response.status(204).end();
   });
-  app.delete("/api/galleries/:galleryId/:photoId", (req, res) => {
+  app.delete("/api/galleries/:galleryId/:photoId", (request, response) => {
     // TODO: authorize
     dao.unlinkPhoto(photo, gallery);
-    res.status(204).end();
+    response.status(204).end();
   });
 };
-const handleError = (res, err) => {
-  console.log(err);
-  res.status(500).json({ error: `Error: ${err}` });
+const handleError = (response, error) => {
+  console.log(error);
+  response.status(500).json({ error: `Error: ${error}` });
 };

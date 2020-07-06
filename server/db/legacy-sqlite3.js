@@ -2,6 +2,30 @@ const CONST = require("../constants");
 
 const sqlite3 = require("sqlite3").verbose();
 
+const COLUMNS = {
+  gallery: ["name", "title", "description", "epoch"],
+  photo: [
+    "name",
+    "title",
+    "taken",
+    "country",
+    "author",
+    "camera",
+    "width",
+    "height",
+    "t_width",
+    "t_height",
+    "description",
+    "place",
+    "focal",
+    "fstop",
+    "shutter",
+    "iso",
+    "f_width",
+    "f_height",
+  ],
+};
+
 module.exports = (opts) => {
   if (!opts) {
     throw "The path to the SQLite3 database must be set to DB_OPTS.";
@@ -9,21 +33,22 @@ module.exports = (opts) => {
   const db = new sqlite3.Database(opts);
   return {
     loadGalleries: (onSuccess, onError) => {
-      db.all("SELECT * FROM gallery", function (err, rows) {
-        if (err) {
-          onError(err);
+      const columns = COLUMNS.gallery.join(",");
+      const query = `SELECT ${columns} FROM gallery`;
+      db.all(query, function (error, rows) {
+        if (error) {
+          onError(error);
         } else {
           onSuccess(rows.map((row) => mapGalleryRow(row)));
         }
       });
     },
     loadGallery: (galleryId, onSuccess, onError) => {
-      db.all("SELECT * FROM gallery WHERE name = ?", galleryId, function (
-        err,
-        rows
-      ) {
-        if (err) {
-          onError(err);
+      const column = COLUMNS.gallery.join(",");
+      const query = `SELECT ${column} FROM gallery WHERE name = ?`;
+      db.all(query, galleryId, function (error, rows) {
+        if (error) {
+          onError(error);
         } else {
           if (rows.length != 1) {
             onError(CONST.ERROR_NOT_FOUND);
@@ -35,7 +60,8 @@ module.exports = (opts) => {
     },
     loadGalleryPhotos: (galleryId, onSuccess, onError) => {
       const getQuery = () => {
-        const baseQuery = "SELECT photo.*" + " FROM photo";
+        const columns = COLUMNS.photo.join(",");
+        const baseQuery = `SELECT ${columns} FROM photo`;
         switch (galleryId) {
           case CONST.SPECIAL_GALLERY_ALL:
             return (
@@ -57,17 +83,17 @@ module.exports = (opts) => {
       };
 
       if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-        db.all(getQuery(), function (err, rows) {
-          if (err) {
-            onError(err);
+        db.all(getQuery(), function (error, rows) {
+          if (error) {
+            onError(error);
           } else {
             onSuccess(rows.map((row) => mapPhotoRow(row)));
           }
         });
       } else {
-        db.all(getQuery(), galleryId, function (err, rows) {
-          if (err) {
-            onError(err);
+        db.all(getQuery(), galleryId, function (error, rows) {
+          if (error) {
+            onError(error);
           } else {
             onSuccess(rows.map((row) => mapPhotoRow(row)));
           }
@@ -76,9 +102,9 @@ module.exports = (opts) => {
     },
     loadPhotos: (onSuccess, onError) => {
       const query = "SELECT * FROM photo";
-      db.all(query, function (err, rows) {
-        if (err) {
-          onError(err);
+      db.all(query, function (error, rows) {
+        if (error) {
+          onError(error);
         } else {
           onSuccess(rows.map((row) => mapPhotoRow(row)));
         }
@@ -86,9 +112,9 @@ module.exports = (opts) => {
     },
     loadPhoto: (photoId, onSuccess, onError) => {
       const query = "SELECT * FROM photo WHERE name = ?";
-      db.all(query, photoId, function (err, rows) {
-        if (err) {
-          onError(err);
+      db.all(query, photoId, function (error, rows) {
+        if (error) {
+          onError(error);
         } else if (rows.length != 1) {
           onError(CONST.ERROR_NOT_FOUND);
         } else {
