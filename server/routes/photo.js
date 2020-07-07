@@ -11,7 +11,7 @@ module.exports = (root, handleError) => {
      * Get the properties of all photos.
      */
     app.get(resource, (request, response) => {
-      authManager.authorizeView(
+      authManager.authorizeAdmin(
         request.session.username,
         () =>
           photoManager.getAllPhotos(
@@ -39,7 +39,7 @@ module.exports = (root, handleError) => {
      * Get the properties of a photo.
      */
     app.get(`${resource}/:photoId`, (request, response) => {
-      authManager.authorizeView(
+      authManager.authorizeAdmin(
         request.session.username,
         () =>
           photoManager.getPhoto(
