@@ -1,6 +1,7 @@
 const CONST = require("./constants");
+const db = require("./db");
 
-module.exports = (app, db) => {
+module.exports = (app) => {
   const sessionManager = require("./manager/session")(db);
 
   const attachSession = (request, response, next) => {

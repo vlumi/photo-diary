@@ -1,9 +1,10 @@
 const CONST = require("../constants");
+const db = require("../db");
 
 module.exports = (root, handleError) => {
   const resource = `${root}/gallery-photo`;
 
-  return (app, db) => {
+  return (app) => {
     const authManager = require("../manager/auth")(db);
     const galleryPhotoManager = require("../manager/gallery-photo")(db);
 

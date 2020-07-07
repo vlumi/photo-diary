@@ -1,10 +1,11 @@
 const CONST = require("../constants");
 const { json } = require("express");
+const db = require("../db");
 
 module.exports = (root, handleError) => {
   const resource = `${root}/gallery`;
 
-  return (app, db) => {
+  return (app) => {
     const authManager = require("../manager/auth")(db);
     const galleryManager = require("../manager/gallery")(db);
 
