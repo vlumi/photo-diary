@@ -1,113 +1,113 @@
 const CONST = require("../constants");
 
-const loadUserAccessControl = (username, onSuccess, onError) => {
-  if (username in dummyAccessControl) {
-    onSuccess(dummyAccessControl[username]);
-  } else {
-    onError(CONST.ERROR_NOT_FOUND);
-  }
-};
-const loadUser = (username, onSuccess, onError) => {
-  if (username in dummyUsers) {
-    onSuccess(dummyUsers[username]);
-  } else {
-    onError(CONST.ERROR_NOT_FOUND);
-  }
-};
-// TODO: something like this for create/update user to hash the password:
-// const dummyGetUser = (username) => DUMMY_USERS[username];
-// {
-//   const saltRounds = 10;
-//   bcrypt.hash("foobar", saltRounds, function (err, hash) {
-//     DUMMY_USERS["admin"].password = hash;
-//   });
-// }
-const loadGalleries = (onSuccess, onError) => {
-  onSuccess(Object.values(dummyGalleries).sort());
-};
-const loadGallery = (galleryId, onSuccess, onError) => {
-  if (galleryId in dummyGalleries) {
-    onSuccess(dummyGalleries[galleryId]);
-  } else {
-    onError(CONST.ERROR_NOT_FOUND);
-  }
-};
-const loadGalleryPhotos = (galleryId, onSuccess, onError) => {
-  switch (galleryId) {
-    case CONST.SPECIAL_GALLERY_ALL:
-      onSuccess(Object.values(dummyPhotos).sort());
-      break;
-    case CONST.SPECIAL_GALLERY_NONE:
-      const galleriesPhotos = Object.values(dummyGalleryPhotos).flat();
-      const photos = Object.keys(dummyPhotos)
-        .filter((photoId) => !galleriesPhotos.includes(photoId))
-        .map((photoId) => dummyPhotos[photoId])
-        .sort();
-      onSuccess(photos);
-      break;
-    default:
-      if (galleryId in dummyGalleries) {
-        const photos = dummyGalleryPhotos[galleryId].map(
-          (photoId) => dummyPhotos[photoId]
-        );
-        onSuccess(photos);
-      } else {
-        onError(CONST.ERROR_NOT_FOUND);
-      }
-      break;
-  }
-};
-const loadGalleryPhoto = (galleryId, photoId, onSuccess, onError) => {
-  switch (galleryId) {
-    case CONST.SPECIAL_GALLERY_ALL:
-      loadPhoto(photoId, onSuccess, onError);
-      break;
-    case CONST.SPECIAL_GALLERY_NONE:
-      const galleriesPhotos = Object.values(dummyGalleryPhotos).flat();
-      const photos = Object.keys(dummyPhotos)
-        .filter((id) => id === photoId)
-        .filter((id) => !galleriesPhotos.includes(id))
-        .map((id) => dummyPhotos[id])
-        .sort();
-      if (photoId in photos) {
-        onSuccess(photos[photoId]);
-      } else {
-        onError(CONST.ERROR_NOT_FOUND);
-      }
-      break;
-    default:
-      if (galleryId in dummyGalleries) {
-        console.log("here", dummyGalleryPhotos[galleryId], photoId);
-        const photos = dummyGalleryPhotos[galleryId]
-          .filter((id) => id === photoId)
-          .map((id) => dummyPhotos[id]);
-        console.log(photos);
-        if (photos.length > 0) {
-          onSuccess(photos[0]);
-        } else {
-          onError(CONST.ERROR_NOT_FOUND);
-        }
-      } else {
-        onError(CONST.ERROR_NOT_FOUND);
-      }
-      break;
-  }
-};
-const loadPhotos = (onSuccess, onError) => {
-  onSuccess(dummyPhotos);
-};
-const loadPhoto = (photoId, onSuccess, onError) => {
-  if (photoId in dummyPhotos) {
-    onSuccess(dummyPhotos[photoId]);
-  } else {
-    onError(CONST.ERROR_NOT_FOUND);
-  }
-};
-
 /**
  * Dummy DB, with all DB values hard-coded.
  */
 module.exports = () => {
+  const loadUserAccessControl = (username, onSuccess, onError) => {
+    if (username in dummyAccessControl) {
+      onSuccess(dummyAccessControl[username]);
+    } else {
+      onError(CONST.ERROR_NOT_FOUND);
+    }
+  };
+  const loadUser = (username, onSuccess, onError) => {
+    if (username in dummyUsers) {
+      onSuccess(dummyUsers[username]);
+    } else {
+      onError(CONST.ERROR_NOT_FOUND);
+    }
+  };
+  // TODO: something like this for create/update user to hash the password:
+  // const dummyGetUser = (username) => DUMMY_USERS[username];
+  // {
+  //   const saltRounds = 10;
+  //   bcrypt.hash("foobar", saltRounds, function (err, hash) {
+  //     DUMMY_USERS["admin"].password = hash;
+  //   });
+  // }
+  const loadGalleries = (onSuccess, onError) => {
+    onSuccess(Object.values(dummyGalleries).sort());
+  };
+  const loadGallery = (galleryId, onSuccess, onError) => {
+    if (galleryId in dummyGalleries) {
+      onSuccess(dummyGalleries[galleryId]);
+    } else {
+      onError(CONST.ERROR_NOT_FOUND);
+    }
+  };
+  const loadGalleryPhotos = (galleryId, onSuccess, onError) => {
+    switch (galleryId) {
+      case CONST.SPECIAL_GALLERY_ALL:
+        onSuccess(Object.values(dummyPhotos).sort());
+        break;
+      case CONST.SPECIAL_GALLERY_NONE:
+        const galleriesPhotos = Object.values(dummyGalleryPhotos).flat();
+        const photos = Object.keys(dummyPhotos)
+          .filter((photoId) => !galleriesPhotos.includes(photoId))
+          .map((photoId) => dummyPhotos[photoId])
+          .sort();
+        onSuccess(photos);
+        break;
+      default:
+        if (galleryId in dummyGalleries) {
+          const photos = dummyGalleryPhotos[galleryId].map(
+            (photoId) => dummyPhotos[photoId]
+          );
+          onSuccess(photos);
+        } else {
+          onError(CONST.ERROR_NOT_FOUND);
+        }
+        break;
+    }
+  };
+  const loadGalleryPhoto = (galleryId, photoId, onSuccess, onError) => {
+    switch (galleryId) {
+      case CONST.SPECIAL_GALLERY_ALL:
+        loadPhoto(photoId, onSuccess, onError);
+        break;
+      case CONST.SPECIAL_GALLERY_NONE:
+        const galleriesPhotos = Object.values(dummyGalleryPhotos).flat();
+        const photos = Object.keys(dummyPhotos)
+          .filter((id) => id === photoId)
+          .filter((id) => !galleriesPhotos.includes(id))
+          .map((id) => dummyPhotos[id])
+          .sort();
+        if (photoId in photos) {
+          onSuccess(photos[photoId]);
+        } else {
+          onError(CONST.ERROR_NOT_FOUND);
+        }
+        break;
+      default:
+        if (galleryId in dummyGalleries) {
+          console.log("here", dummyGalleryPhotos[galleryId], photoId);
+          const photos = dummyGalleryPhotos[galleryId]
+            .filter((id) => id === photoId)
+            .map((id) => dummyPhotos[id]);
+          console.log(photos);
+          if (photos.length > 0) {
+            onSuccess(photos[0]);
+          } else {
+            onError(CONST.ERROR_NOT_FOUND);
+          }
+        } else {
+          onError(CONST.ERROR_NOT_FOUND);
+        }
+        break;
+    }
+  };
+  const loadPhotos = (onSuccess, onError) => {
+    onSuccess(dummyPhotos);
+  };
+  const loadPhoto = (photoId, onSuccess, onError) => {
+    if (photoId in dummyPhotos) {
+      onSuccess(dummyPhotos[photoId]);
+    } else {
+      onError(CONST.ERROR_NOT_FOUND);
+    }
+  };
+
   return {
     loadUserAccessControl,
     loadUser,
