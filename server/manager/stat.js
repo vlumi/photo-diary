@@ -242,15 +242,23 @@ module.exports = (db) => {
   };
   const getGalleryStatistics = (galleryId) => {
     return new Promise((resolve, reject) => {
-      db.loadGallery(galleryId)
-        .then((gallery) => {
-          db.loadGalleryPhotos(galleryId)
-            .then((photos) => {
-              resolve(collectStatistics(photos));
-            })
-            .catch((error) => reject(error));
-        })
-        .catch((error) => reject(error));
+      const loadGalleryPhotos = () =>
+        db
+          .loadGalleryPhotos(galleryId)
+          .then((photos) => {
+            resolve(collectStatistics(photos));
+          })
+          .catch((error) => reject(error));
+
+      if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
+        loadGalleryPhotos();
+      } else {
+        db.loadGallery(galleryId)
+          .then((gallery) => {
+            loadGalleryPhotos();
+          })
+          .catch((error) => reject(error));
+      }
     });
   };
   return {
