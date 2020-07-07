@@ -2,7 +2,7 @@ const CONST = require("../constants");
 const db = require("../db");
 
 module.exports = (root, app) => {
-  const resource = `${root}/stat`;
+  const resource = `${root}/stats`;
 
   const authManager = require("../manager/auth")(db);
   const statManager = require("../manager/stat")(db);

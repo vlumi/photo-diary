@@ -2,7 +2,7 @@ const CONST = require("../constants");
 const db = require("../db");
 
 module.exports = (root, app) => {
-  const endPoint = `${root}/session`;
+  const endPoint = `${root}/sessions`;
 
   const authManager = require("../manager/auth")(db);
   const sessionManager = require("../manager/session")(db);
