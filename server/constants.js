@@ -39,6 +39,8 @@ const SPECIAL_GALLERIES = {
 };
 
 module.exports = {
+  DEBUG,
+
   DEFAULT_PORT,
   SESSION_LENGTH_MS,
 

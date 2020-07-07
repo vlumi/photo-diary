@@ -1,7 +1,7 @@
 const CONST = require("../constants");
 
 module.exports = (app, db, handleError) => {
-  const routesSession = require("./session")(CONST.API_ROOT, handleError);
+  const routesSession = require("./session")(CONST.API_ROOT);
   const routesStat = require("./stat")(CONST.API_ROOT, handleError);
   const routesGallery = require("./gallery")(CONST.API_ROOT, handleError);
   const routesPhoto = require("./photo")(CONST.API_ROOT, handleError);
@@ -20,14 +20,20 @@ module.exports = (app, db, handleError) => {
     response.status(404).send({ error: CONST.ERROR_NOT_FOUND });
   });
   app.use(function (error, request, response, next) {
-    console.error(error);
+    if (CONST.DEBUG) console.log(error);
     switch (error) {
+      case CONST.ERROR_SESSION_EXPIRED:
+        // TODO: notify user, but ok...
+        break;
       case CONST.ERROR_NOT_IMPLEMENTED:
       case CONST.ERROR_NOT_FOUND:
-        response.status(501).send(error);
+        response.status(501).send({ error });
         break;
+      case CONST.ERROR_LOGIN:
       default:
-        response.status(500).send(`Error: ${error}`);
+        response.status(500).send({ error });
+        break;
     }
+    next(error);
   });
 };

@@ -5,6 +5,7 @@ module.exports = (app, db, handleError) => {
 
   const attachSession = (request, response, next) => {
     const token = request.cookies["token"];
+    if (CONST.DEBUG) console.log("In session filter", token);
     const initGuestSession = () => {
       request.session = {
         username: "guest",
@@ -13,28 +14,28 @@ module.exports = (app, db, handleError) => {
       };
     };
     if (token) {
-      sessionManager.verifySession(
-        token,
-        (session) => {
+      sessionManager
+        .verifySession(token)
+        .then((session) => {
+          console.log("session", session);
           request.session = session;
           next();
-        },
-        (error) => {
+        })
+        .catch((error) => {
+          console.log("error", error);
           initGuestSession();
           response.clearCookie("token");
-          sessionManager.revokeSession(
-            token,
-            () => {
+          sessionManager
+            .revokeSession(token)
+            .then(() => {
               // TODO: notify expiry
               next();
-            },
-            (error) => {
+            })
+            .catch((error) => {
               // TODO: notify expiry
               next();
-            }
-          );
-        }
-      );
+            });
+        });
     } else {
       initGuestSession();
       next();

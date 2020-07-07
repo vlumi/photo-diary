@@ -31,45 +31,60 @@ module.exports = (db) => {
     return photosByDate;
   };
 
-  const getAllGalleries = (onSuccess, onError) => {
-    db.loadGalleries((galleries) => {
-      onSuccess([...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)]);
-    }, onError);
-  };
-  const createGallery = (gallery, onSuccess, onError) => {
-    onError(CONST.ERROR_NOT_IMPLEMENTED);
-  };
-  const getGallery = (galleryId, onSuccess, onError) => {
-    const loadGalleryPhotos = (gallery) => {
-      db.loadGalleryPhotos(
-        galleryId,
-        (galleryPhotos) => {
-          const photosByYearMonthDay = groupPhotosByYearMonthDay(galleryPhotos);
-          onSuccess({
-            ...gallery,
-            photos: photosByYearMonthDay,
-          });
+  const getAllGalleries = () => {
+    return new Promise((resolve, reject) => {
+      db.loadGalleries(
+        (galleries) => {
+          resolve([...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)]);
         },
-        onError
+        (error) => reject(error)
       );
-    };
-    if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-      loadGalleryPhotos(CONST.SPECIAL_GALLERIES[galleryId]);
-    } else {
-      db.loadGallery(
-        galleryId,
-        (data) => {
-          loadGalleryPhotos(data);
-        },
-        onError
-      );
-    }
+    });
+  };
+  const createGallery = (gallery) => {
+    return new Promise((resolve, reject) => {
+      reject(CONST.ERROR_NOT_IMPLEMENTED);
+    });
+  };
+  const getGallery = (galleryId, onError) => {
+    return new Promise((resolve, reject) => {
+      const loadGalleryPhotos = (gallery) => {
+        db.loadGalleryPhotos(
+          galleryId,
+          (galleryPhotos) => {
+            const photosByYearMonthDay = groupPhotosByYearMonthDay(
+              galleryPhotos
+            );
+            resolve({
+              ...gallery,
+              photos: photosByYearMonthDay,
+            });
+          },
+          (error) => reject(error)
+        );
+      };
+      if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
+        loadGalleryPhotos(CONST.SPECIAL_GALLERIES[galleryId]);
+      } else {
+        db.loadGallery(
+          galleryId,
+          (data) => {
+            loadGalleryPhotos(data);
+          },
+          (error) => reject(error)
+        );
+      }
+    });
   };
   const updateGallery = (gallery, onSuccess, onError) => {
-    onError(CONST.ERROR_NOT_IMPLEMENTED);
+    return new Promise((resolve, reject) => {
+      reject(CONST.ERROR_NOT_IMPLEMENTED);
+    });
   };
   const deleteGallery = () => {
-    onError(CONST.ERROR_NOT_IMPLEMENTED);
+    return new Promise((resolve, reject) => {
+      reject(CONST.ERROR_NOT_IMPLEMENTED);
+    });
   };
 
   return {

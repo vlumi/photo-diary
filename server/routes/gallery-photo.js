@@ -10,65 +10,55 @@ module.exports = (root, handleError) => {
     /**
      * Get the properties of a photo in gallery context.
      */
-    app.get(`${resource}/:galleryId/:photoId`, (request, response) => {
-      authManager.authorizeGalleryView(
-        request.session.username,
-        request.params.galleryId,
-        () =>
+    app.get(`${resource}/:galleryId/:photoId`, (request, response, next) => {
+      authManager
+        .authorizeGalleryView(
+          request.session.username,
+          request.params.galleryId
+        )
+        .then(() =>
           galleryPhotoManager.getPhoto(
             request.params.galleryId,
             request.params.photoId,
             (photo) => response.json(photo),
             (error) => handleError(response, error)
-          ),
-        (error) => handleError(response, error)
-      );
+          )
+        )
+        .catch((error) => next(error));
     });
     /**
      * Link a photo to a gallery.
      */
-    app.put(`${resource}/:galleryId/:photoId`, (request, response) => {
-      authManager.authorizeGalleryAdmin(
-        request.session.username,
-        request.params.galleryId,
-        () => {
+    app.put(`${resource}/:galleryId/:photoId`, (request, response, next) => {
+      authManager
+        .authorizeGalleryAdmin(
+          request.session.username,
+          request.params.galleryId
+        )
+        .then(() => {
           // TODO: validate and set content from request.body
           const photo = {};
-          galleryPhotoManager.linkPhoto(
-            galleryId,
-            photoId,
-            () => {
-              response.status(204).end();
-            },
-            (error) => {
-              handleError(response, error);
-            }
-          );
-        },
-        (error) => handleError(response, error)
-      );
+          galleryPhotoManager.linkPhoto(galleryId, photoId).then(() => {
+            response.status(204).end();
+          });
+        })
+        .catch((error) => next(error));
     });
     /**
      * Unlink a photo from a gallery.
      */
-    app.delete(`${resource}/:galleryId/:photoId`, (request, response) => {
-      authManager.authorizeGalleryAdmin(
-        request.session.username,
-        request.params.galleryId,
-        () => {
-          galleryPhotoManager.unlinkPhoto(
-            galleryId,
-            photoId,
-            () => {
-              response.status(204).end();
-            },
-            (error) => {
-              handleError(response, error);
-            }
-          );
-        },
-        (error) => handleError(response, error)
-      );
+    app.delete(`${resource}/:galleryId/:photoId`, (request, response, next) => {
+      authManager
+        .authorizeGalleryAdmin(
+          request.session.username,
+          request.params.galleryId
+        )
+        .then(() => {
+          galleryPhotoManager.unlinkPhoto(galleryId, photoId).then(() => {
+            response.status(204).end();
+          });
+        })
+        .catch((error) => next(error));
     });
   };
 };

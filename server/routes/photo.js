@@ -10,72 +10,65 @@ module.exports = (root, handleError) => {
     /**
      * Get the properties of all photos.
      */
-    app.get(resource, (request, response) => {
-      authManager.authorizeView(
-        request.session.username,
-        () =>
-          photoManager.getAllPhotos(
-            (photos) => response.json(photos),
-            (error) => handleerroor(response, error)
-          ),
-        (error) => handleError(response, error)
-      );
+    app.get(resource, (request, response, next) => {
+      authManager
+        .authorizeView(request.session.username)
+        .then(() => {
+          photoManager.getAllPhotos().then((photos) => response.json(photos));
+          Í;
+        })
+        .catch((error) => next(error));
     });
     /**
      * Create the properties of a photo.
      */
-    app.post(resource, (request, response) => {
-      authManager.authorizeAdmin(
-        request.session.username,
-        () => {
+    app.post(resource, (request, response, next) => {
+      authManager
+        .authorizeAdmin(request.session.username)
+        .then(() => {
           // TODO: validate and set content from request.body
           const photo = {};
-          response.json(photoManager.createPhoto(photo));
-        },
-        (error) => handleError(response, error)
-      );
+          photoManager.createPhoto(photo).then((photo) => response.json(photo));
+        })
+        .catch((error) => next(error));
     });
     /**
      * Get the properties of a photo.
      */
-    app.get(`${resource}/:photoId`, (request, response) => {
-      authManager.authorizeView(
-        request.session.username,
-        () =>
-          photoManager.getPhoto(
-            request.params.photoId,
-            (photo) => response.json(photo),
-            (error) => handleError(response, error)
-          ),
-        (error) => handleError(response, error)
-      );
+    app.get(`${resource}/:photoId`, (request, response, next) => {
+      authManager
+        .authorizeView(request.session.username)
+        .then(() =>
+          photoManager
+            .getPhoto(request.params.photoId)
+            .then((photo) => response.json(photo))
+        )
+        .catch((error) => next(error));
     });
     /**
      * Update the properties of a photo.
      */
-    app.put(`${resource}/:photoId`, (request, response) => {
-      authManager.authorizeAdmin(
-        request.session.username,
-        () => {
+    app.put(`${resource}/:photoId`, (request, response, next) => {
+      authManager
+        .authorizeAdmin(request.session.username)
+        .then(() => {
           // TODO: implement: update photo meta
           response.status(501).end();
-        },
-        (error) => handleError(response, error)
-      );
+        })
+        .catch((error) => next(error));
     });
     /**
      * Delete the properties of a photo.
      */
-    app.delete(`${resource}/:photoId`, (request, response) => {
-      authManager.authorizeAdmin(
-        request.session.username,
-        () => {
-          // TODO: authorize request.session.username
-          photoManager.deletePhoto(request.params.galleryId);
-          response.status(204).end();
-        },
-        (error) => handleError(response, error)
-      );
+    app.delete(`${resource}/:photoId`, (request, response, next) => {
+      authManager
+        .authorizeAdmin(request.session.username)
+        .then(() => {
+          photoManager
+            .deletePhoto(request.params.galleryId)
+            .then(() => response.status(204).end());
+        })
+        .catch((error) => next(error));
     });
   };
 };

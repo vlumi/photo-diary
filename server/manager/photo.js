@@ -1,22 +1,41 @@
 const CONST = require("../constants");
 
 module.exports = (db) => {
-  const getAllPhotos = (onSuccess, onError) =>
-    db.loadPhotos(onSuccess, onError);
-
-  const createPhoto = () => {
-    onError(CONST.ERROR_NOT_IMPLEMENTED);
+  const getAllPhotos = (onSuccess, onError) => {
+    return new Promise((resolve, reject) => {
+      db.loadPhotos(
+        () => resolve(),
+        (error) => reject(error)
+      );
+    });
   };
 
-  const getPhoto = (photoId, onSuccess, onError) =>
-    db.loadPhoto(photoId, onSuccess, onError);
+  const createPhoto = () => {
+    return new Promise((resolve, reject) => {
+      reject(CONST.ERROR_NOT_IMPLEMENTED);
+    });
+  };
+
+  const getPhoto = (photoId, onSuccess, onError) => {
+    return new Promise((resolve, reject) => {
+      db.loadPhoto(
+        photoId,
+        () => resolve(),
+        (error) => reject(error)
+      );
+    });
+  };
 
   const updatePhoto = (photo, onSuccess, onError) => {
-    onError(CONST.ERROR_NOT_IMPLEMENTED);
+    return new Promise((resolve, reject) => {
+      reject(CONST.ERROR_NOT_IMPLEMENTED);
+    });
   };
 
   const deletePhoto = (photoId, onSuccess, onError) => {
-    onError(CONST.ERROR_NOT_IMPLEMENTED);
+    return new Promise((resolve, reject) => {
+      reject(CONST.ERROR_NOT_IMPLEMENTED);
+    });
   };
 
   return {

@@ -7,29 +7,26 @@ module.exports = (root, handleError) => {
     const authManager = require("../manager/auth")(db);
     const statManager = require("../manager/stat")(db);
 
-    app.get(resource, (request, response) => {
-      authManager.authorizeView(
-        request.session.username,
-        () =>
-          statManager.getStatistics(
-            (stats) => response.json(stats),
-            (error) => handleError(response, error)
-          ),
-        (error) => handleError(response, error)
-      );
+    app.get(resource, (request, response, next) => {
+      authManager
+        .authorizeView(request.session.username)
+        .then(() =>
+          statManager.getStatistics().then((stats) => response.json(stats))
+        )
+        .catch((error) => next(error));
     });
-    app.get(`${resource}/:galleryId`, (request, response) => {
-      authManager.authorizeGalleryView(
-        request.session.username,
-        request.params.galleryId,
-        () =>
-          statManager.getGalleryStatistics(
-            request.params.galleryId,
-            (stats) => response.json(stats),
-            (error) => handleError(response, error)
-          ),
-        (error) => handleError(response, error)
-      );
+    app.get(`${resource}/:galleryId`, (request, response, next) => {
+      authManager
+        .authorizeGalleryView(
+          request.session.username,
+          request.params.galleryId
+        )
+        .then(() =>
+          statManager
+            .getGalleryStatistics(request.params.galleryId)
+            .then((stats) => response.json(stats))
+        )
+        .catch((error) => next(error));
     });
   };
 };

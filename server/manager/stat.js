@@ -231,19 +231,26 @@ const collectStatistics = (photos) => {
 };
 
 module.exports = (db) => {
-  const getStatistics = (onSuccess, onError) => {
-    db.loadPhotos((photos) => {
-      onSuccess(collectStatistics(Object.values(photos)));
-    }, onError);
+  const getStatistics = () => {
+    return new Promise((resolve, reject) => {
+      db.loadPhotos(
+        (photos) => {
+          resolve(collectStatistics(Object.values(photos)));
+        },
+        (error) => reject(error)
+      );
+    });
   };
-  const getGalleryStatistics = (galleryId, onSuccess, onError) => {
-    db.loadGalleryPhotos(
-      galleryId,
-      (photos) => {
-        onSuccess(collectStatistics(photos));
-      },
-      onError
-    );
+  const getGalleryStatistics = (galleryId) => {
+    return new Promise((resolve, reject) => {
+      db.loadGalleryPhotos(
+        galleryId,
+        (photos) => {
+          resolve(collectStatistics(photos));
+        },
+        (error) => reject(error)
+      );
+    });
   };
   return {
     getStatistics,

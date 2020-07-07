@@ -1,6 +1,6 @@
 const CONST = require("../constants");
 
-module.exports = (root, handleError) => {
+module.exports = (root) => {
   const endPoint = `${root}/session`;
 
   return (app, db) => {
@@ -10,18 +10,20 @@ module.exports = (root, handleError) => {
     /**
      * Login, creating a new session.
      */
-    app.post(endPoint, (request, response) => {
+    app.post(endPoint, (request, response, next) => {
+      if (CONST.DEBUG) console.log("Login", request.body);
       const credentials = {
         username: request.body.username,
         password: request.body.password,
       };
       if (!credentials.username || !credentials.password) {
-        handleError(response, CONST.ERROR_LOGIN, 400);
+        next(CONST.ERROR_LOGIN);
         return;
       }
-      sessionManager.authenticateUser(
-        credentials,
-        (session, token) => {
+      sessionManager
+        .authenticateUser(credentials)
+        .then((sessionToken) => {
+          const [session, token] = sessionToken;
           if (CONST.DEBUG)
             console.log(
               `User "${credentials.username}" logged in successfully.`
@@ -32,62 +34,57 @@ module.exports = (root, handleError) => {
           // TODO: set cookie expiration
           response.cookie("token", encodedToken);
           response.status(204).end();
-        },
-        (error) => handleError(response, error, 401)
-      );
+        })
+        .catch((error) => next(error));
     });
     /**
      * Logout, revoking the session.
      */
-    app.delete(endPoint, (request, response) => {
-      sessionManager.revokeSession(
-        request.cookies["token"],
-        () => {
+    app.delete(endPoint, (request, response, next) => {
+      sessionManager
+        .revokeSession(request.cookies["token"])
+        .then(() => {
           response.clearCookie("token");
           response.status(204).end();
-        },
-        (error) => {
+        })
+        .catch((error) => {
           response.clearCookie("token");
-          handleError(reponse, error);
-        }
-      );
+          next(error);
+        });
     });
     /**
      * Revoke all sessions of a user.
      */
-    app.post(endPoint + "/revoke-all", (request, response) => {
+    app.post(endPoint + "/revoke-all", (request, response, next) => {
       const credentials = {
         username: request.body.username,
         password: request.body.password,
       };
       if (!credentials.username) {
-        handleError(response, CONST.ERROR_LOGIN, 400);
+        next(CONST.ERROR_LOGIN);
         return;
       }
-      authManager.authorizeAdmin(
-        request.session.username,
-        () => {
-          sessionManager.revokeAllSessionsAdmin(
-            credentials,
-            () => response.status(204).end(),
-            (error) => handleError(response, error, 401)
-          );
-        },
-        (error) => {
+      authManager
+        .authorizeAdmin(request.session.username)
+        .then(() => {
+          sessionManager
+            .revokeAllSessionsAdmin(credentials)
+            .then(() => response.status(204).end())
+            .catch((error) => next(error));
+        })
+        .catch((error) => {
           if (!credentials.password) {
-            handleError(response, CONST.ERROR_LOGIN, 400);
+            next(CONST.ERROR_LOGIN);
             return;
           }
-          sessionManager.revokeAllSessions(
-            credentials,
-            () => {
+          sessionManager
+            .revokeAllSessions(credentials)
+            .next(() => {
               response.clearCookie("token");
               response.status(204).end();
-            },
-            (error) => handleError(response, error, 401)
-          );
-        }
-      );
+            })
+            .catch((error) => next(error));
+        });
     });
   };
 };
