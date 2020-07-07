@@ -45,8 +45,23 @@ module.exports = (db) => {
     db.loadUserAccessControl(
       username,
       (acl) => {
-        if (galleryId in acl && acl[galleryId] >= CONST.ACCESS_VIEW) {
-          onSuccess();
+        if (Array.isArray(galleryId)) {
+          const all = CONST.SPECIAL_GALLERY_ALL;
+          const authorizedGalleries = galleryId.filter((id) => {
+            if (id in acl) {
+              return acl[id] >= CONST.ACCESS_VIEW;
+            } else if (all in acl) {
+              return acl[all] >= CONST.ACCESS_VIEW;
+            }
+            return false;
+          });
+          onSuccess(authorizedGalleries);
+        } else if (galleryId in acl) {
+          if (acl[galleryId] >= CONST.ACCESS_VIEW) {
+            onSuccess([galleryId]);
+          } else {
+            onError(CONST.ERROR_ACCESS);
+          }
         } else {
           authorizeView(username, onSuccess, onError);
         }
@@ -65,8 +80,23 @@ module.exports = (db) => {
       username,
       galleryId,
       (acl) => {
-        if (galleryId in acl && acl[galleryId] >= CONST.ACCESS_ADMIN) {
-          onSuccess();
+        if (Array.isArray(galleryId)) {
+          const all = CONST.SPECIAL_GALLERY_ALL;
+          const authorizedGalleries = galleryId.filter((id) => {
+            if (id in acl) {
+              return acl[id] >= CONST.ACCESS_ADMIN;
+            } else if (all in acl) {
+              return acl[all] >= CONST.ACCESS_ADMIN;
+            }
+            return false;
+          });
+          onSuccess(authorizedGalleries);
+        } else if (galleryId in acl) {
+          if (acl[galleryId] >= CONST.ACCESS_ADMIN) {
+            onSuccess([gallery]);
+          } else {
+            onError(CONST.ERROR_ACCESS);
+          }
         } else {
           authorizeAdmin(username, onSuccess, onError);
         }

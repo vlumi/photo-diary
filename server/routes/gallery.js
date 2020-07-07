@@ -11,13 +11,20 @@ module.exports = (root, handleError) => {
      * Get all galleries.
      */
     app.get(resource, (request, response) => {
-      authManager.authorizeView(
-        request.session.username,
-        () =>
-          galleryManager.getAllGalleries(
-            (galleries) => response.json(galleries),
+      galleryManager.getAllGalleries(
+        (galleries) => {
+          authManager.authorizeGalleryView(
+            request.session.username,
+            galleries.map((gallery) => gallery.id),
+            (authorizedGalleryIds) => {
+              const authorizedGalleries = galleries.filter((gallery) =>
+                authorizedGalleryIds.includes(gallery.id)
+              );
+              response.json(authorizedGalleries);
+            },
             (error) => handleError(response, error)
-          ),
+          );
+        },
         (error) => handleError(response, error)
       );
     });
