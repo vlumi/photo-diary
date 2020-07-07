@@ -242,9 +242,13 @@ module.exports = (db) => {
   };
   const getGalleryStatistics = (galleryId) => {
     return new Promise((resolve, reject) => {
-      db.loadGalleryPhotos(galleryId)
-        .then((photos) => {
-          resolve(collectStatistics(photos));
+      db.loadGallery(galleryId)
+        .then((gallery) => {
+          db.loadGalleryPhotos(galleryId)
+            .then((photos) => {
+              resolve(collectStatistics(photos));
+            })
+            .catch((error) => reject(error));
         })
         .catch((error) => reject(error));
     });
