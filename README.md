@@ -94,11 +94,14 @@ This project is intended to create an online photo gallery, with the photos arra
 ## Running Instructions
 
 The back-end server can be started as:
+
 ```
 node server/index.js
 ```
 
 ### Environment Variables
+
+Certain parameters are passed through environment veriables. These can be either exported before running, adding inline- to the command when starting, or added to the file `env`, from which they will be picked up by [dotenv](https://www.npmjs.com/package/dotenv).
 
 - `PORT` (default: 4200)
 - `DB_DRIVER` \*
@@ -116,9 +119,13 @@ node server/index.js
 
 ### Examples
 
-- `DB_DRIVER=dummy npm run dev`
-- `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
-- `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm prod`
+- With the variables in `.env`:
+  - `npm run dev`
+  - `npm run prod`
+- With the variables inlined:
+  - `DB_DRIVER=dummy npm run dev`
+  - `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
+  - `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm prod`
 
 ## TODO
 

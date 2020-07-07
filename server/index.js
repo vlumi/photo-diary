@@ -1,3 +1,4 @@
+require("dotenv").config();
 const CONST = require("./constants");
 const DB_DRIVERS = require("./db/drivers");
 
