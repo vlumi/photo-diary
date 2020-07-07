@@ -233,23 +233,20 @@ const collectStatistics = (photos) => {
 module.exports = (db) => {
   const getStatistics = () => {
     return new Promise((resolve, reject) => {
-      db.loadPhotos(
-        (photos) => {
+      db.loadPhotos()
+        .then((photos) => {
           resolve(collectStatistics(Object.values(photos)));
-        },
-        (error) => reject(error)
-      );
+        })
+        .catch((error) => reject(error));
     });
   };
   const getGalleryStatistics = (galleryId) => {
     return new Promise((resolve, reject) => {
-      db.loadGalleryPhotos(
-        galleryId,
-        (photos) => {
+      db.loadGalleryPhotos(galleryId)
+        .then((photos) => {
           resolve(collectStatistics(photos));
-        },
-        (error) => reject(error)
-      );
+        })
+        .catch((error) => reject(error));
     });
   };
   return {

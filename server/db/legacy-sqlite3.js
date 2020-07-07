@@ -33,41 +33,46 @@ module.exports = (opts) => {
   const db = new sqlite3.Database(opts);
 
   const loadUserAccessControl = (username, onSuccess, onError) => {
-    // No ACL implemented in the legacy Gallery, everyone has global view access.
-    onSuccess({
-      [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+    return new Promise((resolve, reject) => {
+      // No ACL implemented in the legacy Gallery, everyone has global view access.
+      resolve({
+        [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+      });
     });
   };
-  const loadUser = (username, onSuccess, onError) => {
-    onError(CONST.ERROR_NOT_IMPLEMENTED);
+  const loadUser = (username) => {
+    return new Promise((resolve, reject) => {
+      reject(CONST.ERROR_NOT_IMPLEMENTED);
+    });
   };
-  const loadGalleries = (onSuccess, onError) => {
+  const loadGalleries = () => {
     const columns = COLUMNS.gallery.join(",");
     const query = `SELECT ${columns} FROM gallery`;
-    db.all(query, function (error, rows) {
-      if (error) {
-        onError(error);
-      } else {
-        onSuccess(rows.map((row) => mapGalleryRow(row)));
-      }
+    return new Promise((resolve, reject) => {
+      db.all(query, function (error, rows) {
+        if (error) {
+          return reject(error);
+        }
+        resolve(rows.map((row) => mapGalleryRow(row)));
+      });
     });
   };
-  const loadGallery = (galleryId, onSuccess, onError) => {
+  const loadGallery = (galleryId) => {
     const column = COLUMNS.gallery.join(",");
     const query = `SELECT ${column} FROM gallery WHERE name = ?`;
-    db.all(query, galleryId, function (error, rows) {
-      if (error) {
-        onError(error);
-      } else {
-        if (rows.length != 1) {
-          onError(CONST.ERROR_NOT_FOUND);
-        } else {
-          onSuccess(mapGalleryRow(rows[0]));
+    return new Promise((resolve, reject) => {
+      db.all(query, galleryId, function (error, rows) {
+        if (error) {
+          return reject(error);
         }
-      }
+        if (rows.length != 1) {
+          return reject(CONST.ERROR_NOT_FOUND);
+        }
+        resolve(mapGalleryRow(rows[0]));
+      });
     });
   };
-  const loadGalleryPhotos = (galleryId, onSuccess, onError) => {
+  const loadGalleryPhotos = (galleryId) => {
     const getQuery = () => {
       const columns = COLUMNS.photo.join(",");
       const baseQuery = `SELECT ${columns} FROM photo`;
@@ -92,47 +97,103 @@ module.exports = (opts) => {
     };
 
     if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-      db.all(getQuery(), function (error, rows) {
-        if (error) {
-          onError(error);
-        } else {
-          onSuccess(rows.map((row) => mapPhotoRow(row)));
-        }
-      });
-    } else {
-      db.all(getQuery(), galleryId, function (error, rows) {
-        if (error) {
-          onError(error);
-        } else {
-          onSuccess(rows.map((row) => mapPhotoRow(row)));
-        }
+      return new Promise((resolve, reject) => {
+        db.all(getQuery(), function (error, rows) {
+          if (error) {
+            return reject(error);
+          }
+          resolve(rows.map((row) => mapPhotoRow(row)));
+        });
       });
     }
-  };
-  const loadGalleryPhoto = (galleryId, photoId, onSuccess, onError) => {
-    // Without ACL this is no different from global context
-    loadPhoto(photoId, onSuccess, onError);
-  };
-  const loadPhotos = (onSuccess, onError) => {
-    const query = "SELECT * FROM photo";
-    db.all(query, function (error, rows) {
-      if (error) {
-        onError(error);
-      } else {
-        onSuccess(rows.map((row) => mapPhotoRow(row)));
-      }
+    return new Promise((resolve, reject) => {
+      db.all(getQuery(), galleryId, function (error, rows) {
+        if (error) {
+          return reject(error);
+        }
+        resolve(rows.map((row) => mapPhotoRow(row)));
+      });
     });
   };
-  const loadPhoto = (photoId, onSuccess, onError) => {
-    const query = "SELECT * FROM photo WHERE name = ?";
-    db.all(query, photoId, function (error, rows) {
-      if (error) {
-        onError(error);
-      } else if (rows.length != 1) {
-        onError(CONST.ERROR_NOT_FOUND);
-      } else {
-        onSuccess(mapPhotoRow(rows[0]));
+  const loadGalleryPhoto = (galleryId, photoId) => {
+    const getQuery = () => {
+      const columns = COLUMNS.photo.join(",");
+      const baseQuery = `SELECT ${columns} FROM photo`;
+      switch (galleryId) {
+        case CONST.SPECIAL_GALLERY_NONE:
+          return (
+            baseQuery +
+            " WHERE name NOT IN (SELECT photo_name FROM photo_gallery)" +
+            " AND name = ?"
+          );
+        default:
+          return (
+            baseQuery +
+            " JOIN photo_gallery ON photo.name=photo_gallery.photo_name" +
+            " WHERE photo_gallery.gallery_name = ?" +
+            " AND name = ?"
+          );
       }
+    };
+
+    if (galleryId === CONST.SPECIAL_GALLERY_ALL) {
+      return new Promise((resolve, reject) => {
+        // Without ACL this is not much different from global context
+        loadPhoto(photoId)
+          .then((photo) => resolve(photo))
+          .catch((error) => reject(error));
+      });
+    }
+    if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
+      return new Promise((resolve, reject) => {
+        db.all(getQuery(), photoId, function (error, rows) {
+          if (error) {
+            return reject(error);
+          }
+          const photos = rows.map((row) => mapPhotoRow(row));
+          if (photos.length === 0) {
+            return reject(CONST.ERROR_NOT_FOUND);
+          }
+          resolve(photos[0]);
+        });
+      });
+    }
+    return new Promise((resolve, reject) => {
+      db.all(getQuery(), galleryId, photoId, function (error, rows) {
+        if (error) {
+          return reject(error);
+        }
+        const photos = rows.map((row) => mapPhotoRow(row));
+        if (photos.length === 0) {
+          return reject(CONST.ERROR_NOT_FOUND);
+        }
+        resolve(photos[0]);
+      });
+    });
+  };
+  const loadPhotos = () => {
+    const query = "SELECT * FROM photo";
+    return new Promise((resolve, reject) => {
+      db.all(query, function (error, rows) {
+        if (error) {
+          return reject(error);
+        }
+        resolve(rows.map((row) => mapPhotoRow(row)));
+      });
+    });
+  };
+  const loadPhoto = (photoId) => {
+    const query = "SELECT * FROM photo WHERE name = ?";
+    return new Promise((resolve, reject) => {
+      db.all(query, photoId, function (error, rows) {
+        if (error) {
+          return reject(error);
+        }
+        if (rows.length != 1) {
+          return reject(CONST.ERROR_NOT_FOUND);
+        }
+        resolve(mapPhotoRow(rows[0]));
+      });
     });
   };
 
@@ -199,7 +260,6 @@ const mapPhotoRow = (row) => {
     },
     exposure: {
       focalLength: toString(row.focal),
-      // focalLength35mmEquiv: 41,
       aperture: toString(row.fstop),
       shutterSpeed: toString(row.shutter),
       iso: toString(row.iso),

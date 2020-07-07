@@ -36,9 +36,12 @@ module.exports = (root, handleError) => {
         .then(() => {
           // TODO: validate and set content from request.body
           const photo = {};
-          galleryPhotoManager.linkPhoto(galleryId, photoId).then(() => {
-            response.status(204).end();
-          });
+          galleryPhotoManager
+            .linkPhoto(galleryId, photoId)
+            .then(() => {
+              response.status(204).end();
+            })
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
     });
@@ -52,9 +55,12 @@ module.exports = (root, handleError) => {
           request.params.galleryId
         )
         .then(() => {
-          galleryPhotoManager.unlinkPhoto(galleryId, photoId).then(() => {
-            response.status(204).end();
-          });
+          galleryPhotoManager
+            .unlinkPhoto(galleryId, photoId)
+            .then(() => {
+              response.status(204).end();
+            })
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
     });

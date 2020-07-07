@@ -26,11 +26,9 @@ module.exports = (db) => {
         });
       };
 
-      db.loadUser(
-        credentials.username,
-        (user) => verifyPassword(user),
-        (error) => reject(CONST.ERROR_LOGIN)
-      );
+      db.loadUser(credentials.username)
+        .then((user) => verifyPassword(user))
+        .catch((error) => reject(CONST.ERROR_LOGIN));
     });
   };
   const authenticateUser = (credentials) => {
@@ -47,15 +45,6 @@ module.exports = (db) => {
           updated: now,
         };
         return token;
-      };
-      const handleSuccess = () => {
-        const token = createSession(credentials.username);
-        // TODO: DB
-        if (CONST.DEBUG) console.log(sessions);
-        resolve([
-          sessions[credentials.username][token],
-          `${credentials.username}=${token}`,
-        ]);
       };
       checkUserPassword(credentials)
         .then(() => {
@@ -97,9 +86,14 @@ module.exports = (db) => {
     });
   };
   const revokeAllSessions = (credentials) => {
+    console.log("herex");
     return new Promise((resolve, reject) => {
       checkUserPassword(credentials)
-        .then(() => revokeAllSessionsAdmin())
+        .then(() =>
+          revokeAllSessionsAdmin(credentials)
+            .then(() => resolve())
+            .catch((error) => next(error))
+        )
         .catch((error) => reject(error));
     });
   };

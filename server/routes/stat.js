@@ -10,9 +10,12 @@ module.exports = (root, handleError) => {
     app.get(resource, (request, response, next) => {
       authManager
         .authorizeView(request.session.username)
-        .then(() =>
-          statManager.getStatistics().then((stats) => response.json(stats))
-        )
+        .then(() => {
+          statManager
+            .getStatistics()
+            .then((stats) => response.json(stats))
+            .catch((error) => next(error));
+        })
         .catch((error) => next(error));
     });
     app.get(`${resource}/:galleryId`, (request, response, next) => {
@@ -21,11 +24,12 @@ module.exports = (root, handleError) => {
           request.session.username,
           request.params.galleryId
         )
-        .then(() =>
+        .then(() => {
           statManager
             .getGalleryStatistics(request.params.galleryId)
             .then((stats) => response.json(stats))
-        )
+            .catch((error) => next(error));
+        })
         .catch((error) => next(error));
     });
   };

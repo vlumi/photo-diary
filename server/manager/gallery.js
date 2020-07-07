@@ -33,12 +33,11 @@ module.exports = (db) => {
 
   const getAllGalleries = () => {
     return new Promise((resolve, reject) => {
-      db.loadGalleries(
-        (galleries) => {
+      db.loadGalleries()
+        .then((galleries) => {
           resolve([...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)]);
-        },
-        (error) => reject(error)
-      );
+        })
+        .catch((error) => reject(error));
     });
   };
   const createGallery = (gallery) => {
@@ -46,12 +45,11 @@ module.exports = (db) => {
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });
   };
-  const getGallery = (galleryId, onError) => {
+  const getGallery = (galleryId) => {
     return new Promise((resolve, reject) => {
       const loadGalleryPhotos = (gallery) => {
-        db.loadGalleryPhotos(
-          galleryId,
-          (galleryPhotos) => {
+        db.loadGalleryPhotos(galleryId)
+          .then((galleryPhotos) => {
             const photosByYearMonthDay = groupPhotosByYearMonthDay(
               galleryPhotos
             );
@@ -59,20 +57,17 @@ module.exports = (db) => {
               ...gallery,
               photos: photosByYearMonthDay,
             });
-          },
-          (error) => reject(error)
-        );
+          })
+          .catch((error) => reject(error));
       };
       if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
         loadGalleryPhotos(CONST.SPECIAL_GALLERIES[galleryId]);
       } else {
-        db.loadGallery(
-          galleryId,
-          (data) => {
+        db.loadGallery(galleryId)
+          .then((data) => {
             loadGalleryPhotos(data);
-          },
-          (error) => reject(error)
-        );
+          })
+          .catch((error) => reject(error));
       }
     });
   };

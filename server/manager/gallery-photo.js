@@ -3,12 +3,9 @@ const CONST = require("../constants");
 module.exports = (db) => {
   const getPhoto = (galleryId, photoId, onSuccess, onError) => {
     return new Promise((resolve, reject) => {
-      db.loadGalleryPhoto(
-        galleryId,
-        photoId,
-        (photo) => resolve(photo),
-        (error) => reject(error)
-      );
+      db.loadGalleryPhoto(galleryId, photoId)
+        .then((photo) => resolve(photo))
+        .catch((error) => reject(error));
     });
   };
   const linkPhoto = (galleryId, photoId, onSuccess, onError) => {

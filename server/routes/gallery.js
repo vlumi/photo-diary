@@ -25,7 +25,8 @@ module.exports = (root, handleError) => {
                 authorizedGalleryIds.includes(gallery.id)
               );
               response.json(authorizedGalleries);
-            });
+            })
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
     });
@@ -37,9 +38,12 @@ module.exports = (root, handleError) => {
         .authorizeAdmin(request.session.username)
         .then(() => {
           const gallery = {};
-          response.json(galleryManager.createGallery(gallery)).then(() => {
-            // TODO: validate and set content from request.body
-          });
+          response
+            .json(galleryManager.createGallery(gallery))
+            .then(() => {
+              // TODO: validate and set content from request.body
+            })
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
     });
@@ -55,7 +59,8 @@ module.exports = (root, handleError) => {
         .then(() => {
           galleryManager
             .getGallery(request.params.galleryId)
-            .then((data) => response.json(data));
+            .then((data) => response.json(data))
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
     });
@@ -73,7 +78,8 @@ module.exports = (root, handleError) => {
           const gallery = {};
           galleryManager
             .updateGallery(gallery)
-            .then((gallery) => response.json(gallery));
+            .then((gallery) => response.json(gallery))
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
     });
@@ -89,7 +95,8 @@ module.exports = (root, handleError) => {
         .then(() => {
           galleryManager
             .deleteGallery(request.params.galleryId)
-            .then(() => response.status(204).end());
+            .then(() => response.status(204).end())
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
       F;

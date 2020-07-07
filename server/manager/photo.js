@@ -3,10 +3,9 @@ const CONST = require("../constants");
 module.exports = (db) => {
   const getAllPhotos = (onSuccess, onError) => {
     return new Promise((resolve, reject) => {
-      db.loadPhotos(
-        (photos) => resolve(photos),
-        (error) => reject(error)
-      );
+      db.loadPhotos()
+        .then((photos) => resolve(photos))
+        .catch((error) => reject(error));
     });
   };
 
@@ -18,11 +17,9 @@ module.exports = (db) => {
 
   const getPhoto = (photoId, onSuccess, onError) => {
     return new Promise((resolve, reject) => {
-      db.loadPhoto(
-        photoId,
-        (photo) => resolve(photo),
-        (error) => reject(error)
-      );
+      db.loadPhoto(photoId)
+        .then((photo) => resolve(photo))
+        .catch((error) => reject(error));
     });
   };
 

@@ -14,9 +14,12 @@ module.exports = (root, handleError) => {
       authManager
         .authorizeView(request.session.username)
         .then(() => {
-          photoManager.getAllPhotos().then((photos) => {
-            response.json(photos);
-          });
+          photoManager
+            .getAllPhotos()
+            .then((photos) => {
+              response.json(photos);
+            })
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
     });
@@ -29,7 +32,10 @@ module.exports = (root, handleError) => {
         .then(() => {
           // TODO: validate and set content from request.body
           const photo = {};
-          photoManager.createPhoto(photo).then((photo) => response.json(photo));
+          photoManager
+            .createPhoto(photo)
+            .then((photo) => response.json(photo))
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
     });
@@ -39,11 +45,12 @@ module.exports = (root, handleError) => {
     app.get(`${resource}/:photoId`, (request, response, next) => {
       authManager
         .authorizeView(request.session.username)
-        .then(() =>
+        .then(() => {
           photoManager
             .getPhoto(request.params.photoId)
             .then((photo) => response.json(photo))
-        )
+            .catch((error) => next(error));
+        })
         .catch((error) => next(error));
     });
     /**
@@ -67,7 +74,8 @@ module.exports = (root, handleError) => {
         .then(() => {
           photoManager
             .deletePhoto(request.params.galleryId)
-            .then(() => response.status(204).end());
+            .then(() => response.status(204).end())
+            .catch((error) => next(error));
         })
         .catch((error) => next(error));
     });

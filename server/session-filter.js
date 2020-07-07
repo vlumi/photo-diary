@@ -5,7 +5,6 @@ module.exports = (app, db) => {
 
   const attachSession = (request, response, next) => {
     const token = request.cookies["token"];
-    if (CONST.DEBUG) console.log("In session filter", token);
     const initGuestSession = () => {
       request.session = {
         username: "guest",

@@ -3,17 +3,16 @@ const CONST = require("../constants");
 module.exports = (db) => {
   const authorizeView = (username) => {
     return new Promise((resolve, reject) => {
-      db.loadUserAccessControl(
-        username,
-        (acl) => {
+      db.loadUserAccessControl(username)
+        .then((acl) => {
           const all = CONST.SPECIAL_GALLERY_ALL;
           if (all in acl && acl[all] >= CONST.ACCESS_VIEW) {
             resolve();
           } else {
             reject(CONST.ERROR_ACCESS);
           }
-        },
-        (error) => {
+        })
+        .catch((error) => {
           if (username !== "guest") {
             authorizeView("guest")
               .then(() => resolve())
@@ -21,23 +20,21 @@ module.exports = (db) => {
           } else {
             reject(error);
           }
-        }
-      );
+        });
     });
   };
   const authorizeAdmin = (username) => {
     return new Promise((resolve, reject) => {
-      db.loadUserAccessControl(
-        username,
-        (acl) => {
+      db.loadUserAccessControl(username)
+        .then((acl) => {
           const all = CONST.SPECIAL_GALLERY_ALL;
           if (all in acl && acl[all] >= CONST.ACCESS_ADMIN) {
             resolve();
           } else {
             reject(CONST.ERROR_ACCESS);
           }
-        },
-        (error) => {
+        })
+        .catch((error) => {
           if (username !== "guest") {
             authorizeAdmin("guest")
               .then(() => resolve())
@@ -45,15 +42,13 @@ module.exports = (db) => {
           } else {
             reject(error);
           }
-        }
-      );
+        });
     });
   };
   const authorizeGalleryView = (username, galleryId) => {
     return new Promise((resolve, reject) => {
-      db.loadUserAccessControl(
-        username,
-        (acl) => {
+      db.loadUserAccessControl(username)
+        .then((acl) => {
           if (Array.isArray(galleryId)) {
             const all = CONST.SPECIAL_GALLERY_ALL;
             const authorizedGalleries = galleryId.filter((id) => {
@@ -76,8 +71,8 @@ module.exports = (db) => {
               .then(() => resolve())
               .catch((error) => reject(error));
           }
-        },
-        (error) => {
+        })
+        .catch((error) => {
           if (username !== "guest") {
             authorizeGalleryView("guest", galleryId)
               .then(() => resolve())
@@ -85,16 +80,13 @@ module.exports = (db) => {
           } else {
             reject(error);
           }
-        }
-      );
+        });
     });
   };
   const authorizeGalleryAdmin = (username, galleryId) => {
     return new Promise((resolve, reject) => {
-      db.loadUserAccessControl(
-        username,
-        galleryId,
-        (acl) => {
+      db.loadUserAccessControl(username)
+        .then(galleryId, (acl) => {
           if (Array.isArray(galleryId)) {
             const all = CONST.SPECIAL_GALLERY_ALL;
             const authorizedGalleries = galleryId.filter((id) => {
@@ -117,8 +109,8 @@ module.exports = (db) => {
               .then(() => resolve())
               .catch((error) => reject(error));
           }
-        },
-        (error) => {
+        })
+        .catch((error) => {
           if (username !== "guest") {
             authorizeGalleryAdmin("guest", galleryId)
               .then(() => resolve())
@@ -126,8 +118,7 @@ module.exports = (db) => {
           } else {
             reject(error);
           }
-        }
-      );
+        });
     });
   };
 
