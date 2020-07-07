@@ -31,97 +31,120 @@ module.exports = (opts) => {
     throw "The path to the SQLite3 database must be set to DB_OPTS.";
   }
   const db = new sqlite3.Database(opts);
-  return {
-    loadGalleries: (onSuccess, onError) => {
-      const columns = COLUMNS.gallery.join(",");
-      const query = `SELECT ${columns} FROM gallery`;
-      db.all(query, function (error, rows) {
-        if (error) {
-          onError(error);
-        } else {
-          onSuccess(rows.map((row) => mapGalleryRow(row)));
-        }
-      });
-    },
-    loadGallery: (galleryId, onSuccess, onError) => {
-      const column = COLUMNS.gallery.join(",");
-      const query = `SELECT ${column} FROM gallery WHERE name = ?`;
-      db.all(query, galleryId, function (error, rows) {
-        if (error) {
-          onError(error);
-        } else {
-          if (rows.length != 1) {
-            onError(CONST.ERROR_NOT_FOUND);
-          } else {
-            onSuccess(mapGalleryRow(rows[0]));
-          }
-        }
-      });
-    },
-    loadGalleryPhotos: (galleryId, onSuccess, onError) => {
-      const getQuery = () => {
-        const columns = COLUMNS.photo.join(",");
-        const baseQuery = `SELECT ${columns} FROM photo`;
-        switch (galleryId) {
-          case CONST.SPECIAL_GALLERY_ALL:
-            return (
-              baseQuery +
-              " JOIN photo_gallery ON photo.name=photo_gallery.photo_name"
-            );
-          case CONST.SPECIAL_GALLERY_NONE:
-            return (
-              baseQuery +
-              " WHERE name NOT IN (SELECT photo_name FROM photo_gallery)"
-            );
-          default:
-            return (
-              baseQuery +
-              " JOIN photo_gallery ON photo.name=photo_gallery.photo_name" +
-              " WHERE photo_gallery.gallery_name = ?"
-            );
-        }
-      };
 
-      if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-        db.all(getQuery(), function (error, rows) {
-          if (error) {
-            onError(error);
-          } else {
-            onSuccess(rows.map((row) => mapPhotoRow(row)));
-          }
-        });
+  const loadUserAccessControl = (username, onSuccess, onError) => {
+    // No ACL implemented in the legacy Gallery, everyone has global view access.
+    onSuccess({
+      [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+    });
+  };
+  const loadUser = (username, onSuccess, onError) => {
+    onError(CONST.ERROR_NOT_IMPLEMENTED);
+  };
+  const loadGalleries = (onSuccess, onError) => {
+    const columns = COLUMNS.gallery.join(",");
+    const query = `SELECT ${columns} FROM gallery`;
+    db.all(query, function (error, rows) {
+      if (error) {
+        onError(error);
       } else {
-        db.all(getQuery(), galleryId, function (error, rows) {
-          if (error) {
-            onError(error);
-          } else {
-            onSuccess(rows.map((row) => mapPhotoRow(row)));
-          }
-        });
+        onSuccess(rows.map((row) => mapGalleryRow(row)));
       }
-    },
-    loadPhotos: (onSuccess, onError) => {
-      const query = "SELECT * FROM photo";
-      db.all(query, function (error, rows) {
+    });
+  };
+  const loadGallery = (galleryId, onSuccess, onError) => {
+    const column = COLUMNS.gallery.join(",");
+    const query = `SELECT ${column} FROM gallery WHERE name = ?`;
+    db.all(query, galleryId, function (error, rows) {
+      if (error) {
+        onError(error);
+      } else {
+        if (rows.length != 1) {
+          onError(CONST.ERROR_NOT_FOUND);
+        } else {
+          onSuccess(mapGalleryRow(rows[0]));
+        }
+      }
+    });
+  };
+  const loadGalleryPhotos = (galleryId, onSuccess, onError) => {
+    const getQuery = () => {
+      const columns = COLUMNS.photo.join(",");
+      const baseQuery = `SELECT ${columns} FROM photo`;
+      switch (galleryId) {
+        case CONST.SPECIAL_GALLERY_ALL:
+          return (
+            baseQuery +
+            " JOIN photo_gallery ON photo.name=photo_gallery.photo_name"
+          );
+        case CONST.SPECIAL_GALLERY_NONE:
+          return (
+            baseQuery +
+            " WHERE name NOT IN (SELECT photo_name FROM photo_gallery)"
+          );
+        default:
+          return (
+            baseQuery +
+            " JOIN photo_gallery ON photo.name=photo_gallery.photo_name" +
+            " WHERE photo_gallery.gallery_name = ?"
+          );
+      }
+    };
+
+    if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
+      db.all(getQuery(), function (error, rows) {
         if (error) {
           onError(error);
         } else {
           onSuccess(rows.map((row) => mapPhotoRow(row)));
         }
       });
-    },
-    loadPhoto: (photoId, onSuccess, onError) => {
-      const query = "SELECT * FROM photo WHERE name = ?";
-      db.all(query, photoId, function (error, rows) {
+    } else {
+      db.all(getQuery(), galleryId, function (error, rows) {
         if (error) {
           onError(error);
-        } else if (rows.length != 1) {
-          onError(CONST.ERROR_NOT_FOUND);
         } else {
-          onSuccess(mapPhotoRow(rows[0]));
+          onSuccess(rows.map((row) => mapPhotoRow(row)));
         }
       });
-    },
+    }
+  };
+  const loadGalleryPhoto = (galleryId, photoId, onSuccess, onError) => {
+    // Without ACL this is no different from global context
+    loadPhoto(photoId, onSuccess, onError);
+  };
+  const loadPhotos = (onSuccess, onError) => {
+    const query = "SELECT * FROM photo";
+    db.all(query, function (error, rows) {
+      if (error) {
+        onError(error);
+      } else {
+        onSuccess(rows.map((row) => mapPhotoRow(row)));
+      }
+    });
+  };
+  const loadPhoto = (photoId, onSuccess, onError) => {
+    const query = "SELECT * FROM photo WHERE name = ?";
+    db.all(query, photoId, function (error, rows) {
+      if (error) {
+        onError(error);
+      } else if (rows.length != 1) {
+        onError(CONST.ERROR_NOT_FOUND);
+      } else {
+        onSuccess(mapPhotoRow(rows[0]));
+      }
+    });
+  };
+
+  return {
+    loadUserAccessControl,
+    loadUser,
+    loadGalleries,
+    loadGallery,
+    loadGalleryPhotos,
+    loadGalleryPhoto,
+    loadPhotos,
+    loadPhoto,
   };
 };
 
@@ -132,7 +155,6 @@ const toString = (str) => {
   return "";
 };
 const mapGalleryRow = (row) => {
-  // console.log(row);
   return {
     id: toString(row.name),
     title: toString(row.title),
