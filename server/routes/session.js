@@ -79,7 +79,7 @@ module.exports = (root) => {
           }
           sessionManager
             .revokeAllSessions(credentials)
-            .next(() => {
+            .then(() => {
               response.clearCookie("token");
               response.status(204).end();
             })
