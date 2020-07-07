@@ -12,7 +12,13 @@ module.exports = (db) => {
           onError(CONST.ERROR_ACCESS);
         }
       },
-      (error) => onError(error)
+      (error) => {
+        if (username !== "guest") {
+          authorizeView("guest", onSuccess, onError);
+        } else {
+          onError(error);
+        }
+      }
     );
   };
   const authorizeAdmin = (username, onSuccess, onError) => {
@@ -26,7 +32,13 @@ module.exports = (db) => {
           onError(CONST.ERROR_ACCESS);
         }
       },
-      (error) => onError(error)
+      (error) => {
+        if (username !== "guest") {
+          authorizeAdmin("guest", onSuccess, onError);
+        } else {
+          onError(error);
+        }
+      }
     );
   };
   const authorizeGalleryView = (username, galleryId, onSuccess, onError) => {
@@ -39,7 +51,13 @@ module.exports = (db) => {
           authorizeView(username, onSuccess, onError);
         }
       },
-      (error) => onError(error)
+      (error) => {
+        if (username !== "guest") {
+          authorizeGalleryView("guest", galleryId, onSuccess, onError);
+        } else {
+          onError(error);
+        }
+      }
     );
   };
   const authorizeGalleryAdmin = (username, galleryId, onSuccess, onError) => {
@@ -53,7 +71,13 @@ module.exports = (db) => {
           authorizeAdmin(username, onSuccess, onError);
         }
       },
-      (error) => onError(error)
+      (error) => {
+        if (username !== "guest") {
+          authorizeGalleryAdmin("guest", galleryId, onSuccess, onError);
+        } else {
+          onError(error);
+        }
+      }
     );
   };
 
