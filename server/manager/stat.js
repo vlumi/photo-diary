@@ -1,85 +1,4 @@
-const CONST = require("./constants");
-
-module.exports = (db) => {
-  return {
-    getStatistics: (onSuccess, onError) => {
-      db.loadPhotos((photos) => {
-        onSuccess(collectStatistics(Object.values(photos)));
-      }, onError);
-    },
-    getGalleryStatistics: (galleryId, onSuccess, onError) => {
-      db.loadGalleryPhotos(
-        galleryId,
-        (photos) => {
-          onSuccess(collectStatistics(photos));
-        },
-        onError
-      );
-    },
-
-    getAllGalleries: (onSuccess, onError) => {
-      db.loadGalleries((galleries) => {
-        onSuccess([...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)]);
-      }, onError);
-    },
-    createGallery: (gallery, onSuccess, onError) => {
-      onError(CONST.ERROR_NOT_IMPLEMENTED);
-    },
-    getGallery: (galleryId, onSuccess, onError) => {
-      const loadGalleryPhotos = (gallery) => {
-        db.loadGalleryPhotos(
-          galleryId,
-          (galleryPhotos) => {
-            const photosByYearMonthDay = groupPhotosByYearMonthDay(
-              galleryPhotos
-            );
-            onSuccess({
-              ...gallery,
-              photos: photosByYearMonthDay,
-            });
-          },
-          onError
-        );
-      };
-      if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-        loadGalleryPhotos(CONST.SPECIAL_GALLERIES[galleryId]);
-      } else {
-        db.loadGallery(
-          galleryId,
-          (data) => {
-            loadGalleryPhotos(data);
-          },
-          onError
-        );
-      }
-    },
-    updateGallery: (gallery, onSuccess, onError) => {
-      onError(CONST.ERROR_NOT_IMPLEMENTED);
-    },
-    deleteGallery: () => {
-      onError(CONST.ERROR_NOT_IMPLEMENTED);
-    },
-    linkPhoto: (galleryId, photoId, onSuccess, onError) => {
-      onError(CONST.ERROR_NOT_IMPLEMENTED);
-    },
-    unlinkPhoto: (galleryId, photoId, onSuccess, onError) => {
-      onError(CONST.ERROR_NOT_IMPLEMENTED);
-    },
-
-    getAllPhotos: (onSuccess, onError) => db.loadPhotos(onSuccess, onError),
-    createPhoto: () => {
-      onError(CONST.ERROR_NOT_IMPLEMENTED);
-    },
-    getPhoto: (photoId, onSuccess, onError) =>
-      db.loadPhoto(photoId, onSuccess, onError),
-    updatePhoto: (photo, onSuccess, onError) => {
-      onError(CONST.ERROR_NOT_IMPLEMENTED);
-    },
-    deletePhoto: (photoId, onSuccess, onError) => {
-      onError(CONST.ERROR_NOT_IMPLEMENTED);
-    },
-  };
-};
+const CONST = require("../constants");
 
 const populateStatistics = (photos, stats) => {
   const updateTimeDistribution = (timeDistr, year, month, day, hour) => {
@@ -311,32 +230,23 @@ const collectStatistics = (photos) => {
   return stats;
 };
 
-const groupPhotosByYearMonthDay = (galleryPhotos) => {
-  const reducePhotoForList = (photo) => {
-    return {
-      id: photo.id,
-      title: photo.title,
-      taken: {
-        country: photo.taken.country,
-      },
-      author: photo.author,
-      size: {
-        thumbnail: photo.size.thumbnail,
-      },
-    };
+module.exports = (db) => {
+  const getStatistics = (onSuccess, onError) => {
+    db.loadPhotos((photos) => {
+      onSuccess(collectStatistics(Object.values(photos)));
+    }, onError);
   };
-
-  const photosByDate = {};
-  galleryPhotos.forEach((photo) => {
-    const yearMap = (photosByDate[photo.taken.year] =
-      photosByDate[photo.taken.year] || {});
-    const monthMap = (yearMap[photo.taken.month] =
-      yearMap[photo.taken.month] || {});
-    const dayPhotos = (monthMap[photo.taken.day] =
-      monthMap[photo.taken.day] || []);
-    // TODO: reduce meta for this?
-    // dayPhotos.push(reducePhotoForList(photo));
-    dayPhotos.push(photo);
-  });
-  return photosByDate;
+  const getGalleryStatistics = (galleryId, onSuccess, onError) => {
+    db.loadGalleryPhotos(
+      galleryId,
+      (photos) => {
+        onSuccess(collectStatistics(photos));
+      },
+      onError
+    );
+  };
+  return {
+    getStatistics,
+    getGalleryStatistics,
+  };
 };

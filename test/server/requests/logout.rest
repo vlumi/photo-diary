@@ -1,0 +1,3 @@
+DELETE http://localhost:4200/api/session
+Content-type: application/json
+Cookie: token=YWRtaW49NjM5NDEzYjctNjFmMC00MDc3LTk3NzMtNTRkNDEzMzQyYmRk; Path=/

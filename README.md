@@ -91,18 +91,46 @@ This project is intended to create an online photo gallery, with the photos arra
       - Add, update, link, remove orphaned photos
       - Add, update, remove users
 
+## Running Instructions
+
+The back-end server can be started as:
+```
+node server/index.js
+```
+
+### Environment Variables
+
+- `PORT` (default: 4200)
+- `DB_DRIVER` \*
+  - The driver to use for the backend DB connection.
+  - Currently implemented:
+    - `dummy` -- data hard-coded into the driver, for testing purposes only
+    - `legacy_sqlite3` -- DB from [gallery](https://github.com/vlumi/gallery)
+      - No ACL (no admin access support, everyone has global view access)
+      - Limited photo property support (e.g. gear)
+    - TBD: modernized `sqlite3`, `postgresql`, etc.
+- `DB_OPTS` (\* depends on `DB_DRIVER`)
+  - This parameter will be passed to the `DB_DRIVER` during connection.
+    - `dummy` -- Not used
+    - `legacy_sqlite3` -- Path to the DB file
+
+### Examples
+
+- `DB_DRIVER=dummy npm run dev`
+- `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
+- `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm prod`
+
 ## TODO
 
 - Back-end
   - DB
     - New schema
-  - API
-    - Authentication
-    - Authorization
-    - Modifications by admin
-      - Gallery
-      - Photo
-      - Gallery-photo linking
+  - Modification API for admin
+    - Gallery
+    - Photo
+    - Gallery-photo linking
+    - User
+    - User-gallery ACL
 - Front-end
   - Gallery view
     - Yearly
