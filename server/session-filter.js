@@ -5,12 +5,13 @@ module.exports = (app, db, handleError) => {
 
   const attachSession = (request, response, next) => {
     const token = request.cookies["token"];
-    const initGuestSession = () =>
-      (request.session = {
+    const initGuestSession = () => {
+      request.session = {
         username: "guest",
         created: undefined,
         updated: undefined,
-      });
+      };
+    };
     if (token) {
       sessionManager.verifySession(
         token,

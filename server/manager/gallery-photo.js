@@ -1,6 +1,9 @@
 const CONST = require("../constants");
 
 module.exports = (db) => {
+  const getPhoto = (galleryId, photoId, onSuccess, onError) => {
+    db.loadGalleryPhoto(galleryId, photoId, onSuccess, onError);
+  };
   const linkPhoto = (galleryId, photoId, onSuccess, onError) => {
     onError(CONST.ERROR_NOT_IMPLEMENTED);
   };
@@ -9,6 +12,7 @@ module.exports = (db) => {
   };
 
   return {
+    getPhoto,
     linkPhoto,
     unlinkPhoto,
   };

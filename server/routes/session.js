@@ -4,8 +4,12 @@ module.exports = (root, handleError) => {
   const endPoint = `${root}/session`;
 
   return (app, db) => {
+    const authManager = require("../manager/auth")(db);
     const sessionManager = require("../manager/session")(db);
 
+    /**
+     * Login, creating a new session.
+     */
     app.post(endPoint, (request, response) => {
       const credentials = {
         username: request.body.username,
@@ -29,11 +33,12 @@ module.exports = (root, handleError) => {
           response.cookie("token", encodedToken);
           response.status(204).end();
         },
-        (error) => {
-          handleError(response, error, 401);
-        }
+        (error) => handleError(response, error, 401)
       );
     });
+    /**
+     * Logout, revoking the session.
+     */
     app.delete(endPoint, (request, response) => {
       sessionManager.revokeSession(
         request.cookies["token"],
@@ -47,23 +52,40 @@ module.exports = (root, handleError) => {
         }
       );
     });
+    /**
+     * Revoke all sessions of a user.
+     */
     app.post(endPoint + "/revoke-all", (request, response) => {
       const credentials = {
         username: request.body.username,
         password: request.body.password,
       };
-      if (!credentials.username || !credentials.password) {
+      if (!credentials.username) {
         handleError(response, CONST.ERROR_LOGIN, 400);
         return;
       }
-      sessionManager.revokeAllSessions(
-        credentials,
+      authManager.authorizeAdmin(
+        request.session.username,
         () => {
-          response.clearCookie("token");
-          response.status(204).end();
+          sessionManager.revokeAllSessionsAdmin(
+            credentials,
+            () => response.status(204).end(),
+            (error) => handleError(response, error, 401)
+          );
         },
         (error) => {
-          handleError(response, error, 401);
+          if (!credentials.password) {
+            handleError(response, CONST.ERROR_LOGIN, 400);
+            return;
+          }
+          sessionManager.revokeAllSessions(
+            credentials,
+            () => {
+              response.clearCookie("token");
+              response.status(204).end();
+            },
+            (error) => handleError(response, error, 401)
+          );
         }
       );
     });

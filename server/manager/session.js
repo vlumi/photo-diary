@@ -67,16 +67,16 @@ module.exports = (db) => {
     if (CONST.DEBUG) console.log(sessions);
     onSuccess();
   };
+  const revokeAllSessionsAdmin = (credentials, onSuccess, onError) => {
+    if (credentials.username in sessions) {
+      // TODO: DB
+      delete sessions[credentials.username];
+    }
+    if (CONST.DEBUG) console.log(sessions);
+    onSuccess();
+  };
   const revokeAllSessions = (credentials, onSuccess, onError) => {
-    const handleSuccess = () => {
-      if (credentials.username in sessions) {
-        // TODO: DB
-        delete sessions[credentials.username];
-      }
-      if (CONST.DEBUG) console.log(sessions);
-      onSuccess();
-    };
-    checkUserPassword(credentials, handleSuccess, onError);
+    checkUserPassword(credentials, revokeAllSessionsAdmin, onError);
   };
   const verifySession = (encodedToken, onSuccess, onError) => {
     const [username, session] = decodeSessionToken(encodedToken);

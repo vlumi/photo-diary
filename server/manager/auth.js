@@ -32,7 +32,6 @@ module.exports = (db) => {
   const authorizeGalleryView = (username, galleryId, onSuccess, onError) => {
     db.loadUserAccessControl(
       username,
-      galleryId,
       (acl) => {
         if (galleryId in acl && acl[galleryId] >= CONST.ACCESS_VIEW) {
           onSuccess();
