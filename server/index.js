@@ -24,24 +24,9 @@ const connectDb = () => {
 };
 const db = connectDb();
 
-const handleError = (response, error) => {
-  if (CONST.DEBUG) console.log(error);
-  switch (error) {
-    case CONST.ERROR_SESSION_EXPIRED:
-      // TODO: notify user, but ok...
-      break;
-    case CONST.ERROR_NOT_IMPLEMENTED:
-    case CONST.ERROR_NOT_FOUND:
-    case CONST.ERROR_LOGIN:
-    default:
-      response.status(500).json({ error: error });
-      break;
-  }
-};
-
-require("./session-filter")(app, db, handleError);
+require("./session-filter")(app, db);
 require("./logger")(app);
-require("./routes")(app, db, handleError);
+require("./routes")(app, db);
 
 const PORT = process.env.PORT || CONST.DEFAULT_PORT;
 app.listen(PORT, () => {

@@ -1,14 +1,11 @@
 const CONST = require("../constants");
 
-module.exports = (app, db, handleError) => {
+module.exports = (app, db) => {
   const routesSession = require("./session")(CONST.API_ROOT);
-  const routesStat = require("./stat")(CONST.API_ROOT, handleError);
-  const routesGallery = require("./gallery")(CONST.API_ROOT, handleError);
-  const routesPhoto = require("./photo")(CONST.API_ROOT, handleError);
-  const routesGalleryPhoto = require("./gallery-photo")(
-    CONST.API_ROOT,
-    handleError
-  );
+  const routesStat = require("./stat")(CONST.API_ROOT);
+  const routesGallery = require("./gallery")(CONST.API_ROOT);
+  const routesPhoto = require("./photo")(CONST.API_ROOT);
+  const routesGalleryPhoto = require("./gallery-photo")(CONST.API_ROOT);
 
   routesSession(app, db);
   routesStat(app, db);

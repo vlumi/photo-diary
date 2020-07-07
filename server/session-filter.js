@@ -1,6 +1,6 @@
 const CONST = require("./constants");
 
-module.exports = (app, db, handleError) => {
+module.exports = (app, db) => {
   const sessionManager = require("./manager/session")(db);
 
   const attachSession = (request, response, next) => {
