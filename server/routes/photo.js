@@ -14,8 +14,9 @@ module.exports = (root, handleError) => {
       authManager
         .authorizeView(request.session.username)
         .then(() => {
-          photoManager.getAllPhotos().then((photos) => response.json(photos));
-          Í;
+          photoManager.getAllPhotos().then((photos) => {
+            response.json(photos);
+          });
         })
         .catch((error) => next(error));
     });

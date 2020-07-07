@@ -17,12 +17,10 @@ module.exports = (root, handleError) => {
           request.params.galleryId
         )
         .then(() =>
-          galleryPhotoManager.getPhoto(
-            request.params.galleryId,
-            request.params.photoId,
-            (photo) => response.json(photo),
-            (error) => handleError(response, error)
-          )
+          galleryPhotoManager
+            .getPhoto(request.params.galleryId, request.params.photoId)
+            .then((photo) => response.json(photo))
+            .catch((error) => next(error))
         )
         .catch((error) => next(error));
     });

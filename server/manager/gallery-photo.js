@@ -6,7 +6,7 @@ module.exports = (db) => {
       db.loadGalleryPhoto(
         galleryId,
         photoId,
-        () => resolve(),
+        (photo) => resolve(photo),
         (error) => reject(error)
       );
     });

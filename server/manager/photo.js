@@ -4,7 +4,7 @@ module.exports = (db) => {
   const getAllPhotos = (onSuccess, onError) => {
     return new Promise((resolve, reject) => {
       db.loadPhotos(
-        () => resolve(),
+        (photos) => resolve(photos),
         (error) => reject(error)
       );
     });
@@ -20,7 +20,7 @@ module.exports = (db) => {
     return new Promise((resolve, reject) => {
       db.loadPhoto(
         photoId,
-        () => resolve(),
+        (photo) => resolve(photo),
         (error) => reject(error)
       );
     });
