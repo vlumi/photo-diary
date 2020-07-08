@@ -75,7 +75,7 @@ try {
 
     const moveFile = () => {
       logger.info(`[${fileName}] Moving file`);
-      return fs.promises.rename(filePath, path.join(rootDir, "full", fileName));
+      return fs.promises.rename(filePath, path.join(rootDir, CONST.DIR_SIZE_ORIGINAL, fileName));
     };
 
     Promise.resolve()

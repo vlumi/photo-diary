@@ -1,7 +1,7 @@
 const DIR_INBOX = "inbox";
 const DIR_SIZE_ORIGINAL = "original";
-const DIR_SIZE_DISPLAY = "i";
-const DIR_SIZE_THUMBNAIL = "thumb";
+const DIR_SIZE_DISPLAY = "display";
+const DIR_SIZE_THUMBNAIL = "thumbnail";
 
 const DIM_DISPLAY = { width: 1500, height: 1500 };
 const DIM_THUMBNAIL = { width: 600, height: 200 };
