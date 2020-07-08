@@ -1,4 +1,4 @@
-# Photo-diary
+# Photo Diary
 
 This project is intended to create an online photo gallery, with the photos arranged by the date they were shot, in monthly views. This will (hopefully, eventually) replace the legacy [gallery](https://github.com/vlumi/gallery).
 
