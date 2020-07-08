@@ -6,11 +6,8 @@ const cleanString = (string) => {
 
 const cleanAperture = (apertureValue) =>
   Math.round(10 * Math.sqrt(Math.pow(2, apertureValue))) / 10;
-// const cleanShutterSpeed = (shutterSpeedValue) => Math.log2(shutterSpeedValue);
-const cleanShutterSpeed = (shutterSpeedValue) => {
-  const s = Math.pow(2, -shutterSpeedValue);
-  return s < 1 ? `1/${Math.round(1 / s)}` : `${s}`;
-};
+const cleanShutterSpeed = (shutterSpeedValue) =>
+  Math.pow(2, -shutterSpeedValue);
 
 const parseExif = (exif) => {
   return {
@@ -33,12 +30,15 @@ const parseExif = (exif) => {
       focalLength: exif.exif.FocalLength,
       focalLength35mmEquiv: exif.exif.FocalLengthIn35mmFormat,
       aperture: exif.exif.FNumber || cleanAperture(exif.exif.ApertureValue),
-      shutterSpeed: cleanShutterSpeed(exif.exif.ShutterSpeedValue),
+      exposureTime:
+        exif.exif.ExposureTime ||
+        exif.exif.ExposureValue ||
+        cleanShutterSpeed(exif.exif.ShutterSpeedValue),
       iso: exif.exif.ISO,
     },
     size: {
-      width: exif.exif.ExifImageWidth, // ???
-      height: exif.exif.ExifImageHeight, // ???
+      width: exif.exif.ExifImageWidth,
+      height: exif.exif.ExifImageHeight,
     },
   };
 };
@@ -48,7 +48,7 @@ try {
     new ExifImage({ image: filename }, function (error, exifData) {
       if (error) console.log("Error: " + error.message);
       else {
-        // console.log(exifData); // Do something with your data!
+        // console.log(exifData);
         console.log(filename, parseExif(exifData));
       }
     });

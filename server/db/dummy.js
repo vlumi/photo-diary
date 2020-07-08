@@ -215,7 +215,7 @@ const dummyPhotos = {
       focalLength: 27,
       focalLength35mmEquiv: 41,
       aperture: 5.6,
-      shutterSpeed: "1/744",
+      exposureTime: 0.0008,
       iso: 200,
     },
     size: {
@@ -250,7 +250,7 @@ const dummyPhotos = {
       focalLength: 20,
       focalLength35mmEquiv: 40,
       aperture: 1.7,
-      shutterSpeed: "1/15",
+      exposureTime: 0.0006666666666666666,
       iso: 200,
     },
     size: {
@@ -281,7 +281,7 @@ const dummyPhotos = {
       focalLength: 27,
       focalLength35mmEquiv: 41,
       aperture: 5.6,
-      shutterSpeed: "1/744",
+      exposureTime: 0.0008,
       iso: 200,
     },
     size: {
@@ -312,7 +312,7 @@ const dummyPhotos = {
       focalLength: 23,
       focalLength35mmEquiv: undefined,
       aperture: 5.6,
-      shutterSpeed: "1/133",
+      exposureTime: 0.0005263157894736842,
       iso: 200,
     },
     size: { width: 6000, height: 4000 },

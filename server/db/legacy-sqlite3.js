@@ -215,6 +215,13 @@ const toString = (str) => {
   }
   return "";
 };
+const calculateExposureTime = (shutterSpeed) => {
+  const [n, d] = shutterSpeed.split("/");
+  if (!d) {
+    return n;
+  }
+  return Number(n) / Number(d);
+};
 const mapGalleryRow = (row) => {
   return {
     id: toString(row.name),
@@ -261,7 +268,7 @@ const mapPhotoRow = (row) => {
     exposure: {
       focalLength: row.focal,
       aperture: toString(row.fstop),
-      shutterSpeed: toString(row.shutter),
+      exposureTime: calculateExposureTime(row.shutter),
       iso: toString(row.iso),
     },
     size: {

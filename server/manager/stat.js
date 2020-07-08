@@ -48,28 +48,25 @@ const populateStatistics = (photos, stats) => {
 
     fillTimeDistributionGaps(timeDistr);
   };
-  const updateExposureDistribution = (expDistr, photo) => {
-    const focalLength =
-      photo.exposure.focalLength > 0
-        ? photo.exposure.focalLength
-        : CONST.STATS_UNKNOWN;
+  const updateExposureDistribution = (expDistr, exposure) => {
+    const focalLength = exposure.focalLength;
     expDistr.byFocalLength = expDistr.byFocalLength || {};
     expDistr.byFocalLength[focalLength] =
       expDistr.byFocalLength[focalLength] || 0;
     expDistr.byFocalLength[focalLength]++;
 
-    const aperture = photo.exposure.aperture || CONST.STATS_UNKNOWN;
+    const aperture = exposure.aperture;
     expDistr.byAperture = expDistr.byAperture || {};
     expDistr.byAperture[aperture] = expDistr.byAperture[aperture] || 0;
     expDistr.byAperture[aperture]++;
 
-    const shutterSpeed = photo.exposure.shutterSpeed || CONST.STATS_UNKNOWN;
-    expDistr.byShutterSpeed = expDistr.byShutterSpeed || {};
-    expDistr.byShutterSpeed[shutterSpeed] =
-      expDistr.byShutterSpeed[shutterSpeed] || 0;
-    expDistr.byShutterSpeed[shutterSpeed]++;
+    const exposureTime = exposure.exposureTime;
+    expDistr.byExposureTime = expDistr.byExposureTime || {};
+    expDistr.byExposureTime[exposureTime] =
+      expDistr.byExposureTime[exposureTime] || 0;
+    expDistr.byExposureTime[exposureTime]++;
 
-    const iso = photo.exposure.iso || CONST.STATS_UNKNOWN;
+    const iso = exposure.iso;
     expDistr.byIso = expDistr.byIso || {};
     expDistr.byIso[iso] = expDistr.byIso[iso] || 0;
     expDistr.byIso[iso]++;
@@ -100,7 +97,7 @@ const populateStatistics = (photos, stats) => {
         photo.taken.hour
       );
       root.byExposure = root.byExposure || {};
-      updateExposureDistribution(root.byExposure, photo);
+      updateExposureDistribution(root.byExposure, photo.exposure);
     };
 
     const camera = buildName(photo.camera.make, photo.camera.model);
@@ -141,7 +138,24 @@ const populateStatistics = (photos, stats) => {
       photo.taken.day,
       photo.taken.hour
     );
-    updateExposureDistribution(stats.count.byExposure, photo);
+    const adjustExposure = (exposure) => {
+      const focalLength =
+        exposure.focalLength > 0
+          ? photo.exposure.focalLength
+          : CONST.STATS_UNKNOWN;
+      const aperture = photo.exposure.aperture || CONST.STATS_UNKNOWN;
+      const exposureTime = photo.exposure.exposureTime || CONST.STATS_UNKNOWN;
+      const iso = photo.exposure.iso || CONST.STATS_UNKNOWN;
+
+      return {
+        focalLength,
+        aperture,
+        exposureTime,
+        iso,
+      };
+    };
+    photo.exposure = adjustExposure(photo.exposure);
+    updateExposureDistribution(stats.count.byExposure, photo.exposure);
     updateGear(stats.count.byGear, photo);
   });
 };
