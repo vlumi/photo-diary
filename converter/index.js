@@ -8,17 +8,6 @@ const logger = require("./logger");
 const exifDumper = require("./exif-dumper");
 const imageConverter = require("./image-converter");
 
-const TARGETS = [
-  {
-    directory: CONST.DIR_SIZE_DISPLAY,
-    dimensions: CONST.DIM_DISPLAY,
-  },
-  {
-    directory: CONST.DIR_SIZE_THUMBNAIL,
-    dimensions: CONST.DIM_THUMBNAIL,
-  },
-];
-
 const getDirectory = (env) => {
   const directory = process.env[env];
   if (!directory) {
@@ -40,8 +29,8 @@ const getDirectory = (env) => {
   const subDirectories = [
     "",
     CONST.DIR_INBOX,
-    CONST.DIR_SIZE_ORIGINAL,
-    ...TARGETS.map((target) => target.directory),
+    CONST.DIR_ORIGINAL,
+    ...CONST.TARGETS.map((target) => target.directory),
   ];
   const missing =
     subDirectories.filter(
@@ -55,7 +44,7 @@ const getDirectory = (env) => {
 
 try {
   const rootDir = getDirectory("ROOT");
-  const watchDir = path.join(rootDir, "inbox");
+  const watchDir = path.join(rootDir, CONST.DIR_INBOX);
   logger.info(`Watching ${watchDir}`);
 
   const watcher = chokidar.watch("*.jpg", {
@@ -75,7 +64,10 @@ try {
 
     const moveFile = () => {
       logger.info(`[${fileName}] Moving file`);
-      return fs.promises.rename(filePath, path.join(rootDir, CONST.DIR_SIZE_ORIGINAL, fileName));
+      return fs.promises.rename(
+        filePath,
+        path.join(rootDir, CONST.DIR_ORIGINAL, fileName)
+      );
     };
 
     Promise.resolve()
@@ -91,14 +83,14 @@ try {
             }
           })
       )
-      .then(() => exifDumper(filePath))
       .then(() =>
-        TARGETS.reduce(
+        CONST.TARGETS.reduce(
           (promise, target) =>
             promise.then(() => imageConverter(fileName, rootDir, target)),
           Promise.resolve()
         )
       )
+      .then(() => exifDumper(fileName, rootDir))
       .then(() => moveFile())
       .then(() => process.hrtime(hrend))
       .then((hrend) => {
