@@ -2,7 +2,7 @@ const CONST = require("../constants");
 const db = require("../db");
 
 module.exports = (root, app) => {
-  const resource = `${root}/gallery-photo`;
+  const resource = `${root}/gallery-photos`;
 
   const authManager = require("../manager/auth")(db);
   const galleryPhotoManager = require("../manager/gallery-photo")(db);

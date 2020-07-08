@@ -2,7 +2,7 @@ const CONST = require("../constants");
 const db = require("../db");
 
 module.exports = (root, app) => {
-  const resource = `${root}/photo`;
+  const resource = `${root}/photos`;
 
   const authManager = require("../manager/auth")(db);
   const photoManager = require("../manager/photo")(db);

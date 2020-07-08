@@ -11,7 +11,7 @@ const ERROR_LOGIN = "Login failed";
 const ERROR_SESSION_EXPIRED = "Session expired";
 const ERROR_ACCESS = "Access denied";
 
-const STATS_UNKNOWN = "unknown";
+const STATS_UNKNOWN = "[unknown]";
 
 const SPECIAL_GALLERY_PREFIX = ":";
 const SPECIAL_GALLERY_ALL = `${SPECIAL_GALLERY_PREFIX}all`;

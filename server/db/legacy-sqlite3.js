@@ -244,7 +244,7 @@ const mapPhotoRow = (row) => {
       hour: hour,
       minute: minute,
       second: second,
-      country: toString(row.country),
+      country: toString(row.country), // TODO: cleanup "unknown" to undefined
       place: toString(row.place),
       author: toString(row.author),
     },
@@ -259,7 +259,7 @@ const mapPhotoRow = (row) => {
       serial: undefined,
     },
     exposure: {
-      focalLength: toString(row.focal),
+      focalLength: row.focal,
       aperture: toString(row.fstop),
       shutterSpeed: toString(row.shutter),
       iso: toString(row.iso),

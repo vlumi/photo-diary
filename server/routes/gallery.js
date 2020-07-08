@@ -3,7 +3,7 @@ const { json } = require("express");
 const db = require("../db");
 
 module.exports = (root, app) => {
-  const resource = `${root}/gallery`;
+  const resource = `${root}/galleries`;
 
   const authManager = require("../manager/auth")(db);
   const galleryManager = require("../manager/gallery")(db);

@@ -3,20 +3,19 @@ const CONST = require("../constants");
 const populateStatistics = (photos, stats) => {
   const updateTimeDistribution = (timeDistr, year, month, day, hour) => {
     const canonDate = (ymd) => ymd.year * 10000 + ymd.month * 100 + ymd.day;
-    if (
-      timeDistr.minDate === undefined ||
-      canonDate({ year, month, day }) < canonDate(timeDistr.minDate)
-    ) {
+
+    const canonYmd = canonDate({ year, month, day });
+    const minDate = timeDistr.minDate || undefined;
+    if (minDate === undefined || canonYmd < canonDate(minDate)) {
       timeDistr.minDate = {
         year: year,
         month: month,
         day: day,
       };
     }
-    if (
-      timeDistr.maxDate === undefined ||
-      canonDate({ year, month, day }) > canonDate(timeDistr.maxDate)
-    ) {
+    const maxDate = timeDistr.maxDate || undefined;
+
+    if (maxDate === undefined || canonYmd > canonDate(timeDistr.maxDate)) {
       timeDistr.maxDate = {
         year: year,
         month: month,
@@ -24,40 +23,54 @@ const populateStatistics = (photos, stats) => {
       };
     }
 
+    timeDistr.byYear = timeDistr.byYear || {};
     timeDistr.byYear[year] = timeDistr.byYear[year] || 0;
     timeDistr.byYear[year]++;
 
+    timeDistr.byYearMonth = timeDistr.byYearMonth || {};
     timeDistr.byYearMonth[year] = timeDistr.byYearMonth[year] || {};
     timeDistr.byYearMonth[year][month] =
       timeDistr.byYearMonth[year][month] || 0;
     timeDistr.byYearMonth[year][month]++;
 
+    timeDistr.byMonthOfYear = timeDistr.byMonthOfYear || {};
     timeDistr.byMonthOfYear[month] = timeDistr.byMonthOfYear[month] || 0;
     timeDistr.byMonthOfYear[month]++;
 
     const dow = new Date(year, month - 1, day).getDay();
+    timeDistr.byDayOfWeek = timeDistr.byDayOfWeek || {};
     timeDistr.byDayOfWeek[dow] = timeDistr.byDayOfWeek[dow] || 0;
     timeDistr.byDayOfWeek[dow]++;
 
+    timeDistr.byHourOfDay = timeDistr.byHourOfDay || {};
     timeDistr.byHourOfDay[hour] = timeDistr.byHourOfDay[hour] || 0;
     timeDistr.byHourOfDay[hour]++;
+
+    fillTimeDistributionGaps(timeDistr);
   };
   const updateExposureDistribution = (expDistr, photo) => {
-    const focalLength = photo.exposure.focalLength || CONST.STATS_UNKNOWN;
+    const focalLength =
+      photo.exposure.focalLength > 0
+        ? photo.exposure.focalLength
+        : CONST.STATS_UNKNOWN;
+    expDistr.byFocalLength = expDistr.byFocalLength || {};
     expDistr.byFocalLength[focalLength] =
       expDistr.byFocalLength[focalLength] || 0;
     expDistr.byFocalLength[focalLength]++;
 
     const aperture = photo.exposure.aperture || CONST.STATS_UNKNOWN;
+    expDistr.byAperture = expDistr.byAperture || {};
     expDistr.byAperture[aperture] = expDistr.byAperture[aperture] || 0;
     expDistr.byAperture[aperture]++;
 
     const shutterSpeed = photo.exposure.shutterSpeed || CONST.STATS_UNKNOWN;
+    expDistr.byShutterSpeed = expDistr.byShutterSpeed || {};
     expDistr.byShutterSpeed[shutterSpeed] =
       expDistr.byShutterSpeed[shutterSpeed] || 0;
     expDistr.byShutterSpeed[shutterSpeed]++;
 
     const iso = photo.exposure.iso || CONST.STATS_UNKNOWN;
+    expDistr.byIso = expDistr.byIso || {};
     expDistr.byIso[iso] = expDistr.byIso[iso] || 0;
     expDistr.byIso[iso]++;
   };
@@ -75,26 +88,43 @@ const populateStatistics = (photos, stats) => {
       return CONST.STATS_UNKNOWN;
     };
 
+    const updateGearData = (root) => {
+      root.total = root.total || 0;
+      root.total++;
+      root.byTime = root.byTime || {};
+      updateTimeDistribution(
+        root.byTime,
+        photo.taken.year,
+        photo.taken.month,
+        photo.taken.day,
+        photo.taken.hour
+      );
+      root.byExposure = root.byExposure || {};
+      updateExposureDistribution(root.byExposure, photo);
+    };
+
     const camera = buildName(photo.camera.make, photo.camera.model);
     const lens = buildName(photo.lens.make, photo.lens.model);
     if (camera) {
-      gear.byCamera[camera] = gear.byCamera[camera] || 0;
-      gear.byCamera[camera]++;
+      gear.byCamera = gear.byCamera || {};
+      gear.byCamera[camera] = gear.byCamera[camera] || {};
+      updateGearData(gear.byCamera[camera]);
+      if (lens && lens !== CONST.STATS_UNKNOWN) {
+        gear.byCamera[camera].byLens = gear.byCamera[camera].byLens || {};
+        const byLens = gear.byCamera[camera].byLens;
+        byLens[lens] = byLens[lens] || {};
+        updateGearData(byLens[lens]);
+      }
     }
-    if (lens) {
-      gear.byLens[lens] = gear.byLens[lens] || 0;
-      gear.byLens[lens]++;
-    }
-    if (camera && lens) {
-      gear.byCameraAndLens[camera] = gear.byCameraAndLens[camera] || {};
-      gear.byCameraAndLens[camera][lens] =
-        gear.byCameraAndLens[camera][lens] || 0;
-      gear.byCameraAndLens[camera][lens]++;
+    if (lens && lens !== CONST.STATS_UNKNOWN) {
+      gear.byLens = gear.byLens || {};
+      gear.byLens[lens] = gear.byLens[lens] || {};
+      updateGearData(gear.byLens[lens]);
     }
   };
 
   photos.forEach((photo) => {
-    stats.count.photos++;
+    stats.count.total++;
 
     stats.count.byCountry[photo.taken.country] =
       stats.count.byCountry[photo.taken.country] || 0;
@@ -124,20 +154,12 @@ const fillTimeDistributionGaps = (timeDistr) => {
     false: [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
   };
 
-  for (let m = 1; m <= 12; m++) {
-    timeDistr.byMonthOfYear[m] = timeDistr.byMonthOfYear[m] || 0;
-  }
-  for (let dow = 0; dow < 7; dow++) {
-    timeDistr.byDayOfWeek[dow] = timeDistr.byDayOfWeek[dow] || 0;
-  }
-  for (let h = 0; h < 24; h++) {
-    timeDistr.byHourOfDay[h] = timeDistr.byHourOfDay[h] || 0;
-  }
-
   if (timeDistr.minDate && timeDistr.maxDate) {
     const minYear = timeDistr.minDate.year;
     const maxYear = timeDistr.maxDate.year;
+    timeDistr.daysInYear = timeDistr.daysInYear || {};
     timeDistr.daysInYear[minYear] = 0;
+    timeDistr.daysInYearMonth = timeDistr.daysInYearMonth || {};
     timeDistr.daysInYearMonth[minYear] = {};
 
     const maxMonth = minYear === maxYear ? timeDistr.maxDate.month : 12;
@@ -187,46 +209,25 @@ const fillTimeDistributionGaps = (timeDistr) => {
       }
     }
   }
+  timeDistr.days = Object.values(timeDistr.daysInYear).reduce(
+    (a, b) => a + b,
+    0
+  );
 };
 
 const collectStatistics = (photos) => {
   const stats = {
     count: {
-      photos: 0,
-      days: 0,
-      byTime: {
-        minDate: undefined,
-        maxDate: undefined,
-        byYear: {},
-        daysInYear: {},
-        byYearMonth: {},
-        daysInYearMonth: {},
-        byMonthOfYear: {},
-        byDayOfWeek: {},
-        byHourOfDay: {},
-      },
-      byExposure: {
-        byFocalLength: {},
-        byAperture: {},
-        byShutterSpeed: {},
-        byIso: {},
-      },
-      byGear: {
-        byCamera: {},
-        byLens: {},
-        byCameraAndLens: {},
-      },
+      total: 0,
+      byTime: {},
+      byExposure: {},
+      byGear: {},
       byAuthor: {},
       byCountry: {},
     },
   };
 
   populateStatistics(photos, stats);
-  fillTimeDistributionGaps(stats.count.byTime);
-  stats.count.days = Object.values(stats.count.byTime.daysInYear).reduce(
-    (a, b) => a + b,
-    0
-  );
   return stats;
 };
 
@@ -242,15 +243,23 @@ module.exports = (db) => {
   };
   const getGalleryStatistics = (galleryId) => {
     return new Promise((resolve, reject) => {
-      db.loadGallery(galleryId)
-        .then((gallery) => {
-          db.loadGalleryPhotos(galleryId)
-            .then((photos) => {
-              resolve(collectStatistics(photos));
-            })
-            .catch((error) => reject(error));
-        })
-        .catch((error) => reject(error));
+      const loadGalleryPhotos = () =>
+        db
+          .loadGalleryPhotos(galleryId)
+          .then((photos) => {
+            resolve(collectStatistics(photos));
+          })
+          .catch((error) => reject(error));
+
+      if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
+        loadGalleryPhotos();
+      } else {
+        db.loadGallery(galleryId)
+          .then((gallery) => {
+            loadGalleryPhotos();
+          })
+          .catch((error) => reject(error));
+      }
     });
   };
   return {
