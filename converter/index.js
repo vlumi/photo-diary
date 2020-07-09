@@ -3,10 +3,10 @@ const fs = require("fs");
 const path = require("path");
 const chokidar = require("chokidar");
 
-const CONST = require("./constants");
-const logger = require("./logger");
-const exifDumper = require("./exif-dumper");
-const imageConverter = require("./image-converter");
+const CONST = require("./lib/constants");
+const logger = require("./lib/logger");
+const exifDumper = require("./lib/exif-dumper");
+const imageConverter = require("./lib/image-converter");
 
 const getDirectory = (env) => {
   const directory = process.env[env];
@@ -60,7 +60,7 @@ try {
 
   const processFile = (fileName) => {
     const filePath = path.join(watchDir, fileName);
-    const hrend = process.hrtime();
+    const hrstart = process.hrtime();
 
     const moveFile = () => {
       logger.info(`[${fileName}] Moving file`);
@@ -92,20 +92,20 @@ try {
       )
       .then(() => exifDumper(fileName, rootDir))
       .then(() => moveFile())
-      .then(() => process.hrtime(hrend))
-      .then((hrend) => {
+      .then(() => {
+        const hrend = process.hrtime(hrstart);
         const elapsedSeconds =
           Math.round(hrend[0] * 1000 * 1 + hrend[1] / 1000000) / 1000;
         logger.info(`[${fileName}] Processed, elapsed ${elapsedSeconds}s`);
       })
-      .catch((error) => console.error(error));
+      .catch((error) => logger.error(error));
   };
 
   watcher
     .on("add", (fileName) => processFile(fileName))
     .on("change", (fileName) => processFile(fileName))
-    .on("unlink", (fileName) => console.log("Removed:", fileName))
-    .on("error", (error) => console.error("Error:", error));
+    .on("unlink", (fileName) => logger.info(`[${fileName}] Removed from inbox`))
+    .on("error", (error) => logger.error("Error:", error));
 } catch (error) {
   console.error(error);
 }

@@ -47,7 +47,6 @@ module.exports = (fileName, rootDir) => {
   };
   const addDimensions = (properties, target, filePath) => {
     const dimensions = imageSize(filePath);
-    console.log("file dimensions", filePath, dimensions);
     properties.size = properties.size || {};
     if (dimensions.orientation >= 5) {
       // Vertical
@@ -72,50 +71,31 @@ module.exports = (fileName, rootDir) => {
         reject(error.message);
         return;
       }
-      // console.log(exifData);
-      resolve(parseExif(exifData));
+      const properties = parseExif(exifData);
+
+      addDimensions(properties, CONST.DIR_ORIGINAL, inboxFilePath);
+      CONST.TARGETS.forEach((target) => {
+        addDimensions(
+          properties,
+          target.directory,
+          path.join(rootDir, target.directory, fileName)
+        );
+      });
+
+      const jsonFileName = `${inboxFilePath}.json`;
+      fs.writeFile(
+        jsonFileName,
+        JSON.stringify({ [fileName]: properties }),
+        "utf8",
+        (error) => {
+          if (error) {
+            reject(error);
+          } else {
+            logger.info(`[${fileName}] Dumped exif to ${jsonFileName}`);
+            resolve();
+          }
+        }
+      );
     });
-  })
-    .then(
-      (properties) =>
-        new Promise((resolve, reject) => {
-          addDimensions(properties, CONST.DIR_ORIGINAL, inboxFilePath);
-          resolve(properties);
-        })
-    )
-    .then((properties) =>
-      CONST.TARGETS.reduce(
-        (promise, target) =>
-          promise.then((properties) => {
-            return new Promise((resolve, reject) => {
-              addDimensions(
-                properties,
-                target.directory,
-                path.join(rootDir, target.directory, fileName)
-              );
-              resolve(properties);
-            });
-          }),
-        Promise.resolve(properties)
-      )
-    )
-    .then(
-      (properties) =>
-        new Promise((resolve, reject) => {
-          const baseName = inboxFilePath.split(".").slice(0, -1).join(".");
-          fs.writeFile(
-            `${baseName}.json`,
-            JSON.stringify({ [fileName]: properties }),
-            "utf8",
-            (error) => {
-              if (error) {
-                reject(error);
-              } else {
-                logger.info(`[${fileName}] Extracted exif`);
-                resolve();
-              }
-            }
-          );
-        })
-    );
+  });
 };

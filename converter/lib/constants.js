@@ -1,3 +1,5 @@
+const DEBUG = false;
+
 const DIR_INBOX = "inbox";
 const DIR_ORIGINAL = "original";
 const DIR_DISPLAY = "display";
@@ -18,6 +20,8 @@ const TARGETS = [
 ];
 
 module.exports = {
+  DEBUG,
+
   DIR_INBOX,
   DIR_ORIGINAL,
   DIR_DISPLAY,
