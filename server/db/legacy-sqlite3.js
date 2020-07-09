@@ -215,13 +215,6 @@ const toString = (str) => {
   }
   return "";
 };
-const calculateExposureTime = (shutterSpeed) => {
-  const [n, d] = shutterSpeed.split("/");
-  if (!d) {
-    return n;
-  }
-  return Number(n) / Number(d);
-};
 const mapGalleryRow = (row) => {
   return {
     id: toString(row.name),
@@ -239,21 +232,40 @@ const mapPhotoRow = (row) => {
   const minute = taken.getMinutes();
   const second = taken.getSeconds();
 
+  const calculateExposureTime = (shutterSpeed) => {
+    const [n, d] = shutterSpeed.split("/");
+    if (!d) {
+      return n;
+    }
+    return Number(n) / Number(d);
+  };
+  const normalizeCountry = (country) =>
+    !country || country === "unknown" ? undefined : country;
+
   return {
     id: toString(row.name),
     title: toString(row.title),
     description: toString(row.description),
     taken: {
-      timestamp: toString(row.taken),
-      year: year,
-      month: month,
-      day: day,
-      hour: hour,
-      minute: minute,
-      second: second,
-      country: toString(row.country), // TODO: cleanup "unknown" to undefined
-      place: toString(row.place),
+      instant: {
+        timestamp: toString(row.taken),
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        minute: minute,
+        second: second,
+      },
       author: toString(row.author),
+      location: {
+        country: normalizeCountry(row.country),
+        place: toString(row.place),
+        coordinates: {
+          latitude: undefined,
+          longitude: undefined,
+          altitude: undefined,
+        },
+      },
     },
     camera: {
       make: undefined,

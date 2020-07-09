@@ -18,7 +18,8 @@
     "eslint": "^7.4.0",
     "exif": "^0.6.0",
     "gm": "^1.23.1",
-    "image-size": "^0.8.3"
+    "image-size": "^0.8.3",
+    "moment": "^2.27.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"

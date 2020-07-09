@@ -91,10 +91,10 @@ const populateStatistics = (photos, stats) => {
       root.byTime = root.byTime || {};
       updateTimeDistribution(
         root.byTime,
-        photo.taken.year,
-        photo.taken.month,
-        photo.taken.day,
-        photo.taken.hour
+        photo.taken.instant.year,
+        photo.taken.instant.month,
+        photo.taken.instant.day,
+        photo.taken.instant.hour
       );
       root.byExposure = root.byExposure || {};
       updateExposureDistribution(root.byExposure, photo.exposure);
@@ -133,10 +133,10 @@ const populateStatistics = (photos, stats) => {
 
     updateTimeDistribution(
       stats.count.byTime,
-      photo.taken.year,
-      photo.taken.month,
-      photo.taken.day,
-      photo.taken.hour
+      photo.taken.instant.year,
+      photo.taken.instant.month,
+      photo.taken.instant.day,
+      photo.taken.instant.hour
     );
     const adjustExposure = (exposure) => {
       const focalLength =
