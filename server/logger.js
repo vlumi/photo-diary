@@ -1,8 +1,7 @@
-const CONST = require("./constants");
 const morgan = require("morgan");
 
 module.exports = (app) => {
-  morgan.token("username", function (request, response) {
+  morgan.token("username", function (request) {
     if ("session" in request && "username" in request.session) {
       return request.session.username;
     } else {

@@ -1,5 +1,8 @@
 const DEBUG = false;
 
+const ENV_ROOT = "ROOT";
+const WATCH_GLOB = "*.jp?(e)g";
+
 const DIR_INBOX = "inbox";
 const DIR_ORIGINAL = "original";
 const DIR_DISPLAY = "display";
@@ -21,6 +24,9 @@ const TARGETS = [
 
 module.exports = {
   DEBUG,
+
+  ENV_ROOT,
+  WATCH_GLOB,
 
   DIR_INBOX,
   DIR_ORIGINAL,

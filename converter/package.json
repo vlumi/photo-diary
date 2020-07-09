@@ -6,13 +6,16 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dumpexif": "node dumpexif.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ."
   },
   "author": "Ville Misaki",
   "license": "MIT",
   "dependencies": {
     "chokidar": "^3.4.0",
     "dotenv": "^8.2.0",
+    "eslint": "^7.4.0",
     "exif": "^0.6.0",
     "gm": "^1.23.1",
     "image-size": "^0.8.3"

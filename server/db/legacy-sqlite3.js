@@ -32,15 +32,15 @@ module.exports = (opts) => {
   }
   const db = new sqlite3.Database(opts);
 
-  const loadUserAccessControl = (username, onSuccess, onError) => {
-    return new Promise((resolve, reject) => {
+  const loadUserAccessControl = () => {
+    return new Promise((resolve) => {
       // No ACL implemented in the legacy Gallery, everyone has global view access.
       resolve({
         [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
       });
     });
   };
-  const loadUser = (username) => {
+  const loadUser = () => {
     return new Promise((resolve, reject) => {
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });
@@ -65,7 +65,7 @@ module.exports = (opts) => {
         if (error) {
           return reject(error);
         }
-        if (rows.length != 1) {
+        if (rows.length !== 1) {
           return reject(CONST.ERROR_NOT_FOUND);
         }
         resolve(mapGalleryRow(rows[0]));
@@ -189,7 +189,7 @@ module.exports = (opts) => {
         if (error) {
           return reject(error);
         }
-        if (rows.length != 1) {
+        if (rows.length !== 1) {
           return reject(CONST.ERROR_NOT_FOUND);
         }
         resolve(mapPhotoRow(rows[0]));

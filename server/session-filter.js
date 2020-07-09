@@ -1,4 +1,3 @@
-const CONST = require("./constants");
 const db = require("./db");
 
 module.exports = (app) => {
@@ -31,7 +30,7 @@ module.exports = (app) => {
               // TODO: notify expiry
               next();
             })
-            .catch((error) => {
+            .catch(() => {
               // TODO: notify expiry
               next();
             });

@@ -100,7 +100,7 @@ module.exports = (db) => {
             resolve(authorizedGalleries);
           } else if (galleryId in acl) {
             if (acl[galleryId] >= CONST.ACCESS_ADMIN) {
-              resolve([gallery]);
+              resolve([galleryId]);
             } else {
               reject(CONST.ERROR_ACCESS);
             }

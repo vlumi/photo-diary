@@ -1,8 +1,8 @@
 const gm = require("gm").subClass({ imageMagick: true });
 const path = require("path");
 
-const CONST = require("./constants");
-const logger = require("./logger");
+const CONST = require("../util/constants");
+const logger = require("../util/logger");
 
 module.exports = (fileName, root, target) => {
   const inputDir = path.join(root, CONST.DIR_INBOX);

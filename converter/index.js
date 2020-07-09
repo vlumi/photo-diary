@@ -3,15 +3,15 @@ const fs = require("fs");
 const path = require("path");
 const chokidar = require("chokidar");
 
-const CONST = require("./lib/constants");
-const logger = require("./lib/logger");
-const exifDumper = require("./lib/exif-dumper");
-const imageConverter = require("./lib/image-converter");
+const CONST = require("./util/constants");
+const logger = require("./util/logger");
+const extractProperties = require("./extract-properties");
+const convertImage = require("./convert-image");
 
 const getDirectory = (env) => {
   const directory = process.env[env];
   if (!directory) {
-    throw `The ROOT of the directory structure must be defined.`;
+    throw "The ROOT of the directory structure must be defined.";
   }
 
   const checkDirectory = (directory) => {
@@ -37,17 +37,17 @@ const getDirectory = (env) => {
       (subDirectory) => !checkDirectory(path.join(directory, subDirectory))
     ).length > 0;
   if (missing) {
-    throw `Invalid directory structure in ROOT.`;
+    throw "Invalid directory structure in ROOT.";
   }
   return directory;
 };
 
 try {
-  const rootDir = getDirectory("ROOT");
+  const rootDir = getDirectory(CONST.ENV_ROOT);
   const watchDir = path.join(rootDir, CONST.DIR_INBOX);
   logger.info(`Watching ${watchDir}`);
 
-  const watcher = chokidar.watch("*.jpg", {
+  const watcher = chokidar.watch(CONST.WATCH_GLOB, {
     persistent: true,
 
     ignoreInitial: false,
@@ -86,11 +86,11 @@ try {
       .then(() =>
         CONST.TARGETS.reduce(
           (promise, target) =>
-            promise.then(() => imageConverter(fileName, rootDir, target)),
+            promise.then(() => convertImage(fileName, rootDir, target)),
           Promise.resolve()
         )
       )
-      .then(() => exifDumper(fileName, rootDir))
+      .then(() => extractProperties(fileName, rootDir))
       .then(() => moveFile())
       .then(() => {
         const hrend = process.hrtime(hrstart);

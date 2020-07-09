@@ -1,4 +1,3 @@
-const CONST = require("../constants");
 const db = require("../db");
 
 module.exports = (root, app) => {
@@ -29,9 +28,8 @@ module.exports = (root, app) => {
       .authorizeGalleryAdmin(request.session.username, request.params.galleryId)
       .then(() => {
         // TODO: validate and set content from request.body
-        const photo = {};
         galleryPhotoManager
-          .linkPhoto(galleryId, photoId)
+          .linkPhoto(request.params.galleryId, request.params.photoId)
           .then(() => {
             response.status(204).end();
           })
@@ -47,7 +45,7 @@ module.exports = (root, app) => {
       .authorizeGalleryAdmin(request.session.username, request.params.galleryId)
       .then(() => {
         galleryPhotoManager
-          .unlinkPhoto(galleryId, photoId)
+          .unlinkPhoto(request.params.galleryId, request.params.photoId)
           .then(() => {
             response.status(204).end();
           })

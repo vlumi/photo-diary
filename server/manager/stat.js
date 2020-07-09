@@ -162,7 +162,7 @@ const populateStatistics = (photos, stats) => {
 
 const fillTimeDistributionGaps = (timeDistr) => {
   const isLeap = (year) =>
-    year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
   const MONTH_LENGTH = {
     true: [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
     false: [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
@@ -183,7 +183,7 @@ const fillTimeDistributionGaps = (timeDistr) => {
       if (minYear === maxYear && timeDistr.minDate.month === maxMonth) {
         timeDistr.daysInYear[minYear] += timeDistr.daysInYearMonth[minYear][m] =
           timeDistr.maxDate.day - timeDistr.minDate.day + 1;
-      } else if (m == timeDistr.minDate.month) {
+      } else if (m === timeDistr.minDate.month) {
         timeDistr.daysInYear[minYear] += timeDistr.daysInYearMonth[minYear][m] =
           MONTH_LENGTH[isLeap(minYear)][m] - timeDistr.minDate.day + 1;
       } else {
@@ -214,7 +214,7 @@ const fillTimeDistributionGaps = (timeDistr) => {
       if (minYear === maxYear && minMonth === timeDistr.maxDate.month) {
         timeDistr.daysInYear[maxYear] += timeDistr.daysInYearMonth[maxYear][m] =
           timeDistr.maxDate.day - timeDistr.minDate.day + 1;
-      } else if (m == timeDistr.maxDate.month) {
+      } else if (m === timeDistr.maxDate.month) {
         timeDistr.daysInYear[maxYear] += timeDistr.daysInYearMonth[maxYear][m] =
           timeDistr.maxDate.day;
       } else {
@@ -269,7 +269,7 @@ module.exports = (db) => {
         loadGalleryPhotos();
       } else {
         db.loadGallery(galleryId)
-          .then((gallery) => {
+          .then(() => {
             loadGalleryPhotos();
           })
           .catch((error) => reject(error));

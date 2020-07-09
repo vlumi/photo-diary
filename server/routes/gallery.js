@@ -1,5 +1,3 @@
-const CONST = require("../constants");
-const { json } = require("express");
 const db = require("../db");
 
 module.exports = (root, app) => {
@@ -90,6 +88,5 @@ module.exports = (root, app) => {
           .catch((error) => next(error));
       })
       .catch((error) => next(error));
-    F;
   });
 };

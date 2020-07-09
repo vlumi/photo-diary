@@ -31,7 +31,7 @@ module.exports = () => {
   //   });
   // }
   const loadGalleries = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       resolve(Object.values(dummyGalleries).sort());
     });
   };
@@ -51,12 +51,14 @@ module.exports = () => {
           resolve(Object.values(dummyPhotos).sort());
           break;
         case CONST.SPECIAL_GALLERY_NONE:
-          const galleriesPhotos = Object.values(dummyGalleryPhotos).flat();
-          const photos = Object.keys(dummyPhotos)
-            .filter((photoId) => !galleriesPhotos.includes(photoId))
-            .map((photoId) => dummyPhotos[photoId])
-            .sort();
-          resolve(photos);
+          {
+            const galleriesPhotos = Object.values(dummyGalleryPhotos).flat();
+            const photos = Object.keys(dummyPhotos)
+              .filter((photoId) => !galleriesPhotos.includes(photoId))
+              .map((photoId) => dummyPhotos[photoId])
+              .sort();
+            resolve(photos);
+          }
           break;
         default:
           if (galleryId in dummyGalleries) {
@@ -114,7 +116,7 @@ module.exports = () => {
     });
   };
   const loadPhotos = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       resolve(dummyPhotos);
     });
   };
@@ -174,12 +176,11 @@ const dummyAccessControl = {
   plainUser: {
     [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
   },
-  guest: {},
+  guest: {
+    [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+  },
 };
 
-const dummyAdmins = ["admin"];
-const dummyGalleryAdmins = {};
-const dummyGalleryUsers = {};
 const dummyGalleries = {
   gallery1: {
     id: "gallery1",

@@ -1,5 +1,4 @@
 const CONST = require("../constants");
-const db = require("../db");
 
 module.exports = (app) => {
   require("./session")(CONST.API_ROOT, app);

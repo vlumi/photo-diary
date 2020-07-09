@@ -70,7 +70,7 @@ module.exports = (root, app) => {
           .then(() => response.status(204).end())
           .catch((error) => next(error));
       })
-      .catch((error) => {
+      .catch(() => {
         if (!credentials.password) {
           next(CONST.ERROR_LOGIN);
           return;

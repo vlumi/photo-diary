@@ -1,4 +1,3 @@
-const CONST = require("../constants");
 const db = require("../db");
 
 module.exports = (root, app) => {

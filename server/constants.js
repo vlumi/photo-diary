@@ -1,4 +1,4 @@
-const DEBUG = false;
+const DEBUG = true;
 
 const DEFAULT_PORT = 4200;
 const SESSION_LENGTH_MS = 1000 * 60 * 60 * 24 * 7;

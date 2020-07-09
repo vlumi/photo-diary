@@ -28,7 +28,7 @@ module.exports = (db) => {
 
       db.loadUser(credentials.username)
         .then((user) => verifyPassword(user))
-        .catch((error) => reject(CONST.ERROR_LOGIN));
+        .catch(() => reject(CONST.ERROR_LOGIN));
     });
   };
   const authenticateUser = (credentials) => {
@@ -60,7 +60,7 @@ module.exports = (db) => {
     });
   };
   const revokeSession = (encodedToken) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const [username, session] = decodeSessionToken(encodedToken);
       if (!username || !session) {
         resolve();
@@ -76,7 +76,7 @@ module.exports = (db) => {
     });
   };
   const revokeAllSessionsAdmin = (credentials) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       if (credentials.username in sessions) {
         // TODO: DB
         delete sessions[credentials.username];
@@ -92,7 +92,7 @@ module.exports = (db) => {
         .then(() =>
           revokeAllSessionsAdmin(credentials)
             .then(() => resolve())
-            .catch((error) => next(error))
+            .catch((error) => reject(error))
         )
         .catch((error) => reject(error));
     });

@@ -1,5 +1,3 @@
-const gallery = require("../manager/gallery");
-
 const DRIVER = {
   dummy: require("./dummy"),
   legacy_sqlite3: require("./legacy-sqlite3"),

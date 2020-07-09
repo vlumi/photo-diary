@@ -2,20 +2,6 @@ const CONST = require("../constants");
 
 module.exports = (db) => {
   const groupPhotosByYearMonthDay = (galleryPhotos) => {
-    const reducePhotoForList = (photo) => {
-      return {
-        id: photo.id,
-        title: photo.title,
-        taken: {
-          country: photo.taken.country,
-        },
-        author: photo.author,
-        size: {
-          thumbnail: photo.size.thumbnail,
-        },
-      };
-    };
-
     const photosByDate = {};
     galleryPhotos.forEach((photo) => {
       const yearMap = (photosByDate[photo.taken.year] =
@@ -42,6 +28,7 @@ module.exports = (db) => {
   };
   const createGallery = (gallery) => {
     return new Promise((resolve, reject) => {
+      console.log(`Creating gallery ${gallery}`);
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });
   };
@@ -71,8 +58,9 @@ module.exports = (db) => {
       }
     });
   };
-  const updateGallery = (gallery, onSuccess, onError) => {
+  const updateGallery = (gallery) => {
     return new Promise((resolve, reject) => {
+      console.log(`Updating gallery ${gallery}`);
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });
   };
