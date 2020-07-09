@@ -176,9 +176,7 @@ const dummyAccessControl = {
   plainUser: {
     [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
   },
-  guest: {
-    [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
-  },
+  guest: {},
 };
 
 const dummyGalleries = {
@@ -219,7 +217,7 @@ const dummyPhotos = {
       exposureTime: 0.0008,
       iso: 200,
     },
-    size: {
+    dimensions: {
       original: { width: 6000, height: 4000 },
       display: { width: 1500, height: 1000 },
       thumbnail: { width: 150, height: 100 },
@@ -254,7 +252,7 @@ const dummyPhotos = {
       exposureTime: 0.0006666666666666666,
       iso: 200,
     },
-    size: {
+    dimensions: {
       original: { width: 6000, height: 4000 },
       display: { width: 1500, height: 1000 },
       thumbnail: { width: 150, height: 100 },
@@ -285,7 +283,7 @@ const dummyPhotos = {
       exposureTime: 0.0008,
       iso: 200,
     },
-    size: {
+    dimensions: {
       original: { width: 6000, height: 4000 },
       display: { width: 1500, height: 1000 },
       thumbnail: { width: 150, height: 100 },
@@ -316,7 +314,7 @@ const dummyPhotos = {
       exposureTime: 0.0005263157894736842,
       iso: 200,
     },
-    size: { width: 6000, height: 4000 },
+    dimensions: { width: 6000, height: 4000 },
   },
 };
 const dummyGalleryPhotos = {

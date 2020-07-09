@@ -271,7 +271,7 @@ const mapPhotoRow = (row) => {
       exposureTime: calculateExposureTime(row.shutter),
       iso: toString(row.iso),
     },
-    size: {
+    dimensions: {
       original: {
         width: toString(row.f_width),
         height: toString(row.f_height),
