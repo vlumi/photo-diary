@@ -1,15 +1,16 @@
+const config = require("../utils/config");
+
 const DRIVER = {
   dummy: require("./dummy"),
   legacy_sqlite3: require("./legacy-sqlite3"),
 };
 
 const connectDb = () => {
-  const driver = process.env.DB_DRIVER;
+  const driver = config.DB_DRIVER;
   if (!driver) {
     throw "The DB_DRIVER environment variable must be set.";
   }
-  const dbOptions = process.env.DB_OPTS;
-  return DRIVER[driver](dbOptions);
+  return DRIVER[driver]();
 };
 const db = connectDb();
 

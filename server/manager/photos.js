@@ -1,7 +1,10 @@
 const CONST = require("../utils/constants");
+const logger = require("../utils/logger");
+const db = require("../db");
 
-module.exports = (db) => {
+module.exports = () => {
   const getAllPhotos = () => {
+    logger.debug("Getting all photos");
     return new Promise((resolve, reject) => {
       db.loadPhotos()
         .then((photos) => resolve(photos))
@@ -9,13 +12,15 @@ module.exports = (db) => {
     });
   };
 
-  const createPhoto = () => {
+  const createPhoto = (photo) => {
+    logger.debug("Creating photo", photo);
     return new Promise((resolve, reject) => {
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });
   };
 
   const getPhoto = (photoId) => {
+    logger.debug("Getting photo", photoId);
     return new Promise((resolve, reject) => {
       db.loadPhoto(photoId)
         .then((photo) => resolve(photo))
@@ -24,15 +29,15 @@ module.exports = (db) => {
   };
 
   const updatePhoto = (photo) => {
+    logger.debug("Updating photo", photo);
     return new Promise((resolve, reject) => {
-      console.log(`Update photo ${photo}`);
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });
   };
 
   const deletePhoto = (photoId) => {
+    logger.debug("Deleting photo", photoId);
     return new Promise((resolve, reject) => {
-      console.log(`Delete photo ${photoId}`);
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });
   };
