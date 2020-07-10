@@ -1,6 +1,8 @@
 const CONST = require("../utils/constants");
+const logger = require("../utils/logger");
+const db = require("../db");
 
-module.exports = (db) => {
+module.exports = () => {
   const groupPhotosByYearMonthDay = (galleryPhotos) => {
     const photosByDate = {};
     galleryPhotos.forEach((photo) => {
@@ -18,6 +20,7 @@ module.exports = (db) => {
   };
 
   const getAllGalleries = () => {
+    logger.debug("Getting all galleries");
     return new Promise((resolve, reject) => {
       db.loadGalleries()
         .then((galleries) => {
@@ -28,11 +31,12 @@ module.exports = (db) => {
   };
   const createGallery = (gallery) => {
     return new Promise((resolve, reject) => {
-      console.log(`Creating gallery ${gallery}`);
+      logger.debug("Creating gallery", gallery);
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });
   };
   const getGallery = (galleryId) => {
+    logger.debug("Getting gallery", galleryId);
     return new Promise((resolve, reject) => {
       const loadGalleryPhotos = (gallery) => {
         db.loadGalleryPhotos(galleryId)
@@ -60,11 +64,12 @@ module.exports = (db) => {
   };
   const updateGallery = (gallery) => {
     return new Promise((resolve, reject) => {
-      console.log(`Updating gallery ${gallery}`);
+      logger.debug("Updating gallery", gallery);
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });
   };
-  const deleteGallery = () => {
+  const deleteGallery = (galleryId) => {
+    logger.debug("Deleting gallery", galleryId);
     return new Promise((resolve, reject) => {
       reject(CONST.ERROR_NOT_IMPLEMENTED);
     });

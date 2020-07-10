@@ -1,7 +1,10 @@
 const CONST = require("../utils/constants");
+const logger = require("../utils/logger");
+const db = require("../db");
 
-module.exports = (db) => {
+module.exports = () => {
   const getStatistics = () => {
+    logger.debug("Getting statistics");
     return new Promise((resolve, reject) => {
       db.loadPhotos()
         .then((photos) => {
@@ -11,6 +14,7 @@ module.exports = (db) => {
     });
   };
   const getGalleryStatistics = (galleryId) => {
+    logger.debug("Getting statistics for gallery", galleryId);
     return new Promise((resolve, reject) => {
       const loadGalleryPhotos = () =>
         db
@@ -127,7 +131,6 @@ const populateDistributions = (photos, stats) => {
  * @param {number} hour Photo timestamp hour.
  */
 const updateTimeDistribution = (byTime, year, month, day, hour) => {
-  console.log();
   const canonDate = (ymd) => ymd.year * 10000 + ymd.month * 100 + ymd.day;
 
   const canonYmd = canonDate({ year, month, day });

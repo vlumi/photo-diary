@@ -1,24 +1,12 @@
 require("dotenv").config();
-const CONST = require("./utils/constants");
+const app = require("./app");
+const http = require("http");
 
-const express = require("express");
-const cors = require("cors");
-const compression = require("compression");
-const cookieParser = require("cookie-parser");
+const config = require("./utils/config");
+const logger = require("./utils/logger");
 
-const app = express();
-app.use(cors());
-app.use(compression());
-app.use(express.json());
-app.use(cookieParser());
-app.use(express.static("build"));
+const server = http.createServer(app);
 
-
-require("./session-filter")(app);
-require("./utils/logger")(app);
-require("./routes")(app);
-
-const PORT = process.env.PORT || CONST.DEFAULT_PORT;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(config.PORT, () => {
+  logger.info("Server running on port", config.PORT);
 });
