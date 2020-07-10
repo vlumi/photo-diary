@@ -11,6 +11,42 @@ This server implements the RESTful API of the Photo Diary
   - [Express](https://expressjs.com/) (tested on 4.17.1)
   - Check `package.json` for more detailed dependencies
 
+## Running Instructions
+
+The back-end server can be started as:
+
+```
+node index.js
+```
+
+### Environment Variables
+
+Certain parameters are passed through environment veriables. These can be either exported before running, adding inline- to the command when starting, or added to the file `env`, from which they will be picked up by [dotenv](https://www.npmjs.com/package/dotenv).
+
+- `PORT` (default: 4200)
+- `DB_DRIVER` \*
+  - The driver to use for the backend DB connection.
+  - Currently implemented:
+    - `dummy` -- data hard-coded into the driver, for testing purposes only
+    - `legacy_sqlite3` -- DB from [gallery](https://github.com/vlumi/gallery)
+      - No ACL (no admin access support, everyone has global view access)
+      - Limited photo property support (e.g. gear)
+    - TBD: modernized `sqlite3`, `postgresql`, etc.
+- `DB_OPTS` (\* depends on `DB_DRIVER`)
+  - This parameter will be passed to the `DB_DRIVER` during connection.
+    - `dummy` -- Not used
+    - `legacy_sqlite3` -- Path to the DB file
+
+### Examples
+
+- With the variables in `.env`:
+  - `npm run dev`
+  - `npm run prod`
+- With the variables inlined:
+  - `DB_DRIVER=dummy npm run dev`
+  - `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
+  - `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm prod`
+
 ## Public API
 
 ### Access control
