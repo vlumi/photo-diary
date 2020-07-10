@@ -1,4 +1,4 @@
-const CONST = require("../constants");
+const CONST = require("../utils/constants");
 
 /**
  * Dummy DB, with all DB values hard-coded.

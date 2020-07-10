@@ -1,4 +1,4 @@
-const CONST = require("../constants");
+const CONST = require("../utils/constants");
 const db = require("../db");
 
 module.exports = (root, app) => {

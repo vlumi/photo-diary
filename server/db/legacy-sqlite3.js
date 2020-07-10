@@ -1,4 +1,4 @@
-const CONST = require("../constants");
+const CONST = require("../utils/constants");
 
 const sqlite3 = require("sqlite3").verbose();
 

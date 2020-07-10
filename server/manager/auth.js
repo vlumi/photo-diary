@@ -1,4 +1,4 @@
-const CONST = require("../constants");
+const CONST = require("../utils/constants");
 
 module.exports = (db) => {
   const authorizeView = (username) => {

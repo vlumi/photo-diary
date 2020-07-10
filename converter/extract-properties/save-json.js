@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const CONST = require("../util/constants");
-const logger = require("../util/logger");
+const CONST = require("../utils/constants");
+const logger = require("../utils/logger");
 
 module.exports = (fileName, rootDir, properties) => {
   const inboxFilePath = path.join(rootDir, CONST.DIR_INBOX, fileName);

@@ -3,8 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const chokidar = require("chokidar");
 
-const CONST = require("./util/constants");
-const logger = require("./util/logger");
+const CONST = require("./utils/constants");
+const logger = require("./utils/logger");
 const extractProperties = require("./extract-properties");
 const convertImage = require("./convert-image");
 

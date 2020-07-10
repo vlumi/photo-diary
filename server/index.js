@@ -1,5 +1,5 @@
 require("dotenv").config();
-const CONST = require("./constants");
+const CONST = require("./utils/constants");
 
 const express = require("express");
 const cors = require("cors");
@@ -15,7 +15,7 @@ app.use(express.static("build"));
 
 
 require("./session-filter")(app);
-require("./logger")(app);
+require("./utils/logger")(app);
 require("./routes")(app);
 
 const PORT = process.env.PORT || CONST.DEFAULT_PORT;
