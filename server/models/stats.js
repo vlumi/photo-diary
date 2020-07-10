@@ -264,6 +264,7 @@ const updateGear = (byGear, photo) => {
     return CONST.STATS_UNKNOWN;
   };
 
+  // TODO: remove this when filters are implemented
   const updateGearData = (root) => {
     root.total = root.total || 0;
     root.total++;

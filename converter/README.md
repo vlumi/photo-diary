@@ -5,15 +5,15 @@ The converter is a tool to convert images for the Photo Diary, preparing the dat
 - Extract the EXIF information from the photos, storing them as `<file-base-name>.json` into the `inbox` directory
 - Generate the display and thumbnail sizes of each photo
   - Put them into the `display` and `thumbnail` directories respectively
-- Move each original photo to `original` folder after completing
+- Move each original photo to `original` directory after completing
 
 The root directory is passed using the `ROOT` environment variable, with the contained directory structure expected to be as follows:
 
-- `root`
-  - `inbox`
-  - `original`
-  - `display`
-  - `thumbnail`
+- `root` – Common root directory to keep everything together.
+  - `inbox` – The converter is monitoring this directory for new photos.
+  - `original` – Original photos will be moved here after they have been processed.
+  - `display` – Standard display-sized photos are generated here.
+  - `thumbnail` – Thumbnail-sized photos are generated here.
 
 ## Requirements
 

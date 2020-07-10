@@ -1,12 +1,97 @@
 # Photo Diary
 
+**This project is a **_work in progress_**.**
+
 This project is intended to create an online photo gallery, with the photos arranged by the date they were shot, in monthly views. This will (hopefully, eventually) replace the legacy [gallery](https://github.com/vlumi/gallery).
+
+## Structure
+
+Photo Diary is split into separate independent modules, each handling its own sub-system:
+
+- TBD: app
+- [server](server) – Back-end API.
+- [converter](converter) – Back-end process for pre-processing new photos to be added to the gallery.
+
+## Roadmap
+
+### Milestone 0.1
+
+On par with [gallery](https://github.com/vlumi/gallery)].
+
+- Back-end
+  - Read-only
+  - Using existing [gallery](https://github.com/vlumi/gallery)] schema
+- Front-end
+  - Read-only
+  - Gallery view
+    - Monthly
+    - Individual photo
+  - Statistics
+    - Simple, static one-time rendering
+
+### Milestone 0.2
+
+- Back-end
+  - New schema
+    - Users, authentication and authorization
+    - More photo metadata
+    - Migrate from SQLite -> ???
+  - New command-line tool for managing DB content
+- Front-end
+  - Gallery view
+    - Yearly
+
+### Milestone 0.3
+
+- Front-end
+  - Statistics
+    - More dynamic -- filters
+      - By gallery
+      - By gear
+      - By author
+      - By exposure settings
+      - By country
+      - By time
+        - By year
+        - By year/month
+        - By year/month/day
+        - By range
+
+### Milestone 1.0
+
+- Back-end
+  - Modification API
+    - User
+    - User-gallery ACL
+    - Gallery
+    - Photo
+    - Gallery-photo linking
+- Front-end
+  - Global admin view
+    - Manage users & ACL
+    - Manage galleries
+    - Manage photos
+    - Manage gallery/photo linking
+
+## Backlog
+
+This features would be nice to have, but are too far into the future to put on the roadmap.
+
+- Front-end
+  - Gallery view
+    - Multiple display sizes, dynamically chosen to match client window size
+    - Photo license information
+      - Permit/deny original size download by users
+  - Gallery admin view (TBD)
+    - Manage authorized galleries
+    - Manage photos linked to only authorized galleries
+    - Manage gallery/photo linking
 
 ## Planned Features
 
 - Photos segmented into galleries
   - Each photo can be in any number of galleries
-  - Single level -- no nesting
+  - Single level – no nesting
   - One gallery view at a time
   - Virtual root configuration based on URL
     - Host/domain, path
@@ -90,58 +175,3 @@ This project is intended to create an online photo gallery, with the photos arra
       - Create, update, delete galleries
       - Add, update, link, remove orphaned photos
       - Add, update, remove users
-
-## Running Instructions
-
-The back-end server can be started as:
-
-```
-node server/index.js
-```
-
-### Environment Variables
-
-Certain parameters are passed through environment veriables. These can be either exported before running, adding inline- to the command when starting, or added to the file `env`, from which they will be picked up by [dotenv](https://www.npmjs.com/package/dotenv).
-
-- `PORT` (default: 4200)
-- `DB_DRIVER` \*
-  - The driver to use for the backend DB connection.
-  - Currently implemented:
-    - `dummy` -- data hard-coded into the driver, for testing purposes only
-    - `legacy_sqlite3` -- DB from [gallery](https://github.com/vlumi/gallery)
-      - No ACL (no admin access support, everyone has global view access)
-      - Limited photo property support (e.g. gear)
-    - TBD: modernized `sqlite3`, `postgresql`, etc.
-- `DB_OPTS` (\* depends on `DB_DRIVER`)
-  - This parameter will be passed to the `DB_DRIVER` during connection.
-    - `dummy` -- Not used
-    - `legacy_sqlite3` -- Path to the DB file
-
-### Examples
-
-- With the variables in `.env`:
-  - `npm run dev`
-  - `npm run prod`
-- With the variables inlined:
-  - `DB_DRIVER=dummy npm run dev`
-  - `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
-  - `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm prod`
-
-## TODO
-
-- Back-end
-  - DB
-    - New schema
-  - Modification API for admin
-    - Gallery
-    - Photo
-    - Gallery-photo linking
-    - User
-    - User-gallery ACL
-- Front-end
-  - Gallery view
-    - Yearly
-    - Monthly
-    - Individual photo
-  - Statistics
-  - Admin
