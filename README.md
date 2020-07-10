@@ -16,13 +16,12 @@ Photo Diary is split into separate independent modules, each handling its own su
 
 ### Milestone 0.1
 
-On par with [gallery](https://github.com/vlumi/gallery).
+On par with [gallery](https://github.com/vlumi/gallery)].
 
 - Back-end
   - Read-only
-  - Using existing [gallery](https://github.com/vlumi/gallery) schema
+  - Using existing [gallery](https://github.com/vlumi/gallery)] schema
 - Front-end
-  - Responsive
   - Read-only
   - Gallery view
     - Monthly
@@ -87,8 +86,6 @@ This features would be nice to have, but are too far into the future to put on t
     - Manage authorized galleries
     - Manage photos linked to only authorized galleries
     - Manage gallery/photo linking
-  - Support for localization
-    - English, Finnish, Japanese, ...
 
 ## Planned Features
 
