@@ -4,46 +4,13 @@ const path = require("path");
 const chokidar = require("chokidar");
 
 const CONST = require("./utils/constants");
+const config = require("./utils/config");
 const logger = require("./utils/logger");
 const extractProperties = require("./extract-properties");
 const convertImage = require("./convert-image");
 
-const getDirectory = (env) => {
-  const directory = process.env[env];
-  if (!directory) {
-    throw "The ROOT of the directory structure must be defined.";
-  }
-
-  const checkDirectory = (directory) => {
-    if (!fs.existsSync(directory)) {
-      logger.error(`Missing directory: ${directory}`);
-      return false;
-    }
-    if (!fs.lstatSync(directory).isDirectory()) {
-      logger.error(`Not a directory: ${directory}`);
-      return false;
-    }
-    return true;
-  };
-
-  const subDirectories = [
-    "",
-    CONST.DIR_INBOX,
-    CONST.DIR_ORIGINAL,
-    ...CONST.TARGETS.map((target) => target.directory),
-  ];
-  const missing =
-    subDirectories.filter(
-      (subDirectory) => !checkDirectory(path.join(directory, subDirectory))
-    ).length > 0;
-  if (missing) {
-    throw "Invalid directory structure in ROOT.";
-  }
-  return directory;
-};
-
 try {
-  const rootDir = getDirectory(CONST.ENV_ROOT);
+  const rootDir = config.getDirectory();
   const watchDir = path.join(rootDir, CONST.DIR_INBOX);
   logger.info(`Watching ${watchDir}`);
 

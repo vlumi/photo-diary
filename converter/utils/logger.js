@@ -1,3 +1,5 @@
+const config = require("./config");
+
 const timeStamp = () => {
   const toIsoString = (date) => {
     const y = String(date.getFullYear()).padStart(4, "0");
@@ -12,7 +14,15 @@ const timeStamp = () => {
   return toIsoString(new Date());
 };
 
+const debug = (...params) => {
+  if (config.DEBUG) console.log(`[${timeStamp()}] DEBUG:`, ...params);
+};
+const info = (...params) => console.log(`[${timeStamp()}] INFO:`, ...params);
+const error = (...params) =>
+  console.error(`[${timeStamp()}] ERROR:`, ...params);
+
 module.exports = {
-  info: (message) => console.log(`[${timeStamp()}] ${message}`),
-  error: (message) => console.log(`[${timeStamp()}] ERROR: ${message}`),
+  debug,
+  info,
+  error,
 };
