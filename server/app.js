@@ -17,17 +17,23 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static("build"));
 
-app.use(middleware.sessionFilter);
-
-app.use(middleware.requestLogger);
-
-app.use("/api/sessions", sessionsRouter);
-app.use("/api/stats", statsRouter);
-app.use("/api/galleries", galleriesRouter);
-app.use("/api/photos", photosRouter);
-app.use("/api/gallery-photos", galleryPhotosRouter);
-
-app.use(middleware.unknownEndpoint);
-app.use(middleware.errorHandler);
+const registerPreProcessors = () => {
+  app.use(middleware.sessionFilter);
+  app.use(middleware.requestLogger);
+};
+const registerRoutes = () => {
+  app.use("/api/sessions", sessionsRouter);
+  app.use("/api/stats", statsRouter);
+  app.use("/api/galleries", galleriesRouter);
+  app.use("/api/photos", photosRouter);
+  app.use("/api/gallery-photos", galleryPhotosRouter);
+};
+const registerPostProcessors = () => {
+  app.use(middleware.unknownEndpoint);
+  app.use(middleware.errorHandler);
+};
+registerPreProcessors();
+registerRoutes();
+registerPostProcessors();
 
 module.exports = app;
