@@ -2,6 +2,12 @@ const path = require("path");
 const exif = require("exif");
 const moment = require("moment");
 
+const logger = require("../utils/logger");
+const {
+  latitudeToDecimal,
+  longitudeToDecimal,
+} = require("../utils/coordinate-utils");
+
 module.exports = (fileName, rootDir) => {
   const filePath = path.join(rootDir, fileName);
 
@@ -14,33 +20,31 @@ module.exports = (fileName, rootDir) => {
     const cleanShutterSpeed = (shutterSpeedValue) =>
       Math.pow(2, -shutterSpeedValue);
     const parseGps = (gps) => {
-      const result = {
-        latitude: undefined,
-        longitude: undefined,
-        altitude: undefined,
-      };
       if (!gps) {
-        return result;
+        return undefined;
       }
-      const convertCoordinates = (coordinates, ref) =>
-        (ref === "W" || ref === "S" ? -1 : 1) *
-        (coordinates[0] + coordinates[1] / 60 + coordinates[2] / 3600);
-      if (gps.GPSAltitude) {
-        result.altitude = gps.GPSAltitude;
+      try {
+        const altitude = gps.GPSAltitude ? gps.GPSAltitude : undefined;
+        const latitude =
+          gps.GPSLatitude && gps.GPSLatitudeRef
+            ? latitudeToDecimal(...gps.GPSLatitude, gps.GPSLatitudeRef)
+            : undefined;
+        const longitude =
+          gps.GPSLongitude && gps.GPSLongitudeRef
+            ? longitudeToDecimal(...gps.GPSLongitude, gps.GPSLongitudeRef)
+            : undefined;
+        if (!altitude && !latitude && !longitude) {
+          return undefined;
+        }
+        return {
+          altitude,
+          latitude,
+          longitude,
+        };
+      } catch (error) {
+        logger.error(error);
+        return undefined;
       }
-      if (gps.GPSLatitude && gps.GPSLatitudeRef) {
-        result.latitude = convertCoordinates(
-          gps.GPSLatitude,
-          gps.GPSLatitudeRef
-        );
-      }
-      if (gps.GPSLongitude && gps.GPSLongitudeRef) {
-        result.longitude = convertCoordinates(
-          gps.GPSLongitude,
-          gps.GPSLongitudeRef
-        );
-      }
-      return result;
     };
     const parseTimestamp = (timestampString) => {
       const timestamp = moment(timestampString, "YYYY:MM:DD HH:mm:ss");

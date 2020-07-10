@@ -1,4 +1,3 @@
-const dateUtils = require("../../utils/date-utils");
 const { isLeap } = require("../../utils/date-utils");
 
 test("isLeap of undefined", () => expect(isLeap(undefined)).toBe(undefined));

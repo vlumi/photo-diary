@@ -1,4 +1,4 @@
-const config = require("../utils/config");
+const config = require("./config");
 
 const timeStamp = () => {
   const toIsoString = (date) => {
