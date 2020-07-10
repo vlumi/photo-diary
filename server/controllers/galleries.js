@@ -1,17 +1,17 @@
 const router = require("express").Router();
 module.exports = router;
 
-const authManager = require("../utils/auth")();
-const galleryManager = require("../manager/galleries")();
+const authorizer = require("../utils/authorizer")();
+const galleriesModel = require("../models/galleries")();
 
 /**
  * Get all galleries.
  */
 router.get("/", (request, response, next) => {
-  galleryManager
+  galleriesModel
     .getAllGalleries()
     .then((galleries) => {
-      authManager
+      authorizer
         .authorizeGalleryView(
           request.session.username,
           galleries.map((gallery) => gallery.id)
@@ -30,12 +30,12 @@ router.get("/", (request, response, next) => {
  * Create a new gallery.
  */
 router.post("/", (request, response, next) => {
-  authManager
+  authorizer
     .authorizeAdmin(request.session.username)
     .then(() => {
       const gallery = {};
       response
-        .json(galleryManager.createGallery(gallery))
+        .json(galleriesModel.createGallery(gallery))
         .then(() => {
           // TODO: validate and set content from request.body
         })
@@ -47,10 +47,10 @@ router.post("/", (request, response, next) => {
  * Get a single gallery, including its photos.
  */
 router.get("/:galleryId", (request, response, next) => {
-  authManager
+  authorizer
     .authorizeGalleryView(request.session.username, request.params.galleryId)
     .then(() => {
-      galleryManager
+      galleriesModel
         .getGallery(request.params.galleryId)
         .then((data) => response.json(data))
         .catch((error) => next(error));
@@ -61,12 +61,12 @@ router.get("/:galleryId", (request, response, next) => {
  * Update gallery properties
  */
 router.put("/:galleryId", (request, response, next) => {
-  authManager
+  authorizer
     .authorizeGalleryAdmin(request.session.username, request.params.galleryId)
     .then(() => {
       // TODO: validate and set content from request.body
       const gallery = {};
-      galleryManager
+      galleriesModel
         .updateGallery(gallery)
         .then((gallery) => response.json(gallery))
         .catch((error) => next(error));
@@ -77,10 +77,10 @@ router.put("/:galleryId", (request, response, next) => {
  * Delete a gallery.
  */
 router.delete("/:galleryId", (request, response, next) => {
-  authManager
+  authorizer
     .authorizeGalleryAdmin(request.session.username, request.params.galleryId)
     .then(() => {
-      galleryManager
+      galleriesModel
         .deleteGallery(request.params.galleryId)
         .then(() => response.status(204).end())
         .catch((error) => next(error));

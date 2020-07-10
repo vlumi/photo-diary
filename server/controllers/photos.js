@@ -1,17 +1,17 @@
 const router = require("express").Router();
 module.exports = router;
 
-const authManager = require("../utils/auth")();
-const photoManager = require("../manager/photos")();
+const authorizer = require("../utils/authorizer")();
+const photosModel = require("../models/photos")();
 
 /**
  * Get the properties of all photos.
  */
 router.get("/", (request, response, next) => {
-  authManager
+  authorizer
     .authorizeView(request.session.username)
     .then(() => {
-      photoManager
+      photosModel
         .getAllPhotos()
         .then((photos) => {
           response.json(photos);
@@ -24,12 +24,12 @@ router.get("/", (request, response, next) => {
  * Create the properties of a photo.
  */
 router.post("/", (request, response, next) => {
-  authManager
+  authorizer
     .authorizeAdmin(request.session.username)
     .then(() => {
       // TODO: validate and set content from request.body
       const photo = {};
-      photoManager
+      photosModel
         .createPhoto(photo)
         .then((photo) => response.json(photo))
         .catch((error) => next(error));
@@ -40,10 +40,10 @@ router.post("/", (request, response, next) => {
  * Get the properties of a photo.
  */
 router.get("/:photoId", (request, response, next) => {
-  authManager
+  authorizer
     .authorizeView(request.session.username)
     .then(() => {
-      photoManager
+      photosModel
         .getPhoto(request.params.photoId)
         .then((photo) => response.json(photo))
         .catch((error) => next(error));
@@ -54,7 +54,7 @@ router.get("/:photoId", (request, response, next) => {
  * Update the properties of a photo.
  */
 router.put("/:photoId", (request, response, next) => {
-  authManager
+  authorizer
     .authorizeAdmin(request.session.username)
     .then(() => {
       // TODO: implement: update photo meta
@@ -66,10 +66,10 @@ router.put("/:photoId", (request, response, next) => {
  * Delete the properties of a photo.
  */
 router.delete("/:photoId", (request, response, next) => {
-  authManager
+  authorizer
     .authorizeAdmin(request.session.username)
     .then(() => {
-      photoManager
+      photosModel
         .deletePhoto(request.params.galleryId)
         .then(() => response.status(204).end())
         .catch((error) => next(error));

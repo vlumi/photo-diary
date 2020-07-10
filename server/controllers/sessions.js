@@ -4,8 +4,8 @@ const logger = require("../utils/logger");
 const router = require("express").Router();
 module.exports = router;
 
-const authManager = require("../utils/auth")();
-const sessionManager = require("../manager/sessions")();
+const authorizer = require("../utils/authorizer")();
+const sessionsModel = require("../models/sessions")();
 
 /**
  * Login, creating a new session.
@@ -20,7 +20,7 @@ router.post("/", (request, response, next) => {
     next(CONST.ERROR_LOGIN);
     return;
   }
-  sessionManager
+  sessionsModel
     .authenticateUser(credentials)
     .then((sessionToken) => {
       const [session, token] = sessionToken;
@@ -38,7 +38,7 @@ router.post("/", (request, response, next) => {
  * Logout, revoking the session.
  */
 router.delete("/", (request, response, next) => {
-  sessionManager
+  sessionsModel
     .revokeSession(request.cookies["token"])
     .then(() => {
       response.clearCookie("token");
@@ -61,10 +61,10 @@ router.post("/revoke-all", (request, response, next) => {
     next(CONST.ERROR_LOGIN);
     return;
   }
-  authManager
+  authorizer
     .authorizeAdmin(request.session.username)
     .then(() => {
-      sessionManager
+      sessionsModel
         .revokeAllSessionsAdmin(credentials)
         .then(() => response.status(204).end())
         .catch((error) => next(error));
@@ -74,7 +74,7 @@ router.post("/revoke-all", (request, response, next) => {
         next(CONST.ERROR_LOGIN);
         return;
       }
-      sessionManager
+      sessionsModel
         .revokeAllSessions(credentials)
         .then(() => {
           response.clearCookie("token");
