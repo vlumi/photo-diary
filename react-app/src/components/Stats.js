@@ -4,7 +4,8 @@ import PropTypes from "prop-types";
 const Stats = ({ stats }) => {
   return (
     <>
-      <div>Not implemented</div>
+      <h2>Statistics</h2>
+      <div>TODO: implement</div>
     </>
   );
 };

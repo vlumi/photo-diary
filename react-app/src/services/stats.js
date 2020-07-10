@@ -7,4 +7,4 @@ const getGlobal = () => axios.get(baseUrl).then((response) => response.data);
 const getGallery = (galleryId) =>
   axios.get(`${baseUrl}/${galleryId}`).then((response) => response.data);
 
-export default { getAll: getGlobal, get: getGallery };
+export default { getGlobal, getGallery };
