@@ -7,7 +7,7 @@
     "start": "node index.js",
     "prod": "pm2 start index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --verbose",
     "lint": "eslint ."
   },
   "author": "Ville Misaki",
@@ -26,6 +26,7 @@
     "uuid": "^8.2.0"
   },
   "devDependencies": {
+    "jest": "^26.1.0",
     "nodemon": "^2.0.4"
   }
 }
