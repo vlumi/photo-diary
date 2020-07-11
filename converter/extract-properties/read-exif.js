@@ -3,10 +3,7 @@ const exif = require("exif");
 const moment = require("moment");
 
 const logger = require("../utils/logger");
-const {
-  latitudeToDecimal,
-  longitudeToDecimal,
-} = require("../utils/coordinate-utils");
+const geoCoord = require("geo-coord");
 
 module.exports = (fileName, rootDir) => {
   const filePath = path.join(rootDir, fileName);
@@ -27,11 +24,14 @@ module.exports = (fileName, rootDir) => {
         const altitude = gps.GPSAltitude ? gps.GPSAltitude : undefined;
         const latitude =
           gps.GPSLatitude && gps.GPSLatitudeRef
-            ? latitudeToDecimal(...gps.GPSLatitude, gps.GPSLatitudeRef)
+            ? geoCoord.latitudeToDecimal(...gps.GPSLatitude, gps.GPSLatitudeRef)
             : undefined;
         const longitude =
           gps.GPSLongitude && gps.GPSLongitudeRef
-            ? longitudeToDecimal(...gps.GPSLongitude, gps.GPSLongitudeRef)
+            ? geoCoord.longitudeToDecimal(
+                ...gps.GPSLongitude,
+                gps.GPSLongitudeRef
+              )
             : undefined;
         if (!altitude && !latitude && !longitude) {
           return undefined;
