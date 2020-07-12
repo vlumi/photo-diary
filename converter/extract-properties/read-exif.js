@@ -3,7 +3,7 @@ const exif = require("exif");
 const moment = require("moment");
 
 const logger = require("../utils/logger");
-const geoCoord = require("geo-coord");
+const { GeoCoord } = require("geo-coord");
 
 module.exports = (fileName, rootDir) => {
   const filePath = path.join(rootDir, fileName);
@@ -17,29 +17,26 @@ module.exports = (fileName, rootDir) => {
     const cleanShutterSpeed = (shutterSpeedValue) =>
       Math.pow(2, -shutterSpeedValue);
     const parseGps = (gps) => {
-      if (!gps) {
+      if (
+        !gps ||
+        !gps.GPSLatitude ||
+        !gps.GPSLatitudeRef ||
+        !gps.GPSLongitude ||
+        !gps.GPSLongitudeRef
+      ) {
         return undefined;
       }
       try {
         const altitude = gps.GPSAltitude ? gps.GPSAltitude : undefined;
-        const latitude =
-          gps.GPSLatitude && gps.GPSLatitudeRef
-            ? geoCoord.latitudeToDecimal(...gps.GPSLatitude, gps.GPSLatitudeRef)
-            : undefined;
-        const longitude =
-          gps.GPSLongitude && gps.GPSLongitudeRef
-            ? geoCoord.longitudeToDecimal(
-                ...gps.GPSLongitude,
-                gps.GPSLongitudeRef
-              )
-            : undefined;
-        if (!altitude && !latitude && !longitude) {
-          return undefined;
-        }
+        const geoCoord = new GeoCoord(
+          ...gps.GPSLatitude,
+          gps.GPSLatitudeRef,
+          ...gps.GPSLongitude,
+          gps.GPSLongitudeRef
+        );
         return {
           altitude,
-          latitude,
-          longitude,
+          ...geoCoord,
         };
       } catch (error) {
         logger.error(error);
