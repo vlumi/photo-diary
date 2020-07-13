@@ -6,12 +6,12 @@ module.exports = () => {
   const groupPhotosByYearMonthDay = (galleryPhotos) => {
     const photosByDate = {};
     galleryPhotos.forEach((photo) => {
-      const yearMap = (photosByDate[photo.taken.year] =
-        photosByDate[photo.taken.year] || {});
-      const monthMap = (yearMap[photo.taken.month] =
-        yearMap[photo.taken.month] || {});
-      const dayPhotos = (monthMap[photo.taken.day] =
-        monthMap[photo.taken.day] || []);
+      const yearMap = (photosByDate[photo.taken.instant.year] =
+        photosByDate[photo.taken.instant.year] || {});
+      const monthMap = (yearMap[photo.taken.instant.month] =
+        yearMap[photo.taken.instant.month] || {});
+      const dayPhotos = (monthMap[photo.taken.instant.day] =
+        monthMap[photo.taken.instant.day] || []);
       // TODO: reduce meta for this?
       // dayPhotos.push(reducePhotoForList(photo));
       dayPhotos.push(photo);

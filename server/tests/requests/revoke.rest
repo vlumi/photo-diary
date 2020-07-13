@@ -1,7 +1,8 @@
 POST http://localhost:4200/api/sessions/revoke-all
 Content-type: application/json
+Cookie: token=YWRtaW49ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5Ym1GdFpTSTZJbUZrYldsdUlpd2lhV0YwSWpveE5UazBOalEyTmpVeWZRLkJpY0cyY25LRlBBRUFBMHZiT0lZdW9nRm5PY2EzSTBpVWlIYThVeHY1ZXM%3D; Path=/
 
 {
     "username": "admin",
-    "password": "foobar"
+    "password": ""
 }
