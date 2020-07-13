@@ -4,6 +4,7 @@ const compression = require("compression");
 const cookieParser = require("cookie-parser");
 require("express-async-errors");
 
+const config = require("./utils/config");
 const sessionsRouter = require("./controllers/sessions");
 const statsRouter = require("./controllers/stats");
 const galleriesRouter = require("./controllers/galleries");
@@ -20,7 +21,9 @@ app.use(express.static("build"));
 
 const registerPreProcessors = () => {
   app.use(middleware.sessionFilter);
-  app.use(middleware.requestLogger);
+  if (config.ENV !== "test") {
+    app.use(middleware.requestLogger);
+  }
 };
 const registerRoutes = () => {
   app.use("/api/sessions", sessionsRouter);

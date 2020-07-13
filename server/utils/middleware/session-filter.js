@@ -1,3 +1,4 @@
+const CONST = require("../../utils/constants");
 const sessionsModel = require("../../models/sessions")();
 const logger = require("../logger");
 
@@ -34,9 +35,7 @@ module.exports = (request, response, next) => {
             next();
           })
           .finally(() => {
-            // TODO: check error
-            // TODO: notify user?
-            next();
+            next(CONST.ERROR_SESSION_EXPIRED);
           });
       });
   } else {
