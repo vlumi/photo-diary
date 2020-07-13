@@ -1,7 +1,8 @@
-const { v4: uuidv4 } = require("uuid");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 const CONST = require("../utils/constants");
+const config = require("../utils/config");
 const logger = require("../utils/logger");
 const db = require("../db");
 
@@ -37,7 +38,8 @@ module.exports = () => {
     return new Promise((resolve, reject) => {
       logger.debug("Authenticating user", credentials);
       const createSession = (username) => {
-        const token = uuidv4();
+        const tokenContent = { username: credentials.username };
+        const token = jwt.sign(tokenContent, config.SECRET);
         // TODO: DB
         sessions[username] = sessions[username] || {};
         const now = new Date();
@@ -103,20 +105,25 @@ module.exports = () => {
   };
   const verifySession = (encodedToken) => {
     return new Promise((resolve, reject) => {
-      const [username, session] = decodeSessionToken(encodedToken);
-      logger.debug("Verifying session", username, session, encodedToken);
+      const [username, token] = decodeSessionToken(encodedToken);
+      logger.debug("Verifying session", username, token, encodedToken);
       // TODO: DB
-      if (!(username in sessions) || !(session in sessions[username])) {
+      if (!(username in sessions) || !(token in sessions[username])) {
+        reject(CONST.ERROR_LOGIN);
+        return;
+      }
+      const decodedToken = jwt.verify(token, process.env.SECRET);
+      if (!decodedToken || decodedToken.username !== username) {
         reject(CONST.ERROR_LOGIN);
         return;
       }
       const now = new Date();
-      if (sessions[username][session].updated < now - CONST.SESSION_LENGTH_MS) {
+      if (sessions[username][token].updated < now - CONST.SESSION_LENGTH_MS) {
         reject(CONST.ERROR_SESSION_EXPIRED);
       } else {
-        sessions[username][session].updated = now;
+        sessions[username][token].updated = now;
         logger.debug("Current sessions", sessions);
-        resolve(sessions[username][session]);
+        resolve(sessions[username][token]);
       }
     });
   };

@@ -1,3 +1,3 @@
 GET http://localhost:4200/api/stats
 Content-type: application/json
-Cookie: token=YWRtaW49NjIzMmJhNTEtOTY2ZS00NGEwLTg5NGItMmMzMmM0ZDJjMjE2; Path=/
+Cookie: token=YWRtaW49ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5Ym1GdFpTSTZJbUZrYldsdUlpd2lhV0YwSWpveE5UazBOakl3T1RrMGZRLlp6aml4Ql9WRkMzc0g4ekVHeVVzbnh1UHVQRjMwaEFUTGRQM29IUFNWMmc%3D; Path=/
