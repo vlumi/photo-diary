@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "prod": "pm2 start index.js",
-    "dev": "nodemon index.js",
-    "test": "cross-env DB_DRIVER=dummy jest --verbose",
+    "start": "cross-env NODE_ENV=dev node index.js",
+    "prod": "cross-env NODE_ENV=prod pm2 start index.js",
+    "dev": "cross-env NODE_ENV=dev nodemon run index.js",
+    "test": "cross-env DB_DRIVER=dummy NODE_ENV=test jest --verbose",
     "lint": "eslint ."
   },
   "author": "Ville Misaki",
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "jest": "^26.1.0",
-    "nodemon": "^2.0.4"
+    "nodemon": "^2.0.4",
+    "supertest": "^4.0.2"
   }
 }
