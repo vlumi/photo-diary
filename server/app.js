@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
+require("express-async-errors");
 
 const sessionsRouter = require("./controllers/sessions");
 const statsRouter = require("./controllers/stats");
