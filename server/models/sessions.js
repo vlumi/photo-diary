@@ -78,7 +78,6 @@ module.exports = () => {
     });
   };
   const revokeAllSessionsAdmin = (credentials) => {
-    console.log("revoking all sessions", credentials);
     return new Promise((resolve) => {
       logger.debug("Revoking all sessions as admin", credentials);
       if (credentials.username in sessions) {

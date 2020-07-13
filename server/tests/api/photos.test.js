@@ -28,7 +28,7 @@ const expectPhoto = (result, photo) => {
 
 describe("As Guest", () => {
   test("List photos", async () => {
-    const result = await api.get("/api/photos").expect(403);
+    await api.get("/api/photos").expect(403);
   });
   test("Get gallery1photo.jpg", async () => {
     await api.get("/api/photo/gallery1photo.jpg").expect(404);
@@ -135,16 +135,16 @@ describe("As gallery2Admin", () => {
     await getPhotos(token, 403);
   });
   test("Get gallery1photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery1photo.jpg", 403);
+    await getPhoto(token, "gallery1photo.jpg", 403);
   });
   test("Get gallery12photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery12photo.jpg", 403);
+    await getPhoto(token, "gallery12photo.jpg", 403);
   });
   test("Get gallery2photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery2photo.jpg", 403);
+    await getPhoto(token, "gallery2photo.jpg", 403);
   });
   test("Get orphanphoto.jpg", async () => {
-    const result = await getPhoto(token, "orphanphoto.jpg", 403);
+    await getPhoto(token, "orphanphoto.jpg", 403);
   });
   test("Get invalid", async () => {
     await getPhoto(token, "invalid.jpg", 403);
@@ -200,16 +200,16 @@ describe("As gallery1User", () => {
     await getPhotos(token, 403);
   });
   test("Get gallery1photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery1photo.jpg", 403);
+    await getPhoto(token, "gallery1photo.jpg", 403);
   });
   test("Get gallery12photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery12photo.jpg", 403);
+    await getPhoto(token, "gallery12photo.jpg", 403);
   });
   test("Get gallery2photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery2photo.jpg", 403);
+    await getPhoto(token, "gallery2photo.jpg", 403);
   });
   test("Get orphanphoto.jpg", async () => {
-    const result = await getPhoto(token, "orphanphoto.jpg", 403);
+    await getPhoto(token, "orphanphoto.jpg", 403);
   });
   test("Get invalid", async () => {
     await getPhoto(token, "invalid.jpg", 403);
@@ -226,16 +226,16 @@ describe("As gallery12User", () => {
     await getPhotos(token, 403);
   });
   test("Get gallery1photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery1photo.jpg", 403);
+    await getPhoto(token, "gallery1photo.jpg", 403);
   });
   test("Get gallery12photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery12photo.jpg", 403);
+    await getPhoto(token, "gallery12photo.jpg", 403);
   });
   test("Get gallery2photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery2photo.jpg", 403);
+    await getPhoto(token, "gallery2photo.jpg", 403);
   });
   test("Get orphanphoto.jpg", async () => {
-    const result = await getPhoto(token, "orphanphoto.jpg", 403);
+    await getPhoto(token, "orphanphoto.jpg", 403);
   });
   test("Get invalid", async () => {
     await getPhoto(token, "invalid.jpg", 403);

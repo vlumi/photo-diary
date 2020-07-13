@@ -7,7 +7,7 @@
     "start": "cross-env NODE_ENV=dev node index.js",
     "prod": "cross-env NODE_ENV=prod pm2 start index.js",
     "dev": "cross-env NODE_ENV=dev nodemon run index.js",
-    "test": "cross-env DB_DRIVER=dummy NODE_ENV=test jest --verbose",
+    "test": "cross-env DB_DRIVER=dummy NODE_ENV=test jest --runInBand --detectOpenHandles --verbose",
     "lint": "eslint ."
   },
   "author": "Ville Misaki",
