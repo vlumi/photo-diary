@@ -13,8 +13,13 @@ const getGalleries = async (token) =>
   api
     .get("/api/galleries")
     .set("Cookie", [`token=${token}`])
-    .expect(200)
-    .expect("Content-Type", /application\/json/);
+    .expect(200);
+
+const getGallery = async (token, galleryId) =>
+  api
+    .get(`/api/galleries/${galleryId}`)
+    .set("Cookie", [`token=${token}`])
+    .expect(200);
 
 describe("List galleries", () => {
   describe("As Guest", () => {
@@ -93,6 +98,27 @@ describe("List galleries", () => {
     test("Returned in JSON", async () => {
       const res = await getGalleries(token);
       expect(res.body.length).toBe(2);
+    });
+  });
+});
+
+describe("Gallery", () => {
+  describe("As Guest", () => {
+    test("Returned in JSON", async () => {
+      const res = await api.get("/api/galleries/gallery1").expect(403);
+    });
+  });
+
+  describe("As admin", () => {
+    let token = undefined;
+    beforeEach(async () => {
+      token = await loginUser(api, "admin");
+    });
+
+    test("Returned in JSON", async () => {
+      const res = await getGallery(token, "gallery1");
+      console.log(res.body);
+      expect(res.body.id).toBe("gallery1");
     });
   });
 });
