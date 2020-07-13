@@ -23,6 +23,8 @@ const getGalleryStats = async (token, galleryId, status = 200) =>
     .set("Cookie", [`token=${token}`])
     .expect(status);
 
+// TODO: test stats return content when format is stable
+
 describe("As Guest", () => {
   test("Get stats", async () => {
     await api.get("/api/stats").expect(403);
@@ -62,6 +64,9 @@ describe("As admin", () => {
   test("Get :none stats", async () => {
     await getGalleryStats(token, ":none");
   });
+  test("Get invalid stats", async () => {
+    await getGalleryStats(token, "invalid", 404);
+  });
 });
 
 describe("As gallery1Admin", () => {
@@ -84,6 +89,9 @@ describe("As gallery1Admin", () => {
   });
   test("Get :none stats", async () => {
     await getGalleryStats(token, ":none");
+  });
+  test("Get invalid stats", async () => {
+    await getGalleryStats(token, "invalid", 404);
   });
 });
 
@@ -108,6 +116,9 @@ describe("As gallery2Admin", () => {
   test("Get :none stats", async () => {
     await getGalleryStats(token, ":none", 403);
   });
+  test("Get invalid stats", async () => {
+    await getGalleryStats(token, "invalid", 403);
+  });
 });
 
 describe("As plainUser", () => {
@@ -131,6 +142,9 @@ describe("As plainUser", () => {
   test("Get :none stats", async () => {
     await getGalleryStats(token, ":none");
   });
+  test("Get invalid stats", async () => {
+    await getGalleryStats(token, "invalid", 404);
+  });
 });
 describe("As gallery1User", () => {
   let token = undefined;
@@ -153,6 +167,9 @@ describe("As gallery1User", () => {
   test("Get :none stats", async () => {
     await getGalleryStats(token, ":none", 403);
   });
+  test("Get invalid stats", async () => {
+    await getGalleryStats(token, "invalid", 403);
+  });
 });
 describe("As gallery12User", () => {
   let token = undefined;
@@ -174,6 +191,9 @@ describe("As gallery12User", () => {
   });
   test("Get :none stats", async () => {
     await getGalleryStats(token, ":none", 403);
+  });
+  test("Get invalid stats", async () => {
+    await getGalleryStats(token, "invalid", 403);
   });
 });
 
