@@ -1,3 +1,4 @@
+const DEFAULT_ENV = "prod";
 const DEFAULT_DEBUG = false;
 const DEFAULT_PORT = 4200;
 const SESSION_LENGTH_MS = 1000 * 60 * 60 * 24 * 7;
@@ -38,7 +39,8 @@ const SPECIAL_GALLERIES = {
 };
 
 module.exports = {
-  DEBUG: DEFAULT_DEBUG,
+  DEFAULT_ENV,
+  DEFAULT_DEBUG,
 
   DEFAULT_PORT,
   SESSION_LENGTH_MS,

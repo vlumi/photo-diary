@@ -8,6 +8,12 @@ const authorizer = require("../utils/authorizer")();
 const sessionsModel = require("../models/sessions")();
 
 /**
+ * Verify and keep-alive session.
+ */
+router.get("/", (request, response) => {
+  response.status(200).end();
+});
+/**
  * Login, creating a new session.
  */
 router.post("/", (request, response, next) => {
