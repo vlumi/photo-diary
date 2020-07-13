@@ -4,8 +4,10 @@ const logger = require("../logger");
 module.exports = function (error, request, response, next) {
   logger.debug(error);
   switch (error) {
-    case CONST.ERROR_NOT_IMPLEMENTED:
     case CONST.ERROR_NOT_FOUND:
+      response.status(404).send({ error });
+      break;
+    case CONST.ERROR_NOT_IMPLEMENTED:
       response.status(501).send({ error });
       break;
     case CONST.ERROR_SESSION_EXPIRED:

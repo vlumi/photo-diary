@@ -195,12 +195,12 @@ const dbDump = JSON.stringify({
     gallery1: {
       id: "gallery1",
       title: "gallery 1",
-      description: "",
+      description: "This is the first gallery",
     },
     gallery2: {
       id: "gallery2",
       title: "gallery 2",
-      description: "",
+      description: "This is the second gallery",
     },
   },
   photos: {

@@ -23,6 +23,66 @@ const getGallery = async (token, galleryId, status = 200) =>
     .set("Cookie", [`token=${token}`])
     .expect(status);
 
+const expectGallery1 = (result) => {
+  expect(result.body.id).toBe("gallery1");
+  expect(result.body.title).toBe("gallery 1");
+  expect(result.body.description).toBe("This is the first gallery");
+  const photos = result.body.photos;
+  expect(photos).toBeDefined();
+  expect(Object.keys(photos).length).toBe(2);
+  expect(Object.keys(photos[2018]).length).toBe(1);
+  expect(Object.keys(photos[2018][5]).length).toBe(1);
+  expect(Object.keys(photos[2018][5][4]).length).toBe(1);
+  expect(photos[2018][5][4][0].id).toBe("gallery1photo.jpg");
+  expect(Object.keys(photos[2020]).length).toBe(1);
+  expect(Object.keys(photos[2020][7]).length).toBe(1);
+  expect(Object.keys(photos[2020][7][4]).length).toBe(1);
+  expect(photos[2020][7][4][0].id).toBe("gallery12photo.jpg");
+};
+const expectGallery2 = (result) => {
+  expect(result.body.id).toBe("gallery2");
+  expect(result.body.title).toBe("gallery 2");
+  expect(result.body.description).toBe("This is the second gallery");
+  const photos = result.body.photos;
+  expect(photos).toBeDefined();
+  expect(Object.keys(photos).length).toBe(1);
+  expect(Object.keys(photos[2020]).length).toBe(1);
+  expect(Object.keys(photos[2020][7]).length).toBe(2);
+  expect(Object.keys(photos[2020][7][4]).length).toBe(1);
+  expect(photos[2020][7][4][0].id).toBe("gallery12photo.jpg");
+  expect(Object.keys(photos[2020][7][5]).length).toBe(1);
+  expect(photos[2020][7][5][0].id).toBe("gallery2photo.jpg");
+};
+const expectGalleryAll = (result) => {
+  expect(result.body.id).toBe(":all");
+  const photos = result.body.photos;
+  expect(photos).toBeDefined();
+  expect(Object.keys(photos).length).toBe(2);
+  expect(Object.keys(photos[2018]).length).toBe(1);
+  expect(Object.keys(photos[2018][5]).length).toBe(1);
+  expect(Object.keys(photos[2018][5][4]).length).toBe(1);
+  expect(photos[2018][5][4][0].id).toBe("gallery1photo.jpg");
+  expect(Object.keys(photos[2020]).length).toBe(2);
+  expect(Object.keys(photos[2020][7]).length).toBe(2);
+  expect(Object.keys(photos[2020][7][4]).length).toBe(1);
+  expect(photos[2020][7][4][0].id).toBe("gallery12photo.jpg");
+  expect(Object.keys(photos[2020][7][5]).length).toBe(1);
+  expect(photos[2020][7][5][0].id).toBe("gallery2photo.jpg");
+  expect(Object.keys(photos[2020][8]).length).toBe(1);
+  expect(Object.keys(photos[2020][8][5]).length).toBe(1);
+  expect(photos[2020][8][5][0].id).toBe("orphanphoto.jpg");
+};
+const expectGalleryNone = (result) => {
+  expect(result.body.id).toBe(":none");
+  const photos = result.body.photos;
+  expect(photos).toBeDefined();
+  expect(Object.keys(photos).length).toBe(1);
+  expect(Object.keys(photos[2020]).length).toBe(1);
+  expect(Object.keys(photos[2020][8]).length).toBe(1);
+  expect(Object.keys(photos[2020][8][5]).length).toBe(1);
+  expect(photos[2020][8][5][0].id).toBe("orphanphoto.jpg");
+};
+
 describe("As Guest", () => {
   test("List galleries", async () => {
     const result = await api
@@ -45,13 +105,25 @@ describe("As admin", () => {
   test("List galleries", async () => {
     const result = await getGalleries(token);
     expect(result.body.length).toBe(4);
-    // console.log(result.body);
   });
-
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
-    // console.log(result.body);
-    expect(result.body.id).toBe("gallery1");
+    expectGallery1(result);
+  });
+  test("Get gallery2", async () => {
+    const result = await getGallery(token, "gallery2");
+    expectGallery2(result);
+  });
+  test("Get :all", async () => {
+    const result = await getGallery(token, ":all");
+    expectGalleryAll(result);
+  });
+  test("Get :none", async () => {
+    const result = await getGallery(token, ":none");
+    expectGalleryNone(result);
+  });
+  test("Get invalid", async () => {
+    await getGallery(token, "invalid", 404);
   });
 });
 
@@ -65,6 +137,25 @@ describe("As gallery1Admin", () => {
     const result = await getGalleries(token);
     expect(result.body.length).toBe(4);
   });
+  test("Get gallery1", async () => {
+    const result = await getGallery(token, "gallery1");
+    expectGallery1(result);
+  });
+  test("Get gallery2", async () => {
+    const result = await getGallery(token, "gallery2");
+    expectGallery2(result);
+  });
+  test("Get :all", async () => {
+    const result = await getGallery(token, ":all");
+    expectGalleryAll(result);
+  });
+  test("Get :none", async () => {
+    const result = await getGallery(token, ":none");
+    expectGalleryNone(result);
+  });
+  test("Get invalid", async () => {
+    await getGallery(token, "invalid", 404);
+  });
 });
 
 describe("As gallery2Admin", () => {
@@ -76,6 +167,22 @@ describe("As gallery2Admin", () => {
   test("List galleries", async () => {
     const result = await getGalleries(token);
     expect(result.body.length).toBe(1);
+  });
+  test("Get gallery1", async () => {
+    await getGallery(token, "gallery1", 403);
+  });
+  test("Get gallery2", async () => {
+    const result = await getGallery(token, "gallery2");
+    expectGallery2(result);
+  });
+  test("Get :all", async () => {
+    await getGallery(token, ":all", 403);
+  });
+  test("Get :none", async () => {
+    await getGallery(token, ":none", 403);
+  });
+  test("Get invalid", async () => {
+    await getGallery(token, "invalid", 403);
   });
 });
 
@@ -89,6 +196,25 @@ describe("As plainUser", () => {
     const result = await getGalleries(token);
     expect(result.body.length).toBe(4);
   });
+  test("Get gallery1", async () => {
+    const result = await getGallery(token, "gallery1");
+    expectGallery1(result);
+  });
+  test("Get gallery2", async () => {
+    const result = await getGallery(token, "gallery2");
+    expectGallery2(result);
+  });
+  test("Get :all", async () => {
+    const result = await getGallery(token, ":all");
+    expectGalleryAll(result);
+  });
+  test("Get :none", async () => {
+    const result = await getGallery(token, ":none");
+    expectGalleryNone(result);
+  });
+  test("Get invalid", async () => {
+    await getGallery(token, "invalid", 404);
+  });
 });
 
 describe("As gallery1User", () => {
@@ -101,6 +227,22 @@ describe("As gallery1User", () => {
     const result = await getGalleries(token);
     expect(result.body.length).toBe(1);
   });
+  test("Get gallery1", async () => {
+    const result = await getGallery(token, "gallery1");
+    expectGallery1(result);
+  });
+  test("Get gallery2", async () => {
+    await getGallery(token, "gallery2", 403);
+  });
+  test("Get :all", async () => {
+    await getGallery(token, ":all", 403);
+  });
+  test("Get :none", async () => {
+    await getGallery(token, ":none", 403);
+  });
+  test("Get invalid", async () => {
+    await getGallery(token, "invalid", 403);
+  });
 });
 
 describe("As gallery12User", () => {
@@ -112,6 +254,23 @@ describe("As gallery12User", () => {
   test("List galleries", async () => {
     const result = await getGalleries(token);
     expect(result.body.length).toBe(2);
+  });
+  test("Get gallery1", async () => {
+    const result = await getGallery(token, "gallery1");
+    expectGallery1(result);
+  });
+  test("Get gallery2", async () => {
+    const result = await getGallery(token, "gallery2");
+    expectGallery2(result);
+  });
+  test("Get :all", async () => {
+    await getGallery(token, ":all", 403);
+  });
+  test("Get :none", async () => {
+    await getGallery(token, ":none", 403);
+  });
+  test("Get invalid", async () => {
+    await getGallery(token, "invalid", 403);
   });
 });
 
