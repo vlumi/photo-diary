@@ -42,6 +42,9 @@ describe("As Guest", () => {
   test("Get gallery1photo.jpg", async () => {
     await api.get("/api/photo/orphanphoto.jpg").expect(404);
   });
+  test("Get invalid", async () => {
+    await api.get("/api/photo/invalid.jpg").expect(404);
+  });
 });
 
 describe("As admin", () => {
@@ -79,7 +82,7 @@ describe("As admin", () => {
     expect(result.body.id).toBe("orphanphoto.jpg");
   });
   test("Get invalid", async () => {
-    await getPhoto(token, "invalid", 404);
+    await getPhoto(token, "invalid.jpg", 404);
   });
 });
 
@@ -118,7 +121,7 @@ describe("As gallery1Admin", () => {
     expect(result.body.id).toBe("orphanphoto.jpg");
   });
   test("Get invalid", async () => {
-    await getPhoto(token, "invalid", 404);
+    await getPhoto(token, "invalid.jpg", 404);
   });
 });
 
@@ -144,7 +147,7 @@ describe("As gallery2Admin", () => {
     const result = await getPhoto(token, "orphanphoto.jpg", 403);
   });
   test("Get invalid", async () => {
-    await getPhoto(token, "invalid", 403);
+    await getPhoto(token, "invalid.jpg", 403);
   });
 });
 
@@ -183,7 +186,7 @@ describe("As plainUser", () => {
     expect(result.body.id).toBe("orphanphoto.jpg");
   });
   test("Get invalid", async () => {
-    await getPhoto(token, "invalid", 404);
+    await getPhoto(token, "invalid.jpg", 404);
   });
 });
 
@@ -209,7 +212,7 @@ describe("As gallery1User", () => {
     const result = await getPhoto(token, "orphanphoto.jpg", 403);
   });
   test("Get invalid", async () => {
-    await getPhoto(token, "invalid", 403);
+    await getPhoto(token, "invalid.jpg", 403);
   });
 });
 
@@ -235,7 +238,7 @@ describe("As gallery12User", () => {
     const result = await getPhoto(token, "orphanphoto.jpg", 403);
   });
   test("Get invalid", async () => {
-    await getPhoto(token, "invalid", 403);
+    await getPhoto(token, "invalid.jpg", 403);
   });
 });
 
