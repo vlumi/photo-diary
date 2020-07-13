@@ -2,7 +2,7 @@ const supertest = require("supertest");
 const app = require("../../app");
 
 const api = supertest(app);
-const { parseCookies } = require("./helper");
+const { parseCookies, loginUser } = require("./helper");
 
 beforeEach(async () => {});
 
@@ -40,6 +40,19 @@ describe("Login", () => {
   });
 
   afterAll(() => {});
+});
+describe("Keep-alive", () => {
+  let token = undefined;
+  beforeEach(async () => {
+    token = await loginUser(api, "admin");
+  });
+
+  test("Success", async () => {
+    const res = await api
+      .get("/api/sessions")
+      .set("Cookie", [`token=${token}`])
+      .expect(200);
+  });
 });
 
 afterAll(() => {});

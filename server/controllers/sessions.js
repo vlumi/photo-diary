@@ -1,5 +1,6 @@
 const CONST = require("../utils/constants");
 const logger = require("../utils/logger");
+const { response } = require("../app");
 
 const router = require("express").Router();
 module.exports = router;
@@ -7,6 +8,12 @@ module.exports = router;
 const authorizer = require("../utils/authorizer")();
 const sessionsModel = require("../models/sessions")();
 
+/**
+ * Verify and keep-alive session.
+ */
+router.get("/", (request, response) => {
+  response.status(200).end();
+});
 /**
  * Login, creating a new session.
  */
