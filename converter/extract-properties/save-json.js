@@ -5,9 +5,10 @@ const CONST = require("../utils/constants");
 const logger = require("../utils/logger");
 
 module.exports = (fileName, rootDir, properties) => {
-  const inboxFilePath = path.join(rootDir, CONST.DIR_INBOX, fileName);
   return new Promise((resolve, reject) => {
+    const inboxFilePath = path.join(rootDir, CONST.DIR_INBOX, fileName);
     const jsonFileName = `${inboxFilePath}.json`;
+
     fs.writeFile(
       jsonFileName,
       JSON.stringify({ [fileName]: properties }),

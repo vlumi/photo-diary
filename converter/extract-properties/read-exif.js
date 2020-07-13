@@ -1,11 +1,11 @@
 const path = require("path");
-const exif = require("exif");
+const exifr = require("exifr");
 const moment = require("moment");
 
 const logger = require("../utils/logger");
 const { GeoCoord } = require("geo-coord");
 
-module.exports = (fileName, rootDir) => {
+module.exports = async (fileName, rootDir) => {
   const filePath = path.join(rootDir, fileName);
 
   const parseExif = (exif) => {
@@ -34,10 +34,13 @@ module.exports = (fileName, rootDir) => {
           ...gps.GPSLongitude,
           gps.GPSLongitudeRef
         );
-        return {
-          altitude,
-          ...geoCoord,
+        const result = {
+          coordinates: {
+            altitude,
+            ...geoCoord.toDD(),
+          },
         };
+        return result;
       } catch (error) {
         logger.error(error);
         return undefined;
@@ -63,48 +66,39 @@ module.exports = (fileName, rootDir) => {
       description: undefined,
       taken: {
         instant: parseTimestamp(
-          exif.exif.DateTimeOriginal ||
-            exif.exif.CreateDate ||
-            exif.image.ModifyDate
+          exif.DateTimeOriginal || exif.CreateDate || exif.ModifyDate
         ),
-        author: cleanString(exif.image.Artist),
+        author: cleanString(exif.Artist),
         location: {
           country: undefined,
           place: undefined,
-          coordinates: parseGps(exif.gps),
+          ...parseGps(exif),
         },
       },
       camera: {
-        make: cleanString(exif.image.Make),
-        model: cleanString(exif.image.Model),
-        serial: cleanString(exif.exif.SerialNumber),
+        make: cleanString(exif.Make),
+        model: cleanString(exif.Model),
+        serial: cleanString(exif.SerialNumber),
       },
       lens: {
-        make: cleanString(exif.exif.LensMake),
-        model: cleanString(exif.exif.LensModel),
-        serial: cleanString(exif.exif.LensSerialNumber),
+        make: cleanString(exif.LensMake),
+        model: cleanString(exif.LensModel),
+        serial: cleanString(exif.LensSerialNumber),
       },
       exposure: {
-        focalLength: exif.exif.FocalLength,
-        focalLength35mmEquiv: exif.exif.FocalLengthIn35mmFormat,
-        aperture: exif.exif.FNumber || cleanAperture(exif.exif.ApertureValue),
+        focalLength: exif.FocalLength,
+        focalLength35mmEquiv: exif.FocalLengthIn35mmFormat,
+        aperture: exif.FNumber || cleanAperture(exif.ApertureValue),
         exposureTime:
-          exif.exif.ExposureTime ||
-          exif.exif.ExposureValue ||
-          cleanShutterSpeed(exif.exif.ShutterSpeedValue),
-        iso: exif.exif.ISO,
+          exif.ExposureTime ||
+          exif.ExposureValue ||
+          cleanShutterSpeed(exif.ShutterSpeedValue),
+        iso: exif.ISO,
       },
       dimensions: {},
     };
   };
 
-  return new Promise((resolve, reject) => {
-    new exif.ExifImage({ image: filePath }, function (error, exifData) {
-      if (error) {
-        reject(error.message);
-        return;
-      }
-      resolve(parseExif(exifData));
-    });
-  });
+  const exifData = await exifr.parse(filePath);
+  return parseExif(exifData);
 };

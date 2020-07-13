@@ -25,52 +25,41 @@ try {
     atomic: true,
   });
 
-  const processFile = (fileName) => {
+  const processFile = async (fileName) => {
     const filePath = path.join(watchDir, fileName);
+    const stat = await fs.promises.stat(filePath);
+    if (stat.size === 0) {
+      throw `[${fileName}] Skipping empty file`;
+    }
+
     const hrstart = process.hrtime();
+    logger.info(`[${fileName}] Processing`);
 
-    const moveFile = () => {
-      logger.info(`[${fileName}] Moving file`);
-      return fs.promises.rename(
-        filePath,
-        path.join(rootDir, CONST.DIR_ORIGINAL, fileName)
-      );
-    };
+    await Promise.all(
+      CONST.TARGETS.map((target) => convertImage(fileName, rootDir, target))
+    );
 
-    Promise.resolve()
-      .then(() => logger.info(`[${fileName}] Processing`))
-      .then(() => fs.promises.stat(filePath))
-      .then(
-        (stat) =>
-          new Promise((resolve, reject) => {
-            if (stat.size > 0) {
-              resolve();
-            } else {
-              reject(`[${fileName}] Skipping empty file`);
-            }
-          })
-      )
-      .then(() =>
-        CONST.TARGETS.reduce(
-          (promise, target) =>
-            promise.then(() => convertImage(fileName, rootDir, target)),
-          Promise.resolve()
-        )
-      )
-      .then(() => extractProperties(fileName, rootDir))
-      .then(() => moveFile())
-      .then(() => {
-        const hrend = process.hrtime(hrstart);
-        const elapsedSeconds =
-          Math.round(hrend[0] * 1000 * 1 + hrend[1] / 1000000) / 1000;
-        logger.info(`[${fileName}] Processed, elapsed ${elapsedSeconds}s`);
-      })
-      .catch((error) => logger.error(error));
+    await extractProperties(fileName, rootDir);
+
+    logger.info(`[${fileName}] Moving file`);
+    await fs.promises.rename(
+      filePath,
+      path.join(rootDir, CONST.DIR_ORIGINAL, fileName)
+    );
+
+    const hrend = process.hrtime(hrstart);
+    const elapsedSeconds =
+      Math.round(hrend[0] * 1000 * 1 + hrend[1] / 1000000) / 1000;
+    logger.info(`[${fileName}] Processed, elapsed ${elapsedSeconds}s`);
   };
 
   watcher
-    .on("add", (fileName) => processFile(fileName))
-    .on("change", (fileName) => processFile(fileName))
+    .on("add", (fileName) =>
+      processFile(fileName).catch((error) => logger.error(error))
+    )
+    .on("change", (fileName) =>
+      processFile(fileName).catch((error) => logger.error(error))
+    )
     .on("unlink", (fileName) => logger.info(`[${fileName}] Removed from inbox`))
     .on("error", (error) => logger.error("Error:", error));
 } catch (error) {
