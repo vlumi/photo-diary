@@ -6,7 +6,6 @@ const config = require("../utils/config");
 const logger = require("../utils/logger");
 const db = require("../db");
 
-// TODO: DB?
 const sessions = {};
 
 const decodeSessionToken = (encodedToken) => {
@@ -40,9 +39,9 @@ module.exports = () => {
       const createSession = (username) => {
         const tokenContent = { username: credentials.username };
         const token = jwt.sign(tokenContent, config.SECRET);
-        // TODO: DB
-        sessions[username] = sessions[username] || {};
         const now = new Date();
+
+        sessions[username] = sessions[username] || {};
         sessions[username][token] = {
           username,
           created: now,
@@ -53,7 +52,6 @@ module.exports = () => {
       checkUserPassword(credentials)
         .then(() => {
           const token = createSession(credentials.username);
-          // TODO: DB
           logger.debug("Current sessions", sessions);
           resolve([
             sessions[credentials.username][token],
@@ -73,7 +71,6 @@ module.exports = () => {
       }
 
       if (username in sessions && session in sessions[username]) {
-        // TODO: DB
         delete sessions[username][session];
       }
       logger.debug("Current sessions", sessions);
@@ -81,10 +78,10 @@ module.exports = () => {
     });
   };
   const revokeAllSessionsAdmin = (credentials) => {
+    console.log("revoking all sessions", credentials);
     return new Promise((resolve) => {
       logger.debug("Revoking all sessions as admin", credentials);
       if (credentials.username in sessions) {
-        // TODO: DB
         delete sessions[credentials.username];
       }
       logger.debug("Current sessions", sessions);
@@ -93,7 +90,6 @@ module.exports = () => {
   };
   const revokeAllSessions = (credentials) => {
     return new Promise((resolve, reject) => {
-      logger.debug("Revoking all sessions", credentials);
       checkUserPassword(credentials)
         .then(() =>
           revokeAllSessionsAdmin(credentials)
@@ -107,16 +103,18 @@ module.exports = () => {
     return new Promise((resolve, reject) => {
       const [username, token] = decodeSessionToken(encodedToken);
       logger.debug("Verifying session", username, token, encodedToken);
-      // TODO: DB
+
       if (!(username in sessions) || !(token in sessions[username])) {
         reject(CONST.ERROR_LOGIN);
         return;
       }
+
       const decodedToken = jwt.verify(token, process.env.SECRET);
       if (!decodedToken || decodedToken.username !== username) {
         reject(CONST.ERROR_LOGIN);
         return;
       }
+
       const now = new Date();
       if (sessions[username][token].updated < now - CONST.SESSION_LENGTH_MS) {
         reject(CONST.ERROR_SESSION_EXPIRED);
@@ -131,6 +129,7 @@ module.exports = () => {
   return {
     authenticateUser,
     revokeSession,
+    revokeAllSessionsAdmin,
     revokeAllSessions,
     verifySession,
   };

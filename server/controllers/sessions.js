@@ -1,6 +1,5 @@
 const CONST = require("../utils/constants");
 const logger = require("../utils/logger");
-const { response } = require("../app");
 
 const router = require("express").Router();
 module.exports = router;

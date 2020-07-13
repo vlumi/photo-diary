@@ -1,3 +1,5 @@
+"use strict";
+
 const supertest = require("supertest");
 const app = require("../../app");
 
@@ -23,14 +25,14 @@ const getGallery = async (token, galleryId, status = 200) =>
 
 describe("As Guest", () => {
   test("List galleries", async () => {
-    const res = await api
+    const result = await api
       .get("/api/galleries")
       .expect(200)
       .expect("Content-Type", /application\/json/);
-    expect(res.body).toEqual([]);
+    expect(result.body).toEqual([]);
   });
   test("Get gallery", async () => {
-    const res = await api.get("/api/galleries/gallery1").expect(403);
+    await api.get("/api/galleries/gallery1").expect(403);
   });
 });
 
@@ -41,15 +43,15 @@ describe("As admin", () => {
   });
 
   test("List galleries", async () => {
-    const res = await getGalleries(token);
-    expect(res.body.length).toBe(4);
-    // console.log(res.body);
+    const result = await getGalleries(token);
+    expect(result.body.length).toBe(4);
+    // console.log(result.body);
   });
 
   test("Get gallery1", async () => {
-    const res = await getGallery(token, "gallery1");
-    // console.log(res.body);
-    expect(res.body.id).toBe("gallery1");
+    const result = await getGallery(token, "gallery1");
+    // console.log(result.body);
+    expect(result.body.id).toBe("gallery1");
   });
 });
 
@@ -60,8 +62,8 @@ describe("As gallery1Admin", () => {
   });
 
   test("List galleries", async () => {
-    const res = await getGalleries(token);
-    expect(res.body.length).toBe(4);
+    const result = await getGalleries(token);
+    expect(result.body.length).toBe(4);
   });
 });
 
@@ -72,8 +74,8 @@ describe("As gallery2Admin", () => {
   });
 
   test("List galleries", async () => {
-    const res = await getGalleries(token);
-    expect(res.body.length).toBe(1);
+    const result = await getGalleries(token);
+    expect(result.body.length).toBe(1);
   });
 });
 
@@ -84,8 +86,8 @@ describe("As plainUser", () => {
   });
 
   test("List galleries", async () => {
-    const res = await getGalleries(token);
-    expect(res.body.length).toBe(4);
+    const result = await getGalleries(token);
+    expect(result.body.length).toBe(4);
   });
 });
 
@@ -96,8 +98,8 @@ describe("As gallery1User", () => {
   });
 
   test("List galleries", async () => {
-    const res = await getGalleries(token);
-    expect(res.body.length).toBe(1);
+    const result = await getGalleries(token);
+    expect(result.body.length).toBe(1);
   });
 });
 
@@ -108,8 +110,8 @@ describe("As gallery12User", () => {
   });
 
   test("List galleries", async () => {
-    const res = await getGalleries(token);
-    expect(res.body.length).toBe(2);
+    const result = await getGalleries(token);
+    expect(result.body.length).toBe(2);
   });
 });
 
