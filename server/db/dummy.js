@@ -204,8 +204,8 @@ const dbDump = JSON.stringify({
     },
   },
   photos: {
-    "somephoto.jpg": {
-      id: "somephoto.jpg",
+    "gallery1photo.jpg": {
+      id: "gallery1photo.jpg",
       title: "",
       description: "",
       taken: {
@@ -229,8 +229,8 @@ const dbDump = JSON.stringify({
           },
         },
       },
-      camera: { make: "FUJIFILM", model: "X-T2", serial: "62054072" },
-      lens: { make: "FUJIFILM", model: "XF27mmF2.8", serial: "44A07244" },
+      camera: { make: "FUJIFILM", model: "X-T2", serial: "123" },
+      lens: { make: "FUJIFILM", model: "XF27mmF2.8", serial: "456" },
       exposure: {
         focalLength: 27,
         focalLength35mmEquiv: 41,
@@ -244,8 +244,8 @@ const dbDump = JSON.stringify({
         thumbnail: { width: 150, height: 100 },
       },
     },
-    "somephoto2.jpg": {
-      id: "somephoto2.jpg",
+    "gallery12photo.jpg": {
+      id: "gallery12photo.jpg",
       title: "",
       description: "",
       taken: {
@@ -288,8 +288,8 @@ const dbDump = JSON.stringify({
         thumbnail: { width: 150, height: 100 },
       },
     },
-    "somephoto3.jpg": {
-      id: "somephoto3.jpg",
+    "gallery2photo.jpg": {
+      id: "gallery2photo.jpg",
       title: "",
       description: "",
       taken: {
@@ -313,8 +313,8 @@ const dbDump = JSON.stringify({
           },
         },
       },
-      camera: { make: "FUJIFILM", model: "X-T2", serial: "62054072" },
-      lens: { make: "FUJIFILM", model: "XF27mmF2.8", serial: "44A07244" },
+      camera: { make: "FUJIFILM", model: "X-T2", serial: "111" },
+      lens: { make: "FUJIFILM", model: "XF27mmF2.8", serial: "222" },
       exposure: {
         focalLength: 27,
         focalLength35mmEquiv: 41,
@@ -328,8 +328,8 @@ const dbDump = JSON.stringify({
         thumbnail: { width: 150, height: 100 },
       },
     },
-    "somephoto4.jpg": {
-      id: "somephoto4.jpg",
+    "orphanphoto.jpg": {
+      id: "orphanphoto.jpg",
       title: "",
       description: "",
       taken: {
@@ -353,7 +353,7 @@ const dbDump = JSON.stringify({
           },
         },
       },
-      camera: { make: "FUJIFILM", model: "X100F", serial: "71001090" },
+      camera: { make: "FUJIFILM", model: "X100F", serial: "123456" },
       lens: { make: undefined, model: undefined, serial: undefined },
       exposure: {
         focalLength: 23,
@@ -366,8 +366,8 @@ const dbDump = JSON.stringify({
     },
   },
   galleryPhotos: {
-    gallery1: ["somephoto.jpg", "somephoto2.jpg"],
-    gallery2: ["somephoto2.jpg", "somephoto3.jpg"],
+    gallery1: ["gallery1photo.jpg", "gallery12photo.jpg"],
+    gallery2: ["gallery12photo.jpg", "gallery2photo.jpg"],
   },
 });
 init();
