@@ -55,7 +55,7 @@ describe("As guest", () => {
 
 describe("As admin", () => {
   let token = undefined;
-  beforeEach(async () => {
+  beforeAll(async () => {
     token = await loginUser(api, "admin");
   });
 
@@ -118,7 +118,7 @@ describe("As admin", () => {
 
 describe("As gallery1Admin", () => {
   let token = undefined;
-  beforeEach(async () => {
+  beforeAll(async () => {
     token = await loginUser(api, "gallery1Admin");
   });
 
@@ -181,7 +181,7 @@ describe("As gallery1Admin", () => {
 
 describe("As gallery2Admin", () => {
   let token = undefined;
-  beforeEach(async () => {
+  beforeAll(async () => {
     token = await loginUser(api, "gallery2Admin");
   });
 
@@ -232,7 +232,7 @@ describe("As gallery2Admin", () => {
 
 describe("As plainUser", () => {
   let token = undefined;
-  beforeEach(async () => {
+  beforeAll(async () => {
     token = await loginUser(api, "plainUser");
   });
 
@@ -295,7 +295,7 @@ describe("As plainUser", () => {
 
 describe("As gallery1User", () => {
   let token = undefined;
-  beforeEach(async () => {
+  beforeAll(async () => {
     token = await loginUser(api, "gallery1User");
   });
 
@@ -346,7 +346,7 @@ describe("As gallery1User", () => {
 
 describe("As gallery12User", () => {
   let token = undefined;
-  beforeEach(async () => {
+  beforeAll(async () => {
     token = await loginUser(api, "gallery12User");
   });
 
