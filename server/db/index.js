@@ -15,28 +15,28 @@ const connectDb = () => {
 const db = connectDb();
 
 module.exports = {
-  loadUserAccessControl: (username) => {
+  loadUserAccessControl: async (username) => {
     return db.loadUserAccessControl(username);
   },
-  loadUser: (username) => {
+  loadUser: async (username) => {
     return db.loadUser(username);
   },
-  loadGalleries: () => {
+  loadGalleries: async () => {
     return db.loadGalleries();
   },
-  loadGallery: (galleryId) => {
+  loadGallery: async (galleryId) => {
     return db.loadGallery(galleryId);
   },
-  loadGalleryPhotos: (galleryId) => {
+  loadGalleryPhotos: async (galleryId) => {
     return db.loadGalleryPhotos(galleryId);
   },
-  loadGalleryPhoto: (galleryId, photoId) => {
+  loadGalleryPhoto: async (galleryId, photoId) => {
     return db.loadGalleryPhoto(galleryId, photoId);
   },
-  loadPhotos: () => {
+  loadPhotos: async () => {
     return db.loadPhotos();
   },
-  loadPhoto: (photoId) => {
+  loadPhoto: async (photoId) => {
     return db.loadPhoto(photoId);
   },
 };

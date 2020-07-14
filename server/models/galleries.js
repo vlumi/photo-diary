@@ -19,60 +19,38 @@ module.exports = () => {
     return photosByDate;
   };
 
-  const getAllGalleries = () => {
+  const getAllGalleries = async () => {
     logger.debug("Getting all galleries");
-    return new Promise((resolve, reject) => {
-      db.loadGalleries()
-        .then((galleries) => {
-          resolve([...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)]);
-        })
-        .catch((error) => reject(error));
-    });
+    const galleries = await db.loadGalleries();
+    return [...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)];
   };
-  const createGallery = (gallery) => {
-    return new Promise((resolve, reject) => {
-      logger.debug("Creating gallery", gallery);
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+  const createGallery = async (gallery) => {
+    logger.debug("Creating gallery", gallery);
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
-  const getGallery = (galleryId) => {
+  const getGallery = async (galleryId) => {
     logger.debug("Getting gallery", galleryId);
-    return new Promise((resolve, reject) => {
-      const loadGalleryPhotos = (gallery) => {
-        db.loadGalleryPhotos(galleryId)
-          .then((galleryPhotos) => {
-            const photosByYearMonthDay = groupPhotosByYearMonthDay(
-              galleryPhotos
-            );
-            resolve({
-              ...gallery,
-              photos: photosByYearMonthDay,
-            });
-          })
-          .catch((error) => reject(error));
+    const loadGalleryPhotos = async (gallery) => {
+      const galleryPhotos = await db.loadGalleryPhotos(galleryId);
+      const photosByYearMonthDay = groupPhotosByYearMonthDay(galleryPhotos);
+      return {
+        ...gallery,
+        photos: photosByYearMonthDay,
       };
-      if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-        loadGalleryPhotos(CONST.SPECIAL_GALLERIES[galleryId]);
-      } else {
-        db.loadGallery(galleryId)
-          .then((data) => {
-            loadGalleryPhotos(data);
-          })
-          .catch((error) => reject(error));
-      }
-    });
+    };
+    if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
+      return await loadGalleryPhotos(CONST.SPECIAL_GALLERIES[galleryId]);
+    }
+    const gallery = await db.loadGallery(galleryId);
+    return await loadGalleryPhotos(gallery);
   };
-  const updateGallery = (gallery) => {
-    return new Promise((resolve, reject) => {
-      logger.debug("Updating gallery", gallery);
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+  const updateGallery = async (gallery) => {
+    logger.debug("Updating gallery", gallery);
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
-  const deleteGallery = (galleryId) => {
+  const deleteGallery = async (galleryId) => {
     logger.debug("Deleting gallery", galleryId);
-    return new Promise((resolve, reject) => {
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
 
   return {

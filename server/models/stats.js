@@ -3,42 +3,29 @@ const logger = require("../utils/logger");
 const db = require("../db");
 
 module.exports = () => {
-  const getStatistics = () => {
-    logger.debug("Getting statistics");
-    return new Promise((resolve, reject) => {
-      db.loadPhotos()
-        .then((photos) => {
-          resolve(collectStatistics(Object.values(photos)));
-        })
-        .catch((error) => reject(error));
-    });
-  };
-  const getGalleryStatistics = (galleryId) => {
-    logger.debug("Getting statistics for gallery", galleryId);
-    return new Promise((resolve, reject) => {
-      const loadGalleryPhotos = () =>
-        db
-          .loadGalleryPhotos(galleryId)
-          .then((photos) => {
-            resolve(collectStatistics(photos));
-          })
-          .catch((error) => reject(error));
-
-      if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-        loadGalleryPhotos();
-      } else {
-        db.loadGallery(galleryId)
-          .then(() => {
-            loadGalleryPhotos();
-          })
-          .catch((error) => reject(error));
-      }
-    });
-  };
   return {
     getStatistics,
     getGalleryStatistics,
   };
+};
+
+const getStatistics = async () => {
+  logger.debug("Getting statistics");
+  const photos = await db.loadPhotos();
+  return collectStatistics(Object.values(photos));
+};
+const getGalleryStatistics = async (galleryId) => {
+  logger.debug("Getting statistics for gallery", galleryId);
+  const loadGalleryPhotos = async () => {
+    const photos = await db.loadGalleryPhotos(galleryId);
+    return collectStatistics(photos);
+  };
+
+  if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
+    return await loadGalleryPhotos();
+  }
+  await db.loadGallery(galleryId);
+  return await loadGalleryPhotos();
 };
 
 /**

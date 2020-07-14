@@ -8,123 +8,7 @@ const db = require("../db");
 
 const sessions = {};
 
-const decodeSessionToken = (encodedToken) => {
-  const token = Buffer.from(encodedToken, "base64").toString("ascii");
-  const [username, session] = token.split("=", 2);
-  return [username, session];
-};
-
 module.exports = () => {
-  const checkUserPassword = (credentials) => {
-    logger.debug("Check password", credentials);
-    return new Promise((resolve, reject) => {
-      const verifyPassword = (user) => {
-        bcrypt.compare(credentials.password, user.password, (error, result) => {
-          if (error || !result) {
-            reject(CONST.ERROR_LOGIN);
-          } else {
-            resolve();
-          }
-        });
-      };
-
-      db.loadUser(credentials.username)
-        .then((user) => verifyPassword(user))
-        .catch(() => reject(CONST.ERROR_LOGIN));
-    });
-  };
-  const authenticateUser = (credentials) => {
-    return new Promise((resolve, reject) => {
-      logger.debug("Authenticating user", credentials);
-      const createSession = (username) => {
-        const tokenContent = { username: credentials.username };
-        const token = jwt.sign(tokenContent, config.SECRET);
-        const now = new Date();
-
-        sessions[username] = sessions[username] || {};
-        sessions[username][token] = {
-          username,
-          created: now,
-          updated: now,
-        };
-        return token;
-      };
-      checkUserPassword(credentials)
-        .then(() => {
-          const token = createSession(credentials.username);
-          logger.debug("Current sessions", sessions);
-          resolve([
-            sessions[credentials.username][token],
-            `${credentials.username}=${token}`,
-          ]);
-        })
-        .catch((error) => reject(error));
-    });
-  };
-  const revokeSession = (encodedToken) => {
-    return new Promise((resolve) => {
-      const [username, session] = decodeSessionToken(encodedToken);
-      logger.debug("Revoking session", username, session, encodedToken);
-      if (!username || !session) {
-        resolve();
-        return;
-      }
-
-      if (username in sessions && session in sessions[username]) {
-        delete sessions[username][session];
-      }
-      logger.debug("Current sessions", sessions);
-      resolve();
-    });
-  };
-  const revokeAllSessionsAdmin = (credentials) => {
-    return new Promise((resolve) => {
-      logger.debug("Revoking all sessions as admin", credentials);
-      if (credentials.username in sessions) {
-        delete sessions[credentials.username];
-      }
-      logger.debug("Current sessions", sessions);
-      resolve();
-    });
-  };
-  const revokeAllSessions = (credentials) => {
-    return new Promise((resolve, reject) => {
-      checkUserPassword(credentials)
-        .then(() =>
-          revokeAllSessionsAdmin(credentials)
-            .then(() => resolve())
-            .catch((error) => reject(error))
-        )
-        .catch((error) => reject(error));
-    });
-  };
-  const verifySession = (encodedToken) => {
-    return new Promise((resolve, reject) => {
-      const [username, token] = decodeSessionToken(encodedToken);
-      logger.debug("Verifying session", username, token, encodedToken);
-
-      if (!(username in sessions) || !(token in sessions[username])) {
-        reject(CONST.ERROR_LOGIN);
-        return;
-      }
-
-      const decodedToken = jwt.verify(token, process.env.SECRET);
-      if (!decodedToken || decodedToken.username !== username) {
-        reject(CONST.ERROR_LOGIN);
-        return;
-      }
-
-      const now = new Date();
-      if (sessions[username][token].updated < now - CONST.SESSION_LENGTH_MS) {
-        reject(CONST.ERROR_SESSION_EXPIRED);
-      } else {
-        sessions[username][token].updated = now;
-        logger.debug("Current sessions", sessions);
-        resolve(sessions[username][token]);
-      }
-    });
-  };
-
   return {
     authenticateUser,
     revokeSession,
@@ -132,4 +16,89 @@ module.exports = () => {
     revokeAllSessions,
     verifySession,
   };
+};
+
+const checkUserPassword = async (credentials) => {
+  logger.debug("Check password", credentials);
+  try {
+    const user = await db.loadUser(credentials.username);
+    if (!(await bcrypt.compare(credentials.password, user.password))) {
+      throw CONST.ERROR_LOGIN;
+    }
+  } catch (exception) {
+    throw CONST.ERROR_LOGIN;
+  }
+};
+const authenticateUser = async (credentials) => {
+  logger.debug("Authenticating user", credentials);
+  const createSession = (username) => {
+    const tokenContent = { username: credentials.username };
+    const token = jwt.sign(tokenContent, config.SECRET);
+    const now = new Date();
+
+    sessions[username] = sessions[username] || {};
+    sessions[username][token] = {
+      username,
+      created: now,
+      updated: now,
+    };
+    return token;
+  };
+  await checkUserPassword(credentials);
+  const token = createSession(credentials.username);
+  logger.debug("Current sessions", sessions);
+  return [
+    sessions[credentials.username][token],
+    `${credentials.username}=${token}`,
+  ];
+};
+const revokeSession = async (encodedToken) => {
+  const [username, session] = decodeSessionToken(encodedToken);
+  logger.debug("Revoking session", username, session, encodedToken);
+  if (!username || !session) {
+    return;
+  }
+
+  if (username in sessions && session in sessions[username]) {
+    delete sessions[username][session];
+  }
+  logger.debug("Current sessions", sessions);
+};
+const revokeAllSessionsAdmin = async (credentials) => {
+  logger.debug("Revoking all sessions as admin", credentials);
+  if (credentials.username in sessions) {
+    delete sessions[credentials.username];
+  }
+  logger.debug("Current sessions", sessions);
+};
+const revokeAllSessions = async (credentials) => {
+  await checkUserPassword(credentials);
+  await revokeAllSessionsAdmin(credentials);
+};
+const verifySession = async (encodedToken) => {
+  const [username, token] = decodeSessionToken(encodedToken);
+  logger.debug("Verifying session", username, token, encodedToken);
+
+  if (!(username in sessions) || !(token in sessions[username])) {
+    throw CONST.ERROR_LOGIN;
+  }
+
+  const decodedToken = jwt.verify(token, process.env.SECRET);
+  if (!decodedToken || decodedToken.username !== username) {
+    throw CONST.ERROR_LOGIN;
+  }
+
+  const now = new Date();
+  if (sessions[username][token].updated < now - CONST.SESSION_LENGTH_MS) {
+    throw CONST.ERROR_SESSION_EXPIRED;
+  }
+  sessions[username][token].updated = now;
+  logger.debug("Current sessions", sessions);
+  return sessions[username][token];
+};
+
+const decodeSessionToken = (encodedToken) => {
+  const token = Buffer.from(encodedToken, "base64").toString("ascii");
+  const [username, session] = token.split("=", 2);
+  return [username, session];
 };

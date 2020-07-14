@@ -16,7 +16,7 @@ router.get("/", (request, response) => {
 /**
  * Login, creating a new session.
  */
-router.post("/", (request, response, next) => {
+router.post("/", async (request, response, next) => {
   logger.debug("Login", request.body);
   const credentials = {
     username: request.body.username,
@@ -26,39 +26,28 @@ router.post("/", (request, response, next) => {
     next(CONST.ERROR_LOGIN);
     return;
   }
-  sessionsModel
-    .authenticateUser(credentials)
-    .then((sessionToken) => {
-      const [session, token] = sessionToken;
-      logger.debug(`User "${credentials.username}" logged in successfully.`);
+  const [session, token] = await sessionsModel.authenticateUser(credentials);
+  logger.debug(`User "${credentials.username}" logged in successfully.`);
 
-      request.session = session;
-      const encodedToken = Buffer.from(token).toString("base64");
-      // TODO: set cookie expiration
-      response.cookie("token", encodedToken);
-      response.status(204).end();
-    })
-    .catch((error) => next(error));
+  request.session = session;
+  const encodedToken = Buffer.from(token).toString("base64");
+  // TODO: set cookie expiration
+  response.cookie("token", encodedToken);
+  response.status(204).end();
 });
 /**
  * Logout, revoking the session.
  */
-router.delete("/", (request, response, next) => {
-  sessionsModel
-    .revokeSession(request.cookies["token"])
-    .then(() => {
-      response.clearCookie("token");
-      response.status(204).end();
-    })
-    .catch((error) => {
-      response.clearCookie("token");
-      next(error);
-    });
+router.delete("/", async (request, response) => {
+  await sessionsModel.revokeSession(request.cookies["token"]);
+
+  response.clearCookie("token");
+  response.status(204).end();
 });
 /**
  * Revoke all sessions of a user.
  */
-router.post("/revoke-all", (request, response, next) => {
+router.post("/revoke-all", async (request, response, next) => {
   const credentials = {
     username: request.body.username,
     password: request.body.password,
@@ -67,25 +56,17 @@ router.post("/revoke-all", (request, response, next) => {
     next(CONST.ERROR_LOGIN);
     return;
   }
-  authorizer
-    .authorizeAdmin(request.session.username)
-    .then(() => {
-      sessionsModel
-        .revokeAllSessionsAdmin(credentials)
-        .then(() => response.status(204).end())
-        .catch((error) => next(error));
-    })
-    .catch(() => {
-      if (!credentials.password) {
-        next(CONST.ERROR_LOGIN);
-        return;
-      }
-      sessionsModel
-        .revokeAllSessions(credentials)
-        .then(() => {
-          response.clearCookie("token");
-          response.status(204).end();
-        })
-        .catch((error) => next(error));
-    });
+  try {
+    await authorizer.authorizeAdmin(request.session.username);
+    await sessionsModel.revokeAllSessionsAdmin(credentials);
+    response.status(204).end();
+  } catch (exception) {
+    if (!credentials.password) {
+      next(CONST.ERROR_LOGIN);
+      return;
+    }
+    await sessionsModel.revokeAllSessions(credentials);
+    response.clearCookie("token");
+    response.status(204).end();
+  }
 });

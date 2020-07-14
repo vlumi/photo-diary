@@ -7,72 +7,44 @@ const photosModel = require("../models/photos")();
 /**
  * Get the properties of all photos.
  */
-router.get("/", (request, response, next) => {
-  authorizer
-    .authorizeView(request.session.username)
-    .then(() => {
-      photosModel
-        .getAllPhotos()
-        .then((photos) => {
-          response.json(photos);
-        })
-        .catch((error) => next(error));
-    })
-    .catch((error) => next(error));
+router.get("/", async (request, response) => {
+  await authorizer.authorizeView(request.session.username);
+  const photos = await photosModel.getAllPhotos();
+  response.json(photos);
 });
 /**
  * Create the properties of a photo.
  */
-router.post("/", (request, response, next) => {
-  authorizer
-    .authorizeAdmin(request.session.username)
-    .then(() => {
-      // TODO: validate and set content from request.body
-      const photo = {};
-      photosModel
-        .createPhoto(photo)
-        .then((photo) => response.json(photo))
-        .catch((error) => next(error));
-    })
-    .catch((error) => next(error));
+router.post("/", async (request, response) => {
+  await authorizer.authorizeAdmin(request.session.username);
+  const photo = {};
+  // TODO: validate and set content from request.body
+  const createdPhoto = await photosModel.createPhoto(photo);
+  response.json(createdPhoto);
 });
 /**
  * Get the properties of a photo.
  */
-router.get("/:photoId", (request, response, next) => {
-  authorizer
-    .authorizeView(request.session.username)
-    .then(() => {
-      photosModel
-        .getPhoto(request.params.photoId)
-        .then((photo) => response.json(photo))
-        .catch((error) => next(error));
-    })
-    .catch((error) => next(error));
+router.get("/:photoId", async (request, response) => {
+  await authorizer.authorizeView(request.session.username);
+  const photo = await photosModel.getPhoto(request.params.photoId);
+  response.json(photo);
 });
 /**
  * Update the properties of a photo.
  */
-router.put("/:photoId", (request, response, next) => {
-  authorizer
-    .authorizeAdmin(request.session.username)
-    .then(() => {
-      // TODO: implement: update photo meta
-      response.status(501).end();
-    })
-    .catch((error) => next(error));
+router.put("/:photoId", async (request, response) => {
+  await authorizer.authorizeAdmin(request.session.username);
+  const photo = {};
+  // TODO: validate and set content from request.body
+  const updatedPhoto = await photosModel.updatePhoto(photo);
+  response.json(updatedPhoto);
 });
 /**
  * Delete the properties of a photo.
  */
-router.delete("/:photoId", (request, response, next) => {
-  authorizer
-    .authorizeAdmin(request.session.username)
-    .then(() => {
-      photosModel
-        .deletePhoto(request.params.galleryId)
-        .then(() => response.status(204).end())
-        .catch((error) => next(error));
-    })
-    .catch((error) => next(error));
+router.delete("/:photoId", async (request, response) => {
+  await authorizer.authorizeAdmin(request.session.username);
+  await photosModel.deletePhoto(request.params.galleryId);
+  response.status(204).end();
 });
