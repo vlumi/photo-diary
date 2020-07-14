@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const compression = require("compression");
-const cookieParser = require("cookie-parser");
 require("express-async-errors");
 
 const config = require("./utils/config");
@@ -16,7 +15,6 @@ const app = express();
 app.use(cors());
 app.use(compression());
 app.use(express.json());
-app.use(cookieParser());
 app.use(express.static("build"));
 
 const registerPreProcessors = () => {

@@ -23,7 +23,7 @@ module.exports = (request, response, next) => {
     return undefined;
   };
 
-  const token = getToken(request) || request.cookies["token"];
+  const token = getToken(request);
   if (
     !token ||
     (request.url === "/api/sessions" && request.method === "POST")

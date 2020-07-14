@@ -12,13 +12,13 @@ beforeEach(async () => {
 const getStats = async (token, status = 200) =>
   api
     .get("/api/stats")
-    .set("Cookie", [`token=${token}`])
+    .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 const getGalleryStats = async (token, galleryId, status = 200) =>
   api
     .get(`/api/stats/${galleryId}`)
-    .set("Cookie", [`token=${token}`])
+    .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 // TODO: test stats return content when format is stable

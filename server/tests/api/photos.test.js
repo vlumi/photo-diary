@@ -10,15 +10,12 @@ beforeEach(async () => {
 });
 
 const getPhotos = async (token, status = 200) =>
-  api
-    .get("/api/photos")
-    .set("Cookie", [`token=${token}`])
-    .expect(status);
+  api.get("/api/photos").set("Authorization", `Bearer ${token}`).expect(status);
 
 const getPhoto = async (token, photoId, status = 200) =>
   api
     .get(`/api/photos/${photoId}`)
-    .set("Cookie", [`token=${token}`])
+    .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 const expectPhoto = (result, photo) => {
@@ -42,7 +39,7 @@ describe("As guest", () => {
   test("Get gallery3photo.jpg", async () => {
     await api.get("/api/photo/gallery3photo.jpg").expect(404);
   });
-  test("Get gallery1photo.jpg", async () => {
+  test("Get orphanphoto.jpg", async () => {
     await api.get("/api/photo/orphanphoto.jpg").expect(404);
   });
   test("Get invalid", async () => {

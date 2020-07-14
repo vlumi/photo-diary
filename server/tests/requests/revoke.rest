@@ -1,6 +1,6 @@
 POST http://localhost:4200/api/sessions/revoke-all
 Content-type: application/json
-Cookie: token=cGxhaW5Vc2VyPWV5SmhiR2NpT2lKSVV6STFOaUlzSW5SNWNDSTZJa3BYVkNKOS5leUoxYzJWeWJtRnRaU0k2SW5Cc1lXbHVWWE5sY2lJc0ltbGhkQ0k2TVRVNU5EWTRNalF4TUgwLmp2UFphNEFJWjl5ZVVWSkhuams0eTdLaW9qMFlBT2RULVk3b3dnZ3VjNnM%3D; Path=/
+Authorization: Bearer YWRtaW49ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5Ym1GdFpTSTZJbUZrYldsdUlpd2lhV0YwSWpveE5UazBOamd4T0RNemZRLnZPOENtX1I3LTB0WFF4N3pLeXlkN0U1TTRJV3A5Vjc4b2dvR2dUdzNUT1E%3D
 
 {
     "username": "admin",

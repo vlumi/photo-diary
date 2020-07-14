@@ -12,13 +12,13 @@ beforeEach(async () => {
 const getGalleries = async (token, status = 200) =>
   api
     .get("/api/galleries")
-    .set("Cookie", [`token=${token}`])
+    .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 const getGallery = async (token, galleryId, status = 200) =>
   api
     .get(`/api/galleries/${galleryId}`)
-    .set("Cookie", [`token=${token}`])
+    .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 const expectGallery1 = (result) => {

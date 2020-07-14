@@ -12,7 +12,7 @@ beforeEach(async () => {
 const getGalleryPhoto = async (token, galleryId, photoId, status = 200) =>
   api
     .get(`/api/gallery-photos/${galleryId}/${photoId}`)
-    .set("Cookie", [`token=${token}`])
+    .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 describe("As guest", () => {
