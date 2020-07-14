@@ -3,43 +3,29 @@ const logger = require("../utils/logger");
 const db = require("../db");
 
 module.exports = () => {
-  const getAllPhotos = () => {
+  const getAllPhotos = async () => {
     logger.debug("Getting all photos");
-    return new Promise((resolve, reject) => {
-      db.loadPhotos()
-        .then((photos) => resolve(photos))
-        .catch((error) => reject(error));
-    });
+    return await db.loadPhotos();
   };
 
-  const createPhoto = (photo) => {
+  const createPhoto = async (photo) => {
     logger.debug("Creating photo", photo);
-    return new Promise((resolve, reject) => {
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
 
-  const getPhoto = (photoId) => {
+  const getPhoto = async (photoId) => {
     logger.debug("Getting photo", photoId);
-    return new Promise((resolve, reject) => {
-      db.loadPhoto(photoId)
-        .then((photo) => resolve(photo))
-        .catch((error) => reject(error));
-    });
+    return await db.loadPhoto(photoId);
   };
 
-  const updatePhoto = (photo) => {
+  const updatePhoto = async (photo) => {
     logger.debug("Updating photo", photo);
-    return new Promise((resolve, reject) => {
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
 
-  const deletePhoto = (photoId) => {
+  const deletePhoto = async (photoId) => {
     logger.debug("Deleting photo", photoId);
-    return new Promise((resolve, reject) => {
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
 
   return {
