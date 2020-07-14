@@ -1,3 +1,5 @@
+const { v4: uuidv4 } = require("uuid");
+
 const CONST = require("../utils/constants");
 
 /**
@@ -124,28 +126,44 @@ const loadPhoto = async (photoId) => {
 const dbDump = JSON.stringify({
   users: {
     admin: {
+      username: "admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+      secret: uuidv4(),
     },
     gallery1Admin: {
+      username: "gallery1Admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+      secret: uuidv4(),
     },
     gallery2Admin: {
+      username: "gallery2Admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+      secret: uuidv4(),
     },
     gallery1User: {
+      username: "gallery1User",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+      secret: uuidv4(),
     },
     gallery12User: {
+      username: "gallery12User",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+      secret: uuidv4(),
     },
     plainUser: {
+      username: "plainUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+      secret: uuidv4(),
     },
     simpleUser: {
+      username: "simpleUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+      secret: uuidv4(),
     },
     blockedUser: {
+      username: "blockedUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+      secret: uuidv4(),
     },
   },
   accessControl: {

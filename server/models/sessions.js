@@ -6,6 +6,7 @@ const config = require("../utils/config");
 const logger = require("../utils/logger");
 const db = require("../db");
 
+// TODO: clean-up expired tokens
 const sessions = {};
 
 module.exports = () => {
@@ -33,6 +34,7 @@ const authenticateUser = async (credentials) => {
   logger.debug("Authenticating user", credentials);
   const createSession = (username) => {
     const tokenContent = { username: credentials.username };
+    // TODO: expiration
     const token = jwt.sign(tokenContent, config.SECRET);
     const now = new Date();
 
@@ -78,6 +80,7 @@ const revokeAllSessions = async (credentials) => {
 const verifySession = async (encodedToken) => {
   const [username, token] = decodeSessionToken(encodedToken);
   logger.debug("Verifying session", username, token, encodedToken);
+  // const user = await db.loadUser(credentials.username);
 
   if (!(username in sessions) || !(token in sessions[username])) {
     throw CONST.ERROR_LOGIN;
