@@ -60,7 +60,7 @@ router.post("/revoke-all", async (request, response, next) => {
     await authorizer.authorizeAdmin(request.session.username);
     await sessionsModel.revokeAllSessionsAdmin(credentials);
     response.status(204).end();
-  } catch (exception) {
+  } catch (error) {
     if (!credentials.password) {
       next(CONST.ERROR_LOGIN);
       return;

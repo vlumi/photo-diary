@@ -14,6 +14,9 @@ module.exports = function (error, request, response, next) {
     case CONST.ERROR_LOGIN:
       response.status(401).send({ error });
       break;
+    case CONST.ERROR_ACCESS_DELEGATE:
+      response.status(403).send({ error: CONST.ERROR_ACCESS });
+      break;
     case CONST.ERROR_ACCESS:
       response.status(403).send({ error });
       break;

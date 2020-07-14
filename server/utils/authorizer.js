@@ -10,123 +10,88 @@ module.exports = () => {
   };
 };
 
-const authorizeView = (username) => {
-  return new Promise((resolve, reject) => {
-    db.loadUserAccessControl(username)
-      .then((acl) => {
-        const all = CONST.SPECIAL_GALLERY_ALL;
-        if (all in acl && acl[all] >= CONST.ACCESS_VIEW) {
-          resolve();
-        } else {
-          reject(CONST.ERROR_ACCESS);
-        }
-      })
-      .catch((error) => {
-        if (username !== "guest") {
-          authorizeView("guest")
-            .then(() => resolve())
-            .catch((error) => reject(error));
-        } else {
-          reject(error);
-        }
-      });
-  });
+const authorizeView = async (username) => {
+  try {
+    const acl = await db.loadUserAccessControl(username);
+    await authorizeViewDirect(acl);
+  } catch (error) {
+    if (error !== CONST.ERROR_ACCESS_DELEGATE || username === "guest") {
+      throw error;
+    }
+    await authorizeView("guest");
+  }
 };
-const authorizeAdmin = (username) => {
-  return new Promise((resolve, reject) => {
-    db.loadUserAccessControl(username)
-      .then((acl) => {
-        const all = CONST.SPECIAL_GALLERY_ALL;
-        if (all in acl && acl[all] >= CONST.ACCESS_ADMIN) {
-          resolve();
-        } else {
-          reject(CONST.ERROR_ACCESS);
-        }
-      })
-      .catch((error) => {
-        if (username !== "guest") {
-          authorizeAdmin("guest")
-            .then(() => resolve())
-            .catch((error) => reject(error));
-        } else {
-          reject(error);
-        }
-      });
-  });
+const authorizeAdmin = async (username) => {
+  try {
+    const acl = await db.loadUserAccessControl(username);
+    await authorizeAdminDirect(acl);
+  } catch (error) {
+    if (error !== CONST.ERROR_ACCESS_DELEGATE || username === "guest") {
+      throw error;
+    }
+    await authorizeAdmin("guest");
+  }
 };
-const authorizeGalleryView = (username, galleryId) => {
-  return new Promise((resolve, reject) => {
-    db.loadUserAccessControl(username)
-      .then((acl) => {
-        if (Array.isArray(galleryId)) {
-          const all = CONST.SPECIAL_GALLERY_ALL;
-          const authorizedGalleries = galleryId.filter((id) => {
-            if (id in acl) {
-              return acl[id] >= CONST.ACCESS_VIEW;
-            } else if (all in acl) {
-              return acl[all] >= CONST.ACCESS_VIEW;
-            }
-            return false;
-          });
-          resolve(authorizedGalleries);
-        } else if (galleryId in acl) {
-          if (acl[galleryId] >= CONST.ACCESS_VIEW) {
-            resolve([galleryId]);
-          } else {
-            reject(CONST.ERROR_ACCESS);
-          }
-        } else {
-          authorizeView(username)
-            .then(() => resolve())
-            .catch((error) => reject(error));
-        }
-      })
-      .catch((error) => {
-        if (username !== "guest") {
-          authorizeGalleryView("guest", galleryId)
-            .then(() => resolve())
-            .catch((error) => reject(error));
-        } else {
-          reject(error);
-        }
-      });
-  });
+const authorizeGalleryView = async (username, galleryId) => {
+  const acl = await db.loadUserAccessControl(username);
+  try {
+    return await authorizeGalleryViewDirect(acl, galleryId);
+  } catch (error) {
+    if (error !== CONST.ERROR_ACCESS_DELEGATE || username === "guest") {
+      throw CONST.ERROR_ACCESS;
+    }
+    await authorizeGalleryView("guest", galleryId);
+    return galleryId;
+  }
 };
-const authorizeGalleryAdmin = (username, galleryId) => {
-  return new Promise((resolve, reject) => {
-    db.loadUserAccessControl(username)
-      .then(galleryId, (acl) => {
-        if (Array.isArray(galleryId)) {
-          const all = CONST.SPECIAL_GALLERY_ALL;
-          const authorizedGalleries = galleryId.filter((id) => {
-            if (id in acl) {
-              return acl[id] >= CONST.ACCESS_ADMIN;
-            } else if (all in acl) {
-              return acl[all] >= CONST.ACCESS_ADMIN;
-            }
-            return false;
-          });
-          resolve(authorizedGalleries);
-        } else if (galleryId in acl) {
-          if (acl[galleryId] >= CONST.ACCESS_ADMIN) {
-            resolve([galleryId]);
-          } else {
-            reject(CONST.ERROR_ACCESS);
-          }
-        } else {
-          authorizeAdmin(username)
-            .then(() => resolve())
-            .catch((error) => reject(error));
-        }
-      })
-      .catch((error) => {
-        if (username !== "guest") {
-          authorizeGalleryAdmin("guest", galleryId)
-            .then(() => resolve())
-            .catch((error) => reject(error));
-        } else {
-          reject(error);
-        }
-      });
-  });
+const authorizeGalleryAdmin = async (username, galleryId) => {
+  const acl = await db.loadUserAccessControl(username);
+  try {
+    return await authorizeGalleryAdminDirect(acl, galleryId);
+  } catch (error) {
+    if (error !== CONST.ERROR_ACCESS_DELEGATE || username === "guest") {
+      throw CONST.ERROR_ACCESS;
+    }
+    await authorizeGalleryAdmin("guest", galleryId);
+    return galleryId;
+  }
+};
+
+const authorizeViewDirect = async (acl) => {
+  const all = CONST.SPECIAL_GALLERY_ALL;
+  if (!(all in acl)) {
+    throw CONST.ERROR_ACCESS_DELEGATE;
+  }
+  if (acl[all] < CONST.ACCESS_VIEW) {
+    throw CONST.ERROR_ACCESS;
+  }
+};
+const authorizeAdminDirect = async (acl) => {
+  const all = CONST.SPECIAL_GALLERY_ALL;
+  if (!(all in acl)) {
+    throw CONST.ERROR_ACCESS_DELEGATE;
+  }
+  if (acl[all] < CONST.ACCESS_ADMIN) {
+    throw CONST.ERROR_ACCESS;
+  }
+};
+const authorizeGalleryViewDirect = async (acl, galleryId) => {
+  if (!(galleryId in acl)) {
+    await authorizeViewDirect(acl);
+    return galleryId;
+  }
+  if (acl[galleryId] < CONST.ACCESS_VIEW) {
+    throw CONST.ERROR_ACCESS;
+  }
+  return galleryId;
+};
+const authorizeGalleryAdminDirect = async (acl, galleryId) => {
+  if (!(galleryId in acl)) {
+    await authorizeAdminDirect(acl);
+    return galleryId;
+  }
+  if (acl[galleryId] < CONST.ACCESS_ADMIN) {
+    throw CONST.ERROR_ACCESS;
+  }
+  return galleryId;
 };

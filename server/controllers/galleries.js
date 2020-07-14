@@ -9,10 +9,17 @@ const galleriesModel = require("../models/galleries")();
  */
 router.get("/", async (request, response) => {
   const galleries = await galleriesModel.getAllGalleries();
-  const authorizedGalleryIds = await authorizer.authorizeGalleryView(
-    request.session.username,
-    galleries.map((gallery) => gallery.id)
+  const galleryIds = galleries.map((gallery) => gallery.id);
+
+  const authorizedPromises = await Promise.allSettled(
+    galleryIds.map((galleryId) =>
+      authorizer.authorizeGalleryView(request.session.username, galleryId)
+    )
   );
+  const authorizedGalleryIds = authorizedPromises
+    .filter((result) => result.status === "fulfilled")
+    .map((result) => result.value);
+
   const authorizedGalleries = galleries.filter((gallery) =>
     authorizedGalleryIds.includes(gallery.id)
   );

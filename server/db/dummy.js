@@ -141,6 +141,12 @@ const dbDump = JSON.stringify({
     plainUser: {
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
     },
+    simpleUser: {
+      password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+    },
+    blockedUser: {
+      password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+    },
   },
   accessControl: {
     admin: {
@@ -159,11 +165,18 @@ const dbDump = JSON.stringify({
     gallery12User: {
       gallery1: CONST.ACCESS_VIEW,
       gallery2: CONST.ACCESS_VIEW,
+      gallery3: CONST.ACCESS_NONE,
     },
     plainUser: {
       [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
     },
-    guest: {},
+    simpleUser: {},
+    blockedUser: {
+      [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_NONE,
+    },
+    guest: {
+      gallery3: CONST.ACCESS_VIEW,
+    },
   },
   galleries: {
     gallery1: {
@@ -175,6 +188,11 @@ const dbDump = JSON.stringify({
       id: "gallery2",
       title: "gallery 2",
       description: "This is the second gallery",
+    },
+    gallery3: {
+      id: "gallery3",
+      title: "gallery 3",
+      description: "This is the third gallery",
     },
   },
   photos: {
@@ -302,6 +320,46 @@ const dbDump = JSON.stringify({
         thumbnail: { width: 150, height: 100 },
       },
     },
+    "gallery3photo.jpg": {
+      id: "gallery3photo.jpg",
+      title: "",
+      description: "",
+      taken: {
+        instant: {
+          timestamp: "2020-07-05 14:13:03",
+          year: 2020,
+          month: 7,
+          day: 6,
+          hour: 14,
+          minute: 13,
+          second: 3,
+        },
+        author: "Ville Misaki",
+        location: {
+          country: "jp",
+          place: "",
+          coordinates: {
+            latitude: undefined,
+            longitude: undefined,
+            altitude: undefined,
+          },
+        },
+      },
+      camera: { make: "FUJIFILM", model: "X-T2", serial: "111" },
+      lens: { make: "FUJIFILM", model: "XF27mmF2.8", serial: "222" },
+      exposure: {
+        focalLength: 27,
+        focalLength35mmEquiv: 41,
+        aperture: 5.6,
+        exposureTime: 0.0008,
+        iso: 200,
+      },
+      dimensions: {
+        original: { width: 6000, height: 4000 },
+        display: { width: 1500, height: 1000 },
+        thumbnail: { width: 150, height: 100 },
+      },
+    },
     "orphanphoto.jpg": {
       id: "orphanphoto.jpg",
       title: "",
@@ -342,6 +400,7 @@ const dbDump = JSON.stringify({
   galleryPhotos: {
     gallery1: ["gallery1photo.jpg", "gallery12photo.jpg"],
     gallery2: ["gallery12photo.jpg", "gallery2photo.jpg"],
+    gallery3: ["gallery3photo.jpg"],
   },
 });
 init();
