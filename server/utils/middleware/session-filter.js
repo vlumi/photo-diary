@@ -12,6 +12,15 @@ module.exports = (request, response, next) => {
     };
   };
 
+  // const getToken = (request) => {
+  //   const token = request.get("Authorization");
+  //   if (token && token.toLowerCase().startsWith("bearer")) {
+  //     return token.substring(7);
+  //   }
+  //   return undefined;
+  // };
+
+  // const token = getToken(request);
   const token = request.cookies["token"];
   if (
     !token ||

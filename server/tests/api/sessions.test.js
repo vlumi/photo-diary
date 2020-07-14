@@ -2,7 +2,7 @@ const supertest = require("supertest");
 const app = require("../../app");
 
 const api = supertest(app);
-const { parseCookies, loginUser } = require("./helper");
+const { loginUser } = require("./helper");
 
 beforeEach(async () => {});
 
@@ -34,9 +34,8 @@ describe("Login", () => {
         username: "admin",
         password: "foobar",
       })
-      .expect(204);
-    const cookies = parseCookies(result.headers["set-cookie"]);
-    expect(cookies.token).toBeDefined();
+      .expect(200);
+    expect(result.body.token).toBeDefined();
   });
 
   afterAll(() => {});
@@ -101,7 +100,7 @@ describe("Revoke", () => {
         password: "foobar",
       })
       .set("Cookie", [`token=${tokens[0]}`])
-      .expect(204);
+      .expect(200);
     Promise.all(
       tokens.map((token) => {
         api
