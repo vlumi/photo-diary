@@ -2,6 +2,6 @@ POST http://localhost:4200/api/sessions
 Content-type: application/json
 
 {
-    "username": "admin",
+    "username": "plainUser",
     "password": "foobar"
 }

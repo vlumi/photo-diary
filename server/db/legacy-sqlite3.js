@@ -47,20 +47,16 @@ if (!config.DB_OPTS) {
 const db = new sqlite3.Database(config.DB_OPTS);
 logger.debug("Connected to DB");
 
-const loadUserAccessControl = () => {
-  return new Promise((resolve) => {
-    // No ACL implemented in the legacy Gallery, everyone has global view access.
-    resolve({
-      [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
-    });
-  });
+const loadUserAccessControl = async () => {
+  // No ACL implemented in the legacy Gallery, everyone has global view access.
+  return {
+    [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+  };
 };
-const loadUser = () => {
-  return new Promise((resolve, reject) => {
-    reject(CONST.ERROR_NOT_IMPLEMENTED);
-  });
+const loadUser = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
-const loadGalleries = () => {
+const loadGalleries = async () => {
   const columns = SCHEMA.gallery.join(",");
   const query = `SELECT ${columns} FROM gallery`;
   return new Promise((resolve, reject) => {
@@ -72,7 +68,7 @@ const loadGalleries = () => {
     });
   });
 };
-const loadGallery = (galleryId) => {
+const loadGallery = async (galleryId) => {
   const column = SCHEMA.gallery.join(",");
   const query = `SELECT ${column} FROM gallery WHERE name = ?`;
   return new Promise((resolve, reject) => {
@@ -87,7 +83,7 @@ const loadGallery = (galleryId) => {
     });
   });
 };
-const loadGalleryPhotos = (galleryId) => {
+const loadGalleryPhotos = async (galleryId) => {
   const getQuery = () => {
     const columns = SCHEMA.photo.join(",");
     const baseQuery = `SELECT ${columns} FROM photo`;
@@ -130,7 +126,7 @@ const loadGalleryPhotos = (galleryId) => {
     });
   });
 };
-const loadGalleryPhoto = (galleryId, photoId) => {
+const loadGalleryPhoto = async (galleryId, photoId) => {
   const getQuery = () => {
     const columns = SCHEMA.photo.join(",");
     const baseQuery = `SELECT ${columns} FROM photo`;
@@ -152,12 +148,8 @@ const loadGalleryPhoto = (galleryId, photoId) => {
   };
 
   if (galleryId === CONST.SPECIAL_GALLERY_ALL) {
-    return new Promise((resolve, reject) => {
-      // Without ACL this is not much different from global context
-      loadPhoto(photoId)
-        .then((photo) => resolve(photo))
-        .catch((error) => reject(error));
-    });
+    // Without ACL this is no different from global context
+    return await loadPhoto(photoId);
   }
   if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
     return new Promise((resolve, reject) => {
@@ -186,7 +178,7 @@ const loadGalleryPhoto = (galleryId, photoId) => {
     });
   });
 };
-const loadPhotos = () => {
+const loadPhotos = async () => {
   const query = "SELECT * FROM photo";
   return new Promise((resolve, reject) => {
     db.all(query, function (error, rows) {
@@ -197,7 +189,7 @@ const loadPhotos = () => {
     });
   });
 };
-const loadPhoto = (photoId) => {
+const loadPhoto = async (photoId) => {
   const query = "SELECT * FROM photo WHERE name = ?";
   return new Promise((resolve, reject) => {
     db.all(query, photoId, function (error, rows) {

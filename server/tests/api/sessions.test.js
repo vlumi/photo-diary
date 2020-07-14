@@ -129,6 +129,24 @@ describe("Revoke", () => {
       })
       .set("Cookie", [`token=${adminToken}`])
       .expect(204);
+    Promise.all(
+      tokens.map((token) => {
+        api
+          .get("/api/sessions")
+          .set("Cookie", [`token=${token}`])
+          .expect(401);
+      })
+    );
+  });
+  test("By non-admin", async () => {
+    Promise.all(
+      tokens.map(async (token) => {
+        api
+          .get("/api/sessions")
+          .set("Cookie", [`token=${token}`])
+          .expect(200);
+      })
+    );
     await api
       .post("/api/sessions/revoke-all")
       .send({

@@ -3,35 +3,25 @@ const logger = require("../utils/logger");
 const db = require("../db");
 
 module.exports = () => {
-  const getUsers = () => {
-    return new Promise((resolve, reject) => {
-      logger.debug("Getting all users", "dummy db", db);
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+  const getUsers = async () => {
+    logger.debug("Getting all users", "dummy db", db);
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
-  const getUser = (username) => {
+  const getUser = async (username) => {
     logger.debug("Getting user", username);
-    return new Promise((resolve, reject) => {
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
-  const createUser = (user) => {
+  const createUser = async (user) => {
     logger.debug("Creating user", user);
-    return new Promise((resolve, reject) => {
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
-  const updateUser = (user) => {
+  const updateUser = async (user) => {
     logger.debug("Updating user", user);
-    return new Promise((resolve, reject) => {
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
-  const deleteUser = (username) => {
+  const deleteUser = async (username) => {
     logger.debug("Deleting user", username);
-    return new Promise((resolve, reject) => {
-      reject(CONST.ERROR_NOT_IMPLEMENTED);
-    });
+    throw CONST.ERROR_NOT_IMPLEMENTED;
   };
 
   return {

@@ -22,129 +22,103 @@ const init = () => {
   db = JSON.parse(dbDump);
 };
 
-const loadUserAccessControl = (username) => {
-  return new Promise((resolve, reject) => {
-    if (username in db.accessControl) {
-      resolve(db.accessControl[username]);
-    } else {
-      reject(CONST.ERROR_NOT_FOUND);
-    }
-  });
+const loadUserAccessControl = async (username) => {
+  if (!(username in db.accessControl)) {
+    throw CONST.ERROR_NOT_FOUND;
+  }
+  return db.accessControl[username];
 };
-const loadUser = (username) => {
-  return new Promise((resolve, reject) => {
-    if (username in db.users) {
-      resolve(db.users[username]);
-    } else {
-      reject(CONST.ERROR_NOT_FOUND);
-    }
-  });
+const loadUser = async (username) => {
+  if (!(username in db.users)) {
+    throw CONST.ERROR_NOT_FOUND;
+  }
+  return db.users[username];
 };
 // TODO: something like this for create/update user to hash the password:
-// const db.getUser = (username) => DUMMY_USERS[username];
 // {
 //   const saltRounds = 10;
 //   bcrypt.hash(password, saltRounds, function (err, hash) {
-//     DUMMY_USERS["admin"].password = hash;
+//     db.users["admin"].password = hash;
 //   });
 // }
-const loadGalleries = () => {
-  return new Promise((resolve) => {
-    resolve(Object.values(db.galleries).sort());
-  });
+const loadGalleries = async () => {
+  return Object.values(db.galleries).sort();
 };
-const loadGallery = (galleryId) => {
-  return new Promise((resolve, reject) => {
-    if (galleryId in db.galleries) {
-      resolve(db.galleries[galleryId]);
-    } else {
-      reject(CONST.ERROR_NOT_FOUND);
-    }
-  });
+const loadGallery = async (galleryId) => {
+  if (!(galleryId in db.galleries)) {
+    throw CONST.ERROR_NOT_FOUND;
+  }
+  return db.galleries[galleryId];
 };
-const loadGalleryPhotos = (galleryId) => {
-  return new Promise((resolve, reject) => {
-    switch (galleryId) {
-      case CONST.SPECIAL_GALLERY_ALL:
-        resolve(Object.values(db.photos).sort());
-        break;
-      case CONST.SPECIAL_GALLERY_NONE:
-        {
-          const galleriesPhotos = Object.values(db.galleryPhotos).flat();
-          const photos = Object.keys(db.photos)
-            .filter((photoId) => !galleriesPhotos.includes(photoId))
-            .map((photoId) => db.photos[photoId])
-            .sort();
-          resolve(photos);
-        }
-        break;
-      default:
-        if (galleryId in db.galleries) {
-          const photos = db.galleryPhotos[galleryId].map(
-            (photoId) => db.photos[photoId]
-          );
-          resolve(photos);
-        } else {
-          reject(CONST.ERROR_NOT_FOUND);
-        }
-        break;
-    }
-  });
-};
-const loadGalleryPhoto = (galleryId, photoId) => {
-  return new Promise((resolve, reject) => {
-    const handleGalleryAll = () => {
-      loadPhoto(photoId)
-        .then((photo) => resolve(photo))
-        .catch((error) => reject(error));
-    };
-    const handleGalleryNone = () => {
+const loadGalleryPhotos = async (galleryId) => {
+  switch (galleryId) {
+    case CONST.SPECIAL_GALLERY_ALL:
+      return Object.values(db.photos).sort();
+    case CONST.SPECIAL_GALLERY_NONE: {
       const galleriesPhotos = Object.values(db.galleryPhotos).flat();
       const photos = Object.keys(db.photos)
-        .filter((id) => id === photoId)
-        .filter((id) => !galleriesPhotos.includes(id))
-        .map((id) => db.photos[id])
+        .filter((photoId) => !galleriesPhotos.includes(photoId))
+        .map((photoId) => db.photos[photoId])
         .sort();
-      if (photos.length === 0) {
-        return reject(CONST.ERROR_NOT_FOUND);
-      }
-      resolve(photos[0]);
-    };
-    const handleGallery = () => {
+      return photos;
+    }
+    default: {
       if (!(galleryId in db.galleries)) {
-        return reject(CONST.ERROR_NOT_FOUND);
+        throw CONST.ERROR_NOT_FOUND;
       }
-      const photos = db.galleryPhotos[galleryId]
-        .filter((id) => id === photoId)
-        .map((id) => db.photos[id]);
-      if (photos.length === 0) {
-        return reject(CONST.ERROR_NOT_FOUND);
-      }
-      resolve(photos[0]);
-    };
+      const photos = db.galleryPhotos[galleryId].map(
+        (photoId) => db.photos[photoId]
+      );
+      return photos;
+    }
+  }
+};
+const loadGalleryPhoto = async (galleryId, photoId) => {
+  const handleGalleryAll = async () => {
+    return await loadPhoto(photoId);
+  };
+  const handleGalleryNone = async () => {
+    const galleriesPhotos = Object.values(db.galleryPhotos).flat();
+    const photos = Object.keys(db.photos)
+      .filter((id) => id === photoId)
+      .filter((id) => !galleriesPhotos.includes(id))
+      .map((id) => db.photos[id])
+      .sort();
+    if (photos.length === 0) {
+      throw CONST.ERROR_NOT_FOUND;
+    }
+    return photos[0];
+  };
+  const handleGallery = async () => {
+    if (!(galleryId in db.galleries)) {
+      throw CONST.ERROR_NOT_FOUND;
+    }
+    const photos = db.galleryPhotos[galleryId]
+      .filter((id) => id === photoId)
+      .map((id) => db.photos[id]);
+    if (photos.length === 0) {
+      throw CONST.ERROR_NOT_FOUND;
+    }
+    return photos[0];
+  };
 
-    switch (galleryId) {
-      case CONST.SPECIAL_GALLERY_ALL:
-        return handleGalleryAll();
-      case CONST.SPECIAL_GALLERY_NONE:
-        return handleGalleryNone();
-      default:
-        return handleGallery();
-    }
-  });
+  switch (galleryId) {
+    case CONST.SPECIAL_GALLERY_ALL:
+      return await handleGalleryAll();
+    case CONST.SPECIAL_GALLERY_NONE:
+      return await handleGalleryNone();
+    default:
+      return await handleGallery();
+  }
 };
-const loadPhotos = () => {
-  return new Promise((resolve) => {
-    resolve(db.photos);
-  });
+const loadPhotos = async () => {
+  return db.photos;
 };
-const loadPhoto = (photoId) => {
-  return new Promise((resolve, reject) => {
-    if (!(photoId in db.photos)) {
-      return reject(CONST.ERROR_NOT_FOUND);
-    }
-    resolve(db.photos[photoId]);
-  });
+const loadPhoto = async (photoId) => {
+  if (!(photoId in db.photos)) {
+    throw CONST.ERROR_NOT_FOUND;
+  }
+  return db.photos[photoId];
 };
 
 const dbDump = JSON.stringify({
