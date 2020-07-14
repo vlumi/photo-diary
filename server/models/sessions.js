@@ -25,7 +25,7 @@ const checkUserPassword = async (credentials) => {
     if (!(await bcrypt.compare(credentials.password, user.password))) {
       throw CONST.ERROR_LOGIN;
     }
-  } catch (exception) {
+  } catch (error) {
     throw CONST.ERROR_LOGIN;
   }
 };

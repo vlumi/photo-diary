@@ -9,6 +9,7 @@ const ERROR_NOT_IMPLEMENTED = "Not implemented";
 const ERROR_NOT_FOUND = "Not found";
 const ERROR_LOGIN = "Login failed";
 const ERROR_SESSION_EXPIRED = "Session expired";
+const ERROR_ACCESS_DELEGATE = "Access delegation";
 const ERROR_ACCESS = "Access denied";
 
 const STATS_UNKNOWN = "[unknown]";
@@ -51,6 +52,7 @@ module.exports = {
   ERROR_NOT_FOUND,
   ERROR_LOGIN,
   ERROR_SESSION_EXPIRED,
+  ERROR_ACCESS_DELEGATE,
   ERROR_ACCESS,
 
   STATS_UNKNOWN,

@@ -32,8 +32,7 @@ router.post("/", async (request, response, next) => {
   request.session = session;
   const encodedToken = Buffer.from(token).toString("base64");
   // TODO: set cookie expiration
-  response.cookie("token", encodedToken);
-  response.status(204).end();
+  response.cookie("token", encodedToken).status(204).end();
 });
 /**
  * Logout, revoking the session.
@@ -60,7 +59,7 @@ router.post("/revoke-all", async (request, response, next) => {
     await authorizer.authorizeAdmin(request.session.username);
     await sessionsModel.revokeAllSessionsAdmin(credentials);
     response.status(204).end();
-  } catch (exception) {
+  } catch (error) {
     if (!credentials.password) {
       next(CONST.ERROR_LOGIN);
       return;
