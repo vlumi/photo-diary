@@ -3,6 +3,7 @@ const app = require("../../app");
 
 const api = supertest(app);
 const { loginUser } = require("./helper");
+const { set } = require("../../app");
 
 beforeEach(async () => {});
 
@@ -49,7 +50,7 @@ describe("Keep-alive", () => {
   test("Success", async () => {
     await api
       .get("/api/sessions")
-      .set("Cookie", [`token=${token}`])
+      .set("Authorization", `Bearer ${token}`)
       .expect(200);
   });
 });
@@ -62,15 +63,15 @@ describe("Logout", () => {
   test("Success", async () => {
     await api
       .get("/api/sessions")
-      .set("Cookie", [`token=${token}`])
+      .set("Authorization", `Bearer ${token}`)
       .expect(200);
     await api
       .delete("/api/sessions")
-      .set("Cookie", [`token=${token}`])
+      .set("Authorization", `Bearer ${token}`)
       .expect(204);
     await api
       .get("/api/sessions")
-      .set("Cookie", [`token=${token}`])
+      .set("Authorization", `Bearer ${token}`)
       .expect(401);
   });
 });
@@ -89,7 +90,7 @@ describe("Revoke", () => {
       tokens.map(async (token) => {
         api
           .get("/api/sessions")
-          .set("Cookie", [`token=${token}`])
+          .set("Authorization", `Bearer ${token}`)
           .expect(200);
       })
     );
@@ -99,13 +100,13 @@ describe("Revoke", () => {
         username: "plainUser",
         password: "foobar",
       })
-      .set("Cookie", [`token=${tokens[0]}`])
+      .set("Authorization", `Bearer ${tokens[0]}`)
       .expect(200);
     Promise.all(
       tokens.map((token) => {
         api
           .get("/api/sessions")
-          .set("Cookie", [`token=${token}`])
+          .set("Authorization", `Bearer ${token}`)
           .expect(401);
       })
     );
@@ -116,7 +117,7 @@ describe("Revoke", () => {
       tokens.map(async (token) => {
         api
           .get("/api/sessions")
-          .set("Cookie", [`token=${token}`])
+          .set("Authorization", `Bearer ${token}`)
           .expect(200);
       })
     );
@@ -126,13 +127,13 @@ describe("Revoke", () => {
         username: "plainUser",
         password: "",
       })
-      .set("Cookie", [`token=${adminToken}`])
+      .set("Authorization", `Bearer ${adminToken}`)
       .expect(204);
     Promise.all(
       tokens.map((token) => {
         api
           .get("/api/sessions")
-          .set("Cookie", [`token=${token}`])
+          .set("Authorization", `Bearer ${token}`)
           .expect(401);
       })
     );
@@ -142,7 +143,7 @@ describe("Revoke", () => {
       tokens.map(async (token) => {
         api
           .get("/api/sessions")
-          .set("Cookie", [`token=${token}`])
+          .set("Authorization", `Bearer ${token}`)
           .expect(200);
       })
     );
@@ -152,13 +153,13 @@ describe("Revoke", () => {
         username: "plainUser",
         password: "",
       })
-      .set("Cookie", [`token=${tokens[0]}`])
+      .set("Authorization", `Bearer ${tokens[0]}`)
       .expect(401);
     Promise.all(
       tokens.map((token) => {
         api
           .get("/api/sessions")
-          .set("Cookie", [`token=${token}`])
+          .set("Authorization", `Bearer ${token}`)
           .expect(401);
       })
     );

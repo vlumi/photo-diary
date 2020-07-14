@@ -32,14 +32,14 @@ router.post("/", async (request, response, next) => {
   request.session = session;
   const encodedToken = Buffer.from(token).toString("base64");
   // TODO: set cookie expiration
-  response.status(200).send({token: encodedToken}).end();
+  response.status(200).send({ token: encodedToken }).end();
   // response.status(200).send({token: encodedToken});
 });
 /**
  * Logout, revoking the session.
  */
 router.delete("/", async (request, response) => {
-  await sessionsModel.revokeSession(request.cookies["token"]);
+  await sessionsModel.revokeSession(request.token);
 
   response.clearCookie("token");
   response.status(204).end();

@@ -3,6 +3,9 @@ const sessionsModel = require("../../models/sessions")();
 const logger = require("../logger");
 
 module.exports = (request, response, next) => {
+  request.session = undefined;
+  request.token = undefined;
+
   const initGuestSession = () => {
     logger.debug("Using anonymous guest session");
     request.session = {
@@ -12,16 +15,15 @@ module.exports = (request, response, next) => {
     };
   };
 
-  // const getToken = (request) => {
-  //   const token = request.get("Authorization");
-  //   if (token && token.toLowerCase().startsWith("bearer")) {
-  //     return token.substring(7);
-  //   }
-  //   return undefined;
-  // };
+  const getToken = (request) => {
+    const token = request.get("Authorization");
+    if (token && token.toLowerCase().startsWith("bearer")) {
+      return token.substring(7);
+    }
+    return undefined;
+  };
 
-  // const token = getToken(request);
-  const token = request.cookies["token"];
+  const token = getToken(request) || request.cookies["token"];
   if (
     !token ||
     (request.url === "/api/sessions" && request.method === "POST")
@@ -36,6 +38,7 @@ module.exports = (request, response, next) => {
     .then((session) => {
       logger.debug("Verified session", session);
       request.session = session;
+      request.token = token;
       next();
     })
     .catch((error) => {
