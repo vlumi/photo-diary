@@ -8,9 +8,10 @@ const API_ROOT = "/api";
 const ERROR_NOT_IMPLEMENTED = "Not implemented";
 const ERROR_NOT_FOUND = "Not found";
 const ERROR_LOGIN = "Login failed";
-const ERROR_SESSION_EXPIRED = "Session expired";
+const ERROR_INVALID_TOKEN = "Invalid token";
 const ERROR_ACCESS_DELEGATE = "Access delegation";
 const ERROR_ACCESS = "Access denied";
+const ERROR_UNAVAILABLE = "Service not available";
 
 const STATS_UNKNOWN = "[unknown]";
 
@@ -51,9 +52,10 @@ module.exports = {
   ERROR_NOT_IMPLEMENTED,
   ERROR_NOT_FOUND,
   ERROR_LOGIN,
-  ERROR_SESSION_EXPIRED,
+  ERROR_INVALID_TOKEN,
   ERROR_ACCESS_DELEGATE,
   ERROR_ACCESS,
+  ERROR_UNAVAILABLE,
 
   STATS_UNKNOWN,
 
