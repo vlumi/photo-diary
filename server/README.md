@@ -59,14 +59,20 @@ The access control has three levels of increasing access:
 
 An access level can be assigned to each user globally, or to any number of galleries.
 
+Gallery-level access is also hierarchical, with increasing scope:
+
+1. Specific gallery
+2. Virtual gallery ":public", matching all galleries and their photos
+3. Virtual gallery ":all", matching all photos, including those in ":private"
+
 ### RESTful resources
 
 The required access level is listed in brackets at the end of each resource method. The access levels are hierarchical, with the following, ascending priority:
 
-1. **[gallery/view]** – User with view access assigned to gallery
-2. **[view]** – User with global view access
-3. **[gallery/admin]** – User with admin access assigned to gallery
-4. **[admin]** – User with global admin acces
+1. **[gallery/view]** – User with view access assigned to the specific gallery, ":public", or ":all"
+2. **[view]** – User with global (":all") view access
+3. **[gallery/admin]** – User with admin access assigned to the specific gallery, ":public", or ":all"
+4. **[admin]** – User with global (":all") admin acces
 5. **[none]** – A user with access explicitly denied
 6. **[any]** – Any user with an account
 

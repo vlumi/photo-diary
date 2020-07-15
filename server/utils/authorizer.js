@@ -77,7 +77,11 @@ const authorizeAdminDirect = async (acl) => {
 };
 const authorizeGalleryViewDirect = async (acl, galleryId) => {
   if (!(galleryId in acl)) {
-    await authorizeViewDirect(acl);
+    if (!CONST.isSpecialGallery(galleryId)) {
+      await authorizeGalleryViewDirect(acl, CONST.SPECIAL_GALLERY_PUBLIC);
+    } else {
+      await authorizeViewDirect(acl);
+    }
     return galleryId;
   }
   if (acl[galleryId] < CONST.ACCESS_VIEW) {
@@ -87,7 +91,11 @@ const authorizeGalleryViewDirect = async (acl, galleryId) => {
 };
 const authorizeGalleryAdminDirect = async (acl, galleryId) => {
   if (!(galleryId in acl)) {
-    await authorizeAdminDirect(acl);
+    if (!CONST.isSpecialGallery(galleryId)) {
+      await authorizeGalleryAdminDirect(acl, CONST.SPECIAL_GALLERY_PUBLIC);
+    } else {
+      await authorizeAdminDirect(acl);
+    }
     return galleryId;
   }
   if (acl[galleryId] < CONST.ACCESS_ADMIN) {

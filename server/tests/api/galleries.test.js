@@ -213,6 +213,43 @@ describe("As simple user", () => {
   });
 });
 
+describe("As publicUser", () => {
+  let token = undefined;
+  beforeAll(async () => {
+    token = await loginUser(api, "publicUser");
+  });
+
+  test("List galleries", async () => {
+    const result = await getGalleries(token);
+    expect(result.body.length).toBe(4);
+  });
+  test("Get gallery1", async () => {
+    const result = await getGallery(token, "gallery1");
+    expectGallery1(result);
+  });
+  test("Get gallery2", async () => {
+    const result = await getGallery(token, "gallery2");
+    expectGallery2(result);
+  });
+  test("Get gallery3", async () => {
+    const result = await getGallery(token, "gallery3");
+    expectGallery3(result);
+  });
+  test("Get :all", async () => {
+    await getGallery(token, ":all", 403);
+  });
+  test("Get :public", async () => {
+    const result = await getGallery(token, ":public");
+    expectGalleryPublic(result);
+  });
+  test("Get :private", async () => {
+    await getGallery(token, ":private", 403);
+  });
+  test("Get invalid", async () => {
+    await getGallery(token, "invalid", 404);
+  });
+});
+
 describe("As admin", () => {
   let token = undefined;
   beforeAll(async () => {
