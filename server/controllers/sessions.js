@@ -33,43 +33,22 @@ router.post("/", async (request, response, next) => {
     next(CONST.ERROR_LOGIN);
     return;
   }
-  const [session, token] = await sessionsModel.authenticateUser(credentials);
+  const token = await sessionsModel.authenticateUser(credentials);
   logger.debug(`User "${credentials.username}" logged in successfully.`);
 
-  request.session = session;
+  // request.session = session;
   const encodedToken = Buffer.from(token).toString("base64");
   response.status(200).send({ token: encodedToken }).end();
 });
 /**
  * Logout, revoking the session.
  */
-router.delete("/", async (request, response) => {
-  await sessionsModel.revokeSession(request.token);
-
-  response.status(204).end();
-});
-/**
- * Revoke all sessions of a user.
- */
-router.post("/revoke-all", async (request, response, next) => {
-  const credentials = {
-    username: request.body.username,
-    password: request.body.password,
-  };
-  if (!credentials.username) {
-    next(CONST.ERROR_LOGIN);
-    return;
-  }
-  try {
+router.delete("/:username", async (request, response) => {
+  if (request.params.username === request.session.username) {
+    await sessionsModel.revokeSession(request.params.username);
+  } else {
     await authorizer.authorizeAdmin(request.session.username);
-    await sessionsModel.revokeAllSessionsAdmin(credentials);
-    response.status(204).end();
-  } catch (error) {
-    if (!credentials.password) {
-      next(CONST.ERROR_LOGIN);
-      return;
-    }
-    await sessionsModel.revokeAllSessions(credentials);
-    response.status(204).end();
+    await sessionsModel.revokeSession(request.param.username);
   }
+  response.status(204).end();
 });

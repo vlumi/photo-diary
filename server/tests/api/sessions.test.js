@@ -63,7 +63,7 @@ describe("Logout", () => {
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     await api
-      .delete("/api/sessions")
+      .delete("/api/sessions/admin")
       .set("Authorization", `Bearer ${token}`)
       .expect(204);
     await api
@@ -92,13 +92,9 @@ describe("Revoke", () => {
       })
     );
     await api
-      .post("/api/sessions")
-      .send({
-        username: "plainUser",
-        password: "foobar",
-      })
+      .delete("/api/sessions/plainUser")
       .set("Authorization", `Bearer ${tokens[0]}`)
-      .expect(200);
+      .expect(204);
     Promise.all(
       tokens.map((token) => {
         api
@@ -119,11 +115,7 @@ describe("Revoke", () => {
       })
     );
     await api
-      .post("/api/sessions/revoke-all")
-      .send({
-        username: "plainUser",
-        password: "",
-      })
+      .delete("/api/sessions/plainUser")
       .set("Authorization", `Bearer ${adminToken}`)
       .expect(204);
     Promise.all(
@@ -136,6 +128,7 @@ describe("Revoke", () => {
     );
   });
   test("By non-admin", async () => {
+    const otherToken = await loginUser(api, "simpleUser");
     Promise.all(
       tokens.map(async (token) => {
         api
@@ -145,13 +138,9 @@ describe("Revoke", () => {
       })
     );
     await api
-      .post("/api/sessions/revoke-all")
-      .send({
-        username: "plainUser",
-        password: "",
-      })
-      .set("Authorization", `Bearer ${tokens[0]}`)
-      .expect(401);
+      .delete("/api/sessions/plainUser")
+      .set("Authorization", `Bearer ${otherToken}`)
+      .expect(403);
     Promise.all(
       tokens.map((token) => {
         api
