@@ -12,7 +12,7 @@ module.exports = {
 };
 
 /**
- * Get the properties of all photos.
+ * Get all photos.
  */
 router.get("/", async (request, response) => {
   await authorizer.authorizeView(request.user.username);
@@ -20,7 +20,7 @@ router.get("/", async (request, response) => {
   response.json(photos);
 });
 /**
- * Create the properties of a photo.
+ * Create a photo.
  */
 router.post("/", async (request, response) => {
   await authorizer.authorizeAdmin(request.user.username);
@@ -30,7 +30,7 @@ router.post("/", async (request, response) => {
   response.json(createdPhoto);
 });
 /**
- * Get the properties of a photo.
+ * Get the matching photo.
  */
 router.get("/:photoId", async (request, response) => {
   await authorizer.authorizeView(request.user.username);
@@ -38,7 +38,7 @@ router.get("/:photoId", async (request, response) => {
   response.json(photo);
 });
 /**
- * Update the properties of a photo.
+ * Update the matching photo.
  */
 router.put("/:photoId", async (request, response) => {
   await authorizer.authorizeAdmin(request.user.username);
@@ -48,10 +48,10 @@ router.put("/:photoId", async (request, response) => {
   response.json(updatedPhoto);
 });
 /**
- * Delete the properties of a photo.
+ * Delete the matching photo.
  */
 router.delete("/:photoId", async (request, response) => {
   await authorizer.authorizeAdmin(request.user.username);
-  await photosModel.deletePhoto(request.params.galleryId);
+  await photosModel.deletePhoto(request.params.photoId);
   response.status(204).end();
 });
