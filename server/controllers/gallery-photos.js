@@ -1,8 +1,8 @@
 const authorizer = require("../utils/authorizer")();
-const galleryPhotosModel = require("../models/gallery-photos")();
+const model = require("../models/gallery-photo")();
 
 const init = async () => {
-  await galleryPhotosModel.init();
+  await model.init();
 };
 const router = require("express").Router();
 
@@ -19,7 +19,7 @@ router.get("/:galleryId/:photoId", async (request, response) => {
     request.user.username,
     request.params.galleryId
   );
-  const photo = await galleryPhotosModel.getGalleryPhoto(
+  const photo = await model.getGalleryPhoto(
     request.params.galleryId,
     request.params.photoId
   );
@@ -33,7 +33,7 @@ router.put("/:galleryId/:photoId", async (request, response) => {
     request.user.username,
     request.params.galleryId
   );
-  await galleryPhotosModel.linkGalleryPhoto(
+  await model.linkGalleryPhoto(
     request.params.galleryId,
     request.params.photoId
   );
@@ -47,7 +47,7 @@ router.delete("/:galleryId/:photoId", async (request, response) => {
     request.user.username,
     request.params.galleryId
   );
-  await galleryPhotosModel.unlinkGalleryPhoto(
+  await model.unlinkGalleryPhoto(
     request.params.galleryId,
     request.params.photoId
   );

@@ -1,8 +1,8 @@
 const authorizer = require("../utils/authorizer")();
-const galleriesModel = require("../models/galleries")();
+const model = require("../models/gallery")();
 
 const init = async () => {
-  await galleriesModel.init();
+  await model.init();
 };
 const router = require("express").Router();
 
@@ -15,7 +15,7 @@ module.exports = {
  * Get all galleries.
  */
 router.get("/", async (request, response) => {
-  const galleries = await galleriesModel.getGalleries();
+  const galleries = await model.getGalleries();
   const galleryIds = galleries.map((gallery) => gallery.id);
 
   const authorizedPromises = await Promise.allSettled(
@@ -39,7 +39,7 @@ router.post("/", async (request, response) => {
   await authorizer.authorizeAdmin(request.user.username);
   const gallery = {};
   // TODO: validate and set content from request.body
-  const craetedGallery = await galleriesModel.createGallery(gallery);
+  const craetedGallery = await model.createGallery(gallery);
   response.json(craetedGallery);
 });
 /**
@@ -50,7 +50,7 @@ router.get("/:galleryId", async (request, response) => {
     request.user.username,
     request.params.galleryId
   );
-  const gallery = await galleriesModel.getGallery(request.params.galleryId);
+  const gallery = await model.getGallery(request.params.galleryId);
   response.json(gallery);
 });
 /**
@@ -63,7 +63,7 @@ router.put("/:galleryId", async (request, response) => {
   );
   const gallery = {};
   // TODO: validate and set content from request.body
-  const updatedGallery = await galleriesModel.updateGallery(gallery);
+  const updatedGallery = await model.updateGallery(gallery);
   response.json(updatedGallery);
 });
 /**
@@ -74,6 +74,6 @@ router.delete("/:galleryId", async (request, response) => {
     request.user.username,
     request.params.galleryId
   );
-  await galleriesModel.deleteGallery(request.params.galleryId);
+  await model.deleteGallery(request.params.galleryId);
   response.status(204).end();
 });

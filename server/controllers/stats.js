@@ -1,8 +1,8 @@
 const authManager = require("../utils/authorizer")();
-const statsModel = require("../models/stats")();
+const model = require("../models/statistics")();
 
 const init = async () => {
-  await statsModel.init();
+  await model.init();
 };
 const router = require("express").Router();
 
@@ -13,7 +13,7 @@ module.exports = {
 
 router.get("/", async (request, response) => {
   await authManager.authorizeView(request.user.username);
-  const stats = await statsModel.getStatistics();
+  const stats = await model.getStatistics();
   response.json(stats);
 });
 router.get("/:galleryId", async (request, response) => {
@@ -21,6 +21,6 @@ router.get("/:galleryId", async (request, response) => {
     request.user.username,
     request.params.galleryId
   );
-  const stats = await statsModel.getGalleryStatistics(request.params.galleryId);
+  const stats = await model.getGalleryStatistics(request.params.galleryId);
   response.json(stats);
 });
