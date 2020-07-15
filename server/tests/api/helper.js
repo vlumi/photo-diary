@@ -1,6 +1,6 @@
 const loginUser = async (api, username) => {
   const authRes = await api
-    .post("/api/sessions")
+    .post("/api/tokens")
     .send({
       username: username,
       password: "foobar",

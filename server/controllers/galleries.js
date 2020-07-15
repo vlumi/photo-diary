@@ -20,7 +20,7 @@ router.get("/", async (request, response) => {
 
   const authorizedPromises = await Promise.allSettled(
     galleryIds.map((galleryId) =>
-      authorizer.authorizeGalleryView(request.session.username, galleryId)
+      authorizer.authorizeGalleryView(request.user.username, galleryId)
     )
   );
   const authorizedGalleryIds = authorizedPromises
@@ -36,7 +36,7 @@ router.get("/", async (request, response) => {
  * Create a new gallery.
  */
 router.post("/", async (request, response) => {
-  await authorizer.authorizeAdmin(request.session.username);
+  await authorizer.authorizeAdmin(request.user.username);
   const gallery = {};
   // TODO: validate and set content from request.body
   const craetedGallery = await galleriesModel.createGallery(gallery);
@@ -47,7 +47,7 @@ router.post("/", async (request, response) => {
  */
 router.get("/:galleryId", async (request, response) => {
   await authorizer.authorizeGalleryView(
-    request.session.username,
+    request.user.username,
     request.params.galleryId
   );
   const gallery = await galleriesModel.getGallery(request.params.galleryId);
@@ -58,7 +58,7 @@ router.get("/:galleryId", async (request, response) => {
  */
 router.put("/:galleryId", async (request, response) => {
   await authorizer.authorizeGalleryAdmin(
-    request.session.username,
+    request.user.username,
     request.params.galleryId
   );
   const gallery = {};
@@ -71,7 +71,7 @@ router.put("/:galleryId", async (request, response) => {
  */
 router.delete("/:galleryId", async (request, response) => {
   await authorizer.authorizeGalleryAdmin(
-    request.session.username,
+    request.user.username,
     request.params.galleryId
   );
   await galleriesModel.deleteGallery(request.params.galleryId);

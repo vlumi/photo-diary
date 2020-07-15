@@ -12,7 +12,7 @@ module.exports = function (error, request, response, next) {
     case CONST.ERROR_NOT_IMPLEMENTED:
       response.status(HttpStatus.NOT_IMPLEMENTED).send({ error });
       break;
-    case CONST.ERROR_SESSION_EXPIRED:
+    case CONST.ERROR_INVALID_TOKEN:
     case CONST.ERROR_LOGIN:
       response.status(HttpStatus.UNAUTHORIZED).send({ error });
       break;

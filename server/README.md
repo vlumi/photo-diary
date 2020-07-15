@@ -70,11 +70,11 @@ The required access level is listed in brackets at the end of each resource meth
 5. **[none]** – A user with access explicitly denied
 6. **[any]** – Any user with an account
 
-- `/sessions`
-  - `POST` – Login, create a session **[any]**
+- `/tokens`
+  - `POST` – Login, create a authentication token **[any]**
     1. `username`
     2. `password`
-    - Returns `session`
+    - Returns `token`
   - `DELETE` – Logout, revoke all tokens for the current **[any]**
   - `DELETE ../:username` – Logout, revoke all tokens for the user **[admin]**
 - `/user` – TBD

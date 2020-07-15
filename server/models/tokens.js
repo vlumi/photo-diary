@@ -24,8 +24,8 @@ module.exports = () => {
   return {
     init,
     authenticateUser,
-    revokeSession,
-    verifySession,
+    revokeToken,
+    verifyToken,
   };
 };
 
@@ -37,7 +37,7 @@ const checkUserPassword = async (credentials, user) => {
 };
 const authenticateUser = async (credentials) => {
   logger.debug("Authenticating user", credentials);
-  const createSession = (username) => {
+  const createToken = (username) => {
     const tokenContent = { username: credentials.username };
     // TODO: expiration
     return jwt.sign(tokenContent, secrets[username] || config.SECRET);
@@ -46,32 +46,29 @@ const authenticateUser = async (credentials) => {
     const user = await db.loadUser(credentials.username);
     await checkUserPassword(credentials, user);
 
-    const token = createSession(credentials.username);
+    const token = createToken(credentials.username);
     return `${credentials.username}=${token}`;
   } catch (error) {
     throw CONST.ERROR_LOGIN;
   }
 };
-const revokeSession = async (username) => {
-  logger.debug("Revoking session for user:", username);
+const revokeToken = async (username) => {
+  logger.debug("Revoking token for user:", username);
   if (!username) {
     return;
   }
   secrets[username] = uuidv4();
 };
-const verifySession = async (encodedToken) => {
-  const [username, token] = decodeSessionToken(encodedToken);
-  logger.debug("Verifying session", username, token, encodedToken);
+const verifyToken = async (encodedToken) => {
+  const [username, token] = decodeToken(encodedToken);
+  logger.debug("Verifying token", username, token, encodedToken);
 
-  const decodedToken = jwt.verify(token, secrets[username] || config.SECRET);
-  if (!decodedToken || decodedToken.username !== username) {
+  const user = jwt.verify(token, secrets[username] || config.SECRET);
+  if (!user || user.username !== username) {
     throw CONST.ERROR_LOGIN;
   }
-  return decodedToken;
+  return user;
 };
 
-const decodeSessionToken = (encodedToken) => {
-  const token = Buffer.from(encodedToken, "base64").toString("ascii");
-  const [username, session] = token.split("=", 2);
-  return [username, session];
-};
+const decodeToken = (encodedToken) =>
+  Buffer.from(encodedToken, "base64").toString("ascii").split("=", 2);

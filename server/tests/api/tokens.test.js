@@ -11,7 +11,7 @@ beforeEach(async () => {
 describe("Login", () => {
   test("Non-existing user", async () => {
     await api
-      .post("/api/sessions")
+      .post("/api/tokens")
       .send({
         username: "wrong",
         password: "wrong",
@@ -20,7 +20,7 @@ describe("Login", () => {
   });
   test("Wrong password", async () => {
     await api
-      .post("/api/sessions")
+      .post("/api/tokens")
       .send({
         username: "admin",
         password: "wrong",
@@ -29,7 +29,7 @@ describe("Login", () => {
   });
   test("Successful login", async () => {
     const result = await api
-      .post("/api/sessions")
+      .post("/api/tokens")
       .send({
         username: "admin",
         password: "foobar",
@@ -46,7 +46,7 @@ describe("Keep-alive", () => {
 
   test("Success", async () => {
     await api
-      .get("/api/sessions")
+      .get("/api/tokens")
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
   });
@@ -59,15 +59,15 @@ describe("Logout", () => {
 
   test("Success", async () => {
     await api
-      .get("/api/sessions")
+      .get("/api/tokens")
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     await api
-      .delete("/api/sessions")
+      .delete("/api/tokens")
       .set("Authorization", `Bearer ${token}`)
       .expect(204);
     await api
-      .get("/api/sessions")
+      .get("/api/tokens")
       .set("Authorization", `Bearer ${token}`)
       .expect(401);
   });
@@ -86,19 +86,19 @@ describe("Revoke", () => {
     Promise.all(
       tokens.map(async (token) => {
         api
-          .get("/api/sessions")
+          .get("/api/tokens")
           .set("Authorization", `Bearer ${token}`)
           .expect(200);
       })
     );
     await api
-      .delete("/api/sessions")
+      .delete("/api/tokens")
       .set("Authorization", `Bearer ${tokens[0]}`)
       .expect(204);
     Promise.all(
       tokens.map((token) => {
         api
-          .get("/api/sessions")
+          .get("/api/tokens")
           .set("Authorization", `Bearer ${token}`)
           .expect(401);
       })
@@ -109,19 +109,19 @@ describe("Revoke", () => {
     Promise.all(
       tokens.map(async (token) => {
         api
-          .get("/api/sessions")
+          .get("/api/tokens")
           .set("Authorization", `Bearer ${token}`)
           .expect(200);
       })
     );
     await api
-      .delete("/api/sessions/plainUser")
+      .delete("/api/tokens/plainUser")
       .set("Authorization", `Bearer ${adminToken}`)
       .expect(204);
     Promise.all(
       tokens.map((token) => {
         api
-          .get("/api/sessions")
+          .get("/api/tokens")
           .set("Authorization", `Bearer ${token}`)
           .expect(401);
       })
@@ -132,19 +132,19 @@ describe("Revoke", () => {
     Promise.all(
       tokens.map(async (token) => {
         api
-          .get("/api/sessions")
+          .get("/api/tokens")
           .set("Authorization", `Bearer ${token}`)
           .expect(200);
       })
     );
     await api
-      .delete("/api/sessions/plainUser")
+      .delete("/api/tokens/plainUser")
       .set("Authorization", `Bearer ${otherToken}`)
       .expect(403);
     Promise.all(
       tokens.map((token) => {
         api
-          .get("/api/sessions")
+          .get("/api/tokens")
           .set("Authorization", `Bearer ${token}`)
           .expect(401);
       })

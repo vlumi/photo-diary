@@ -12,13 +12,13 @@ module.exports = {
 };
 
 router.get("/", async (request, response) => {
-  await authManager.authorizeView(request.session.username);
+  await authManager.authorizeView(request.user.username);
   const stats = await statsModel.getStatistics();
   response.json(stats);
 });
 router.get("/:galleryId", async (request, response) => {
   await authManager.authorizeGalleryView(
-    request.session.username,
+    request.user.username,
     request.params.galleryId
   );
   const stats = await statsModel.getGalleryStatistics(request.params.galleryId);

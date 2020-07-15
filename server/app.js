@@ -5,7 +5,7 @@ require("express-async-errors");
 
 const config = require("./utils/config");
 
-const sessions = require("./controllers/sessions");
+const tokens = require("./controllers/tokens");
 const stats = require("./controllers/stats");
 const galleries = require("./controllers/galleries");
 const photos = require("./controllers/photos");
@@ -21,13 +21,13 @@ app.use(express.json());
 app.use(express.static("build"));
 
 const registerPreProcessors = () => {
-  app.use(middleware.sessionFilter);
+  app.use(middleware.tokenFilter);
   if (config.ENV !== "test") {
     app.use(middleware.requestLogger);
   }
 };
 const registerRoutes = () => {
-  app.use("/api/sessions", sessions.router);
+  app.use("/api/tokens", tokens.router);
   app.use("/api/stats", stats.router);
   app.use("/api/galleries", galleries.router);
   app.use("/api/photos", photos.router);
@@ -43,7 +43,7 @@ registerPostProcessors();
 
 const init = async () => {
   logger.debug("Initialize app start");
-  await sessions.init();
+  await tokens.init();
   await stats.init();
   await galleries.init();
   await photos.init();

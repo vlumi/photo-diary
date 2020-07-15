@@ -1,8 +1,8 @@
 const morgan = require("morgan");
 
 morgan.token("username", function (request) {
-  if ("session" in request && "username" in request.session) {
-    return request.session.username;
+  if ("user" in request && "username" in request.user) {
+    return request.user.username;
   } else {
     return "";
   }
