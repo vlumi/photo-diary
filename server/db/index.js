@@ -18,6 +18,9 @@ module.exports = {
   loadUserAccessControl: async (username) => {
     return db.loadUserAccessControl(username);
   },
+  loadUsers: async () => {
+    return db.loadUsers();
+  },
   loadUser: async (username) => {
     return db.loadUser(username);
   },

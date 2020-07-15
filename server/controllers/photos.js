@@ -1,8 +1,15 @@
-const router = require("express").Router();
-module.exports = router;
-
 const authorizer = require("../utils/authorizer")();
 const photosModel = require("../models/photos")();
+
+const init = async () => {
+  await photosModel.init();
+};
+const router = require("express").Router();
+
+module.exports = {
+  init,
+  router,
+};
 
 /**
  * Get the properties of all photos.

@@ -9,6 +9,7 @@ module.exports = () => {
   return {
     init,
     loadUserAccessControl,
+    loadUsers,
     loadUser,
     loadGalleries,
     loadGallery,
@@ -29,6 +30,9 @@ const loadUserAccessControl = async (username) => {
     throw CONST.ERROR_NOT_FOUND;
   }
   return db.accessControl[username];
+};
+const loadUsers = async () => {
+  return Object.values(db.users);
 };
 const loadUser = async (username) => {
   if (!(username in db.users)) {

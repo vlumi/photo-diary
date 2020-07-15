@@ -1,12 +1,13 @@
 const supertest = require("supertest");
-const app = require("../../app");
+const { app, init } = require("../../app");
 
 const api = supertest(app);
 const db = require("../../db/dummy")();
 const { loginUser } = require("./helper");
 
 beforeEach(async () => {
-  db.init();
+  await db.init();
+  await init();
 });
 
 const getGalleryPhoto = async (token, galleryId, photoId, status = 200) =>

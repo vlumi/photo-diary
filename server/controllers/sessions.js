@@ -1,11 +1,18 @@
 const CONST = require("../utils/constants");
 const logger = require("../utils/logger");
 
-const router = require("express").Router();
-module.exports = router;
-
 const authorizer = require("../utils/authorizer")();
 const sessionsModel = require("../models/sessions")();
+
+const init = async () => {
+  await sessionsModel.init();
+};
+const router = require("express").Router();
+
+module.exports = {
+  init,
+  router,
+};
 
 /**
  * Verify and keep-alive session.

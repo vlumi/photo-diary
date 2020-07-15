@@ -4,12 +4,15 @@ const compression = require("compression");
 require("express-async-errors");
 
 const config = require("./utils/config");
-const sessionsRouter = require("./controllers/sessions");
-const statsRouter = require("./controllers/stats");
-const galleriesRouter = require("./controllers/galleries");
-const photosRouter = require("./controllers/photos");
-const galleryPhotosRouter = require("./controllers/gallery-photos");
+
+const sessions = require("./controllers/sessions");
+const stats = require("./controllers/stats");
+const galleries = require("./controllers/galleries");
+const photos = require("./controllers/photos");
+const galleryPhotos = require("./controllers/gallery-photos");
+
 const middleware = require("./utils/middleware");
+const logger = require("./utils/logger");
 
 const app = express();
 app.use(cors());
@@ -24,11 +27,11 @@ const registerPreProcessors = () => {
   }
 };
 const registerRoutes = () => {
-  app.use("/api/sessions", sessionsRouter);
-  app.use("/api/stats", statsRouter);
-  app.use("/api/galleries", galleriesRouter);
-  app.use("/api/photos", photosRouter);
-  app.use("/api/gallery-photos", galleryPhotosRouter);
+  app.use("/api/sessions", sessions.router);
+  app.use("/api/stats", stats.router);
+  app.use("/api/galleries", galleries.router);
+  app.use("/api/photos", photos.router);
+  app.use("/api/gallery-photos", galleryPhotos.router);
 };
 const registerPostProcessors = () => {
   app.use(middleware.unknownEndpoint);
@@ -38,4 +41,17 @@ registerPreProcessors();
 registerRoutes();
 registerPostProcessors();
 
-module.exports = app;
+const init = async () => {
+  logger.debug("Initialize app start");
+  await sessions.init();
+  await stats.init();
+  await galleries.init();
+  await photos.init();
+  await galleryPhotos.init();
+  logger.debug("Initialize app done");
+};
+
+module.exports = {
+  app,
+  init,
+};

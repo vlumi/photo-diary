@@ -1,15 +1,14 @@
 const supertest = require("supertest");
-const app = require("../../app");
+const { app, init } = require("../../app");
 
 const api = supertest(app);
 const { loginUser } = require("./helper");
-const { set } = require("../../app");
 
-beforeEach(async () => {});
+beforeEach(async () => {
+  await init();
+});
 
 describe("Login", () => {
-  beforeEach(async () => {});
-
   test("Non-existing user", async () => {
     await api
       .post("/api/sessions")
@@ -38,8 +37,6 @@ describe("Login", () => {
       .expect(200);
     expect(result.body.token).toBeDefined();
   });
-
-  afterAll(() => {});
 });
 describe("Keep-alive", () => {
   let token = undefined;
@@ -165,5 +162,3 @@ describe("Revoke", () => {
     );
   });
 });
-
-afterAll(() => {});

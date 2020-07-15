@@ -11,6 +11,7 @@ const ERROR_LOGIN = "Login failed";
 const ERROR_SESSION_EXPIRED = "Session expired";
 const ERROR_ACCESS_DELEGATE = "Access delegation";
 const ERROR_ACCESS = "Access denied";
+const ERROR_UNAVAILABLE = "Service not available";
 
 const STATS_UNKNOWN = "[unknown]";
 
@@ -54,6 +55,7 @@ module.exports = {
   ERROR_SESSION_EXPIRED,
   ERROR_ACCESS_DELEGATE,
   ERROR_ACCESS,
+  ERROR_UNAVAILABLE,
 
   STATS_UNKNOWN,
 

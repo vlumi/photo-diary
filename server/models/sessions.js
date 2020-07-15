@@ -8,9 +8,18 @@ const db = require("../db");
 
 // TODO: clean-up expired tokens
 const sessions = {};
+const secrets = {};
+
+const init = async () => {
+  logger.debug("Loading secrets");
+  const users = await db.loadUsers();
+  users.forEach((user) => (secrets[user.username] = user.secret));
+  logger.debug("Loading secrets done");
+};
 
 module.exports = () => {
   return {
+    init,
     authenticateUser,
     revokeSession,
     revokeAllSessionsAdmin,
@@ -19,14 +28,9 @@ module.exports = () => {
   };
 };
 
-const checkUserPassword = async (credentials) => {
+const checkUserPassword = async (credentials, user) => {
   logger.debug("Check password", credentials);
-  try {
-    const user = await db.loadUser(credentials.username);
-    if (!(await bcrypt.compare(credentials.password, user.password))) {
-      throw CONST.ERROR_LOGIN;
-    }
-  } catch (error) {
+  if (!(await bcrypt.compare(credentials.password, user.password))) {
     throw CONST.ERROR_LOGIN;
   }
 };
@@ -46,13 +50,19 @@ const authenticateUser = async (credentials) => {
     };
     return token;
   };
-  await checkUserPassword(credentials);
-  const token = createSession(credentials.username);
-  logger.debug("Current sessions", sessions);
-  return [
-    sessions[credentials.username][token],
-    `${credentials.username}=${token}`,
-  ];
+  try {
+    const user = await db.loadUser(credentials.username);
+    secrets[user.username] = user.secret;
+    await checkUserPassword(credentials, user);
+    const token = createSession(credentials.username);
+    logger.debug("Current sessions", sessions);
+    return [
+      sessions[credentials.username][token],
+      `${credentials.username}=${token}`,
+    ];
+  } catch (error) {
+    throw CONST.ERROR_LOGIN;
+  }
 };
 const revokeSession = async (encodedToken) => {
   const [username, session] = decodeSessionToken(encodedToken);
@@ -74,8 +84,13 @@ const revokeAllSessionsAdmin = async (credentials) => {
   logger.debug("Current sessions", sessions);
 };
 const revokeAllSessions = async (credentials) => {
-  await checkUserPassword(credentials);
-  await revokeAllSessionsAdmin(credentials);
+  try {
+    const user = await db.loadUser(credentials.username);
+    await checkUserPassword(credentials, user);
+    await revokeAllSessionsAdmin(credentials);
+  } catch (error) {
+    throw CONST.ERROR_LOGIN;
+  }
 };
 const verifySession = async (encodedToken) => {
   const [username, token] = decodeSessionToken(encodedToken);
@@ -86,7 +101,7 @@ const verifySession = async (encodedToken) => {
     throw CONST.ERROR_LOGIN;
   }
 
-  const decodedToken = jwt.verify(token, process.env.SECRET);
+  const decodedToken = jwt.verify(token, config.SECRET);
   if (!decodedToken || decodedToken.username !== username) {
     throw CONST.ERROR_LOGIN;
   }

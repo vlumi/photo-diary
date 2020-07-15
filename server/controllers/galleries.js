@@ -1,8 +1,15 @@
-const router = require("express").Router();
-module.exports = router;
-
 const authorizer = require("../utils/authorizer")();
 const galleriesModel = require("../models/galleries")();
+
+const init = async () => {
+  await galleriesModel.init();
+};
+const router = require("express").Router();
+
+module.exports = {
+  init,
+  router,
+};
 
 /**
  * Get all galleries.

@@ -1,8 +1,15 @@
-const router = require("express").Router();
-module.exports = router;
-
 const authorizer = require("../utils/authorizer")();
 const galleryPhotosModel = require("../models/gallery-photos")();
+
+const init = async () => {
+  await galleryPhotosModel.init();
+};
+const router = require("express").Router();
+
+module.exports = {
+  init,
+  router,
+};
 
 /**
  * Get the properties of a photo in gallery context.
