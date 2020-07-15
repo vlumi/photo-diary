@@ -34,8 +34,8 @@ describe("As Guest", () => {
   test("Get :all stats", async () => {
     await api.get("/api/galleries/:all").expect(403);
   });
-  test("Get :none stats", async () => {
-    await api.get("/api/galleries/:none").expect(403);
+  test("Get :private stats", async () => {
+    await api.get("/api/galleries/:private").expect(403);
   });
 });
 
@@ -57,8 +57,8 @@ describe("As admin", () => {
   test("Get :all stats", async () => {
     await getGalleryStats(token, ":all");
   });
-  test("Get :none stats", async () => {
-    await getGalleryStats(token, ":none");
+  test("Get :private stats", async () => {
+    await getGalleryStats(token, ":private");
   });
   test("Get invalid stats", async () => {
     await getGalleryStats(token, "invalid", 404);
@@ -83,8 +83,8 @@ describe("As gallery1Admin", () => {
   test("Get :all stats", async () => {
     await getGalleryStats(token, ":all");
   });
-  test("Get :none stats", async () => {
-    await getGalleryStats(token, ":none");
+  test("Get :private stats", async () => {
+    await getGalleryStats(token, ":private");
   });
   test("Get invalid stats", async () => {
     await getGalleryStats(token, "invalid", 404);
@@ -109,8 +109,8 @@ describe("As gallery2Admin", () => {
   test("Get :all stats", async () => {
     await getGalleryStats(token, ":all", 403);
   });
-  test("Get :none stats", async () => {
-    await getGalleryStats(token, ":none", 403);
+  test("Get :private stats", async () => {
+    await getGalleryStats(token, ":private", 403);
   });
   test("Get invalid stats", async () => {
     await getGalleryStats(token, "invalid", 403);
@@ -135,8 +135,8 @@ describe("As plainUser", () => {
   test("Get :all stats", async () => {
     await getGalleryStats(token, ":all");
   });
-  test("Get :none stats", async () => {
-    await getGalleryStats(token, ":none");
+  test("Get :private stats", async () => {
+    await getGalleryStats(token, ":private");
   });
   test("Get invalid stats", async () => {
     await getGalleryStats(token, "invalid", 404);
@@ -160,8 +160,8 @@ describe("As gallery1User", () => {
   test("Get :all stats", async () => {
     await getGalleryStats(token, ":all", 403);
   });
-  test("Get :none stats", async () => {
-    await getGalleryStats(token, ":none", 403);
+  test("Get :private stats", async () => {
+    await getGalleryStats(token, ":private", 403);
   });
   test("Get invalid stats", async () => {
     await getGalleryStats(token, "invalid", 403);
@@ -185,8 +185,8 @@ describe("As gallery12User", () => {
   test("Get :all stats", async () => {
     await getGalleryStats(token, ":all", 403);
   });
-  test("Get :none stats", async () => {
-    await getGalleryStats(token, ":none", 403);
+  test("Get :private stats", async () => {
+    await getGalleryStats(token, ":private", 403);
   });
   test("Get invalid stats", async () => {
     await getGalleryStats(token, "invalid", 403);

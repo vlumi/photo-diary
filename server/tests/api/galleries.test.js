@@ -85,8 +85,26 @@ const expectGalleryAll = (result) => {
   expect(Object.keys(photos[2020][8][5]).length).toBe(1);
   expect(photos[2020][8][5][0].id).toBe("orphanphoto.jpg");
 };
-const expectGalleryNone = (result) => {
-  expect(result.body.id).toBe(":none");
+const expectGalleryPublic = (result) => {
+  expect(result.body.id).toBe(":public");
+  const photos = result.body.photos;
+  expect(photos).toBeDefined();
+  expect(Object.keys(photos).length).toBe(2);
+  expect(Object.keys(photos[2018]).length).toBe(1);
+  expect(Object.keys(photos[2018][5]).length).toBe(1);
+  expect(Object.keys(photos[2018][5][4]).length).toBe(1);
+  expect(photos[2018][5][4][0].id).toBe("gallery1photo.jpg");
+  expect(Object.keys(photos[2020]).length).toBe(1);
+  expect(Object.keys(photos[2020][7]).length).toBe(3);
+  expect(Object.keys(photos[2020][7][4]).length).toBe(1);
+  expect(photos[2020][7][4][0].id).toBe("gallery12photo.jpg");
+  expect(Object.keys(photos[2020][7][5]).length).toBe(1);
+  expect(photos[2020][7][5][0].id).toBe("gallery2photo.jpg");
+  expect(Object.keys(photos[2020][7][6]).length).toBe(1);
+  expect(photos[2020][7][6][0].id).toBe("gallery3photo.jpg");
+};
+const expectGalleryPrivate = (result) => {
+  expect(result.body.id).toBe(":private");
   const photos = result.body.photos;
   expect(photos).toBeDefined();
   expect(Object.keys(photos).length).toBe(1);
@@ -117,8 +135,11 @@ describe("As guest", () => {
   test("Get :all", async () => {
     await api.get("/api/galleries/:all").expect(403);
   });
-  test("Get :none", async () => {
-    await api.get("/api/galleries/:none").expect(403);
+  test("Get :public", async () => {
+    await api.get("/api/galleries/:public").expect(403);
+  });
+  test("Get :private", async () => {
+    await api.get("/api/galleries/:private").expect(403);
   });
   test("Get invalid", async () => {
     await api.get("/api/galleries/invalid").expect(403);
@@ -147,8 +168,11 @@ describe("As blocked user", () => {
   test("Get :all", async () => {
     await getGallery(token, ":all", 403);
   });
-  test("Get :none", async () => {
-    await getGallery(token, ":none", 403);
+  test("Get :public", async () => {
+    await getGallery(token, ":public", 403);
+  });
+  test("Get :private", async () => {
+    await getGallery(token, ":private", 403);
   });
   test("Get invalid", async () => {
     await getGallery(token, "invalid", 403);
@@ -178,8 +202,11 @@ describe("As simple user", () => {
   test("Get :all", async () => {
     await getGallery(token, ":all", 403);
   });
-  test("Get :none", async () => {
-    await getGallery(token, ":none", 403);
+  test("Get :public", async () => {
+    await getGallery(token, ":public", 403);
+  });
+  test("Get :private", async () => {
+    await getGallery(token, ":private", 403);
   });
   test("Get invalid", async () => {
     await getGallery(token, "invalid", 403);
@@ -194,7 +221,7 @@ describe("As admin", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(5);
+    expect(result.body.length).toBe(6);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -212,9 +239,13 @@ describe("As admin", () => {
     const result = await getGallery(token, ":all");
     expectGalleryAll(result);
   });
-  test("Get :none", async () => {
-    const result = await getGallery(token, ":none");
-    expectGalleryNone(result);
+  test("Get :public", async () => {
+    const result = await getGallery(token, ":public");
+    expectGalleryPublic(result);
+  });
+  test("Get :private", async () => {
+    const result = await getGallery(token, ":private");
+    expectGalleryPrivate(result);
   });
   test("Get invalid", async () => {
     await getGallery(token, "invalid", 404);
@@ -229,7 +260,7 @@ describe("As gallery1Admin", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(5);
+    expect(result.body.length).toBe(6);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -247,9 +278,13 @@ describe("As gallery1Admin", () => {
     const result = await getGallery(token, ":all");
     expectGalleryAll(result);
   });
-  test("Get :none", async () => {
-    const result = await getGallery(token, ":none");
-    expectGalleryNone(result);
+  test("Get :public", async () => {
+    const result = await getGallery(token, ":public");
+    expectGalleryPublic(result);
+  });
+  test("Get :private", async () => {
+    const result = await getGallery(token, ":private");
+    expectGalleryPrivate(result);
   });
   test("Get invalid", async () => {
     await getGallery(token, "invalid", 404);
@@ -280,8 +315,11 @@ describe("As gallery2Admin", () => {
   test("Get :all", async () => {
     await getGallery(token, ":all", 403);
   });
-  test("Get :none", async () => {
-    await getGallery(token, ":none", 403);
+  test("Get :public", async () => {
+    await getGallery(token, ":public", 403);
+  });
+  test("Get :private", async () => {
+    await getGallery(token, ":private", 403);
   });
   test("Get invalid", async () => {
     await getGallery(token, "invalid", 403);
@@ -296,7 +334,7 @@ describe("As plainUser", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(5);
+    expect(result.body.length).toBe(6);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -314,9 +352,13 @@ describe("As plainUser", () => {
     const result = await getGallery(token, ":all");
     expectGalleryAll(result);
   });
-  test("Get :none", async () => {
-    const result = await getGallery(token, ":none");
-    expectGalleryNone(result);
+  test("Get :public", async () => {
+    const result = await getGallery(token, ":public");
+    expectGalleryPublic(result);
+  });
+  test("Get :private", async () => {
+    const result = await getGallery(token, ":private");
+    expectGalleryPrivate(result);
   });
   test("Get invalid", async () => {
     await getGallery(token, "invalid", 404);
@@ -347,8 +389,11 @@ describe("As gallery1User", () => {
   test("Get :all", async () => {
     await getGallery(token, ":all", 403);
   });
-  test("Get :none", async () => {
-    await getGallery(token, ":none", 403);
+  test("Get :public", async () => {
+    await getGallery(token, ":public", 403);
+  });
+  test("Get :private", async () => {
+    await getGallery(token, ":private", 403);
   });
   test("Get invalid", async () => {
     await getGallery(token, "invalid", 403);
@@ -379,8 +424,11 @@ describe("As gallery12User", () => {
   test("Get :all", async () => {
     await getGallery(token, ":all", 403);
   });
-  test("Get :none", async () => {
-    await getGallery(token, ":none", 403);
+  test("Get :public", async () => {
+    await getGallery(token, ":public", 403);
+  });
+  test("Get :private", async () => {
+    await getGallery(token, ":private", 403);
   });
   test("Get invalid", async () => {
     await getGallery(token, "invalid", 403);

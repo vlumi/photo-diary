@@ -17,12 +17,8 @@ const STATS_UNKNOWN = "[unknown]";
 
 const SPECIAL_GALLERY_PREFIX = ":";
 const SPECIAL_GALLERY_ALL = `${SPECIAL_GALLERY_PREFIX}all`;
-const SPECIAL_GALLERY_NONE = `${SPECIAL_GALLERY_PREFIX}none`;
-
-const ACCESS_ADMIN = 2;
-const ACCESS_VIEW = 1;
-const ACCESS_NONE = 0;
-
+const SPECIAL_GALLERY_PUBLIC = `${SPECIAL_GALLERY_PREFIX}public`;
+const SPECIAL_GALLERY_PRIVATE = `${SPECIAL_GALLERY_PREFIX}private`;
 const SPECIAL_GALLERIES = {
   [SPECIAL_GALLERY_ALL]: {
     id: SPECIAL_GALLERY_ALL,
@@ -31,14 +27,23 @@ const SPECIAL_GALLERIES = {
       "Contains all photos in the repository, regardless of galleries they have been linked to.",
     epoch: undefined,
   },
-  [SPECIAL_GALLERY_NONE]: {
-    id: SPECIAL_GALLERY_NONE,
+  [SPECIAL_GALLERY_PUBLIC]: {
+    id: SPECIAL_GALLERY_PUBLIC,
+    title: "Photos in galleries",
+    description: "Contains all photos that have been linked to galleries.",
+    epoch: undefined,
+  },
+  [SPECIAL_GALLERY_PRIVATE]: {
+    id: SPECIAL_GALLERY_PRIVATE,
     title: "Photos not in galleries",
-    description:
-      "Contains all photos that have not been linked to any galleries.",
+    description: "Contains all photos that have not been linked to galleries.",
     epoch: undefined,
   },
 };
+
+const ACCESS_ADMIN = 2;
+const ACCESS_VIEW = 1;
+const ACCESS_NONE = 0;
 
 module.exports = {
   DEFAULT_ENV,
@@ -61,7 +66,8 @@ module.exports = {
 
   SPECIAL_GALLERY_PREFIX,
   SPECIAL_GALLERY_ALL,
-  SPECIAL_GALLERY_NONE,
+  SPECIAL_GALLERY_PRIVATE,
+  SPECIAL_GALLERY_PUBLIC,
   SPECIAL_GALLERIES,
 
   ACCESS_ADMIN,
