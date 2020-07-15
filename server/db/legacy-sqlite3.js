@@ -7,6 +7,7 @@ const logger = require("../utils/logger");
 module.exports = () => {
   return {
     loadUserAccessControl,
+    loadUsers,
     loadUser,
     loadGalleries,
     loadGallery,
@@ -53,8 +54,11 @@ const loadUserAccessControl = async () => {
     [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
   };
 };
+const loadUsers = async () => {
+  return [];
+};
 const loadUser = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw CONST.NOT_FOUND;
 };
 const loadGalleries = async () => {
   const columns = SCHEMA.gallery.join(",");

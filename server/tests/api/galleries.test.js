@@ -1,24 +1,25 @@
 const supertest = require("supertest");
-const app = require("../../app");
+const { app, init } = require("../../app");
 
 const api = supertest(app);
 const db = require("../../db/dummy")();
 const { loginUser } = require("./helper");
 
 beforeEach(async () => {
-  db.init();
+  await db.init();
+  await init();
 });
 
 const getGalleries = async (token, status = 200) =>
   api
     .get("/api/galleries")
-    .set("Cookie", [`token=${token}`])
+    .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 const getGallery = async (token, galleryId, status = 200) =>
   api
     .get(`/api/galleries/${galleryId}`)
-    .set("Cookie", [`token=${token}`])
+    .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 const expectGallery1 = (result) => {

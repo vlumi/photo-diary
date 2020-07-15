@@ -4,10 +4,13 @@ const db = require("../db");
 
 module.exports = () => {
   return {
+    init,
     getStatistics,
     getGalleryStatistics,
   };
 };
+
+const init = async () => {};
 
 const getStatistics = async () => {
   logger.debug("Getting statistics");
