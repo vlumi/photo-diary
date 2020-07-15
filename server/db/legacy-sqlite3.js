@@ -97,7 +97,11 @@ const loadGalleryPhotos = async (galleryId) => {
           baseQuery +
           " JOIN photo_gallery ON photo.name=photo_gallery.photo_name"
         );
-      case CONST.SPECIAL_GALLERY_NONE:
+      case CONST.SPECIAL_GALLERY_PUBLIC:
+        return (
+          baseQuery + " WHERE name IN (SELECT photo_name FROM photo_gallery)"
+        );
+      case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
           baseQuery +
           " WHERE name NOT IN (SELECT photo_name FROM photo_gallery)"
@@ -135,7 +139,13 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
     const columns = SCHEMA.photo.join(",");
     const baseQuery = `SELECT ${columns} FROM photo`;
     switch (galleryId) {
-      case CONST.SPECIAL_GALLERY_NONE:
+      case CONST.SPECIAL_GALLERY_PUBLIC:
+        return (
+          baseQuery +
+          " WHERE name IN (SELECT photo_name FROM photo_gallery)" +
+          " AND name = ?"
+        );
+      case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
           baseQuery +
           " WHERE name NOT IN (SELECT photo_name FROM photo_gallery)" +

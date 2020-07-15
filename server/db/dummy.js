@@ -60,6 +60,10 @@ const loadGalleryPhotos = async (galleryId) => {
   switch (galleryId) {
     case CONST.SPECIAL_GALLERY_ALL:
       return Object.values(db.photos).sort();
+    case CONST.SPECIAL_GALLERY_PUBLIC:
+      return [...new Set(Object.values(db.galleryPhotos).flat())]
+        .sort()
+        .map((photoId) => db.photos[photoId]);
     case CONST.SPECIAL_GALLERY_PRIVATE: {
       const galleriesPhotos = Object.values(db.galleryPhotos).flat();
       const photos = Object.keys(db.photos)
