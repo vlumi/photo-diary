@@ -16,7 +16,7 @@ module.exports = {
  */
 router.get("/", async (request, response) => {
   await authorizer.authorizeView(request.user.username);
-  const photos = await photosModel.getAllPhotos();
+  const photos = await photosModel.getPhotos();
   response.json(photos);
 });
 /**

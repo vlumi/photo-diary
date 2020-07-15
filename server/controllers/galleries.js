@@ -15,7 +15,7 @@ module.exports = {
  * Get all galleries.
  */
 router.get("/", async (request, response) => {
-  const galleries = await galleriesModel.getAllGalleries();
+  const galleries = await galleriesModel.getGalleries();
   const galleryIds = galleries.map((gallery) => gallery.id);
 
   const authorizedPromises = await Promise.allSettled(

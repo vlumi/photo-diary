@@ -77,13 +77,24 @@ The required access level is listed in brackets at the end of each resource meth
 6. **[any]** – Any user with an account
 
 - `/tokens`
-  - `POST` – Login, create a authentication token **[any]**
+  - `POST` – Login, create an authentication token **[any]**
     1. `username`
     2. `password`
     - Returns `token`
-  - `DELETE` – Logout, revoke all tokens for the current **[any]**
+  - `GET` – Verify the current authenticatio ntoken **[any]**
+  - `DELETE` – Logout, revoke all tokens for the current user **[any]**
   - `DELETE ../:username` – Logout, revoke all tokens for the user **[admin]**
-- `/user` – TBD
+- `/user`
+  - `GET` – List all users **[admin]**
+  - `POST` – Create a new user **[admin]**
+    1. `user`
+    - Returnes `users`
+  - `GET ../:username` – Get user **[admin]**
+    - Returns `user`
+  - `PUT ../:username` – Update user **[admin]**
+    1. `user`
+    - Returns `user`
+  - `DELETE ../:username` – Delete user **[admin]**
 - `/stats`
   - `GET` – Global statistics **[view]**
     - Returns `stats`

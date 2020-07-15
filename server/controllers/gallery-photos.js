@@ -19,7 +19,7 @@ router.get("/:galleryId/:photoId", async (request, response) => {
     request.user.username,
     request.params.galleryId
   );
-  const photo = await galleryPhotosModel.getPhoto(
+  const photo = await galleryPhotosModel.getGalleryPhoto(
     request.params.galleryId,
     request.params.photoId
   );
@@ -33,7 +33,7 @@ router.put("/:galleryId/:photoId", async (request, response) => {
     request.user.username,
     request.params.galleryId
   );
-  await galleryPhotosModel.linkPhoto(
+  await galleryPhotosModel.linkGalleryPhoto(
     request.params.galleryId,
     request.params.photoId
   );
@@ -47,7 +47,7 @@ router.delete("/:galleryId/:photoId", async (request, response) => {
     request.user.username,
     request.params.galleryId
   );
-  await galleryPhotosModel.unlinkPhoto(
+  await galleryPhotosModel.unlinkGalleryPhoto(
     request.params.galleryId,
     request.params.photoId
   );
