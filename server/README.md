@@ -75,12 +75,8 @@ The required access level is listed in brackets at the end of each resource meth
     1. `username`
     2. `password`
     - Returns `session`
-  - `DELETE` – Logout, revoke current session **[any]**
-- `/sessions/revoke-all`
-  - `POST` – Revoke all sessions for user **[any]**
-    1. `username`
-    2. `password`
-  - `DELETE ../:username` – Revoke any user's sessions **[admin]**
+  - `DELETE` – Logout, revoke all tokens for the current **[any]**
+  - `DELETE ../:username` – Logout, revoke all tokens for the user **[admin]**
 - `/user` – TBD
 - `/stats`
   - `GET` – Global statistics **[view]**

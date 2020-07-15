@@ -41,14 +41,17 @@ router.post("/", async (request, response, next) => {
   response.status(200).send({ token: encodedToken }).end();
 });
 /**
- * Logout, revoking the session.
+ * Logout, revoking all tokens.
+ */
+router.delete("/", async (request, response) => {
+  await sessionsModel.revokeSession(request.session.username);
+  response.status(204).end();
+});
+/**
+ * Logout, revoking all tokens.
  */
 router.delete("/:username", async (request, response) => {
-  if (request.params.username === request.session.username) {
-    await sessionsModel.revokeSession(request.params.username);
-  } else {
-    await authorizer.authorizeAdmin(request.session.username);
-    await sessionsModel.revokeSession(request.param.username);
-  }
+  await authorizer.authorizeAdmin(request.session.username);
+  await sessionsModel.revokeSession(request.param.username);
   response.status(204).end();
 });

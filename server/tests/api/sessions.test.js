@@ -63,7 +63,7 @@ describe("Logout", () => {
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     await api
-      .delete("/api/sessions/admin")
+      .delete("/api/sessions")
       .set("Authorization", `Bearer ${token}`)
       .expect(204);
     await api
@@ -92,7 +92,7 @@ describe("Revoke", () => {
       })
     );
     await api
-      .delete("/api/sessions/plainUser")
+      .delete("/api/sessions")
       .set("Authorization", `Bearer ${tokens[0]}`)
       .expect(204);
     Promise.all(
