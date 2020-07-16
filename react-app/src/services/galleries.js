@@ -2,9 +2,11 @@ import axios from "axios";
 
 const baseUrl = "/api/galleries";
 
-const getAll = () => axios.get(baseUrl).then((response) => response.data);
+const getAll = async () => axios.get(baseUrl).then((response) => response.data);
 
-const get = (galleryId) =>
-  axios.get(`${baseUrl}/${galleryId}`).then((response) => response.data);
+const get = async (galleryId) => {
+  const response = await axios.get(`${baseUrl}/${galleryId}`);
+  return response.data;
+};
 
 export default { getAll, get };

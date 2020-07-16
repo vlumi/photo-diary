@@ -8,7 +8,7 @@ const Galleries = ({ galleries }) => {
       <h2>Pick gallery</h2>
       <ul>
         {galleries.map((gallery) => (
-          <li>
+          <li key={gallery.id}>
             <Link to={`/gallery/${gallery.id}`}>{gallery.title}</Link>
           </li>
         ))}

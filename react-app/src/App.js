@@ -35,9 +35,9 @@ const App = () => {
         </ul>
 
         <Switch>
-          <Route path="/gallery/:galleryId/:photoId">
+          {/* <Route path="/gallery/:galleryId/:photoId">
             <Gallery galleries={galleries} />
-          </Route>
+          </Route> */}
           <Route path="/gallery/:galleryId">
             <Gallery galleries={galleries} />
           </Route>
