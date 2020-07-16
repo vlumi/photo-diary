@@ -13,7 +13,7 @@
   "author": "Ville Misaki",
   "license": "MIT",
   "dependencies": {
-    "chokidar": "^3.4.0",
+    "chokidar": "^3.4.1",
     "dotenv": "^8.2.0",
     "eslint": "^7.4.0",
     "exifr": "^5.0.2",
