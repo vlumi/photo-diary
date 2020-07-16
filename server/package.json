@@ -32,5 +32,9 @@
     "jest": "^26.1.0",
     "nodemon": "^2.0.4",
     "supertest": "^4.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github:vlumi/photo-diary"
   }
 }
