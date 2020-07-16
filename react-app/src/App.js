@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom";
 
 import "./App.css";
 
@@ -27,7 +27,7 @@ const App = () => {
         <h1>Photo Diary</h1>
         <ul>
           <li>
-            <Link to="/">galleries</Link>
+            <Link to="/g">galleries</Link>
           </li>
           <li>
             <Link to="/stats">stats</Link>
@@ -38,8 +38,11 @@ const App = () => {
           {/* <Route path="/gallery/:galleryId/:photoId">
             <Gallery galleries={galleries} />
           </Route> */}
-          <Route path="/gallery/:galleryId">
+          <Route path="/g/:galleryId/:year?/:month?/:day?">
             <Gallery galleries={galleries} />
+          </Route>
+          <Route path="/g">
+            <Galleries galleries={galleries} />
           </Route>
           <Route path="/stats/:galleryId">
             <Stats stats={stats} />
@@ -48,7 +51,7 @@ const App = () => {
             <Stats stats={stats} />
           </Route>
           <Route path="/">
-            <Galleries galleries={galleries} />
+            <Redirect to="/g" />
           </Route>
         </Switch>
 

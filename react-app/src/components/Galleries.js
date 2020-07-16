@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Galleries = ({ galleries }) => {
   return (
@@ -9,7 +9,7 @@ const Galleries = ({ galleries }) => {
       <ul>
         {galleries.map((gallery) => (
           <li key={gallery.id}>
-            <Link to={`/gallery/${gallery.id}`}>{gallery.title}</Link>
+            <Link to={`/g/${gallery.id}`}>{gallery.title}</Link>
           </li>
         ))}
       </ul>
@@ -21,5 +21,4 @@ const Galleries = ({ galleries }) => {
 Galleries.propTypes = {
   galleries: PropTypes.array,
 };
-
 export default Galleries;

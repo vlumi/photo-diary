@@ -6,6 +6,7 @@ const Stats = ({ stats }) => {
     <>
       <h2>Statistics</h2>
       <div>TODO: implement</div>
+      {console.log(stats)}
     </>
   );
 };
