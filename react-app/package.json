@@ -38,5 +38,9 @@
   "devDependencies": {
     "eslint": "^6.6.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "github:vlumi/photo-diary"
+  },
   "proxy": "http://localhost:4200"
 }
