@@ -291,16 +291,16 @@ const mapPhotoRow = (row) => {
     },
     dimensions: {
       original: {
-        width: toString(row.f_width),
-        height: toString(row.f_height),
+        width: Number(row.f_width),
+        height: Number(row.f_height),
       },
       display: {
-        width: toString(row.width),
-        height: toString(row.height),
+        width: Number(row.width),
+        height: Number(row.height),
       },
       thumbnail: {
-        width: toString(row.t_width),
-        height: toString(row.t_height),
+        width: Number(row.t_width),
+        height: Number(row.t_height),
       },
     },
   };
