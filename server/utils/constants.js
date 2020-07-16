@@ -40,6 +40,7 @@ const SPECIAL_GALLERIES = {
     epoch: undefined,
   },
 };
+const isSpecialGallery = (galleryId) => galleryId in SPECIAL_GALLERIES;
 
 const ACCESS_ADMIN = 2;
 const ACCESS_VIEW = 1;
@@ -69,6 +70,7 @@ module.exports = {
   SPECIAL_GALLERY_PRIVATE,
   SPECIAL_GALLERY_PUBLIC,
   SPECIAL_GALLERIES,
+  isSpecialGallery,
 
   ACCESS_ADMIN,
   ACCESS_VIEW,

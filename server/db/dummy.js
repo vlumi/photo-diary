@@ -163,6 +163,11 @@ const dbDump = JSON.stringify({
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: uuidv4(),
     },
+    publicUser: {
+      username: "publicUser",
+      password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
+      secret: uuidv4(),
+    },
     simpleUser: {
       username: "simpleUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
@@ -195,6 +200,9 @@ const dbDump = JSON.stringify({
     },
     plainUser: {
       [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+    },
+    publicUser: {
+      [CONST.SPECIAL_GALLERY_PUBLIC]: CONST.ACCESS_VIEW,
     },
     simpleUser: {},
     blockedUser: {

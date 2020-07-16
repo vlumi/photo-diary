@@ -93,10 +93,7 @@ const loadGalleryPhotos = async (galleryId) => {
     const baseQuery = `SELECT ${columns} FROM photo`;
     switch (galleryId) {
       case CONST.SPECIAL_GALLERY_ALL:
-        return (
-          baseQuery +
-          " JOIN photo_gallery ON photo.name=photo_gallery.photo_name"
-        );
+        return baseQuery;
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
           baseQuery + " WHERE name IN (SELECT photo_name FROM photo_gallery)"

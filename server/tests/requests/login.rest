@@ -2,6 +2,6 @@ POST http://localhost:4200/api/tokens
 Content-type: application/json
 
 {
-    "username": "plainUser",
+    "username": "admin",
     "password": "foobar"
 }

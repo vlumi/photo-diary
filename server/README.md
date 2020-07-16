@@ -59,25 +59,42 @@ The access control has three levels of increasing access:
 
 An access level can be assigned to each user globally, or to any number of galleries.
 
+Gallery-level access is also hierarchical, with increasing scope:
+
+1. Specific gallery
+2. Virtual gallery ":public", matching all galleries and their photos
+3. Virtual gallery ":all", matching all photos, including those in ":private"
+
 ### RESTful resources
 
 The required access level is listed in brackets at the end of each resource method. The access levels are hierarchical, with the following, ascending priority:
 
-1. **[gallery/view]** – User with view access assigned to gallery
-2. **[view]** – User with global view access
-3. **[gallery/admin]** – User with admin access assigned to gallery
-4. **[admin]** – User with global admin acces
+1. **[gallery/view]** – User with view access assigned to the specific gallery, ":public", or ":all"
+2. **[view]** – User with global (":all") view access
+3. **[gallery/admin]** – User with admin access assigned to the specific gallery, ":public", or ":all"
+4. **[admin]** – User with global (":all") admin acces
 5. **[none]** – A user with access explicitly denied
 6. **[any]** – Any user with an account
 
 - `/tokens`
-  - `POST` – Login, create a authentication token **[any]**
+  - `POST` – Login, create an authentication token **[any]**
     1. `username`
     2. `password`
     - Returns `token`
-  - `DELETE` – Logout, revoke all tokens for the current **[any]**
+  - `GET` – Verify the current authenticatio ntoken **[any]**
+  - `DELETE` – Logout, revoke all tokens for the current user **[any]**
   - `DELETE ../:username` – Logout, revoke all tokens for the user **[admin]**
-- `/user` – TBD
+- `/user`
+  - `GET` – List all users **[admin]**
+  - `POST` – Create a new user **[admin]**
+    1. `user`
+    - Returnes `users`
+  - `GET ../:username` – Get user **[admin]**
+    - Returns `user`
+  - `PUT ../:username` – Update user **[admin]**
+    1. `user`
+    - Returns `user`
+  - `DELETE ../:username` – Delete user **[admin]**
 - `/stats`
   - `GET` – Global statistics **[view]**
     - Returns `stats`

@@ -5,7 +5,7 @@ const db = require("../db");
 module.exports = () => {
   return {
     init,
-    getAllPhotos,
+    getPhotos,
     createPhoto,
     getPhoto,
     updatePhoto,
@@ -15,7 +15,7 @@ module.exports = () => {
 
 const init = async () => {};
 
-const getAllPhotos = async () => {
+const getPhotos = async () => {
   logger.debug("Getting all photos");
   return await db.loadPhotos();
 };

@@ -5,7 +5,7 @@ const db = require("../db");
 module.exports = () => {
   return {
     init,
-    getAllGalleries,
+    getGalleries,
     createGallery,
     getGallery,
     updateGallery,
@@ -31,7 +31,7 @@ const groupPhotosByYearMonthDay = (galleryPhotos) => {
   return photosByDate;
 };
 
-const getAllGalleries = async () => {
+const getGalleries = async () => {
   logger.debug("Getting all galleries");
   const galleries = await db.loadGalleries();
   return [...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)];

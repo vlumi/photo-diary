@@ -1,5 +1,5 @@
 const CONST = require("../constants");
-const tokensModel = require("../../models/tokens")();
+const tokensModel = require("../../models/token")();
 const logger = require("../logger");
 
 module.exports = (request, response, next) => {

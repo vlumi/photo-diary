@@ -2,10 +2,10 @@ const CONST = require("../utils/constants");
 const logger = require("../utils/logger");
 
 const authorizer = require("../utils/authorizer")();
-const tokensModel = require("../models/tokens")();
+const model = require("../models/token")();
 
 const init = async () => {
-  await tokensModel.init();
+  await model.init();
 };
 const router = require("express").Router();
 
@@ -33,7 +33,7 @@ router.post("/", async (request, response, next) => {
     next(CONST.ERROR_LOGIN);
     return;
   }
-  const token = await tokensModel.authenticateUser(credentials);
+  const token = await model.authenticateUser(credentials);
   logger.debug(`User "${credentials.username}" logged in successfully.`);
 
   const encodedToken = Buffer.from(token).toString("base64");
@@ -43,7 +43,7 @@ router.post("/", async (request, response, next) => {
  * Logout, revoking all tokens.
  */
 router.delete("/", async (request, response) => {
-  await tokensModel.revokeToken(request.user.username);
+  await model.revokeToken(request.user.username);
   response.status(204).end();
 });
 /**
@@ -51,6 +51,6 @@ router.delete("/", async (request, response) => {
  */
 router.delete("/:username", async (request, response) => {
   await authorizer.authorizeAdmin(request.user.username);
-  await tokensModel.revokeToken(request.param.username);
+  await model.revokeToken(request.param.username);
   response.status(204).end();
 });

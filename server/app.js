@@ -6,6 +6,7 @@ require("express-async-errors");
 const config = require("./utils/config");
 
 const tokens = require("./controllers/tokens");
+const users = require("./controllers/users");
 const stats = require("./controllers/stats");
 const galleries = require("./controllers/galleries");
 const photos = require("./controllers/photos");
@@ -28,6 +29,7 @@ const registerPreProcessors = () => {
 };
 const registerRoutes = () => {
   app.use("/api/tokens", tokens.router);
+  app.use("/api/users", users.router);
   app.use("/api/stats", stats.router);
   app.use("/api/galleries", galleries.router);
   app.use("/api/photos", photos.router);

@@ -1,4 +1,4 @@
-const CONST = require("../constants");
+const CONST = require("../utils/constants");
 const logger = require("../utils/logger");
 const db = require("../db");
 
@@ -16,12 +16,10 @@ module.exports = () => {
 const init = async () => {};
 
 const getUsers = async () => {
-  logger.debug("Getting all users", "dummy db", db);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  return await db.loadUsers();
 };
 const getUser = async (username) => {
-  logger.debug("Getting user", username);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  return await db.loadUser(username);
 };
 const createUser = async (user) => {
   logger.debug("Creating user", user);
