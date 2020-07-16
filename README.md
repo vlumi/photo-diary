@@ -25,10 +25,10 @@ On par with [gallery](https://github.com/vlumi/gallery).
   - Responsive
   - Read-only
   - Gallery view
+    - Yearly
     - Monthly
+    - Daily
     - Individual photo
-  - Statistics
-    - Simple, static one-time rendering
 
 ### Milestone 0.2
 
@@ -38,9 +38,6 @@ On par with [gallery](https://github.com/vlumi/gallery).
     - More photo metadata
     - Migrate from SQLite -> ???
   - New command-line tool for managing DB content
-- Front-end
-  - Gallery view
-    - Yearly
 
 ### Milestone 0.3
 
