@@ -1,0 +1,80 @@
+body {
+  color: #000;
+  background: #ddf;
+  text-align: center;
+  font-family: sans-serif;
+  padding: 5px;
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+h1 {
+  margin: 0;
+}
+h2 {
+  width: 100%;
+  color: #fff;
+  background: #004;
+  font-size: 24pt;
+  text-align: center;
+  margin: 1px 1px 0;
+  padding: 0;
+  clear: both;
+}
+h2 :link {
+  color: #fff;
+}
+h2 :visited {
+  color: #fff;
+}
+h2 span {
+  padding: 0 1em;
+  display: inline;
+}
+
+h3 {
+  width: 35px;
+  height: 200px;
+  color: #fff;
+  background: #004;
+  font-size: 18pt;
+  text-align: center;
+  margin: 1px;
+  padding: 5px 3px;
+  border: solid #004 1px;
+  float: left;
+}
+h3 > :link {
+  color: #fff;
+}
+h3 > :visited {
+  color: #fff;
+}
+
+div.photos {
+}
+
+div.photo {
+  vertical-align: top;
+  height: 214px;
+  float: left;
+}
+
+div.photo > a {
+  float: left;
+  margin: 1px;
+  background-color: #bbb;
+}
+
+span.photo {
+  display: block;
+  background-repeat: no-repeat;
+  background-position: 5px 5px;
+  border: solid #004 1px;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}

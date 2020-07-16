@@ -33,7 +33,7 @@ const Gallery = () => {
 
   return (
     <>
-      <h2>{gallery.title}</h2>
+      <h1>{gallery.title}</h1>
       {!year ? (
         <ViewFull gallery={gallery} />
       ) : !month ? (

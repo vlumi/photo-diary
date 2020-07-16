@@ -4,6 +4,7 @@ module.exports = {
     browser: true,
     es2020: true,
     jest: true,
+    node: true,
   },
   extends: ["eslint:recommended", "plugin:react/recommended"],
   settings: {
@@ -28,7 +29,7 @@ module.exports = {
   },
   plugins: ["react"],
   rules: {
-    indent: ["error", 2, { SwitchCase: 1, offsetTernaryExpressions: true }],
+    indent: ["error", 2, { SwitchCase: 1 }],
     "linebreak-style": ["error", "unix"],
     quotes: ["error", "double"],
     semi: ["error", "always"],

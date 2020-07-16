@@ -1,11 +1,11 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 
 const DumpPhotoNames = ({ gallery, year, month, day }) => {
   const processDay = (year, month, day) => {
     return (
-      <li key={year * 10000 + month * 100 + day}>
+      <li key={"" + year + month + day}>
         <Link to={`/g/${gallery.id}/${year}/${month}/${day}`}>{day}</Link>
         {day in gallery.photos[year][month] ? (
           <ul>
@@ -28,7 +28,7 @@ const DumpPhotoNames = ({ gallery, year, month, day }) => {
         });
     };
     return (
-      <li key={year * 100 + month}>
+      <li key={"" + year + month}>
         <Link to={`/g/${gallery.id}/${year}/${month}`}>{month}</Link>
         {month in gallery.photos[year] ? (
           <ul>{day ? processDay(year, month, day) : eachDay(year, month)}</ul>

@@ -13,12 +13,10 @@ const Galleries = ({ galleries }) => {
           </li>
         ))}
       </ul>
-      <div>TODO: implement</div>
     </>
   );
 };
-
 Galleries.propTypes = {
-  galleries: PropTypes.array,
+  galleries: PropTypes.array.isRequired,
 };
 export default Galleries;

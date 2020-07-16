@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from "react-router-dom";
 
 import "./App.css";
 
@@ -24,15 +29,14 @@ const App = () => {
   return (
     <>
       <Router>
-        <h1>Photo Diary</h1>
-        <ul>
+        {/* <ul>
           <li>
             <Link to="/g">galleries</Link>
           </li>
           <li>
             <Link to="/stats">stats</Link>
           </li>
-        </ul>
+        </ul> */}
 
         <Switch>
           {/* <Route path="/gallery/:galleryId/:photoId">
@@ -54,8 +58,6 @@ const App = () => {
             <Redirect to="/g" />
           </Route>
         </Switch>
-
-        <div>TODO: implement</div>
       </Router>
     </>
   );
