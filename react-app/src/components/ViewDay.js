@@ -2,19 +2,13 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import NavDay from "./NavDay";
-import Photos from "./Photos";
+import BodyDay from "./BodyDay";
 
 const ViewDay = ({ gallery, year, month, day }) => {
-  const hasContent =
-    year in gallery.photos &&
-    month in gallery.photos[year] &&
-    day in gallery.photos[year][month];
   return (
     <>
       <NavDay gallery={gallery} year={year} month={month} day={day} />
-      <div>
-        {hasContent ? <Photos photos={gallery.photos[year][month][day]} /> : ""}
-      </div>
+      <BodyDay gallery={gallery} year={year} month={month} day={day} />
       <NavDay gallery={gallery} year={year} month={month} day={day} />
     </>
   );
