@@ -19,7 +19,6 @@ const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
       {/* TODO: design */}
       <div>
         <img src={path} alt={photo.id}/>
-        {photo.id}
       </div>
       <NavGalleryPhoto
         gallery={gallery}
