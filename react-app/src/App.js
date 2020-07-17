@@ -33,18 +33,9 @@ const App = () => {
   return (
     <>
       <Router>
-        {/* <ul>
-          <li>
-            <Link to="/g">galleries</Link>
-          </li>
-          <li>
-            <Link to="/stats">stats</Link>
-          </li>
-        </ul> */}
-
         <Switch>
-          {/* <Route path="/gallery/:galleryId/:photoId">
-            <Gallery galleries={galleries} />
+          {/* <Route path="/p/:galleryId/:photoId">
+            <Photo galleries={galleries} />
           </Route> */}
           <Route path="/g/:galleryId/:year?/:month?/:day?">
             <Gallery galleries={galleries} />

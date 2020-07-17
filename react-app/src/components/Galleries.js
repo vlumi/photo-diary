@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 const Galleries = ({ galleries }) => {
   return (
     <>
+      {/* TODO: design */}
       <h2>Pick gallery</h2>
       <ul>
         {galleries.map((gallery) => (

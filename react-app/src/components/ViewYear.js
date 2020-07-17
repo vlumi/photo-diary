@@ -10,11 +10,11 @@ const ViewYear = ({ gallery, year }) => {
     return (
       <>
         {Object.keys(gallery.photos).map((year) => (
-          <div className="year">
+          <div key={year} className="year">
             <h2>
-              <GalleryLink gallery={gallery} year={year}>{year}</GalleryLink>
+              <GalleryLink gallery={gallery} year={Number(year)}>{year}</GalleryLink>
             </h2>
-            <BodyYear gallery={gallery} year={year} />
+            <BodyYear gallery={gallery} year={Number(year)} />
           </div>
         ))}
       </>

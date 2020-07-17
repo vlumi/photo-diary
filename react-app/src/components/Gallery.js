@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 
 import galleryService from "../services/galleries";
 
+import GalleryTitle from "./GalleryTitle";
 import ViewFull from "./ViewFull";
 import ViewYear from "./ViewYear";
 import ViewMonth from "./ViewMonth";
@@ -38,7 +39,7 @@ const Gallery = () => {
 
   return (
     <>
-      <h1>{gallery.title}</h1>
+      <GalleryTitle gallery={gallery} />
       {!year ? (
         <ViewFull gallery={gallery} />
       ) : !month ? (
