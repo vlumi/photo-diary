@@ -122,7 +122,7 @@ const isFirstYearMonthDay = (
     !day ||
     currentYear < year ||
     (currentYear === year &&
-      (currentMonth > month || (currentMonth === month && currentDay >= day)))
+      (currentMonth < month || (currentMonth === month && currentDay <= day)))
   );
 };
 const isLastYear = (gallery, currentYear) => {
