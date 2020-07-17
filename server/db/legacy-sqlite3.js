@@ -118,7 +118,7 @@ const loadGalleryPhotos = async (galleryId) => {
         if (error) {
           return reject(error);
         }
-        resolve(rows.map((row) => mapPhotoRow(row)));
+        resolve(rows.map((row, index) => mapPhotoRow(row, index)));
       });
     });
   }
@@ -127,7 +127,7 @@ const loadGalleryPhotos = async (galleryId) => {
       if (error) {
         return reject(error);
       }
-      resolve(rows.map((row) => mapPhotoRow(row)));
+      resolve(rows.map((row, index) => mapPhotoRow(row, index)));
     });
   });
 };
@@ -135,25 +135,29 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
   const getQuery = () => {
     const columns = SCHEMA.photo.join(",");
     const baseQuery = `SELECT ${columns} FROM photo`;
+    const order = " ORDER BY taken, id";
     switch (galleryId) {
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
           baseQuery +
           " WHERE name IN (SELECT photo_name FROM photo_gallery)" +
-          " AND name = ?"
+          " AND name = ?" +
+          order
         );
       case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
           baseQuery +
           " WHERE name NOT IN (SELECT photo_name FROM photo_gallery)" +
-          " AND name = ?"
+          " AND name = ?" +
+          order
         );
       default:
         return (
           baseQuery +
           " JOIN photo_gallery ON photo.name=photo_gallery.photo_name" +
           " WHERE photo_gallery.gallery_name = ?" +
-          " AND name = ?"
+          " AND name = ?" +
+          order
         );
     }
   };
@@ -229,7 +233,7 @@ const mapGalleryRow = (row) => {
     epoch: toString(row.epoch),
   };
 };
-const mapPhotoRow = (row) => {
+const mapPhotoRow = (row, index) => {
   const taken = new Date(toString(row.taken).substring(0, 19));
   const year = 0 + taken.getFullYear();
   const month = taken.getMonth() + 1;
@@ -250,6 +254,7 @@ const mapPhotoRow = (row) => {
 
   return {
     id: toString(row.name),
+    index: index,
     title: toString(row.title),
     description: toString(row.description),
     taken: {

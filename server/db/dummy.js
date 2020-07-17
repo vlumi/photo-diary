@@ -235,6 +235,7 @@ const dbDump = JSON.stringify({
   photos: {
     "gallery1photo.jpg": {
       id: "gallery1photo.jpg",
+      index: 0,
       title: "",
       description: "",
       taken: {
@@ -275,6 +276,7 @@ const dbDump = JSON.stringify({
     },
     "gallery12photo.jpg": {
       id: "gallery12photo.jpg",
+      index: 1,
       title: "",
       description: "",
       taken: {
@@ -319,6 +321,7 @@ const dbDump = JSON.stringify({
     },
     "gallery2photo.jpg": {
       id: "gallery2photo.jpg",
+      index: 2,
       title: "",
       description: "",
       taken: {
@@ -359,17 +362,18 @@ const dbDump = JSON.stringify({
     },
     "gallery3photo.jpg": {
       id: "gallery3photo.jpg",
+      index: 3,
       title: "",
       description: "",
       taken: {
         instant: {
-          timestamp: "2020-07-05 14:13:03",
+          timestamp: "2020-07-05 14:13:04",
           year: 2020,
           month: 7,
           day: 6,
           hour: 14,
           minute: 13,
-          second: 3,
+          second: 4,
         },
         author: "Ville Misaki",
         location: {
@@ -399,6 +403,7 @@ const dbDump = JSON.stringify({
     },
     "orphanphoto.jpg": {
       id: "orphanphoto.jpg",
+      index: 4,
       title: "",
       description: "",
       taken: {
