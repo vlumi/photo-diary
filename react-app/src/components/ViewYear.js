@@ -9,7 +9,7 @@ const ViewYear = ({ gallery, year }) => {
   if (year < 0) {
     return (
       <>
-        {Object.keys(gallery.photos).map((year) => (
+        {gallery.mapYears((year) => (
           <div key={year} className="year">
             <h2>
               <GalleryLink gallery={gallery} year={Number(year)}>{year}</GalleryLink>

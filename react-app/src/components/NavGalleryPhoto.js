@@ -4,78 +4,20 @@ import PropTypes from "prop-types";
 import GalleryLink from "./GalleryLink";
 import DateLink from "./DateLink";
 
-import calendar from "../utils/calendar";
-
-const getCurrentPhotoIndex = (gallery, year, month, day, currentPhoto) => {
-  const currentDayPhotos = gallery.photos[year][month][day];
-  const currentIndex = currentDayPhotos.findIndex(
-    (photo) => photo.id === currentPhoto.id
-  );
-  return currentIndex;
-};
-
-const getPreviousPhoto = (gallery, year, month, day, currentIndex) => {
-  const currentDayPhotos = gallery.photos[year][month][day];
-  if (currentIndex > 0) {
-    return currentDayPhotos[currentIndex - 1];
-  }
-  const [
-    previousYear,
-    previousMonth,
-    previousDay,
-  ] = calendar.previousYearMonthDay(gallery, year, month, day);
-  if (!previousYear || !previousMonth || !previousDay) {
-    return undefined;
-  }
-  const previousDayPhotos =
-    gallery.photos[previousYear][previousMonth][previousDay];
-  if (!previousDayPhotos || previousDayPhotos.length === 0) {
-    return undefined;
-  }
-  return previousDayPhotos[previousDayPhotos.length - 1];
-};
-const getNextPhoto = (gallery, year, month, day, currentIndex) => {
-  const currentDayPhotos = gallery.photos[year][month][day];
-  if (currentIndex < currentDayPhotos.length - 1) {
-    return currentDayPhotos[currentIndex + 1];
-  }
-  const [nextYear, nextMonth, nextDay] = calendar.nextYearMonthDay(
-    gallery,
-    year,
-    month,
-    day
-  );
-  if (!nextYear || !nextMonth || !nextDay) {
-    return undefined;
-  }
-  const nextDayPhotos = gallery.photos[nextYear][nextMonth][nextDay];
-  if (!nextDayPhotos || nextDayPhotos.length === 0) {
-    return undefined;
-  }
-  return nextDayPhotos[0];
-};
-
 const NavGalleryPhoto = ({ gallery, year, month, day, photo }) => {
-  const [firstYear, firstMonth, firstDay] = calendar.firstYearMonthDay(gallery);
-  const [lastYear, lastMonth, lastDay] = calendar.lastYearMonthDay(gallery);
+  const [firstYear, firstMonth, firstDay] = gallery.firstYearMonthDay();
+  const [lastYear, lastMonth, lastDay] = gallery.lastYearMonthDay();
 
-  const firstDayPhotos = gallery.photos[firstYear][firstMonth][firstDay];
+  const firstDayPhotos = gallery.getPhotos(firstYear, firstMonth, firstDay);
   const firstPhoto = firstDayPhotos[0];
 
-  const currentIndex = getCurrentPhotoIndex(gallery, year, month, day, photo);
-  const previousPhoto = getPreviousPhoto(
-    gallery,
-    year,
-    month,
-    day,
-    currentIndex
-  );
-  const nextPhoto = getNextPhoto(gallery, year, month, day, currentIndex);
+  const previousPhoto = gallery.getPreviousPhoto(year, month, day, photo);
+  const nextPhoto = gallery.getNextPhoto(year, month, day, photo);
 
   const prevStyle = previousPhoto ? {} : { visibility: "hidden" };
   const nextStyle = nextPhoto ? {} : { visibility: "hidden" };
 
-  const lastDayPhotos = gallery.photos[lastYear][lastMonth][lastDay];
+  const lastDayPhotos = gallery.getPhotos(lastYear, lastMonth, lastDay);
   const lastPhoto = lastDayPhotos[lastDayPhotos.length - 1];
   return (
     <h2>

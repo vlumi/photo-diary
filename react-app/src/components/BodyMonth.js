@@ -5,15 +5,15 @@ import Photos from "./Photos";
 import GalleryLink from "./GalleryLink";
 
 const BodyMonth = ({ gallery, year, month }) => {
-  const hasContent = year in gallery.photos && month in gallery.photos[year];
+  const hasContent = gallery.includesMonth(year, month);
 
   const produceContent = () =>
-    Object.keys(gallery.photos[year][month]).map((day) => {
+    gallery.mapDays(year, month, (day) => {
       return (
         <Photos
           key={"" + year + month + day}
           gallery={gallery}
-          photos={gallery.photos[year][month][day]}
+          photos={gallery.getPhotos(year, month, day)}
         >
           <h3>
             <GalleryLink

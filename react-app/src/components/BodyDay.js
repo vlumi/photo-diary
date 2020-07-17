@@ -4,15 +4,11 @@ import PropTypes from "prop-types";
 import Photos from "./Photos";
 
 const BodyDay = ({ gallery, year, month, day }) => {
-  const hasContent =
-    year in gallery.photos &&
-    month in gallery.photos[year] &&
-    day in gallery.photos[year][month];
   return (
     <>
       <div>
-        {hasContent ? (
-          <Photos gallery={gallery} photos={gallery.photos[year][month][day]} />
+        {gallery.includesDay(year, month, day) ? (
+          <Photos gallery={gallery} photos={gallery.getPhotos(year, month, day)} />
         ) : (
           ""
         )}

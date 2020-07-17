@@ -2,17 +2,23 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 
+import G from "../utils/gallery";
+
 const Galleries = ({ galleries }) => {
   return (
     <>
       {/* TODO: design */}
       <h2>Pick gallery</h2>
       <ul>
-        {galleries.map((gallery) => (
-          <li key={gallery.id}>
-            <Link to={`/g/${gallery.id}`}>{gallery.title}</Link>
-          </li>
-        ))}
+        {galleries
+          .map((gallery) => G(gallery))
+          .map((gallery) => {
+            return (
+              <li key={gallery.getId()}>
+                <Link to={gallery.getPath()}>{gallery.getTitle()}</Link>
+              </li>
+            );
+          })}
       </ul>
     </>
   );

@@ -16,12 +16,7 @@ const BodyYear = ({ gallery, year }) => {
   const produceMonthGrid = (month) => {
     const produceWeekRow = (row, rowIndex) => {
       const produceDayCell = (day, index) => {
-        const photoCount =
-          year in gallery.photos &&
-          month in gallery.photos[year] &&
-          day in gallery.photos[year][month]
-            ? gallery.photos[year][month][day].length
-            : 0;
+        const photoCount = gallery.countPhotos(year, month, day);
         const heat = calculateHeat(photoCount);
         return (
           <td
@@ -37,7 +32,7 @@ const BodyYear = ({ gallery, year }) => {
             ) : photoCount > 0 ? (
               <Link
                 key={`${calendar.formatDate({ year, month, day })}`}
-                to={`/g/${gallery.id}/${year}/${month}/${day}`}
+                to={gallery.getPath(year, month, day)}
                 title={`${calendar.formatDate({
                   year,
                   month,
@@ -88,8 +83,8 @@ const BodyYear = ({ gallery, year }) => {
         <div key={"calendar" + year + month} className="calendar">
           <div>
             <h3>
-              {year in gallery.photos && month in gallery.photos[year] ? (
-                <Link to={`/g/${gallery.id}/${year}/${month}`}>{month}</Link>
+              {gallery.includesMonth(year, month) ? (
+                <Link to={gallery.getPath(year, month)}>{month}</Link>
               ) : (
                 month
               )}

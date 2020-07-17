@@ -18,8 +18,8 @@ const Photos = ({ children, gallery, photos }) => {
   );
 };
 Photos.propTypes = {
-  photos: PropTypes.array.isRequired,
-  gallery: PropTypes.array.isRequired,
   children: PropTypes.any,
+  gallery: PropTypes.object.isRequired,
+  photos: PropTypes.array.isRequired,
 };
 export default Photos;

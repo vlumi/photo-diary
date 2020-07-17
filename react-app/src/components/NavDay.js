@@ -4,30 +4,26 @@ import PropTypes from "prop-types";
 import DateLink from "./DateLink";
 import GalleryLink from "./GalleryLink";
 
-import calendar from "../utils/calendar";
-
 const NavDay = ({ gallery, year, month, day }) => {
-  const prevStyle = calendar.isFirstYearMonthDay(gallery, year, month, day)
+  const prevStyle = gallery.isFirstYearMonthDay(year, month, day)
     ? { visibility: "hidden" }
     : {};
-  const nextStyle = calendar.isLastYearMonthDay(gallery, year, month, day)
+  const nextStyle = gallery.isLastYearMonthDay(year, month, day)
     ? { visibility: "hidden" }
     : {};
 
-  const [firstYear, firstMonth, firstDay] = calendar.firstYearMonthDay(gallery);
-  const [previousYear, previousMonth, previousDay] = calendar.previousYearMonthDay(
-    gallery,
+  const [firstYear, firstMonth, firstDay] = gallery.firstYearMonthDay();
+  const [
+    previousYear,
+    previousMonth,
+    previousDay,
+  ] = gallery.previousYearMonthDay(year, month, day);
+  const [nextYear, nextMonth, nextDay] = gallery.nextYearMonthDay(
     year,
     month,
     day
   );
-  const [nextYear, nextMonth, nextDay] = calendar.nextYearMonthDay(
-    gallery,
-    year,
-    month,
-    day
-  );
-  const [lastYear, lastMonth, lastDay] = calendar.lastYearMonthDay(gallery);
+  const [lastYear, lastMonth, lastDay] = gallery.lastYearMonthDay();
   return (
     <h2>
       <span title="First day" style={prevStyle}>

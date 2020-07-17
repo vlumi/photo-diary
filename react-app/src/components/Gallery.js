@@ -9,6 +9,7 @@ import ViewYear from "./ViewYear";
 import ViewMonth from "./ViewMonth";
 import ViewDay from "./ViewDay";
 
+import G from "../utils/gallery";
 import theme from "../utils/theme";
 import GalleryPhoto from "./GalleryPhoto";
 
@@ -28,7 +29,7 @@ const Gallery = () => {
       if (loadedGallery.theme) {
         theme.setTheme(loadedGallery.theme);
       }
-      setGallery(loadedGallery);
+      setGallery(G(loadedGallery));
     });
   }, [galleryId]);
 
@@ -39,22 +40,15 @@ const Gallery = () => {
       </>
     );
   }
-  if (!("photos" in gallery)) {
+  if (!gallery.includesPhotos()) {
     return <></>;
   }
 
   if (photoId) {
-    if (
-      !(year in gallery.photos) ||
-      !(month in gallery.photos[year]) ||
-      !(day in gallery.photos[year][month]) ||
-      gallery.photos[year][month][day].includes(photoId)
-    ) {
+    const photo = gallery.findPhoto(year, month, day, photoId);
+    if (!photo) {
       return <></>;
     }
-    const photo = gallery.photos[year][month][day].find(
-      (photo) => photo.id === photoId
-    );
     return (
       <GalleryPhoto
         gallery={gallery}

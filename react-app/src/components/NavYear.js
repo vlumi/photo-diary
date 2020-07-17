@@ -4,20 +4,14 @@ import PropTypes from "prop-types";
 import DateLink from "./DateLink";
 import GalleryLink from "./GalleryLink";
 
-import calendar from "../utils/calendar";
-
 const NavYear = ({ gallery, year }) => {
-  const prevStyle = calendar.isFirstYear(gallery, year)
-    ? { visibility: "hidden" }
-    : {};
-  const nextStyle = calendar.isLastYear(gallery, year)
-    ? { visibility: "hidden" }
-    : {};
+  const prevStyle = gallery.isFirstYear(year) ? { visibility: "hidden" } : {};
+  const nextStyle = gallery.isLastYear(year) ? { visibility: "hidden" } : {};
 
-  const firstYear = calendar.firstYear(gallery);
-  const previousYear = calendar.previousYear(gallery, year);
-  const nextYear = calendar.nextYear(gallery, year);
-  const lastYear = calendar.lastYear(gallery);
+  const firstYear = gallery.firstYear();
+  const previousYear = gallery.previousYear(year);
+  const nextYear = gallery.nextYear(year);
+  const lastYear = gallery.lastYear();
   return (
     <h2>
       <span title="First year" style={prevStyle}>
