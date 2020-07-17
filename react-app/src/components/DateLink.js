@@ -47,7 +47,7 @@ const DateLink = ({ gallery, year, month, day }) => {
   );
 };
 DateLink.propTypes = {
-  gallery: PropTypes.object.isRequired.isRequired,
+  gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number,
   day: PropTypes.number,

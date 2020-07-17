@@ -4,8 +4,7 @@ import PropTypes from "prop-types";
 import config from "../utils/config";
 
 const Photo = ({ photo }) => {
-  console.log("root", config.PHOTO_ROOT);
-  const thumbUrl = `url(${config.PHOTO_ROOT}/thumbnail/${photo.id})`;
+  const thumbUrl = `url("${config.PHOTO_ROOT}thumbnail/${photo.id}")`;
   const style = {
     width: `${photo.dimensions.thumbnail.width + 10}px`,
     height: `${photo.dimensions.thumbnail.height + 10}px`,

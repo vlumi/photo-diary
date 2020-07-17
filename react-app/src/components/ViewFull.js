@@ -1,12 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import DumpPhotoNames from "./DumpPhotoNames";
-
 const ViewFull = ({ gallery }) => (
   <>
     <h2>All</h2>
-    <DumpPhotoNames gallery={gallery} />
+    <div>TODO: jump to last month? {console.log(gallery)}</div>
   </>
 );
 ViewFull.propTypes = {

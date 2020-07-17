@@ -15,6 +15,10 @@ import Stats from "./components/Stats";
 import galleryService from "./services/galleries";
 import statService from "./services/stats";
 
+import config from "./utils/config";
+import theme from "./utils/theme";
+theme.setTheme(config.DEFAULT_THEME);
+
 const App = () => {
   const [galleries, setGalleries] = useState([]);
   const [stats, setStats] = useState({});
@@ -46,13 +50,21 @@ const App = () => {
             <Gallery galleries={galleries} />
           </Route>
           <Route path="/g">
-            <Galleries galleries={galleries} />
+            {config.DEFAULT_GALLERY ? (
+              <Redirect to={`/g/${config.DEFAULT_GALLERY}`} />
+            ) : (
+              <Galleries galleries={galleries} />
+            )}
           </Route>
           <Route path="/stats/:galleryId">
             <Stats stats={stats} />
           </Route>
           <Route path="/stats">
-            <Stats stats={stats} />
+            {config.DEFAULT_GALLERY ? (
+              <Redirect to={`/stats/${config.DEFAULT_GALLERY}`} />
+            ) : (
+              <Stats stats={stats} />
+            )}
           </Route>
           <Route path="/">
             <Redirect to="/g" />
