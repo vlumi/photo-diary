@@ -10,6 +10,18 @@
   --high-color: #aac;
   --extreme-color: #99b;
 }
+.red-theme {
+  --primary-color: #000;
+  --primary-background: #fdd;
+  --inactive-color: #999;
+  --header-color: #fff;
+  --header-background: #500;
+  --none-color: #fdd;
+  --low-color: #ecc;
+  --medium-color: #dbb;
+  --high-color: #caa;
+  --extreme-color: #b99;
+}
 .grayscale-theme {
   --primary-color: #000;
   --primary-background: #ddd;
@@ -154,18 +166,20 @@ h3 > :visited {
 }
 
 .month h3 {
+  float: left;
   width: 35px;
   height: 200px;
 }
 
-div.photos {
+.photos {
   vertical-align: top;
-  height: 214px;
-  float: left;
 }
 
-div.photo {
+div.photo-block {
   vertical-align: top;
+  float: left;
+}
+div.photo {
   float: left;
   margin: 1px;
   background-color: #bbb;

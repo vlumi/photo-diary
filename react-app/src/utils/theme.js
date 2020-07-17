@@ -6,7 +6,6 @@ const setTheme = (theme) => {
     }
   });
   document.body.classList.add(`${theme}-theme`);
-  console.log("body classes", document.body.classList);
 };
 
 export default {

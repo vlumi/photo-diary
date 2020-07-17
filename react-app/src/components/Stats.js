@@ -5,8 +5,7 @@ const Stats = ({ stats }) => {
   return (
     <>
       <h2>Statistics</h2>
-      <div>TODO: implement</div>
-      {console.log(stats)}
+      <div>TODO: implement {stats === null}</div>
     </>
   );
 };

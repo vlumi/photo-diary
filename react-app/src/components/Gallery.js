@@ -21,9 +21,7 @@ const Gallery = () => {
 
   React.useEffect(() => {
     galleryService.get(galleryId).then((loadedGallery) => {
-      console.log(loadedGallery);
       if (loadedGallery.theme) {
-        console.log("THEME!!", loadedGallery.theme);
         theme.setTheme(loadedGallery.theme);
       }
       setGallery(loadedGallery);

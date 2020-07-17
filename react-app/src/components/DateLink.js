@@ -1,48 +1,43 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
 
+import GalleryLink from "./GalleryLink";
 import FormatDate from "./FormatDate";
 
 const DateLink = ({ gallery, year, month, day }) => {
-  if (!year) {
-    return "";
-  }
   if (!month) {
     return (
-      <>
-        <Link to={`/g/${gallery.id}/${year}`}>
-          <FormatDate year={year} />
-        </Link>
-      </>
+      <GalleryLink gallery={gallery} year={year}>
+        <FormatDate year={year} />
+      </GalleryLink>
     );
   }
   if (!day) {
     return (
       <>
-        <Link to={`/g/${gallery.id}/${year}`}>
+        <GalleryLink gallery={gallery} year={year}>
           <FormatDate year={year} />
-        </Link>
+        </GalleryLink>
         -
-        <Link to={`/g/${gallery.id}/${year}/${month}`}>
+        <GalleryLink gallery={gallery} year={year} month={month}>
           <FormatDate month={month} />
-        </Link>
+        </GalleryLink>
       </>
     );
   }
   return (
     <>
-      <Link to={`/g/${gallery.id}/${year}`}>
+      <GalleryLink gallery={gallery} year={year}>
         <FormatDate year={year} />
-      </Link>
+      </GalleryLink>
       -
-      <Link to={`/g/${gallery.id}/${year}/${month}`}>
+      <GalleryLink gallery={gallery} year={year} month={month}>
         <FormatDate month={month} />
-      </Link>
+      </GalleryLink>
       -
-      <Link to={`/g/${gallery.id}/${year}/${month}/${day}`}>
+      <GalleryLink gallery={gallery} year={year} month={month} day={day}>
         <FormatDate day={day} />
-      </Link>
+      </GalleryLink>
     </>
   );
 };

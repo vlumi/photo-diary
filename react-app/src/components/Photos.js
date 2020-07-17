@@ -8,10 +8,10 @@ const Photos = ({ children, photos }) => {
     <div className="photos">
       {photos.map((photo, index) => {
         return (
-          <span key={photo.id}>
+          <div key={photo.id} className="photo-block">
             {index === 0 ? children : ""}
             <Photo photo={photo} />
-          </span>
+          </div>
         );
       })}
     </div>
@@ -19,6 +19,6 @@ const Photos = ({ children, photos }) => {
 };
 Photos.propTypes = {
   photos: PropTypes.array.isRequired,
-  children: PropTypes.object,
+  children: PropTypes.any,
 };
 export default Photos;
