@@ -10,7 +10,6 @@ const getAll = async () => {
 
 const get = async (galleryId) => {
   const response = await axios.get(`${baseUrl}/${galleryId}`);
-  response.data.theme = "blue";
   return response.data;
 };
 

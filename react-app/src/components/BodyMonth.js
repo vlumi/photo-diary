@@ -12,6 +12,7 @@ const BodyMonth = ({ gallery, year, month }) => {
       return (
         <Photos
           key={"" + year + month + day}
+          gallery={gallery}
           photos={gallery.photos[year][month][day]}
         >
           <h3>

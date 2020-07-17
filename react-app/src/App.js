@@ -34,9 +34,9 @@ const App = () => {
     <>
       <Router>
         <Switch>
-          {/* <Route path="/p/:galleryId/:photoId">
-            <Photo galleries={galleries} />
-          </Route> */}
+          <Route path="/g/:galleryId/:year/:month/:day/:photoId">
+            <Gallery galleries={galleries} />
+          </Route>
           <Route path="/g/:galleryId/:year?/:month?/:day?">
             <Gallery galleries={galleries} />
           </Route>

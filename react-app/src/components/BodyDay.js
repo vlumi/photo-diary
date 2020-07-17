@@ -11,7 +11,11 @@ const BodyDay = ({ gallery, year, month, day }) => {
   return (
     <>
       <div>
-        {hasContent ? <Photos photos={gallery.photos[year][month][day]} /> : ""}
+        {hasContent ? (
+          <Photos gallery={gallery} photos={gallery.photos[year][month][day]} />
+        ) : (
+          ""
+        )}
       </div>
     </>
   );
