@@ -2,8 +2,20 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import GalleryLink from "./GalleryLink";
+import FlagIcon from "./FlagIcon";
 
 import config from "../utils/config";
+
+const OFFSET = 127397;
+const toFlag = (code) => {
+  if (!code) {
+    return "";
+  }
+  const characters = [...code.toUpperCase()].map(
+    (c) => OFFSET + c.charCodeAt()
+  );
+  return String.fromCodePoint(...characters);
+};
 
 const Photo = ({ gallery, photo }) => {
   const thumbUrl = `url("${config.PHOTO_ROOT}thumbnail/${photo.id}")`;
@@ -19,6 +31,7 @@ const Photo = ({ gallery, photo }) => {
           <img src="https://gallery.misaki.fi/css/blank.gif" alt="" />
         </span>
       </GalleryLink>
+      {photo.taken.location.country ? <FlagIcon code={photo.taken.location.country} size="1g" /> :""}
     </div>
   );
 };
