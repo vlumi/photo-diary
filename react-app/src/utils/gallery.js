@@ -1,4 +1,5 @@
 import calendar from "./calendar";
+import config from "./config";
 
 const G = (galleryData) => {
   const importGalleryData = (gallery) => {
@@ -33,11 +34,21 @@ const G = (galleryData) => {
       );
     },
     lastPath: () => {
-      const [year, month] = self.lastMonth();
-      if (year && month) {
-        return self.path(year, month);
+      const [year, month, day] = self.lastDay();
+      if (!self.includesDay(year, month, day)) {
+        return self.path(new Date().getFullYear());
       }
-      return self.path(new Date().getFullYear());
+      switch (config.INITIAL_GALLERY_VIEW || "") {
+        case "year":
+          return self.path(year);
+        default:
+        case "month":
+          return self.path(year, month);
+        case "day":
+          return self.path(year, month, day);
+        case "photo":
+          return self.photoPath(self.lastPhoto());
+      }
     },
     includesPhotos: () => "photos" in gallery,
     includesYear: (year) => year in photos,
