@@ -10,42 +10,30 @@ import useKeyPress from "../utils/keypress";
 const GalleryDay = ({ gallery, year, month, day }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
-  const escapePress = useKeyPress("Escape");
-  const homePress = useKeyPress("Home");
-  const leftPress = useKeyPress("ArrowLeft");
-  const rightPress = useKeyPress("ArrowRight");
-  const endPress = useKeyPress("End");
-
-  React.useEffect(() => {
-    if (escapePress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(year, month));
-    }
-  }, [escapePress]);
-  React.useEffect(() => {
-    if (homePress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.firstDay()));
-    }
-  }, [homePress]);
-  React.useEffect(() => {
-    if (leftPress) {
+  useKeyPress("Escape", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(year, month));
+  });
+  useKeyPress("Home", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(...gallery.firstDay()));
+  });
+  useKeyPress("ArrowLeft", () => {
+    if (!gallery.isFirstDay(year, month, day)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(...gallery.previousDay(year, month, day)));
     }
-  }, [leftPress]);
-  React.useEffect(() => {
-    if (rightPress) {
+  });
+  useKeyPress("ArrowRight", () => {
+    if (!gallery.isLastDay(year, month, day)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(...gallery.nextDay(year, month, day)));
     }
-  }, [rightPress]);
-  React.useEffect(() => {
-    if (endPress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.lastDay()));
-    }
-  }, [endPress]);
+  });
+  useKeyPress("End", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(...gallery.lastDay()));
+  });
 
   if (redirect) {
     setTimeout(() => setRedirect(""), 0);

@@ -10,46 +10,43 @@ import useKeyPress from "../utils/keypress";
 const GalleryMonth = ({ gallery, year, month }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
-  const escapePress = useKeyPress("Escape");
-  const homePress = useKeyPress("Home");
-  const leftPress = useKeyPress("ArrowLeft");
-  const rightPress = useKeyPress("ArrowRight");
-  const endPress = useKeyPress("End");
-
-  React.useEffect(() => {
-    if (escapePress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(year));
-    }
-  }, [escapePress]);
-  React.useEffect(() => {
-    if (homePress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.firstMonth()));
-    }
-  }, [homePress]);
-  React.useEffect(() => {
-    if (leftPress) {
+  useKeyPress("Escape", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(year));
+  });
+  useKeyPress("Home", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(...gallery.firstMonth()));
+  });
+  useKeyPress("ArrowLeft", () => {
+    if (!gallery.isFirstMonth(year, month)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(...gallery.previousMonth(year, month)));
     }
-  }, [leftPress]);
-  React.useEffect(() => {
-    if (rightPress) {
+  });
+  useKeyPress("ArrowRight", () => {
+    if (!gallery.isLastMonth(year, month)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(...gallery.nextMonth(year, month)));
     }
-  }, [rightPress]);
-  React.useEffect(() => {
-    if (endPress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.lastMonth()));
-    }
-  }, [endPress]);
+  });
+  useKeyPress("End", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(...gallery.lastMonth()));
+  });
 
   if (redirect) {
     setTimeout(() => setRedirect(""), 0);
     return <Redirect to={redirect} />;
+  }
+
+  if (!gallery.includesMonth(year, month)) {
+    return (
+      <p>
+        <GalleryMonthNav gallery={gallery} year={year} month={month} />
+        <i>Empty</i>
+      </p>
+    );
   }
 
   return (

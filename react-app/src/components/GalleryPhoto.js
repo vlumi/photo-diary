@@ -10,46 +10,28 @@ import useKeyPress from "../utils/keypress";
 const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
-  const escapePress = useKeyPress("Escape");
-  const homePress = useKeyPress("Home");
-  const leftPress = useKeyPress("ArrowLeft");
-  const rightPress = useKeyPress("ArrowRight");
-  const endPress = useKeyPress("End");
-
-  React.useEffect(() => {
-    if (escapePress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(year, month));
-    }
-  }, [escapePress]);
-  React.useEffect(() => {
-    if (homePress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.photoPath(gallery.firstPhoto()));
-    }
-  }, [homePress]);
-  React.useEffect(() => {
-    if (leftPress) {
-      window.history.pushState({}, "");
-      setRedirect(
-        gallery.photoPath(gallery.previousPhoto(year, month, day, photo))
-      );
-    }
-  }, [leftPress]);
-  React.useEffect(() => {
-    if (rightPress) {
-      window.history.pushState({}, "");
-      setRedirect(
-        gallery.photoPath(gallery.nextPhoto(year, month, day, photo))
-      );
-    }
-  }, [rightPress]);
-  React.useEffect(() => {
-    if (endPress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.photoPath(gallery.lastPhoto()));
-    }
-  }, [endPress]);
+  useKeyPress("Escape", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(year, month));
+  });
+  useKeyPress("Home", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.photoPath(gallery.firstPhoto()));
+  });
+  useKeyPress("ArrowLeft", () => {
+    window.history.pushState({}, "");
+    setRedirect(
+      gallery.photoPath(gallery.previousPhoto(year, month, day, photo))
+    );
+  });
+  useKeyPress("ArrowRight", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.photoPath(gallery.nextPhoto(year, month, day, photo)));
+  });
+  useKeyPress("End", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.photoPath(gallery.lastPhoto()));
+  });
 
   if (redirect) {
     setTimeout(() => setRedirect(""), 0);

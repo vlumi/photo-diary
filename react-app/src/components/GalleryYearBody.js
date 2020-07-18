@@ -20,7 +20,7 @@ const GalleryYearBody = ({ gallery, year }) => {
         const heat = calculateHeat(photoCount);
         return (
           <td
-            key={`day ${calendar.format({
+            key={`day ${calendar.formatDate({
               year,
               month,
               day,
@@ -31,9 +31,9 @@ const GalleryYearBody = ({ gallery, year }) => {
               <></>
             ) : photoCount > 0 ? (
               <Link
-                key={`${calendar.format({ year, month, day })}`}
+                key={`${calendar.formatDate({ year, month, day })}`}
                 to={gallery.path(year, month, day)}
-                title={`${calendar.format({
+                title={`${calendar.formatDate({
                   year,
                   month,
                   day,
@@ -49,7 +49,7 @@ const GalleryYearBody = ({ gallery, year }) => {
       };
 
       return (
-        <tr key={`grid ${calendar.format({ year, month })} ${rowIndex}`}>
+        <tr key={`grid ${calendar.formatDate({ year, month })} ${rowIndex}`}>
           {row.map((day, cellIndex) => {
             return produceDayCell(day, cellIndex);
           })}

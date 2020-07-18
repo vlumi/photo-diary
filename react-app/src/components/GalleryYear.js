@@ -11,42 +11,30 @@ import useKeyPress from "../utils/keypress";
 const GalleryYear = ({ gallery, year }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
-  const escapePress = useKeyPress("Escape");
-  const homePress = useKeyPress("Home");
-  const leftPress = useKeyPress("ArrowLeft");
-  const rightPress = useKeyPress("ArrowRight");
-  const endPress = useKeyPress("End");
-
-  React.useEffect(() => {
-    if (escapePress) {
-      window.history.pushState({}, "");
-      setRedirect("/g");
-    }
-  }, [escapePress]);
-  React.useEffect(() => {
-    if (homePress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(gallery.firstYear()));
-    }
-  }, [homePress]);
-  React.useEffect(() => {
-    if (leftPress) {
+  useKeyPress("Escape", () => {
+    window.history.pushState({}, "");
+    setRedirect("/g");
+  });
+  useKeyPress("Home", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(gallery.firstYear()));
+  });
+  useKeyPress("ArrowLeft", () => {
+    if (!gallery.isFirstYear(year)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(gallery.previousYear(year)));
     }
-  }, [leftPress]);
-  React.useEffect(() => {
-    if (rightPress) {
+  });
+  useKeyPress("ArrowRight", () => {
+    if (!gallery.isLastYear(year)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(gallery.nextYear(year)));
     }
-  }, [rightPress]);
-  React.useEffect(() => {
-    if (endPress) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(gallery.lastYear()));
-    }
-  }, [endPress]);
+  });
+  useKeyPress("End", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(gallery.lastYear()));
+  });
 
   if (year < 0) {
     return (
