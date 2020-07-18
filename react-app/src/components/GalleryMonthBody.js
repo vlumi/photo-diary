@@ -1,16 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import Photos from "./Photos";
+import GalleryThumbnails from "./GalleryThumbnails";
 import GalleryLink from "./GalleryLink";
 
-const BodyMonth = ({ gallery, year, month }) => {
+const GalleryMonthBody = ({ gallery, year, month }) => {
   const hasContent = gallery.includesMonth(year, month);
 
   const produceContent = () =>
     gallery.mapDays(year, month, (day) => {
       return (
-        <Photos
+        <GalleryThumbnails
           key={"" + year + month + day}
           gallery={gallery}
           photos={gallery.photos(year, month, day)}
@@ -25,7 +25,7 @@ const BodyMonth = ({ gallery, year, month }) => {
               {day}
             </GalleryLink>
           </h3>
-        </Photos>
+        </GalleryThumbnails>
       );
     });
   return (
@@ -34,9 +34,9 @@ const BodyMonth = ({ gallery, year, month }) => {
     </>
   );
 };
-BodyMonth.propTypes = {
+GalleryMonthBody.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
 };
-export default BodyMonth;
+export default GalleryMonthBody;

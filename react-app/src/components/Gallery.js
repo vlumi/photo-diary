@@ -4,16 +4,16 @@ import { useParams } from "react-router-dom";
 import galleryService from "../services/galleries";
 
 import GalleryTitle from "./GalleryTitle";
-import ViewFull from "./ViewFull";
-import ViewYear from "./ViewYear";
-import ViewMonth from "./ViewMonth";
-import ViewDay from "./ViewDay";
+import GalleryFull from "./GalleryFull";
+import GalleryYear from "./GalleryYear";
+import GalleryMonth from "./GalleryMonth";
+import GalleryDay from "./GalleryDay";
+import GalleryPhoto from "./GalleryPhoto";
 
 import G from "../utils/gallery";
 import theme from "../utils/theme";
-import ViewPhoto from "./ViewPhoto";
 
-const ViewGallery = () => {
+const Gallery = () => {
   const [gallery, setGallery] = React.useState(undefined);
 
   const galleryId = useParams().galleryId;
@@ -50,7 +50,7 @@ const ViewGallery = () => {
       return <></>;
     }
     return (
-      <ViewPhoto
+      <GalleryPhoto
         gallery={gallery}
         year={year}
         month={month}
@@ -63,15 +63,15 @@ const ViewGallery = () => {
     <>
       <GalleryTitle gallery={gallery} />
       {!year ? (
-        <ViewFull gallery={gallery} />
+        <GalleryFull gallery={gallery} />
       ) : !month ? (
-        <ViewYear gallery={gallery} year={year} />
+        <GalleryYear gallery={gallery} year={year} />
       ) : !day ? (
-        <ViewMonth gallery={gallery} year={year} month={month} />
+        <GalleryMonth gallery={gallery} year={year} month={month} />
       ) : (
-        <ViewDay gallery={gallery} year={year} month={month} day={day} />
+        <GalleryDay gallery={gallery} year={year} month={month} day={day} />
       )}
     </>
   );
 };
-export default ViewGallery;
+export default Gallery;

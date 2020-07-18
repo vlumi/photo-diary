@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import DateLink from "./DateLink";
 import GalleryLink from "./GalleryLink";
 
-const NavYear = ({ gallery, year }) => {
+const GalleryYearNav = ({ gallery, year }) => {
   const prevStyle = gallery.isFirstYear(year) ? { visibility: "hidden" } : {};
   const nextStyle = gallery.isLastYear(year) ? { visibility: "hidden" } : {};
 
@@ -40,8 +40,8 @@ const NavYear = ({ gallery, year }) => {
     </h2>
   );
 };
-NavYear.propTypes = {
+GalleryYearNav.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };
-export default NavYear;
+export default GalleryYearNav;

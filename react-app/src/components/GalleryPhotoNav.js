@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import GalleryLink from "./GalleryLink";
 import DateLink from "./DateLink";
 
-const NavPhoto = ({ gallery, year, month, day, photo }) => {
+const GalleryPhotoNav = ({ gallery, year, month, day, photo }) => {
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
 
@@ -50,11 +50,11 @@ const NavPhoto = ({ gallery, year, month, day, photo }) => {
     </h2>
   );
 };
-NavPhoto.propTypes = {
+GalleryPhotoNav.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
 };
-export default NavPhoto;
+export default GalleryPhotoNav;

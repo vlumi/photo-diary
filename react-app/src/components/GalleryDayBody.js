@@ -1,14 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import Photos from "./Photos";
+import GalleryThumbnails from "./GalleryThumbnails";
 
-const BodyDay = ({ gallery, year, month, day }) => {
+const GalleryDayBody = ({ gallery, year, month, day }) => {
   return (
     <>
       <div>
         {gallery.includesDay(year, month, day) ? (
-          <Photos gallery={gallery} photos={gallery.photos(year, month, day)} />
+          <GalleryThumbnails gallery={gallery} photos={gallery.photos(year, month, day)} />
         ) : (
           ""
         )}
@@ -16,10 +16,10 @@ const BodyDay = ({ gallery, year, month, day }) => {
     </>
   );
 };
-BodyDay.propTypes = {
+GalleryDayBody.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
 };
-export default BodyDay;
+export default GalleryDayBody;

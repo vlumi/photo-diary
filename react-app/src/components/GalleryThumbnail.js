@@ -6,12 +6,12 @@ import FlagIcon from "./FlagIcon";
 
 import config from "../utils/config";
 
-const Photo = ({ gallery, photo }) => {
-  const thumbUrl = `url("${config.PHOTO_ROOT}thumbnail/${photo.id}")`;
+const GalleryThumbnail = ({ gallery, photo }) => {
+  const url = `url("${config.PHOTO_ROOT}thumbnail/${photo.id}")`;
   const style = {
     width: `${photo.dimensions.thumbnail.width + 10}px`,
     height: `${photo.dimensions.thumbnail.height + 10}px`,
-    backgroundImage: thumbUrl,
+    backgroundImage: url,
   };
   return (
     <div className="thumbnail">
@@ -28,8 +28,8 @@ const Photo = ({ gallery, photo }) => {
     </div>
   );
 };
-Photo.propTypes = {
+GalleryThumbnail.propTypes = {
   gallery: PropTypes.object.isRequired,
   photo: PropTypes.object.isRequired,
 };
-export default Photo;
+export default GalleryThumbnail;

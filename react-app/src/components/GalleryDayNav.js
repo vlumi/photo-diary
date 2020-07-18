@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import DateLink from "./DateLink";
 import GalleryLink from "./GalleryLink";
 
-const NavDay = ({ gallery, year, month, day }) => {
+const GalleryDayNav = ({ gallery, year, month, day }) => {
   const prevStyle = gallery.isFirstDay(year, month, day)
     ? { visibility: "hidden" }
     : {};
@@ -72,10 +72,10 @@ const NavDay = ({ gallery, year, month, day }) => {
     </h2>
   );
 };
-NavDay.propTypes = {
+GalleryDayNav.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
 };
-export default NavDay;
+export default GalleryDayNav;

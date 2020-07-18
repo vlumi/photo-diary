@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 
 import config from "../utils/config";
 
-const BodyPhoto = ({ photo }) => {
+const GalleryPhotoBody = ({ photo }) => {
   const style = {
     width: `${photo.dimensions.display.width}px`,
     height: `${photo.dimensions.display.height}px`,
@@ -21,7 +21,7 @@ const BodyPhoto = ({ photo }) => {
     </>
   );
 };
-BodyPhoto.propTypes = {
+GalleryPhotoBody.propTypes = {
   photo: PropTypes.object.isRequired,
 };
-export default BodyPhoto;
+export default GalleryPhotoBody;

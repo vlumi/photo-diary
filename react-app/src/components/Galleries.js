@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 import G from "../utils/gallery";
 
-const ListGalleries = ({ galleries }) => {
+const Galleries = ({ galleries }) => {
   return (
     <>
       {/* TODO: design */}
@@ -23,7 +23,7 @@ const ListGalleries = ({ galleries }) => {
     </>
   );
 };
-ListGalleries.propTypes = {
+Galleries.propTypes = {
   galleries: PropTypes.array.isRequired,
 };
-export default ListGalleries;
+export default Galleries;

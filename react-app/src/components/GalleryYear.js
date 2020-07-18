@@ -2,13 +2,13 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 
-import NavYear from "./NavYear";
-import BodyYear from "./BodyYear";
+import GalleryYearNav from "./GalleryYearNav";
+import GalleryYearBody from "./GalleryYearBody";
 import GalleryLink from "./GalleryLink";
 
 import useKeyPress from "../utils/keypress";
 
-const ViewYear = ({ gallery, year }) => {
+const GalleryYear = ({ gallery, year }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const escapePress = useKeyPress("Escape");
@@ -58,7 +58,7 @@ const ViewYear = ({ gallery, year }) => {
                 {year}
               </GalleryLink>
             </h2>
-            <BodyYear gallery={gallery} year={Number(year)} />
+            <GalleryYearBody gallery={gallery} year={Number(year)} />
           </div>
         ))}
       </>
@@ -71,15 +71,15 @@ const ViewYear = ({ gallery, year }) => {
 
     return (
       <div className="year">
-        <NavYear gallery={gallery} year={year} />
-        <BodyYear gallery={gallery} year={year} />
-        <NavYear gallery={gallery} year={year} />
+        <GalleryYearNav gallery={gallery} year={year} />
+        <GalleryYearBody gallery={gallery} year={year} />
+        <GalleryYearNav gallery={gallery} year={year} />
       </div>
     );
   }
 };
-ViewYear.propTypes = {
+GalleryYear.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };
-export default ViewYear;
+export default GalleryYear;

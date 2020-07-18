@@ -2,12 +2,12 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 
-import NavDay from "./NavDay";
-import BodyDay from "./BodyDay";
+import GalleryMonthNav from "./GalleryMonthNav";
+import GalleryMonthBody from "./GalleryMonthBody";
 
 import useKeyPress from "../utils/keypress";
 
-const ViewDay = ({ gallery, year, month, day }) => {
+const GalleryMonth = ({ gallery, year, month }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const escapePress = useKeyPress("Escape");
@@ -19,31 +19,31 @@ const ViewDay = ({ gallery, year, month, day }) => {
   React.useEffect(() => {
     if (escapePress) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(year, month));
+      setRedirect(gallery.path(year));
     }
   }, [escapePress]);
   React.useEffect(() => {
     if (homePress) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.firstDay()));
+      setRedirect(gallery.path(...gallery.firstMonth()));
     }
   }, [homePress]);
   React.useEffect(() => {
     if (leftPress) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.previousDay(year, month, day)));
+      setRedirect(gallery.path(...gallery.previousMonth(year, month)));
     }
   }, [leftPress]);
   React.useEffect(() => {
     if (rightPress) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.nextDay(year, month, day)));
+      setRedirect(gallery.path(...gallery.nextMonth(year, month)));
     }
   }, [rightPress]);
   React.useEffect(() => {
     if (endPress) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.lastDay()));
+      setRedirect(gallery.path(...gallery.lastMonth()));
     }
   }, [endPress]);
 
@@ -54,16 +54,17 @@ const ViewDay = ({ gallery, year, month, day }) => {
 
   return (
     <>
-      <NavDay gallery={gallery} year={year} month={month} day={day} />
-      <BodyDay gallery={gallery} year={year} month={month} day={day} />
-      <NavDay gallery={gallery} year={year} month={month} day={day} />
+      <div className="month">
+        <GalleryMonthNav gallery={gallery} year={year} month={month} />
+        <GalleryMonthBody gallery={gallery} year={year} month={month} />
+        <GalleryMonthNav gallery={gallery} year={year} month={month} />
+      </div>
     </>
   );
 };
-ViewDay.propTypes = {
+GalleryMonth.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
 };
-export default ViewDay;
+export default GalleryMonth;

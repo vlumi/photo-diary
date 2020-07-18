@@ -12,7 +12,7 @@ const calculateHeat = (photos) => {
   return "extreme";
 };
 
-const BodyYear = ({ gallery, year }) => {
+const GalleryYearBody = ({ gallery, year }) => {
   const produceMonthGrid = (month) => {
     const produceWeekRow = (row, rowIndex) => {
       const produceDayCell = (day, index) => {
@@ -96,8 +96,8 @@ const BodyYear = ({ gallery, year }) => {
     </>
   );
 };
-BodyYear.propTypes = {
+GalleryYearBody.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };
-export default BodyYear;
+export default GalleryYearBody;

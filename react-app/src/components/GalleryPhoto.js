@@ -2,12 +2,12 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 
-import NavPhoto from "./NavPhoto";
-import BodyPhoto from "./BodyPhoto";
+import GalleryPhotoNav from "./GalleryPhotoNav";
+import GalleryPhotoBody from "./GalleryPhotoBody";
 
 import useKeyPress from "../utils/keypress";
 
-const ViewPhoto = ({ gallery, year, month, day, photo }) => {
+const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const escapePress = useKeyPress("Escape");
@@ -58,22 +58,22 @@ const ViewPhoto = ({ gallery, year, month, day, photo }) => {
 
   return (
     <>
-      <NavPhoto
+      <GalleryPhotoNav
         gallery={gallery}
         year={year}
         month={month}
         day={day}
         photo={photo}
       />
-      <BodyPhoto photo={photo} />
+      <GalleryPhotoBody photo={photo} />
     </>
   );
 };
-ViewPhoto.propTypes = {
+GalleryPhoto.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
 };
-export default ViewPhoto;
+export default GalleryPhoto;
