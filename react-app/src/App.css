@@ -52,7 +52,10 @@ h1 {
   margin: 0;
 }
 h2 {
+  position: relative;
+  z-index: 0;
   width: 100%;
+  height: 50px;
   color: var(--header-color);
   background: var(--header-background);
   font-size: 24pt;
@@ -62,12 +65,16 @@ h2 {
   clear: both;
 }
 h2 :link {
+  position: relative;
+  z-index: 0;
   color: var(--header-color);
 }
 h2 :visited {
   color: var(--header-color);
 }
 h2 span {
+  position: relative;
+  z-index: 0;
   padding: 0 1em;
   display: inline;
 }
@@ -171,29 +178,29 @@ h3 > :visited {
   height: 200px;
 }
 
-.photos {
+.thumbnails {
   vertical-align: top;
 }
 
-div.photo-block {
+div.thumbnail-block {
   vertical-align: top;
   float: left;
 }
-div.photo {
+div.thumbnail {
   height: 212px;
   float: left;
   margin: 1px;
   background-color: #bbb;
 }
 
-div.photo > .flag-icon {
+div.thumbnail > .flag-icon {
   display: block;
   position: relative;
   top: -19px;
   left: 3px;
 }
 
-span.photo {
+span.thumbnail {
   display: block;
   background-repeat: no-repeat;
   background-position: 5px 5px;
@@ -201,4 +208,64 @@ span.photo {
   margin: 0;
   padding: 0;
   text-align: left;
+}
+
+div.layer {
+  z-index: -1;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  opacity: 0.5;
+}
+
+h2.photo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 101;
+  color: var(--header-color);
+  background: var(--header-background);
+  font-size: 24pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  opacity: 0.5;
+}
+h2.photo :link {
+  position: relative;
+  z-index: 0;
+  color: var(--header-color);
+}
+h2.photo :visited {
+  color: var(--header-color);
+}
+h2.photo span {
+  position: relative;
+  z-index: 0;
+  padding: 0 1em;
+  display: inline;
+}
+
+div.photo {
+  position: relative;
+  z-index: 100;
+  width: 100%;
+  margin: 50px 1px ;
+}
+
+span.photo {
+  position: relative;
+  z-index: 100;
+  display: block;
+  background-repeat: no-repeat;
+  background-position: 5px 5px;
+  border: solid #004 1px;
+  margin: 10px auto;
+  padding: 25px;
+  text-align: left;
+  background-color: #bbb;
 }

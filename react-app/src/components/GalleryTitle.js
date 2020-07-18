@@ -8,7 +8,7 @@ const GalleryTitle = ({ gallery }) => (
     <span>
       <Link to="/g">galleries</Link>
     </span>
-    <h1>{gallery.getTitle()}</h1>
+    <h1>{gallery.title()}</h1>
   </>
 );
 GalleryTitle.propTypes = {

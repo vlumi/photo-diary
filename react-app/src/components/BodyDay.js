@@ -8,7 +8,7 @@ const BodyDay = ({ gallery, year, month, day }) => {
     <>
       <div>
         {gallery.includesDay(year, month, day) ? (
-          <Photos gallery={gallery} photos={gallery.getPhotos(year, month, day)} />
+          <Photos gallery={gallery} photos={gallery.photos(year, month, day)} />
         ) : (
           ""
         )}

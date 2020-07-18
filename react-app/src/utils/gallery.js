@@ -3,9 +3,9 @@ import calendar from "./calendar";
 const G = (gallery) => {
   const photos = gallery.photos;
   const self = {
-    getId: () => gallery.id,
-    getTitle: () => gallery.title,
-    getPath: (year, month, day, photo) => {
+    id: () => gallery.id,
+    title: () => gallery.title,
+    path: (year, month, day, photo) => {
       const parts = ["", "g", gallery.id];
       const ymd = calendar.formatDate({ year, month, day, separator: "/" });
       if (ymd) {
@@ -16,20 +16,20 @@ const G = (gallery) => {
       }
       return parts.join("/");
     },
-    getPhotoPath: (photo) => {
-      return self.getPath(
+    photoPath: (photo) => {
+      return self.path(
         photo.taken.instant.year,
         photo.taken.instant.month,
         photo.taken.instant.day,
         photo
       );
     },
-    getLastPath: () => {
-      const [year, month] = self.lastYearMonth();
+    lastPath: () => {
+      const [year, month] = self.lastMonth();
       if (year && month) {
-        return self.getPath(year, month);
+        return self.path(year, month);
       }
-      return self.getPath(new Date().getFullYear());
+      return self.path(new Date().getFullYear());
     },
     includesPhotos: () => "photos" in gallery,
     includesYear: (year) => self.includesPhotos() && year in photos,
@@ -48,14 +48,13 @@ const G = (gallery) => {
       }
       return photos[year][month][day].length;
     },
-    getPhotos: (year, month, day) => {
+    photos: (year, month, day) => {
       if (!self.includesDay(year, month, day)) {
         return [];
       }
       return photos[year][month][day];
     },
-    photos: photos,
-    findPhoto: (year, month, day, photoId = "") => {
+    photo: (year, month, day, photoId = "") => {
       if (!self.includesDay(year, month, day)) {
         return undefined;
       }
@@ -86,15 +85,15 @@ const G = (gallery) => {
       }
       return Math.min(...Object.keys(gallery.photos));
     },
-    firstYearMonth: () => {
+    firstMonth: () => {
       const year = self.firstYear();
       if (!year || !(year in gallery.photos)) {
         return [undefined, undefined];
       }
       return [year, Math.min(...Object.keys(gallery.photos[year]))];
     },
-    firstYearMonthDay: () => {
-      const [year, month] = self.firstYearMonth();
+    firstDay: () => {
+      const [year, month] = self.firstMonth();
       if (
         !year ||
         !month ||
@@ -115,15 +114,15 @@ const G = (gallery) => {
       }
       return Math.max(...Object.keys(gallery.photos));
     },
-    lastYearMonth: () => {
+    lastMonth: () => {
       const year = self.lastYear();
       if (!year || !(year in gallery.photos)) {
         return [undefined, undefined];
       }
       return [year, Math.max(...Object.keys(gallery.photos[year]))];
     },
-    lastYearMonthDay: () => {
-      const [year, month] = self.lastYearMonth();
+    lastDay: () => {
+      const [year, month] = self.lastMonth();
       if (
         !year ||
         !month ||
@@ -143,14 +142,14 @@ const G = (gallery) => {
       const year = self.firstYear();
       return !year || currentYear === year;
     },
-    isFirstYearMonth: (currentYear, currentMonth) => {
-      const [year, month] = self.firstYearMonth();
+    isFirstMonth: (currentYear, currentMonth) => {
+      const [year, month] = self.firstMonth();
       return (
         !year || !month || (currentYear === year && currentMonth === month)
       );
     },
-    isFirstYearMonthDay: (currentYear, currentMonth, currentDay) => {
-      const [year, month, day] = self.firstYearMonthDay();
+    isFirstDay: (currentYear, currentMonth, currentDay) => {
+      const [year, month, day] = self.firstDay();
       return (
         !year ||
         !month ||
@@ -165,14 +164,14 @@ const G = (gallery) => {
       const year = self.lastYear();
       return !year || currentYear === year;
     },
-    isLastYearMonth: (currentYear, currentMonth) => {
-      const [year, month] = self.lastYearMonth();
+    isLastMonth: (currentYear, currentMonth) => {
+      const [year, month] = self.lastMonth();
       return (
         !year || !month || (currentYear === year && currentMonth === month)
       );
     },
-    isLastYearMonthDay: (currentYear, currentMonth, currentDay) => {
-      const [year, month, day] = self.lastYearMonthDay();
+    isLastDay: (currentYear, currentMonth, currentDay) => {
+      const [year, month, day] = self.lastDay();
       return (
         !year ||
         !month ||
@@ -192,17 +191,17 @@ const G = (gallery) => {
         (year) => year < currentYear
       );
       if (previousYears.length === 0) {
-        return currentYear - 1;
+        return currentYear;
       }
       return Math.max(...previousYears);
     },
-    previousYearMonth: (currentYear, currentMonth) => {
+    previousMonth: (currentYear, currentMonth) => {
       if (!("photos" in gallery)) {
         return undefined;
       }
       let year = currentYear;
       let month = currentMonth;
-      while (!self.isFirstYearMonth(year, month)) {
+      while (!self.isFirstMonth(year, month)) {
         month--;
         if (month === 0) {
           month = 12;
@@ -212,19 +211,16 @@ const G = (gallery) => {
           return [year, month];
         }
       }
-      if (currentMonth > 1) {
-        return [currentYear, currentMonth - 1];
-      }
-      return [currentYear - 1, 12];
+      return [currentYear, currentMonth];
     },
-    previousYearMonthDay: (currentYear, currentMonth, currentDay) => {
+    previousDay: (currentYear, currentMonth, currentDay) => {
       if (!("photos" in gallery)) {
         return undefined;
       }
       let year = currentYear;
       let month = currentMonth;
       let day = currentDay;
-      while (!self.isFirstYearMonthDay(year, month)) {
+      while (!self.isFirstDay(year, month)) {
         day--;
         if (day === 0) {
           month--;
@@ -242,21 +238,7 @@ const G = (gallery) => {
           return [year, month, day];
         }
       }
-      if (currentDay > 1) {
-        return [currentYear, currentMonth, currentDay - 1];
-      }
-      if (currentMonth > 1) {
-        return [
-          currentYear,
-          currentMonth - 1,
-          calendar.getDaysInMonth(currentYear, currentMonth - 1),
-        ];
-      }
-      return [
-        currentYear - 1,
-        12,
-        calendar.getDaysInMonth(currentYear - 1, 11),
-      ];
+      return [currentYear, currentMonth, currentDay];
     },
     nextYear: (currentYear) => {
       if (!("photos" in gallery)) {
@@ -266,17 +248,17 @@ const G = (gallery) => {
         (year) => year > currentYear
       );
       if (nextYears.length < 1) {
-        return currentYear + 1;
+        return currentYear;
       }
       return Math.min(...nextYears);
     },
-    nextYearMonth: (currentYear, currentMonth) => {
+    nextMonth: (currentYear, currentMonth) => {
       if (!("photos" in gallery)) {
         return undefined;
       }
       let year = currentYear;
       let month = currentMonth;
-      while (!self.isLastYearMonth(year, month)) {
+      while (!self.isLastMonth(year, month)) {
         month++;
         if (month > 12) {
           month = 1;
@@ -286,19 +268,16 @@ const G = (gallery) => {
           return [year, month];
         }
       }
-      if (currentMonth < 12) {
-        return [currentYear, currentMonth + 1];
-      }
-      return [currentYear + 1, 1];
+      return [currentYear, currentMonth];
     },
-    nextYearMonthDay: (currentYear, currentMonth, currentDay) => {
+    nextDay: (currentYear, currentMonth, currentDay) => {
       if (!("photos" in gallery)) {
         return undefined;
       }
       let year = currentYear;
       let month = currentMonth;
       let day = currentDay;
-      while (!self.isLastYearMonthDay(year, month, day)) {
+      while (!self.isLastDay(year, month, day)) {
         day++;
         if (day > calendar.getDaysInMonth(year, month)) {
           month++;
@@ -312,62 +291,80 @@ const G = (gallery) => {
           return [year, month, day];
         }
       }
-      if (currentDay < calendar.getDaysInMonth(currentYear, currentMonth)) {
-        return [currentYear, currentMonth, currentDay + 1];
-      }
-      if (currentMonth < 12) {
-        return [currentYear, currentMonth + 1, 1];
-      }
-      return [currentYear + 1, 1, 1];
+      return [currentYear, currentMonth, currentDay];
     },
 
-    getCurrentPhotoIndex: (year, month, day, currentPhoto) => {
+    currentPhotoIndex: (year, month, day, currentPhoto) => {
       const currentDayPhotos = gallery.photos[year][month][day];
       const currentIndex = currentDayPhotos.findIndex(
         (photo) => photo.id === currentPhoto.id
       );
       return currentIndex;
     },
-    getPreviousPhoto: (year, month, day, photo) => {
+    firstPhoto: () => {
+      const [firstYear, firstMonth, firstDay] = self.firstDay();
+      const firstDayPhotos = self.photos(firstYear, firstMonth, firstDay);
+      if (firstDayPhotos.length > 0) {
+        return firstDayPhotos[0];
+      }
+      return undefined;
+    },
+    previousPhoto: (year, month, day, photo) => {
       const currentDayPhotos = gallery.photos[year][month][day];
-      const currentIndex = self.getCurrentPhotoIndex(year, month, day, photo);
+      const currentIndex = self.currentPhotoIndex(year, month, day, photo);
       if (currentIndex > 0) {
         return currentDayPhotos[currentIndex - 1];
       }
-      const [
-        previousYear,
-        previousMonth,
-        previousDay,
-      ] = self.previousYearMonthDay(year, month, day);
-      if (!previousYear || !previousMonth || !previousDay) {
-        return undefined;
-      }
-      const previousDayPhotos =
-        gallery.photos[previousYear][previousMonth][previousDay];
-      if (!previousDayPhotos || previousDayPhotos.length === 0) {
-        return undefined;
-      }
-      return previousDayPhotos[previousDayPhotos.length - 1];
-    },
-    getNextPhoto: (year, month, day, photo) => {
-      const currentDayPhotos = gallery.photos[year][month][day];
-      const currentIndex = self.getCurrentPhotoIndex(year, month, day, photo);
-      if (currentIndex < currentDayPhotos.length - 1) {
-        return currentDayPhotos[currentIndex + 1];
-      }
-      const [nextYear, nextMonth, nextDay] = self.nextYearMonthDay(
+      const [previousYear, previousMonth, previousDay] = self.previousDay(
         year,
         month,
         day
       );
-      if (!nextYear || !nextMonth || !nextDay) {
-        return undefined;
+      if (
+        !previousYear ||
+        !previousMonth ||
+        !previousDay ||
+        (previousYear === year &&
+          previousMonth === month &&
+          previousDay === day)
+      ) {
+        return photo;
+      }
+      const previousDayPhotos =
+        gallery.photos[previousYear][previousMonth][previousDay];
+      if (!previousDayPhotos || previousDayPhotos.length === 0) {
+        return photo;
+      }
+      return previousDayPhotos[previousDayPhotos.length - 1];
+    },
+    nextPhoto: (year, month, day, photo) => {
+      const currentDayPhotos = gallery.photos[year][month][day];
+      const currentIndex = self.currentPhotoIndex(year, month, day, photo);
+      if (currentIndex < currentDayPhotos.length - 1) {
+        return currentDayPhotos[currentIndex + 1];
+      }
+      const [nextYear, nextMonth, nextDay] = self.nextDay(year, month, day);
+      if (
+        !nextYear ||
+        !nextMonth ||
+        !nextDay ||
+        (nextYear === year && nextMonth === month && nextDay === day)
+      ) {
+        return photo;
       }
       const nextDayPhotos = gallery.photos[nextYear][nextMonth][nextDay];
       if (!nextDayPhotos || nextDayPhotos.length === 0) {
-        return undefined;
+        return photo;
       }
       return nextDayPhotos[0];
+    },
+    lastPhoto: () => {
+      const [lasstYear, lasstMonth, lastDay] = self.lastDay();
+      const lastDayPhotos = self.photos(lasstYear, lasstMonth, lastDay);
+      if (lastDayPhotos.length > 0) {
+        return lastDayPhotos[lastDayPhotos.length - 1];
+      }
+      return undefined;
     },
   };
   return self;

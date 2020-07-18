@@ -3,7 +3,7 @@ import { Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 
 const ViewFull = ({ gallery }) => {
-  const path = gallery.getLastPath();
+  const path = gallery.lastPath();
   return <Redirect to={path} />;
 };
 

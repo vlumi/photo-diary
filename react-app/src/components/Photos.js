@@ -8,7 +8,7 @@ const Photos = ({ children, gallery, photos }) => {
     <div className="photos">
       {photos.map((photo, index) => {
         return (
-          <div key={photo.id} className="photo-block">
+          <div key={photo.id} className="thumbnail-block">
             {index === 0 ? children : ""}
             <Photo gallery={gallery} photo={photo} />
           </div>

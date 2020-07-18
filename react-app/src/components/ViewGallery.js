@@ -11,9 +11,9 @@ import ViewDay from "./ViewDay";
 
 import G from "../utils/gallery";
 import theme from "../utils/theme";
-import GalleryPhoto from "./GalleryPhoto";
+import ViewPhoto from "./ViewPhoto";
 
-const Gallery = () => {
+const ViewGallery = () => {
   const [gallery, setGallery] = React.useState(undefined);
 
   const galleryId = useParams().galleryId;
@@ -40,17 +40,17 @@ const Gallery = () => {
       </>
     );
   }
+
   if (!gallery.includesPhotos()) {
     return <></>;
   }
-
   if (photoId) {
-    const photo = gallery.findPhoto(year, month, day, photoId);
+    const photo = gallery.photo(year, month, day, photoId);
     if (!photo) {
       return <></>;
     }
     return (
-      <GalleryPhoto
+      <ViewPhoto
         gallery={gallery}
         year={year}
         month={month}
@@ -74,4 +74,4 @@ const Gallery = () => {
     </>
   );
 };
-export default Gallery;
+export default ViewGallery;

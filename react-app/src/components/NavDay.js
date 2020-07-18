@@ -5,25 +5,25 @@ import DateLink from "./DateLink";
 import GalleryLink from "./GalleryLink";
 
 const NavDay = ({ gallery, year, month, day }) => {
-  const prevStyle = gallery.isFirstYearMonthDay(year, month, day)
+  const prevStyle = gallery.isFirstDay(year, month, day)
     ? { visibility: "hidden" }
     : {};
-  const nextStyle = gallery.isLastYearMonthDay(year, month, day)
+  const nextStyle = gallery.isLastDay(year, month, day)
     ? { visibility: "hidden" }
     : {};
 
-  const [firstYear, firstMonth, firstDay] = gallery.firstYearMonthDay();
+  const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [
     previousYear,
     previousMonth,
     previousDay,
-  ] = gallery.previousYearMonthDay(year, month, day);
-  const [nextYear, nextMonth, nextDay] = gallery.nextYearMonthDay(
+  ] = gallery.previousDay(year, month, day);
+  const [nextYear, nextMonth, nextDay] = gallery.nextDay(
     year,
     month,
     day
   );
-  const [lastYear, lastMonth, lastDay] = gallery.lastYearMonthDay();
+  const [lastYear, lastMonth, lastDay] = gallery.lastDay();
   return (
     <h2>
       <span title="First day" style={prevStyle}>

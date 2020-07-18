@@ -5,17 +5,17 @@ import DateLink from "./DateLink";
 import GalleryLink from "./GalleryLink";
 
 const NavMonth = ({ gallery, year, month }) => {
-  const prevStyle = gallery.isFirstYearMonth(year, month)
+  const prevStyle = gallery.isFirstMonth(year, month)
     ? { visibility: "hidden" }
     : {};
-  const nextStyle = gallery.isLastYearMonth(year, month)
+  const nextStyle = gallery.isLastMonth(year, month)
     ? { visibility: "hidden" }
     : {};
 
-  const [firstYear, firstMonth] = gallery.firstYearMonth();
-  const [previousYear, previousMonth] = gallery.previousYearMonth(year, month);
-  const [nextYear, nextMonth] = gallery.nextYearMonth(year, month);
-  const [lastYear, lastMonth] = gallery.lastYearMonth();
+  const [firstYear, firstMonth] = gallery.firstMonth();
+  const [previousYear, previousMonth] = gallery.previousMonth(year, month);
+  const [nextYear, nextMonth] = gallery.nextMonth(year, month);
+  const [lastYear, lastMonth] = gallery.lastMonth();
   return (
     <h2>
       <span title="First month" style={prevStyle}>

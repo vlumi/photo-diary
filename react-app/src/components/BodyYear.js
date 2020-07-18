@@ -32,7 +32,7 @@ const BodyYear = ({ gallery, year }) => {
             ) : photoCount > 0 ? (
               <Link
                 key={`${calendar.formatDate({ year, month, day })}`}
-                to={gallery.getPath(year, month, day)}
+                to={gallery.path(year, month, day)}
                 title={`${calendar.formatDate({
                   year,
                   month,
@@ -84,7 +84,7 @@ const BodyYear = ({ gallery, year }) => {
           <div>
             <h3>
               {gallery.includesMonth(year, month) ? (
-                <Link to={gallery.getPath(year, month)}>{month}</Link>
+                <Link to={gallery.path(year, month)}>{month}</Link>
               ) : (
                 month
               )}

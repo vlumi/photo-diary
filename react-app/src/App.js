@@ -8,8 +8,8 @@ import {
 
 import "./App.css";
 
-import Galleries from "./components/Galleries";
-import Gallery from "./components/Gallery";
+import ListGalleries from "./components/ListGalleries";
+import ViewGallery from "./components/ViewGallery";
 import Stats from "./components/Stats";
 
 import galleryService from "./services/galleries";
@@ -35,16 +35,16 @@ const App = () => {
       <Router>
         <Switch>
           <Route path="/g/:galleryId/:year/:month/:day/:photoId">
-            <Gallery galleries={galleries} />
+            <ViewGallery galleries={galleries} />
           </Route>
           <Route path="/g/:galleryId/:year?/:month?/:day?">
-            <Gallery galleries={galleries} />
+            <ViewGallery galleries={galleries} />
           </Route>
           <Route path="/g">
             {config.DEFAULT_GALLERY ? (
               <Redirect to={`/g/${config.DEFAULT_GALLERY}`} />
             ) : (
-              <Galleries galleries={galleries} />
+              <ListGalleries galleries={galleries} />
             )}
           </Route>
           <Route path="/stats/:galleryId">

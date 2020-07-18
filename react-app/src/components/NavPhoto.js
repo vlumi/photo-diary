@@ -4,23 +4,25 @@ import PropTypes from "prop-types";
 import GalleryLink from "./GalleryLink";
 import DateLink from "./DateLink";
 
-const NavGalleryPhoto = ({ gallery, year, month, day, photo }) => {
-  const [firstYear, firstMonth, firstDay] = gallery.firstYearMonthDay();
-  const [lastYear, lastMonth, lastDay] = gallery.lastYearMonthDay();
+const NavPhoto = ({ gallery, year, month, day, photo }) => {
+  const [firstYear, firstMonth, firstDay] = gallery.firstDay();
+  const [lastYear, lastMonth, lastDay] = gallery.lastDay();
 
-  const firstDayPhotos = gallery.getPhotos(firstYear, firstMonth, firstDay);
+  const firstDayPhotos = gallery.photos(firstYear, firstMonth, firstDay);
   const firstPhoto = firstDayPhotos[0];
 
-  const previousPhoto = gallery.getPreviousPhoto(year, month, day, photo);
-  const nextPhoto = gallery.getNextPhoto(year, month, day, photo);
+  const previousPhoto = gallery.previousPhoto(year, month, day, photo);
+  const nextPhoto = gallery.nextPhoto(year, month, day, photo);
 
-  const prevStyle = previousPhoto ? {} : { visibility: "hidden" };
-  const nextStyle = nextPhoto ? {} : { visibility: "hidden" };
+  const prevStyle =
+    previousPhoto && previousPhoto === photo ? { visibility: "hidden" } : {};
+  const nextStyle =
+    nextPhoto && nextPhoto === photo ? { visibility: "hidden" } : {};
 
-  const lastDayPhotos = gallery.getPhotos(lastYear, lastMonth, lastDay);
+  const lastDayPhotos = gallery.photos(lastYear, lastMonth, lastDay);
   const lastPhoto = lastDayPhotos[lastDayPhotos.length - 1];
   return (
-    <h2>
+    <h2 className="photo">
       <span title="First photo" style={prevStyle}>
         <GalleryLink gallery={gallery} photo={firstPhoto}>
           ⇤
@@ -48,11 +50,11 @@ const NavGalleryPhoto = ({ gallery, year, month, day, photo }) => {
     </h2>
   );
 };
-NavGalleryPhoto.propTypes = {
+NavPhoto.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
 };
-export default NavGalleryPhoto;
+export default NavPhoto;

@@ -2,12 +2,12 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 
-import NavDay from "./NavDay";
-import BodyDay from "./BodyDay";
+import NavPhoto from "./NavPhoto";
+import BodyPhoto from "./BodyPhoto";
 
 import useKeyPress from "../utils/keypress";
 
-const ViewDay = ({ gallery, year, month, day }) => {
+const ViewPhoto = ({ gallery, year, month, day, photo }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const escapePress = useKeyPress("Escape");
@@ -25,25 +25,29 @@ const ViewDay = ({ gallery, year, month, day }) => {
   React.useEffect(() => {
     if (homePress) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.firstDay()));
+      setRedirect(gallery.photoPath(gallery.firstPhoto()));
     }
   }, [homePress]);
   React.useEffect(() => {
     if (leftPress) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.previousDay(year, month, day)));
+      setRedirect(
+        gallery.photoPath(gallery.previousPhoto(year, month, day, photo))
+      );
     }
   }, [leftPress]);
   React.useEffect(() => {
     if (rightPress) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.nextDay(year, month, day)));
+      setRedirect(
+        gallery.photoPath(gallery.nextPhoto(year, month, day, photo))
+      );
     }
   }, [rightPress]);
   React.useEffect(() => {
     if (endPress) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.lastDay()));
+      setRedirect(gallery.photoPath(gallery.lastPhoto()));
     }
   }, [endPress]);
 
@@ -54,16 +58,22 @@ const ViewDay = ({ gallery, year, month, day }) => {
 
   return (
     <>
-      <NavDay gallery={gallery} year={year} month={month} day={day} />
-      <BodyDay gallery={gallery} year={year} month={month} day={day} />
-      <NavDay gallery={gallery} year={year} month={month} day={day} />
+      <NavPhoto
+        gallery={gallery}
+        year={year}
+        month={month}
+        day={day}
+        photo={photo}
+      />
+      <BodyPhoto photo={photo} />
     </>
   );
 };
-ViewDay.propTypes = {
+ViewPhoto.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
+  photo: PropTypes.object.isRequired,
 };
-export default ViewDay;
+export default ViewPhoto;

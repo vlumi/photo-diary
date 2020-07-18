@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 import G from "../utils/gallery";
 
-const Galleries = ({ galleries }) => {
+const ListGalleries = ({ galleries }) => {
   return (
     <>
       {/* TODO: design */}
@@ -14,8 +14,8 @@ const Galleries = ({ galleries }) => {
           .map((gallery) => G(gallery))
           .map((gallery) => {
             return (
-              <li key={gallery.getId()}>
-                <Link to={gallery.getPath()}>{gallery.getTitle()}</Link>
+              <li key={gallery.id()}>
+                <Link to={gallery.path()}>{gallery.title()}</Link>
               </li>
             );
           })}
@@ -23,7 +23,7 @@ const Galleries = ({ galleries }) => {
     </>
   );
 };
-Galleries.propTypes = {
+ListGalleries.propTypes = {
   galleries: PropTypes.array.isRequired,
 };
-export default Galleries;
+export default ListGalleries;
