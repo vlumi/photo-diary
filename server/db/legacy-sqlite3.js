@@ -91,23 +91,28 @@ const loadGalleryPhotos = async (galleryId) => {
   const getQuery = () => {
     const columns = SCHEMA.photo.join(",");
     const baseQuery = `SELECT ${columns} FROM photo`;
+    const order = " ORDER BY taken ASC, name ASC";
     switch (galleryId) {
       case CONST.SPECIAL_GALLERY_ALL:
         return baseQuery;
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
-          baseQuery + " WHERE name IN (SELECT photo_name FROM photo_gallery)"
+          baseQuery +
+          " WHERE name IN (SELECT photo_name FROM photo_gallery)" +
+          order
         );
       case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
           baseQuery +
-          " WHERE name NOT IN (SELECT photo_name FROM photo_gallery)"
+          " WHERE name NOT IN (SELECT photo_name FROM photo_gallery)" +
+          order
         );
       default:
         return (
           baseQuery +
           " JOIN photo_gallery ON photo.name=photo_gallery.photo_name" +
-          " WHERE photo_gallery.gallery_name = ?"
+          " WHERE photo_gallery.gallery_name = ?" +
+          order
         );
     }
   };
@@ -135,7 +140,7 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
   const getQuery = () => {
     const columns = SCHEMA.photo.join(",");
     const baseQuery = `SELECT ${columns} FROM photo`;
-    const order = " ORDER BY taken, id";
+    const order = " ORDER BY taken ASC, name ASC";
     switch (galleryId) {
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
