@@ -7,7 +7,7 @@ const G = (gallery) => {
     title: () => gallery.title,
     path: (year, month, day, photo) => {
       const parts = ["", "g", gallery.id];
-      const ymd = calendar.formatDate({ year, month, day, separator: "/" });
+      const ymd = calendar.format({ year, month, day, separator: "/" });
       if (ymd) {
         parts.push(ymd);
         if (photo) {
@@ -228,7 +228,7 @@ const G = (gallery) => {
             month = 12;
             year--;
           }
-          day = calendar.getDaysInMonth(year, month);
+          day = calendar.daysInMonth(year, month);
         }
         if (
           year in gallery.photos &&
@@ -279,7 +279,7 @@ const G = (gallery) => {
       let day = currentDay;
       while (!self.isLastDay(year, month, day)) {
         day++;
-        if (day > calendar.getDaysInMonth(year, month)) {
+        if (day > calendar.daysInMonth(year, month)) {
           month++;
           if (month > 12) {
             month = 1;

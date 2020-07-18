@@ -20,7 +20,7 @@ const GalleryYearBody = ({ gallery, year }) => {
         const heat = calculateHeat(photoCount);
         return (
           <td
-            key={`day ${calendar.formatDate({
+            key={`day ${calendar.format({
               year,
               month,
               day,
@@ -31,9 +31,9 @@ const GalleryYearBody = ({ gallery, year }) => {
               <></>
             ) : photoCount > 0 ? (
               <Link
-                key={`${calendar.formatDate({ year, month, day })}`}
+                key={`${calendar.format({ year, month, day })}`}
                 to={gallery.path(year, month, day)}
-                title={`${calendar.formatDate({
+                title={`${calendar.format({
                   year,
                   month,
                   day,
@@ -49,7 +49,7 @@ const GalleryYearBody = ({ gallery, year }) => {
       };
 
       return (
-        <tr key={`grid ${calendar.formatDate({ year, month })} ${rowIndex}`}>
+        <tr key={`grid ${calendar.format({ year, month })} ${rowIndex}`}>
           {row.map((day, cellIndex) => {
             return produceDayCell(day, cellIndex);
           })}
@@ -62,14 +62,14 @@ const GalleryYearBody = ({ gallery, year }) => {
         <table>
           <thead>
             <tr>
-              {calendar.getDaysOfWeek().map((dow) => (
+              {calendar.daysOfWeek().map((dow) => (
                 <th key={"head" + year + month + dow}>{dow}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {calendar
-              .getMonthGrid(year, month)
+              .monthGrid(year, month)
               .map((row, index) => produceWeekRow(row, index))}
           </tbody>
         </table>
@@ -79,7 +79,7 @@ const GalleryYearBody = ({ gallery, year }) => {
 
   return (
     <>
-      {calendar.getMonths().map((month) => (
+      {calendar.months().map((month) => (
         <div key={"calendar" + year + month} className="calendar">
           <div>
             <h3>

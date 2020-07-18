@@ -5,8 +5,8 @@ This server implements the RESTful API of the Photo Diary
 ## Requirements
 
 - Recent [Node.js](https://nodejs.org) stack
-  - [npm](https://www.npmjs.com/) (tested on 6.14.5)
-  - [Node.js](https://nodejs.org) (tested on 14.5.0)
+  - [npm](https://www.npmjs.com/) (tested on 6.14.6)
+  - [Node.js](https://nodejs.org) (tested on 14.6.0)
 - Dependencies
   - [Express](https://expressjs.com/) (tested on 4.17.1)
   - Check `package.json` for more detailed dependencies
@@ -27,15 +27,15 @@ Certain parameters are passed through environment veriables. These can be either
 - `DB_DRIVER` \*
   - The driver to use for the backend DB connection.
   - Currently implemented:
-    - `dummy` -- data hard-coded into the driver, for testing purposes only
-    - `legacy_sqlite3` -- DB from [gallery](https://github.com/vlumi/gallery)
+    - `dummy` – data hard-coded into the driver, for testing purposes only
+    - `legacy_sqlite3` – DB from [gallery](https://github.com/vlumi/gallery)
       - No ACL (no admin access support, everyone has global view access)
       - Limited photo property support (e.g. gear)
     - TBD: modernized `sqlite3`, `postgresql`, etc.
 - `DB_OPTS` (\* depends on `DB_DRIVER`)
   - This parameter will be passed to the `DB_DRIVER` during connection.
-    - `dummy` -- Not used
-    - `legacy_sqlite3` -- Path to the DB file
+    - `dummy` – Not used
+    - `legacy_sqlite3` – Path to the DB file
 
 ### Examples
 

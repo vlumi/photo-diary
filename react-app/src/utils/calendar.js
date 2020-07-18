@@ -1,6 +1,6 @@
 import config from "./config";
 
-const formatDate = ({ year, month, day, separator = "-" }) => {
+const format = ({ year, month, day, separator = "-" }) => {
   const pad = (value, length) => String(value).padStart(length, "0");
 
   const parts = [];
@@ -16,23 +16,26 @@ const formatDate = ({ year, month, day, separator = "-" }) => {
   return parts.join(separator);
 };
 
-const getDaysInMonth = (year, month) => {
+const daysInMonth = (year, month) => {
   return new Date(year, month, 0).getDate();
 };
 
-const getMonths = () => Array.from(Array(13).keys()).slice(1);
+const months = () => Array.from(Array(13).keys()).slice(1);
 
-const getMonthDays = (year, month) =>
-  Array.from(Array(getDaysInMonth(year, month) + 1).keys()).slice(1);
+const monthDays = (year, month) =>
+  Array.from(Array(daysInMonth(year, month) + 1).keys()).slice(1);
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const getDaysOfWeek = () =>
+const daysOfWeek = () =>
   Array(7)
     .fill(0)
     .map((x, index) => DOW[(index + config.FIRST_WEEKDAY) % 7]);
+const dayOfWeek = (year, month, day) => {
+  return DOW[new Date(year, month - 1, day).getDay()];
+};
 
-const getMonthGrid = (year, month) => {
-  const days = getMonthDays(year, month);
+const monthGrid = (year, month) => {
+  const days = monthDays(year, month);
   const firstDow = new Date(year, month - 1, 1).getDay();
 
   const result = [];
@@ -51,11 +54,12 @@ const getMonthGrid = (year, month) => {
 };
 
 export default {
-  formatDate,
+  format,
 
-  getDaysInMonth,
-  getMonths,
-  getMonthDays,
-  getDaysOfWeek,
-  getMonthGrid,
+  daysInMonth,
+  months,
+  monthDays,
+  daysOfWeek,
+  dayOfWeek,
+  monthGrid,
 };

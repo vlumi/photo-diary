@@ -4,6 +4,8 @@ import PropTypes from "prop-types";
 import GalleryThumbnails from "./GalleryThumbnails";
 import GalleryLink from "./GalleryLink";
 
+import calendar from "../utils/calendar";
+
 const GalleryMonthBody = ({ gallery, year, month }) => {
   const hasContent = gallery.includesMonth(year, month);
 
@@ -24,6 +26,7 @@ const GalleryMonthBody = ({ gallery, year, month }) => {
             >
               {day}
             </GalleryLink>
+            <span>{calendar.dayOfWeek(year, month, day)}</span>
           </h3>
         </GalleryThumbnails>
       );

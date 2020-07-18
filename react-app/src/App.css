@@ -1,40 +1,3 @@
-.blue-theme {
-  --primary-color: #000;
-  --primary-background: #ddf;
-  --inactive-color: #999;
-  --header-color: #fff;
-  --header-background: #004;
-  --none-color: #ddf;
-  --low-color: #cce;
-  --medium-color: #bbd;
-  --high-color: #aac;
-  --extreme-color: #99b;
-}
-.red-theme {
-  --primary-color: #000;
-  --primary-background: #fdd;
-  --inactive-color: #999;
-  --header-color: #fff;
-  --header-background: #500;
-  --none-color: #fdd;
-  --low-color: #ecc;
-  --medium-color: #dbb;
-  --high-color: #caa;
-  --extreme-color: #b99;
-}
-.grayscale-theme {
-  --primary-color: #000;
-  --primary-background: #ddd;
-  --inactive-color: #999;
-  --header-color: #fff;
-  --header-background: #333;
-  --none-color: #fff;
-  --low-color: #eee;
-  --medium-color: #ddd;
-  --high-color: #ccc;
-  --extreme-color: #bbb;
-}
-
 body {
   color: var(--primary-color);
   background: var(--primary-background);
@@ -96,6 +59,13 @@ h3 > :link {
 }
 h3 > :visited {
   color: var(--header-color);
+}
+h3 > span {
+  display: block;
+  font-size: 8pt;
+  margin: 0;
+  color: var(--header-sub-color);
+  background: inherit;
 }
 
 .calendar > div {
@@ -254,7 +224,7 @@ div.photo {
   position: relative;
   z-index: 100;
   width: 100%;
-  margin: 50px 1px ;
+  margin: 50px 1px;
 }
 
 span.photo {

@@ -6,6 +6,7 @@ import {
   Redirect,
 } from "react-router-dom";
 
+import "./themes.css";
 import "./App.css";
 
 import Galleries from "./components/Galleries";
