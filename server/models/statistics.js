@@ -254,39 +254,17 @@ const updateGear = (byGear, photo) => {
     return CONST.STATS_UNKNOWN;
   };
 
-  // TODO: remove this when filters are implemented
-  const updateGearData = (root) => {
-    root.total = root.total || 0;
-    root.total++;
-    root.byTime = root.byTime || {};
-    updateTimeDistribution(
-      root.byTime,
-      photo.taken.instant.year,
-      photo.taken.instant.month,
-      photo.taken.instant.day,
-      photo.taken.instant.hour
-    );
-    root.byExposure = root.byExposure || {};
-    updateExposureDistribution(root.byExposure, photo.exposure);
-  };
-
   const camera = buildName(photo.camera.make, photo.camera.model);
   const lens = buildName(photo.lens.make, photo.lens.model);
-  if (camera) {
+  if (camera && camera !== CONST.STATS_UNKNOWN) {
     byGear.byCamera = byGear.byCamera || {};
-    byGear.byCamera[camera] = byGear.byCamera[camera] || {};
-    updateGearData(byGear.byCamera[camera]);
-    if (lens && lens !== CONST.STATS_UNKNOWN) {
-      byGear.byCamera[camera].byLens = byGear.byCamera[camera].byLens || {};
-      const byLens = byGear.byCamera[camera].byLens;
-      byLens[lens] = byLens[lens] || {};
-      updateGearData(byLens[lens]);
-    }
+    byGear.byCamera[camera] = byGear.byCamera[camera] || 0;
+    byGear.byCamera[camera]++;
   }
   if (lens && lens !== CONST.STATS_UNKNOWN) {
     byGear.byLens = byGear.byLens || {};
-    byGear.byLens[lens] = byGear.byLens[lens] || {};
-    updateGearData(byGear.byLens[lens]);
+    byGear.byLens[lens] = byGear.byLens[lens] || 0;
+    byGear.byLens[lens]++;
   }
 };
 

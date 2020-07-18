@@ -8,9 +8,9 @@ This project is intended to create an online photo gallery, with the photos arra
 
 Photo Diary is split into separate independent modules, each handling its own sub-system:
 
-- TBD: app
-- [server](server) – Back-end API.
-- [converter](converter) – Back-end process for pre-processing new photos to be added to the gallery.
+- [react-app](react-app) – Front-end web app
+- [server](server) – Back-end API
+- [converter](converter) – Back-end process for pre-processing new photos to be added to the gallery
 
 ## Roadmap
 
@@ -25,10 +25,10 @@ On par with [gallery](https://github.com/vlumi/gallery).
   - Responsive
   - Read-only
   - Gallery view
+    - Yearly
     - Monthly
+    - Daily
     - Individual photo
-  - Statistics
-    - Simple, static one-time rendering
 
 ### Milestone 0.2
 
@@ -38,9 +38,6 @@ On par with [gallery](https://github.com/vlumi/gallery).
     - More photo metadata
     - Migrate from SQLite -> ???
   - New command-line tool for managing DB content
-- Front-end
-  - Gallery view
-    - Yearly
 
 ### Milestone 0.3
 
@@ -178,3 +175,32 @@ This features would be nice to have, but are too far into the future to put on t
       - Create, update, delete galleries
       - Add, update, link, remove orphaned photos
       - Add, update, remove users
+
+## Version History
+
+- 0.1.0 (TBD)
+  - New front-end app
+    - Read-only views for browsing/viewing
+      - Front page with list of galleries
+        - Can be skipped by setting a default gallery
+      - Year view
+        - Optionally all years by setting the year parameter negative
+        - Calendar layout, with days heat-mapped by number of photos
+      - Month view
+        - Photos group by day, same as [gallery](https://github.com/vlumi/gallery)
+      - Day view
+        - Same as month view, but restricted to a single day
+      - Single photo view
+        - A single photo in larger size with properties
+  - Back-end API
+    - RESTful JSON API
+    - Abstract DAO layer for future DB migration
+      - Legacy [gallery](https://github.com/vlumi/gallery), read-only DB driver
+      - Dummy DB driver for unit tests
+    - Currently unused features already implemented
+      - Token-based user and access control
+      - More photo metadata
+  - Dependent on parts of [gallery](https://github.com/vlumi/gallery)
+    - DB
+    - Admin tools
+    - Statistics
