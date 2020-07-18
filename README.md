@@ -178,7 +178,7 @@ This features would be nice to have, but are too far into the future to put on t
 
 ## Version History
 
-- 0.1.0 (TBD)
+- v0.1.0 (2020-07-18)
   - New front-end app
     - Read-only views for browsing/viewing
       - Front page with list of galleries
