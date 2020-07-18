@@ -2,6 +2,8 @@
 
 **This project is a **_work in progress_**.**
 
+Photo Diary is a calendar based gallery for self-hosting.
+
 This project is intended to create an online photo gallery, with the photos arranged by the date they were shot, in monthly views. This will (hopefully, eventually) replace the legacy [gallery](https://github.com/vlumi/gallery).
 
 ## Structure
@@ -13,22 +15,6 @@ Photo Diary is split into separate independent modules, each handling its own su
 - [converter](converter) – Back-end process for pre-processing new photos to be added to the gallery
 
 ## Roadmap
-
-### Milestone 0.1
-
-On par with [gallery](https://github.com/vlumi/gallery).
-
-- Back-end
-  - Read-only
-  - Using existing [gallery](https://github.com/vlumi/gallery) schema
-- Front-end
-  - Responsive
-  - Read-only
-  - Gallery view
-    - Yearly
-    - Monthly
-    - Daily
-    - Individual photo
 
 ### Milestone 0.2
 
