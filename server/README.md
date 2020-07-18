@@ -6,7 +6,7 @@ This server implements the RESTful API of the Photo Diary
 
 - Recent [Node.js](https://nodejs.org) stack
   - [npm](https://www.npmjs.com/) (tested on 6.14.6)
-  - [Node.js](https://nodejs.org) (tested on 14.6.0)
+  - [Node.js](https://nodejs.org) (tested on 14.5.0)
 - Dependencies
   - [Express](https://expressjs.com/) (tested on 4.17.1)
   - Check `package.json` for more detailed dependencies
