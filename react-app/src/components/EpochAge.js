@@ -26,11 +26,11 @@ const EpochAge = ({ gallery, year, month, day }) => {
     return `0${t("days-short")}`;
   }
 
-  return parts.map((part) => (
-    <>
+  return parts.map((part, index) => (
+    <span key={`age-${year}${month}${day}${index}`}>
       {part}
       <br />
-    </>
+    </span>
   ));
 };
 

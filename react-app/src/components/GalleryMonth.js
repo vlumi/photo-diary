@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 import GalleryTitle from "./GalleryTitle";
 import GalleryMonthNav from "./GalleryMonthNav";
@@ -36,13 +37,24 @@ const GalleryMonth = ({ gallery, year, month }) => {
     setRedirect(gallery.path(...gallery.lastMonth()));
   });
 
+  React.useEffect(() => {
+    if (redirect) {
+      const handle = setTimeout(() => setRedirect(""), 0);
+      return () => {
+        setRedirect("");
+        clearTimeout(handle);
+      };
+    }
+  }, [redirect]);
   if (redirect) {
-    setTimeout(() => setRedirect(""), 0);
     return <Redirect to={redirect} />;
   }
 
   return (
     <>
+      <Helmet>
+        <title>{gallery.title(year, month)}</title>
+      </Helmet>
       <GalleryMonthNav gallery={gallery} year={year} month={month} />
       <div className="content">
         <GalleryTitle gallery={gallery} />

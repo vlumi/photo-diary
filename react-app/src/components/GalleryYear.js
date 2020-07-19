@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 import GalleryTitle from "./GalleryTitle";
 import GalleryYearNav from "./GalleryYearNav";
@@ -36,6 +37,19 @@ const GalleryYear = ({ gallery, year }) => {
     setRedirect(gallery.path(gallery.lastYear()));
   });
 
+  React.useEffect(() => {
+    if (redirect) {
+      const handle = setTimeout(() => setRedirect(""), 0);
+      return () => {
+        setRedirect("");
+        clearTimeout(handle);
+      };
+    }
+  }, [redirect]);
+  if (redirect) {
+    return <Redirect to={redirect} />;
+  }
+
   if (year < 0) {
     // TODO: remove?
     return (
@@ -50,13 +64,11 @@ const GalleryYear = ({ gallery, year }) => {
       </>
     );
   } else {
-    if (redirect) {
-      setTimeout(() => setRedirect(""), 0);
-      return <Redirect to={redirect} />;
-    }
-
     return (
       <>
+        <Helmet>
+          <title>{gallery.title(year)}</title>
+        </Helmet>
         <GalleryYearNav gallery={gallery} year={year} />
         <div className="content">
           <GalleryTitle gallery={gallery} />

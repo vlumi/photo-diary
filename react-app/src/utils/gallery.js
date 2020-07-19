@@ -13,7 +13,16 @@ const G = (galleryData) => {
   const photos = gallery.photos || {};
   const self = {
     id: () => gallery.id,
-    title: () => gallery.title,
+    title: (year, month, day, photo) => {
+      const ymd = calendar.formatDate({ year, month, day });
+      if (!ymd) {
+        return gallery.title;
+      }
+      if (!photo) {
+        return `${gallery.title} — ${ymd} `;
+      }
+      return `${gallery.title} — ${ymd} #${photo.index + 1}`;
+    },
     hasEpoch: () => "epoch" in gallery && gallery.epoch,
     epoch: () => gallery.epoch,
     epochYmd: () => {

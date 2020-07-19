@@ -119,7 +119,7 @@ const sinceEpochYmd = (epoch, now) => {
   const [y1, m1, d1] = epoch;
   const [y2, m2, d2] = now;
 
-  if (y1 > y2 || (y1 == y2 && m1 > m2) || (m1 == m2 && y1 > y2)) {
+  if (y1 > y2 || (y1 === y2 && m1 > m2) || (m1 === m2 && y1 > y2)) {
     return [0, 0, 0];
   }
 
@@ -135,10 +135,12 @@ const sinceEpochYmd = (epoch, now) => {
 };
 
 const daysSinceEpoch = (epoch, now) => {
-  const d1 = new Date(...epoch);
-  const d2 = new Date(...now);
+  const [y1, m1, d1] = epoch;
+  const [y2, m2, d2] = now;
+  const date1 = new Date(y1, m1 - 1, d1);
+  const date2 = new Date(y2, m2 - 1, d2);
 
-  const diff = d2 - d1;
+  const diff = date2 - date1;
   return Math.floor(diff / (24 * 60 * 60 * 1000));
 };
 
