@@ -21,7 +21,7 @@ const registerCountryData = (i18n) => {
 };
 
 const GalleryThumbnail = ({ gallery, photo }) => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const url = `url("${config.PHOTO_ROOT}thumbnail/${photo.id}")`;
   const style = {
     width: `${photo.dimensions.thumbnail.width + 10}px`,

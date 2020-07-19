@@ -38,7 +38,6 @@ h2 > span.title {
   flex-shrink: 0;
 }
 h2 > span {
-  /* flex-grow: 1; */
   flex-shrink: 1;
   vertical-align: middle;
 }
@@ -202,52 +201,20 @@ span.thumbnail {
   text-align: left;
 }
 
-div.layer {
-  z-index: -1;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  opacity: 0.5;
-}
-
-h2.photo {
-  color: var(--header-color);
-  background: var(--header-background);
-  opacity: 0.5;
-}
-h2.photo :link {
-  position: relative;
-  z-index: 0;
-  color: var(--header-color);
-}
-h2.photo :visited {
-  color: var(--header-color);
-}
-h2.photo span {
-  position: relative;
-  z-index: 0;
-  padding: 0 1em;
-  display: inline;
-}
-
 div.photo {
+  flex-grow: 1;
   position: relative;
   z-index: 100;
-  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 span.photo {
-  position: relative;
   z-index: 100;
-  display: block;
-  background-repeat: no-repeat;
-  background-position: 5px 5px;
   border: solid #004 1px;
-  margin: 10px auto;
-  padding: 25px;
-  text-align: left;
+  padding: 10px;
   background-color: #bbb;
 }

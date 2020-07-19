@@ -8,18 +8,20 @@ const Galleries = ({ galleries }) => {
   return (
     <>
       {/* TODO: design */}
-      <h2>Pick gallery</h2>
-      <ul>
-        {galleries
-          .map((gallery) => G(gallery))
-          .map((gallery) => {
-            return (
-              <li key={gallery.id()}>
-                <Link to={gallery.path()}>{gallery.title()}</Link>
-              </li>
-            );
-          })}
-      </ul>
+      <h2><span class="title">Pick gallery</span></h2>
+      <div class="content">
+        <ul>
+          {galleries
+            .map((gallery) => G(gallery))
+            .map((gallery) => {
+              return (
+                <li key={gallery.id()}>
+                  <Link to={gallery.path()}>{gallery.title()}</Link>
+                </li>
+              );
+            })}
+        </ul>
+      </div>
     </>
   );
 };

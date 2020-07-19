@@ -2,9 +2,9 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 
+import GalleryTitle from "./GalleryTitle";
 import GalleryYearNav from "./GalleryYearNav";
 import GalleryYearBody from "./GalleryYearBody";
-import GalleryLink from "./GalleryLink";
 
 import useKeyPress from "../utils/keypress";
 
@@ -37,15 +37,13 @@ const GalleryYear = ({ gallery, year }) => {
   });
 
   if (year < 0) {
+    // TODO: remove?
     return (
       <>
+        <GalleryTitle gallery={gallery} />
         {gallery.mapYears((year) => (
+          // TODO: display year number somehow
           <div key={year} className="year">
-            <h2>
-              <GalleryLink gallery={gallery} year={Number(year)}>
-                {year}
-              </GalleryLink>
-            </h2>
             <GalleryYearBody gallery={gallery} year={Number(year)} />
           </div>
         ))}
@@ -58,11 +56,13 @@ const GalleryYear = ({ gallery, year }) => {
     }
 
     return (
-      <div className="year">
+      <>
         <GalleryYearNav gallery={gallery} year={year} />
-        <GalleryYearBody gallery={gallery} year={year} />
-        <GalleryYearNav gallery={gallery} year={year} />
-      </div>
+        <div className="content year">
+          <GalleryTitle gallery={gallery} />
+          <GalleryYearBody gallery={gallery} year={year} />
+        </div>
+      </>
     );
   }
 };

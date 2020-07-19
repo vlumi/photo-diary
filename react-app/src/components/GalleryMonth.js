@@ -41,16 +41,6 @@ const GalleryMonth = ({ gallery, year, month }) => {
     return <Redirect to={redirect} />;
   }
 
-  if (!gallery.includesMonth(year, month)) {
-    return (
-      <p>
-        <GalleryMonthNav gallery={gallery} year={year} month={month} />
-        <GalleryTitle gallery={gallery} />
-        <i>Empty</i>
-      </p>
-    );
-  }
-
   return (
     <>
       <GalleryMonthNav gallery={gallery} year={year} month={month} />

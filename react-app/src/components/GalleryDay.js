@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 
+import GalleryTitle from "./GalleryTitle";
 import GalleryDayNav from "./GalleryDayNav";
 import GalleryDayBody from "./GalleryDayBody";
 
@@ -43,8 +44,10 @@ const GalleryDay = ({ gallery, year, month, day }) => {
   return (
     <>
       <GalleryDayNav gallery={gallery} year={year} month={month} day={day} />
-      <GalleryDayBody gallery={gallery} year={year} month={month} day={day} />
-      <GalleryDayNav gallery={gallery} year={year} month={month} day={day} />
+      <div className="content day">
+        <GalleryTitle gallery={gallery} />
+        <GalleryDayBody gallery={gallery} year={year} month={month} day={day} />
+      </div>
     </>
   );
 };

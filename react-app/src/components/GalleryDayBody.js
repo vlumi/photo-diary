@@ -4,15 +4,19 @@ import PropTypes from "prop-types";
 import GalleryThumbnails from "./GalleryThumbnails";
 
 const GalleryDayBody = ({ gallery, year, month, day }) => {
+  if (!gallery.includesDay(year, month, day)) {
+    return <i>Empty</i>;
+  }
   return (
     <>
-      <div>
-        {gallery.includesDay(year, month, day) ? (
-          <GalleryThumbnails gallery={gallery} photos={gallery.photos(year, month, day)} />
-        ) : (
-          ""
-        )}
-      </div>
+      {gallery.includesDay(year, month, day) ? (
+        <GalleryThumbnails
+          gallery={gallery}
+          photos={gallery.photos(year, month, day)}
+        />
+      ) : (
+        ""
+      )}
     </>
   );
 };
