@@ -5,6 +5,7 @@ import {
   Route,
   Redirect,
 } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 import "./themes.css";
 import "./App.css";
@@ -33,6 +34,9 @@ const App = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Photo diary</title>
+      </Helmet>
       <Router>
         <Switch>
           <Route path="/g/:galleryId/:year/:month/:day/:photoId">
