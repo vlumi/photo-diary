@@ -8,7 +8,8 @@
     "prod": "cross-env NODE_ENV=prod pm2 start index.js",
     "dev": "cross-env NODE_ENV=dev nodemon run index.js",
     "test": "cross-env DB_DRIVER=dummy NODE_ENV=test jest --runInBand --detectOpenHandles --forceExit --verbose",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build:ui": "rm -rf build && cd ../react-app && npm run build --prod && cp -r build ../server/"
   },
   "author": "Ville Misaki",
   "license": "MIT",
@@ -18,7 +19,7 @@
     "cors": "^2.8.5",
     "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
-    "eslint": "^7.4.0",
+    "eslint": "^7.5.0",
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
     "http-status-codes": "^1.4.0",
