@@ -20,7 +20,20 @@ const daysInMonth = (year, month) => {
   return new Date(year, month, 0).getDate();
 };
 
-const months = () => Array.from(Array(13).keys()).slice(1);
+const months = (year, firstYear, firstMonth, lastYear, lastMonth) => {
+  return Array.from(Array(13).keys())
+    .slice(1)
+    .filter(
+      (month) =>
+        !year ||
+        !firstYear ||
+        !firstMonth ||
+        !lastYear ||
+        !lastMonth ||
+        ((year > firstYear || (year === firstYear && month >= firstMonth)) &&
+          (year < lastYear || (year === lastYear && month <= lastMonth)))
+    );
+};
 
 const monthDays = (year, month) =>
   Array.from(Array(daysInMonth(year, month) + 1).keys()).slice(1);

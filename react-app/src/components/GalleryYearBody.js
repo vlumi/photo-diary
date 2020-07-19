@@ -82,7 +82,7 @@ const GalleryYearBody = ({ gallery, year }) => {
 
   return (
     <>
-      {calendar.months().map((month) => (
+      {calendar.months(year, ...gallery.firstMonth(), ...gallery.lastMonth()).map((month) => (
         <div key={"calendar" + year + month} className="calendar">
           <div>
             <h3>
