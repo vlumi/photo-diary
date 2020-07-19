@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import calendar from "../utils/calendar";
 
@@ -13,6 +14,7 @@ const calculateHeat = (photos) => {
 };
 
 const GalleryYearBody = ({ gallery, year }) => {
+  const { t } = useTranslation();
   const produceMonthGrid = (month) => {
     const produceWeekRow = (row, rowIndex) => {
       const produceDayCell = (day, index) => {
@@ -57,13 +59,14 @@ const GalleryYearBody = ({ gallery, year }) => {
       );
     };
 
+
     return (
       <div className="calendar-grid">
         <table>
           <thead>
             <tr>
               {calendar.daysOfWeek().map((dow) => (
-                <th key={"head" + year + month + dow}>{dow}</th>
+                <th key={"head" + year + month + dow}>{t(`weekday-short-${dow}`)}</th>
               ))}
             </tr>
           </thead>

@@ -14,12 +14,12 @@ const GalleryYearNav = ({ gallery, year }) => {
   const lastYear = gallery.lastYear();
   return (
     <h2>
-      <span title="First year" style={prevStyle}>
+      <span style={prevStyle}>
         <GalleryLink gallery={gallery} year={firstYear}>
           ⇤
         </GalleryLink>
       </span>
-      <span title="Previous year" style={prevStyle}>
+      <span style={prevStyle}>
         <GalleryLink gallery={gallery} year={previousYear}>
           ←
         </GalleryLink>
@@ -27,12 +27,12 @@ const GalleryYearNav = ({ gallery, year }) => {
       <span className="title">
         <DateLink gallery={gallery} year={year} />
       </span>
-      <span title="Next year" style={nextStyle}>
+      <span style={nextStyle}>
         <GalleryLink gallery={gallery} year={nextYear}>
           →
         </GalleryLink>
       </span>
-      <span title="Last year" style={nextStyle}>
+      <span style={nextStyle}>
         <GalleryLink gallery={gallery} year={lastYear}>
           ⇥
         </GalleryLink>

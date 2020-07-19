@@ -23,12 +23,12 @@ const GalleryPhotoNav = ({ gallery, year, month, day, photo }) => {
   const lastPhoto = lastDayPhotos[lastDayPhotos.length - 1];
   return (
     <h2 className="photo">
-      <span title="First photo" style={prevStyle}>
+      <span style={prevStyle}>
         <GalleryLink gallery={gallery} photo={firstPhoto}>
           ⇤
         </GalleryLink>
       </span>
-      <span title="Previous photo" style={prevStyle}>
+      <span style={prevStyle}>
         <GalleryLink gallery={gallery} photo={previousPhoto}>
           ←
         </GalleryLink>
@@ -37,12 +37,12 @@ const GalleryPhotoNav = ({ gallery, year, month, day, photo }) => {
         <DateLink gallery={gallery} year={year} month={month} day={day} /> #
         {photo.index + 1}
       </span>
-      <span title="Next photo" style={nextStyle}>
+      <span style={nextStyle}>
         <GalleryLink gallery={gallery} photo={nextPhoto}>
           →
         </GalleryLink>
       </span>
-      <span title="Last photo" style={nextStyle}>
+      <span style={nextStyle}>
         <GalleryLink gallery={gallery} photo={lastPhoto}>
           ⇥
         </GalleryLink>

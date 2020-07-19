@@ -13,7 +13,7 @@ const GalleryPhotoBody = ({ photo }) => {
   return (
     <>
       <div className="layer"></div>
-      <div className="photo">
+      <div className="photo content">
         <span className="photo" style={style}>
           <img src={path} alt={photo.id} />
         </span>

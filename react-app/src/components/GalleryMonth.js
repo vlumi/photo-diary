@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 
+import GalleryTitle from "./GalleryTitle";
 import GalleryMonthNav from "./GalleryMonthNav";
 import GalleryMonthBody from "./GalleryMonthBody";
 
@@ -44,6 +45,7 @@ const GalleryMonth = ({ gallery, year, month }) => {
     return (
       <p>
         <GalleryMonthNav gallery={gallery} year={year} month={month} />
+        <GalleryTitle gallery={gallery} />
         <i>Empty</i>
       </p>
     );
@@ -51,10 +53,10 @@ const GalleryMonth = ({ gallery, year, month }) => {
 
   return (
     <>
-      <div className="month">
-        <GalleryMonthNav gallery={gallery} year={year} month={month} />
+      <GalleryMonthNav gallery={gallery} year={year} month={month} />
+      <div className="content month">
+        <GalleryTitle gallery={gallery} />
         <GalleryMonthBody gallery={gallery} year={year} month={month} />
-        <GalleryMonthNav gallery={gallery} year={year} month={month} />
       </div>
     </>
   );

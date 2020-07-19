@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import GalleryThumbnails from "./GalleryThumbnails";
 import GalleryLink from "./GalleryLink";
@@ -7,10 +8,13 @@ import GalleryLink from "./GalleryLink";
 import calendar from "../utils/calendar";
 
 const GalleryMonthBody = ({ gallery, year, month }) => {
-  const hasContent = gallery.includesMonth(year, month);
+  const { t } = useTranslation();
 
-  const produceContent = () =>
-    gallery.mapDays(year, month, (day) => {
+  const produceContent = () => {
+    if (!gallery.includesMonth(year, month)) {
+      return <></>;
+    }
+    return gallery.mapDays(year, month, (day) => {
       return (
         <GalleryThumbnails
           key={"" + year + month + day}
@@ -26,14 +30,15 @@ const GalleryMonthBody = ({ gallery, year, month }) => {
             >
               {day}
             </GalleryLink>
-            <span>{calendar.dayOfWeek(year, month, day)}</span>
+            <span>{t(`weekday-short-${calendar.dayOfWeek(year, month, day)}`)}</span>
           </h3>
         </GalleryThumbnails>
       );
     });
+  };
   return (
     <>
-      <div>{hasContent ? produceContent() : ""}</div>
+      <div>{produceContent()}</div>
     </>
   );
 };

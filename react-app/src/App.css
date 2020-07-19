@@ -15,17 +15,32 @@ h1 {
   margin: 0;
 }
 h2 {
-  position: relative;
-  z-index: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 101;
   width: 100%;
   height: 50px;
   color: var(--header-color);
   background: var(--header-background);
   font-size: 24pt;
+  font-weight: bold;
   text-align: center;
-  margin: 1px 1px 0;
+  margin: 0;
   padding: 0;
-  clear: both;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+}
+h2 > span.title {
+  flex-grow: 2;
+  flex-shrink: 0;
+}
+h2 > span {
+  /* flex-grow: 1; */
+  flex-shrink: 1;
+  vertical-align: middle;
 }
 h2 :link {
   position: relative;
@@ -40,6 +55,10 @@ h2 span {
   z-index: 0;
   padding: 0 1em;
   display: inline;
+}
+
+#root > .content {
+  margin-top: 50px;
 }
 
 h3 {
@@ -163,11 +182,14 @@ div.thumbnail {
   background-color: #bbb;
 }
 
-div.thumbnail > .flag-icon {
-  display: block;
+div.thumbnail > .flag {
+  display: inline;
   position: relative;
   top: -19px;
   left: 3px;
+}
+div.thumbnail > .flag > .flag-icon {
+  display: block;
 }
 
 span.thumbnail {
@@ -192,17 +214,8 @@ div.layer {
 }
 
 h2.photo {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 101;
   color: var(--header-color);
   background: var(--header-background);
-  font-size: 24pt;
-  font-weight: bold;
-  text-align: center;
-  margin: 0;
-  padding: 0;
   opacity: 0.5;
 }
 h2.photo :link {
@@ -224,7 +237,6 @@ div.photo {
   position: relative;
   z-index: 100;
   width: 100%;
-  margin: 50px 1px;
 }
 
 span.photo {

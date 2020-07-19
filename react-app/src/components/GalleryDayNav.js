@@ -13,20 +13,16 @@ const GalleryDayNav = ({ gallery, year, month, day }) => {
     : {};
 
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
-  const [
-    previousYear,
-    previousMonth,
-    previousDay,
-  ] = gallery.previousDay(year, month, day);
-  const [nextYear, nextMonth, nextDay] = gallery.nextDay(
+  const [previousYear, previousMonth, previousDay] = gallery.previousDay(
     year,
     month,
     day
   );
+  const [nextYear, nextMonth, nextDay] = gallery.nextDay(year, month, day);
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
   return (
     <h2>
-      <span title="First day" style={prevStyle}>
+      <span style={prevStyle}>
         <GalleryLink
           gallery={gallery}
           year={firstYear}
@@ -36,7 +32,7 @@ const GalleryDayNav = ({ gallery, year, month, day }) => {
           ⇤
         </GalleryLink>
       </span>
-      <span title="Previous day" style={prevStyle}>
+      <span style={prevStyle}>
         <GalleryLink
           gallery={gallery}
           year={previousYear}
@@ -49,7 +45,7 @@ const GalleryDayNav = ({ gallery, year, month, day }) => {
       <span className="title">
         <DateLink gallery={gallery} year={year} month={month} day={day} />
       </span>
-      <span title="Next day" style={nextStyle}>
+      <span style={nextStyle}>
         <GalleryLink
           gallery={gallery}
           year={nextYear}
@@ -59,7 +55,7 @@ const GalleryDayNav = ({ gallery, year, month, day }) => {
           →
         </GalleryLink>
       </span>
-      <span title="Last day" style={nextStyle}>
+      <span style={nextStyle}>
         <GalleryLink
           gallery={gallery}
           year={lastYear}
