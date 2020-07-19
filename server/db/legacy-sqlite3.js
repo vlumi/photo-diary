@@ -235,7 +235,7 @@ const mapGalleryRow = (row) => {
     id: toString(row.name),
     title: toString(row.title),
     description: toString(row.description),
-    epoch: toString(row.epoch),
+    epoch: toString(row.epoch).substring(0, 10),
   };
 };
 const mapPhotoRow = (row, index) => {
