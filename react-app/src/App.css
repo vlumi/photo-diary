@@ -165,6 +165,9 @@ h3 > span {
   width: 35px;
   height: 200px;
 }
+.month h3 > span {
+  margin: 5px 0;
+}
 
 .thumbnails {
   vertical-align: top;

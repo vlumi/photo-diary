@@ -115,6 +115,29 @@ const nextDay = (year, month, day) => {
   return [year + 1, 1, 1];
 };
 
+const sinceEpochYmd = (epoch, now) => {
+  const [y1, m1, d1] = epoch;
+  const [y2, m2, d2] = now;
+
+  const years = y2 - y1;
+  const months = (m2 + 12 - m1) % 12;
+  const mdays = daysInMonth(y2, (m2 + 11) % 12);
+  const days = (d2 + mdays - d1) % mdays;
+
+  const yearOffset = m2 < m1 || (m2 === m1 && d2 < d1) ? -1 : 0;
+  const monthOffset = d2 < d1 ? -1 : 0;
+
+  return [years + yearOffset, (months + monthOffset + 12) % 12, days];
+};
+
+const daysSinceEpoch = (epoch, now) => {
+  const d1 = new Date(...epoch);
+  const d2 = new Date(...now);
+
+  const diff = d2 - d1;
+  return Math.floor(diff / (24 * 60 * 60 * 1000));
+};
+
 export default {
   formatDate,
 
@@ -133,4 +156,7 @@ export default {
   nextYear,
   nextMonth,
   nextDay,
+
+  sinceEpochYmd,
+  daysSinceEpoch,
 };

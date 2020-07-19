@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 
 import GalleryThumbnails from "./GalleryThumbnails";
 import GalleryLink from "./GalleryLink";
+import FromEpoch from "./FromEpoch";
+import DayIndex from "./DayIndex";
 
 import calendar from "../utils/calendar";
 
@@ -21,17 +23,35 @@ const GalleryMonthBody = ({ gallery, year, month }) => {
         photos={gallery.photos(year, month, day)}
       >
         <h3>
-          <GalleryLink
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={Number(day)}
-          >
+          <GalleryLink gallery={gallery} year={year} month={month} day={day}>
             {day}
           </GalleryLink>
           <span>
             {t(`weekday-short-${calendar.dayOfWeek(year, month, day)}`)}
           </span>
+          {gallery.hasEpoch() ? (
+            <>
+              {/* TODO: choose from configuration -- make a component */}
+              <span>
+                <FromEpoch
+                  gallery={gallery}
+                  year={year}
+                  month={month}
+                  day={day}
+                />
+              </span>
+              <span>
+                <DayIndex
+                  gallery={gallery}
+                  year={year}
+                  month={month}
+                  day={day}
+                />
+              </span>
+            </>
+          ) : (
+            <></>
+          )}
         </h3>
       </GalleryThumbnails>
     );

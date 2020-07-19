@@ -14,6 +14,15 @@ const G = (galleryData) => {
   const self = {
     id: () => gallery.id,
     title: () => gallery.title,
+    hasEpoch: () => "epoch" in gallery && gallery.epoch,
+    epoch: () => gallery.epoch,
+    epochYmd: () => {
+      return [
+        gallery.epoch.getFullYear(),
+        gallery.epoch.getMonth() + 1,
+        gallery.epoch.getDate(),
+      ];
+    },
     path: (year, month, day, photo) => {
       const parts = ["", "g", gallery.id];
       const ymd = calendar.formatDate({ year, month, day, separator: "/" });
@@ -80,19 +89,19 @@ const G = (galleryData) => {
       return photos[year][month][day].find((photo) => photo.id === photoId);
     },
     mapYears: (f) => {
-      return Object.keys(photos).map(f);
+      return Object.keys(photos).map(Number).map(f);
     },
     mapMonths: (year, f) => {
       if (!self.includesYear(year)) {
         return;
       }
-      return Object.keys(photos[year]).map(f);
+      return Object.keys(photos[year]).map(Number).map(f);
     },
     mapDays: (year, month, f) => {
       if (!self.includesMonth(year, month)) {
         return;
       }
-      return Object.keys(photos[year][month]).map(f);
+      return Object.keys(photos[year][month]).map(Number).map(f);
     },
 
     firstYear: () => {

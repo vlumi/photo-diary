@@ -8,8 +8,8 @@ const Galleries = ({ galleries }) => {
   return (
     <>
       {/* TODO: design */}
-      <h2><span class="title">Pick gallery</span></h2>
-      <div class="content">
+      <h2><span className="title">Pick gallery</span></h2>
+      <div className="content">
         <ul>
           {galleries
             .map((gallery) => G(gallery))
