@@ -25,7 +25,7 @@ const months = () => Array.from(Array(13).keys()).slice(1);
 const monthDays = (year, month) =>
   Array.from(Array(daysInMonth(year, month) + 1).keys()).slice(1);
 
-const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 const daysOfWeek = () =>
   Array(7)
     .fill(0)

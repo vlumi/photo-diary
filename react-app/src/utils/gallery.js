@@ -144,7 +144,7 @@ const G = (galleryData) => {
     },
     isFirstMonth: (currentYear, currentMonth) => {
       return (
-        calendar.compare([currentYear, currentMonth], self.firstMonth()) == 0
+        calendar.compare([currentYear, currentMonth], self.firstMonth()) === 0
       );
     },
     isBeforeFirstMonth: (currentYear, currentMonth) => {
