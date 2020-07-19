@@ -4,8 +4,7 @@ import PropTypes from "prop-types";
 import GalleryThumbnail from "./GalleryThumbnail";
 
 const GalleryThumbnails = ({ children, gallery, photos }) => {
-  return (
-    <div className="photos">
+  return (<>
       {photos.map((photo, index) => {
         return (
           <div key={photo.id} className="thumbnail-block">
@@ -13,8 +12,7 @@ const GalleryThumbnails = ({ children, gallery, photos }) => {
             <GalleryThumbnail gallery={gallery} photo={photo} />
           </div>
         );
-      })}
-    </div>
+      })}</>
   );
 };
 GalleryThumbnails.propTypes = {

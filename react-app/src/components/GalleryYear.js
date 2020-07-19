@@ -58,9 +58,11 @@ const GalleryYear = ({ gallery, year }) => {
     return (
       <>
         <GalleryYearNav gallery={gallery} year={year} />
-        <div className="content year">
+        <div className="content">
           <GalleryTitle gallery={gallery} />
-          <GalleryYearBody gallery={gallery} year={year} />
+          <div className="year">
+            <GalleryYearBody gallery={gallery} year={year} />
+          </div>
         </div>
       </>
     );

@@ -44,9 +44,16 @@ const GalleryDay = ({ gallery, year, month, day }) => {
   return (
     <>
       <GalleryDayNav gallery={gallery} year={year} month={month} day={day} />
-      <div className="content day">
+      <div className="content">
         <GalleryTitle gallery={gallery} />
-        <GalleryDayBody gallery={gallery} year={year} month={month} day={day} />
+        <div className="day">
+          <GalleryDayBody
+            gallery={gallery}
+            year={year}
+            month={month}
+            day={day}
+          />
+        </div>
       </div>
     </>
   );
