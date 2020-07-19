@@ -19,6 +19,10 @@ const resources = {
       "date-ymd": "{year}-{month}-{day}",
       "date-ym": "{year}-{month}",
       "date-y": "{year}",
+
+      "years-short": "y",
+      "months-short": "m",
+      "days-short": "d",
     },
   },
   fi: {
@@ -34,6 +38,10 @@ const resources = {
       "date-ymd": "{year}-{month}-{day}",
       "date-ym": "{year}-{month}",
       "date-y": "{year}",
+
+      "years-short": " v",
+      "months-short": " kk",
+      "days-short": " pv",
     },
   },
   ja: {
@@ -48,6 +56,10 @@ const resources = {
       "date-ymd": "{year}年{month}月{day}日",
       "date-ym": "{year}年{month}月",
       "date-y": "{year}年",
+
+      "years-short": "歳",
+      "months-short": "ヶ月",
+      "days-short": "日",
     },
   },
 };

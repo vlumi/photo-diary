@@ -1,6 +1,11 @@
+import React from "react";
+
+import { useTranslation } from "react-i18next";
+
 import calendar from "../utils/calendar";
 
-const FromEpoch = ({ gallery, year, month, day }) => {
+const EpochAge = ({ gallery, year, month, day }) => {
+  const { t } = useTranslation();
   if (!gallery.hasEpoch()) {
     return "";
   }
@@ -10,7 +15,7 @@ const FromEpoch = ({ gallery, year, month, day }) => {
     day,
   ]);
 
-  const partTitles = ["y", "m", "d"];
+  const partTitles = [t("years-short"), t("months-short"), t("days-short")];
   const parts = [];
   for (const i in [...Array(epochDiffYmd.length).keys()]) {
     if (epochDiffYmd[i] > 0) {
@@ -18,10 +23,15 @@ const FromEpoch = ({ gallery, year, month, day }) => {
     }
   }
   if (parts.length === 0) {
-    return "0d";
+    return `0${t("days-short")}`;
   }
 
-  return parts.join(" ");
+  return parts.map((part) => (
+    <>
+      {part}
+      <br />
+    </>
+  ));
 };
 
-export default FromEpoch;
+export default EpochAge;

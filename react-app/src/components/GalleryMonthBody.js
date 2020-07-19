@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 
 import GalleryThumbnails from "./GalleryThumbnails";
 import GalleryLink from "./GalleryLink";
-import FromEpoch from "./FromEpoch";
-import DayIndex from "./DayIndex";
+import EpochAge from "./EpochAge";
+import EpochDayIndex from "./EpochDayIndex";
 
 import calendar from "../utils/calendar";
 
@@ -33,7 +33,7 @@ const GalleryMonthBody = ({ gallery, year, month }) => {
             <>
               {/* TODO: choose from configuration -- make a component */}
               <span>
-                <FromEpoch
+                <EpochAge
                   gallery={gallery}
                   year={year}
                   month={month}
@@ -41,7 +41,7 @@ const GalleryMonthBody = ({ gallery, year, month }) => {
                 />
               </span>
               <span>
-                <DayIndex
+                <EpochDayIndex
                   gallery={gallery}
                   year={year}
                   month={month}

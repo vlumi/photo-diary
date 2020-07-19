@@ -119,6 +119,10 @@ const sinceEpochYmd = (epoch, now) => {
   const [y1, m1, d1] = epoch;
   const [y2, m2, d2] = now;
 
+  if (y1 > y2 || (y1 == y2 && m1 > m2) || (m1 == m2 && y1 > y2)) {
+    return [0, 0, 0];
+  }
+
   const years = y2 - y1;
   const months = (m2 + 12 - m1) % 12;
   const mdays = daysInMonth(y2, (m2 + 11) % 12);
