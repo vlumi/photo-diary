@@ -2,7 +2,6 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import GalleryLink from "./GalleryLink";
-import FormatDate from "./FormatDate";
 
 const GalleryPhotoNav = ({ gallery, year, month, day, photo }) => {
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();

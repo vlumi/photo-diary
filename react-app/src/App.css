@@ -9,6 +9,7 @@ body {
 
 a {
   text-decoration: none;
+  color: var(--primary-color);
 }
 
 h1 {
@@ -81,6 +82,28 @@ h3 > span {
   margin: 0;
   color: var(--header-sub-color);
   background: inherit;
+}
+
+.galleries {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.gallery {
+  width: 214px;
+  height: 238px;
+  margin: 5px;
+  padding: 0;
+  border-style: solid;
+  border-width: 1px;
+  background-color: var(--none-color);
+}
+.gallery > h3 {
+  margin: 0;
+}
+.gallery > div {
+  margin: 5px;
+  text-align: left;
 }
 
 .year {
