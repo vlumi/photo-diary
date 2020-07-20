@@ -4,25 +4,28 @@ import PropTypes from "prop-types";
 import FormatDate from "./FormatDate";
 
 import config from "../utils/config";
+import GalleryLink from "./GalleryLink";
 
 const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
   const previousPhoto = gallery.previousPhoto(year, month, day, photo);
   const nextPhoto = gallery.nextPhoto(year, month, day, photo);
 
-  const renderAdjacentPhoto = (photo) => {
-    if (!photo) {
+  const renderAdjacentPhoto = (adjacentPhoto) => {
+    if (adjacentPhoto === photo) {
       return <></>;
     }
     const style = {
-      width: `${Math.floor(photo.dimensions.thumbnail.width / 5)}px`,
-      height: `${Math.floor(photo.dimensions.thumbnail.height / 5)}px`,
+      width: `${Math.floor(adjacentPhoto.dimensions.thumbnail.width / 5)}px`,
+      height: `${Math.floor(adjacentPhoto.dimensions.thumbnail.height / 5)}px`,
     };
-    const path = `${config.PHOTO_ROOT}display/${photo.id}`;
+    const path = `${config.PHOTO_ROOT}display/${adjacentPhoto.id}`;
 
     return (
-      <div className="adjacent" style={style}>
-        <img src={path} alt={photo.id} style={style} />
-      </div>
+      <GalleryLink gallery={gallery} photo={adjacentPhoto}>
+        <div className="adjacent" style={style}>
+          <img src={path} alt={adjacentPhoto.id} style={style} />
+        </div>
+      </GalleryLink>
     );
   };
 
