@@ -92,14 +92,14 @@ const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
         <div className="content">
           <GalleryPhotoContent photo={photo} />
         </div>
+        <GalleryPhotoFooter
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={day}
+          photo={photo}
+        />
       </Swipeable>
-      <GalleryPhotoFooter
-        gallery={gallery}
-        year={year}
-        month={month}
-        day={day}
-        photo={photo}
-      />
     </>
   );
 };
