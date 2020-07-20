@@ -46,6 +46,8 @@ const Gallery = (galleryData) => {
         gallery.epoch.getDate(),
       ];
     },
+    hasTheme: () => "theme" in gallery && gallery.theme,
+    theme: () => gallery.theme,
     path: (year, month, day, photo) => {
       const parts = ["", "g", gallery.id];
       const ymd = calendar.formatDate({ year, month, day, separator: "/" });

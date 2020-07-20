@@ -10,10 +10,13 @@ import GalleryDay from "./GalleryDay";
 import GalleryPhoto from "./GalleryPhoto";
 
 import GalleryModel from "../models/Gallery";
+import config from "../utils/config";
 import theme from "../utils/theme";
 
 const GalleryTop = () => {
   const [gallery, setGallery] = React.useState(undefined);
+
+  theme.setTheme(config.DEFAULT_THEME);
 
   const galleryId = useParams().galleryId;
   const photoId = useParams().photoId;
@@ -25,10 +28,11 @@ const GalleryTop = () => {
 
   React.useEffect(() => {
     galleryService.get(galleryId).then((loadedGallery) => {
-      if (loadedGallery.theme) {
-        theme.setTheme(loadedGallery.theme);
+      const gallery = GalleryModel(loadedGallery);
+      if (gallery.hasTheme()) {
+        theme.setTheme(gallery.theme());
       }
-      setGallery(GalleryModel(loadedGallery));
+      setGallery(gallery);
     });
   }, [galleryId]);
 

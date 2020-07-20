@@ -1,7 +1,7 @@
 const setTheme = (theme) => {
   const oldClasses = document.body.classList || [];
   oldClasses.forEach((oldClass) => {
-    if (oldClass.endsWith("-thee")) {
+    if (oldClass.endsWith("-theme")) {
       document.body.classList.remove(oldClass);
     }
   });
