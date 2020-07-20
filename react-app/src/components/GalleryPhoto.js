@@ -2,47 +2,63 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { Swipeable } from "react-swipeable";
 
 import GalleryPhotoNav from "./GalleryPhotoNav";
-import GalleryPhotoBody from "./GalleryPhotoBody";
+import GalleryPhotoContent from "./GalleryPhotoContent";
 
 import useKeyPress from "../utils/keypress";
 
 const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
-  useKeyPress("Escape", () => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.path(year, month));
-  });
-  useKeyPress("Home", () => {
+  const handlMoveToFirst = () => {
     if (!gallery.isFirstPhoto(photo)) {
       window.history.pushState({}, "");
       setRedirect(gallery.photoPath(gallery.firstPhoto()));
     }
-  });
-  useKeyPress("ArrowLeft", () => {
+  };
+  const handlMoveToPrevious = () => {
     if (!gallery.isFirstPhoto(photo)) {
       window.history.pushState({}, "");
       setRedirect(
         gallery.photoPath(gallery.previousPhoto(year, month, day, photo))
       );
     }
-  });
-  useKeyPress("ArrowRight", () => {
+  };
+  const handlMoveToNext = () => {
     if (!gallery.isLastPhoto(photo)) {
       window.history.pushState({}, "");
       setRedirect(
         gallery.photoPath(gallery.nextPhoto(year, month, day, photo))
       );
     }
-  });
-  useKeyPress("End", () => {
+  };
+  const handlMoveToLast = () => {
     if (!gallery.isLastPhoto(photo)) {
       window.history.pushState({}, "");
       setRedirect(gallery.photoPath(gallery.lastPhoto()));
     }
+  };
+
+  useKeyPress("Escape", () => {
+    window.history.pushState({}, "");
+    setRedirect(gallery.path(year, month));
   });
+  useKeyPress("Home", handlMoveToFirst);
+  useKeyPress("ArrowLeft", handlMoveToPrevious);
+  useKeyPress("ArrowRight", handlMoveToNext);
+  useKeyPress("End", handlMoveToLast);
+  const handleSwipe = (event) => {
+    switch (event.dir) {
+      case "Left":
+        handlMoveToNext();
+        break;
+      case "Right":
+        handlMoveToPrevious();
+        break;
+    }
+  };
 
   React.useEffect(() => {
     if (redirect) {
@@ -69,7 +85,9 @@ const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
         day={day}
         photo={photo}
       />
-      <GalleryPhotoBody photo={photo} />
+      <Swipeable onSwiped={handleSwipe}>
+        <GalleryPhotoContent photo={photo} />
+      </Swipeable>
     </>
   );
 };

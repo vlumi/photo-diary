@@ -1,11 +1,11 @@
 import React from "react";
 
 export default (targetKey, handler) => {
-
-  const downHandler = ({ key }) => {
-    if (key === targetKey) {
+  const downHandler = (event) => {
+    if (event.key === targetKey) {
+      event.preventDefault();
       if (typeof handler === "function") {
-        handler();
+        handler(event);
       }
     }
   };

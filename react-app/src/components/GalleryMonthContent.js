@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
+import GalleryTitle from "./GalleryTitle";
 import GalleryThumbnails from "./GalleryThumbnails";
 import GalleryLink from "./GalleryLink";
 import EpochAge from "./EpochAge";
@@ -9,13 +10,14 @@ import EpochDayIndex from "./EpochDayIndex";
 
 import calendar from "../utils/calendar";
 
-const GalleryMonthBody = ({ gallery, year, month }) => {
+const GalleryMonthContent = ({ gallery, year, month }) => {
   const { t } = useTranslation();
 
   if (!gallery.includesMonth(year, month)) {
     return <i>Empty</i>;
   }
-  return gallery.mapDays(year, month, (day) => {
+
+  const renderDay = (day) => {
     return (
       <GalleryThumbnails
         key={"" + year + month + day}
@@ -30,7 +32,6 @@ const GalleryMonthBody = ({ gallery, year, month }) => {
             </span>
             {gallery.hasEpoch() ? (
               <>
-                {/* TODO: choose from configuration -- make a component */}
                 <span>
                   <EpochAge
                     gallery={gallery}
@@ -55,11 +56,18 @@ const GalleryMonthBody = ({ gallery, year, month }) => {
         </GalleryLink>
       </GalleryThumbnails>
     );
-  });
+  };
+
+  return (
+    <div className="content">
+      <GalleryTitle gallery={gallery} />
+      <div className="month">{gallery.mapDays(year, month, renderDay)}</div>
+    </div>
+  );
 };
-GalleryMonthBody.propTypes = {
+GalleryMonthContent.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
 };
-export default GalleryMonthBody;
+export default GalleryMonthContent;

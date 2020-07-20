@@ -2,40 +2,59 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { Swipeable } from "react-swipeable";
 
-import GalleryTitle from "./GalleryTitle";
 import GalleryDayNav from "./GalleryDayNav";
-import GalleryDayBody from "./GalleryDayBody";
+import GalleryDayContent from "./GalleryDayContent";
 
 import useKeyPress from "../utils/keypress";
 
 const GalleryDay = ({ gallery, year, month, day }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
-  useKeyPress("Escape", () => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.path(year, month));
-  });
-  useKeyPress("Home", () => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.path(...gallery.firstDay()));
-  });
-  useKeyPress("ArrowLeft", () => {
+  const handlMoveToFirst = () => {
+    if (!gallery.isFirstDay(year, month, day)) {
+      window.history.pushState({}, "");
+      setRedirect(gallery.path(...gallery.firstDay()));
+    }
+  };
+  const handlMoveToPrevious = () => {
     if (!gallery.isFirstDay(year, month, day)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(...gallery.previousDay(year, month, day)));
     }
-  });
-  useKeyPress("ArrowRight", () => {
+  };
+  const handlMoveToNext = () => {
     if (!gallery.isLastDay(year, month, day)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(...gallery.nextDay(year, month, day)));
     }
-  });
-  useKeyPress("End", () => {
+  };
+  const handlMoveToLast = () => {
+    if (!gallery.isLastDay(year, month, day)) {
+      window.history.pushState({}, "");
+      setRedirect(gallery.path(...gallery.lastDay()));
+    }
+  };
+
+  useKeyPress("Escape", () => {
     window.history.pushState({}, "");
-    setRedirect(gallery.path(...gallery.lastDay()));
+    setRedirect(gallery.path(year, month));
   });
+  useKeyPress("Home", handlMoveToFirst);
+  useKeyPress("ArrowLeft", handlMoveToPrevious);
+  useKeyPress("ArrowRight", handlMoveToNext);
+  useKeyPress("End", handlMoveToLast);
+  const handleSwipe = (event) => {
+    switch (event.dir) {
+      case "Left":
+        handlMoveToNext();
+        break;
+      case "Right":
+        handlMoveToPrevious();
+        break;
+    }
+  };
 
   React.useEffect(() => {
     if (redirect) {
@@ -56,17 +75,14 @@ const GalleryDay = ({ gallery, year, month, day }) => {
         <title>{gallery.title(year, month, day)}</title>
       </Helmet>
       <GalleryDayNav gallery={gallery} year={year} month={month} day={day} />
-      <div className="content">
-        <GalleryTitle gallery={gallery} />
-        <div className="day">
-          <GalleryDayBody
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-          />
-        </div>
-      </div>
+      <Swipeable onSwiped={handleSwipe}>
+        <GalleryDayContent
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={day}
+        />
+      </Swipeable>
     </>
   );
 };

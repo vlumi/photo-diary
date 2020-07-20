@@ -2,40 +2,60 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { Swipeable } from "react-swipeable";
 
 import GalleryTitle from "./GalleryTitle";
 import GalleryYearNav from "./GalleryYearNav";
-import GalleryYearBody from "./GalleryYearBody";
+import GalleryYearContent from "./GalleryYearContent";
 
 import useKeyPress from "../utils/keypress";
 
 const GalleryYear = ({ gallery, year }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
-  useKeyPress("Escape", () => {
-    window.history.pushState({}, "");
-    setRedirect("/g");
-  });
-  useKeyPress("Home", () => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.path(gallery.firstYear()));
-  });
-  useKeyPress("ArrowLeft", () => {
+  const handlMoveToFirst = () => {
+    if (!gallery.isFirstYear(year)) {
+      window.history.pushState({}, "");
+      setRedirect(gallery.path(gallery.firstYear()));
+    }
+  };
+  const handlMoveToPrevious = () => {
     if (!gallery.isFirstYear(year)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(gallery.previousYear(year)));
     }
-  });
-  useKeyPress("ArrowRight", () => {
+  };
+  const handlMoveToNext = () => {
     if (!gallery.isLastYear(year)) {
       window.history.pushState({}, "");
       setRedirect(gallery.path(gallery.nextYear(year)));
     }
-  });
-  useKeyPress("End", () => {
+  };
+  const handlMoveToLast = () => {
+    if (!gallery.isLastYear(year)) {
+      window.history.pushState({}, "");
+      setRedirect(gallery.path(gallery.lastYear()));
+    }
+  };
+
+  useKeyPress("Escape", () => {
     window.history.pushState({}, "");
-    setRedirect(gallery.path(gallery.lastYear()));
+    setRedirect("/g");
   });
+  useKeyPress("Home", handlMoveToFirst);
+  useKeyPress("ArrowLeft", handlMoveToPrevious);
+  useKeyPress("ArrowRight", handlMoveToNext);
+  useKeyPress("End", handlMoveToLast);
+  const handleSwipe = (event) => {
+    switch (event.dir) {
+      case "Left":
+        handlMoveToNext();
+        break;
+      case "Right":
+        handlMoveToPrevious();
+        break;
+    }
+  };
 
   React.useEffect(() => {
     if (redirect) {
@@ -58,7 +78,7 @@ const GalleryYear = ({ gallery, year }) => {
         {gallery.mapYears((year) => (
           // TODO: display year number somehow
           <div key={year} className="year">
-            <GalleryYearBody gallery={gallery} year={Number(year)} />
+            <GalleryYearContent gallery={gallery} year={Number(year)} />
           </div>
         ))}
       </>
@@ -70,12 +90,9 @@ const GalleryYear = ({ gallery, year }) => {
           <title>{gallery.title(year)}</title>
         </Helmet>
         <GalleryYearNav gallery={gallery} year={year} />
-        <div className="content">
-          <GalleryTitle gallery={gallery} />
-          <div className="year">
-            <GalleryYearBody gallery={gallery} year={year} />
-          </div>
-        </div>
+        <Swipeable onSwiped={handleSwipe}>
+          <GalleryYearContent gallery={gallery} year={year} />
+        </Swipeable>
       </>
     );
   }

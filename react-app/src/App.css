@@ -55,7 +55,7 @@ h2 :visited {
   color: var(--header-color);
 }
 
-#root > .content {
+#root .content {
   margin-top: 50px;
 }
 
@@ -110,6 +110,14 @@ h3 > span {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: flex-start;
+}
+.calendars {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 904px;
 }
 .calendar {
   width: 214px;
@@ -191,6 +199,7 @@ h3 > span {
 }
 .month h3 {
   height: 200px;
+  min-width: 25px;
 }
 .month h3 > span {
   margin: 5px 0;

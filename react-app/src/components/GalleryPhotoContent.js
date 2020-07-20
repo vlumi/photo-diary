@@ -16,7 +16,7 @@ function calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio) {
   return Math.floor(maxWidth / photoRatio);
 }
 
-const GalleryPhotoBody = ({ photo }) => {
+const GalleryPhotoContent = ({ photo }) => {
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -45,15 +45,17 @@ const GalleryPhotoBody = ({ photo }) => {
 
   return (
     <>
-      <div className="photo content">
-        <span className="photo" style={style}>
-          <img src={path} alt={photo.id} style={style} />
-        </span>
+      <div className="content">
+        <div className="photo">
+          <span className="photo" style={style}>
+            <img src={path} alt={photo.id} style={style} />
+          </span>
+        </div>
       </div>
     </>
   );
 };
-GalleryPhotoBody.propTypes = {
+GalleryPhotoContent.propTypes = {
   photo: PropTypes.object.isRequired,
 };
-export default GalleryPhotoBody;
+export default GalleryPhotoContent;
