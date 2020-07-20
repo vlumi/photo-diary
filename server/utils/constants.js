@@ -24,19 +24,19 @@ const SPECIAL_GALLERIES = {
     id: SPECIAL_GALLERY_ALL,
     title: "All photos",
     description:
-      "Contains all photos in the repository, regardless of galleries they have been linked to.",
+      "Contains all photos in the repository.",
     epoch: undefined,
   },
   [SPECIAL_GALLERY_PUBLIC]: {
     id: SPECIAL_GALLERY_PUBLIC,
     title: "Photos in galleries",
-    description: "Contains all photos that have been linked to galleries.",
+    description: "Contains all photos linked to galleries.",
     epoch: undefined,
   },
   [SPECIAL_GALLERY_PRIVATE]: {
     id: SPECIAL_GALLERY_PRIVATE,
     title: "Photos not in galleries",
-    description: "Contains all photos that have not been linked to galleries.",
+    description: "Contains all photos not linked to galleries.",
     epoch: undefined,
   },
 };
