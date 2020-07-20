@@ -16,22 +16,32 @@ const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
     setRedirect(gallery.path(year, month));
   });
   useKeyPress("Home", () => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.photoPath(gallery.firstPhoto()));
+    if (!gallery.isFirstPhoto(photo)) {
+      window.history.pushState({}, "");
+      setRedirect(gallery.photoPath(gallery.firstPhoto()));
+    }
   });
   useKeyPress("ArrowLeft", () => {
-    window.history.pushState({}, "");
-    setRedirect(
-      gallery.photoPath(gallery.previousPhoto(year, month, day, photo))
-    );
+    if (!gallery.isFirstPhoto(photo)) {
+      window.history.pushState({}, "");
+      setRedirect(
+        gallery.photoPath(gallery.previousPhoto(year, month, day, photo))
+      );
+    }
   });
   useKeyPress("ArrowRight", () => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.photoPath(gallery.nextPhoto(year, month, day, photo)));
+    if (!gallery.isLastPhoto(photo)) {
+      window.history.pushState({}, "");
+      setRedirect(
+        gallery.photoPath(gallery.nextPhoto(year, month, day, photo))
+      );
+    }
   });
   useKeyPress("End", () => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.photoPath(gallery.lastPhoto()));
+    if (!gallery.isLastPhoto(photo)) {
+      window.history.pushState({}, "");
+      setRedirect(gallery.photoPath(gallery.lastPhoto()));
+    }
   });
 
   React.useEffect(() => {

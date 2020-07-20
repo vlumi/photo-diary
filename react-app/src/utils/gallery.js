@@ -334,6 +334,7 @@ const G = (galleryData) => {
       }
       return undefined;
     },
+    isFirstPhoto: (photo) => photo === self.firstPhoto(),
     previousPhoto: (year, month, day, photo) => {
       const currentDayPhotos = self.photos(year, month, day);
       const currentIndex = self.currentPhotoIndex(year, month, day, photo);
@@ -373,6 +374,7 @@ const G = (galleryData) => {
       }
       return undefined;
     },
+    isLastPhoto: (photo) => photo === self.lastPhoto(),
   };
   return self;
 };
