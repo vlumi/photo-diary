@@ -29,29 +29,31 @@ const GalleryPhotoContent = ({ photo }) => {
     return () => window.removeEventListener("resize", updateDimensions);
   });
 
-  const photoRatio =
-    photo.dimensions.display.width / photo.dimensions.display.height;
+  const renderPhoto = (photo) => {
+    const photoRatio =
+      photo.dimensions.display.width / photo.dimensions.display.height;
 
-  const scale = window.visualViewport.scale;
-  const maxWidth = (dimensions.width - 62) * scale;
-  const maxHeight = (dimensions.height - 112) * scale;
-  const maxRatio = maxWidth / maxHeight;
+    const scale = window.visualViewport.scale;
+    const maxWidth = (dimensions.width - 62) * scale;
+    const maxHeight = (dimensions.height - 112) * scale;
+    const maxRatio = maxWidth / maxHeight;
 
-  const style = {
-    width: calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio),
-    height: calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio),
+    const style = {
+      width: calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio),
+      height: calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio),
+    };
+    const path = `${config.PHOTO_ROOT}display/${photo.id}`;
+
+    return (
+      <span className="photo" style={style}>
+        <img src={path} alt={photo.id} style={style} />
+      </span>
+    );
   };
-  const path = `${config.PHOTO_ROOT}display/${photo.id}`;
 
   return (
     <>
-      <div className="content">
-        <div className="photo">
-          <span className="photo" style={style}>
-            <img src={path} alt={photo.id} style={style} />
-          </span>
-        </div>
-      </div>
+      <div className="photo">{renderPhoto(photo)}</div>
     </>
   );
 };

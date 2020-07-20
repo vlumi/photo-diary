@@ -53,6 +53,8 @@ const GalleryDay = ({ gallery, year, month, day }) => {
       case "Right":
         handlMoveToPrevious();
         break;
+      default:
+        break;
     }
   };
 

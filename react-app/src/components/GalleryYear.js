@@ -54,6 +54,8 @@ const GalleryYear = ({ gallery, year }) => {
       case "Right":
         handlMoveToPrevious();
         break;
+      default:
+        break;
     }
   };
 

@@ -6,6 +6,7 @@ import { Swipeable } from "react-swipeable";
 
 import GalleryPhotoNav from "./GalleryPhotoNav";
 import GalleryPhotoContent from "./GalleryPhotoContent";
+import GalleryPhotoFooter from "./GalleryPhotoFooter";
 
 import useKeyPress from "../utils/keypress";
 
@@ -57,6 +58,8 @@ const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
       case "Right":
         handlMoveToPrevious();
         break;
+      default:
+        break;
     }
   };
 
@@ -86,8 +89,17 @@ const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
         photo={photo}
       />
       <Swipeable onSwiped={handleSwipe}>
-        <GalleryPhotoContent photo={photo} />
+        <div className="content">
+          <GalleryPhotoContent photo={photo} />
+        </div>
       </Swipeable>
+      <GalleryPhotoFooter
+        gallery={gallery}
+        year={year}
+        month={month}
+        day={day}
+        photo={photo}
+      />
     </>
   );
 };

@@ -53,6 +53,8 @@ const GalleryMonth = ({ gallery, year, month }) => {
       case "Right":
         handlMoveToPrevious();
         break;
+      default:
+        break;
     }
   };
 
