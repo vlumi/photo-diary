@@ -32,8 +32,9 @@ const GalleryPhotoBody = ({ photo }) => {
   const photoRatio =
     photo.dimensions.display.width / photo.dimensions.display.height;
 
-  const maxWidth = dimensions.width - 62;
-  const maxHeight = dimensions.height - 112;
+  const scale = window.visualViewport.scale;
+  const maxWidth = (dimensions.width - 62) * scale;
+  const maxHeight = (dimensions.height - 112) * scale;
   const maxRatio = maxWidth / maxHeight;
 
   const style = {
