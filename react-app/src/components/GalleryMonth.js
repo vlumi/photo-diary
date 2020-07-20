@@ -78,7 +78,9 @@ const GalleryMonth = ({ gallery, year, month }) => {
       </Helmet>
       <GalleryMonthNav gallery={gallery} year={year} month={month} />
       <Swipeable onSwiped={handleSwipe}>
-        <GalleryMonthContent gallery={gallery} year={year} month={month} />
+        <div id="content">
+          <GalleryMonthContent gallery={gallery} year={year} month={month} />
+        </div>
       </Swipeable>
     </>
   );

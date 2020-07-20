@@ -93,7 +93,9 @@ const GalleryYear = ({ gallery, year }) => {
         </Helmet>
         <GalleryYearNav gallery={gallery} year={year} />
         <Swipeable onSwiped={handleSwipe}>
-          <GalleryYearContent gallery={gallery} year={year} />
+          <div id="content">
+            <GalleryYearContent gallery={gallery} year={year} />
+          </div>{" "}
         </Swipeable>
       </>
     );

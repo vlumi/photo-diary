@@ -16,6 +16,16 @@ function calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio) {
   return Math.floor(maxWidth / photoRatio);
 }
 
+const toggleFullScreen = () => {
+  if (!document.fullscreenElement) {
+    document.getElementById("root").requestFullscreen();
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    }
+  }
+};
+
 const GalleryPhotoContent = ({ photo }) => {
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
@@ -29,11 +39,17 @@ const GalleryPhotoContent = ({ photo }) => {
     return () => window.removeEventListener("resize", updateDimensions);
   });
 
+  const getScale = () => {
+    if (window.visualViewport) {
+      return window.visualViewport.scale;
+    }
+    return 1;
+  };
   const renderPhoto = (photo) => {
     const photoRatio =
       photo.dimensions.display.width / photo.dimensions.display.height;
 
-    const scale = window.visualViewport.scale;
+    const scale = getScale();
     const maxWidth = (dimensions.width - 62) * scale;
     const maxHeight = (dimensions.height - 112) * scale;
     const maxRatio = maxWidth / maxHeight;
@@ -46,7 +62,12 @@ const GalleryPhotoContent = ({ photo }) => {
 
     return (
       <span className="photo" style={style}>
-        <img src={path} alt={photo.id} style={style} />
+        <img
+          src={path}
+          alt={photo.id}
+          style={style}
+          onClick={toggleFullScreen}
+        />
       </span>
     );
   };

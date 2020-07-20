@@ -59,10 +59,10 @@ const GalleryMonthContent = ({ gallery, year, month }) => {
   };
 
   return (
-    <div className="content">
+    <>
       <GalleryTitle gallery={gallery} />
       <div className="month">{gallery.mapDays(year, month, renderDay)}</div>
-    </div>
+    </>
   );
 };
 GalleryMonthContent.propTypes = {

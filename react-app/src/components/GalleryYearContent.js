@@ -18,56 +18,65 @@ const calculateHeat = (photos) => {
 const GalleryYearContent = ({ gallery, year }) => {
   const { t } = useTranslation();
 
-  const renderDayCell = (year, month, day, index) => {
+  const renderMonthTitle = (gallery, year, month) => {
+    if (gallery.includesMonth(year, month)) {
+      return (
+        <Link to={gallery.path(year, month)}>
+          <h3>{month}</h3>
+        </Link>
+      );
+    }
+    return <h3>month</h3>;
+  };
+  const renderDayValue = (gallery, year, month, day, photoCount) => {
+    if (day === 0) {
+      return <></>;
+    }
+    if (photoCount > 0) {
+      return (
+        <Link
+          to={gallery.path(year, month, day)}
+          title={`${calendar.formatDate({
+            year,
+            month,
+            day,
+          })}: ${photoCount} photos`}
+        >
+          {day}
+        </Link>
+      );
+    }
+    return day;
+  };
+  const renderDayCell = (gallery, year, month, day, index) => {
     const photoCount = gallery.countPhotos(year, month, day);
     const heat = calculateHeat(photoCount);
     return (
       <td
-        key={`day ${calendar.formatDate({
-          year,
-          month,
-          day,
-        })} ${index}`}
+        key={["td", year, month, day, index].join("-")}
         className={`heat-${heat}`}
       >
-        {day === 0 ? (
-          <></>
-        ) : photoCount > 0 ? (
-          <Link
-            key={`${calendar.formatDate({ year, month, day })}`}
-            to={gallery.path(year, month, day)}
-            title={`${calendar.formatDate({
-              year,
-              month,
-              day,
-            })}: ${photoCount} photos`}
-          >
-            {day}
-          </Link>
-        ) : (
-          day
-        )}
+        {renderDayValue(gallery, year, month, day, photoCount)}
       </td>
     );
   };
-
-  const renderWeekRow = (year, month, row, rowIndex) => {
+  const renderWeekRow = (gallery, year, month, row, rowIndex) => {
     return (
-      <tr key={`grid ${calendar.formatDate({ year, month })} ${rowIndex}`}>
+      <tr key={["tr", year, month, rowIndex].join("-")}>
         {row.map((day, cellIndex) => {
-          return renderDayCell(year, month, day, cellIndex);
+          return renderDayCell(gallery, year, month, day, cellIndex);
         })}
       </tr>
     );
   };
-  const renderMonthGrid = (month) => {
+  const renderMonthGrid = (gallery, year, month) => {
     return (
       <div className="calendar-grid">
         <table>
           <thead>
             <tr>
               {calendar.daysOfWeek().map((dow) => (
-                <th key={"head" + year + month + dow}>
+                <th key={["th", year, month, dow].join("-")}>
                   {t(`weekday-short-${dow}`)}
                 </th>
               ))}
@@ -76,7 +85,9 @@ const GalleryYearContent = ({ gallery, year }) => {
           <tbody>
             {calendar
               .monthGrid(year, month)
-              .map((row, index) => renderWeekRow(year, month, row, index))}
+              .map((row, index) =>
+                renderWeekRow(gallery, year, month, row, index)
+              )}
           </tbody>
         </table>
       </div>
@@ -84,27 +95,21 @@ const GalleryYearContent = ({ gallery, year }) => {
   };
 
   return (
-    <div className="content">
+    <>
       <GalleryTitle gallery={gallery} />
       <div className="year">
         <div className="calendars">
           {calendar
             .months(year, ...gallery.firstMonth(), ...gallery.lastMonth())
             .map((month) => (
-              <div key={"calendar" + year + month} className="calendar">
-                {gallery.includesMonth(year, month) ? (
-                  <Link to={gallery.path(year, month)}>
-                    <h3>{month}</h3>
-                  </Link>
-                ) : (
-                  <h3>month</h3>
-                )}
-                {renderMonthGrid(month)}
+              <div key={["cal", year, month].join("-")} className="calendar">
+                {renderMonthTitle(gallery, year, month)}
+                {renderMonthGrid(gallery, year, month)}
               </div>
             ))}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 GalleryYearContent.propTypes = {

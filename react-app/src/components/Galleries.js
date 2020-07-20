@@ -12,7 +12,7 @@ const Galleries = ({ galleries }) => {
       <h2>
         <span className="title">Galleries</span>
       </h2>
-      <div className="content">
+      <div id="content">
         <div className="galleries">
           {galleries
             .map((gallery) => G(gallery))

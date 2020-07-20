@@ -78,12 +78,14 @@ const GalleryDay = ({ gallery, year, month, day }) => {
       </Helmet>
       <GalleryDayNav gallery={gallery} year={year} month={month} day={day} />
       <Swipeable onSwiped={handleSwipe}>
-        <GalleryDayContent
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
-        />
+        <div id="content">
+          <GalleryDayContent
+            gallery={gallery}
+            year={year}
+            month={month}
+            day={day}
+          />
+        </div>
       </Swipeable>
     </>
   );

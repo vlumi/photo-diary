@@ -53,7 +53,7 @@ h2 :visited {
   color: var(--header-color);
 }
 
-#root .content {
+#content {
   margin-top: 50px;
 }
 

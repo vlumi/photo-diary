@@ -8,20 +8,24 @@ const GalleryDayContent = ({ gallery, year, month, day }) => {
   if (!gallery.includesDay(year, month, day)) {
     return <i>Empty</i>;
   }
+
+  const renderContent = () => {
+    if (!gallery.includesDay(year, month, day)) {
+      return <></>;
+    }
+    return (
+      <GalleryThumbnails
+        gallery={gallery}
+        photos={gallery.photos(year, month, day)}
+      />
+    );
+  };
+
   return (
-    <div className="content">
+    <>
       <GalleryTitle gallery={gallery} />
-      <div className="day">
-        {gallery.includesDay(year, month, day) ? (
-          <GalleryThumbnails
-            gallery={gallery}
-            photos={gallery.photos(year, month, day)}
-          />
-        ) : (
-          ""
-        )}
-      </div>
-    </div>
+      <div className="day">{renderContent()}</div>
+    </>
   );
 };
 GalleryDayContent.propTypes = {
