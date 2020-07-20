@@ -164,6 +164,9 @@ This features would be nice to have, but are too far into the future to put on t
 
 ## Version History
 
+- v0.1.1 (2020-07-20)
+  - Usability improvements and polish
+  - Setup to run in production mode
 - v0.1.0 (2020-07-18)
   - New front-end app
     - Read-only views for browsing/viewing
