@@ -59,14 +59,15 @@ const GalleryYearBody = ({ gallery, year }) => {
       );
     };
 
-
     return (
       <div className="calendar-grid">
         <table>
           <thead>
             <tr>
               {calendar.daysOfWeek().map((dow) => (
-                <th key={"head" + year + month + dow}>{t(`weekday-short-${dow}`)}</th>
+                <th key={"head" + year + month + dow}>
+                  {t(`weekday-short-${dow}`)}
+                </th>
               ))}
             </tr>
           </thead>
@@ -82,20 +83,20 @@ const GalleryYearBody = ({ gallery, year }) => {
 
   return (
     <>
-      {calendar.months(year, ...gallery.firstMonth(), ...gallery.lastMonth()).map((month) => (
-        <div key={"calendar" + year + month} className="calendar">
-          <div>
-            <h3>
-              {gallery.includesMonth(year, month) ? (
-                <Link to={gallery.path(year, month)}>{month}</Link>
-              ) : (
-                month
-              )}
-            </h3>
+      {calendar
+        .months(year, ...gallery.firstMonth(), ...gallery.lastMonth())
+        .map((month) => (
+          <div key={"calendar" + year + month} className="calendar">
+            {gallery.includesMonth(year, month) ? (
+              <Link to={gallery.path(year, month)}>
+                <h3>{month}</h3>
+              </Link>
+            ) : (
+              <h3>month</h3>
+            )}
             {produceMonthGrid(month)}
           </div>
-        </div>
-      ))}
+        ))}
     </>
   );
 };

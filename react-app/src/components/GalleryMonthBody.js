@@ -22,37 +22,37 @@ const GalleryMonthBody = ({ gallery, year, month }) => {
         gallery={gallery}
         photos={gallery.photos(year, month, day)}
       >
-        <h3>
-          <GalleryLink gallery={gallery} year={year} month={month} day={day}>
+        <GalleryLink gallery={gallery} year={year} month={month} day={day}>
+          <h3>
             {day}
-          </GalleryLink>
-          <span>
-            {t(`weekday-short-${calendar.dayOfWeek(year, month, day)}`)}
-          </span>
-          {gallery.hasEpoch() ? (
-            <>
-              {/* TODO: choose from configuration -- make a component */}
-              <span>
-                <EpochAge
-                  gallery={gallery}
-                  year={year}
-                  month={month}
-                  day={day}
-                />
-              </span>
-              <span>
-                <EpochDayIndex
-                  gallery={gallery}
-                  year={year}
-                  month={month}
-                  day={day}
-                />
-              </span>
-            </>
-          ) : (
-            <></>
-          )}
-        </h3>
+            <span>
+              {t(`weekday-short-${calendar.dayOfWeek(year, month, day)}`)}
+            </span>
+            {gallery.hasEpoch() ? (
+              <>
+                {/* TODO: choose from configuration -- make a component */}
+                <span>
+                  <EpochAge
+                    gallery={gallery}
+                    year={year}
+                    month={month}
+                    day={day}
+                  />
+                </span>
+                <span>
+                  <EpochDayIndex
+                    gallery={gallery}
+                    year={year}
+                    month={month}
+                    day={day}
+                  />
+                </span>
+              </>
+            ) : (
+              <></>
+            )}
+          </h3>
+        </GalleryLink>
       </GalleryThumbnails>
     );
   });
