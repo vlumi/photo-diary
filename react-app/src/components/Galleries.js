@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 
 import GalleriesBody from "./GalleriesBody";
 
-import G from "../utils/gallery";
+import GalleryModel from "../models/Gallery";
 
 const Galleries = ({ galleries }) => {
   return (
@@ -15,9 +15,9 @@ const Galleries = ({ galleries }) => {
       <div id="content">
         <div className="galleries">
           {galleries
-            .map((gallery) => G(gallery))
+            .map((gallery) => GalleryModel(gallery))
             .map((gallery) => (
-              <GalleriesBody key={gallery.id} gallery={gallery} />
+              <GalleriesBody key={gallery.id()} gallery={gallery} />
             ))}
         </div>
       </div>

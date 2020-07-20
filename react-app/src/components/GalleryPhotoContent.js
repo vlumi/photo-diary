@@ -51,20 +51,20 @@ const GalleryPhotoContent = ({ photo }) => {
 
     const scale = getScale();
     const maxWidth = (dimensions.width - 62) * scale;
-    const maxHeight = (dimensions.height - 112) * scale;
+    const maxHeight = (dimensions.height - 82) * scale;
     const maxRatio = maxWidth / maxHeight;
 
     const style = {
       width: calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio),
       height: calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio),
     };
-    const path = `${config.PHOTO_ROOT}display/${photo.id}`;
+    const path = `${config.PHOTO_ROOT}display/${photo.id()}`;
 
     return (
       <span className="photo" style={style}>
         <img
           src={path}
-          alt={photo.id}
+          alt={photo.id()}
           style={style}
           onClick={toggleFullScreen}
         />

@@ -1,16 +1,29 @@
-import calendar from "./calendar";
-import config from "./config";
+import calendar from "../utils/calendar";
+import config from "../utils/config";
+import Photo from "./Photo";
 
-const G = (galleryData) => {
-  const importGalleryData = (gallery) => {
-    if (gallery.epoch) {
-      gallery.epoch = new Date(gallery.epoch);
+const Gallery = (galleryData) => {
+  const importGalleryData = (galleryData) => {
+    if (galleryData.epoch) {
+      galleryData.epoch = new Date(galleryData.epoch);
     }
-    return gallery;
+    return galleryData;
+  };
+  const importPhotos = (photos) => {
+    Object.keys(photos).forEach((year) => {
+      Object.keys(photos[year]).forEach((month) => {
+        Object.keys(photos[year][month]).forEach((day) => {
+          photos[year][month][day] = photos[year][month][day].map((photo) =>
+            Photo(photo)
+          );
+        });
+      });
+    });
+    return photos;
   };
 
   const gallery = importGalleryData(galleryData);
-  const photos = gallery.photos || {};
+  const photos = importPhotos(gallery.photos || {});
   const self = {
     id: () => gallery.id,
     title: (year, month, day, photo) => {
@@ -21,7 +34,7 @@ const G = (galleryData) => {
       if (!photo) {
         return `${gallery.title} — ${ymd} `;
       }
-      return `${gallery.title} — ${ymd} #${photo.index + 1}`;
+      return `${gallery.title} — ${ymd} #${photo.index() + 1}`;
     },
     description: () => gallery.description || "",
     hasEpoch: () => "epoch" in gallery && gallery.epoch,
@@ -39,7 +52,7 @@ const G = (galleryData) => {
       if (ymd) {
         parts.push(ymd);
         if (photo) {
-          parts.push(photo.id);
+          parts.push(photo.id());
         }
       }
       return parts.join("/");
@@ -96,7 +109,7 @@ const G = (galleryData) => {
       if (!self.includesDay(year, month, day)) {
         return undefined;
       }
-      return photos[year][month][day].find((photo) => photo.id === photoId);
+      return photos[year][month][day].find((photo) => photo.id() === photoId);
     },
     mapYears: (f) => {
       return Object.keys(photos).map(Number).map(f);
@@ -324,7 +337,7 @@ const G = (galleryData) => {
     currentPhotoIndex: (year, month, day, currentPhoto) => {
       const currentDayPhotos = photos[year][month][day];
       const currentIndex = currentDayPhotos.findIndex(
-        (photo) => photo.id === currentPhoto.id
+        (photo) => photo.id() === currentPhoto.id()
       );
       return currentIndex;
     },
@@ -380,4 +393,4 @@ const G = (galleryData) => {
   return self;
 };
 
-export default G;
+export default Gallery;

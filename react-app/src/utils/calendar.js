@@ -1,17 +1,31 @@
 import config from "./config";
 
-const formatDate = ({ year, month, day, separator = "-" }) => {
-  const pad = (value, length) => String(value).padStart(length, "0");
+const padNumber = (value, length) => String(value).padStart(length, "0");
 
+const formatDate = ({ year, month, day, separator = "-" }) => {
   const parts = [];
   if (year) {
-    parts.push(pad(year, 4));
+    parts.push(padNumber(year, 4));
+    if (month) {
+      parts.push(padNumber(month, 2));
+      if (day) {
+        parts.push(padNumber(day, 2));
+      }
+    }
   }
-  if (month) {
-    parts.push(pad(month, 2));
-  }
-  if (day) {
-    parts.push(pad(day, 2));
+  return parts.join(separator);
+};
+
+const formatTime = ({ hour, minute, second, separator = ":" }) => {
+  const parts = [];
+  if (hour) {
+    parts.push(padNumber(hour, 2));
+    if (minute) {
+      parts.push(padNumber(minute, 2));
+      if (second) {
+        parts.push(padNumber(second, 2));
+      }
+    }
   }
   return parts.join(separator);
 };
@@ -159,6 +173,7 @@ const daysSinceEpoch = (epoch, now) => {
 
 export default {
   formatDate,
+  formatTime,
 
   daysInMonth,
   months,

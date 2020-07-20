@@ -9,10 +9,10 @@ import GalleryMonth from "./GalleryMonth";
 import GalleryDay from "./GalleryDay";
 import GalleryPhoto from "./GalleryPhoto";
 
-import G from "../utils/gallery";
+import GalleryModel from "../models/Gallery";
 import theme from "../utils/theme";
 
-const Gallery = () => {
+const GalleryTop = () => {
   const [gallery, setGallery] = React.useState(undefined);
 
   const galleryId = useParams().galleryId;
@@ -28,7 +28,7 @@ const Gallery = () => {
       if (loadedGallery.theme) {
         theme.setTheme(loadedGallery.theme);
       }
-      setGallery(G(loadedGallery));
+      setGallery(GalleryModel(loadedGallery));
     });
   }, [galleryId]);
 
@@ -72,4 +72,4 @@ const Gallery = () => {
     </>
   );
 };
-export default Gallery;
+export default GalleryTop;

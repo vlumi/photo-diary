@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 
 import GalleryLink from "./GalleryLink";
 import FormatDate from "./FormatDate";
@@ -7,36 +8,24 @@ import FormatDate from "./FormatDate";
 const DateLink = ({ gallery, year, month, day }) => {
   if (!month) {
     return (
-      <GalleryLink gallery={gallery} year={year}>
+      <Link to="/g">
         <FormatDate year={year} />
-      </GalleryLink>
+      </Link>
     );
   }
   if (!day) {
     return (
       <>
         <GalleryLink gallery={gallery} year={year}>
-          <FormatDate year={year} />
-        </GalleryLink>
-        -
-        <GalleryLink gallery={gallery} year={year} month={month}>
-          <FormatDate month={month} />
+          <FormatDate year={year} month={month} />
         </GalleryLink>
       </>
     );
   }
   return (
     <>
-      <GalleryLink gallery={gallery} year={year}>
-        <FormatDate year={year} />
-      </GalleryLink>
-      -
       <GalleryLink gallery={gallery} year={year} month={month}>
-        <FormatDate month={month} />
-      </GalleryLink>
-      -
-      <GalleryLink gallery={gallery} year={year} month={month} day={day}>
-        <FormatDate day={day} />
+        <FormatDate year={year} month={month} day={day} />
       </GalleryLink>
     </>
   );

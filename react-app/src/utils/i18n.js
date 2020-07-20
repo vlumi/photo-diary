@@ -20,9 +20,16 @@ const resources = {
       "date-ym": "{year}-{month}",
       "date-y": "{year}",
 
-      "years-short": "y",
-      "months-short": "m",
-      "days-short": "d",
+      "years-short": "{{count}}y",
+      "months-short": "{{count}}m",
+      "days-short": "{{count}}d",
+
+      "years-long": "{{count}} year",
+      "years-long_plural": "{{count}} years",
+      "months-long": "{{count}} month",
+      "months-long_plural": "{{count}} months",
+      "days-long": "{{count}} day",
+      "days-long_plural": "{{count}} days",
     },
   },
   fi: {
@@ -39,9 +46,16 @@ const resources = {
       "date-ym": "{year}-{month}",
       "date-y": "{year}",
 
-      "years-short": " v",
-      "months-short": " kk",
-      "days-short": " pv",
+      "years-short": "{{count}} v",
+      "months-short": "{{count}} kk",
+      "days-short": "{{count}} pv",
+
+      "years-long": "{{count}} vuosi",
+      "years-long_plural": "{{count}} vuotta",
+      "months-long": "{{count}} kuukausi",
+      "months-long_plural": "{{count}} kuukautta",
+      "days-long": "{{count}} päivä",
+      "days-long_plural": "{{count}} päivää",
     },
   },
   ja: {
@@ -57,9 +71,13 @@ const resources = {
       "date-ym": "{year}年{month}月",
       "date-y": "{year}年",
 
-      "years-short": "歳",
-      "months-short": "ヶ月",
-      "days-short": "日",
+      "years-short": "{{count}}歳",
+      "months-short": "{{count}}ヶ月",
+      "days-short": "{{count}}日",
+
+      "years-long": "{{count}}歳",
+      "months-long": "{{count}}ヶ月",
+      "days-long": "{{count}}日",
     },
   },
 };
