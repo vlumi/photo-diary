@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import GalleryLink from "./GalleryLink";
-import DateLink from "./DateLink";
+import FormatDate from "./FormatDate";
 
 const GalleryPhotoNav = ({ gallery, year, month, day, photo }) => {
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
@@ -34,8 +34,9 @@ const GalleryPhotoNav = ({ gallery, year, month, day, photo }) => {
         </GalleryLink>
       </span>
       <span className="title">
-        <DateLink gallery={gallery} year={year} month={month} day={day} /> #
-        {photo.index + 1}
+        <GalleryLink gallery={gallery} year={year} month={month}>
+          #{photo.index + 1}
+        </GalleryLink>
       </span>
       <span style={nextStyle}>
         <GalleryLink gallery={gallery} photo={nextPhoto}>
