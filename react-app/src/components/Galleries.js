@@ -22,8 +22,7 @@ const Galleries = () => {
       .then((returnedGalleries) => {
         // TODO: for admin show all galleries
         const gals = returnedGalleries
-          .map((gallery) => Gallery(gallery))
-          .filter((gallery) => !gallery.isSpecial(":"));
+          .map((gallery) => Gallery(gallery));
         setGalleries(gals);
       })
       .catch((error) => setError(error.message));

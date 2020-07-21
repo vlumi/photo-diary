@@ -221,7 +221,7 @@ describe("As publicUser", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(4);
+    expect(result.body.length).toBe(3);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -297,7 +297,7 @@ describe("As gallery1Admin", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(6);
+    expect(result.body.length).toBe(3);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -371,7 +371,7 @@ describe("As plainUser", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(6);
+    expect(result.body.length).toBe(3);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
