@@ -39,7 +39,7 @@ const Gallery = (galleryData) => {
       return `${gallery.title} — ${ymd} #${photo.index() + 1}`;
     },
     description: () => gallery.description || "",
-    hasEpoch: () => "epoch" in gallery && gallery.epoch,
+    hasEpoch: () => gallery && "epoch" in gallery && gallery.epoch,
     epoch: () => gallery.epoch,
     epochYmd: () => {
       return [
@@ -48,26 +48,15 @@ const Gallery = (galleryData) => {
         gallery.epoch.getDate(),
       ];
     },
-    hasTheme: () => "theme" in gallery && gallery.theme,
+    hasTheme: () => gallery && "theme" in gallery && gallery.theme,
     theme: () => gallery.theme,
-    path: (year, month, day, photo) => {
+    path: (year, month, day) => {
       const parts = ["", "g", gallery.id];
       const ymd = calendar.formatDate({ year, month, day, separator: "/" });
       if (ymd) {
         parts.push(ymd);
-        if (photo) {
-          parts.push(photo.id());
-        }
       }
       return parts.join("/");
-    },
-    photoPath: (photo) => {
-      return self.path(
-        photo.taken.instant.year,
-        photo.taken.instant.month,
-        photo.taken.instant.day,
-        photo
-      );
     },
     lastPath: () => {
       const [year, month, day] = self.lastDay();
@@ -83,7 +72,7 @@ const Gallery = (galleryData) => {
         case "day":
           return self.path(year, month, day);
         case "photo":
-          return self.photoPath(self.lastPhoto());
+          return self.lastPhoto().path(self.id());
       }
     },
     includesPhotos: () => "photos" in gallery,

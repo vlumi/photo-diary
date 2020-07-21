@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const GalleryLink = ({ children, gallery, year, month, photo, day }) => {
   if (photo) {
-    return <Link to={gallery.photoPath(photo)}>{children}</Link>;
+    return <Link to={photo.path(gallery)}>{children}</Link>;
   }
   if (!year) {
     return "";

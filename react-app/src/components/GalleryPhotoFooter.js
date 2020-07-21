@@ -15,9 +15,10 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
     if (adjacentPhoto === photo) {
       return <></>;
     }
+    const dimensions = adjacentPhoto.thumbnailDimensions();
     const style = {
-      width: `${Math.floor(adjacentPhoto.dimensions.thumbnail.width / 5)}px`,
-      height: `${Math.floor(adjacentPhoto.dimensions.thumbnail.height / 5)}px`,
+      width: `${Math.floor(dimensions.width / 5)}px`,
+      height: `${Math.floor(dimensions.height / 5)}px`,
     };
     const path = `${config.PHOTO_ROOT}display/${adjacentPhoto.id()}`;
 

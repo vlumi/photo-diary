@@ -16,29 +16,25 @@ const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
   const handlMoveToFirst = () => {
     if (!gallery.isFirstPhoto(photo)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.photoPath(gallery.firstPhoto()));
+      setRedirect(gallery.firstPhoto().path(gallery));
     }
   };
   const handlMoveToPrevious = () => {
     if (!gallery.isFirstPhoto(photo)) {
       window.history.pushState({}, "");
-      setRedirect(
-        gallery.photoPath(gallery.previousPhoto(year, month, day, photo))
-      );
+      setRedirect(gallery.previousPhoto(year, month, day, photo).path(gallery));
     }
   };
   const handlMoveToNext = () => {
     if (!gallery.isLastPhoto(photo)) {
       window.history.pushState({}, "");
-      setRedirect(
-        gallery.photoPath(gallery.nextPhoto(year, month, day, photo))
-      );
+      setRedirect(gallery.nextPhoto(year, month, day, photo).path(gallery));
     }
   };
   const handlMoveToLast = () => {
     if (!gallery.isLastPhoto(photo)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.photoPath(gallery.lastPhoto()));
+      setRedirect(gallery.lastPhoto().path(gallery));
     }
   };
 

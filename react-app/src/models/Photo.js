@@ -23,21 +23,20 @@ const Photo = (photoData) => {
   const countryData = registerCountryData(i18n);
   const photo = importPhotoData(photoData);
 
-  const formatExposureTime = (time) => {
-    if (time >= 1) {
-      return `${time}s`;
-    }
-    const fraction = Math.round(1 / time);
-    return `1/${fraction}s`;
-  };
-
   const self = {
     id: () => photo.id,
     index: () => photo.index,
     title: () => photo.title,
     description: () => photo.description,
-    taken: photo.taken,
-    dimensions: photo.dimensions,
+    ymd: () => [self.year(), self.month(), self.day()],
+    year: () => photo.taken.instant.year,
+    month: () => photo.taken.instant.month,
+    day: () => photo.taken.instant.day,
+    thumbnailDimensions: () => {
+      return { ...photo.dimensions.thumbnail };
+    },
+    ratio: () =>
+      photo.dimensions.display.width / photo.dimensions.display.height,
     formatTimestamp: () => {
       const ymd = calendar.formatDate({
         year: photo.taken.instant.year,
@@ -51,12 +50,29 @@ const Photo = (photoData) => {
       });
       return `${ymd} ${hms}`;
     },
+    formatFocalLength: () => `ƒ=${photo.exposure.focalLength}mm`,
+    formatAperture: () => `ƒ/${photo.exposure.aperture}`,
+    formatExposureTime: () => {
+      const time = photo.exposure.exposureTime;
+      if (time >= 1) {
+        return `${time}s`;
+      }
+      const fraction = Math.round(1 / time);
+      return `1/${fraction}s`;
+    },
+    formatIso: () => `ISO${photo.exposure.iso}`,
+    formatMegapixels: () =>
+      `${Math.round(
+        (photo.dimensions.original.width * photo.dimensions.original.height) /
+          10 ** 6
+      )}MP`,
     formatExposure: () => {
-      const focalLength = `ƒ=${photo.exposure.focalLength}mm`;
-      const aperture = `ƒ/${photo.exposure.aperture}`;
-      const exposureTime = formatExposureTime(photo.exposure.exposureTime);
-      const iso = `ISO${photo.exposure.iso}`;
-      return `${focalLength} ${aperture} ${exposureTime} ${iso}`;
+      const focalLength = self.formatFocalLength();
+      const aperture = self.formatAperture();
+      const exposureTime = self.formatExposureTime();
+      const iso = self.formatIso();
+      const mpix = self.formatMegapixels();
+      return `${focalLength} ${aperture} ${exposureTime} ${iso} ${mpix}`;
     },
     formatGear: () => {
       const camera = [photo.camera.make, photo.camera.model]
@@ -67,12 +83,23 @@ const Photo = (photoData) => {
         .join(" ");
       return [camera, lens].filter(Boolean).join(", ");
     },
+    hasCountry: () =>
+      photo &&
+      "taken" in photo &&
+      "location" in photo.taken &&
+      "country" in photo.taken.location &&
+      photo.taken.location.country,
     countryCode: () => photo.taken.location.country,
     countryName: () => countryData.getName(self.countryCode(), i18n.language),
     place: () =>
       [photo.taken.location.place, self.countryName()]
         .filter(Boolean)
         .join(", "),
+    path: (gallery) => {
+      const parts = [gallery.path(...self.ymd())];
+      parts.push(photo.id);
+      return parts.join("/");
+    },
   };
   return self;
 };

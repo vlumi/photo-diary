@@ -46,9 +46,7 @@ const GalleryPhotoContent = ({ photo }) => {
     return 1;
   };
   const renderPhoto = (photo) => {
-    const photoRatio =
-      photo.dimensions.display.width / photo.dimensions.display.height;
-
+    const photoRatio = photo.ratio();
     const scale = getScale();
     const maxWidth = (dimensions.width - 62) * scale;
     const maxHeight = (dimensions.height - 82) * scale;

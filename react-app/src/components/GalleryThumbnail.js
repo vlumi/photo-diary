@@ -8,9 +8,10 @@ import config from "../utils/config";
 
 const GalleryThumbnail = ({ gallery, photo }) => {
   const url = `url("${config.PHOTO_ROOT}thumbnail/${photo.id()}")`;
+  const dimensions = photo.thumbnailDimensions();
   const style = {
-    width: `${photo.dimensions.thumbnail.width + 10}px`,
-    height: `${photo.dimensions.thumbnail.height + 10}px`,
+    width: `${dimensions.width + 10}px`,
+    height: `${dimensions.height + 10}px`,
     backgroundImage: url,
   };
   return (
@@ -20,7 +21,7 @@ const GalleryThumbnail = ({ gallery, photo }) => {
           <img src="https://gallery.misaki.fi/css/blank.gif" alt="" />
         </span>
       </GalleryLink>
-      {photo.taken.location.country ? (
+      {photo.hasCountry() ? (
         <span className="flag" title={photo.countryName()}>
           <FlagIcon code={photo.countryCode()} />
         </span>
