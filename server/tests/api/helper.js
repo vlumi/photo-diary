@@ -1,8 +1,8 @@
-const loginUser = async (api, username) => {
+const loginUser = async (api, id) => {
   const authRes = await api
     .post("/api/tokens")
     .send({
-      username: username,
+      id: id,
       password: "foobar",
     })
     .expect(200);

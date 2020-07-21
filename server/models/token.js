@@ -12,7 +12,7 @@ const secrets = {};
 const loadSecrets = async () => {
   logger.debug("Loading secrets");
   const users = await db.loadUsers();
-  users.forEach((user) => (secrets[user.username] = user.secret));
+  users.forEach((user) => (secrets[user.id] = user.secret));
   logger.debug("Loading secrets done");
 };
 
@@ -37,34 +37,34 @@ const checkUserPassword = async (credentials, user) => {
 };
 const authenticateUser = async (credentials) => {
   logger.debug("Authenticating user", credentials);
-  const createToken = (username) => {
-    const tokenContent = { username: credentials.username };
+  const createToken = (id) => {
+    const tokenContent = { id: credentials.id };
     // TODO: expiration
-    return jwt.sign(tokenContent, secrets[username] || config.SECRET);
+    return jwt.sign(tokenContent, secrets[id] || config.SECRET);
   };
   try {
-    const user = await db.loadUser(credentials.username);
+    const user = await db.loadUser(credentials.id);
     await checkUserPassword(credentials, user);
 
-    const token = createToken(credentials.username);
-    return `${credentials.username}=${token}`;
+    const token = createToken(credentials.id);
+    return `${credentials.id}=${token}`;
   } catch (error) {
     throw CONST.ERROR_LOGIN;
   }
 };
-const revokeToken = async (username) => {
-  logger.debug("Revoking token for user:", username);
-  if (!username) {
+const revokeToken = async (id) => {
+  logger.debug("Revoking token for user:", id);
+  if (!id) {
     return;
   }
-  secrets[username] = uuidv4();
+  secrets[id] = uuidv4();
 };
 const verifyToken = async (encodedToken) => {
-  const [username, token] = decodeToken(encodedToken);
-  logger.debug("Verifying token", username, token, encodedToken);
+  const [id, token] = decodeToken(encodedToken);
+  logger.debug("Verifying token", id, token, encodedToken);
 
-  const user = jwt.verify(token, secrets[username] || config.SECRET);
-  if (!user || user.username !== username) {
+  const user = jwt.verify(token, secrets[id] || config.SECRET);
+  if (!user || user.id !== id) {
     throw CONST.ERROR_LOGIN;
   }
   return user;

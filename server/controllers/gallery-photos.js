@@ -16,7 +16,7 @@ module.exports = {
  */
 router.get("/:galleryId/:photoId", async (request, response) => {
   await authorizer.authorizeGalleryView(
-    request.user.username,
+    request.user.id,
     request.params.galleryId
   );
   const photo = await model.getGalleryPhoto(
@@ -30,7 +30,7 @@ router.get("/:galleryId/:photoId", async (request, response) => {
  */
 router.put("/:galleryId/:photoId", async (request, response) => {
   await authorizer.authorizeGalleryAdmin(
-    request.user.username,
+    request.user.id,
     request.params.galleryId
   );
   await model.linkGalleryPhoto(
@@ -44,7 +44,7 @@ router.put("/:galleryId/:photoId", async (request, response) => {
  */
 router.delete("/:galleryId/:photoId", async (request, response) => {
   await authorizer.authorizeGalleryAdmin(
-    request.user.username,
+    request.user.id,
     request.params.galleryId
   );
   await model.unlinkGalleryPhoto(

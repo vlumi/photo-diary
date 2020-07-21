@@ -18,8 +18,8 @@ const init = async () => {};
 const getUsers = async () => {
   return await db.loadUsers();
 };
-const getUser = async (username) => {
-  return await db.loadUser(username);
+const getUser = async (id) => {
+  return await db.loadUser(id);
 };
 const createUser = async (user) => {
   logger.debug("Creating user", user);
@@ -29,7 +29,7 @@ const updateUser = async (user) => {
   logger.debug("Updating user", user);
   throw CONST.ERROR_NOT_IMPLEMENTED;
 };
-const deleteUser = async (username) => {
-  logger.debug("Deleting user", username);
+const deleteUser = async (id) => {
+  logger.debug("Deleting user", id);
   throw CONST.ERROR_NOT_IMPLEMENTED;
 };

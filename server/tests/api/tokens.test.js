@@ -13,7 +13,7 @@ describe("Login", () => {
     await api
       .post("/api/tokens")
       .send({
-        username: "wrong",
+        id: "wrong",
         password: "wrong",
       })
       .expect(401);
@@ -22,7 +22,7 @@ describe("Login", () => {
     await api
       .post("/api/tokens")
       .send({
-        username: "admin",
+        id: "admin",
         password: "wrong",
       })
       .expect(401);
@@ -31,7 +31,7 @@ describe("Login", () => {
     const result = await api
       .post("/api/tokens")
       .send({
-        username: "admin",
+        id: "admin",
         password: "foobar",
       })
       .expect(200);

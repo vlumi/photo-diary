@@ -15,10 +15,10 @@ module.exports = {
  * Get all users.
  */
 router.get("/", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.username);
+  await authorizer.authorizeAdmin(request.user.id);
   const cleanUser = (user) => {
     return {
-      username: user.username,
+      id: user.id,
     };
   };
   const users = await model.getUsers();
@@ -28,7 +28,7 @@ router.get("/", async (request, response) => {
  * Create a user.
  */
 router.post("/", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.username);
+  await authorizer.authorizeAdmin(request.user.id);
   const user = {};
   // TODO: validate and set content from request.body
   const createdUser = await model.createUser(user);
@@ -37,16 +37,16 @@ router.post("/", async (request, response) => {
 /**
  * Get the matching user.
  */
-router.get("/:username", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.username);
-  const user = await model.getUser(request.params.username);
+router.get("/:userId", async (request, response) => {
+  await authorizer.authorizeAdmin(request.user.id);
+  const user = await model.getUser(request.params.userId);
   response.json(user);
 });
 /**
  * Update the matching user.
  */
-router.put("/:username", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.username);
+router.put("/:userId", async (request, response) => {
+  await authorizer.authorizeAdmin(request.user.userId);
   const user = {};
   // TODO: validate and set content from request.body
   const updateduser = await model.updateUser(user);
@@ -55,8 +55,8 @@ router.put("/:username", async (request, response) => {
 /**
  * Delete the matching user.
  */
-router.delete("/:username", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.username);
-  await model.deleteUser(request.params.username);
+router.delete("/:userId", async (request, response) => {
+  await authorizer.authorizeAdmin(request.user.id);
+  await model.deleteUser(request.params.userId);
   response.status(204).end();
 });

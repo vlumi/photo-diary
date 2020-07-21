@@ -26,15 +26,15 @@ router.get("/", (request, response) => {
 router.post("/", async (request, response, next) => {
   logger.debug("Login", request.body);
   const credentials = {
-    username: request.body.username,
+    id: request.body.id,
     password: request.body.password,
   };
-  if (!credentials.username || !credentials.password) {
+  if (!credentials.id || !credentials.password) {
     next(CONST.ERROR_LOGIN);
     return;
   }
   const token = await model.authenticateUser(credentials);
-  logger.debug(`User "${credentials.username}" logged in successfully.`);
+  logger.debug(`User "${credentials.id}" logged in successfully.`);
 
   const encodedToken = Buffer.from(token).toString("base64");
   response.status(200).send({ token: encodedToken }).end();
@@ -43,14 +43,14 @@ router.post("/", async (request, response, next) => {
  * Logout, revoking all tokens.
  */
 router.delete("/", async (request, response) => {
-  await model.revokeToken(request.user.username);
+  await model.revokeToken(request.user.id);
   response.status(204).end();
 });
 /**
  * Logout, revoking all tokens.
  */
-router.delete("/:username", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.username);
-  await model.revokeToken(request.param.username);
+router.delete("/:userId", async (request, response) => {
+  await authorizer.authorizeAdmin(request.user.id);
+  await model.revokeToken(request.param.userId);
   response.status(204).end();
 });
