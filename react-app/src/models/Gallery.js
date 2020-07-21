@@ -345,7 +345,7 @@ const Gallery = (galleryData) => {
       if (
         !photos ||
         !(year in photos) ||
-        !(month in photos[year][month]) ||
+        !(month in photos[year]) ||
         !(day in photos[year][month]) ||
         !photos[year][month][day]
       ) {
