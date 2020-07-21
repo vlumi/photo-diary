@@ -1,6 +1,10 @@
 CREATE TABLE schema_info (version INTEGER PRIMARY KEY);
 INSERT INTO schema_info (version)
 VALUES (3);
+-- new
+CREATE TABLE user (id TEXT, password TEXT, secret TEXT);
+-- new
+CREATE TABLE acl (user_id TEXT PRIMARY KEY, level INTEGER);
 CREATE TABLE gallery (
   -- change name
   id TEXT PRIMARY KEY,
@@ -17,18 +21,22 @@ CREATE TABLE photo (
   id TEXT PRIMARY KEY,
   title TEXT,
   description TEXT,
+  author TEXT,
+  --
   taken TEXT,
-  country TEXT,
-  -- new
-  coord_alt REAL,
+  -- change name
+  country_code TEXT,
+  place TEXT,
   -- new
   coord_lat REAL,
   -- new
   coord_lon REAL,
-  place TEXT,
-  author TEXT,
+  -- new
+  coord_alt REAL,
+  -- gear
   -- new
   camera_make TEXT,
+  -- change name
   camera_model TEXT,
   -- new
   camera_serial TEXT,
@@ -38,13 +46,19 @@ CREATE TABLE photo (
   lens_model TEXT,
   -- new
   lens_serial TEXT,
+  -- exposure
   -- change type
   focal REAL,
   -- change type
   fstop REAL,
   -- change format, type
-  exposureTime REAL,
+  exposure_time REAL,
   iso INTEGER,
+  -- dimensions
+  -- change name
+  orig_width INTEGER,
+  -- change name
+  orig_height INTEGER,
   -- change name
   disp_width INTEGER,
   -- change name
@@ -52,16 +66,14 @@ CREATE TABLE photo (
   -- change name
   thumb_width INTEGER,
   -- change name
-  thumb_height INTEGER,
-  -- change name
-  orig_width INTEGER,
-  -- change name
-  orig_height INTEGER
+  thumb_height INTEGER
 );
 CREATE TABLE photo_gallery (
-  photo_name TEXT,
-  gallery_name TEXT,
-  PRIMARY KEY(photo_name, gallery_name),
-  FOREIGN KEY(photo_name) REFERENCES photos(name),
-  FOREIGN KEY(gallery_name) REFERENCES galleries(name)
+  -- change name
+  photo_id TEXT,
+  -- change name
+  gallery_id TEXT,
+  PRIMARY KEY(photo_id, gallery_id),
+  FOREIGN KEY(photo_id) REFERENCES photos(id),
+  FOREIGN KEY(gallery_id) REFERENCES galleries(id)
 );
