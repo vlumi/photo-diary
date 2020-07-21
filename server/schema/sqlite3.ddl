@@ -1,10 +1,14 @@
 CREATE TABLE schema_info (version INTEGER PRIMARY KEY);
+
 INSERT INTO schema_info (version)
 VALUES (3);
+
 -- new
-CREATE TABLE user (id TEXT, password TEXT, secret TEXT);
+CREATE TABLE user (id TEXT, PASSWORD TEXT, secret TEXT);
+
 -- new
-CREATE TABLE acl (user_id TEXT PRIMARY KEY, level INTEGER);
+CREATE TABLE acl (user_id TEXT PRIMARY KEY, LEVEL INTEGER);
+
 CREATE TABLE gallery (
   -- change name
   id TEXT PRIMARY KEY,
@@ -16,6 +20,7 @@ CREATE TABLE gallery (
   -- new
   theme TEXT
 );
+
 CREATE TABLE photo (
   -- change name
   id TEXT PRIMARY KEY,
@@ -68,11 +73,13 @@ CREATE TABLE photo (
   -- change name
   thumb_height INTEGER
 );
-CREATE TABLE photo_gallery (
-  -- change name
-  photo_id TEXT,
+
+-- change name
+CREATE TABLE gallery_photo (
   -- change name
   gallery_id TEXT,
+  -- change name
+  photo_id TEXT,
   PRIMARY KEY(photo_id, gallery_id),
   FOREIGN KEY(photo_id) REFERENCES photos(id),
   FOREIGN KEY(gallery_id) REFERENCES galleries(id)

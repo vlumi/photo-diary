@@ -112,20 +112,20 @@ const loadGalleryPhotos = async (galleryId) => {
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
           baseQuery +
-          " WHERE id IN (SELECT photo_id FROM photo_gallery)" +
+          " WHERE id IN (SELECT photo_id FROM gallery_photo)" +
           order
         );
       case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
           baseQuery +
-          " WHERE id NOT IN (SELECT photo_id FROM photo_gallery)" +
+          " WHERE id NOT IN (SELECT photo_id FROM gallery_photo)" +
           order
         );
       default:
         return (
           baseQuery +
-          " JOIN photo_gallery ON photo.id=photo_gallery.photo_id" +
-          " WHERE photo_gallery.gallery_id = ?" +
+          " JOIN gallery_photo ON photo.id=gallery_photo.photo_id" +
+          " WHERE gallery_photo.gallery_id = ?" +
           order
         );
     }
@@ -159,22 +159,22 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
           baseQuery +
-          " WHERE id IN (SELECT photo_id FROM photo_gallery)" +
+          " WHERE id IN (SELECT photo_id FROM gallery_photo)" +
           " AND id = ?" +
           order
         );
       case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
           baseQuery +
-          " WHERE id NOT IN (SELECT photo_id FROM photo_gallery)" +
+          " WHERE id NOT IN (SELECT photo_id FROM gallery_photo)" +
           " AND id = ?" +
           order
         );
       default:
         return (
           baseQuery +
-          " JOIN photo_gallery ON photo.id=photo_gallery.photo_id" +
-          " WHERE photo_gallery.gallery_id = ?" +
+          " JOIN gallery_photo ON photo.id=gallery_photo.photo_id" +
+          " WHERE gallery_photo.gallery_id = ?" +
           " AND id = ?" +
           order
         );
