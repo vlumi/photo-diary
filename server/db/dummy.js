@@ -25,12 +25,6 @@ const init = () => {
   db = JSON.parse(dbDump);
 };
 
-const loadUserAccessControl = async (id) => {
-  if (!(id in db.accessControl)) {
-    throw CONST.ERROR_NOT_FOUND;
-  }
-  return db.accessControl[id];
-};
 const loadUsers = async () => {
   return Object.values(db.users);
 };
@@ -39,6 +33,12 @@ const loadUser = async (id) => {
     throw CONST.ERROR_NOT_FOUND;
   }
   return db.users[id];
+};
+const loadUserAccessControl = async (id) => {
+  if (!(id in db.accessControl)) {
+    throw CONST.ERROR_NOT_FOUND;
+  }
+  return db.accessControl[id];
 };
 // TODO: something like this for create/update user to hash the password:
 // {

@@ -2,6 +2,7 @@ const config = require("../utils/config");
 
 const DRIVER = {
   dummy: () => require("./dummy"),
+  sqlite3: () => require("./sqlite3"),
   legacy_sqlite3: () => require("./legacy-sqlite3"),
 };
 
@@ -15,14 +16,14 @@ const connectDb = () => {
 const db = connectDb();
 
 module.exports = {
-  loadUserAccessControl: async (username) => {
-    return db.loadUserAccessControl(username);
-  },
   loadUsers: async () => {
     return db.loadUsers();
   },
   loadUser: async (username) => {
     return db.loadUser(username);
+  },
+  loadUserAccessControl: async (username) => {
+    return db.loadUserAccessControl(username);
   },
   loadGalleries: async () => {
     return db.loadGalleries();

@@ -7,7 +7,12 @@ VALUES (3);
 CREATE TABLE user (id TEXT, PASSWORD TEXT, secret TEXT);
 
 -- new
-CREATE TABLE acl (user_id TEXT PRIMARY KEY, LEVEL INTEGER);
+CREATE TABLE acl (
+  user_id TEXT PRIMARY KEY,
+  gallery_id TEXT,
+  level INTEGER,
+  UNIQUE(user_id, gallery_id)
+);
 
 CREATE TABLE gallery (
   -- change name

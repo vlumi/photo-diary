@@ -18,112 +18,242 @@ module.exports = () => {
   };
 };
 
-const SCHEMA = {
-  gallery: ["id", "title", "description", "epoch", "theme"],
-  photo: [
-    "id",
-    "title",
-    "description",
-    "author",
-
-    "taken",
-    "country_code",
-    "place",
-    "coord_lat",
-    "coord_lon",
-    "coord_alt",
-
-    "camera_make",
-    "camera_model",
-    "camera_serial",
-    "lens_make",
-    "lens_model",
-    "lens_serial",
-
-    "focal",
-    "fstop",
-    "exposure_time",
-    "iso",
-
-    "orig_width",
-    "orig_height",
-    "disp_width",
-    "disp_height",
-    "thumb_width",
-    "thumb_height",
-  ],
-};
-
 if (!config.DB_OPTS) {
   throw "The path to the SQLite3 database must be set to DB_OPTS.";
 }
 const db = new sqlite3.Database(config.DB_OPTS);
 logger.debug("Connected to DB");
 
-const loadUserAccessControl = async () => {
-  // TODO: implement
-  return {
-    [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
-  };
+const SCHEMA = {
+  user: {
+    table: "user",
+    columns: ["id", "password", "secret"],
+    order: ["id ASC"],
+    mapRow: (row) => {
+      // TODO: implement
+      return {
+        ...row,
+      };
+    },
+  },
+  acl: {
+    table: "acl",
+    columns: ["user_id", "gallery_id", "level"],
+    order: ["user_id ASC", "gallery_id ASC"],
+    mapRow: (row) => {
+      return [row.gallery_id, row.level];
+    },
+  },
+  gallery: {
+    table: "gallery",
+    columns: ["id", "title", "description", "epoch", "theme"],
+    order: ["id ASC"],
+    mapRow: (row) => {
+      return {
+        id: toString(row.id),
+        title: toString(row.title),
+        description: toString(row.description),
+        epoch: toString(row.epoch).substring(0, 10),
+        epochType: toString(row.epoch_type),
+        theme: toString(row.theme),
+      };
+    },
+  },
+  photo: {
+    table: "photo",
+    columns: [
+      "id",
+      "title",
+      "description",
+      "author",
+
+      "taken",
+      "country_code",
+      "place",
+      "coord_lat",
+      "coord_lon",
+      "coord_alt",
+
+      "camera_make",
+      "camera_model",
+      "camera_serial",
+      "lens_make",
+      "lens_model",
+      "lens_serial",
+
+      "focal",
+      "fstop",
+      "exposure_time",
+      "iso",
+
+      "orig_width",
+      "orig_height",
+      "disp_width",
+      "disp_height",
+      "thumb_width",
+      "thumb_height",
+    ],
+    order: ["taken ASC", "id ASC"],
+    mapRow: (row, index) => {
+      const taken = new Date(toString(row.taken).substring(0, 19));
+      const year = 0 + taken.getFullYear();
+      const month = taken.getMonth() + 1;
+      const day = taken.getDate();
+      const hour = taken.getHours();
+      const minute = taken.getMinutes();
+      const second = taken.getSeconds();
+
+      const normalizeCountry = (country) =>
+        !country || country === "unknown" ? undefined : country;
+
+      return {
+        id: toString(row.id),
+        index: index,
+        title: toString(row.title),
+        description: toString(row.description),
+        taken: {
+          instant: {
+            timestamp: toString(row.taken),
+            year: year,
+            month: month,
+            day: day,
+            hour: hour,
+            minute: minute,
+            second: second,
+          },
+          author: toString(row.author),
+          location: {
+            country: normalizeCountry(row.country_code),
+            place: toString(row.place),
+            coordinates: {
+              latitude: row.coord_lat,
+              longitude: row.coord_lon,
+              altitude: row.coord_alt,
+            },
+          },
+        },
+        camera: {
+          make: toString(row.camera_make),
+          model: toString(row.camera_model),
+          serial: toString(row.camera_serial),
+        },
+        lens: {
+          make: toString(row.lens_make),
+          model: toString(row.lens_model),
+          serial: toString(row.lens_serial),
+        },
+        exposure: {
+          focalLength: Number(row.focal),
+          aperture: Number(row.fstop),
+          exposureTime: Number(row.exposure_time),
+          iso: Number(row.iso),
+        },
+        dimensions: {
+          original: {
+            width: Number(row.orig_width),
+            height: Number(row.orig_height),
+          },
+          display: {
+            width: Number(row.disp_width),
+            height: Number(row.disp_height),
+          },
+          thumbnail: {
+            width: Number(row.thumb_width),
+            height: Number(row.thumb_height),
+          },
+        },
+      };
+    },
+  },
 };
-const loadUsers = async () => {
-  // TODO: implement
-  return [];
+const baseQuery = (schema) => {
+  const columns = schema.columns.join(",");
+  return `SELECT ${columns} FROM ${schema.table}`;
 };
-const loadUser = async () => {
-  // TODO: implement
-  throw CONST.NOT_FOUND;
-};
-const loadGalleries = async () => {
-  const columns = SCHEMA.gallery.join(",");
-  const query = `SELECT ${columns} FROM gallery`;
+const loadAll = async (schema) => {
+  const query = baseQuery(schema) + ` ORDER BY ${schema.order}`;
   return new Promise((resolve, reject) => {
-    db.all(query, function (error, rows) {
+    db.all(query, (error, rows) => {
       if (error) {
         return reject(error);
       }
-      resolve(rows.map((row) => mapGalleryRow(row)));
+      resolve(rows.map((row) => schema.mapRow(row)));
     });
   });
 };
-const loadGallery = async (galleryId) => {
-  const column = SCHEMA.gallery.join(",");
-  const query = `SELECT ${column} FROM gallery WHERE id = ?`;
+const loadById = async (schema, id, idField = "id", allowEmpty = false) => {
+  const query = baseQuery(schema) + ` WHERE ${idField} = ?`;
   return new Promise((resolve, reject) => {
-    db.all(query, galleryId, function (error, rows) {
+    db.all(query, id, (error, rows) => {
       if (error) {
         return reject(error);
+      }
+      if (rows.length !== 1 && !allowEmpty) {
+        return reject(CONST.ERROR_NOT_FOUND);
+      }
+      resolve(schema.mapRow(rows[0]));
+    });
+  });
+};
+
+const loadUsers = async () => {
+  return await loadAll(SCHEMA.user);
+};
+const loadUser = async (userId) => {
+  console.log("load user", userId);
+  return await loadById(SCHEMA.user, userId);
+};
+const loadUserAccessControl = async (userId) => {
+  // TODO: cache in memory
+  const query = baseQuery(SCHEMA.acl) + " WHERE user_id IN (?)";
+  const data = await new Promise((resolve, reject) => {
+    db.all(query, userId, (error, rows) => {
+      if (error) {
+        return {};
       }
       if (rows.length !== 1) {
         return reject(CONST.ERROR_NOT_FOUND);
       }
-      resolve(mapGalleryRow(rows[0]));
+      resolve(rows.map((row) => SCHEMA.acl.mapRow(row)));
     });
   });
+
+  const acl = Object.fromEntries(data);
+  console.log("acl now", acl, data);
+
+  return acl;
+
+  // return {
+  //   [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+  // };
+};
+const loadGalleries = async () => {
+  return await loadAll(SCHEMA.gallery);
+};
+const loadGallery = async (galleryId) => {
+  return await loadById(SCHEMA.gallery, galleryId);
 };
 const loadGalleryPhotos = async (galleryId) => {
   const getQuery = () => {
-    const columns = SCHEMA.photo.join(",");
-    const baseQuery = `SELECT ${columns} FROM photo`;
     const order = " ORDER BY taken ASC, id ASC";
     switch (galleryId) {
       case CONST.SPECIAL_GALLERY_ALL:
-        return baseQuery;
+        return baseQuery(SCHEMA.photo);
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
-          baseQuery +
+          baseQuery(SCHEMA.photo) +
           " WHERE id IN (SELECT photo_id FROM gallery_photo)" +
           order
         );
       case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
-          baseQuery +
+          baseQuery(SCHEMA.photo) +
           " WHERE id NOT IN (SELECT photo_id FROM gallery_photo)" +
           order
         );
       default:
         return (
-          baseQuery +
+          baseQuery(SCHEMA.photo) +
           " JOIN gallery_photo ON photo.id=gallery_photo.photo_id" +
           " WHERE gallery_photo.gallery_id = ?" +
           order
@@ -137,7 +267,7 @@ const loadGalleryPhotos = async (galleryId) => {
         if (error) {
           return reject(error);
         }
-        resolve(rows.map((row, index) => mapPhotoRow(row, index)));
+        resolve(rows.map((row, index) => SCHEMA.photo.mapRow(row, index)));
       });
     });
   }
@@ -146,33 +276,31 @@ const loadGalleryPhotos = async (galleryId) => {
       if (error) {
         return reject(error);
       }
-      resolve(rows.map((row, index) => mapPhotoRow(row, index)));
+      resolve(rows.map((row, index) => SCHEMA.photo.mapRow(row, index)));
     });
   });
 };
 const loadGalleryPhoto = async (galleryId, photoId) => {
   const getQuery = () => {
-    const columns = SCHEMA.photo.join(",");
-    const baseQuery = `SELECT ${columns} FROM photo`;
     const order = " ORDER BY taken ASC, id ASC";
     switch (galleryId) {
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
-          baseQuery +
+          baseQuery(SCHEMA.photo) +
           " WHERE id IN (SELECT photo_id FROM gallery_photo)" +
           " AND id = ?" +
           order
         );
       case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
-          baseQuery +
+          baseQuery(SCHEMA.photo) +
           " WHERE id NOT IN (SELECT photo_id FROM gallery_photo)" +
           " AND id = ?" +
           order
         );
       default:
         return (
-          baseQuery +
+          baseQuery(SCHEMA.photo) +
           " JOIN gallery_photo ON photo.id=gallery_photo.photo_id" +
           " WHERE gallery_photo.gallery_id = ?" +
           " AND id = ?" +
@@ -191,7 +319,7 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
         if (error) {
           return reject(error);
         }
-        const photos = rows.map((row) => mapPhotoRow(row));
+        const photos = rows.map((row) => SCHEMA.photo.mapRow(row));
         if (photos.length === 0) {
           return reject(CONST.ERROR_NOT_FOUND);
         }
@@ -204,7 +332,7 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
       if (error) {
         return reject(error);
       }
-      const photos = rows.map((row) => mapPhotoRow(row));
+      const photos = rows.map((row) => SCHEMA.photo.mapRow(row));
       if (photos.length === 0) {
         return reject(CONST.ERROR_NOT_FOUND);
       }
@@ -213,31 +341,10 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
   });
 };
 const loadPhotos = async () => {
-  const columns = SCHEMA.photo.join(",");
-  const query = `SELECT ${columns} FROM photo`;
-  return new Promise((resolve, reject) => {
-    db.all(query, function (error, rows) {
-      if (error) {
-        return reject(error);
-      }
-      resolve(rows.map((row) => mapPhotoRow(row)));
-    });
-  });
+  return loadAll(SCHEMA.photo);
 };
 const loadPhoto = async (photoId) => {
-  const columns = SCHEMA.photo.join(",");
-  const query = `SELECT ${columns} FROM photo WHERE name = ?`;
-  return new Promise((resolve, reject) => {
-    db.all(query, photoId, function (error, rows) {
-      if (error) {
-        return reject(error);
-      }
-      if (rows.length !== 1) {
-        return reject(CONST.ERROR_NOT_FOUND);
-      }
-      resolve(mapPhotoRow(rows[0]));
-    });
-  });
+  return loadById(SCHEMA.photo, photoId);
 };
 
 const toString = (str) => {
@@ -245,84 +352,4 @@ const toString = (str) => {
     return str.toString();
   }
   return "";
-};
-const mapGalleryRow = (row) => {
-  return {
-    id: toString(row.id),
-    title: toString(row.title),
-    description: toString(row.description),
-    epoch: toString(row.epoch).substring(0, 10),
-    epochType: toString(row.epoch_type),
-    theme: toString(row.theme),
-  };
-};
-const mapPhotoRow = (row, index) => {
-  const taken = new Date(toString(row.taken).substring(0, 19));
-  const year = 0 + taken.getFullYear();
-  const month = taken.getMonth() + 1;
-  const day = taken.getDate();
-  const hour = taken.getHours();
-  const minute = taken.getMinutes();
-  const second = taken.getSeconds();
-
-  const normalizeCountry = (country) =>
-    !country || country === "unknown" ? undefined : country;
-
-  return {
-    id: toString(row.id),
-    index: index,
-    title: toString(row.title),
-    description: toString(row.description),
-    taken: {
-      instant: {
-        timestamp: toString(row.taken),
-        year: year,
-        month: month,
-        day: day,
-        hour: hour,
-        minute: minute,
-        second: second,
-      },
-      author: toString(row.author),
-      location: {
-        country: normalizeCountry(row.country_code),
-        place: toString(row.place),
-        coordinates: {
-          latitude: row.coord_lat,
-          longitude: row.coord_lon,
-          altitude: row.coord_alt,
-        },
-      },
-    },
-    camera: {
-      make: toString(row.camera_make),
-      model: toString(row.camera_model),
-      serial: toString(row.camera_serial),
-    },
-    lens: {
-      make: toString(row.lens_make),
-      model: toString(row.lens_model),
-      serial: toString(row.lens_serial),
-    },
-    exposure: {
-      focalLength: Number(row.focal),
-      aperture: Number(row.fstop),
-      exposureTime: Number(row.exposure_time),
-      iso: Number(row.iso),
-    },
-    dimensions: {
-      original: {
-        width: Number(row.orig_width),
-        height: Number(row.orig_height),
-      },
-      display: {
-        width: Number(row.disp_width),
-        height: Number(row.disp_height),
-      },
-      thumbnail: {
-        width: Number(row.thumb_width),
-        height: Number(row.thumb_height),
-      },
-    },
-  };
 };
