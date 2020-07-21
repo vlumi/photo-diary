@@ -18,33 +18,21 @@ const GalleryMonthNav = ({ gallery, year, month }) => {
   const [lastYear, lastMonth] = gallery.lastMonth();
   return (
     <h2>
-      <span style={prevStyle}>
-        <GalleryLink gallery={gallery} year={firstYear} month={firstMonth}>
-          ⇤
-        </GalleryLink>
-      </span>
-      <span style={prevStyle}>
-        <GalleryLink
-          gallery={gallery}
-          year={previousYear}
-          month={previousMonth}
-        >
-          ←
-        </GalleryLink>
-      </span>
-      <span className="title">
-        <DateLink gallery={gallery} year={year} month={month} />
-      </span>
-      <span style={nextStyle}>
-        <GalleryLink gallery={gallery} year={nextYear} month={nextMonth}>
-          →
-        </GalleryLink>
-      </span>
-      <span style={nextStyle}>
-        <GalleryLink gallery={gallery} year={lastYear} month={lastMonth}>
-          ⇥
-        </GalleryLink>
-      </span>
+      <GalleryLink gallery={gallery} year={firstYear} month={firstMonth}>
+        <span style={prevStyle}>⇤</span>
+      </GalleryLink>
+      <GalleryLink gallery={gallery} year={previousYear} month={previousMonth}>
+        <span style={prevStyle}>←</span>
+      </GalleryLink>
+      <DateLink gallery={gallery} year={year} month={month}>
+        <span className="title"></span>
+      </DateLink>
+      <GalleryLink gallery={gallery} year={nextYear} month={nextMonth}>
+        <span style={nextStyle}>→</span>
+      </GalleryLink>
+      <GalleryLink gallery={gallery} year={lastYear} month={lastMonth}>
+        <span style={nextStyle}>⇥</span>
+      </GalleryLink>
     </h2>
   );
 };
