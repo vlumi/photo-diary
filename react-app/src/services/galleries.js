@@ -3,9 +3,8 @@ import axios from "axios";
 const baseUrl = "/api/galleries";
 
 const getAll = async () => {
-  return await axios.get(baseUrl).then((response) => {
-    return response.data;
-  });
+  const response = await axios.get(baseUrl);
+  return response.data;
 };
 
 const get = async (galleryId) => {

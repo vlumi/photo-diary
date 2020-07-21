@@ -28,6 +28,7 @@ const Gallery = (galleryData) => {
   const photos = importPhotos(gallery.photos || {});
   const self = {
     id: () => gallery.id,
+    isSpecial: () => gallery.id.startsWith(":"),
     title: (year, month, day, photo) => {
       const ymd = calendar.formatDate({ year, month, day });
       if (!ymd) {
@@ -61,9 +62,10 @@ const Gallery = (galleryData) => {
     lastPath: () => {
       const [year, month, day] = self.lastDay();
       if (!self.includesDay(year, month, day)) {
-        return self.path(new Date().getFullYear());
+        return self.path(new Date());
       }
-      switch (config.INITIAL_GALLERY_VIEW || "") {
+      const initialView = gallery.initialView || config.INITIAL_GALLERY_VIEW;
+      switch (initialView) {
         case "year":
           return self.path(year);
         default:
@@ -72,7 +74,7 @@ const Gallery = (galleryData) => {
         case "day":
           return self.path(year, month, day);
         case "photo":
-          return self.lastPhoto().path(self.id());
+          return self.lastPhoto().path(self);
       }
     },
     includesPhotos: () => "photos" in gallery,

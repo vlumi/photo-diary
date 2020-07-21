@@ -4,8 +4,6 @@ import { Link } from "react-router-dom";
 
 import FormatDate from "./FormatDate";
 
-import GalleryModel from "../models/Gallery";
-
 import collection from "../utils/collection";
 
 const GalleriesBody = ({ galleries }) => {
@@ -40,9 +38,7 @@ const GalleriesBody = ({ galleries }) => {
   };
   return (
     <div className="galleries">
-      {galleries
-        .map((gallery) => GalleryModel(gallery))
-        .map((gallery) => renderGallery(gallery))}
+      {galleries.map((gallery) => renderGallery(gallery))}
     </div>
   );
 };

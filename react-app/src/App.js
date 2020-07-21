@@ -13,10 +13,6 @@ import "./App.css";
 import Galleries from "./components/Galleries";
 import GalleryTop from "./components/GalleryTop";
 
-import config from "./utils/config";
-import theme from "./utils/theme";
-theme.setTheme(config.DEFAULT_THEME);
-
 const App = () => {
   return (
     <>
@@ -33,11 +29,7 @@ const App = () => {
             <GalleryTop />
           </Route>
           <Route path="/g">
-            {config.DEFAULT_GALLERY ? (
-              <Redirect to={`/g/${config.DEFAULT_GALLERY}`} />
-            ) : (
-              <Galleries />
-            )}
+            <Galleries />
           </Route>
           <Route path="/">
             <Redirect to="/g" />

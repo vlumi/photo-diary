@@ -18,7 +18,11 @@ const GalleryTop = () => {
   const [gallery, setGallery] = React.useState(undefined);
   const [error, setError] = React.useState("");
 
-  theme.setTheme(config.DEFAULT_THEME);
+  if (gallery && gallery.hasTheme()) {
+    theme.setTheme(gallery.theme());
+  } else {
+    theme.setTheme(config.DEFAULT_THEME);
+  }
 
   const galleryId = useParams().galleryId;
   const photoId = useParams().photoId;
