@@ -46,7 +46,15 @@ const SCHEMA = {
   },
   gallery: {
     table: "gallery",
-    columns: ["id", "title", "description", "epoch", "theme"],
+    columns: [
+      "id",
+      "title",
+      "description",
+      "epoch",
+      "epoch_type",
+      "theme",
+      "initial_view",
+    ],
     order: ["id ASC"],
     mapRow: (row) => {
       return {
@@ -56,6 +64,7 @@ const SCHEMA = {
         epoch: toString(row.epoch).substring(0, 10),
         epochType: toString(row.epoch_type),
         theme: toString(row.theme),
+        initialView: toString(row.initial_view),
       };
     },
   },

@@ -23,7 +23,9 @@ CREATE TABLE gallery (
   -- new, TBD
   epoch_type TEXT,
   -- new
-  theme TEXT
+  theme TEXT,
+  -- new
+  initial_view TEXT
 );
 
 CREATE TABLE photo (
