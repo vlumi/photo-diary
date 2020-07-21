@@ -3,7 +3,7 @@ body {
   background: var(--primary-background);
   text-align: center;
   font-family: sans-serif;
-  padding: 5px;
+  padding: 0;
   margin: 0;
 }
 
@@ -11,6 +11,21 @@ body {
   font-size: xx-large;
   font-weight: bold;
   color: #f00;
+}
+
+.top-menu {
+  height: 25px;
+  color: var(--header-color);
+  background: var(--header-background);
+  margin: 50px 0 0 0;
+  padding: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+.top-menu .user {
+  text-align: right;
 }
 
 a {
@@ -53,10 +68,6 @@ h2 :link {
 }
 h2 :visited {
   color: var(--header-color);
-}
-
-#content {
-  margin-top: 50px;
 }
 
 h3 {
@@ -259,7 +270,7 @@ div.photo {
   align-items: flex-start;
   justify-content: center;
   overflow: hidden;
-  margin: 10px 0;
+  margin: 5px 0;
 }
 
 span.photo {

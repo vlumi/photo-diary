@@ -8,6 +8,7 @@ import GalleryYear from "./GalleryYear";
 import GalleryMonth from "./GalleryMonth";
 import GalleryDay from "./GalleryDay";
 import GalleryPhoto from "./GalleryPhoto";
+import GalleryTopMenu from "./GalleryTopMenu";
 
 import GalleryModel from "../models/Gallery";
 
@@ -48,18 +49,32 @@ const GalleryTop = () => {
     theme.setTheme("grayscale");
     return <div className="error">Loading failed</div>;
   }
-  if (!gallery) {
-    return (
-      <>
-        <div>Loading...</div>
-      </>
-    );
-  }
 
-  if (!gallery.includesPhotos()) {
-    return <i>Empty</i>;
-  }
-  if (photoId) {
+  const renderContent = () => {
+    if (!gallery) {
+      return (
+        <>
+          <div>Loading...</div>
+        </>
+      );
+    }
+    if (!gallery.includesPhotos()) {
+      return <i>Empty</i>;
+    }
+    if (!year) {
+      return <GalleryFull gallery={gallery} />;
+    }
+    if (!month) {
+      return <GalleryYear gallery={gallery} year={year} />;
+    }
+    if (!day) {
+      return <GalleryMonth gallery={gallery} year={year} month={month} />;
+    }
+    if (!photoId) {
+      return (
+        <GalleryDay gallery={gallery} year={year} month={month} day={day} />
+      );
+    }
     const photo = gallery.photo(year, month, day, photoId);
     return (
       <GalleryPhoto
@@ -70,18 +85,12 @@ const GalleryTop = () => {
         photo={photo}
       />
     );
-  }
+  };
+
   return (
     <>
-      {!year ? (
-        <GalleryFull gallery={gallery} />
-      ) : !month ? (
-        <GalleryYear gallery={gallery} year={year} />
-      ) : !day ? (
-        <GalleryMonth gallery={gallery} year={year} month={month} />
-      ) : (
-        <GalleryDay gallery={gallery} year={year} month={month} day={day} />
-      )}
+      <GalleryTopMenu />
+      {renderContent()}
     </>
   );
 };
