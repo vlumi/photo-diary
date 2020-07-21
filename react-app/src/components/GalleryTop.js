@@ -24,7 +24,6 @@ const GalleryTop = () => {
   const year = Number(useParams().year || 0);
   const month = Number(useParams().month || 0);
   const day = Number(useParams().day || 0);
-  // TODO: validate ymd...
 
   React.useEffect(() => {
     galleryService.get(galleryId).then((loadedGallery) => {

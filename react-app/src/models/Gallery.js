@@ -1,6 +1,8 @@
-import calendar from "../utils/calendar";
-import config from "../utils/config";
 import Photo from "./Photo";
+
+import calendar from "../utils/calendar";
+import collection from "../utils/collection";
+import config from "../utils/config";
 
 const Gallery = (galleryData) => {
   const importGalleryData = (galleryData) => {
@@ -171,24 +173,30 @@ const Gallery = (galleryData) => {
     },
 
     isFirstYear: (currentYear) => {
-      return calendar.compare([currentYear], [self.firstYear()]) === 0;
+      return collection.compareArrays([currentYear], [self.firstYear()]) === 0;
     },
     isBeforeFirstYear: (currentYear) => {
-      return calendar.compare([currentYear], [self.firstYear()]) >= 0;
+      return collection.compareArrays([currentYear], [self.firstYear()]) >= 0;
     },
     isFirstMonth: (currentYear, currentMonth) => {
       return (
-        calendar.compare([currentYear, currentMonth], self.firstMonth()) === 0
+        collection.compareArrays(
+          [currentYear, currentMonth],
+          self.firstMonth()
+        ) === 0
       );
     },
     isBeforeFirstMonth: (currentYear, currentMonth) => {
       return (
-        calendar.compare([currentYear, currentMonth], self.firstMonth()) >= 0
+        collection.compareArrays(
+          [currentYear, currentMonth],
+          self.firstMonth()
+        ) >= 0
       );
     },
     isFirstDay: (currentYear, currentMonth, currentDay) => {
       return (
-        calendar.compare(
+        collection.compareArrays(
           [currentYear, currentMonth, currentDay],
           self.firstDay()
         ) === 0
@@ -196,31 +204,37 @@ const Gallery = (galleryData) => {
     },
     isBeforeFirstDay: (currentYear, currentMonth, currentDay) => {
       return (
-        calendar.compare(
+        collection.compareArrays(
           [currentYear, currentMonth, currentDay],
           self.firstDay()
         ) >= 0
       );
     },
     isLastYear: (currentYear) => {
-      return calendar.compare([currentYear], [self.lastYear()]) === 0;
+      return collection.compareArrays([currentYear], [self.lastYear()]) === 0;
     },
     isAfterLasttYear: (currentYear) => {
-      return calendar.compare([currentYear], [self.lastYear()]) <= 0;
+      return collection.compareArrays([currentYear], [self.lastYear()]) <= 0;
     },
     isLastMonth: (currentYear, currentMonth) => {
       return (
-        calendar.compare([currentYear, currentMonth], self.lastMonth()) === 0
+        collection.compareArrays(
+          [currentYear, currentMonth],
+          self.lastMonth()
+        ) === 0
       );
     },
     isAfterLastMonth: (currentYear, currentMonth) => {
       return (
-        calendar.compare([currentYear, currentMonth], self.lastMonth()) <= 0
+        collection.compareArrays(
+          [currentYear, currentMonth],
+          self.lastMonth()
+        ) <= 0
       );
     },
     isLastDay: (currentYear, currentMonth, currentDay) => {
       return (
-        calendar.compare(
+        collection.compareArrays(
           [currentYear, currentMonth, currentDay],
           self.lastDay()
         ) === 0
@@ -228,7 +242,7 @@ const Gallery = (galleryData) => {
     },
     isAfterLastDay: (currentYear, currentMonth, currentDay) => {
       return (
-        calendar.compare(
+        collection.compareArrays(
           [currentYear, currentMonth, currentDay],
           self.lastDay()
         ) <= 0

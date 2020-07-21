@@ -80,34 +80,6 @@ const monthGrid = (year, month) => {
   return result;
 };
 
-const compare = (a, b) => {
-  if (typeof a !== "object" && typeof b !== "object") {
-    return undefined;
-  }
-  if (typeof a !== "object") {
-    return undefined;
-  }
-  if (typeof b !== "object") {
-    return undefined;
-  }
-  const maxLength = Math.max(a.length, b.length);
-  for (const i in [...Array(maxLength).keys()]) {
-    if (b.length <= i) {
-      return -1;
-    }
-    if (a.length <= i) {
-      return 1;
-    }
-    if (a[i] > b[i]) {
-      return -1;
-    }
-    if (a[i] < b[i]) {
-      return 1;
-    }
-  }
-  return 0;
-};
-
 const previousYear = (year) => year - 1;
 const previousMonth = (year, month) => {
   if (month > 1) {
@@ -181,8 +153,6 @@ export default {
   daysOfWeek,
   dayOfWeek,
   monthGrid,
-
-  compare,
 
   previousYear,
   previousMonth,

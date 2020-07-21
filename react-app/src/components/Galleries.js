@@ -6,7 +6,6 @@ import GalleriesBody from "./GalleriesBody";
 const Galleries = ({ galleries }) => {
   return (
     <>
-      {/* TODO: design */}
       <h2>
         <span className="title">Galleries</span>
       </h2>

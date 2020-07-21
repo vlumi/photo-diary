@@ -2,8 +2,11 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 
-import GalleryModel from "../models/Gallery";
 import FormatDate from "./FormatDate";
+
+import GalleryModel from "../models/Gallery";
+
+import collection from "../utils/collection";
 
 const GalleriesBody = ({ galleries }) => {
   const renderDescription = (gallery) => {
@@ -20,14 +23,8 @@ const GalleriesBody = ({ galleries }) => {
       </div>
     );
   };
-  function classNames(classes) {
-    return Object.entries(classes)
-      .filter(([key, value]) => value)
-      .map(([key, value]) => key)
-      .join(' ');
-  }
   const renderGallery = (gallery) => {
-    const styles = classNames({
+    const styles = collection.joinTruthyKeys({
       gallery: true,
       [`${gallery.theme()}-theme`]: gallery.hasTheme(),
     });
