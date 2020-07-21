@@ -11,7 +11,7 @@ module.exports = (fileName, root, target) => {
 
     const width = target.dimensions.width;
     const height = target.dimensions.height;
-    logger.info(`[${fileName}] Resizing to ${width}x${height}`);
+    logger.debug(`[${fileName}] Resizing to ${width}x${height}`);
 
     gm(inputPath)
       .autoOrient()

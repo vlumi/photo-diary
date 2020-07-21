@@ -17,7 +17,7 @@ module.exports = (fileName, rootDir, properties) => {
         if (error) {
           reject(error);
         } else {
-          logger.info(`[${fileName}] Dumped exif to ${jsonFileName}`);
+          logger.debug(`[${fileName}] Dumped exif to ${jsonFileName}`);
           resolve();
         }
       }

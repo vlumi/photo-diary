@@ -5,8 +5,6 @@ const path = require("path");
 const CONST = require("./constants");
 const logger = require("../utils/logger");
 
-const DEBUG = process.env.DEBUG || CONST.DEBUG;
-
 const getDirectory = () => {
   const directory = process.env[CONST.ENV_ROOT];
   if (!directory) {
@@ -42,7 +40,5 @@ const getDirectory = () => {
 };
 
 module.exports = {
-  DEBUG,
-
   getDirectory,
 };

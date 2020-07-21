@@ -1,4 +1,4 @@
-const DEBUG = false;
+const DEBUG = process.env.DEBUG || false;
 
 const ENV_ROOT = "ROOT";
 const WATCH_GLOB = "*.jp?(e)g";

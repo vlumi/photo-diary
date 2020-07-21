@@ -48,7 +48,6 @@ module.exports = async (fileName, rootDir) => {
     };
     const parseTimestamp = (timestampString) => {
       const timestamp = moment(timestampString, "YYYY:MM:DD HH:mm:ss");
-      console.log(timestampString, timestamp);
       return {
         timestamp: timestamp.format("YYYY-MM-DD HH:mm:ss"),
         year: timestamp.year(),

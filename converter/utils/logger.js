@@ -1,4 +1,4 @@
-const config = require("./config");
+const constants = require("./constants");
 
 const timeStamp = () => {
   const toIsoString = (date) => {
@@ -15,7 +15,7 @@ const timeStamp = () => {
 };
 
 const debug = (...params) => {
-  if (config.DEBUG) console.log(`[${timeStamp()}] DEBUG:`, ...params);
+  if (constants.DEBUG) console.log(`[${timeStamp()}] DEBUG:`, ...params);
 };
 const info = (...params) => console.log(`[${timeStamp()}] INFO:`, ...params);
 const error = (...params) =>

@@ -33,7 +33,7 @@ try {
     }
 
     const hrstart = process.hrtime();
-    logger.info(`[${fileName}] Processing`);
+    logger.debug(`[${fileName}] Processing`);
 
     await Promise.all(
       CONST.TARGETS.map((target) => convertImage(fileName, rootDir, target))
@@ -41,7 +41,7 @@ try {
 
     await extractProperties(fileName, rootDir);
 
-    logger.info(`[${fileName}] Moving file`);
+    logger.debug(`[${fileName}] Moving file`);
     await fs.promises.rename(
       filePath,
       path.join(rootDir, CONST.DIR_ORIGINAL, fileName)
@@ -53,14 +53,33 @@ try {
     logger.info(`[${fileName}] Processed, elapsed ${elapsedSeconds}s`);
   };
 
+  const fileQueue = [];
+  const fileQueueProcessor = () => {
+    const fileName = fileQueue.shift();
+    if (fileName) {
+      processFile(fileName)
+        .then(() => setTimeout(fileQueueProcessor, 0))
+        .catch((error) => {
+          logger.error("Processing failed for file", fileName, error);
+        });
+    } else {
+      setTimeout(fileQueueProcessor, 1000);
+    }
+  };
+  setTimeout(fileQueueProcessor, 1000);
+
   watcher
-    .on("add", (fileName) =>
-      processFile(fileName).catch((error) => logger.error(error))
-    )
-    .on("change", (fileName) =>
-      processFile(fileName).catch((error) => logger.error(error))
-    )
-    .on("unlink", (fileName) => logger.info(`[${fileName}] Removed from inbox`))
+    .on("add", (fileName) => {
+      if (!fileQueue.includes(fileName)) {
+        fileQueue.push(fileName);
+      }
+    })
+    .on("change", (fileName) => {
+      if (!fileQueue.includes(fileName)) {
+        fileQueue.push(fileName);
+      }
+    })
+    .on("unlink", (fileName) => logger.debug(`[${fileName}] Removed from inbox`))
     .on("error", (error) => logger.error("Error:", error));
 } catch (error) {
   console.error(error);
