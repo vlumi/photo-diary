@@ -23,6 +23,5 @@ const linkGalleryPhoto = async (galleryId, photoId) => {
 };
 const unlinkGalleryPhoto = async (galleryId, photoId) => {
   logger.debug("Unlinking photo", photoId, "from gallery", galleryId);
-  console.log(`Unlinking ${photoId} from ${galleryId}`);
   throw CONST.ERROR_NOT_IMPLEMENTED;
 };

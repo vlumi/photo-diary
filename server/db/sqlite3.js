@@ -200,13 +200,12 @@ const loadUsers = async () => {
   return await loadAll(SCHEMA.user);
 };
 const loadUser = async (userId) => {
-  console.log("load user", userId);
   return await loadById(SCHEMA.user, userId);
 };
 const loadUserAccessControl = async (userId) => {
   // TODO: cache in memory
   const query = baseQuery(SCHEMA.acl) + " WHERE user_id IN (?)";
-  const data = await new Promise((resolve, reject) => {
+  const acl = await new Promise((resolve, reject) => {
     db.all(query, userId, (error, rows) => {
       if (error) {
         return {};
@@ -217,11 +216,7 @@ const loadUserAccessControl = async (userId) => {
       resolve(rows.map((row) => SCHEMA.acl.mapRow(row)));
     });
   });
-
-  const acl = Object.fromEntries(data);
-  console.log("acl now", acl, data);
-
-  return acl;
+  return Object.fromEntries(acl);
 
   // return {
   //   [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
