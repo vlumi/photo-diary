@@ -250,7 +250,7 @@ const mapPhotoRow = (row, index) => {
   const calculateExposureTime = (shutterSpeed) => {
     const [n, d] = shutterSpeed.split("/");
     if (!d) {
-      return n;
+      return Number(n);
     }
     return Number(n) / Number(d);
   };
@@ -294,10 +294,10 @@ const mapPhotoRow = (row, index) => {
       serial: undefined,
     },
     exposure: {
-      focalLength: row.focal,
-      aperture: toString(row.fstop),
+      focalLength: Number(row.focal),
+      aperture: Number(row.fstop),
       exposureTime: calculateExposureTime(row.shutter),
-      iso: toString(row.iso),
+      iso: Number(row.iso),
     },
     dimensions: {
       original: {
