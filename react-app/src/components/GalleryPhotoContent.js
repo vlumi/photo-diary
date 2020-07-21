@@ -26,7 +26,7 @@ const toggleFullScreen = () => {
   }
 };
 
-const GalleryPhotoContent = ({ photo }) => {
+const GalleryPhotoContent = ({ gallery, year, month, day, photo }) => {
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -38,6 +38,10 @@ const GalleryPhotoContent = ({ photo }) => {
     window.addEventListener("resize", updateDimensions);
     return () => window.removeEventListener("resize", updateDimensions);
   });
+
+  if (!gallery.includesPhoto(year, month, day, photo)) {
+    return <i>Empty</i>;
+  }
 
   const getScale = () => {
     if (window.visualViewport) {
@@ -77,6 +81,10 @@ const GalleryPhotoContent = ({ photo }) => {
   );
 };
 GalleryPhotoContent.propTypes = {
+  gallery: PropTypes.object.isRequired,
+  year: PropTypes.number.isRequired,
+  month: PropTypes.number.isRequired,
+  day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
 };
 export default GalleryPhotoContent;

@@ -13,9 +13,9 @@ beforeEach(async () => {
 const getUsers = async (token, status = 200) =>
   api.get("/api/users").set("Authorization", `Bearer ${token}`).expect(status);
 
-const getUser = async (token, username, status = 200) =>
+const getUser = async (token, id, status = 200) =>
   api
-    .get(`/api/users/${username}`)
+    .get(`/api/users/${id}`)
     .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
@@ -39,14 +39,14 @@ describe("As admin", () => {
     const users = response.body;
     expect(users).toBeDefined();
     expect(users.length).toBe(9);
-    const admin = users.find((user) => user.username === "admin");
+    const admin = users.find((user) => user.id === "admin");
     expect(admin).toBeDefined();
-    expect(admin.username).toBe("admin");
+    expect(admin.id).toBe("admin");
     expect(admin.password).not.toBeDefined();
     users.forEach((user) => {
       expect(user).toBeDefined();
       expect(Object.keys(user).length).toBe(1);
-      expect(user.username).toBeDefined();
+      expect(user.id).toBeDefined();
       expect(user.password).not.toBeDefined();
     });
   });

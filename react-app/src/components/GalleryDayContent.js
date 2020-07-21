@@ -10,9 +10,6 @@ const GalleryDayContent = ({ gallery, year, month, day }) => {
   }
 
   const renderContent = () => {
-    if (!gallery.includesDay(year, month, day)) {
-      return <></>;
-    }
     return (
       <GalleryThumbnails
         gallery={gallery}

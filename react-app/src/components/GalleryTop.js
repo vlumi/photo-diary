@@ -10,11 +10,13 @@ import GalleryDay from "./GalleryDay";
 import GalleryPhoto from "./GalleryPhoto";
 
 import GalleryModel from "../models/Gallery";
+
 import config from "../utils/config";
 import theme from "../utils/theme";
 
 const GalleryTop = () => {
   const [gallery, setGallery] = React.useState(undefined);
+  const [error, setError] = React.useState("");
 
   theme.setTheme(config.DEFAULT_THEME);
 
@@ -26,15 +28,22 @@ const GalleryTop = () => {
   const day = Number(useParams().day || 0);
 
   React.useEffect(() => {
-    galleryService.get(galleryId).then((loadedGallery) => {
-      const gallery = GalleryModel(loadedGallery);
-      if (gallery.hasTheme()) {
-        theme.setTheme(gallery.theme());
-      }
-      setGallery(gallery);
-    });
+    galleryService
+      .get(galleryId)
+      .then((loadedGallery) => {
+        const gallery = GalleryModel(loadedGallery);
+        if (gallery.hasTheme()) {
+          theme.setTheme(gallery.theme());
+        }
+        setGallery(gallery);
+      })
+      .catch((error) => setError(error.message));
   }, [galleryId]);
 
+  if (error) {
+    theme.setTheme("grayscale");
+    return <div className="error">Loading failed</div>;
+  }
   if (!gallery) {
     return (
       <>
@@ -44,13 +53,10 @@ const GalleryTop = () => {
   }
 
   if (!gallery.includesPhotos()) {
-    return <></>;
+    return <i>Empty</i>;
   }
   if (photoId) {
     const photo = gallery.photo(year, month, day, photoId);
-    if (!photo) {
-      return <></>;
-    }
     return (
       <GalleryPhoto
         gallery={gallery}

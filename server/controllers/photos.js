@@ -15,7 +15,7 @@ module.exports = {
  * Get all photos.
  */
 router.get("/", async (request, response) => {
-  await authorizer.authorizeView(request.user.username);
+  await authorizer.authorizeView(request.user.id);
   const photos = await model.getPhotos();
   response.json(photos);
 });
@@ -23,7 +23,7 @@ router.get("/", async (request, response) => {
  * Create a photo.
  */
 router.post("/", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.username);
+  await authorizer.authorizeAdmin(request.user.id);
   const photo = {};
   // TODO: validate and set content from request.body
   const createdPhoto = await model.createPhoto(photo);
@@ -33,7 +33,7 @@ router.post("/", async (request, response) => {
  * Get the matching photo.
  */
 router.get("/:photoId", async (request, response) => {
-  await authorizer.authorizeView(request.user.username);
+  await authorizer.authorizeView(request.user.id);
   const photo = await model.getPhoto(request.params.photoId);
   response.json(photo);
 });
@@ -41,7 +41,7 @@ router.get("/:photoId", async (request, response) => {
  * Update the matching photo.
  */
 router.put("/:photoId", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.username);
+  await authorizer.authorizeAdmin(request.user.id);
   const photo = {};
   // TODO: validate and set content from request.body
   const updatedPhoto = await model.updatePhoto(photo);
@@ -51,7 +51,7 @@ router.put("/:photoId", async (request, response) => {
  * Delete the matching photo.
  */
 router.delete("/:photoId", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.username);
+  await authorizer.authorizeAdmin(request.user.id);
   await model.deletePhoto(request.params.photoId);
   response.status(204).end();
 });

@@ -29,7 +29,7 @@ const GalleryPhotoNav = ({ gallery, year, month, day, photo }) => {
         <span style={prevStyle}>←</span>
       </GalleryLink>
       <GalleryLink gallery={gallery} year={year} month={month}>
-        <span className="title">#{photo.index() + 1}</span>
+        <span className="title">#{photo ? photo.index() + 1 : ""}</span>
       </GalleryLink>
       <GalleryLink gallery={gallery} photo={nextPhoto}>
         <span style={nextStyle}>→</span>

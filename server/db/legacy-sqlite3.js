@@ -199,7 +199,8 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
   });
 };
 const loadPhotos = async () => {
-  const query = "SELECT * FROM photo";
+  const columns = SCHEMA.photo.join(",");
+  const query = `SELECT ${columns} FROM photo`;
   return new Promise((resolve, reject) => {
     db.all(query, function (error, rows) {
       if (error) {
@@ -210,7 +211,8 @@ const loadPhotos = async () => {
   });
 };
 const loadPhoto = async (photoId) => {
-  const query = "SELECT * FROM photo WHERE name = ?";
+  const columns = SCHEMA.photo.join(",");
+  const query = `SELECT ${columns} FROM photo WHERE name = ?`;
   return new Promise((resolve, reject) => {
     db.all(query, photoId, function (error, rows) {
       if (error) {

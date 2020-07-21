@@ -10,46 +10,46 @@ module.exports = () => {
   };
 };
 
-const authorizeView = async (username) => {
+const authorizeView = async (id) => {
   try {
-    const acl = await db.loadUserAccessControl(username);
+    const acl = await db.loadUserAccessControl(id);
     await authorizeViewDirect(acl);
   } catch (error) {
-    if (error !== CONST.ERROR_ACCESS_DELEGATE || username === "guest") {
+    if (error !== CONST.ERROR_ACCESS_DELEGATE || id === "guest") {
       throw error;
     }
     await authorizeView("guest");
   }
 };
-const authorizeAdmin = async (username) => {
+const authorizeAdmin = async (id) => {
   try {
-    const acl = await db.loadUserAccessControl(username);
+    const acl = await db.loadUserAccessControl(id);
     await authorizeAdminDirect(acl);
   } catch (error) {
-    if (error !== CONST.ERROR_ACCESS_DELEGATE || username === "guest") {
+    if (error !== CONST.ERROR_ACCESS_DELEGATE || id === "guest") {
       throw error;
     }
     await authorizeAdmin("guest");
   }
 };
-const authorizeGalleryView = async (username, galleryId) => {
-  const acl = await db.loadUserAccessControl(username);
+const authorizeGalleryView = async (id, galleryId) => {
+  const acl = await db.loadUserAccessControl(id);
   try {
     return await authorizeGalleryViewDirect(acl, galleryId);
   } catch (error) {
-    if (error !== CONST.ERROR_ACCESS_DELEGATE || username === "guest") {
+    if (error !== CONST.ERROR_ACCESS_DELEGATE || id === "guest") {
       throw CONST.ERROR_ACCESS;
     }
     await authorizeGalleryView("guest", galleryId);
     return galleryId;
   }
 };
-const authorizeGalleryAdmin = async (username, galleryId) => {
-  const acl = await db.loadUserAccessControl(username);
+const authorizeGalleryAdmin = async (id, galleryId) => {
+  const acl = await db.loadUserAccessControl(id);
   try {
     return await authorizeGalleryAdminDirect(acl, galleryId);
   } catch (error) {
-    if (error !== CONST.ERROR_ACCESS_DELEGATE || username === "guest") {
+    if (error !== CONST.ERROR_ACCESS_DELEGATE || id === "guest") {
       throw CONST.ERROR_ACCESS;
     }
     await authorizeGalleryAdmin("guest", galleryId);

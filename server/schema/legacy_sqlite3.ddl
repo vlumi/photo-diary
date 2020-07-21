@@ -1,12 +1,15 @@
 CREATE TABLE schema_info (version INTEGER PRIMARY KEY);
+
 INSERT INTO schema_info (version)
 VALUES (2);
+
 CREATE TABLE gallery (
   name TEXT PRIMARY KEY,
   title TEXT,
   description TEXT,
   epoch TEXT
 );
+
 CREATE TABLE photo (
   name TEXT PRIMARY KEY,
   title TEXT,
@@ -27,6 +30,7 @@ CREATE TABLE photo (
   f_width INTEGER,
   f_height INTEGER
 );
+
 CREATE TABLE photo_gallery (
   photo_name TEXT,
   gallery_name TEXT,
