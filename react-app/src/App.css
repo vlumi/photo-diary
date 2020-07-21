@@ -20,12 +20,24 @@ body {
   margin: 50px 0 0 0;
   padding: 0;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: stretch;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .top-menu .user {
-  text-align: right;
+  color: var(--inactive-color);
+  text-align: left;
+  font-size: small;
+}
+.top-menu .login input {
+  width: 75px;
+  margin: 0 2px;
+}
+
+form {
+  display: inline;
 }
 
 a {

@@ -6,7 +6,7 @@ const User = () => {
   //     // TODO: show user info;
   //     return <>user</>;
   // }
-  return <>Login</>;
+  return <span className="user">Guest</span>;
 };
 
 export default User;
