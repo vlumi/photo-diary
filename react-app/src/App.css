@@ -7,6 +7,12 @@ body {
   margin: 0;
 }
 
+.error {
+  font-size: xx-large;
+  font-weight: bold;
+  color: #f00;
+}
+
 a {
   text-decoration: none;
   color: var(--primary-color);

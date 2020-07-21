@@ -48,24 +48,31 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
       </div>
     );
   };
-  return (
-    <>
-      <div className="footer">
-        <span className="previous">{renderAdjacentPhoto(previousPhoto)}</span>
-        <span className="description">
-          <h4>{photo.formatTimestamp()}</h4>
-          {photo.title()}
-          <div className="location">
-            {photo.place()} <FlagIcon code={photo.countryCode()} />
-          </div>
-          <div className="exposure">{photo.formatExposure()}</div>
-          <div className="gear">{photo.formatGear()}</div>
-          {renderAge()}
-        </span>
-        <div className="next">{renderAdjacentPhoto(nextPhoto)}</div>
-      </div>
-    </>
-  );
+  const renderContent = () => {
+    if (!photo) {
+      return <></>;
+    }
+    return (
+      <>
+        <div className="footer">
+          <span className="previous">{renderAdjacentPhoto(previousPhoto)}</span>
+          <span className="description">
+            <h4>{photo.formatTimestamp()}</h4>
+            {photo.title()}
+            <div className="location">
+              {photo.place()} <FlagIcon code={photo.countryCode()} />
+            </div>
+            <div className="exposure">{photo.formatExposure()}</div>
+            <div className="gear">{photo.formatGear()}</div>
+            {renderAge()}
+          </span>
+          <div className="next">{renderAdjacentPhoto(nextPhoto)}</div>
+        </div>
+      </>
+    );
+  };
+
+  return renderContent();
 };
 GalleryPhotoFooter.propTypes = {
   gallery: PropTypes.object.isRequired,

@@ -81,6 +81,8 @@ const Gallery = (galleryData) => {
       self.includesYear(year) && month in photos[year],
     includesDay: (year, month, day) =>
       self.includesMonth(year, month) && day in photos[year][month],
+    includesPhoto: (year, month, day, photo) =>
+      self.currentPhotoIndex(year, month, day, photo) >= 0,
     countPhotos: (year, month, day) => {
       if (
         !photos ||
@@ -340,6 +342,15 @@ const Gallery = (galleryData) => {
     },
 
     currentPhotoIndex: (year, month, day, currentPhoto) => {
+      if (
+        !photos ||
+        !(year in photos) ||
+        !(month in photos[year][month]) ||
+        !(day in photos[year][month]) ||
+        !photos[year][month][day]
+      ) {
+        return -1;
+      }
       const currentDayPhotos = photos[year][month][day];
       const currentIndex = currentDayPhotos.findIndex(
         (photo) => photo.id() === currentPhoto.id()

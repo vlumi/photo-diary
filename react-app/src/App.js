@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Switch,
@@ -12,26 +12,12 @@ import "./App.css";
 
 import Galleries from "./components/Galleries";
 import GalleryTop from "./components/GalleryTop";
-import Stats from "./components/Stats";
-
-import galleryService from "./services/galleries";
-import statService from "./services/stats";
 
 import config from "./utils/config";
 import theme from "./utils/theme";
 theme.setTheme(config.DEFAULT_THEME);
 
 const App = () => {
-  const [galleries, setGalleries] = useState([]);
-  const [stats, setStats] = useState({});
-
-  useEffect(() => {
-    galleryService
-      .getAll()
-      .then((returnedGalleries) => setGalleries(returnedGalleries));
-    statService.getGlobal().then((returnedStats) => setStats(returnedStats));
-  }, []);
-
   return (
     <>
       <Helmet>
@@ -41,26 +27,16 @@ const App = () => {
       <Router>
         <Switch>
           <Route path="/g/:galleryId/:year/:month/:day/:photoId">
-            <GalleryTop galleries={galleries} />
+            <GalleryTop />
           </Route>
           <Route path="/g/:galleryId/:year?/:month?/:day?">
-            <GalleryTop galleries={galleries} />
+            <GalleryTop />
           </Route>
           <Route path="/g">
             {config.DEFAULT_GALLERY ? (
               <Redirect to={`/g/${config.DEFAULT_GALLERY}`} />
             ) : (
-              <Galleries galleries={galleries} />
-            )}
-          </Route>
-          <Route path="/stats/:galleryId">
-            <Stats stats={stats} />
-          </Route>
-          <Route path="/stats">
-            {config.DEFAULT_GALLERY ? (
-              <Redirect to={`/stats/${config.DEFAULT_GALLERY}`} />
-            ) : (
-              <Stats stats={stats} />
+              <Galleries />
             )}
           </Route>
           <Route path="/">
