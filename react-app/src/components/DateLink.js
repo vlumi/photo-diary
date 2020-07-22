@@ -17,9 +17,7 @@ const DateLink = ({ gallery, year, month, day }) => {
     return (
       <>
         <GalleryLink gallery={gallery} year={year}>
-          <children>
-            <FormatDate year={year} month={month} />
-          </children>
+          <FormatDate year={year} month={month} />
         </GalleryLink>
       </>
     );
@@ -27,15 +25,12 @@ const DateLink = ({ gallery, year, month, day }) => {
   return (
     <>
       <GalleryLink gallery={gallery} year={year} month={month}>
-        <children>
-          <FormatDate year={year} month={month} day={day} />
-        </children>
+        <FormatDate year={year} month={month} day={day} />
       </GalleryLink>
     </>
   );
 };
 DateLink.propTypes = {
-  children: PropTypes.object,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number,

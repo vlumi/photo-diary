@@ -24,9 +24,7 @@ const GalleryMonthNav = ({ gallery, year, month }) => {
       <GalleryLink gallery={gallery} year={previousYear} month={previousMonth}>
         <span style={prevStyle}>←</span>
       </GalleryLink>
-      <DateLink gallery={gallery} year={year} month={month}>
-        <span className="title"></span>
-      </DateLink>
+      <DateLink gallery={gallery} year={year} month={month}></DateLink>
       <GalleryLink gallery={gallery} year={nextYear} month={nextMonth}>
         <span style={nextStyle}>→</span>
       </GalleryLink>

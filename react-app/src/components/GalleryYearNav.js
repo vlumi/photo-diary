@@ -20,9 +20,7 @@ const GalleryYearNav = ({ gallery, year }) => {
       <GalleryLink gallery={gallery} year={previousYear}>
         <span style={prevStyle}>←</span>
       </GalleryLink>
-      <DateLink gallery={gallery} year={year}>
-        <span className="title"></span>
-      </DateLink>
+      <DateLink gallery={gallery} year={year} />
       <GalleryLink gallery={gallery} year={nextYear}>
         <span style={nextStyle}>→</span>
       </GalleryLink>

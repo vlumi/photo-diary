@@ -91,6 +91,6 @@ const GalleryTop = ({ user }) => {
   return <>{renderContent()}</>;
 };
 GalleryTop.propTypes = {
-  user: PropTypes.object.isRequired,
+  user: PropTypes.object,
 };
 export default GalleryTop;

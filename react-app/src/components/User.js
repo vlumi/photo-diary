@@ -12,6 +12,6 @@ const User = ({ user }) => {
   return <span className="user">{renderUserInfo(user)}</span>;
 };
 User.propTypes = {
-  user: PropTypes.object.isRequired,
+  user: PropTypes.object,
 };
 export default User;
