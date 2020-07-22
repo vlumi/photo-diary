@@ -14,6 +14,7 @@ import User from "./models/User";
 import TopMenu from "./components/TopMenu";
 import Galleries from "./components/Galleries";
 import GalleryTop from "./components/GalleryTop";
+import AdminTop from "./components/AdminTop";
 
 import token from "./utils/token";
 
@@ -46,6 +47,9 @@ const App = () => {
           </Route>
           <Route path="/g">
             <Galleries user={user} />
+          </Route>
+          <Route path="/admin">
+            <AdminTop user={user} />
           </Route>
           <Route path="/">
             <Redirect to="/g" />
