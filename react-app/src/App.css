@@ -31,7 +31,8 @@ body {
   white-space: nowrap;
 }
 
-.top-menu .login {
+.top-menu .login,
+.top-menu .logout {
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -45,7 +46,8 @@ body {
   flex-grow: 1;
   text-align: left;
 }
-.top-menu .login {
+.top-menu .login,
+.top-menu .logout {
   flex-grow: 1;
   text-align: right;
 }

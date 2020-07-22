@@ -1,24 +1,40 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 import Toggleable from "./Toggleable";
 import Login from "./Login";
+import Logout from "./Logout";
 import User from "./User";
 
-const TopMenu = () => {
+const TopMenu = ({ user, setUser }) => {
   const renderUserInfo = () => {
-    return <User />;
+    return <User user={user} />;
   };
-  return (
-    <div className="top-menu">
+  const renderContent = () => {
+    if (user) {
+      return (
+        <>
+          <span>
+            {renderUserInfo()}
+            <Logout setUser={setUser} />
+          </span>
+        </>
+      );
+    }
+    return (
       <Toggleable
         showLabel="Login"
         hideLabel="╳"
         defaultBody={renderUserInfo()}
       >
-        <Login />
+        <Login setUser={setUser} />
       </Toggleable>
-    </div>
-  );
+    );
+  };
+  return <div className="top-menu">{renderContent()}</div>;
 };
-
+TopMenu.propTypes = {
+  user: PropTypes.object,
+  setUser: PropTypes.func,
+};
 export default TopMenu;

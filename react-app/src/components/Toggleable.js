@@ -33,7 +33,7 @@ const Toggleable = React.forwardRef((props, ref) => {
 Toggleable.displayName = "Toggleable";
 Toggleable.propTypes = {
   children: PropTypes.object,
-  defaultBody: PropTypes.string,
+  defaultBody: PropTypes.object,
   showLabel: PropTypes.string,
   hideLabel: PropTypes.string,
   visibleDefault: PropTypes.bool,

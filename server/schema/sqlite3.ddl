@@ -4,7 +4,11 @@ INSERT INTO schema_info (version)
 VALUES (3);
 
 -- new
-CREATE TABLE user (id TEXT, PASSWORD TEXT, secret TEXT);
+CREATE TABLE user (
+  id TEXT PRIMARY KEY,
+  password TEXT,
+  secret TEXT
+);
 
 -- new
 CREATE TABLE acl (

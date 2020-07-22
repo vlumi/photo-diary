@@ -14,24 +14,37 @@ import TopMenu from "./components/TopMenu";
 import Galleries from "./components/Galleries";
 import GalleryTop from "./components/GalleryTop";
 
+import token from "./utils/token";
+
 const App = () => {
+  const [user, setUser] = React.useState(undefined);
+
+  if (!user) {
+    const storedUserJson = window.localStorage.getItem("user");
+    if (storedUserJson) {
+      const storedUser = JSON.parse(storedUserJson);
+      token.setToken(storedUser.token);
+      setUser(storedUser);
+    }
+  }
+
   return (
     <>
       <Helmet>
         <title>Photo diary</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Helmet>
-      <TopMenu />
+      <TopMenu user={user} setUser={setUser} />
       <Router>
         <Switch>
           <Route path="/g/:galleryId/:year/:month/:day/:photoId">
-            <GalleryTop />
+            <GalleryTop user={user} />
           </Route>
           <Route path="/g/:galleryId/:year?/:month?/:day?">
-            <GalleryTop />
+            <GalleryTop user={user} />
           </Route>
           <Route path="/g">
-            <Galleries />
+            <Galleries user={user} />
           </Route>
           <Route path="/">
             <Redirect to="/g" />

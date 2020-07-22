@@ -24,30 +24,35 @@ module.exports = () => {
   return {
     init,
     authenticateUser,
+    createToken,
     revokeToken,
     verifyToken,
   };
 };
 
 const checkUserPassword = async (credentials, user) => {
-  logger.debug("Check password", credentials);
-  if (!(await bcrypt.compare(credentials.password, user.password))) {
-    throw CONST.ERROR_LOGIN;
-  }
+  logger.debug("Check password", credentials, user);
+  return new Promise((resolve, reject) => {
+    bcrypt.compare(credentials.password, user.password, (error, result) => {
+      if (error || !result) {
+        logger.debug("Invalid password", credentials);
+        reject(CONST.ERROR_LOGIN);
+      }
+      logger.debug("success!", error, result);
+      resolve();
+    });
+  });
+};
+const createToken = async (id, acl) => {
+  const tokenContent = { id, acl };
+  // TODO: expiration
+  return await jwt.sign(tokenContent, secrets[id] || config.SECRET);
 };
 const authenticateUser = async (credentials) => {
   logger.debug("Authenticating user", credentials);
-  const createToken = (id) => {
-    const tokenContent = { id: credentials.id };
-    // TODO: expiration
-    return jwt.sign(tokenContent, secrets[id] || config.SECRET);
-  };
   try {
     const user = await db.loadUser(credentials.id);
     await checkUserPassword(credentials, user);
-
-    const token = createToken(credentials.id);
-    return `${credentials.id}=${token}`;
   } catch (error) {
     throw CONST.ERROR_LOGIN;
   }
@@ -59,16 +64,13 @@ const revokeToken = async (id) => {
   }
   secrets[id] = uuidv4();
 };
-const verifyToken = async (encodedToken) => {
-  const [id, token] = decodeToken(encodedToken);
-  logger.debug("Verifying token", id, token, encodedToken);
+const verifyToken = async (token) => {
+  const decoded = jwt.decode(token);
+  logger.debug("Verifying token", token);
 
-  const user = jwt.verify(token, secrets[id] || config.SECRET);
-  if (!user || user.id !== id) {
+  const user = jwt.verify(token, secrets[decoded.id] || config.SECRET);
+  if (!user || user.id !== decoded.id) {
     throw CONST.ERROR_LOGIN;
   }
   return user;
 };
-
-const decodeToken = (encodedToken) =>
-  Buffer.from(encodedToken, "base64").toString("ascii").split("=", 2);

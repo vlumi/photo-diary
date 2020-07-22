@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 
 import GalleriesBody from "./GalleriesBody";
@@ -10,7 +11,7 @@ import Gallery from "../models/Gallery";
 import config from "../utils/config";
 import theme from "../utils/theme";
 
-const Galleries = () => {
+const Galleries = ({ user }) => {
   const [galleries, setGalleries] = useState([]);
   const [error, setError] = React.useState("");
 
@@ -20,13 +21,11 @@ const Galleries = () => {
     galleryService
       .getAll()
       .then((returnedGalleries) => {
-        // TODO: for admin show all galleries
-        const gals = returnedGalleries
-          .map((gallery) => Gallery(gallery));
+        const gals = returnedGalleries.map((gallery) => Gallery(gallery));
         setGalleries(gals);
       })
       .catch((error) => setError(error.message));
-  }, []);
+  }, [user]);
 
   if (error) {
     theme.setTheme("grayscale");
@@ -54,5 +53,8 @@ const Galleries = () => {
       </div>
     </>
   );
+};
+Galleries.propTypes = {
+  user: PropTypes.object.isRequired,
 };
 export default Galleries;

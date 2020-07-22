@@ -1,8 +1,10 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
 
 import galleryService from "../services/galleries";
 
+import GalleryEmpty from "./GalleryEmpty";
 import GalleryFull from "./GalleryFull";
 import GalleryYear from "./GalleryYear";
 import GalleryMonth from "./GalleryMonth";
@@ -14,7 +16,7 @@ import GalleryModel from "../models/Gallery";
 import config from "../utils/config";
 import theme from "../utils/theme";
 
-const GalleryTop = () => {
+const GalleryTop = ({ user }) => {
   const [gallery, setGallery] = React.useState(undefined);
   const [error, setError] = React.useState("");
 
@@ -42,7 +44,7 @@ const GalleryTop = () => {
         setGallery(gallery);
       })
       .catch((error) => setError(error.message));
-  }, [galleryId]);
+  }, [galleryId, user]);
 
   if (error) {
     theme.setTheme("grayscale");
@@ -58,7 +60,7 @@ const GalleryTop = () => {
       );
     }
     if (!gallery.includesPhotos()) {
-      return <i>Empty</i>;
+      return <GalleryEmpty gallery={gallery} />;
     }
     if (!year) {
       return <GalleryFull gallery={gallery} />;
@@ -86,10 +88,9 @@ const GalleryTop = () => {
     );
   };
 
-  return (
-    <>
-      {renderContent()}
-    </>
-  );
+  return <>{renderContent()}</>;
+};
+GalleryTop.propTypes = {
+  user: PropTypes.object.isRequired,
 };
 export default GalleryTop;

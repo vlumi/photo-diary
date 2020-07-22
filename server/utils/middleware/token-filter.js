@@ -22,10 +22,7 @@ module.exports = (request, response, next) => {
   };
 
   const token = getToken(request);
-  if (
-    !token ||
-    (request.url === "/api/tokens" && request.method === "POST")
-  ) {
+  if (!token || (request.url === "/api/tokens" && request.method === "POST")) {
     initGuest();
     next();
     return;

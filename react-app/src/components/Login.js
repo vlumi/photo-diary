@@ -1,32 +1,37 @@
 import React from "react";
+import PropTypes from "prop-types";
+
+import jwt from "jsonwebtoken";
 
 import tokenService from "../services/tokens";
 
-const Login = () => {
-  const [username, setUsername] = React.useState("");
+import token from "../utils/token";
+
+const Login = ({ setUser }) => {
+  const [userId, setUserId] = React.useState("");
   const [password, setPassword] = React.useState("");
-  // const [user, setUser] = React.useState(undefined);
 
-  const login = async (username, password) => {
+  const login = async (userId, password) => {
     try {
-      const user = await tokenService.login({ username, password });
+      const response = await tokenService.login(userId, password);
+      const rawToken = response.data.token;
+      const user = jwt.decode(rawToken);
+      const userWithToken = { ...user, token: rawToken };
 
-      window.localStorage.setItem("user", JSON.stringify(user));
-      // blogService.setToken(user.setToken);
-      // setUser(user);
-      // showMessage(`Login successful. Welcome ${user.username}!`);
-      return true;
+      token.setToken(rawToken);
+      window.localStorage.setItem("user", JSON.stringify(userWithToken));
+      setUser(userWithToken);
     } catch (error) {
-      // blogService.setToken(undefined);
-      // setUser(undefined);
-      // showErrorMessage("Invalid credentials");
-      return false;
+      token.clearToken();
+      window.localStorage.clear();
+      setUser(undefined);
+      // TODO: notify user
     }
   };
 
   const handleLogin = (event) => {
     event.preventDefault();
-    login(username, password);
+    login(userId, password);
     setPassword("");
   };
 
@@ -36,10 +41,10 @@ const Login = () => {
         <span className="login">
           <input
             type="text"
-            value={username}
-            name="username"
+            value={userId}
+            name="userId"
             placeholder="Username"
-            onChange={({ target }) => setUsername(target.value)}
+            onChange={({ target }) => setUserId(target.value)}
           />
           <input
             type="password"
@@ -53,5 +58,8 @@ const Login = () => {
       </form>
     </>
   );
+};
+Login.propTypes = {
+  setUser: PropTypes.func,
 };
 export default Login;
