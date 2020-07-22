@@ -17,6 +17,8 @@ const loadSecrets = async () => {
 
 const init = async () => {
   await loadSecrets();
+  // Reload every minute or so
+  setTimeout(async () => await init(), 60000);
 };
 
 module.exports = () => {
