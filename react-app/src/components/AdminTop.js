@@ -5,6 +5,14 @@ const AdminTop = ({ user }) => {
   if (!user || !user.isAdmin()) {
     return <>Access denied.</>;
   }
+  // TODO: split by sections..?
+  //  - manage gallery AdminGallery
+  //    - import
+  //    - update/delete/link/unlink
+  //  - manage users AdminUser
+  //    - create/update/delete
+  //    - acl
+
   return <>Adminz</>;
 };
 AdminTop.propTypes = {
