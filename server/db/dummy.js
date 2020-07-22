@@ -208,7 +208,7 @@ const dbDump = JSON.stringify({
     blockedUser: {
       [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_NONE,
     },
-    guest: {
+    ":guest": {
       gallery3: CONST.ACCESS_VIEW,
     },
   },

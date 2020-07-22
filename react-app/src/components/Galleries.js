@@ -35,22 +35,27 @@ const Galleries = ({ user }) => {
   if (!galleries) {
     return <div>Loading...</div>;
   }
-  if (galleries.length === 0) {
-    return <i>Empty</i>;
-  }
 
   if (galleries.length === 1) {
     return <Redirect to={galleries[0].lastPath()} />;
   }
 
+  const renderBody = () => {
+    if (galleries.length === 0) {
+      return <i>Empty</i>;
+    }
+    return (
+      <div id="content">
+        <GalleriesBody galleries={galleries} />
+      </div>
+    );
+  };
   return (
     <>
       <h2>
         <span className="title">Galleries</span>
       </h2>
-      <div id="content">
-        <GalleriesBody galleries={galleries} />
-      </div>
+      {renderBody()}
     </>
   );
 };

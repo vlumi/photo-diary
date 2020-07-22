@@ -9,7 +9,7 @@ module.exports = (request, response, next) => {
   const initGuest = () => {
     logger.debug("Using anonymous guest");
     request.user = {
-      id: "guest",
+      id: CONST.GUEST_USER,
     };
   };
 

@@ -1,9 +1,11 @@
 const DEFAULT_ENV = "prod";
 const DEFAULT_DEBUG = false;
+
 const DEFAULT_PORT = 4200;
 const SESSION_LENGTH_MS = 1000 * 60 * 60 * 24 * 7;
 
 const API_ROOT = "/api";
+const GUEST_USER = ":guest";
 
 const ERROR_NOT_IMPLEMENTED = "Not implemented";
 const ERROR_NOT_FOUND = "Not found";
@@ -23,8 +25,7 @@ const SPECIAL_GALLERIES = {
   [SPECIAL_GALLERY_ALL]: {
     id: SPECIAL_GALLERY_ALL,
     title: "All photos",
-    description:
-      "Contains all photos in the repository.",
+    description: "Contains all photos in the repository.",
     epoch: undefined,
   },
   [SPECIAL_GALLERY_PUBLIC]: {
@@ -54,6 +55,7 @@ module.exports = {
   SESSION_LENGTH_MS,
 
   API_ROOT,
+  GUEST_USER,
 
   ERROR_NOT_IMPLEMENTED,
   ERROR_NOT_FOUND,
