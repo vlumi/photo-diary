@@ -8,13 +8,19 @@ const CONST = require("../utils/constants");
 module.exports = () => {
   return {
     init,
-    loadUserAccessControl,
     loadUsers,
+    createUser,
+    updateUser,
     loadUser,
+
+    loadUserAccessControl,
+
     loadGalleries,
     loadGallery,
+
     loadGalleryPhotos,
     loadGalleryPhoto,
+
     loadPhotos,
     loadPhoto,
   };
@@ -27,6 +33,12 @@ const init = () => {
 
 const loadUsers = async () => {
   return Object.values(db.users);
+};
+const createUser = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const updateUser = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 const loadUser = async (id) => {
   if (!(id in db.users)) {

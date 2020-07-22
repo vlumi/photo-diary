@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { v4: uuidv4 } = require("uuid");
 
 const CONST = require("../utils/constants");
 const config = require("../utils/config");
@@ -25,7 +24,6 @@ module.exports = () => {
     init,
     authenticateUser,
     createToken,
-    revokeToken,
     verifyToken,
   };
 };
@@ -57,16 +55,9 @@ const authenticateUser = async (credentials) => {
     throw CONST.ERROR_LOGIN;
   }
 };
-const revokeToken = async (id) => {
-  logger.debug("Revoking token for user:", id);
-  if (!id) {
-    return;
-  }
-  secrets[id] = uuidv4();
-};
 const verifyToken = async (token) => {
   const decoded = jwt.decode(token);
-  logger.debug("Verifying token", token);
+  logger.debug("Verifying token", token, secrets[decoded.id]);
 
   const user = jwt.verify(token, secrets[decoded.id] || config.SECRET);
   if (!user || user.id !== decoded.id) {

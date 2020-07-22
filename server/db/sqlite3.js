@@ -7,11 +7,14 @@ const logger = require("../utils/logger");
 module.exports = () => {
   return {
     loadUsers,
+    createUser,
+    updateUser,
     loadUser,
     loadUserAccessControl,
 
     loadGalleries,
     loadGallery,
+
     loadGalleryPhotos,
     loadGalleryPhoto,
 
@@ -37,6 +40,7 @@ const SCHEMA = {
         ...row,
       };
     },
+    mapInsert: (user) => [user.id, user.password, user.secret],
   },
   acl: {
     table: "acl",
@@ -177,12 +181,12 @@ const SCHEMA = {
     },
   },
 };
-const baseQuery = (schema) => {
+const baseSelect = (schema) => {
   const columns = schema.columns.join(",");
   return `SELECT ${columns} FROM ${schema.table}`;
 };
 const loadAll = async (schema) => {
-  const query = baseQuery(schema) + ` ORDER BY ${schema.order}`;
+  const query = baseSelect(schema) + ` ORDER BY ${schema.order}`;
   return new Promise((resolve, reject) => {
     db.all(query, (error, rows) => {
       if (error) {
@@ -192,8 +196,40 @@ const loadAll = async (schema) => {
     });
   });
 };
+const create = async (schema, data) => {
+  const cleanData = Object.fromEntries(
+    schema.columns.map((column) => [
+      column,
+      column in data ? data[column] : undefined,
+    ])
+  );
+  const columns = schema.columns;
+  const placeholders = columns.map(() => "?").join(",");
+  const query = `INSERT INTO ${schema.table} (${columns}) VALUES (${placeholders})`;
+  await db.serialize(() => {
+    var stmt = db.prepare(query);
+    stmt.run(schema.mapInsert(cleanData));
+    stmt.finalize();
+  });
+};
+const update = async (schema, id, data) => {
+  const cleanData = Object.fromEntries(
+    schema.columns
+      .filter((column) => column in data)
+      .map((column) => [column, data[column]])
+  );
+  const columns = Object.keys(cleanData);
+  const placeholders = columns.map((column) => `${column}=?`).join(", ");
+  const values = columns.map((column) => cleanData[column]);
+  const query = `UPDATE ${schema.table} SET ${placeholders} WHERE id=?`;
+  await db.serialize(() => {
+    var stmt = db.prepare(query);
+    stmt.run([...values, id]);
+    stmt.finalize();
+  });
+};
 const loadById = async (schema, id, idField = "id", allowEmpty = false) => {
-  const query = baseQuery(schema) + ` WHERE ${idField} = ?`;
+  const query = baseSelect(schema) + ` WHERE ${idField} = ?`;
   return new Promise((resolve, reject) => {
     db.all(query, id, (error, rows) => {
       if (error) {
@@ -210,12 +246,19 @@ const loadById = async (schema, id, idField = "id", allowEmpty = false) => {
 const loadUsers = async () => {
   return await loadAll(SCHEMA.user);
 };
+const createUser = async (user) => {
+  await create(SCHEMA.user, user);
+};
+const updateUser = async (userId, user) => {
+  await update(SCHEMA.user, userId, user);
+};
 const loadUser = async (userId) => {
   return await loadById(SCHEMA.user, userId);
 };
+
 const loadUserAccessControl = async (userId) => {
   // TODO: cache in memory
-  const query = baseQuery(SCHEMA.acl) + " WHERE user_id IN (?)";
+  const query = baseSelect(SCHEMA.acl) + " WHERE user_id IN (?)";
   const acl = await new Promise((resolve, reject) => {
     db.all(query, userId, (error, rows) => {
       if (error) {
@@ -229,38 +272,36 @@ const loadUserAccessControl = async (userId) => {
     });
   });
   return Object.fromEntries(acl);
-
-  // return {
-  //   [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
-  // };
 };
+
 const loadGalleries = async () => {
   return await loadAll(SCHEMA.gallery);
 };
 const loadGallery = async (galleryId) => {
   return await loadById(SCHEMA.gallery, galleryId);
 };
+
 const loadGalleryPhotos = async (galleryId) => {
   const getQuery = () => {
     const order = " ORDER BY taken ASC, id ASC";
     switch (galleryId) {
       case CONST.SPECIAL_GALLERY_ALL:
-        return baseQuery(SCHEMA.photo);
+        return baseSelect(SCHEMA.photo);
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
-          baseQuery(SCHEMA.photo) +
+          baseSelect(SCHEMA.photo) +
           " WHERE id IN (SELECT photo_id FROM gallery_photo)" +
           order
         );
       case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
-          baseQuery(SCHEMA.photo) +
+          baseSelect(SCHEMA.photo) +
           " WHERE id NOT IN (SELECT photo_id FROM gallery_photo)" +
           order
         );
       default:
         return (
-          baseQuery(SCHEMA.photo) +
+          baseSelect(SCHEMA.photo) +
           " JOIN gallery_photo ON photo.id=gallery_photo.photo_id" +
           " WHERE gallery_photo.gallery_id = ?" +
           order
@@ -293,21 +334,21 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
     switch (galleryId) {
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
-          baseQuery(SCHEMA.photo) +
+          baseSelect(SCHEMA.photo) +
           " WHERE id IN (SELECT photo_id FROM gallery_photo)" +
           " AND id = ?" +
           order
         );
       case CONST.SPECIAL_GALLERY_PRIVATE:
         return (
-          baseQuery(SCHEMA.photo) +
+          baseSelect(SCHEMA.photo) +
           " WHERE id NOT IN (SELECT photo_id FROM gallery_photo)" +
           " AND id = ?" +
           order
         );
       default:
         return (
-          baseQuery(SCHEMA.photo) +
+          baseSelect(SCHEMA.photo) +
           " JOIN gallery_photo ON photo.id=gallery_photo.photo_id" +
           " WHERE gallery_photo.gallery_id = ?" +
           " AND id = ?" +
@@ -347,6 +388,7 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
     });
   });
 };
+
 const loadPhotos = async () => {
   return loadAll(SCHEMA.photo);
 };

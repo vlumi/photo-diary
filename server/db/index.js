@@ -17,30 +17,40 @@ const db = connectDb();
 
 module.exports = {
   loadUsers: async () => {
-    return db.loadUsers();
+    return await db.loadUsers();
+  },
+  createUser: async (user) => {
+    await db.createUser(user);
+  },
+  updateUser: async (userId, user) => {
+    await db.updateUser(userId, user);
   },
   loadUser: async (username) => {
-    return db.loadUser(username);
+    return await db.loadUser(username);
   },
+
   loadUserAccessControl: async (username) => {
-    return db.loadUserAccessControl(username);
+    return await db.loadUserAccessControl(username);
   },
+
   loadGalleries: async () => {
-    return db.loadGalleries();
+    return await db.loadGalleries();
   },
   loadGallery: async (galleryId) => {
-    return db.loadGallery(galleryId);
+    return await db.loadGallery(galleryId);
   },
+
   loadGalleryPhotos: async (galleryId) => {
-    return db.loadGalleryPhotos(galleryId);
+    return await db.loadGalleryPhotos(galleryId);
   },
   loadGalleryPhoto: async (galleryId, photoId) => {
-    return db.loadGalleryPhoto(galleryId, photoId);
+    return await db.loadGalleryPhoto(galleryId, photoId);
   },
+
   loadPhotos: async () => {
-    return db.loadPhotos();
+    return await db.loadPhotos();
   },
   loadPhoto: async (photoId) => {
-    return db.loadPhoto(photoId);
+    return await db.loadPhoto(photoId);
   },
 };

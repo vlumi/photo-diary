@@ -37,18 +37,6 @@ module.exports = (request, response, next) => {
     })
     .catch((error) => {
       logger.debug("Token verification failed", error);
-      initGuest();
-      tokensModel
-        .revokeToken(token)
-        .then(() => {
-          logger.debug("Token revokated", token);
-        })
-        .catch(() => {
-          logger.debug("Token revokation failed", token, error);
-          next();
-        })
-        .finally(() => {
-          next(CONST.ERROR_INVALID_TOKEN);
-        });
+      next(CONST.ERROR_INVALID_TOKEN);
     });
 };

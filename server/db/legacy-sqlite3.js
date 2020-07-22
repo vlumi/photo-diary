@@ -6,13 +6,19 @@ const logger = require("../utils/logger");
 
 module.exports = () => {
   return {
-    loadUserAccessControl,
     loadUsers,
+    createUser,
+    updateUser,
     loadUser,
+
+    loadUserAccessControl,
+
     loadGalleries,
     loadGallery,
+
     loadGalleryPhotos,
     loadGalleryPhoto,
+
     loadPhotos,
     loadPhoto,
   };
@@ -56,6 +62,12 @@ const loadUserAccessControl = async () => {
 };
 const loadUsers = async () => {
   return [];
+};
+const createUser = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const updateUser = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 const loadUser = async () => {
   throw CONST.NOT_FOUND;
