@@ -6,13 +6,15 @@ const logger = require("../utils/logger");
 
 module.exports = () => {
   return {
-    loadUserAccessControl,
     loadUsers,
     loadUser,
+    loadUserAccessControl,
+
     loadGalleries,
     loadGallery,
     loadGalleryPhotos,
     loadGalleryPhoto,
+
     loadPhotos,
     loadPhoto,
   };
@@ -217,12 +219,13 @@ const loadUserAccessControl = async (userId) => {
   const acl = await new Promise((resolve, reject) => {
     db.all(query, userId, (error, rows) => {
       if (error) {
-        return {};
-      }
-      if (rows.length !== 1) {
         return reject(CONST.ERROR_NOT_FOUND);
       }
-      resolve(rows.map((row) => SCHEMA.acl.mapRow(row)));
+      if (rows.length < 1) {
+        return reject(CONST.ERROR_NOT_FOUND);
+      }
+      const mappedRows = rows.map((row) => SCHEMA.acl.mapRow(row));
+      resolve(mappedRows);
     });
   });
   return Object.fromEntries(acl);

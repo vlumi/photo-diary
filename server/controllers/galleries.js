@@ -1,3 +1,4 @@
+const CONST = require("../utils/constants");
 const authorizer = require("../utils/authorizer")();
 const model = require("../models/gallery")();
 
@@ -16,21 +17,29 @@ module.exports = {
  */
 router.get("/", async (request, response) => {
   const galleries = await model.getGalleries();
-  const galleryIds = galleries.map((gallery) => gallery.id);
 
-  const authorizedPromises = await Promise.allSettled(
-    galleryIds.map((galleryId) =>
-      authorizer.authorizeGalleryView(request.user.id, galleryId)
-    )
-  );
-  const authorizedGalleryIds = authorizedPromises
-    .filter((result) => result.status === "fulfilled")
-    .map((result) => result.value);
+  try {
+    await authorizer.authorizeAdmin(request.user.id);
+    response.json(galleries);
+  } catch (error) {
+    const galleryIds = galleries
+      .map((gallery) => gallery.id)
+      .filter((id) => !CONST.isSpecialGallery(id));
 
-  const authorizedGalleries = galleries.filter((gallery) =>
-    authorizedGalleryIds.includes(gallery.id)
-  );
-  response.json(authorizedGalleries);
+    const authorizedPromises = await Promise.allSettled(
+      galleryIds.map((galleryId) =>
+        authorizer.authorizeGalleryView(request.user.id, galleryId)
+      )
+    );
+    const authorizedGalleryIds = authorizedPromises
+      .filter((result) => result.status === "fulfilled")
+      .map((result) => result.value);
+
+    const authorizedGalleries = galleries.filter((gallery) =>
+      authorizedGalleryIds.includes(gallery.id)
+    );
+    response.json(authorizedGalleries);
+  }
 });
 /**
  * Create a new gallery.

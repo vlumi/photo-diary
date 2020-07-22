@@ -43,6 +43,6 @@ const GalleriesBody = ({ galleries }) => {
   );
 };
 GalleriesBody.propTypes = {
-  galleries: PropTypes.object.isRequired,
+  galleries: PropTypes.array.isRequired,
 };
 export default GalleriesBody;

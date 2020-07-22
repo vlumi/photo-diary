@@ -1,8 +1,10 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
 
 import galleryService from "../services/galleries";
 
+import GalleryEmpty from "./GalleryEmpty";
 import GalleryFull from "./GalleryFull";
 import GalleryYear from "./GalleryYear";
 import GalleryMonth from "./GalleryMonth";
@@ -14,7 +16,7 @@ import GalleryModel from "../models/Gallery";
 import config from "../utils/config";
 import theme from "../utils/theme";
 
-const GalleryTop = () => {
+const GalleryTop = ({ user }) => {
   const [gallery, setGallery] = React.useState(undefined);
   const [error, setError] = React.useState("");
 
@@ -42,24 +44,38 @@ const GalleryTop = () => {
         setGallery(gallery);
       })
       .catch((error) => setError(error.message));
-  }, [galleryId]);
+  }, [galleryId, user]);
 
   if (error) {
     theme.setTheme("grayscale");
     return <div className="error">Loading failed</div>;
   }
-  if (!gallery) {
-    return (
-      <>
-        <div>Loading...</div>
-      </>
-    );
-  }
 
-  if (!gallery.includesPhotos()) {
-    return <i>Empty</i>;
-  }
-  if (photoId) {
+  const renderContent = () => {
+    if (!gallery) {
+      return (
+        <>
+          <div>Loading...</div>
+        </>
+      );
+    }
+    if (!gallery.includesPhotos()) {
+      return <GalleryEmpty gallery={gallery} />;
+    }
+    if (!year) {
+      return <GalleryFull gallery={gallery} />;
+    }
+    if (!month) {
+      return <GalleryYear gallery={gallery} year={year} />;
+    }
+    if (!day) {
+      return <GalleryMonth gallery={gallery} year={year} month={month} />;
+    }
+    if (!photoId) {
+      return (
+        <GalleryDay gallery={gallery} year={year} month={month} day={day} />
+      );
+    }
     const photo = gallery.photo(year, month, day, photoId);
     return (
       <GalleryPhoto
@@ -70,19 +86,11 @@ const GalleryTop = () => {
         photo={photo}
       />
     );
-  }
-  return (
-    <>
-      {!year ? (
-        <GalleryFull gallery={gallery} />
-      ) : !month ? (
-        <GalleryYear gallery={gallery} year={year} />
-      ) : !day ? (
-        <GalleryMonth gallery={gallery} year={year} month={month} />
-      ) : (
-        <GalleryDay gallery={gallery} year={year} month={month} day={day} />
-      )}
-    </>
-  );
+  };
+
+  return <>{renderContent()}</>;
+};
+GalleryTop.propTypes = {
+  user: PropTypes.object.isRequired,
 };
 export default GalleryTop;

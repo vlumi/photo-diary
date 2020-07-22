@@ -60,6 +60,9 @@ const Gallery = (galleryData) => {
       return parts.join("/");
     },
     lastPath: () => {
+      if (!self.includesPhotos()) {
+        return self.path();
+      }
       const [year, month, day] = self.lastDay();
       if (!self.includesDay(year, month, day)) {
         return self.path(new Date());
@@ -77,7 +80,8 @@ const Gallery = (galleryData) => {
           return self.lastPhoto().path(self);
       }
     },
-    includesPhotos: () => "photos" in gallery,
+    includesPhotos: () =>
+      "photos" in gallery && Object.keys(gallery.photos).length > 0,
     includesYear: (year) => year in photos,
     includesMonth: (year, month) =>
       self.includesYear(year) && month in photos[year],

@@ -53,7 +53,7 @@ const GalleryPhotoContent = ({ gallery, year, month, day, photo }) => {
     const photoRatio = photo.ratio();
     const scale = getScale();
     const maxWidth = (dimensions.width - 62) * scale;
-    const maxHeight = (dimensions.height - 82) * scale;
+    const maxHeight = (dimensions.height - 107) * scale;
     const maxRatio = maxWidth / maxHeight;
 
     const style = {
