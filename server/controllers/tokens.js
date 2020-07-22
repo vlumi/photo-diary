@@ -34,11 +34,16 @@ router.post("/", async (request, response, next) => {
     return;
   }
   await model.authenticateUser(credentials);
-  const acl = {};
-  const token = await model.createToken(credentials.id, acl);
+  const token = await authorizer
+    .authorizeAdmin(credentials.id)
+    .then(async () => {
+      return await model.createToken(credentials.id, true);
+    })
+    .catch(async () => {
+      return await model.createToken(credentials.id, false);
+    });
   logger.debug(`User "${credentials.id}" logged in successfully.`);
 
-  // const encodedToken = Buffer.from(token).toString("base64");
   response.status(200).send({ token: token }).end();
 });
 /**

@@ -41,8 +41,8 @@ const checkUserPassword = async (credentials, user) => {
     });
   });
 };
-const createToken = async (id, acl) => {
-  const tokenContent = { id, acl };
+const createToken = async (id, isAdmin) => {
+  const tokenContent = { id, isAdmin };
   // TODO: expiration
   return await jwt.sign(tokenContent, secrets[id] || config.SECRET);
 };

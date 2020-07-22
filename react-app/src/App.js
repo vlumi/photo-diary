@@ -10,6 +10,7 @@ import { Helmet } from "react-helmet";
 import "./themes.css";
 import "./App.css";
 
+import User from "./models/User";
 import TopMenu from "./components/TopMenu";
 import Galleries from "./components/Galleries";
 import GalleryTop from "./components/GalleryTop";
@@ -22,8 +23,8 @@ const App = () => {
   if (!user) {
     const storedUserJson = window.localStorage.getItem("user");
     if (storedUserJson) {
-      const storedUser = JSON.parse(storedUserJson);
-      token.setToken(storedUser.token);
+      const storedUser = User(JSON.parse(storedUserJson));
+      token.setToken(storedUser.token());
       setUser(storedUser);
     }
   }

@@ -1,7 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
-
 import jwt from "jsonwebtoken";
+
+import User from "../models/User";
 
 import tokenService from "../services/tokens";
 
@@ -15,12 +16,12 @@ const Login = ({ setUser }) => {
     try {
       const response = await tokenService.login(userId, password);
       const rawToken = response.data.token;
-      const user = jwt.decode(rawToken);
-      const userWithToken = { ...user, token: rawToken };
+      const user = User(jwt.decode(rawToken), rawToken);
+      console.log("got user", user);
 
       token.setToken(rawToken);
-      window.localStorage.setItem("user", JSON.stringify(userWithToken));
-      setUser(userWithToken);
+      window.localStorage.setItem("user", user.toJson());
+      setUser(user);
     } catch (error) {
       token.clearToken();
       window.localStorage.clear();
