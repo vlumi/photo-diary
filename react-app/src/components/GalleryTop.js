@@ -8,7 +8,6 @@ import GalleryYear from "./GalleryYear";
 import GalleryMonth from "./GalleryMonth";
 import GalleryDay from "./GalleryDay";
 import GalleryPhoto from "./GalleryPhoto";
-import GalleryTopMenu from "./GalleryTopMenu";
 
 import GalleryModel from "../models/Gallery";
 
@@ -89,7 +88,6 @@ const GalleryTop = () => {
 
   return (
     <>
-      <GalleryTopMenu />
       {renderContent()}
     </>
   );

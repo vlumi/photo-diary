@@ -19,21 +19,57 @@ body {
   background: var(--header-background);
   margin: 50px 0 0 0;
   padding: 0;
+  font-size: small;
+}
+
+.top-menu > span {
+  width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: stretch;
   flex-wrap: nowrap;
   white-space: nowrap;
 }
 
+.top-menu .login {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
 .top-menu .user {
+  margin: auto 10px;
   color: var(--inactive-color);
+  flex-grow: 1;
   text-align: left;
-  font-size: small;
+}
+.top-menu .login {
+  flex-grow: 1;
+  text-align: right;
 }
 .top-menu .login input {
+  flex-grow: 1;
+  max-width: 200px;
   width: 75px;
+  height: 21px;
+  border: 1px;
   margin: 0 2px;
+}
+.top-menu button {
+  height: 23px;
+  margin: 1px;
+  padding: 0 1em;
+  border: none;
+}
+.top-menu button.show {
+}
+.top-menu button.hide {
+  color: var(--header-color);
+  background: var(--header-background);
+  padding: 0;
+  width: 23px;
 }
 
 form {

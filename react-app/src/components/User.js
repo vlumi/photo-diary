@@ -1,12 +1,16 @@
 import React from "react";
 
+import tokenService from "../services/tokens";
+
+const renderUserInfo = () => {
+  if (!tokenService.isLoggedIn()) {
+    return <></>;
+  }
+  return <>{tokenService.id()}</>;
+};
+
 const User = () => {
-  // TODO: get login info...
-  // if (false) {
-  //     // TODO: show user info;
-  //     return <>user</>;
-  // }
-  return <span className="user">Guest</span>;
+  return <span className="user">{renderUserInfo()}</span>;
 };
 
 export default User;

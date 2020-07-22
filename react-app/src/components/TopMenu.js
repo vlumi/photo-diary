@@ -4,15 +4,21 @@ import Toggleable from "./Toggleable";
 import Login from "./Login";
 import User from "./User";
 
-const GalleryTopMenu = () => {
+const TopMenu = () => {
+  const renderUserInfo = () => {
+    return <User />;
+  };
   return (
     <div className="top-menu">
-      <User />
-      <Toggleable showLabel="Login" hideLabel="X">
+      <Toggleable
+        showLabel="Login"
+        hideLabel="╳"
+        defaultBody={renderUserInfo()}
+      >
         <Login />
       </Toggleable>
     </div>
   );
 };
 
-export default GalleryTopMenu;
+export default TopMenu;

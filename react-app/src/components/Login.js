@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 
 import tokenService from "../services/tokens";
 
@@ -33,8 +32,8 @@ const Login = () => {
 
   return (
     <>
-      <span className="login">
-        <form onSubmit={handleLogin}>
+      <form onSubmit={handleLogin}>
+        <span className="login">
           <input
             type="text"
             value={username}
@@ -50,12 +49,9 @@ const Login = () => {
             onChange={({ target }) => setPassword(target.value)}
           />
           <button type="submit">Login</button>
-        </form>
-      </span>
+        </span>
+      </form>
     </>
   );
-};
-Login.propTypes = {
-  login: PropTypes.func.isRequired,
 };
 export default Login;

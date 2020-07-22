@@ -17,19 +17,25 @@ const Toggleable = React.forwardRef((props, ref) => {
     <>
       <span style={hideWhenVisible}>
         {props.defaultBody}
-        <button onClick={toggle}>{props.showLabel || "Show"}</button>
+        <button className="show" onClick={toggle}>
+          {props.showLabel || "Show"}
+        </button>
       </span>
       <span style={showWhenVisible}>
         {props.children}
-        <button onClick={toggle}>{props.hideLabel || "Hide"}</button>
+        <button className="hide" onClick={toggle}>
+          {props.hideLabel || "Hide"}
+        </button>
       </span>
     </>
   );
 });
 Toggleable.displayName = "Toggleable";
 Toggleable.propTypes = {
+  children: PropTypes.object,
   defaultBody: PropTypes.string,
   showLabel: PropTypes.string,
   hideLabel: PropTypes.string,
+  visibleDefault: PropTypes.bool,
 };
 export default Toggleable;

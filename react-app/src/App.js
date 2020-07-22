@@ -10,6 +10,7 @@ import { Helmet } from "react-helmet";
 import "./themes.css";
 import "./App.css";
 
+import TopMenu from "./components/TopMenu";
 import Galleries from "./components/Galleries";
 import GalleryTop from "./components/GalleryTop";
 
@@ -20,6 +21,7 @@ const App = () => {
         <title>Photo diary</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Helmet>
+      <TopMenu />
       <Router>
         <Switch>
           <Route path="/g/:galleryId/:year/:month/:day/:photoId">
