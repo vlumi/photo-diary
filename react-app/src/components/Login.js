@@ -17,7 +17,6 @@ const Login = ({ setUser }) => {
       const response = await tokenService.login(userId, password);
       const rawToken = response.data.token;
       const user = User(jwt.decode(rawToken), rawToken);
-      console.log("got user", user);
 
       token.setToken(rawToken);
       window.localStorage.setItem("user", user.toJson());

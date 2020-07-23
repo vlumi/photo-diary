@@ -56,29 +56,37 @@ const Photo = (photoData) => {
       });
       return `${ymd} ${hms}`;
     },
-    formatFocalLength: () => `ƒ=${photo.exposure.focalLength}mm`,
-    formatAperture: () => `ƒ/${photo.exposure.aperture}`,
+    formatFocalLength: () =>
+      photo.exposure.focalLength ? `ƒ=${photo.exposure.focalLength}mm` : "",
+    formatAperture: () =>
+      photo.exposure.aperture ? `ƒ/${photo.exposure.aperture}` : "",
     formatExposureTime: () => {
       const time = photo.exposure.exposureTime;
+      if (!time) {
+        return "";
+      }
       if (time >= 1) {
         return `${time}s`;
       }
       const fraction = Math.round(1 / time);
       return `1/${fraction}s`;
     },
-    formatIso: () => `ISO${photo.exposure.iso}`,
-    formatMegapixels: () =>
-      `${Math.round(
+    formatIso: () => (photo.exposure.iso ? `ISO${photo.exposure.iso}` : ""),
+    formatMegapixels: () => {
+      const mpix = Math.round(
         (photo.dimensions.original.width * photo.dimensions.original.height) /
           10 ** 6
-      )}MP`,
+      );
+      return mpix ? `${mpix}MP` : "";
+    },
     formatExposure: () => {
-      const focalLength = self.formatFocalLength();
-      const aperture = self.formatAperture();
-      const exposureTime = self.formatExposureTime();
-      const iso = self.formatIso();
-      const mpix = self.formatMegapixels();
-      return `${focalLength} ${aperture} ${exposureTime} ${iso} ${mpix}`;
+      return [
+        self.formatFocalLength(),
+        self.formatAperture(),
+        self.formatExposureTime(),
+        self.formatIso(),
+        self.formatMegapixels(),
+      ].join(" ");
     },
     formatGear: () => {
       const joinMakeAndModel = (make, model) => {
