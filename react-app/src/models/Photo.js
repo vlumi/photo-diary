@@ -81,13 +81,18 @@ const Photo = (photoData) => {
       return `${focalLength} ${aperture} ${exposureTime} ${iso} ${mpix}`;
     },
     formatGear: () => {
-      const camera = [photo.camera.make, photo.camera.model]
-        .filter(Boolean)
-        .join(" ");
-      const lens = [photo.lens.make, photo.lens.model]
-        .filter(Boolean)
-        .join(" ");
-      return [camera, lens].filter(Boolean).join(", ");
+      const joinMakeAndModel = (make, model) => {
+        if (!make && !model) return "";
+        if (!make) return model;
+        if (!model) return make;
+        if (model.startsWith(make)) {
+          return model;
+        }
+        return [make, model].join(" ");
+      };
+      const camera = joinMakeAndModel(photo.camera.make, photo.camera.model);
+      const lens = joinMakeAndModel(photo.lens.make, photo.lens.model);
+      return [camera, lens].filter(Boolean).join(" + ");
     },
     hasCountry: () =>
       photo &&
@@ -109,52 +114,4 @@ const Photo = (photoData) => {
   };
   return self;
 };
-
-// const x = {
-//   id: "20170812_130718_X100F_2880.jpg",
-//   index: 2463,
-//   title: "",
-//   description: "",
-//   taken: {
-//     instant: {
-//       timestamp: "2017-08-12 13:07:18 +0900",
-//       year: 2017,
-//       month: 8,
-//       day: 12,
-//       hour: 13,
-//       minute: 7,
-//       second: 18,
-//     },
-//     author: "Ville Misaki",
-//     location: {
-//       country: "jp",
-//       place: "Kyoto railway museum",
-//       coordinates: {},
-//     },
-//   },
-//   camera: {
-//     model: "FUJIFILM X100F",
-//   },
-//   lens: {},
-//   exposure: {
-//     focalLength: 23,
-//     aperture: "4.0",
-//     exposureTime: 0.01,
-//     iso: "4000",
-//   },
-//   dimensions: {
-//     original: {
-//       width: 5871,
-//       height: 3914,
-//     },
-//     display: {
-//       width: 1000,
-//       height: 1500,
-//     },
-//     thumbnail: {
-//       width: 133,
-//       height: 200,
-//     },
-//   },
-// };
 export default Photo;
