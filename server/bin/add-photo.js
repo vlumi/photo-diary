@@ -13,7 +13,7 @@ const { argv } = require("yargs")
   .group(
     [
       "author",
-      "plaFe",
+      "place",
       "camera-make",
       "camera-model",
       "lens-make",
