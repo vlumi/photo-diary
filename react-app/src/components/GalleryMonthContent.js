@@ -32,6 +32,7 @@ const GalleryMonthContent = ({ gallery, year, month }) => {
             </span>
             {gallery.hasEpoch() ? (
               <>
+                {/* TODO: epochMode */}
                 <span>
                   <EpochAge
                     gallery={gallery}

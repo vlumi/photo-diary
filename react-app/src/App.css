@@ -65,8 +65,6 @@ body {
   padding: 0 1em;
   border: none;
 }
-.top-menu button.show {
-}
 .top-menu button.hide {
   color: var(--header-color);
   background: var(--header-background);
@@ -355,6 +353,12 @@ div.adjacent {
   margin: 0;
   padding: 2px;
   border: solid #004 1px;
+}
+.footer .copyright {
+  flex-grow: 1;
+  text-align: center;
+  margin: 0 10px;
+  font-size: x-small;
 }
 .footer .description {
   flex-grow: 1;

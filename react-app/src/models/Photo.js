@@ -28,6 +28,12 @@ const Photo = (photoData) => {
     index: () => photo.index,
     title: () => photo.title,
     description: () => photo.description,
+    copyright: () => {
+      if (photo.taken.author) {
+        return `Photo Copyright © ${photo.taken.author}. All rights reserved.`;
+      }
+      return "Photo Copyright © All rights reserved.";
+    },
     ymd: () => [self.year(), self.month(), self.day()],
     year: () => photo.taken.instant.year,
     month: () => photo.taken.instant.month,

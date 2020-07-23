@@ -59,11 +59,13 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
           <span className="description">
             <h4>{photo.formatTimestamp()}</h4>
             {photo.title()}
+            <div className="copyright">{photo.copyright()}</div>
             <div className="location">
               {photo.place()} <FlagIcon code={photo.countryCode()} />
             </div>
             <div className="exposure">{photo.formatExposure()}</div>
             <div className="gear">{photo.formatGear()}</div>
+            {/* TODO: epochMode */}
             {renderAge()}
           </span>
           <div className="next">{renderAdjacentPhoto(nextPhoto)}</div>

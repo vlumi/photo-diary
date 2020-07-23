@@ -18,6 +18,7 @@ const GalleryDayContent = ({ gallery, year, month, day }) => {
     );
   };
 
+  // TODO: epoch & epochMode
   return (
     <>
       <GalleryTitle gallery={gallery} />
