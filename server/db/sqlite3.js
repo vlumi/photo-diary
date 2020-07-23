@@ -452,7 +452,7 @@ const loadGalleryPhotos = async (galleryId) => {
     const order = " ORDER BY taken ASC, id ASC";
     switch (galleryId) {
       case CONST.SPECIAL_GALLERY_ALL:
-        return baseSelect(SCHEMA.photo);
+        return baseSelect(SCHEMA.photo) + order;
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return (
           baseSelect(SCHEMA.photo) +
