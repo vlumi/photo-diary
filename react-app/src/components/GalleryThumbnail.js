@@ -17,9 +17,7 @@ const GalleryThumbnail = ({ gallery, photo }) => {
   return (
     <div className="thumbnail">
       <GalleryLink gallery={gallery} photo={photo}>
-        <span className="thumbnail" style={style}>
-          <img src="https://gallery.misaki.fi/css/blank.gif" alt="" />
-        </span>
+        <span className="thumbnail" style={style}></span>
       </GalleryLink>
       {photo.hasCountry() ? (
         <span className="flag" title={photo.countryName()}>
