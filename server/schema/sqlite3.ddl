@@ -19,7 +19,8 @@ CREATE TABLE gallery (
   epoch TEXT,
   epoch_type TEXT,
   theme TEXT,
-  initial_view TEXT
+  initial_view TEXT,
+  hostname TEXT
 );
 CREATE TABLE photo (
   id TEXT PRIMARY KEY,

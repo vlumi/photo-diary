@@ -40,6 +40,13 @@ const Galleries = ({ user }) => {
     return <Redirect to={galleries[0].lastPath()} />;
   }
 
+  const galleriesMatchingHostname = galleries.filter((gallery) =>
+    gallery.matchesHostname(window.location.hostname)
+  );
+  if (galleriesMatchingHostname.length === 1) {
+    return <Redirect to={galleriesMatchingHostname[0].lastPath()} />;
+  }
+
   const renderBody = () => {
     if (galleries.length === 0) {
       return <i>Empty</i>;

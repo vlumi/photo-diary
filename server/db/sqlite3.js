@@ -79,6 +79,7 @@ const SCHEMA = {
       "epoch_type",
       "theme",
       "initial_view",
+      "hostname",
     ],
     order: ["id ASC"],
     mapRow: (row) => {
@@ -90,6 +91,7 @@ const SCHEMA = {
         epochType: toString(row.epoch_type),
         theme: toString(row.theme),
         initialView: toString(row.initial_view),
+        hostname: toString(row.hostname),
       };
     },
     mapToColumns: (gallery) => {
@@ -100,6 +102,7 @@ const SCHEMA = {
         epoch_type: gallery.epochType,
         theme: gallery.theme,
         initial_view: gallery.initialView,
+        hostname: gallery.hostname,
       };
     },
     mapInsert: (gallery) => {
@@ -111,6 +114,7 @@ const SCHEMA = {
         gallery.epochType,
         gallery.theme,
         gallery.initialView,
+        gallery.hostname,
       ];
     },
   },

@@ -9,6 +9,9 @@ const Gallery = (galleryData) => {
     if (galleryData.epoch) {
       galleryData.epoch = new Date(galleryData.epoch);
     }
+    if (galleryData.hostname) {
+      galleryData.hostname = new RegExp(`^${galleryData.hostname}$`);
+    }
     return galleryData;
   };
   const importPhotos = (photos) => {
@@ -51,6 +54,12 @@ const Gallery = (galleryData) => {
     },
     hasTheme: () => gallery && "theme" in gallery && gallery.theme,
     theme: () => gallery.theme,
+    matchesHostname: (hostname) => {
+      if (!gallery.hostname) {
+        return false;
+      }
+      return gallery.hostname.test(hostname);
+    },
     path: (year, month, day) => {
       const parts = ["", "g", gallery.id];
       const ymd = calendar.formatDate({ year, month, day, separator: "/" });
