@@ -26,7 +26,8 @@
     "morgan": "^1.10.0",
     "pm2": "^4.4.0",
     "sqlite3": "^5.0.0",
-    "uuid": "^8.2.0"
+    "uuid": "^8.2.0",
+    "yargs": "^15.4.1"
   },
   "devDependencies": {
     "eslint": "^7.5.0",
