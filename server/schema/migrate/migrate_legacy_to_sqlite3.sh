@@ -1,18 +1,18 @@
 #!bin/sh
 
-OLD_DB=/path/to/old.sqlite3
+OLD_DB="/path/to/old.sqlite3"
 # The target directory of the new DB
-NEW_DIR=.
+NEW_DIR="."
 # Name of the target DB -- expected to be empty
-NEW_DB=newdb
+NEW_DB="newdb"
 # TODO: catch the directory of this script
-SCHEMA_DIR=.
+SCHEMA_DIR="."
 
 (
-    cat $SCHEMA_DIR/sqlite3.ddl
-    cat $SCHEMA_DIR/dump_legacy_sqlite3_to_sqlite3.sql |
-        sqlite3 $OLD_DB |
-        perl $SCHEMA_DIR/transform_legacy_sqlite3_to_sqlite.pl
+    cat "$SCHEMA_DIR/sqlite3.ddl"
+    cat "$SCHEMA_DIR/migrate/dump_legacy_sqlite3_to_sqlite3.sql" |
+        sqlite3 "$OLD_DB" |
+        perl "$SCHEMA_DIR/migrate/transform_legacy_sqlite3_to_sqlite.pl"
     echo "INSERT INTO acl VALUES (':guest',':public',1);"
     echo "UPDATE photo SET taken=substr(taken, 0, 20);"
 ) |

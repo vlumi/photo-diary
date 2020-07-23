@@ -1,7 +1,7 @@
 const path = require("path");
 const util = require("util");
 
-const readExif = require("./extract-properties/read-exif");
+const readExif = require("../extract-properties/read-exif");
 
 process.argv.slice(2).forEach((filePath) => {
   const fileName = path.basename(filePath);
