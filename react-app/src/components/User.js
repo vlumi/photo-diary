@@ -5,7 +5,7 @@ const renderUserInfo = (user) => {
   if (!user || !("id" in user)) {
     return <></>;
   }
-  return <>{user.id}</>;
+  return <>{user.id()}</>;
 };
 
 const User = ({ user }) => {
