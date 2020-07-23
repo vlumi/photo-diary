@@ -30,7 +30,7 @@ const EpochAge = ({
     }
   }
   if (parts.length === 0) {
-    return `0${t("days-short")}`;
+    return `0${t("days-${format}")}`;
   }
 
   return parts.map((part, index) => (
