@@ -27,15 +27,23 @@ Certain parameters are passed through environment veriables. These can be either
 - `DB_DRIVER` \*
   - The driver to use for the backend DB connection.
   - Currently implemented:
+    - `sqlite3` – Latest schema with all current features implemented
     - `dummy` – data hard-coded into the driver, for testing purposes only
     - `legacy_sqlite3` – DB from [gallery](https://github.com/vlumi/gallery)
       - No ACL (no admin access support, everyone has global view access)
       - Limited photo property support (e.g. gear)
-    - TBD: modernized `sqlite3`, `postgresql`, etc.
+    - TBD: `postgresql`, `mysql`, etc.
 - `DB_OPTS` (\* depends on `DB_DRIVER`)
   - This parameter will be passed to the `DB_DRIVER` during connection.
+    - `sqlite3` – Path to the DB file
     - `dummy` – Not used
     - `legacy_sqlite3` – Path to the DB file
+- `REACT_APP_PHOTO_ROOT_DIR` \*
+  - The path to the physical photos, with the following sub-directories
+    - `inbox` – New photos to be added, or their extracted JSON files
+    - `display` – Display-size, large photos
+    - `thumbnail` – Thumbnail-size, small photos
+    - `original` – The already-processed photos and JSON files
 
 ### Examples
 
@@ -44,8 +52,8 @@ Certain parameters are passed through environment veriables. These can be either
   - `npm run prod`
 - With the variables inlined:
   - `DB_DRIVER=dummy npm run dev`
-  - `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
-  - `DB_DRIVER=legacy_sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm prod`
+  - `DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
+  - `DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm prod`
 
 ## Public API
 
@@ -78,24 +86,24 @@ The required access level is listed in brackets at the end of each resource meth
 
 - `/tokens`
   - `POST` – Login, create an authentication token **[any]**
-    1. `username`
+    1. `id`
     2. `password`
     - Returns `token`
   - `GET` – Verify the current authenticatio ntoken **[any]**
   - `DELETE` – Logout, revoke all tokens for the current user **[any]**
-  - `DELETE ../:username` – Logout, revoke all tokens for the user **[admin]**
+  - `DELETE ../:userId` – Logout, revoke all tokens for the user **[admin]**
 - `/user`
   - `GET` – List all users **[admin]**
   - `POST` – Create a new user **[admin]**
     1. `user`
     - Returnes `users`
-  - `GET ../:username` – Get user **[admin]**
+  - `GET ../:userId` – Get user **[admin]**
     - Returns `user`
-  - `PUT ../:username` – Update user **[admin]**
+  - `PUT ../:userId` – Update user **[admin]**
     1. `user`
     - Returns `user`
-  - `DELETE ../:username` – Delete user **[admin]**
-- `/stats`
+  - `DELETE ../:userId` – Delete user **[admin]**
+- `/stats` – (TBD: under consideration for removal, in favor of app-side processing)
   - `GET` – Global statistics **[view]**
     - Returns `stats`
   - `GET ../:galleryId` – Gallery statistics **[view]**
@@ -135,7 +143,7 @@ TBD
 
 - `session`
 - `user`
-- `stats`
+- `stats` – (TBD: under consideration for removal, in favor of app-side processing)
 - `galleries`
 - `gallery`
 - `photos`
@@ -145,13 +153,30 @@ TBD
 
 ### DB API
 
-TBD
-
-- `loadUserAccessControl(username)`
-- `loadUser(username)`
-- `loadGalleries()`
-- `loadGallery(galleryId)`
-- `loadGalleryPhotos(galleryId)`
-- `loadGalleryPhoto(galleryId, photoId)`
-- `loadPhotos()`
-- `loadPhoto(photoId)`
+- User
+  - `loadUsers()` – Load all users
+  - `createUser(user)` – Create a user with the given properties
+  - `loadUser(userId)` – Load the user
+  - `updateUser(userId, user)` – Update the user with the new properties
+  - `deleteUser(userId)` – Delete the user
+- ACL
+  - `loadUserAccessControl(userId)` – Load ACL for the user, with default values from :guest
+- Gallery
+  - `loadGalleries()` – Load all galleries
+  - `createGallery(gallery)` – Create a gallery with the properties
+  - `loadGallery(galleryId)` – Load the gallery
+  - `updateGallery(galleryId, gallery)` – Update the gallery with the new properties
+  - `deleteGallery(galleryId)` – Delete the gallery
+- Gallery-Photo
+  - `loadGalleryPhotos(galleryId)` – Load all photos linked to the gallery
+  - `linkGalleryPhoto(galleryIds, photoIds)` – Link the photo to galleries
+  - `loadGalleryPhoto(galleryId, photoId)` – Load the photo in the gallery context
+  - `unlinkGalleryPhoto(galleryId, photoId)` Unlink the photo from the gallery
+  - `unlinkAllPhotos(galleryId)` – Unlink all photos from the gallery
+  - `unlinkAllGalleries(photoId)` – Unlink the photo from all galleries
+- Photo
+  - `loadPhotos()` – Load all photos
+  - `createPhoto(photo)` – Create a photo with the properties
+  - `loadPhoto(photoId)` – Load the photo
+  - `updatePhoto(photoId, photo)` – Update the photo with the new properties
+  - `deletePhoto(photoId)` – Delete the photo
