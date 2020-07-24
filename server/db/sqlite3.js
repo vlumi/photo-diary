@@ -533,7 +533,7 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
   };
 
   if (galleryId === CONST.SPECIAL_GALLERY_ALL) {
-    // Without ACL this is no different from global context
+    // TODO: fix
     return await loadPhoto(photoId);
   }
   if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
