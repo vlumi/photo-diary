@@ -38,17 +38,13 @@ const { argv } = require("yargs")
   .nargs("focal", 1)
   .describe("focal", "Focal length")
   .nargs("aperture", 1)
-  .describe("aperture", "Aperture value (f-number)");
+  .describe("aperture", "Aperture value (f-number)")
+  .demand(1);
 
 const fs = require("fs");
 
 const logger = require("../utils/logger");
 const db = require("../db");
-
-if (process.argv.length < 3) {
-  logger.error("Usage: node bin/add-photo.js [photo.json] ...");
-  process.exit();
-}
 
 const addToGalleries = (photo, galleries) => {
   if (!galleries) {
