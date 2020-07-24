@@ -7,10 +7,10 @@ CREATE TABLE user (
   secret TEXT
 );
 CREATE TABLE acl (
-  user_id TEXT PRIMARY KEY,
+  user_id TEXT,
   gallery_id TEXT,
   level INTEGER,
-  UNIQUE(user_id, gallery_id)
+  PRIMARY KEY(user_id, gallery_id)
 );
 CREATE TABLE gallery (
   id TEXT PRIMARY KEY,
