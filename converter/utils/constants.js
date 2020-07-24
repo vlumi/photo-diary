@@ -1,6 +1,6 @@
 const DEBUG = process.env.DEBUG || false;
 
-const ENV_ROOT = "ROOT";
+const PHOTO_ROOT_DIR = process.env.PHOTO_ROOT_DIR;
 const WATCH_GLOB = "*.jp?(e)g";
 
 const DIR_INBOX = "inbox";
@@ -25,7 +25,7 @@ const TARGETS = [
 module.exports = {
   DEBUG,
 
-  ENV_ROOT,
+  PHOTO_ROOT_DIR,
   WATCH_GLOB,
 
   DIR_INBOX,

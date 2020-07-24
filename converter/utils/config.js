@@ -6,9 +6,9 @@ const CONST = require("./constants");
 const logger = require("../utils/logger");
 
 const getDirectory = () => {
-  const directory = process.env[CONST.ENV_ROOT];
+  const directory = CONST.PHOTO_ROOT_DIR;
   if (!directory) {
-    throw "The ROOT of the directory structure must be defined.";
+    throw "The PHOTO_ROOT_DIR of the directory structure must be defined.";
   }
 
   const checkDirectory = (directory) => {
@@ -34,7 +34,7 @@ const getDirectory = () => {
       (subDirectory) => !checkDirectory(path.join(directory, subDirectory))
     ).length > 0;
   if (missing) {
-    throw "Invalid directory structure in ROOT.";
+    throw `Invalid directory structure in PHOTO_ROOT_DIR (${directory}).`;
   }
   return directory;
 };

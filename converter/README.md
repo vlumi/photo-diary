@@ -7,10 +7,10 @@ The converter is a tool to convert images for the Photo Diary, preparing the dat
   - Put them into the `display` and `thumbnail` directories respectively
 - Move each original photo to `original` directory after completing
 
-The root directory is passed using the `ROOT` environment variable, with the contained directory structure expected to be as follows:
+The root directory is passed using the `PHOTO_ROOT_DIR` environment variable, with the contained directory structure expected to be as follows:
 
 - `root` – Common root directory to keep everything together.
-  - `inbox` – The converter is monitoring this directory for new photos.
+  - `inbox` – The converter is monitoring this directory for new photos, also producing the JSON files here.
   - `original` – Original photos will be moved here after they have been processed.
   - `display` – Standard display-sized photos are generated here.
   - `thumbnail` – Thumbnail-sized photos are generated here.
