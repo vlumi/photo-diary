@@ -8,11 +8,18 @@ const db = require("../db");
 
 const saltRounds = 10;
 
-if (process.argv.length < 4) {
-  logger.error("Usage: node bin/add-user.js [userId] [password]");
-  process.exit();
-}
-const [userId, password] = process.argv.slice(2);
+const { argv } = require("yargs")
+  .alias("u", "user")
+  .nargs("u", 1)
+  .describe("u", "User ID")
+  .alias("p", "password")
+  .nargs("p", 1)
+  .describe("p", "Password")
+  .demandOption(["u", "p"])
+  .usage("Usage: $0 [options]");
+
+const userId = argv.u;
+const password = argv.p;
 
 bcrypt.hash(password, saltRounds, async (err, hash) => {
   db.loadUser(userId)
