@@ -3,7 +3,7 @@ require("dotenv").config();
 /**
  * The root URL for accessing the photo files. The display-sized photos should be inside `display`, and the thumbnails inside `thumbnail` directory.
  */
-const PHOTO_ROOT = process.env.REACT_APP_PHOTO_ROOT;
+const PHOTO_ROOT_URL = process.env.REACT_APP_PHOTO_ROOT_URL;
 /**
  * The default language to choose if the user has not selected one.
  */
@@ -31,7 +31,7 @@ const INITIAL_GALLERY_VIEW =
 const FIRST_WEEKDAY = process.env.REACT_APP_FIRST_WEEKDAY || 1;
 
 export default {
-  PHOTO_ROOT,
+  PHOTO_ROOT_URL: PHOTO_ROOT_URL,
 
   DEFAULT_LANGUAGE,
   DEFAULT_GALLERY,

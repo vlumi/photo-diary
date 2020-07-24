@@ -20,7 +20,7 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
       width: `${Math.floor(dimensions.width / 5)}px`,
       height: `${Math.floor(dimensions.height / 5)}px`,
     };
-    const path = `${config.PHOTO_ROOT}display/${adjacentPhoto.id()}`;
+    const path = `${config.PHOTO_ROOT_URL}display/${adjacentPhoto.id()}`;
 
     return (
       <GalleryLink gallery={gallery} photo={adjacentPhoto}>

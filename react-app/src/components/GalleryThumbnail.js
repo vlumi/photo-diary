@@ -7,7 +7,7 @@ import FlagIcon from "./FlagIcon";
 import config from "../utils/config";
 
 const GalleryThumbnail = ({ gallery, photo }) => {
-  const url = `url("${config.PHOTO_ROOT}thumbnail/${photo.id()}")`;
+  const url = `url("${config.PHOTO_ROOT_URL}thumbnail/${photo.id()}")`;
   const dimensions = photo.thumbnailDimensions();
   const style = {
     width: `${dimensions.width + 10}px`,

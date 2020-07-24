@@ -60,7 +60,7 @@ const GalleryPhotoContent = ({ gallery, year, month, day, photo }) => {
       width: calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio),
       height: calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio),
     };
-    const path = `${config.PHOTO_ROOT}display/${photo.id()}`;
+    const path = `${config.PHOTO_ROOT_URL}display/${photo.id()}`;
 
     return (
       <span className="photo" style={style}>
