@@ -56,10 +56,7 @@ const updateUser = async () => {
 };
 
 const loadUserAccessControl = async (id) => {
-  if (!(id in db.accessControl)) {
-    throw CONST.ERROR_NOT_FOUND;
-  }
-  return db.accessControl[id];
+  return { ...db.accessControl[":guest"], ...db.accessControl[id] };
 };
 
 const loadGalleries = async () => {

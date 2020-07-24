@@ -22,8 +22,8 @@ module.exports = {
   createUser: async (user) => {
     await db.createUser(user);
   },
-  loadUser: async (username) => {
-    return await db.loadUser(username);
+  loadUser: async (userId) => {
+    return await db.loadUser(userId);
   },
   updateUser: async (userId, user) => {
     await db.updateUser(userId, user);
@@ -32,8 +32,8 @@ module.exports = {
     await db.deleteUser(userId);
   },
 
-  loadUserAccessControl: async (username) => {
-    return await db.loadUserAccessControl(username);
+  loadUserAccessControl: async (userId) => {
+    return await db.loadUserAccessControl(userId);
   },
 
   loadGalleries: async () => {

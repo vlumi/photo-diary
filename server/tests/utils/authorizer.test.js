@@ -11,7 +11,9 @@ jest.mock("../../db");
 
 const fail = (authorize, user, gallery) => {
   expect.assertions(1);
-  return authorize(user, gallery).catch((e) => expect(e).toMatch("Access"));
+  return authorize(user, gallery).catch((e) =>
+    expect(e).toBe(CONST.ERROR_ACCESS)
+  );
 };
 
 describe("No ACL defined", () => {
@@ -42,10 +44,8 @@ describe("ACL :guest,:all,VIEW", () => {
   beforeAll(() => {
     db.loadUserAccessControl.mockImplementation((user) => {
       switch (user) {
-        case ":guest":
-          return { ":all": CONST.ACCESS_VIEW };
         default:
-          return {};
+          return { ":all": CONST.ACCESS_VIEW };
       }
     });
   });
@@ -64,14 +64,36 @@ describe("ACL :guest,:all,VIEW", () => {
   });
 });
 
+describe("ACL :guest,:public,VIEW", () => {
+  beforeAll(() => {
+    db.loadUserAccessControl.mockImplementation((user) => {
+      switch (user) {
+        default:
+          return { ":public": CONST.ACCESS_VIEW };
+      }
+    });
+  });
+  describe("As :guest", () => {
+    test("View", () => fail(authorizeView, ":guest"));
+    test("Admin", () => fail(authorizeAdmin, ":guest"));
+    test("Gallery view", () => authorizeGalleryView(":guest", "gallery"));
+    test("Gallery admin", () =>
+      fail(authorizeGalleryAdmin, ":guest", "gallery"));
+  });
+  describe("As user", () => {
+    test("View", () => authorizeGalleryView("user", "gallery"));
+    test("Admin", () => fail(authorizeAdmin, "user"));
+    test("Gallery view", () => authorizeGalleryView("user", "gallery"));
+    test("Gallery admin", () => fail(authorizeGalleryAdmin, "user", "gallery"));
+  });
+});
+
 describe("ACL :guest,:all,ADMIN", () => {
   beforeAll(() => {
     db.loadUserAccessControl.mockImplementation((user) => {
       switch (user) {
-        case ":guest":
-          return { ":all": CONST.ACCESS_ADMIN };
         default:
-          return {};
+          return { ":all": CONST.ACCESS_ADMIN };
       }
     });
   });
@@ -93,10 +115,10 @@ describe("ACL :user,:all,VIEW", () => {
   beforeAll(() => {
     db.loadUserAccessControl.mockImplementation((user) => {
       switch (user) {
-        case "user":
-          return { ":all": CONST.ACCESS_VIEW };
         default:
           return {};
+        case "user":
+          return { ":all": CONST.ACCESS_VIEW };
       }
     });
   });
@@ -119,10 +141,10 @@ describe("ACL :user,:all,ADMIN", () => {
   beforeAll(() => {
     db.loadUserAccessControl.mockImplementation((user) => {
       switch (user) {
-        case "user":
-          return { ":all": CONST.ACCESS_ADMIN };
         default:
           return {};
+        case "user":
+          return { ":all": CONST.ACCESS_ADMIN };
       }
     });
   });
@@ -145,12 +167,10 @@ describe("ACL :guest,:all,VIEW, user,:all,ADMIN", () => {
   beforeAll(() => {
     db.loadUserAccessControl.mockImplementation((user) => {
       switch (user) {
-        case ":guest":
-          return { ":all": CONST.ACCESS_VIEW };
         case "user":
           return { ":all": CONST.ACCESS_ADMIN };
         default:
-          return {};
+          return { ":all": CONST.ACCESS_VIEW };
       }
     });
   });
@@ -173,12 +193,10 @@ describe("ACL :guest,:all,ADMIN, user1,:all,VIEW", () => {
   beforeAll(() => {
     db.loadUserAccessControl.mockImplementation((user) => {
       switch (user) {
-        case ":guest":
+        default:
           return { ":all": CONST.ACCESS_ADMIN };
         case "user1":
           return { ":all": CONST.ACCESS_VIEW };
-        default:
-          return {};
       }
     });
   });
@@ -207,12 +225,10 @@ describe("ACL :guest,:all,ADMIN, user1,:all,NONE", () => {
   beforeAll(() => {
     db.loadUserAccessControl.mockImplementation((user) => {
       switch (user) {
-        case ":guest":
+        default:
           return { ":all": CONST.ACCESS_ADMIN };
         case "user1":
           return { ":all": CONST.ACCESS_NONE };
-        default:
-          return {};
       }
     });
   });
@@ -241,12 +257,10 @@ describe("ACL :guest,:all,VIEW, user1,gallery1,ADMIN", () => {
   beforeAll(() => {
     db.loadUserAccessControl.mockImplementation((user) => {
       switch (user) {
-        case ":guest":
+        default:
           return { ":all": CONST.ACCESS_VIEW };
         case "user1":
-          return { gallery1: CONST.ACCESS_ADMIN };
-        default:
-          return {};
+          return { ":all": CONST.ACCESS_VIEW, gallery1: CONST.ACCESS_ADMIN };
       }
     });
   });
@@ -285,12 +299,14 @@ describe("ACL :guest,:all,NONE,gallery2,VIEW, user1,gallery1,ADMIN", () => {
   beforeAll(() => {
     db.loadUserAccessControl.mockImplementation((user) => {
       switch (user) {
-        case ":guest":
+        default:
           return { ":all": CONST.ACCESS_NONE, gallery2: CONST.ACCESS_VIEW };
         case "user1":
-          return { gallery1: CONST.ACCESS_ADMIN };
-        default:
-          return {};
+          return {
+            ":all": CONST.ACCESS_NONE,
+            gallery1: CONST.ACCESS_ADMIN,
+            gallery2: CONST.ACCESS_VIEW,
+          };
       }
     });
   });

@@ -418,15 +418,26 @@ const loadUserAccessControl = async (userId) => {
   // TODO: cache in memory
   const query = baseSelect(SCHEMA.acl) + " WHERE user_id IN (?)";
   return await new Promise((resolve, reject) => {
-    db.all(query, userId, (error, rows) => {
+    db.all(query, [userId], (error, rows) => {
       if (error) {
         return reject(CONST.ERROR_NOT_FOUND);
       }
-      if (rows.length < 1) {
-        return reject(CONST.ERROR_NOT_FOUND);
-      }
-      const mappedRows = rows.map((row) => SCHEMA.acl.mapRow(row));
-      resolve(Object.fromEntries(mappedRows));
+      const mappedRows = Object.fromEntries(
+        rows.map((row) => SCHEMA.acl.mapRow(row))
+      );
+      db.all(query, [":guest"], (error, rows) => {
+        if (!error) {
+          const mappedGuestRows = Object.fromEntries(
+            rows.map((row) => SCHEMA.acl.mapRow(row))
+          );
+          resolve({
+            ...mappedGuestRows,
+            ...mappedRows,
+          });
+        } else {
+          resolve(mappedRows);
+        }
+      });
     });
   });
 };
