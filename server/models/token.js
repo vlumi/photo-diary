@@ -53,6 +53,8 @@ const authenticateUser = async (credentials) => {
   try {
     const user = await db.loadUser(credentials.id);
     await checkUserPassword(credentials, user);
+    // Make sure the secret is up-to-date
+    secrets[user.id] = user.secret;
   } catch (error) {
     throw CONST.ERROR_LOGIN;
   }
