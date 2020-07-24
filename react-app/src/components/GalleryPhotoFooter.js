@@ -31,6 +31,36 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
     );
   };
 
+  const renderExposure = () => {
+    return (
+      <div className="exposure">
+        <span></span>
+        <span>{photo.formatFocalLength()}</span>{" "}
+        <span>{photo.formatAperture()}</span>{" "}
+        <span>{photo.formatExposureTime()}</span>{" "}
+        <span>{photo.formatIso()}</span> <span>{photo.formatMegapixels()}</span>
+      </div>
+    );
+  };
+  const renderGear = () => {
+    const camera = photo.formatCamera();
+    const lens = photo.formatLens();
+
+    if (!camera && !lens) {
+      return <></>;
+    }
+    if (!camera) {
+      return <div className="gear">{lens}</div>;
+    }
+    if (!lens) {
+      return <div className="gear">{camera}</div>;
+    }
+    return (
+      <div className="gear">
+        <span>{camera}</span> + <span>{lens}</span>
+      </div>
+    );
+  };
   const renderAge = () => {
     if (!gallery.hasEpoch()) {
       return <></>;
@@ -43,7 +73,7 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
           month={month}
           day={day}
           format="long"
-          separator=" "
+          separator=""
         />
       </div>
     );
@@ -59,12 +89,18 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
           <span className="description">
             <h4>{photo.formatTimestamp()}</h4>
             {photo.title()}
-            <div className="copyright">{photo.copyright()}</div>
-            <div className="location">
-              {photo.place()} <FlagIcon code={photo.countryCode()} />
+            <div className="copyright">
+              <span>Photo Copyright © {photo.author()}</span>{" "}
+              <span>All rights reserved.</span>
             </div>
-            <div className="exposure">{photo.formatExposure()}</div>
-            <div className="gear">{photo.formatGear()}</div>
+            <div className="location">
+              <span>{photo.place()}</span>{" "}
+              <span>
+                {photo.countryName()} <FlagIcon code={photo.countryCode()} />
+              </span>
+            </div>
+            {renderExposure()}
+            {renderGear()}
             {/* TODO: epochMode */}
             {renderAge()}
           </span>

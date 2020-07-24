@@ -35,8 +35,7 @@ const EpochAge = ({
 
   return parts.map((part, index) => (
     <span key={`age-${year}${month}${day}${index}`}>
-      {part}
-      {separator}
+      {part} {separator}
     </span>
   ));
 };

@@ -371,6 +371,9 @@ div.adjacent {
   margin: 0 10px;
   font-size: x-small;
 }
+.footer span {
+  display: inline-block;
+}
 .footer .description {
   flex-grow: 1;
   text-align: center;

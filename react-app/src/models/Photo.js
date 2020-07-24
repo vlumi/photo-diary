@@ -14,6 +14,15 @@ const registerCountryData = (i18n) => {
   }
   return countryData;
 };
+const joinMakeAndModel = (make, model) => {
+  if (!make && !model) return "";
+  if (!make) return model;
+  if (!model) return make;
+  if (model.startsWith(make)) {
+    return model;
+  }
+  return [make, model].join(" ");
+};
 
 const Photo = (photoData) => {
   const importPhotoData = (photoData) => {
@@ -28,12 +37,7 @@ const Photo = (photoData) => {
     index: () => photo.index,
     title: () => photo.title,
     description: () => photo.description,
-    copyright: () => {
-      if (photo.taken.author) {
-        return `Photo Copyright © ${photo.taken.author}. All rights reserved.`;
-      }
-      return "Photo Copyright © All rights reserved.";
-    },
+    author: () => photo.taken.author,
     ymd: () => [self.year(), self.month(), self.day()],
     year: () => photo.taken.instant.year,
     month: () => photo.taken.instant.month,
@@ -88,18 +92,11 @@ const Photo = (photoData) => {
         self.formatMegapixels(),
       ].join(" ");
     },
+    formatCamera: () => joinMakeAndModel(photo.camera.make, photo.camera.model),
+    formatLens: () => joinMakeAndModel(photo.lens.make, photo.lens.model),
     formatGear: () => {
-      const joinMakeAndModel = (make, model) => {
-        if (!make && !model) return "";
-        if (!make) return model;
-        if (!model) return make;
-        if (model.startsWith(make)) {
-          return model;
-        }
-        return [make, model].join(" ");
-      };
-      const camera = joinMakeAndModel(photo.camera.make, photo.camera.model);
-      const lens = joinMakeAndModel(photo.lens.make, photo.lens.model);
+      const camera = self.formatCamera();
+      const lens = self.formatLens();
       return [camera, lens].filter(Boolean).join(" + ");
     },
     hasCountry: () =>
@@ -110,10 +107,7 @@ const Photo = (photoData) => {
       photo.taken.location.country,
     countryCode: () => photo.taken.location.country,
     countryName: () => countryData.getName(self.countryCode(), i18n.language),
-    place: () =>
-      [photo.taken.location.place, self.countryName()]
-        .filter(Boolean)
-        .join(", "),
+    place: () => photo.taken.location.place,
     path: (gallery) => {
       const parts = [gallery.path(...self.ymd())];
       parts.push(photo.id);
