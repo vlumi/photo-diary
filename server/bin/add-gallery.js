@@ -29,14 +29,13 @@ const galleryId = argv.id;
 
 db.loadGallery(galleryId)
   .then(async (gallery) => {
-    const updatedGallery = {
-      title: argv.title,
-      description: argv.description,
-      epoch: argv.epoch,
-      epoch_type: argv.epoch_type,
-      theme: argv.theme,
-      initial_view: argv.initial_view,
-    };
+    const updatedGallery = {};
+    if ("title" in argv) updatedGallery.title = argv.title;
+    if ("description" in argv) updatedGallery.description = argv.description;
+    if ("epoch" in argv) updatedGallery.epoch = argv.epoch;
+    if ("epoch_type" in argv) updatedGallery.epoch_type = argv.epoch_type;
+    if ("theme" in argv) updatedGallery.theme = argv.theme;
+    if ("initial_view" in argv) updatedGallery.initial_view = argv.initial_view;
     db.updateGallery(gallery.id, updatedGallery).catch((error) => {
       logger.error("Failed:", error);
     });
