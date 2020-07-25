@@ -61,16 +61,12 @@ module.exports = async (fileName, rootDir) => {
 
     return {
       id: fileName,
-      title: undefined,
-      description: undefined,
       taken: {
         instant: parseTimestamp(
           exif.DateTimeOriginal || exif.CreateDate || exif.ModifyDate
         ),
         author: cleanString(exif.Artist),
         location: {
-          country: undefined,
-          place: undefined,
           ...parseGps(exif),
         },
       },
