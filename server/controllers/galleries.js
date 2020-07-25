@@ -22,9 +22,7 @@ router.get("/", async (request, response) => {
     await authorizer.authorizeAdmin(request.user.id);
     response.json(galleries);
   } catch (error) {
-    const galleryIds = galleries
-      .map((gallery) => gallery.id)
-      .filter((id) => !CONST.isSpecialGallery(id));
+    const galleryIds = galleries.map((gallery) => gallery.id);
 
     const authorizedPromises = await Promise.allSettled(
       galleryIds.map((galleryId) =>
