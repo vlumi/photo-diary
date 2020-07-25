@@ -4,34 +4,35 @@ import { Link } from "react-router-dom";
 
 import FormatDate from "./FormatDate";
 
+import config from "../utils/config";
 import collection from "../utils/collection";
 
 const GalleriesBody = ({ galleries }) => {
   const renderDescription = (gallery) => {
-    return <div>{gallery.description()}</div>;
+    return <div className="description">{gallery.description()}</div>;
   };
-  const renderEpoch = (gallery) => {
-    if (!gallery.hasEpoch()) {
-      return <></>;
+  const renderIcon = (gallery) => {
+    if (!gallery.hasIcon) {
+      return "";
     }
-    const [epochYear, epochMonth, epochDay] = gallery.epochYmd();
+    const url = `${config.PHOTO_ROOT_URL}${gallery.icon()}`;
     return (
-      <div>
-        Epoch: <FormatDate year={epochYear} month={epochMonth} day={epochDay} />
+      <div className="icon">
+        <img src={url} />
       </div>
     );
   };
   const renderGallery = (gallery) => {
-    const styles = collection.joinTruthyKeys({
+    const className = collection.joinTruthyKeys({
       gallery: true,
       [`${gallery.theme()}-theme`]: gallery.hasTheme(),
     });
     return (
       <Link key={gallery.id()} to={gallery.path()}>
-        <div key={gallery.id()} className={styles}>
+        <div key={gallery.id()} className={className}>
           <h3>{gallery.title()}</h3>
+          {renderIcon(gallery)}
           {renderDescription(gallery)}
-          {renderEpoch(gallery)}
         </div>
       </Link>
     );

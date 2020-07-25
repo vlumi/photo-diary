@@ -16,6 +16,7 @@ CREATE TABLE gallery (
   id TEXT PRIMARY KEY,
   title TEXT,
   description TEXT,
+  icon TEXT,
   epoch TEXT,
   epoch_type TEXT,
   theme TEXT,

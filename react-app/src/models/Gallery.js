@@ -43,6 +43,8 @@ const Gallery = (galleryData) => {
       return `${gallery.title} — ${ymd} #${photo.index() + 1}`;
     },
     description: () => gallery.description || "",
+    hasIcon: () => gallery && "icon" in gallery && gallery.icon,
+    icon: () => gallery.icon || "",
     hasEpoch: () => gallery && "epoch" in gallery && gallery.epoch,
     epoch: () => gallery.epoch,
     epochYmd: () => {

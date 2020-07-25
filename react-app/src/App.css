@@ -161,7 +161,6 @@ h3 > span {
 }
 .gallery {
   width: 214px;
-  height: 238px;
   margin: 5px;
   padding: 0;
   border-style: solid;
@@ -171,7 +170,13 @@ h3 > span {
 .gallery > h3 {
   margin: 0;
 }
-.gallery > div {
+.gallery > .icon {
+  margin: 0;
+}
+.gallery > .icon > img {
+  width: 100%;
+}
+.gallery > .description {
   margin: 5px;
   text-align: left;
 }
