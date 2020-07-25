@@ -16,6 +16,9 @@ let DefaultIcon = Leaflet.icon({
 Leaflet.Marker.prototype.options.icon = DefaultIcon;
 
 const MapContainer = ({ positions }) => {
+  if (positions.length === 0) {
+    return <></>;
+  }
   const bounds = Leaflet.latLngBounds(positions);
   return (
     <>
