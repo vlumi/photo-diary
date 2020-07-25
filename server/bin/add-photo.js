@@ -58,7 +58,6 @@ const addToGalleries = (photo, galleries) => {
       .map((gallery) => `"${gallery}"`)
       .join(", ")}`
   );
-  // TODO: implement
   db.unlinkAllGalleries(photo.id)
     .then(() => {
       db.linkGalleryPhoto(galleries, [photo.id])
@@ -99,14 +98,16 @@ const createPhoto = (photo) => {
 };
 
 const updatePhoto = (photo) => {
-  logger.debug(`Photo "${photo.id}" already in DB, updating`);
-  db.updatePhoto(photo.id, photo)
+  const id = photo.id;
+  delete photo.id;
+  logger.debug(`Photo "${id}" already in DB, updating`);
+  db.updatePhoto(id, photo)
     .then(() => {
-      logger.info(`Updated "${photo.id}"`);
+      logger.info(`Updated "${id}"`);
       addToGalleries(photo, argv.gallery);
     })
     .catch((error) => {
-      logger.error(`Update of "${photo.id}" failed:`, error);
+      logger.error(`Update of "${id}" failed:`, error);
     });
 };
 

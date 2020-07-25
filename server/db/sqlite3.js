@@ -377,6 +377,7 @@ const loadById = async (schema, id, idField = "id", allowEmpty = false) => {
   });
 };
 const updateById = async (schema, id, data) => {
+  delete data.id;
   const columnData = schema.mapToColumns(data);
   const cleanData = Object.fromEntries(
     schema.columns
