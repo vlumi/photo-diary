@@ -37,3 +37,29 @@
   --high-color: #ccc;
   --extreme-color: #bbb;
 }
+.bw-theme {
+  --primary-color: #000;
+  --primary-background: #fff;
+  --inactive-color: #999;
+  --header-color: #fff;
+  --header-sub-color: #ddd;
+  --header-background: #000;
+  --none-color: #fff;
+  --low-color: #eee;
+  --medium-color: #ddd;
+  --high-color: #ccc;
+  --extreme-color: #bbb;
+}
+.alert-theme {
+  --primary-color: #f00;
+  --primary-background: #ff6;
+  --inactive-color: #999;
+  --header-color: #ff6;
+  --header-sub-color: #ddd;
+  --header-background: #f00;
+  --none-color: #fff;
+  --low-color: #eee;
+  --medium-color: #ddd;
+  --high-color: #ccc;
+  --extreme-color: #bbb;
+}
