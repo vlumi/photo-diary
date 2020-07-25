@@ -4,7 +4,7 @@ import FlagIcon from "./FlagIcon";
 
 import GalleryLink from "./GalleryLink";
 import EpochAge from "./EpochAge";
-import MyMap from "./MapContainer";
+import MapContainer from "./MapContainer";
 
 import config from "../utils/config";
 
@@ -107,7 +107,7 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
     }
     return (
       <>
-        <MyMap positions={[photo.coordinates()]} zoom="9" />
+        <MapContainer positions={[photo.coordinates()]} zoom="9" />
       </>
     );
   };
