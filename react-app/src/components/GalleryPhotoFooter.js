@@ -4,6 +4,7 @@ import FlagIcon from "./FlagIcon";
 
 import GalleryLink from "./GalleryLink";
 import EpochAge from "./EpochAge";
+import MyMap from "./MapContainer";
 
 import config from "../utils/config";
 
@@ -31,34 +32,56 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
     );
   };
 
-  const renderExposure = () => {
+  const renderPlace = () => {
+    if (!photo.hasPlace()) {
+      return "";
+    }
+    return <span>{photo.place()}</span>;
+  };
+  const renderCountry = () => {
+    if (!photo.hasCountry()) {
+      return "";
+    }
     return (
-      <div className="exposure">
-        <span></span>
-        <span>{photo.formatFocalLength()}</span>{" "}
-        <span>{photo.formatAperture()}</span>{" "}
-        <span>{photo.formatExposureTime()}</span>{" "}
-        <span>{photo.formatIso()}</span> <span>{photo.formatMegapixels()}</span>
+      <span>
+        {photo.countryName()} <FlagIcon code={photo.countryCode()} />
+      </span>
+    );
+  };
+  const renderLocation = () => {
+    const country = renderCountry();
+    const place = renderPlace();
+    return (
+      <div className="details">
+        {place}
+        {place && country ? ", " : ""}
+        {country}
       </div>
     );
+  };
+  const renderCoordinates = () => {
+    if (!photo.hasCoordinates()) {
+      return <></>;
+    }
+    return <div className="details">{photo.formatCoordinates()}</div>;
   };
   const renderGear = () => {
     const camera = photo.formatCamera();
     const lens = photo.formatLens();
 
     if (!camera && !lens) {
-      return <></>;
+      return "";
     }
     if (!camera) {
-      return <div className="gear">{lens}</div>;
+      return <>{lens}</>;
     }
     if (!lens) {
-      return <div className="gear">{camera}</div>;
+      return <>{camera}</>;
     }
     return (
-      <div className="gear">
+      <>
         <span>{camera}</span> + <span>{lens}</span>
-      </div>
+      </>
     );
   };
   const renderAge = () => {
@@ -66,7 +89,7 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
       return <></>;
     }
     return (
-      <div className="age">
+      <div className="details">
         <EpochAge
           gallery={gallery}
           year={year}
@@ -78,6 +101,17 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
       </div>
     );
   };
+  const renderMap = () => {
+    if (!photo.hasCoordinates()) {
+      return "";
+    }
+    return (
+      <>
+        <MyMap positions={[photo.coordinates()]} zoom="9" />
+      </>
+    );
+  };
+
   const renderContent = () => {
     if (!photo) {
       return <></>;
@@ -89,23 +123,20 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
           <span className="description">
             <h4>{photo.formatTimestamp()}</h4>
             {photo.title()}
+            {renderLocation()}
+            {renderCoordinates()}
+            <div className="details">{photo.formatExposure()}</div>
+            <div className="details">{renderGear()}</div>
+            {/* TODO: epochMode */}
+            {renderAge()}
             <div className="copyright">
               <span>Photo Copyright © {photo.author()}</span>{" "}
               <span>All rights reserved.</span>
             </div>
-            <div className="location">
-              <span>{photo.place()}</span>{" "}
-              <span>
-                {photo.countryName()} <FlagIcon code={photo.countryCode()} />
-              </span>
-            </div>
-            {renderExposure()}
-            {renderGear()}
-            {/* TODO: epochMode */}
-            {renderAge()}
           </span>
           <div className="next">{renderAdjacentPhoto(nextPhoto)}</div>
         </div>
+        <div className="footer">{renderMap()}</div>
       </>
     );
   };

@@ -1,4 +1,5 @@
 import i18n from "i18next";
+import { GeoCoord } from "geo-coord";
 
 import calendar from "../utils/calendar";
 
@@ -107,7 +108,44 @@ const Photo = (photoData) => {
       photo.taken.location.country,
     countryCode: () => photo.taken.location.country,
     countryName: () => countryData.getName(self.countryCode(), i18n.language),
+    hasPlace: () =>
+      photo &&
+      "taken" in photo &&
+      "location" in photo.taken &&
+      "place" in photo.taken.location &&
+      photo.taken.location.place,
     place: () => photo.taken.location.place,
+    hasCoordinates: () =>
+      photo &&
+      "taken" in photo &&
+      "location" in photo.taken &&
+      "coordinates" in photo.taken.location &&
+      "latitude" in photo.taken.location.coordinates &&
+      "longitude" in photo.taken.location.coordinates &&
+      photo.taken.location.coordinates.latitude &&
+      photo.taken.location.coordinates.longitude,
+    coordinates: () => [self.latitude(), self.longitude()],
+    latitude: () => {
+      if (!self.hasCoordinates()) {
+        return "";
+      }
+      return photo.taken.location.coordinates.latitude;
+    },
+    longitude: () => {
+      if (!self.hasCoordinates()) {
+        return "";
+      }
+      return photo.taken.location.coordinates.longitude;
+    },
+    formatCoordinates: () => {
+      if (!self.hasCoordinates()) {
+        return "";
+      }
+      return new GeoCoord(
+        photo.taken.location.coordinates.latitude,
+        photo.taken.location.coordinates.longitude
+      ).toString();
+    },
     path: (gallery) => {
       const parts = [gallery.path(...self.ymd())];
       parts.push(photo.id);

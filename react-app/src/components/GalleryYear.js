@@ -7,6 +7,7 @@ import { Swipeable } from "react-swipeable";
 import GalleryTitle from "./GalleryTitle";
 import GalleryYearNav from "./GalleryYearNav";
 import GalleryYearContent from "./GalleryYearContent";
+import GalleryYearFooter from "./GalleryYearFooter";
 
 import useKeyPress from "../utils/keypress";
 
@@ -97,6 +98,7 @@ const GalleryYear = ({ gallery, year }) => {
             <GalleryYearContent gallery={gallery} year={year} />
           </div>{" "}
         </Swipeable>
+        <GalleryYearFooter gallery={gallery} year={year} />
       </>
     );
   }

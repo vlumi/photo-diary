@@ -2,8 +2,6 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 
-import FormatDate from "./FormatDate";
-
 import config from "../utils/config";
 import collection from "../utils/collection";
 
@@ -18,7 +16,7 @@ const GalleriesBody = ({ galleries }) => {
     const url = `${config.PHOTO_ROOT_URL}${gallery.icon()}`;
     return (
       <div className="icon">
-        <img src={url} />
+        <img src={url} alt={gallery.title()} />
       </div>
     );
   };

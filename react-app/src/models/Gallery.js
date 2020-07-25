@@ -126,17 +126,32 @@ const Gallery = (galleryData) => {
     mapYears: (f) => {
       return Object.keys(photos).map(Number).map(f);
     },
+    flatMapYears: (f) => {
+      return Object.keys(photos).map(Number).flatMap(f);
+    },
     mapMonths: (year, f) => {
       if (!self.includesYear(year)) {
         return;
       }
       return Object.keys(photos[year]).map(Number).map(f);
     },
+    flatMapMonths: (year, f) => {
+      if (!self.includesYear(year)) {
+        return;
+      }
+      return Object.keys(photos[year]).map(Number).flatMap(f);
+    },
     mapDays: (year, month, f) => {
       if (!self.includesMonth(year, month)) {
         return;
       }
       return Object.keys(photos[year][month]).map(Number).map(f);
+    },
+    flatMapDays: (year, month, f) => {
+      if (!self.includesMonth(year, month)) {
+        return;
+      }
+      return Object.keys(photos[year][month]).map(Number).flatMap(f);
     },
 
     firstYear: () => {

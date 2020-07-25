@@ -6,6 +6,7 @@ import { Swipeable } from "react-swipeable";
 
 import GalleryDayNav from "./GalleryDayNav";
 import GalleryDayContent from "./GalleryDayContent";
+import GalleryDayFooter from "./GalleryDayFooter";
 
 import useKeyPress from "../utils/keypress";
 
@@ -87,6 +88,7 @@ const GalleryDay = ({ gallery, year, month, day }) => {
           />
         </div>
       </Swipeable>
+      <GalleryDayFooter gallery={gallery} year={year} month={month} day={day} />
     </>
   );
 };

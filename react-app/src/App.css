@@ -390,11 +390,13 @@ div.adjacent {
   padding: 0;
   text-align: center;
 }
+.leaflet-container {
+  width: 100%;
+  height: 400px;
+  margin: 10px 0;
+}
 
-.footer .exposure,
-.footer .gear,
-.footer .location,
-.footer .age {
+.footer .details {
   font-size: small;
   text-align: right;
   color: var(--inactive-color);
