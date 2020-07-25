@@ -376,7 +376,7 @@ const updateById = async (schema, id, data) => {
   const columnData = schema.mapToColumns(data);
   const cleanData = Object.fromEntries(
     schema.columns
-      .filter((column) => column in columnData)
+      .filter((column) => column in data)
       .map((column) => [column, columnData[column]])
   );
   const columns = Object.keys(cleanData);
