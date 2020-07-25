@@ -161,6 +161,7 @@ h3 > span {
 }
 .gallery {
   width: 214px;
+  min-height: 200px;
   margin: 5px;
   padding: 0;
   border-style: solid;

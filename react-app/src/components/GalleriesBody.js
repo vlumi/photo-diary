@@ -12,7 +12,7 @@ const GalleriesBody = ({ galleries }) => {
     return <div className="description">{gallery.description()}</div>;
   };
   const renderIcon = (gallery) => {
-    if (!gallery.hasIcon) {
+    if (!gallery.hasIcon()) {
       return "";
     }
     const url = `${config.PHOTO_ROOT_URL}${gallery.icon()}`;
