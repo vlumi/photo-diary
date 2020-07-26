@@ -329,7 +329,7 @@ const SCHEMA = {
           const location = taken.location;
           if ("country" in location) result.country_code = location.country;
           if ("place" in location) result.place = location.place;
-          if (isSubTree(taken, "location")) {
+          if (isSubTree(location, "coordinates")) {
             const coordinates = location.coordinates;
             if ("latitude" in coordinates)
               result.coord_lat = coordinates.latitude;
