@@ -37,6 +37,10 @@
   --high-color: #ccc;
   --extreme-color: #bbb;
 }
+.grayscale-theme .leaflet-container {
+  -webkit-filter: grayscale(100%);
+  filter: grayscale(100%);
+}
 .bw-theme {
   --primary-color: #000;
   --primary-background: #fff;
