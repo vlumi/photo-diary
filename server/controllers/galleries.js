@@ -1,4 +1,3 @@
-const CONST = require("../utils/constants");
 const authorizer = require("../utils/authorizer")();
 const model = require("../models/gallery")();
 
