@@ -137,6 +137,10 @@ argv._.forEach(async (filePath) => {
     const json = await fs.promises.readFile(filePath, { encoding: "utf-8" });
     const data = JSON.parse(json);
     if (Array.isArray(data)) {
+      data.forEach((photo) => {
+        processPhoto(photo);
+      });
+    } else if (!("id" in data)) {
       Object.values(data).forEach((photo) => {
         processPhoto(photo);
       });
