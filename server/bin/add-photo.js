@@ -111,30 +111,38 @@ const updatePhoto = (photo) => {
     });
 };
 
+const processPhoto = (photo) => {
+  if (photo.id) {
+    if ("title" in argv) photo.title = argv.title;
+    if ("description" in argv) photo.title = argv.description;
+    if ("author" in argv) photo.taken.author = argv.author;
+    if ("country" in argv) photo.taken.location.country = argv.country;
+    if ("place" in argv) photo.taken.location.place = argv.place;
+    if ("camera-make" in argv) photo.camera.make = argv["camera-make"];
+    if ("camera-model" in argv) photo.camera.model = argv["camera-model"];
+    if ("lens-make" in argv) photo.lens.make = argv["lens-make"];
+    if ("lens-model" in argv) photo.lens.model = argv["lens-model"];
+    if ("focal" in argv) photo.exposure.focalLength = argv.focal;
+    if ("aperture" in argv) photo.exposure.aperture = argv.aperture;
+
+    db.loadPhoto(photo.id)
+      .then(() => updatePhoto(photo))
+      .catch(() => createPhoto(photo));
+  }
+};
+
 argv._.forEach(async (filePath) => {
   logger.debug(`Processing "${filePath}"`);
   try {
     const json = await fs.promises.readFile(filePath, { encoding: "utf-8" });
     const data = JSON.parse(json);
-    Object.values(data).forEach((photo) => {
-      if (photo.id) {
-        if ("title" in argv) photo.title = argv.title;
-        if ("description" in argv) photo.title = argv.description;
-        if ("author" in argv) photo.taken.author = argv.author;
-        if ("country" in argv) photo.taken.location.country = argv.country;
-        if ("place" in argv) photo.taken.location.place = argv.place;
-        if ("camera-make" in argv) photo.camera.make = argv["camera-make"];
-        if ("camera-model" in argv) photo.camera.model = argv["camera-model"];
-        if ("lens-make" in argv) photo.lens.make = argv["lens-make"];
-        if ("lens-model" in argv) photo.lens.model = argv["lens-model"];
-        if ("focal" in argv) photo.exposure.focalLength = argv.focal;
-        if ("aperture" in argv) photo.exposure.aperture = argv.aperture;
-
-        db.loadPhoto(photo.id)
-          .then(() => updatePhoto(photo))
-          .catch(() => createPhoto(photo));
-      }
-    });
+    if (Array.isArray(data)) {
+      Object.values(data).forEach((photo) => {
+        processPhoto(photo);
+      });
+    } else {
+      processPhoto(data);
+    }
   } catch (error) {
     logger.error("Failed:", error);
   }
