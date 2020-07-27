@@ -1,4 +1,4 @@
-const UNKNOWN = "[unknown]";
+const UNKNOWN = "N/A";
 
 const generate = async (gallery) => {
   return collectStatistics(gallery.photos());
@@ -224,24 +224,20 @@ const updateGear = (byGear, photo) => {
     byGear.byCameraMake[cameraMake]++;
   }
 
-  const camera = photo.formatCamera();
-  const lens = photo.formatLens();
-  if (camera && camera !== UNKNOWN) {
-    byGear.byCamera = byGear.byCamera || {};
-    byGear.byCamera[camera] = byGear.byCamera[camera] || 0;
-    byGear.byCamera[camera]++;
-  }
-  if (lens && lens !== UNKNOWN) {
-    byGear.byLens = byGear.byLens || {};
-    byGear.byLens[lens] = byGear.byLens[lens] || 0;
-    byGear.byLens[lens]++;
-  }
-  if (camera && camera !== UNKNOWN && lens && lens !== UNKNOWN) {
-    const cameraLens = `${camera} + ${lens}`;
-    byGear.byCameraLens = byGear.byCameraLens || {};
-    byGear.byCameraLens[cameraLens] = byGear.byCameraLens[cameraLens] || 0;
-    byGear.byCameraLens[cameraLens]++;
-  }
+  const camera = photo.formatCamera() || UNKNOWN;
+  const lens = photo.formatLens() || UNKNOWN;
+  byGear.byCamera = byGear.byCamera || {};
+  byGear.byCamera[camera] = byGear.byCamera[camera] || 0;
+  byGear.byCamera[camera]++;
+
+  byGear.byLens = byGear.byLens || {};
+  byGear.byLens[lens] = byGear.byLens[lens] || 0;
+  byGear.byLens[lens]++;
+
+  const cameraLens = `${camera} + ${lens}`;
+  byGear.byCameraLens = byGear.byCameraLens || {};
+  byGear.byCameraLens[cameraLens] = byGear.byCameraLens[cameraLens] || 0;
+  byGear.byCameraLens[cameraLens]++;
 };
 
 /**

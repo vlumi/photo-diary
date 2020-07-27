@@ -448,7 +448,7 @@ div.adjacent {
   justify-content: flex-start;
 }
 .stats .chart {
-  width: 400px;
-  height: 500px;
+  width: 100%;
   overflow: auto;
+  text-align: left;
 }
