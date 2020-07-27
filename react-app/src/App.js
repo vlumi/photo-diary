@@ -13,8 +13,8 @@ import "./App.css";
 
 import User from "./models/User";
 import TopMenu from "./components/TopMenu";
-import Galleries from "./components/Galleries";
-import GalleryTop from "./components/GalleryTop";
+import GalleryList from "./components/gallery/List";
+import Top from "./components/gallery/Top";
 
 import config from "./utils/config";
 import token from "./utils/token";
@@ -70,7 +70,7 @@ const App = () => {
       <Router>
         <Switch>
           <Route path="/g/:galleryId/stats">
-            <GalleryTop
+            <Top
               user={user}
               lang={lang}
               countryData={countryData}
@@ -78,13 +78,13 @@ const App = () => {
             />
           </Route>
           <Route path="/g/:galleryId/:year/:month/:day/:photoId">
-            <GalleryTop user={user} lang={lang} countryData={countryData} />
+            <Top user={user} lang={lang} countryData={countryData} />
           </Route>
           <Route path="/g/:galleryId/:year?/:month?/:day?">
-            <GalleryTop user={user} lang={lang} countryData={countryData} />
+            <Top user={user} lang={lang} countryData={countryData} />
           </Route>
           <Route path="/g">
-            <Galleries user={user} />
+            <GalleryList user={user} />
           </Route>
           <Route path="/">
             <Redirect to="/g" />

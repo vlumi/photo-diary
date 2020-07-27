@@ -1,0 +1,35 @@
+{
+  "translation": {
+    "loading": "Loading...",
+
+    "nav-gallery-top": "Back to top",
+    "nav-gallery": "Gallery",
+    "nav-gallery-stats": "Statistics",
+
+    "weekday-short-mon": "Mon",
+    "weekday-short-tue": "Tue",
+    "weekday-short-wed": "Wed",
+    "weekday-short-thu": "Thu",
+    "weekday-short-fri": "Fri",
+    "weekday-short-sat": "Sat",
+    "weekday-short-sun": "Sun",
+
+    "date-ymd": "{year}-{month}-{day}",
+    "date-ym": "{year}-{month}",
+    "date-y": "{year}",
+
+    "years-short": "{{count}}y",
+    "months-short": "{{count}}m",
+    "days-short": "{{count}}d",
+
+    "years-long": "{{count}} year",
+    "years-long_plural": "{{count}} years",
+    "months-long": "{{count}} month",
+    "months-long_plural": "{{count}} months",
+    "days-long": "{{count}} day",
+    "days-long_plural": "{{count}} days",
+
+    "epoch-day-short": "#{{count}}",
+    "epoch-day-long": "Day number {{count}}"
+  }
+}
