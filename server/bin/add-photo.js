@@ -86,32 +86,33 @@ const addToGalleries = (photoId, galleries) => {
 };
 
 const createPhoto = (photo) => {
-  logger.debug(`Photo "${photoid}" not yet in DB, creating`);
+  logger.debug(`Photo "${photo.id}" not yet in DB, creating`);
   db.createPhoto(photo)
     .then(() => {
-      logger.info(`Created "${photoId}"`);
-      addToGalleries(photoId, argv.gallery);
+      logger.info(`Created "${photo.id}"`);
+      addToGalleries(photo, argv.gallery);
     })
     .catch((error) => {
-      logger.error(`Creating "${photoId}" failed:`, error);
+      logger.error(`Creating "${photo.id}" failed:`, error);
     });
 };
 
 const updatePhoto = (photo) => {
+  const id = photo.id;
   delete photo.id;
-  logger.debug(`Photo "${photoId}" already in DB, updating`);
-  db.updatePhoto(photoId, photo)
+  logger.debug(`Photo "${id}" already in DB, updating`);
+  db.updatePhoto(id, photo)
     .then(() => {
-      logger.info(`Updated "${photoId}"`);
-      addToGalleries(photoId, argv.gallery);
+      logger.info(`Updated "${id}"`);
+      addToGalleries(photo, argv.gallery);
     })
     .catch((error) => {
-      logger.error(`Update of "${photoId}" failed:`, error);
+      logger.error(`Update of "${id}" failed:`, error);
     });
 };
 
 const processPhoto = (photo) => {
-  if (photoId) {
+  if (photo.id) {
     if ("title" in argv) photo.title = argv.title;
     if ("description" in argv) photo.title = argv.description;
     if ("author" in argv) photo.taken.author = argv.author;
@@ -124,7 +125,7 @@ const processPhoto = (photo) => {
     if ("focal" in argv) photo.exposure.focalLength = argv.focal;
     if ("aperture" in argv) photo.exposure.aperture = argv.aperture;
 
-    db.loadPhoto(photoId)
+    db.loadPhoto(photo.id)
       .then(() => updatePhoto(photo))
       .catch(() => createPhoto(photo));
   }
