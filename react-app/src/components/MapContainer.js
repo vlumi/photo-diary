@@ -43,6 +43,7 @@ const MapContainer = ({ positions: photos }) => {
               <Popup>
                 <span className="map-popup">
                   <img
+                    alt={photo.id}
                     src={thumbnailUrl}
                     width={dimensions.width / 2}
                     height={dimensions.height / 2}
