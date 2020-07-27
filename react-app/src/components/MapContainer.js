@@ -4,6 +4,7 @@ import Leaflet from "leaflet";
 import { Map, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
+// TODO: custom icons; first/last day
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
