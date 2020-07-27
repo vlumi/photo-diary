@@ -90,7 +90,7 @@ const createPhoto = (photo) => {
   db.createPhoto(photo)
     .then(() => {
       logger.info(`Created "${photo.id}"`);
-      addToGalleries(photo, argv.gallery);
+      addToGalleries(photo.id, argv.gallery);
     })
     .catch((error) => {
       logger.error(`Creating "${photo.id}" failed:`, error);
@@ -104,7 +104,7 @@ const updatePhoto = (photo) => {
   db.updatePhoto(id, photo)
     .then(() => {
       logger.info(`Updated "${id}"`);
-      addToGalleries(photo, argv.gallery);
+      addToGalleries(photo.id, argv.gallery);
     })
     .catch((error) => {
       logger.error(`Update of "${id}" failed:`, error);
