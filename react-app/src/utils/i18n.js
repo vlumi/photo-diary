@@ -8,6 +8,8 @@ import config from "./config";
 const resources = {
   en: {
     translation: {
+      loading: "Loading...",
+
       "nav-gallery-top": "Back to top",
       "nav-gallery": "Gallery",
       "nav-gallery-stats": "Statistics",
@@ -41,6 +43,8 @@ const resources = {
   },
   fi: {
     translation: {
+      loading: "Ladataan...",
+
       "nav-gallery-top": "Palaa alkuun",
       "nav-gallery": "Galleria",
       "nav-gallery-stats": "Tilastot",
@@ -74,6 +78,8 @@ const resources = {
   },
   ja: {
     translation: {
+      loading: "ロード中",
+
       "nav-gallery-top": "トップへ",
       "nav-gallery": "ギャラリー",
       "nav-gallery-stats": "統計",

@@ -29,6 +29,9 @@ const Photo = (photoData) => {
     year: () => photo.taken.instant.year,
     month: () => photo.taken.instant.month,
     day: () => photo.taken.instant.day,
+    hour: () => photo.taken.instant.hour,
+    minute: () => photo.taken.instant.minute,
+    second: () => photo.taken.instant.second,
     thumbnailDimensions: () => {
       return { ...photo.dimensions.thumbnail };
     },
@@ -54,6 +57,10 @@ const Photo = (photoData) => {
       });
       return `${ymd} ${hms}`;
     },
+    focalLength: () => photo.exposure.focalLength,
+    aperture: () => photo.exposure.aperture,
+    exposureTime: () => photo.exposure.exposureTime,
+    iso: () => photo.exposure.iso,
     formatFocalLength: () =>
       photo.exposure.focalLength ? `ƒ=${photo.exposure.focalLength}mm` : "",
     formatAperture: () =>
@@ -86,7 +93,18 @@ const Photo = (photoData) => {
         self.formatMegapixels(),
       ].join(" ");
     },
+    cameraMake: () => photo.camera.make,
+    hasCamera: () =>
+      photo &&
+      "camera" in photo &&
+      (("make" in photo.camera && photo.camera.make) ||
+        ("model" in photo.camera && photo.camera.model)),
     formatCamera: () => joinMakeAndModel(photo.camera.make, photo.camera.model),
+    hasLens: () =>
+      photo &&
+      "lens" in photo &&
+      (("make" in photo.lens && photo.lens.make) ||
+        ("model" in photo.lens && photo.lens.model)),
     formatLens: () => joinMakeAndModel(photo.lens.make, photo.lens.model),
     formatGear: () => {
       const camera = self.formatCamera();

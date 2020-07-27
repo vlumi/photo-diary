@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import galleryService from "../services/galleries";
 
@@ -20,6 +21,8 @@ import theme from "../utils/theme";
 const GalleryTop = ({ user, lang, countryData, stats = false }) => {
   const [gallery, setGallery] = React.useState(undefined);
   const [error, setError] = React.useState("");
+
+  const { t } = useTranslation();
 
   if (gallery && gallery.hasTheme()) {
     theme.setTheme(gallery.theme());
@@ -56,7 +59,7 @@ const GalleryTop = ({ user, lang, countryData, stats = false }) => {
     if (!gallery) {
       return (
         <>
-          <div>Loading...</div>
+          <div>{t("loading")}</div>
         </>
       );
     }
