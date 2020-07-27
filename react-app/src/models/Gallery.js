@@ -54,6 +54,7 @@ const Gallery = (galleryData) => {
         gallery.epoch.getDate(),
       ];
     },
+    epochType: () => gallery.epochType,
     hasTheme: () => gallery && "theme" in gallery && gallery.theme,
     theme: () => gallery.theme,
     matchesHostname: (hostname) => {

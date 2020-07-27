@@ -3,14 +3,25 @@ import PropTypes from "prop-types";
 
 import GalleryThumbnail from "./GalleryThumbnail";
 
-const GalleryThumbnails = ({ children, gallery, photos }) => {
+const GalleryThumbnails = ({
+  children,
+  gallery,
+  photos,
+  lang,
+  countryData,
+}) => {
   return (
     <>
       {photos.map((photo, index) => {
         return (
           <div key={photo.id()} className="thumbnail-block">
             {index === 0 ? children : ""}
-            <GalleryThumbnail gallery={gallery} photo={photo} />
+            <GalleryThumbnail
+              gallery={gallery}
+              photo={photo}
+              lang={lang}
+              countryData={countryData}
+            />
           </div>
         );
       })}
@@ -21,5 +32,7 @@ GalleryThumbnails.propTypes = {
   children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   photos: PropTypes.array.isRequired,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default GalleryThumbnails;

@@ -30,6 +30,8 @@ const INITIAL_GALLERY_VIEW =
  */
 const FIRST_WEEKDAY = process.env.REACT_APP_FIRST_WEEKDAY || 1;
 
+let lang = DEFAULT_LANGUAGE;
+
 export default {
   PHOTO_ROOT_URL: PHOTO_ROOT_URL,
 
@@ -38,4 +40,6 @@ export default {
   DEFAULT_THEME,
   INITIAL_GALLERY_VIEW,
   FIRST_WEEKDAY,
+
+  lang,
 };

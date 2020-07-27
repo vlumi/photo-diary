@@ -1,5 +1,5 @@
 import React from "react";
-
+import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
 import calendar from "../utils/calendar";
@@ -9,6 +9,7 @@ const EpochAge = ({
   year,
   month,
   day,
+  lang,
   format = "short",
   separator = <br />,
 }) => {
@@ -39,5 +40,13 @@ const EpochAge = ({
     </span>
   ));
 };
-
+EpochAge.propTypes = {
+  gallery: PropTypes.object.isRequired,
+  year: PropTypes.number.isRequired,
+  month: PropTypes.number,
+  day: PropTypes.number,
+  lang: PropTypes.string.isRequired,
+  format: PropTypes.string,
+  separator: PropTypes.object,
+};
 export default EpochAge;

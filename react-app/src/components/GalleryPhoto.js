@@ -10,7 +10,15 @@ import GalleryPhotoFooter from "./GalleryPhotoFooter";
 
 import useKeyPress from "../utils/keypress";
 
-const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
+const GalleryPhoto = ({
+  gallery,
+  year,
+  month,
+  day,
+  photo,
+  lang,
+  countryData,
+}) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const handlMoveToFirst = () => {
@@ -100,6 +108,8 @@ const GalleryPhoto = ({ gallery, year, month, day, photo }) => {
           month={month}
           day={day}
           photo={photo}
+          lang={lang}
+          countryData={countryData}
         />
       </Swipeable>
     </>
@@ -111,5 +121,7 @@ GalleryPhoto.propTypes = {
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default GalleryPhoto;

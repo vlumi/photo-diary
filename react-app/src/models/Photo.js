@@ -1,20 +1,8 @@
-import i18n from "i18next";
 import { GeoCoord } from "geo-coord";
 
+import config from "../utils/config";
 import calendar from "../utils/calendar";
 
-const registerCountryData = (i18n) => {
-  var countryData = require("i18n-iso-countries");
-  try {
-    countryData.registerLocale(
-      require("i18n-iso-countries/langs/" + i18n.language + ".json")
-    );
-  } catch (err) {
-    // Fall back to English
-    countryData.registerLocale(require("i18n-iso-countries/langs/en.json"));
-  }
-  return countryData;
-};
 const joinMakeAndModel = (make, model) => {
   if (!make && !model) return "";
   if (!make) return model;
@@ -30,7 +18,6 @@ const Photo = (photoData) => {
     return photoData;
   };
 
-  const countryData = registerCountryData(i18n);
   const photo = importPhotoData(photoData);
 
   const self = {
@@ -114,7 +101,9 @@ const Photo = (photoData) => {
       "country" in photo.taken.location &&
       photo.taken.location.country,
     countryCode: () => photo.taken.location.country,
-    countryName: () => countryData.getName(self.countryCode(), i18n.language),
+    // TODO: this should not be here...
+    countryName: (lang, countryData) =>
+      countryData.getName(self.countryCode(), lang),
     hasPlace: () =>
       photo &&
       "taken" in photo &&

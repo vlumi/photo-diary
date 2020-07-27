@@ -10,7 +10,7 @@ import GalleryDayFooter from "./GalleryDayFooter";
 
 import useKeyPress from "../utils/keypress";
 
-const GalleryDay = ({ gallery, year, month, day }) => {
+const GalleryDay = ({ gallery, year, month, day, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const handlMoveToFirst = () => {
@@ -85,6 +85,8 @@ const GalleryDay = ({ gallery, year, month, day }) => {
             year={year}
             month={month}
             day={day}
+            lang={lang}
+            countryData={countryData}
           />
         </div>
       </Swipeable>
@@ -97,5 +99,7 @@ GalleryDay.propTypes = {
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default GalleryDay;

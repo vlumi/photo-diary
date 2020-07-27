@@ -37,7 +37,7 @@ const Login = ({ setUser }) => {
 
   return (
     <>
-      <form onSubmit={handleLogin}>
+      <form className="login" onSubmit={handleLogin}>
         <span className="login">
           <input
             type="text"

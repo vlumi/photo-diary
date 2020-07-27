@@ -4,11 +4,20 @@ import FlagIcon from "./FlagIcon";
 
 import GalleryLink from "./GalleryLink";
 import EpochAge from "./EpochAge";
+import EpochDayIndex from "./EpochDayIndex";
 import MapContainer from "./MapContainer";
 
 import config from "../utils/config";
 
-const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
+const GalleryPhotoFooter = ({
+  gallery,
+  year,
+  month,
+  day,
+  photo,
+  lang,
+  countryData,
+}) => {
   const previousPhoto = gallery.previousPhoto(year, month, day, photo);
   const nextPhoto = gallery.nextPhoto(year, month, day, photo);
 
@@ -44,7 +53,8 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
     }
     return (
       <span>
-        {photo.countryName()} <FlagIcon code={photo.countryCode()} />
+        {photo.countryName(lang, countryData)}{" "}
+        <FlagIcon code={photo.countryCode()} />
       </span>
     );
   };
@@ -88,18 +98,51 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
     if (!gallery.hasEpoch()) {
       return <></>;
     }
-    return (
-      <div className="details">
-        <EpochAge
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
-          format="long"
-          separator=""
-        />
-      </div>
-    );
+    switch (gallery.epochType()) {
+      case "birthday":
+        return (
+          <div className="details">
+            <EpochAge
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              lang={lang}
+              format="long"
+              separator=""
+            />
+          </div>
+        );
+      case "1-index":
+        return (
+          <div className="details">
+            <EpochDayIndex
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              lang={lang}
+              format="long"
+            />
+          </div>
+        );
+      case "0-index":
+        return (
+          <div className="details">
+            <EpochDayIndex
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              lang={lang}
+              format="long"
+              start={0}
+            />
+          </div>
+        );
+      default:
+        return "";
+    }
   };
   const renderMap = () => {
     if (!photo.hasCoordinates()) {
@@ -149,5 +192,7 @@ GalleryPhotoFooter.propTypes = {
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default GalleryPhotoFooter;

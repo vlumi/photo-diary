@@ -10,12 +10,59 @@ import EpochDayIndex from "./EpochDayIndex";
 
 import calendar from "../utils/calendar";
 
-const GalleryMonthContent = ({ gallery, year, month }) => {
+const GalleryMonthContent = ({ gallery, year, month, lang, countryData }) => {
   const { t } = useTranslation();
 
   if (!gallery.includesMonth(year, month)) {
     return <i>Empty</i>;
   }
+
+  const renderEpochInfo = (day) => {
+    if (!gallery.hasEpoch()) {
+      return <></>;
+    }
+    switch (gallery.epochType()) {
+      case "birthday":
+        return (
+          <span>
+            <EpochAge
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              lang={lang}
+            />
+          </span>
+        );
+      case "1-index":
+        return (
+          <span>
+            <EpochDayIndex
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              lang={lang}
+            />
+          </span>
+        );
+      case "0-index":
+        return (
+          <span>
+            <EpochDayIndex
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              lang={lang}
+              start={0}
+            />
+          </span>
+        );
+      default:
+        return "";
+    }
+  };
 
   const renderDay = (day) => {
     return (
@@ -23,6 +70,8 @@ const GalleryMonthContent = ({ gallery, year, month }) => {
         key={"" + year + month + day}
         gallery={gallery}
         photos={gallery.photos(year, month, day)}
+        lang={lang}
+        countryData={countryData}
       >
         <GalleryLink gallery={gallery} year={year} month={month} day={day}>
           <h3>
@@ -30,29 +79,7 @@ const GalleryMonthContent = ({ gallery, year, month }) => {
             <span>
               {t(`weekday-short-${calendar.dayOfWeek(year, month, day)}`)}
             </span>
-            {gallery.hasEpoch() ? (
-              <>
-                {/* TODO: epochMode */}
-                <span>
-                  <EpochAge
-                    gallery={gallery}
-                    year={year}
-                    month={month}
-                    day={day}
-                  />
-                </span>
-                <span>
-                  <EpochDayIndex
-                    gallery={gallery}
-                    year={year}
-                    month={month}
-                    day={day}
-                  />
-                </span>
-              </>
-            ) : (
-              <></>
-            )}
+            {renderEpochInfo(day)}
           </h3>
         </GalleryLink>
       </GalleryThumbnails>
@@ -70,5 +97,7 @@ GalleryMonthContent.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default GalleryMonthContent;

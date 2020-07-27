@@ -10,7 +10,7 @@ import GalleryMonthFooter from "./GalleryMonthFooter";
 
 import useKeyPress from "../utils/keypress";
 
-const GalleryMonth = ({ gallery, year, month }) => {
+const GalleryMonth = ({ gallery, year, month, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const handlMoveToFirst = () => {
@@ -80,7 +80,13 @@ const GalleryMonth = ({ gallery, year, month }) => {
       <GalleryMonthNav gallery={gallery} year={year} month={month} />
       <Swipeable onSwiped={handleSwipe}>
         <div id="content">
-          <GalleryMonthContent gallery={gallery} year={year} month={month} />
+          <GalleryMonthContent
+            gallery={gallery}
+            year={year}
+            month={month}
+            lang={lang}
+            countryData={countryData}
+          />
         </div>
       </Swipeable>
       <GalleryMonthFooter gallery={gallery} year={year} month={month} />
@@ -91,5 +97,7 @@ GalleryMonth.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default GalleryMonth;

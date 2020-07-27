@@ -12,7 +12,7 @@ const Logout = ({ setUser }) => {
   };
 
   return (
-    <form onSubmit={handleLogout}>
+    <form  className="logout" onSubmit={handleLogout}>
       <span className="logout">
         <button type="submit">Logout</button>
       </span>

@@ -6,7 +6,7 @@ import FlagIcon from "./FlagIcon";
 
 import config from "../utils/config";
 
-const GalleryThumbnail = ({ gallery, photo }) => {
+const GalleryThumbnail = ({ gallery, photo, lang, countryData }) => {
   const url = `url("${config.PHOTO_ROOT_URL}thumbnail/${photo.id()}")`;
   const dimensions = photo.thumbnailDimensions();
   const style = {
@@ -20,7 +20,7 @@ const GalleryThumbnail = ({ gallery, photo }) => {
         <span className="thumbnail" style={style}></span>
       </GalleryLink>
       {photo.hasCountry() ? (
-        <span className="flag" title={photo.countryName()}>
+        <span className="flag" title={photo.countryName(lang, countryData)}>
           <FlagIcon code={photo.countryCode()} />
         </span>
       ) : (
@@ -32,5 +32,7 @@ const GalleryThumbnail = ({ gallery, photo }) => {
 GalleryThumbnail.propTypes = {
   gallery: PropTypes.object.isRequired,
   photo: PropTypes.object.isRequired,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default GalleryThumbnail;

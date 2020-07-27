@@ -4,7 +4,14 @@ import PropTypes from "prop-types";
 import GalleryTitle from "./GalleryTitle";
 import GalleryThumbnails from "./GalleryThumbnails";
 
-const GalleryDayContent = ({ gallery, year, month, day }) => {
+const GalleryDayContent = ({
+  gallery,
+  year,
+  month,
+  day,
+  lang,
+  countryData,
+}) => {
   if (!gallery.includesDay(year, month, day)) {
     return <i>Empty</i>;
   }
@@ -14,6 +21,8 @@ const GalleryDayContent = ({ gallery, year, month, day }) => {
       <GalleryThumbnails
         gallery={gallery}
         photos={gallery.photos(year, month, day)}
+        lang={lang}
+        countryData={countryData}
       />
     );
   };
@@ -31,5 +40,7 @@ GalleryDayContent.propTypes = {
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default GalleryDayContent;

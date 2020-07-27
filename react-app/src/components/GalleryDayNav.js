@@ -38,7 +38,7 @@ const GalleryDayNav = ({ gallery, year, month, day }) => {
       >
         <span style={prevStyle}>←</span>
       </GalleryLink>
-      <DateLink gallery={gallery} year={year} month={month} day={day}/>
+      <DateLink gallery={gallery} year={year} month={month} day={day} />
       <GalleryLink
         gallery={gallery}
         year={nextYear}

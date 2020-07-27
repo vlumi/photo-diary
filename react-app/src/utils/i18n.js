@@ -30,6 +30,9 @@ const resources = {
       "months-long_plural": "{{count}} months",
       "days-long": "{{count}} day",
       "days-long_plural": "{{count}} days",
+
+      "epoch-day-short": "#{{count}}",
+      "epoch-day-long": "Day number {{count}}",
     },
   },
   fi: {
@@ -56,6 +59,9 @@ const resources = {
       "months-long_plural": "{{count}} kuukautta",
       "days-long": "{{count}} päivä",
       "days-long_plural": "{{count}} päivää",
+
+      "epoch-day-short": "#{{count}}",
+      "epoch-day-long": "{{count}}. päivä",
     },
   },
   ja: {
@@ -78,6 +84,9 @@ const resources = {
       "years-long": "{{count}}歳",
       "months-long": "{{count}}ヶ月",
       "days-long": "{{count}}日",
+
+      "epoch-day-short": "#{{count}}",
+      "epoch-day-long": "第{{count}}日",
     },
   },
 };

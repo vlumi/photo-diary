@@ -16,7 +16,7 @@ import GalleryModel from "../models/Gallery";
 import config from "../utils/config";
 import theme from "../utils/theme";
 
-const GalleryTop = ({ user }) => {
+const GalleryTop = ({ user, lang, countryData }) => {
   const [gallery, setGallery] = React.useState(undefined);
   const [error, setError] = React.useState("");
 
@@ -66,14 +66,36 @@ const GalleryTop = ({ user }) => {
       return <GalleryFull gallery={gallery} />;
     }
     if (!month) {
-      return <GalleryYear gallery={gallery} year={year} />;
+      return (
+        <GalleryYear
+          gallery={gallery}
+          year={year}
+          lang={lang}
+          countryData={countryData}
+        />
+      );
     }
     if (!day) {
-      return <GalleryMonth gallery={gallery} year={year} month={month} />;
+      return (
+        <GalleryMonth
+          gallery={gallery}
+          year={year}
+          month={month}
+          lang={lang}
+          countryData={countryData}
+        />
+      );
     }
     if (!photoId) {
       return (
-        <GalleryDay gallery={gallery} year={year} month={month} day={day} />
+        <GalleryDay
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={day}
+          lang={lang}
+          countryData={countryData}
+        />
       );
     }
     const photo = gallery.photo(year, month, day, photoId);
@@ -84,6 +106,8 @@ const GalleryTop = ({ user }) => {
         month={month}
         day={day}
         photo={photo}
+        lang={lang}
+        countryData={countryData}
       />
     );
   };
@@ -92,5 +116,7 @@ const GalleryTop = ({ user }) => {
 };
 GalleryTop.propTypes = {
   user: PropTypes.object,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default GalleryTop;

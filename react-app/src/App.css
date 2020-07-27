@@ -41,7 +41,6 @@ a {
 }
 
 .top-menu form {
-  flex-grow: 1;
   max-width: 300px;
 }
 
@@ -60,9 +59,29 @@ a {
   flex-grow: 1;
   text-align: left;
 }
-.top-menu .login,
-.top-menu .logout {
+.top-menu .lang {
+  margin: auto 0;
+}
+.top-menu .lang input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.top-menu .lang label {
+  margin: auto 5px;
+  color: var(--inactive-color);
+}
+.top-menu .lang label.checked {
+  color: var(--header-color);
+}
+
+.top-menu .login {
   flex-grow: 1;
+  text-align: right;
+}
+.top-menu .logout {
   text-align: right;
 }
 .top-menu .login input {
