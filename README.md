@@ -136,7 +136,7 @@ These features would be nice to have, but are too far into the future to put on 
 
 ## Version History
 
-- current (TBD)
+- v0.2.1 (2020-07-27)
   - Embedded map with markers of the photo(s) on year, month, day, and photo views
     - Marker popup with small thumbnail and date
     - No grouping of nearby markers
