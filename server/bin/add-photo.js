@@ -104,7 +104,7 @@ const updatePhoto = (photo) => {
   db.updatePhoto(id, photo)
     .then(() => {
       logger.info(`Updated "${id}"`);
-      addToGalleries(photo.id, argv.gallery);
+      addToGalleries(id, argv.gallery);
     })
     .catch((error) => {
       logger.error(`Update of "${id}" failed:`, error);
