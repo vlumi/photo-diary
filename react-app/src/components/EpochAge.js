@@ -9,7 +9,6 @@ const EpochAge = ({
   year,
   month,
   day,
-  lang,
   format = "short",
   separator = <br />,
 }) => {
@@ -31,7 +30,7 @@ const EpochAge = ({
     }
   }
   if (parts.length === 0) {
-    return "0" + t(`days-${format}}`);
+    return "0" + t(`days-${format}`);
   }
 
   return parts.map((part, index) => (
@@ -43,9 +42,8 @@ const EpochAge = ({
 EpochAge.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
-  month: PropTypes.number,
-  day: PropTypes.number,
-  lang: PropTypes.string.isRequired,
+  month: PropTypes.number.isRequired,
+  day: PropTypes.number.isRequired,
   format: PropTypes.string,
   separator: PropTypes.object,
 };

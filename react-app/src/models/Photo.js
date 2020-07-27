@@ -1,6 +1,5 @@
 import { GeoCoord } from "geo-coord";
 
-import config from "../utils/config";
 import calendar from "../utils/calendar";
 
 const joinMakeAndModel = (make, model) => {

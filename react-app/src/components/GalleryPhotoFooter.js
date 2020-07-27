@@ -94,7 +94,7 @@ const GalleryPhotoFooter = ({
       </>
     );
   };
-  const renderAge = () => {
+  const renderEpochInfo = () => {
     if (!gallery.hasEpoch()) {
       return <></>;
     }
@@ -107,7 +107,6 @@ const GalleryPhotoFooter = ({
               year={year}
               month={month}
               day={day}
-              lang={lang}
               format="long"
               separator=""
             />
@@ -171,7 +170,7 @@ const GalleryPhotoFooter = ({
             <div className="details">{photo.formatExposure()}</div>
             <div className="details">{renderGear()}</div>
             {/* TODO: epochMode */}
-            {renderAge()}
+            {renderEpochInfo()}
             <div className="copyright">
               <span>Photo Copyright © {photo.author()}</span>{" "}
               <span>All rights reserved.</span>

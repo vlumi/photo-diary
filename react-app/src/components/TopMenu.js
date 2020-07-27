@@ -2,8 +2,6 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-import config from "../utils/config";
-
 import Toggleable from "./Toggleable";
 import Login from "./Login";
 import Logout from "./Logout";
@@ -84,5 +82,6 @@ const TopMenu = ({ user, setUser, lang }) => {
 TopMenu.propTypes = {
   user: PropTypes.object,
   setUser: PropTypes.func,
+  lang: PropTypes.string.isRequired,
 };
 export default TopMenu;

@@ -25,13 +25,7 @@ const GalleryMonthContent = ({ gallery, year, month, lang, countryData }) => {
       case "birthday":
         return (
           <span>
-            <EpochAge
-              gallery={gallery}
-              year={year}
-              month={month}
-              day={day}
-              lang={lang}
-            />
+            <EpochAge gallery={gallery} year={year} month={month} day={day} />
           </span>
         );
       case "1-index":
