@@ -1,10 +1,12 @@
 # Photo Diary
 
-**This project is a **_work in progress_**.**
+Photo Diary is a calendar based gallery for self-hosting. The photos are presented arranged by the date they were shot, in calendar-based views, aimed at diary and other similar photography projects.
 
-Photo Diary is a calendar based gallery for self-hosting.
+Key features include:
 
-This project is intended to create an online photo gallery, with the photos arranged by the date they were shot, in monthly views. This will replace the legacy [gallery](https://github.com/vlumi/gallery).
+- Fast browsing – gallery content (apart from actual photos) loaded once at startup
+- Calendar-based views (year, month, day, photo)
+- User management and basic access control
 
 ## Structure
 
@@ -112,11 +114,6 @@ Photo Diary is split into separate independent modules, each handling its own su
     - Photo
     - Gallery-photo linking
 - Front-end
-  - Localization
-    - Static items
-    - User language setting
-      - Auto-detect
-      - Persist to local storage
   - Global admin view
     - Manage users & ACL
     - Manage galleries
@@ -139,6 +136,12 @@ These features would be nice to have, but are too far into the future to put on 
 
 ## Version History
 
+- current (TBD)
+  - Embedded map with markers of the photo(s) on year, month, day, and photo views
+    - Marker popup with small thumbnail and date
+    - No grouping of nearby markers
+  - Language selection and minimal localization
+    - English, Finnish, Japanese
 - v0.2.0 (2020-07-25)
   - Implement new `sqlite3` schema and driver
     - More photo and gallery metadata
