@@ -1,0 +1,25 @@
+{
+  "translation": {
+    "weekday-short-mon": "月",
+    "weekday-short-tue": "火",
+    "weekday-short-wed": "水",
+    "weekday-short-thu": "木",
+    "weekday-short-fri": "金",
+    "weekday-short-sat": "土",
+    "weekday-short-sun": "日",
+    "date-ymd": "{year}年{month}月{day}日",
+    "date-ym": "{year}年{month}月",
+    "date-y": "{year}年",
+
+    "years-short": "{{count}}歳",
+    "months-short": "{{count}}ヶ月",
+    "days-short": "{{count}}日",
+
+    "years-long": "{{count}}歳",
+    "months-long": "{{count}}ヶ月",
+    "days-long": "{{count}}日",
+
+    "epoch-day-short": "#{{count}}",
+    "epoch-day-long": "第{{count}}日"
+  }
+}

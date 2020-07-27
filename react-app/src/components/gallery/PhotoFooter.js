@@ -1,15 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
-import FlagIcon from "./FlagIcon";
 
-import GalleryLink from "./GalleryLink";
+import FlagIcon from "../FlagIcon";
 import EpochAge from "./EpochAge";
 import EpochDayIndex from "./EpochDayIndex";
-import MapContainer from "./MapContainer";
+import MapContainer from "../MapContainer";
 
-import config from "../utils/config";
+import Link from "./Link";
 
-const GalleryPhotoFooter = ({
+import config from "../../utils/config";
+
+const PhotoFooter = ({
   gallery,
   year,
   month,
@@ -33,11 +34,11 @@ const GalleryPhotoFooter = ({
     const path = `${config.PHOTO_ROOT_URL}display/${adjacentPhoto.id()}`;
 
     return (
-      <GalleryLink gallery={gallery} photo={adjacentPhoto}>
+      <Link gallery={gallery} photo={adjacentPhoto}>
         <div className="adjacent" style={style}>
           <img src={path} alt={adjacentPhoto.id()} style={style} />
         </div>
-      </GalleryLink>
+      </Link>
     );
   };
 
@@ -185,7 +186,7 @@ const GalleryPhotoFooter = ({
 
   return renderContent();
 };
-GalleryPhotoFooter.propTypes = {
+PhotoFooter.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
@@ -194,4 +195,4 @@ GalleryPhotoFooter.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default GalleryPhotoFooter;
+export default PhotoFooter;

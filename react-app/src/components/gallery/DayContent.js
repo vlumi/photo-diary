@@ -1,10 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import GalleryTitle from "./GalleryTitle";
-import GalleryThumbnails from "./GalleryThumbnails";
+import Title from "./Title";
+import Thumbnails from "./Thumbnails";
 
-const GalleryDayContent = ({
+const DayContent = ({
   gallery,
   year,
   month,
@@ -18,7 +18,7 @@ const GalleryDayContent = ({
 
   const renderContent = () => {
     return (
-      <GalleryThumbnails
+      <Thumbnails
         gallery={gallery}
         photos={gallery.photos(year, month, day)}
         lang={lang}
@@ -30,12 +30,12 @@ const GalleryDayContent = ({
   // TODO: epoch & epochMode
   return (
     <>
-      <GalleryTitle gallery={gallery} />
+      <Title gallery={gallery} />
       <div className="day">{renderContent()}</div>
     </>
   );
 };
-GalleryDayContent.propTypes = {
+DayContent.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
@@ -43,4 +43,4 @@ GalleryDayContent.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default GalleryDayContent;
+export default DayContent;

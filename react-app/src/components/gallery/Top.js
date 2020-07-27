@@ -2,21 +2,21 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
 
-import galleryService from "../services/galleries";
+import galleryService from "../../services/galleries";
 
-import GalleryEmpty from "./GalleryEmpty";
-import GalleryFull from "./GalleryFull";
-import GalleryYear from "./GalleryYear";
-import GalleryMonth from "./GalleryMonth";
-import GalleryDay from "./GalleryDay";
-import GalleryPhoto from "./GalleryPhoto";
+import Empty from "./Empty";
+import Full from "./Full";
+import Year from "./Year";
+import Month from "./Month";
+import Day from "./Day";
+import Photo from "./Photo";
 
-import GalleryModel from "../models/Gallery";
+import GalleryModel from "../../models/Gallery";
 
-import config from "../utils/config";
-import theme from "../utils/theme";
+import config from "../../utils/config";
+import theme from "../../utils/theme";
 
-const GalleryTop = ({ user, lang, countryData }) => {
+const Top = ({ user, lang, countryData }) => {
   const [gallery, setGallery] = React.useState(undefined);
   const [error, setError] = React.useState("");
 
@@ -60,14 +60,14 @@ const GalleryTop = ({ user, lang, countryData }) => {
       );
     }
     if (!gallery.includesPhotos()) {
-      return <GalleryEmpty gallery={gallery} />;
+      return <Empty gallery={gallery} />;
     }
     if (!year) {
-      return <GalleryFull gallery={gallery} />;
+      return <Full gallery={gallery} />;
     }
     if (!month) {
       return (
-        <GalleryYear
+        <Year
           gallery={gallery}
           year={year}
           lang={lang}
@@ -77,7 +77,7 @@ const GalleryTop = ({ user, lang, countryData }) => {
     }
     if (!day) {
       return (
-        <GalleryMonth
+        <Month
           gallery={gallery}
           year={year}
           month={month}
@@ -88,7 +88,7 @@ const GalleryTop = ({ user, lang, countryData }) => {
     }
     if (!photoId) {
       return (
-        <GalleryDay
+        <Day
           gallery={gallery}
           year={year}
           month={month}
@@ -100,7 +100,7 @@ const GalleryTop = ({ user, lang, countryData }) => {
     }
     const photo = gallery.photo(year, month, day, photoId);
     return (
-      <GalleryPhoto
+      <Photo
         gallery={gallery}
         year={year}
         month={month}
@@ -114,9 +114,9 @@ const GalleryTop = ({ user, lang, countryData }) => {
 
   return <>{renderContent()}</>;
 };
-GalleryTop.propTypes = {
+Top.propTypes = {
   user: PropTypes.object,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default GalleryTop;
+export default Top;

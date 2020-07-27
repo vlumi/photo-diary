@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import GalleryThumbnail from "./GalleryThumbnail";
+import Thumbnail from "./Thumbnail";
 
-const GalleryThumbnails = ({
+const Thumbnails = ({
   children,
   gallery,
   photos,
@@ -16,7 +16,7 @@ const GalleryThumbnails = ({
         return (
           <div key={photo.id()} className="thumbnail-block">
             {index === 0 ? children : ""}
-            <GalleryThumbnail
+            <Thumbnail
               gallery={gallery}
               photo={photo}
               lang={lang}
@@ -28,11 +28,11 @@ const GalleryThumbnails = ({
     </>
   );
 };
-GalleryThumbnails.propTypes = {
+Thumbnails.propTypes = {
   children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   photos: PropTypes.array.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default GalleryThumbnails;
+export default Thumbnails;

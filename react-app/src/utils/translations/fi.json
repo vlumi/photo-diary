@@ -1,0 +1,29 @@
+{
+  "translation": {
+    "weekday-short-mon": "ma",
+    "weekday-short-tue": "ti",
+    "weekday-short-wed": "ke",
+    "weekday-short-thu": "to",
+    "weekday-short-fri": "pe",
+    "weekday-short-sat": "la",
+    "weekday-short-sun": "su",
+
+    "date-ymd": "{year}-{month}-{day}",
+    "date-ym": "{year}-{month}",
+    "date-y": "{year}",
+
+    "years-short": "{{count}} v",
+    "months-short": "{{count}} kk",
+    "days-short": "{{count}} pv",
+
+    "years-long": "{{count}} vuosi",
+    "years-long_plural": "{{count}} vuotta",
+    "months-long": "{{count}} kuukausi",
+    "months-long_plural": "{{count}} kuukautta",
+    "days-long": "{{count}} päivä",
+    "days-long_plural": "{{count}} päivää",
+
+    "epoch-day-short": "#{{count}}",
+    "epoch-day-long": "{{count}}. päivä"
+  }
+}

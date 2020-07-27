@@ -1,10 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import DateLink from "./DateLink";
-import GalleryLink from "./GalleryLink";
+import DateLink from "../DateLink";
 
-const GalleryYearNav = ({ gallery, year }) => {
+import Link from "./Link";
+
+const YearNav = ({ gallery, year }) => {
   const prevStyle = gallery.isFirstYear(year) ? { visibility: "hidden" } : {};
   const nextStyle = gallery.isLastYear(year) ? { visibility: "hidden" } : {};
 
@@ -14,24 +15,24 @@ const GalleryYearNav = ({ gallery, year }) => {
   const lastYear = gallery.lastYear();
   return (
     <h2>
-      <GalleryLink gallery={gallery} year={firstYear}>
+      <Link gallery={gallery} year={firstYear}>
         <span style={prevStyle}>⇤</span>
-      </GalleryLink>
-      <GalleryLink gallery={gallery} year={previousYear}>
+      </Link>
+      <Link gallery={gallery} year={previousYear}>
         <span style={prevStyle}>←</span>
-      </GalleryLink>
+      </Link>
       <DateLink gallery={gallery} year={year} />
-      <GalleryLink gallery={gallery} year={nextYear}>
+      <Link gallery={gallery} year={nextYear}>
         <span style={nextStyle}>→</span>
-      </GalleryLink>
-      <GalleryLink gallery={gallery} year={lastYear}>
+      </Link>
+      <Link gallery={gallery} year={lastYear}>
         <span style={nextStyle}>⇥</span>
-      </GalleryLink>
+      </Link>
     </h2>
   );
 };
-GalleryYearNav.propTypes = {
+YearNav.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };
-export default GalleryYearNav;
+export default YearNav;

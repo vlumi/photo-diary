@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import MapContainer from "./MapContainer";
+import MapContainer from "../MapContainer";
 
-const GalleryYearFooter = ({ gallery, year }) => {
+const YearFooter = ({ gallery, year }) => {
   const renderMap = (positions) => {
     if (!positions) {
       return "";
@@ -25,8 +25,8 @@ const GalleryYearFooter = ({ gallery, year }) => {
 
   return <div className="footer">{renderMap(photos)}</div>;
 };
-GalleryYearFooter.propTypes = {
+YearFooter.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };
-export default GalleryYearFooter;
+export default YearFooter;

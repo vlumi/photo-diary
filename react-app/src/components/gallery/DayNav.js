@@ -1,10 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import DateLink from "./DateLink";
-import GalleryLink from "./GalleryLink";
+import DateLink from "../DateLink";
 
-const GalleryDayNav = ({ gallery, year, month, day }) => {
+import Link from "./Link";
+
+const DayNav = ({ gallery, year, month, day }) => {
   const prevStyle = gallery.isFirstDay(year, month, day)
     ? { visibility: "hidden" }
     : {};
@@ -22,46 +23,46 @@ const GalleryDayNav = ({ gallery, year, month, day }) => {
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
   return (
     <h2>
-      <GalleryLink
+      <Link
         gallery={gallery}
         year={firstYear}
         month={firstMonth}
         day={firstDay}
       >
         <span style={prevStyle}>⇤</span>
-      </GalleryLink>
-      <GalleryLink
+      </Link>
+      <Link
         gallery={gallery}
         year={previousYear}
         month={previousMonth}
         day={previousDay}
       >
         <span style={prevStyle}>←</span>
-      </GalleryLink>
+      </Link>
       <DateLink gallery={gallery} year={year} month={month} day={day} />
-      <GalleryLink
+      <Link
         gallery={gallery}
         year={nextYear}
         month={nextMonth}
         day={nextDay}
       >
         <span style={nextStyle}>→</span>
-      </GalleryLink>
-      <GalleryLink
+      </Link>
+      <Link
         gallery={gallery}
         year={lastYear}
         month={lastMonth}
         day={lastDay}
       >
         <span style={nextStyle}>⇥</span>
-      </GalleryLink>
+      </Link>
     </h2>
   );
 };
-GalleryDayNav.propTypes = {
+DayNav.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
 };
-export default GalleryDayNav;
+export default DayNav;

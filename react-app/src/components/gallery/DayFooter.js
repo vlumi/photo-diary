@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import MapContainer from "./MapContainer";
+import MapContainer from "../MapContainer";
 
-const GalleryMonthFooter = ({ gallery, year, month }) => {
+const DayFooter = ({ gallery, year, month, day }) => {
   const renderMap = (positions) => {
     if (!positions) {
       return "";
@@ -16,14 +16,15 @@ const GalleryMonthFooter = ({ gallery, year, month }) => {
   };
 
   const photos = gallery
-    .flatMapDays(year, month, (day) => gallery.photos(year, month, day))
+    .photos(year, month, day)
     .filter((photo) => photo.hasCoordinates());
 
   return <div className="footer">{renderMap(photos)}</div>;
 };
-GalleryMonthFooter.propTypes = {
+DayFooter.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
+  day: PropTypes.number.isRequired,
 };
-export default GalleryMonthFooter;
+export default DayFooter;

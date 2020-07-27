@@ -1,12 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import GalleryLink from "./GalleryLink";
-import FlagIcon from "./FlagIcon";
+import FlagIcon from "../FlagIcon";
 
-import config from "../utils/config";
+import Link from "./Link";
 
-const GalleryThumbnail = ({ gallery, photo, lang, countryData }) => {
+import config from "../../utils/config";
+
+const Thumbnail = ({ gallery, photo, lang, countryData }) => {
   const url = `url("${config.PHOTO_ROOT_URL}thumbnail/${photo.id()}")`;
   const dimensions = photo.thumbnailDimensions();
   const style = {
@@ -16,9 +17,9 @@ const GalleryThumbnail = ({ gallery, photo, lang, countryData }) => {
   };
   return (
     <div className="thumbnail">
-      <GalleryLink gallery={gallery} photo={photo}>
+      <Link gallery={gallery} photo={photo}>
         <span className="thumbnail" style={style}></span>
-      </GalleryLink>
+      </Link>
       {photo.hasCountry() ? (
         <span className="flag" title={photo.countryName(lang, countryData)}>
           <FlagIcon code={photo.countryCode()} />
@@ -29,10 +30,10 @@ const GalleryThumbnail = ({ gallery, photo, lang, countryData }) => {
     </div>
   );
 };
-GalleryThumbnail.propTypes = {
+Thumbnail.propTypes = {
   gallery: PropTypes.object.isRequired,
   photo: PropTypes.object.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default GalleryThumbnail;
+export default Thumbnail;

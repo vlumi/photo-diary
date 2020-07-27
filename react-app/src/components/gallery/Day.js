@@ -4,13 +4,13 @@ import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
 
-import GalleryDayNav from "./GalleryDayNav";
-import GalleryDayContent from "./GalleryDayContent";
-import GalleryDayFooter from "./GalleryDayFooter";
+import DayNav from "./DayNav";
+import DayContent from "./DayContent";
+import DayFooter from "./DayFooter";
 
-import useKeyPress from "../utils/keypress";
+import useKeyPress from "../../utils/keypress";
 
-const GalleryDay = ({ gallery, year, month, day, lang, countryData }) => {
+const Day = ({ gallery, year, month, day, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const handlMoveToFirst = () => {
@@ -77,10 +77,10 @@ const GalleryDay = ({ gallery, year, month, day, lang, countryData }) => {
       <Helmet>
         <title>{gallery.title(year, month, day)}</title>
       </Helmet>
-      <GalleryDayNav gallery={gallery} year={year} month={month} day={day} />
+      <DayNav gallery={gallery} year={year} month={month} day={day} />
       <Swipeable onSwiped={handleSwipe}>
         <div id="content">
-          <GalleryDayContent
+          <DayContent
             gallery={gallery}
             year={year}
             month={month}
@@ -90,11 +90,11 @@ const GalleryDay = ({ gallery, year, month, day, lang, countryData }) => {
           />
         </div>
       </Swipeable>
-      <GalleryDayFooter gallery={gallery} year={year} month={month} day={day} />
+      <DayFooter gallery={gallery} year={year} month={month} day={day} />
     </>
   );
 };
-GalleryDay.propTypes = {
+Day.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
@@ -102,4 +102,4 @@ GalleryDay.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default GalleryDay;
+export default Day;

@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 
-import GalleriesBody from "./GalleriesBody";
+import ListBody from "./ListBody";
 
-import galleryService from "../services/galleries";
+import galleryService from "../../services/galleries";
 
-import Gallery from "../models/Gallery";
+import Gallery from "../../models/Gallery";
 
-import config from "../utils/config";
-import theme from "../utils/theme";
+import config from "../../utils/config";
+import theme from "../../utils/theme";
 
 const Galleries = ({ user }) => {
   const [galleries, setGalleries] = useState([]);
@@ -53,7 +53,7 @@ const Galleries = ({ user }) => {
     }
     return (
       <div id="content">
-        <GalleriesBody galleries={galleries} />
+        <ListBody galleries={galleries} />
       </div>
     );
   };

@@ -2,15 +2,16 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-import GalleryTitle from "./GalleryTitle";
-import GalleryThumbnails from "./GalleryThumbnails";
-import GalleryLink from "./GalleryLink";
 import EpochAge from "./EpochAge";
 import EpochDayIndex from "./EpochDayIndex";
 
-import calendar from "../utils/calendar";
+import Title from "./Title";
+import Thumbnails from "./Thumbnails";
+import Link from "./Link";
 
-const GalleryMonthContent = ({ gallery, year, month, lang, countryData }) => {
+import calendar from "../../utils/calendar";
+
+const MonthContent = ({ gallery, year, month, lang, countryData }) => {
   const { t } = useTranslation();
 
   if (!gallery.includesMonth(year, month)) {
@@ -60,14 +61,14 @@ const GalleryMonthContent = ({ gallery, year, month, lang, countryData }) => {
 
   const renderDay = (day) => {
     return (
-      <GalleryThumbnails
+      <Thumbnails
         key={"" + year + month + day}
         gallery={gallery}
         photos={gallery.photos(year, month, day)}
         lang={lang}
         countryData={countryData}
       >
-        <GalleryLink gallery={gallery} year={year} month={month} day={day}>
+        <Link gallery={gallery} year={year} month={month} day={day}>
           <h3>
             {day}
             <span>
@@ -75,23 +76,23 @@ const GalleryMonthContent = ({ gallery, year, month, lang, countryData }) => {
             </span>
             {renderEpochInfo(day)}
           </h3>
-        </GalleryLink>
-      </GalleryThumbnails>
+        </Link>
+      </Thumbnails>
     );
   };
 
   return (
     <>
-      <GalleryTitle gallery={gallery} />
+      <Title gallery={gallery} />
       <div className="month">{gallery.mapDays(year, month, renderDay)}</div>
     </>
   );
 };
-GalleryMonthContent.propTypes = {
+MonthContent.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default GalleryMonthContent;
+export default MonthContent;

@@ -2,11 +2,12 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { Link } from "react-router-dom";
 
-import useKeyPress from "../utils/keypress";
+import Link from "./Link";
 
-const GalleryEmpty = ({ gallery }) => {
+import useKeyPress from "../../utils/keypress";
+
+const Empty = ({ gallery }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   useKeyPress("Escape", () => {
@@ -35,7 +36,7 @@ const GalleryEmpty = ({ gallery }) => {
       <h2>
         <span style={style}>⇤</span>
         <span style={style}>←</span>
-        <Link to="/g">
+        <Link gallery={gallery}>
           <span className="title">
             <i>Empty</i>
           </span>
@@ -47,7 +48,7 @@ const GalleryEmpty = ({ gallery }) => {
     </>
   );
 };
-GalleryEmpty.propTypes = {
+Empty.propTypes = {
   gallery: PropTypes.object.isRequired,
 };
-export default GalleryEmpty;
+export default Empty;

@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-import calendar from "../utils/calendar";
+import calendar from "../../utils/calendar";
 
 const EpochAge = ({
   gallery,

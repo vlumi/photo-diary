@@ -1,11 +1,12 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
 
-import config from "../utils/config";
-import collection from "../utils/collection";
+import Link from "./Link";
 
-const GalleriesBody = ({ galleries }) => {
+import config from "../../utils/config";
+import collection from "../../utils/collection";
+
+const ListBody = ({ galleries }) => {
   const renderDescription = (gallery) => {
     return <div className="description">{gallery.description()}</div>;
   };
@@ -26,7 +27,7 @@ const GalleriesBody = ({ galleries }) => {
       [`${gallery.theme()}-theme`]: gallery.hasTheme(),
     });
     return (
-      <Link key={gallery.id()} to={gallery.path()}>
+      <Link gallery={gallery}>
         <div key={gallery.id()} className={className}>
           <h3>{gallery.title()}</h3>
           {renderIcon(gallery)}
@@ -41,7 +42,7 @@ const GalleriesBody = ({ galleries }) => {
     </div>
   );
 };
-GalleriesBody.propTypes = {
+ListBody.propTypes = {
   galleries: PropTypes.array.isRequired,
 };
-export default GalleriesBody;
+export default ListBody;

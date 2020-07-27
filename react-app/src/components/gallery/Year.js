@@ -4,14 +4,14 @@ import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
 
-import GalleryTitle from "./GalleryTitle";
-import GalleryYearNav from "./GalleryYearNav";
-import GalleryYearContent from "./GalleryYearContent";
-import GalleryYearFooter from "./GalleryYearFooter";
+import Title from "./Title";
+import YearNav from "./YearNav";
+import YearContent from "./YearContent";
+import YearFooter from "./YearFooter";
 
-import useKeyPress from "../utils/keypress";
+import useKeyPress from "../../utils/keypress";
 
-const GalleryYear = ({ gallery, year }) => {
+const Year = ({ gallery, year }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const handlMoveToFirst = () => {
@@ -77,11 +77,11 @@ const GalleryYear = ({ gallery, year }) => {
     // TODO: remove?
     return (
       <>
-        <GalleryTitle gallery={gallery} />
+        <Title gallery={gallery} />
         {gallery.mapYears((year) => (
           // TODO: display year number somehow
           <div key={year} className="year">
-            <GalleryYearContent gallery={gallery} year={Number(year)} />
+            <YearContent gallery={gallery} year={Number(year)} />
           </div>
         ))}
       </>
@@ -92,19 +92,19 @@ const GalleryYear = ({ gallery, year }) => {
         <Helmet>
           <title>{gallery.title(year)}</title>
         </Helmet>
-        <GalleryYearNav gallery={gallery} year={year} />
+        <YearNav gallery={gallery} year={year} />
         <Swipeable onSwiped={handleSwipe}>
           <div id="content">
-            <GalleryYearContent gallery={gallery} year={year} />
+            <YearContent gallery={gallery} year={year} />
           </div>{" "}
         </Swipeable>
-        <GalleryYearFooter gallery={gallery} year={year} />
+        <YearFooter gallery={gallery} year={year} />
       </>
     );
   }
 };
-GalleryYear.propTypes = {
+Year.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };
-export default GalleryYear;
+export default Year;

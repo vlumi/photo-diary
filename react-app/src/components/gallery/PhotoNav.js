@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import GalleryLink from "./GalleryLink";
+import Link from "./Link";
 
-const GalleryPhotoNav = ({ gallery, year, month, day, photo }) => {
+const PhotoNav = ({ gallery, year, month, day, photo }) => {
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
 
@@ -22,29 +22,29 @@ const GalleryPhotoNav = ({ gallery, year, month, day, photo }) => {
   const lastPhoto = lastDayPhotos[lastDayPhotos.length - 1];
   return (
     <h2 className="photo">
-      <GalleryLink gallery={gallery} photo={firstPhoto}>
+      <Link gallery={gallery} photo={firstPhoto}>
         <span style={prevStyle}>⇤</span>
-      </GalleryLink>
-      <GalleryLink gallery={gallery} photo={previousPhoto}>
+      </Link>
+      <Link gallery={gallery} photo={previousPhoto}>
         <span style={prevStyle}>←</span>
-      </GalleryLink>
-      <GalleryLink gallery={gallery} year={year} month={month}>
+      </Link>
+      <Link gallery={gallery} year={year} month={month}>
         <span className="title">#{photo ? photo.index() + 1 : ""}</span>
-      </GalleryLink>
-      <GalleryLink gallery={gallery} photo={nextPhoto}>
+      </Link>
+      <Link gallery={gallery} photo={nextPhoto}>
         <span style={nextStyle}>→</span>
-      </GalleryLink>
-      <GalleryLink gallery={gallery} photo={lastPhoto}>
+      </Link>
+      <Link gallery={gallery} photo={lastPhoto}>
         <span style={nextStyle}>⇥</span>
-      </GalleryLink>
+      </Link>
     </h2>
   );
 };
-GalleryPhotoNav.propTypes = {
+PhotoNav.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
 };
-export default GalleryPhotoNav;
+export default PhotoNav;

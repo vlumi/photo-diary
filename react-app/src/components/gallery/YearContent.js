@@ -1,11 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import GalleryTitle from "./GalleryTitle";
+import Title from "./Title";
+import Link from "./Link";
 
-import calendar from "../utils/calendar";
+import calendar from "../../utils/calendar";
 
 const calculateHeat = (photos) => {
   if (photos < 1) return "none";
@@ -15,13 +15,13 @@ const calculateHeat = (photos) => {
   return "extreme";
 };
 
-const GalleryYearContent = ({ gallery, year }) => {
+const YearContent = ({ gallery, year }) => {
   const { t } = useTranslation();
 
   const renderMonthTitle = (gallery, year, month) => {
     if (gallery.includesMonth(year, month)) {
       return (
-        <Link to={gallery.path(year, month)}>
+        <Link gallery={gallery} year={year} month={month}>
           <h3>{month}</h3>
         </Link>
       );
@@ -34,14 +34,7 @@ const GalleryYearContent = ({ gallery, year }) => {
     }
     if (photoCount > 0) {
       return (
-        <Link
-          to={gallery.path(year, month, day)}
-          title={`${calendar.formatDate({
-            year,
-            month,
-            day,
-          })}: ${photoCount} photos`}
-        >
+        <Link gallery={gallery} year={year} month={month} day={day}>
           {day}
         </Link>
       );
@@ -51,10 +44,16 @@ const GalleryYearContent = ({ gallery, year }) => {
   const renderDayCell = (gallery, year, month, day, index) => {
     const photoCount = gallery.countPhotos(year, month, day);
     const heat = calculateHeat(photoCount);
+    const title = `${calendar.formatDate({
+      year,
+      month,
+      day,
+    })}: ${photoCount} photos`;
     return (
       <td
         key={["td", year, month, day, index].join("-")}
         className={`heat-${heat}`}
+        title={title}
       >
         {renderDayValue(gallery, year, month, day, photoCount)}
       </td>
@@ -96,7 +95,7 @@ const GalleryYearContent = ({ gallery, year }) => {
 
   return (
     <>
-      <GalleryTitle gallery={gallery} />
+      <Title gallery={gallery} />
       <div className="year">
         <div className="calendars">
           {calendar
@@ -112,8 +111,8 @@ const GalleryYearContent = ({ gallery, year }) => {
     </>
   );
 };
-GalleryYearContent.propTypes = {
+YearContent.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };
-export default GalleryYearContent;
+export default YearContent;

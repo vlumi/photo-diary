@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import config from "../utils/config";
+import config from "../../utils/config";
 
 function calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio) {
   if (maxRatio > photoRatio) {
@@ -26,7 +26,7 @@ const toggleFullScreen = () => {
   }
 };
 
-const GalleryPhotoContent = ({ gallery, year, month, day, photo }) => {
+const PhotoContent = ({ gallery, year, month, day, photo }) => {
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -80,11 +80,11 @@ const GalleryPhotoContent = ({ gallery, year, month, day, photo }) => {
     </>
   );
 };
-GalleryPhotoContent.propTypes = {
+PhotoContent.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
 };
-export default GalleryPhotoContent;
+export default PhotoContent;
