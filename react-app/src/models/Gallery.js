@@ -92,6 +92,7 @@ const Gallery = (galleryData) => {
           return self.lastPhoto().path(self);
       }
     },
+    statsPath: () => ["", "g", gallery.id, "stats"].join("/"),
     includesPhotos: () =>
       "photos" in gallery && Object.keys(gallery.photos).length > 0,
     includesYear: (year) => year in photos,

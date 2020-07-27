@@ -8,6 +8,10 @@ import config from "./config";
 const resources = {
   en: {
     translation: {
+      "nav-gallery-top": "Back to top",
+      "nav-gallery": "Gallery",
+      "nav-gallery-stats": "Statistics",
+
       "weekday-short-mon": "Mon",
       "weekday-short-tue": "Tue",
       "weekday-short-wed": "Wed",
@@ -37,6 +41,10 @@ const resources = {
   },
   fi: {
     translation: {
+      "nav-gallery-top": "Palaa alkuun",
+      "nav-gallery": "Galleria",
+      "nav-gallery-stats": "Tilastot",
+
       "weekday-short-mon": "ma",
       "weekday-short-tue": "ti",
       "weekday-short-wed": "ke",
@@ -66,6 +74,10 @@ const resources = {
   },
   ja: {
     translation: {
+      "nav-gallery-top": "トップへ",
+      "nav-gallery": "ギャラリー",
+      "nav-gallery-stats": "統計",
+
       "weekday-short-mon": "月",
       "weekday-short-tue": "火",
       "weekday-short-wed": "水",

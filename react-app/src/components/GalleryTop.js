@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 
 import galleryService from "../services/galleries";
 
+import GalleryStats from "./GalleryStats";
 import GalleryEmpty from "./GalleryEmpty";
 import GalleryFull from "./GalleryFull";
 import GalleryYear from "./GalleryYear";
@@ -16,7 +17,7 @@ import GalleryModel from "../models/Gallery";
 import config from "../utils/config";
 import theme from "../utils/theme";
 
-const GalleryTop = ({ user, lang, countryData }) => {
+const GalleryTop = ({ user, lang, countryData, stats = false }) => {
   const [gallery, setGallery] = React.useState(undefined);
   const [error, setError] = React.useState("");
 
@@ -61,6 +62,11 @@ const GalleryTop = ({ user, lang, countryData }) => {
     }
     if (!gallery.includesPhotos()) {
       return <GalleryEmpty gallery={gallery} />;
+    }
+    if (stats) {
+      return (
+        <GalleryStats gallery={gallery} lang={lang} countryData={countryData} />
+      );
     }
     if (!year) {
       return <GalleryFull gallery={gallery} />;
@@ -118,5 +124,6 @@ GalleryTop.propTypes = {
   user: PropTypes.object,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
+  stats: PropTypes.bool,
 };
 export default GalleryTop;

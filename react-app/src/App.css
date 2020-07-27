@@ -111,6 +111,18 @@ a {
   width: 23px;
 }
 
+.gallery-menu {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px;
+}
+.gallery-menu .top {
+  text-align: left;
+}
+.gallery-menu .stats {
+  text-align: right;
+}
+
 h1 {
   margin: 0;
 }

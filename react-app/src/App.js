@@ -69,6 +69,14 @@ const App = () => {
       <TopMenu user={user} setUser={setUser} lang={lang} />
       <Router>
         <Switch>
+          <Route path="/g/:galleryId/stats">
+            <GalleryTop
+              user={user}
+              lang={lang}
+              countryData={countryData}
+              stats={true}
+            />
+          </Route>
           <Route path="/g/:galleryId/:year/:month/:day/:photoId">
             <GalleryTop user={user} lang={lang} countryData={countryData} />
           </Route>

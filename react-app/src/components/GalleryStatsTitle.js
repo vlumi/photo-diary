@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-const GalleryTitle = ({ gallery }) => {
+const GalleryStatsTitle = ({ gallery }) => {
   const { t } = useTranslation();
 
   return (
@@ -13,14 +13,14 @@ const GalleryTitle = ({ gallery }) => {
           <Link to="/g">{t("nav-gallery-top")}</Link>
         </span>
         <span className="stats">
-          <Link to={gallery.statsPath()}>{t("nav-gallery-stats")}</Link>
+          <Link to={gallery.lastPath()}>{t("nav-gallery")}</Link>
         </span>
       </span>
       <h1>{gallery.title()}</h1>
     </>
   );
 };
-GalleryTitle.propTypes = {
+GalleryStatsTitle.propTypes = {
   gallery: PropTypes.object.isRequired,
 };
-export default GalleryTitle;
+export default GalleryStatsTitle;
