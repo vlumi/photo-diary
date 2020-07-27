@@ -107,7 +107,7 @@ const GalleryPhotoFooter = ({ gallery, year, month, day, photo }) => {
     }
     return (
       <>
-        <MapContainer positions={[photo.coordinates()]} zoom="9" />
+        <MapContainer positions={[photo]} zoom="9" />
       </>
     );
   };

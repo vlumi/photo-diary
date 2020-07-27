@@ -15,12 +15,11 @@ const GalleryDayFooter = ({ gallery, year, month, day }) => {
     );
   };
 
-  const positions = gallery
+  const photos = gallery
     .photos(year, month, day)
-    .filter((photo) => photo.hasCoordinates())
-    .map((photo) => photo.coordinates());
+    .filter((photo) => photo.hasCoordinates());
 
-  return <div className="footer">{renderMap(positions)}</div>;
+  return <div className="footer">{renderMap(photos)}</div>;
 };
 GalleryDayFooter.propTypes = {
   gallery: PropTypes.object.isRequired,

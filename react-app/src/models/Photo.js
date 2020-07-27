@@ -48,6 +48,13 @@ const Photo = (photoData) => {
     },
     ratio: () =>
       photo.dimensions.display.width / photo.dimensions.display.height,
+    formatDate: () => {
+      return calendar.formatDate({
+        year: photo.taken.instant.year,
+        month: photo.taken.instant.month,
+        day: photo.taken.instant.day,
+      });
+    },
     formatTimestamp: () => {
       const ymd = calendar.formatDate({
         year: photo.taken.instant.year,

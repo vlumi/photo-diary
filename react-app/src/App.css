@@ -395,6 +395,9 @@ div.adjacent {
   height: 400px;
   margin: 10px 0;
 }
+.map-popup {
+  text-align: center;
+}
 
 .footer .details {
   font-size: small;

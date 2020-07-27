@@ -1,12 +1,15 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Leaflet from "leaflet";
-import { Map, TileLayer, Marker } from "react-leaflet";
+import { Map, TileLayer, Marker, Popup } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
+
+import config from "../utils/config";
+
 let DefaultIcon = Leaflet.icon({
   ...Leaflet.Icon.Default.prototype.options,
   iconUrl: icon,
@@ -15,10 +18,11 @@ let DefaultIcon = Leaflet.icon({
 });
 Leaflet.Marker.prototype.options.icon = DefaultIcon;
 
-const MapContainer = ({ positions }) => {
-  if (positions.length === 0) {
+const MapContainer = ({ positions: photos }) => {
+  if (photos.length === 0) {
     return <></>;
   }
+  const positions = photos.map((photo) => photo.coordinates());
   const bounds = Leaflet.latLngBounds(positions);
   return (
     <>
@@ -27,9 +31,27 @@ const MapContainer = ({ positions }) => {
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {positions.map((position, index) => (
-          <Marker key={index} position={position}></Marker>
-        ))}
+        {photos.map((photo, index) => {
+          const thumbnailUrl = `${
+            config.PHOTO_ROOT_URL
+          }thumbnail/${photo.id()}`;
+          const dimensions = photo.thumbnailDimensions();
+          return (
+            <Marker key={index} position={photo.coordinates()}>
+              <Popup>
+                <span className="map-popup">
+                  <img
+                    src={thumbnailUrl}
+                    width={dimensions.width / 2}
+                    height={dimensions.height / 2}
+                  />
+                  <br />
+                  {photo.formatDate()}
+                </span>
+              </Popup>
+            </Marker>
+          );
+        })}
       </Map>
     </>
   );
