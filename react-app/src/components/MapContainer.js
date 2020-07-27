@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Leaflet from "leaflet";
-import { Map, TileLayer, Marker, Popup } from "react-leaflet";
+import { Map, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -22,6 +22,7 @@ const MapContainer = ({ positions: photos }) => {
   if (photos.length === 0) {
     return <></>;
   }
+  // TODO: group positions very close to each other; show as navigable list on popup
   const positions = photos.map((photo) => photo.coordinates());
   const bounds = Leaflet.latLngBounds(positions);
   return (
@@ -52,6 +53,7 @@ const MapContainer = ({ positions: photos }) => {
             </Marker>
           );
         })}
+        <Polyline positions={positions} />
       </Map>
     </>
   );
