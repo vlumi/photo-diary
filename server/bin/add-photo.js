@@ -46,31 +46,31 @@ const fs = require("fs");
 const logger = require("../utils/logger");
 const db = require("../db");
 
-const addToGalleries = (photo, galleries) => {
+const addToGalleries = (photoId, galleries) => {
   if (!galleries) {
     return;
   }
   if (typeof galleries === "string") {
-    return addToGalleries(photo, [galleries]);
+    return addToGalleries(photoId, [galleries]);
   }
   logger.debug(
-    `Add photo "${photo.id}" to galleries: ${galleries
+    `Add photo "${photoId}" to galleries: ${galleries
       .map((gallery) => `"${gallery}"`)
       .join(", ")}`
   );
-  db.unlinkAllGalleries(photo.id)
+  db.unlinkAllGalleries(photoId)
     .then(() => {
-      db.linkGalleryPhoto(galleries, [photo.id])
+      db.linkGalleryPhoto(galleries, [photoId])
         .then(() => {
           logger.info(
-            `Photo "${photo.id}" linked to galleries  ${galleries
+            `Photo "${photoId}" linked to galleries  ${galleries
               .map((gallery) => `"${gallery}"`)
               .join(", ")}`
           );
         })
         .catch((error) =>
           logger.error(
-            `Linking photo "${photo.id}" to galleries  ${galleries
+            `Linking photo "${photoId}" to galleries  ${galleries
               .map((gallery) => `"${gallery}"`)
               .join(", ")} failed:`,
             error
@@ -79,40 +79,39 @@ const addToGalleries = (photo, galleries) => {
     })
     .catch((error) =>
       logger.error(
-        `Unlinking photo "${photo.id}" from existing galleries failed:`,
+        `Unlinking photo "${photoId}" from existing galleries failed:`,
         error
       )
     );
 };
 
 const createPhoto = (photo) => {
-  logger.debug(`Photo "${photo.id}" not yet in DB, creating`);
+  logger.debug(`Photo "${photoid}" not yet in DB, creating`);
   db.createPhoto(photo)
     .then(() => {
-      logger.info(`Created "${photo.id}"`);
-      addToGalleries(photo, argv.gallery);
+      logger.info(`Created "${photoId}"`);
+      addToGalleries(photoId, argv.gallery);
     })
     .catch((error) => {
-      logger.error(`Creating "${photo.id}" failed:`, error);
+      logger.error(`Creating "${photoId}" failed:`, error);
     });
 };
 
 const updatePhoto = (photo) => {
-  const id = photo.id;
   delete photo.id;
-  logger.debug(`Photo "${id}" already in DB, updating`);
-  db.updatePhoto(id, photo)
+  logger.debug(`Photo "${photoId}" already in DB, updating`);
+  db.updatePhoto(photoId, photo)
     .then(() => {
-      logger.info(`Updated "${id}"`);
-      addToGalleries(photo, argv.gallery);
+      logger.info(`Updated "${photoId}"`);
+      addToGalleries(photoId, argv.gallery);
     })
     .catch((error) => {
-      logger.error(`Update of "${id}" failed:`, error);
+      logger.error(`Update of "${photoId}" failed:`, error);
     });
 };
 
 const processPhoto = (photo) => {
-  if (photo.id) {
+  if (photoId) {
     if ("title" in argv) photo.title = argv.title;
     if ("description" in argv) photo.title = argv.description;
     if ("author" in argv) photo.taken.author = argv.author;
@@ -125,7 +124,7 @@ const processPhoto = (photo) => {
     if ("focal" in argv) photo.exposure.focalLength = argv.focal;
     if ("aperture" in argv) photo.exposure.aperture = argv.aperture;
 
-    db.loadPhoto(photo.id)
+    db.loadPhoto(photoId)
       .then(() => updatePhoto(photo))
       .catch(() => createPhoto(photo));
   }
