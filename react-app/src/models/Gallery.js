@@ -1,6 +1,7 @@
 import Photo from "./Photo";
 
 import calendar from "../utils/calendar";
+import format from "../utils/format";
 import collection from "../utils/collection";
 import config from "../utils/config";
 
@@ -35,7 +36,7 @@ const Gallery = (galleryData) => {
     id: () => gallery.id,
     isSpecial: () => gallery.id.startsWith(":"),
     title: (year, month, day, photo) => {
-      const ymd = calendar.formatDate({ year, month, day });
+      const ymd = format.date({ year, month, day });
       if (!ymd) {
         return gallery.title;
       }
@@ -67,7 +68,7 @@ const Gallery = (galleryData) => {
     },
     path: (year, month, day) => {
       const parts = ["", "g", gallery.id];
-      const ymd = calendar.formatDate({ year, month, day, separator: "/" });
+      const ymd = format.date({ year, month, day, separator: "/" });
       if (ymd) {
         parts.push(ymd);
       }
