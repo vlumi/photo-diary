@@ -14,6 +14,27 @@
     "weekday-short-sat": "la",
     "weekday-short-sun": "su",
 
+    "weekday-long-mon": "maanantai",
+    "weekday-long-tue": "tiistai",
+    "weekday-long-wed": "keskiviikko",
+    "weekday-long-thu": "torstai",
+    "weekday-long-fri": "perjantai",
+    "weekday-long-sat": "lauantai",
+    "weekday-long-sun": "sunnuntai",
+
+    "month-long-1": "tammikuu",
+    "month-long-2": "helmikuu",
+    "month-long-3": "maaliskuu",
+    "month-long-4": "huhtikuu",
+    "month-long-5": "toukokuu",
+    "month-long-6": "kesäkuu",
+    "month-long-7": "heinäkuu",
+    "month-long-8": "elokuu",
+    "month-long-9": "syyskuu",
+    "month-long-10": "lokakuu",
+    "month-long-11": "marraskuu",
+    "month-long-12": "joulukuu",
+
     "date-ymd": "{year}-{month}-{day}",
     "date-ym": "{year}-{month}",
     "date-y": "{year}",
@@ -30,6 +51,30 @@
     "days-long_plural": "{{count}} päivää",
 
     "epoch-day-short": "#{{count}}",
-    "epoch-day-long": "{{count}}. päivä"
+    "epoch-day-long": "{{count}}. päivä",
+
+    "stats-unknown": "N/A",
+    "stats-other": "Muut",
+
+    "stats-category-general": "Yleiset",
+    "stats-chart-author": "Kuvaaja",
+    "stats-chart-country": "Maa",
+    "stats-category-time": "Aika",
+    "stats-chart-year": "Vuosi",
+    "stats-chart-month": "Kuukausi",
+    "stats-chart-weekday": "Viikonpäivä",
+    "stats-chart-hour": "Tunti",
+    "stats-category-gear": "Kalusto",
+    "stats-chart-camera-make": "Kameran merkki",
+    "stats-chart-camera": "Kamera",
+    "stats-chart-lens": "Objektiivi",
+    "stats-chart-camera-lens": "Kamera + Objektiivi",
+    "stats-category-exposure": "Valotus",
+    "stats-chart-focal-length": "Polttoväli",
+    "stats-chart-aperture": "Aukko",
+    "stats-chart-exposure-time": "Valotusaika",
+    "stats-chart-iso": "Herkkyys",
+    "stats-chart-ev": "EV",
+    "stats-chart-lv": "EV @ ISO100"
   }
 }

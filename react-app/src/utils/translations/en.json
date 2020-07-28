@@ -14,6 +14,27 @@
     "weekday-short-sat": "Sat",
     "weekday-short-sun": "Sun",
 
+    "weekday-long-mon": "Monday",
+    "weekday-long-tue": "Tuesday",
+    "weekday-long-wed": "Wednesday",
+    "weekday-long-thu": "Thursday",
+    "weekday-long-fri": "Friday",
+    "weekday-long-sat": "Saturday",
+    "weekday-long-sun": "Sunday",
+
+    "month-long-1": "January",
+    "month-long-2": "February",
+    "month-long-3": "March",
+    "month-long-4": "April",
+    "month-long-5": "May",
+    "month-long-6": "June",
+    "month-long-7": "July",
+    "month-long-8": "August",
+    "month-long-9": "September",
+    "month-long-10": "October",
+    "month-long-11": "November",
+    "month-long-12": "December",
+
     "date-ymd": "{year}-{month}-{day}",
     "date-ym": "{year}-{month}",
     "date-y": "{year}",
@@ -30,6 +51,30 @@
     "days-long_plural": "{{count}} days",
 
     "epoch-day-short": "#{{count}}",
-    "epoch-day-long": "Day number {{count}}"
+    "epoch-day-long": "Day number {{count}}",
+
+    "stats-unknown": "N/A",
+    "stats-other": "Other",
+
+    "stats-category-general": "General",
+    "stats-chart-author": "Author",
+    "stats-chart-country": "Country",
+    "stats-category-time": "Time",
+    "stats-chart-year": "Year",
+    "stats-chart-month": "Month",
+    "stats-chart-weekday": "Weekday",
+    "stats-chart-hour": "Hour",
+    "stats-category-gear": "Gear",
+    "stats-chart-camera-make": "Camera Make",
+    "stats-chart-camera": "Camera",
+    "stats-chart-lens": "Lens",
+    "stats-chart-camera-lens": "Camera + Lens",
+    "stats-category-exposure": "Exposure",
+    "stats-chart-focal-length": "Focal Length",
+    "stats-chart-aperture": "Aperture",
+    "stats-chart-exposure-time": "Exposure Time",
+    "stats-chart-iso": "Sensitivity",
+    "stats-chart-ev": "EV",
+    "stats-chart-lv": "EV @ ISO100"
   }
 }

@@ -13,6 +13,28 @@
     "weekday-short-fri": "金",
     "weekday-short-sat": "土",
     "weekday-short-sun": "日",
+
+    "weekday-long-mon": "月曜日",
+    "weekday-long-tue": "火曜日",
+    "weekday-long-wed": "水曜日",
+    "weekday-long-thu": "木曜日",
+    "weekday-long-fri": "金曜日",
+    "weekday-long-sat": "土曜日",
+    "weekday-long-sun": "日曜日",
+
+    "month-long-1": "一月",
+    "month-long-2": "二月",
+    "month-long-3": "三月",
+    "month-long-4": "四月",
+    "month-long-5": "五月",
+    "month-long-6": "六月",
+    "month-long-7": "七月",
+    "month-long-8": "八月",
+    "month-long-9": "九月",
+    "month-long-10": "十月",
+    "month-long-11": "十一月",
+    "month-long-12": "十二月",
+
     "date-ymd": "{year}年{month}月{day}日",
     "date-ym": "{year}年{month}月",
     "date-y": "{year}年",
@@ -26,6 +48,30 @@
     "days-long": "{{count}}日",
 
     "epoch-day-short": "#{{count}}",
-    "epoch-day-long": "第{{count}}日"
+    "epoch-day-long": "第{{count}}日",
+
+    "stats-unknown": "N/A",
+    "stats-other": "他",
+
+    "stats-category-general": "General",
+    "stats-chart-author": "Author",
+    "stats-chart-country": "Country",
+    "stats-category-time": "Time",
+    "stats-chart-year": "Year",
+    "stats-chart-month": "Month",
+    "stats-chart-weekday": "Weekday",
+    "stats-chart-hour": "Hour",
+    "stats-category-gear": "Gear",
+    "stats-chart-camera-make": "Camera Make",
+    "stats-chart-camera": "Camera",
+    "stats-chart-lens": "Lens",
+    "stats-chart-camera-lens": "Camera + Lens",
+    "stats-category-exposure": "Exposure",
+    "stats-chart-focal-length": "Focal Length",
+    "stats-chart-aperture": "Aperture",
+    "stats-chart-exposure-time": "Exposure Time",
+    "stats-chart-iso": "Sensitivity",
+    "stats-chart-ev": "EV",
+    "stats-chart-lv": "EV @ ISO100"
   }
 }

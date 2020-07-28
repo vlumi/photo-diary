@@ -1,6 +1,8 @@
 import { GeoCoord } from "geo-coord";
 
-const UNKNOWN = "N/A";
+let UNKNOWN = undefined;
+
+const identity = (_) => _;
 
 const padNumber = (value, length) => String(value).padStart(length, "0");
 const date = ({ year, month, day, separator = "-" }) => {
@@ -28,6 +30,11 @@ const time = ({ hour, minute, second, separator = ":" }) => {
     }
   }
   return parts.join(separator);
+};
+
+const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const dayOfWeek = (dow) => {
+  return DOW[dow % 7];
 };
 
 const countryName = (countryCode, lang, countryData) => {
@@ -80,8 +87,11 @@ const coordinates = (latitude, longitude) => {
 };
 
 export default {
+  identity,
+
   date,
   time,
+  dayOfWeek,
 
   countryName,
 

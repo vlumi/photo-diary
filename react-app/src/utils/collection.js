@@ -49,7 +49,12 @@ const compareArrays = (a, b) => {
   return 0;
 };
 
+const transformObjectKeys = (data, f) => {
+  return Object.fromEntries(Object.keys(data.count.byTime.byDayOfWeek).map(f));
+};
+
 export default {
   joinTruthyKeys,
   compareArrays,
+  transformObjectKeys,
 };

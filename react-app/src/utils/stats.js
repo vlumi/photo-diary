@@ -1,10 +1,40 @@
-const UNKNOWN = "N/A";
-
 const generate = async (gallery) => {
   return collectStatistics(gallery.photos());
 };
 
-export default { generate };
+const pad = (value, length) => String(value).padStart(length, "0");
+const toHexRgb = ({ r, g, b }) =>
+  `#${pad(r.toString(16), 2)}${pad(g.toString(16), 2)}${pad(
+    b.toString(16),
+    2
+  )}`;
+const colorGradient = (start, end, steps) => {
+  if (steps < 1) return [];
+  if (steps < 2) return [toHexRgb({ r: start[0], g: start[1], b: start[2] })];
+  if (steps < 3)
+    return [
+      toHexRgb({ r: start[0], g: start[1], b: start[2] }),
+      toHexRgb({ r: end[0], g: end[1], b: end[2] }),
+    ];
+
+  const [r1, g1, b1] = start;
+  const [r2, g2, b2] = end;
+
+  const linearStep = (start, end, step, lastStep) =>
+    Math.round(start + ((end - start) * step) / lastStep);
+
+  return [...Array(steps).keys()]
+    .map((step) => {
+      return {
+        r: linearStep(r1, r2, step, steps - 1),
+        g: linearStep(g1, g2, step, steps - 1),
+        b: linearStep(b1, b2, step, steps - 1),
+      };
+    })
+    .map(toHexRgb);
+};
+
+export default { generate, colorGradient };
 
 /**
  * Collect statistics from photos
@@ -225,8 +255,8 @@ const updateGear = (byGear, photo) => {
     byGear.byCameraMake[cameraMake]++;
   }
 
-  const camera = photo.formatCamera() || UNKNOWN;
-  const lens = photo.formatLens() || UNKNOWN;
+  const camera = photo.formatCamera() || undefined;
+  const lens = photo.formatLens() || undefined;
   byGear.byCamera = byGear.byCamera || {};
   byGear.byCamera[camera] = byGear.byCamera[camera] || 0;
   byGear.byCamera[camera]++;
@@ -235,7 +265,7 @@ const updateGear = (byGear, photo) => {
   byGear.byLens[lens] = byGear.byLens[lens] || 0;
   byGear.byLens[lens]++;
 
-  const cameraLens = `${camera} + ${lens}`;
+  const cameraLens = lens ? `${camera} + ${lens}` : camera;
   byGear.byCameraLens = byGear.byCameraLens || {};
   byGear.byCameraLens[cameraLens] = byGear.byCameraLens[cameraLens] || 0;
   byGear.byCameraLens[cameraLens]++;
