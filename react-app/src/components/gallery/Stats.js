@@ -162,31 +162,6 @@ const Stats = ({ gallery, lang, countryData }) => {
       (data) => data.map((_) => _.value).reduce((a, b) => a + b, 0)
     );
   };
-  const mapMultiSetToChartData = (foldedData, formatter = format.identity) => {
-    const colorGradients = stats.colorGradient(
-      // TODO: from configured theme: --header-background -> --header-color
-      "#004",
-      "#ddf",
-      foldedData.length
-    );
-
-    // const encodeLabelKey = (entry) =>
-    //   collection.transformObjectValue(entry, "key", (entry) => [
-    //     formatter(entry.key),
-    //     format.share(entry.value, data.count.total),
-    //   ]);
-
-    return {
-      labels: foldedData[0].value.map((_) => _.key),
-      datasets: foldedData.map((entry, i) => {
-        return {
-          label: entry.key,
-          backgroundColor: colorGradients[i],
-          data: entry.value.map((_) => _.value),
-        };
-      }),
-    };
-  };
 
   const decodeLabelKey = (key, value) => {
     const [name, share] = key;
@@ -252,6 +227,13 @@ const Stats = ({ gallery, lang, countryData }) => {
     line: {
       ...chartOptions.common,
       tooltips: {},
+      scales: {
+        yAxes: [
+          {
+            stacked: true,
+          },
+        ],
+      },
     },
   });
 
@@ -347,7 +329,27 @@ const Stats = ({ gallery, lang, countryData }) => {
           ),
         };
       });
-    const byYearMonthData = mapMultiSetToChartData(byYearMonth);
+    const mapYearMonthToChartData = (foldedData) => {
+      const colorGradients = stats.colorGradient(
+        // TODO: from configured theme: --header-background -> --header-color
+        "#004",
+        "#ddf",
+        foldedData.length
+      );
+      return {
+        labels: foldedData[0].value.map((_) => _.key),
+        datasets: foldedData.map((entry, i) => {
+          return {
+            label: entry.key,
+            backgroundColor: colorGradients[i],
+            data: entry.value.map((_) => _.value),
+            fill: true,
+            lineTension: 0.4,
+          };
+        }),
+      };
+    };
+    const byYearMonthData = mapYearMonthToChartData(byYearMonth);
     const byYearMonthFlat = byYearMonth
       .sort((a, b) => a - b)
       .flatMap((year) => {

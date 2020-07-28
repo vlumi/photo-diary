@@ -39,7 +39,9 @@ const colorGradient = (start, end, steps) => {
   const [r2, g2, b2] = fromHexRgb(end);
 
   const linearStep = (start, end, step, lastStep) =>
-    Math.round(start + ((end - start) * step) / lastStep);
+    end > start
+      ? Math.round(start + ((end - start) * step) / lastStep)
+      : Math.round(start - ((start - end) * step) / lastStep);
 
   return [...Array(steps).keys()]
     .map((step) => {
