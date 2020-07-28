@@ -64,21 +64,11 @@ const StyledRawCol = styled.td`
   overflow: hidden;
 `;
 
-const doughnutOptions = {
-  legend: {
-    display: false,
-  },
-  animation: {
-    animateRotate: false,
-    animateScale: false,
-  },
-  cutoutPercentage: 0,
-};
-
 const Stats = ({ gallery, lang, countryData }) => {
   const [data, setData] = React.useState(undefined);
 
   const { t } = useTranslation();
+  const numberFormatter = new Intl.NumberFormat(lang).format;
 
   React.useEffect(() => {
     stats.generate(gallery).then((stats) => setData(stats));
@@ -91,6 +81,36 @@ const Stats = ({ gallery, lang, countryData }) => {
       </>
     );
   }
+
+  const encodePieKey = (format) => (entry) => {
+    return {
+      key: [format(entry.key), share(entry.value)],
+      value: entry.value,
+    };
+  };
+  const decodePieKey = (key, value) =>
+    ` ${key[0]}: ${numberFormatter(value)} (${key[1]}%)`;
+
+  const doughnutOptions = {
+    legend: {
+      display: false,
+    },
+    animation: {
+      animateRotate: false,
+      animateScale: false,
+    },
+    cutoutPercentage: 0,
+    tooltips: {
+      mode: "label",
+      callbacks: {
+        label: (tooltipItem, data) =>
+          decodePieKey(
+            data.labels[tooltipItem.index],
+            data.datasets[0].data[tooltipItem.index]
+          ),
+      },
+    },
+  };
 
   const defaultToUnknown = (key) =>
     key && key !== "N/A" && key !== "undefined" ? key : t("stats-unknown");
@@ -109,13 +129,6 @@ const Stats = ({ gallery, lang, countryData }) => {
     compareWithNaN(a.value, b.value, () => b.value - a.value);
 
   const share = (value) => Math.floor((value / data.count.total) * 1000) / 10;
-
-  const formatKey = (format) => (entry) => {
-    return {
-      key: `${format(entry.key)} (${share(entry.value)}%)`,
-      value: entry.value,
-    };
-  };
 
   const foldToArray = (data, sorter = numSortByValueDesc) =>
     Object.keys(data)
@@ -150,7 +163,7 @@ const Stats = ({ gallery, lang, countryData }) => {
         .map((_) => Number(_.value))
         .map((value) => colorGradients[valueRanks[value]]);
       return {
-        labels: data.map(formatKey(formatter)).map((_) => _.key),
+        labels: data.map(encodePieKey(formatter)).map((_) => _.key),
         datasets: [
           {
             data: data.map((_) => _.value),
@@ -274,7 +287,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byAuthorData} options={doughnutOptions} />,
           raw: byAuthor.map((entry) => [
             entry.key,
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -287,7 +300,7 @@ const Stats = ({ gallery, lang, countryData }) => {
               <FlagIcon code={entry.key} />{" "}
               {format.countryName(entry.key, lang, countryData)}
             </>,
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -303,7 +316,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byYearData} options={doughnutOptions} />,
           raw: byYear.map((entry) => [
             entry.key,
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -313,7 +326,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byMonthOfYearData} options={doughnutOptions} />,
           raw: byMonthOfYear.map((entry) => [
             t(`month-long-${entry.key}`),
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -323,7 +336,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byDayOfWeekData} options={doughnutOptions} />,
           raw: byDayOfWeek.map((entry) => [
             t(`weekday-long-${format.dayOfWeek(entry.key)}`),
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -333,7 +346,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byHourOfDayData} options={doughnutOptions} />,
           raw: byHourOfDay.map((entry) => [
             `${format.padNumber(entry.key, 2)}:00–`,
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -349,7 +362,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byCameraMakeData} options={doughnutOptions} />,
           raw: byCameraMake.map((entry) => [
             entry.key,
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -359,7 +372,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byCameraData} options={doughnutOptions} />,
           raw: byCamera.map((entry) => [
             entry.key,
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -369,7 +382,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byLensData} options={doughnutOptions} />,
           raw: byLens.map((entry) => [
             entry.key,
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -379,7 +392,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byCameraLensData} options={doughnutOptions} />,
           raw: byCameraLens.map((entry) => [
             entry.key,
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -395,7 +408,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byFocalLengthData} options={doughnutOptions} />,
           raw: byFocalLength.map((entry) => [
             defaultToUnknown(format.focalLength(entry.key)),
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -405,7 +418,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byApertureData} options={doughnutOptions} />,
           raw: byAperture.map((entry) => [
             defaultToUnknown(format.aperture(entry.key)),
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -415,7 +428,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byExposureTimeData} options={doughnutOptions} />,
           raw: byExposureTime.map((entry) => [
             defaultToUnknown(format.exposureTime(entry.key)),
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -425,7 +438,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byIsoData} options={doughnutOptions} />,
           raw: byIso.map((entry) => [
             defaultToUnknown(format.iso(entry.key)),
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -437,7 +450,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           ),
           raw: byExposureValue.map((entry) => [
             defaultToUnknown(entry.key),
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
@@ -447,7 +460,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: <Doughnut data={byLightValueData} options={doughnutOptions} />,
           raw: byLightValue.map((entry) => [
             defaultToUnknown(entry.key),
-            entry.value,
+            numberFormatter(entry.value),
             `${share(entry.value)}%`,
           ]),
         },
