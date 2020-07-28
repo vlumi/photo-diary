@@ -25,25 +25,23 @@
   --extreme-color: #b99;
 }
 .grayscale-theme {
-  --primary-color: #000;
+  --primary-color: #444;
   --primary-background: #ddd;
   --inactive-color: #999;
   --header-color: #fff;
   --header-sub-color: #ddd;
-  --header-background: #333;
+  --header-background: #444;
   --none-color: #fff;
   --low-color: #eee;
   --medium-color: #ddd;
   --high-color: #ccc;
   --extreme-color: #bbb;
-}
-.grayscale-theme .leaflet-container {
   -webkit-filter: grayscale(100%);
   filter: grayscale(100%);
 }
 .bw-theme {
   --primary-color: #000;
-  --primary-background: #fff;
+  --primary-background: #ddd;
   --inactive-color: #999;
   --header-color: #fff;
   --header-sub-color: #ddd;

@@ -113,11 +113,32 @@ const Stats = ({ gallery, lang, countryData }) => {
     legend: {
       display: false,
     },
-    animation: {
-      animateRotate: false,
-      animateScale: false,
-    },
+    animation: false,
     cutoutPercentage: 0,
+    responsive: true,
+    maintainAspectRatio: false,
+    tooltips: {
+      mode: "label",
+      callbacks: {
+        title: () => "",
+        label: (tooltipItem, data) =>
+          decodePieKey(
+            data.labels[tooltipItem.index],
+            data.datasets[0].data[tooltipItem.index]
+          ),
+      },
+    },
+  };
+  const polarOptions = {
+    legend: {
+      display: false,
+    },
+    animation: false,
+    scale: {
+      ticks: {
+        display: false,
+      },
+    },
     responsive: true,
     maintainAspectRatio: false,
     tooltips: {
@@ -136,6 +157,7 @@ const Stats = ({ gallery, lang, countryData }) => {
     legend: {
       display: false,
     },
+    animation: false,
     scales: {
       xAxes: [
         {
@@ -222,7 +244,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           {
             data: data.map((_) => _.value),
             backgroundColor: colors,
-            borderWidth: 0.25,
+            borderWidth: 0.5,
             barThickness: "flex",
             minBarLength: 3,
             barPercentage: 1,
@@ -359,7 +381,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Polar data={byMonthOfYearData} options={doughnutOptions} />
+                <Polar data={byMonthOfYearData} options={polarOptions} />
               </StyledPieContainer>
               <StyledBarContainer>
                 <HorizontalBar data={byMonthOfYearData} options={barOptions} />
@@ -378,7 +400,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Polar data={byDayOfWeekData} options={doughnutOptions} />
+                <Polar data={byDayOfWeekData} options={polarOptions} />
               </StyledPieContainer>
               <StyledBarContainer>
                 <HorizontalBar data={byDayOfWeekData} options={barOptions} />
@@ -397,7 +419,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Polar data={byHourOfDayData} options={doughnutOptions} />
+                <Polar data={byHourOfDayData} options={polarOptions} />
               </StyledPieContainer>
               <StyledBarContainer>
                 <HorizontalBar data={byHourOfDayData} options={barOptions} />
