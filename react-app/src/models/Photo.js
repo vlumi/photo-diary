@@ -99,9 +99,10 @@ const Photo = (photoData) => {
       "country" in photo.taken.location &&
       photo.taken.location.country,
     countryCode: () => photo.taken.location.country,
-    // TODO: this should not be here...
     countryName: (lang, countryData) =>
-      countryData.getName(self.countryCode(), lang),
+      self.hasCountry()
+        ? format.countryName(self.countryCode(), lang, countryData)
+        : "",
     hasPlace: () =>
       photo &&
       "taken" in photo &&

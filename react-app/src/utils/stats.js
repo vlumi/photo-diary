@@ -58,10 +58,10 @@ const populateDistributions = (photos, stats) => {
     );
     const adjustExposure = () => {
       const focalLength =
-        photo.focalLength() > 0 ? photo.focalLength() : UNKNOWN;
-      const aperture = photo.aperture() || UNKNOWN;
-      const exposureTime = photo.exposureTime() || UNKNOWN;
-      const iso = photo.iso() || UNKNOWN;
+        photo.focalLength() > 0 ? photo.focalLength() : undefined;
+      const aperture = photo.aperture() || undefined;
+      const exposureTime = photo.exposureTime() || undefined;
+      const iso = photo.iso() || undefined;
 
       return {
         focalLength,
@@ -101,7 +101,7 @@ const updateTimeDistribution = (byTime, year, month, day, hour) => {
 
   const canonYmd = canonDate({ year, month, day });
   const minDate = byTime.minDate || undefined;
-  if (minDate === undefined || canonYmd < canonDate(minDate)) {
+  if (!minDate || canonYmd < canonDate(minDate)) {
     byTime.minDate = {
       year: year,
       month: month,
@@ -110,7 +110,7 @@ const updateTimeDistribution = (byTime, year, month, day, hour) => {
   }
   const maxDate = byTime.maxDate || undefined;
 
-  if (maxDate === undefined || canonYmd > canonDate(byTime.maxDate)) {
+  if (!maxDate || canonYmd > canonDate(byTime.maxDate)) {
     byTime.maxDate = {
       year: year,
       month: month,
@@ -158,45 +158,46 @@ const updateTimeDistribution = (byTime, year, month, day, hour) => {
  * @param {object} photo Exposure values of the current photo.
  */
 const updateExposureDistribution = (byExposure, photo) => {
-  const focalLength = Number(photo.focalLength());
+  const focalLength = Number(photo.focalLength()) || undefined;
   byExposure.byFocalLength = byExposure.byFocalLength || {};
   byExposure.byFocalLength[focalLength] =
     byExposure.byFocalLength[focalLength] || 0;
   byExposure.byFocalLength[focalLength]++;
 
-  const aperture = Number(photo.aperture());
+  const aperture = Number(photo.aperture()) || undefined;
   byExposure.byAperture = byExposure.byAperture || {};
   byExposure.byAperture[aperture] = byExposure.byAperture[aperture] || 0;
   byExposure.byAperture[aperture]++;
 
-  const exposureTime = Number(photo.exposureTime());
+  const exposureTime = Number(photo.exposureTime()) || undefined;
   byExposure.byExposureTime = byExposure.byExposureTime || {};
   byExposure.byExposureTime[exposureTime] =
     byExposure.byExposureTime[exposureTime] || 0;
   byExposure.byExposureTime[exposureTime]++;
 
-  const iso = Number(photo.iso());
+  const iso = Number(photo.iso()) || undefined;
   byExposure.byIso = byExposure.byIso || {};
   byExposure.byIso[iso] = byExposure.byIso[iso] || 0;
   byExposure.byIso[iso]++;
 
-  // Round EV and LV to the closest half
-  const roundEv = (value) => Math.round(value * 2) / 2;
+  if (exposureTime) {
+    // Round EV and LV to the closest half
+    const roundEv = (value) => Math.round(value * 2) / 2;
+    const fullExposureValue = Math.log2(aperture ** 2 / exposureTime);
+    const exposureValue = roundEv(fullExposureValue) || undefined;
+    byExposure.byExposureValue = byExposure.byExposureValue || {};
+    byExposure.byExposureValue[exposureValue] =
+      byExposure.byExposureValue[exposureValue] || 0;
+    byExposure.byExposureValue[exposureValue]++;
 
-  const fullExposureValue = Math.log2(aperture ** 2 / exposureTime);
-  const exposureValue = roundEv(fullExposureValue) || undefined;
-  byExposure.byExposureValue = byExposure.byExposureValue || {};
-  byExposure.byExposureValue[exposureValue] =
-    byExposure.byExposureValue[exposureValue] || 0;
-  byExposure.byExposureValue[exposureValue]++;
-
-  // LV = EV at ISO 100
-  const fullLightValue = fullExposureValue + Math.log2(iso / 100);
-  const lightValue = roundEv(fullLightValue) || undefined;
-  byExposure.byLightValue = byExposure.byLightValue || {};
-  byExposure.byLightValue[lightValue] =
-    byExposure.byLightValue[lightValue] || 0;
-  byExposure.byLightValue[lightValue]++;
+    // LV = EV at ISO 100
+    const fullLightValue = fullExposureValue + Math.log2(iso / 100);
+    const lightValue = roundEv(fullLightValue) || undefined;
+    byExposure.byLightValue = byExposure.byLightValue || {};
+    byExposure.byLightValue[lightValue] =
+      byExposure.byLightValue[lightValue] || 0;
+    byExposure.byLightValue[lightValue]++;
+  }
 };
 /**
  * Update the current photo's ger values into the gear (camera, lens) distribution.

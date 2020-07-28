@@ -1,5 +1,7 @@
 import { GeoCoord } from "geo-coord";
 
+const UNKNOWN = "N/A";
+
 const padNumber = (value, length) => String(value).padStart(length, "0");
 const date = ({ year, month, day, separator = "-" }) => {
   const parts = [];
@@ -28,16 +30,38 @@ const time = ({ hour, minute, second, separator = ":" }) => {
   return parts.join(separator);
 };
 
-const focalLength = (focalLength) => `ƒ=${focalLength}mm`;
-const aperture = (aperture) => `ƒ/${aperture}`;
+const countryName = (countryCode, lang, countryData) => {
+  return countryData.getName(countryCode, lang);
+};
+
+const focalLength = (focalLength) => {
+  if (isNaN(focalLength)) {
+    return UNKNOWN;
+  }
+  return `ƒ=${focalLength}mm`;
+};
+const aperture = (aperture) => {
+  if (isNaN(aperture)) {
+    return UNKNOWN;
+  }
+  return `ƒ/${aperture}`;
+};
 const exposureTime = (exposureTime) => {
+  if (isNaN(exposureTime)) {
+    return UNKNOWN;
+  }
   if (exposureTime >= 1) {
     return `${exposureTime}s`;
   }
   const fraction = Math.round(1 / exposureTime);
   return `1/${fraction}s`;
 };
-const iso = (iso) => `ISO${iso}`;
+const iso = (iso) => {
+  if (isNaN(iso)) {
+    return UNKNOWN;
+  }
+  return `ISO${iso}`;
+};
 const megapixels = (width, height) => {
   const mpix = Math.round((width * height) / 10 ** 6);
   return mpix ? `${mpix}MP` : "";
@@ -58,6 +82,8 @@ const coordinates = (latitude, longitude) => {
 export default {
   date,
   time,
+
+  countryName,
 
   focalLength,
   aperture,

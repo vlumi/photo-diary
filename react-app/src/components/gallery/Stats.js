@@ -7,14 +7,29 @@ import StatsTitle from "./StatsTitle";
 import stats from "../../utils/stats";
 import format from "../../utils/format";
 
-const foldToArray = (data, sort = (a, b) => b.value - a.value) =>
+const compareWithNaN = (a, b, f) => {
+  if (isNaN(a) && isNaN(b)) return 0;
+  if (isNaN(a)) return 1;
+  if (isNaN(b)) return -1;
+  return f();
+};
+const numSortByKeyDesc = (a, b) =>
+  compareWithNaN(a.key, b.key, () => b.key - a.key);
+const numSortByKeyAsc = (a, b) =>
+  compareWithNaN(a.key, b.key, () => a.key - b.key);
+const numSortByValueDesc = (a, b) =>
+  compareWithNaN(a.value, b.value, () => b.value - a.value);
+const numSortByValueAsc = (a, b) =>
+  compareWithNaN(a.value, b.value, () => a.value - b.value);
+
+const foldToArray = (data, sort = numSortByValueDesc) =>
   Object.keys(data)
     .map((key) => {
       return { key, value: data[key] };
     })
     .sort(sort);
 
-const Stats = ({ gallery }) => {
+const Stats = ({ gallery, lang, countryData }) => {
   const [data, setData] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -34,6 +49,9 @@ const Stats = ({ gallery }) => {
   // TODO: time distribution -- calendar ymd, day-of-week, hour-of-day
 
   const byAuthor = foldToArray(data.count.byAuthor);
+
+  const byCountry = foldToArray(data.count.byCountry);
+
   const byCameraMake = foldToArray(data.count.byGear.byCameraMake);
   const byCamera = foldToArray(data.count.byGear.byCamera);
   const byLens = foldToArray(data.count.byGear.byLens);
@@ -41,20 +59,17 @@ const Stats = ({ gallery }) => {
 
   const byFocalLength = foldToArray(
     data.count.byExposure.byFocalLength,
-    (a, b) => a.key - b.key
+    numSortByKeyAsc
   );
   const byAperture = foldToArray(
     data.count.byExposure.byAperture,
-    (a, b) => a.key - b.key
+    numSortByKeyAsc
   );
   const byExposureTime = foldToArray(
     data.count.byExposure.byExposureTime,
-    (a, b) => a.key - b.key
+    numSortByKeyDesc
   );
-  const byIso = foldToArray(
-    data.count.byExposure.byIso,
-    (a, b) => a.key - b.key
-  );
+  const byIso = foldToArray(data.count.byExposure.byIso, numSortByKeyAsc);
 
   const share = (value) =>
     `${Math.floor((value / data.count.total) * 1000) / 10}%`;
@@ -71,6 +86,17 @@ const Stats = ({ gallery }) => {
               {byAuthor.map((entry) => (
                 <li key={entry.key}>
                   {entry.key}: {entry.value} ({share(entry.value)})
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="chart">
+            <h3>By Country</h3>
+            <ul>
+              {byCountry.map((entry) => (
+                <li key={entry.key}>
+                  {format.countryName(entry.key, lang, countryData)}:{" "}
+                  {entry.value} ({share(entry.value)})
                 </li>
               ))}
             </ul>
@@ -142,8 +168,8 @@ const Stats = ({ gallery }) => {
             <ul>
               {byExposureTime.map((entry) => (
                 <li key={entry.key}>
-                  {format.exposureTime(entry.key)}: {entry.value} (
-                  {share(entry.value)})
+                  {format.exposureTime(entry.key)} / {entry.key}: {entry.value}{" "}
+                  ({share(entry.value)})
                 </li>
               ))}
             </ul>
