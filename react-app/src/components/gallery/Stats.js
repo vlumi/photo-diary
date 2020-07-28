@@ -1,15 +1,68 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Trans, useTranslation } from "react-i18next";
+import styled from "styled-components";
 
 import { Doughnut } from "react-chartjs-2";
 
 import StatsTitle from "./StatsTitle";
+import FlagIcon from "../FlagIcon";
 
 import stats from "../../utils/stats";
 import format from "../../utils/format";
 import collection from "../../utils/collection";
 import config from "../../utils/config";
+
+const StyledRoot = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+`;
+const StyledCategory = styled.section`
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+`;
+const StyledCategoryTitle = styled.h3`
+  text-align: left;
+  writing-mode: vertical-rl;
+`;
+const StyledCharts = styled.section`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+`;
+const StyledChart = styled.div`
+  width: 300px;
+`;
+const StyledChartTitle = styled.h3``;
+const StyledPieContainer = styled.div`
+  margin: 5px 0;
+`;
+const StyledRawContainer = styled.table`
+  width: 100%;
+  text-align: left;
+  margin: 0;
+  padding: 0;
+  font-size: xx-small;
+  border-spacing: 0;
+  border-collapse: collapse;
+`;
+const StyledRawBlock = styled.tbody``;
+const StyledRawRow = styled.tr`
+  &:hover {
+    color: var(--header-color);
+    background-color: var(--header-background);
+  }
+`;
+const StyledRawCol = styled.td`
+  padding: 0 10px;
+  vertical-align: top;
+  text-align: ${(props) => (props.col === 0 ? "left" : "right")};
+  overflow: hidden;
+`;
 
 const doughnutOptions = {
   legend: {
@@ -39,6 +92,9 @@ const Stats = ({ gallery, lang, countryData }) => {
     );
   }
 
+  const defaultToUnknown = (key) =>
+    key && key !== "N/A" && key !== "undefined" ? key : t("stats-unknown");
+
   const compareWithNaN = (a, b, f) => {
     if (isNaN(a) && isNaN(b)) return 0;
     if (isNaN(a)) return 1;
@@ -52,22 +108,30 @@ const Stats = ({ gallery, lang, countryData }) => {
   const numSortByValueDesc = (a, b) =>
     compareWithNaN(a.value, b.value, () => b.value - a.value);
 
-  const foldToArray = (
-    data,
-    formatter = format.identity,
-    sorter = numSortByValueDesc
-  ) =>
+  const share = (value) => Math.floor((value / data.count.total) * 1000) / 10;
+
+  const formatKey = (format) => (entry) => {
+    return {
+      key: `${format(entry.key)} (${share(entry.value)}%)`,
+      value: entry.value,
+    };
+  };
+
+  const foldToArray = (data, sorter = numSortByValueDesc) =>
     Object.keys(data)
       .map((key) => {
         return {
-          key: key !== "undefined" ? key : t("stats-unknown"),
+          key: defaultToUnknown(key),
           value: data[key],
         };
       })
-      .sort(sorter)
-      .map(formatKey(formatter));
+      .sort(sorter);
 
-  const mapToPieChartData = (data, maxEntries = 10) => {
+  const mapToPieChartData = (
+    data,
+    formatter = format.identity,
+    maxEntries = 0
+  ) => {
     const doMap = (data) => {
       const valueRanks = Object.fromEntries(
         data
@@ -76,9 +140,9 @@ const Stats = ({ gallery, lang, countryData }) => {
           .map((value, i) => [value, i])
       );
       const colorGradients = stats.colorGradient(
-        // TODO: from configured theme: primary-color -> primary-background
-        [0, 0, 68], // #004
-        [221, 221, 255], // #ddf
+        // TODO: from configured theme: --header-background -> --header-color
+        "#004",
+        "#ddf",
         data.length
       );
       const borderColor = "#fff";
@@ -86,7 +150,7 @@ const Stats = ({ gallery, lang, countryData }) => {
         .map((_) => Number(_.value))
         .map((value) => colorGradients[valueRanks[value]]);
       return {
-        labels: data.map((_) => _.key),
+        labels: data.map(formatKey(formatter)).map((_) => _.key),
         datasets: [
           {
             data: data.map((_) => _.value),
@@ -111,54 +175,44 @@ const Stats = ({ gallery, lang, countryData }) => {
     return doMap(data);
   };
 
-  const share = (value) => Math.floor((value / data.count.total) * 1000) / 10;
-
-  const formatKey = (format) => (entry) => {
-    return {
-      key: `${format(entry.key)} (${share(entry.value)}%)`,
-      value: entry.value,
-    };
-  };
-
   // console.log("data", data);
 
   const byAuthor = foldToArray(data.count.byAuthor);
   const byAuthorData = mapToPieChartData(byAuthor);
 
-  const byCountry = foldToArray(data.count.byCountry, (key) =>
+  const byCountry = foldToArray(data.count.byCountry);
+  const byCountryData = mapToPieChartData(byCountry, (key) =>
     format.countryName(key, lang, countryData)
   );
-  const byCountryData = mapToPieChartData(byCountry);
 
   // TODO: year/month distribution, average per day, total days, ...
 
-  const byYear = foldToArray(
-    data.count.byTime.byYear,
-    format.identity,
-    numSortByKeyAsc
-  );
-  const byYearData = mapToPieChartData(byYear, 0);
+  const byYear = foldToArray(data.count.byTime.byYear, numSortByKeyAsc);
+  const byYearData = mapToPieChartData(byYear, format.identity, 0);
   const byMonthOfYear = foldToArray(
     data.count.byTime.byMonthOfYear,
-    (month) => t(`month-long-${month}`),
     numSortByKeyAsc
   );
-  const byMonthOfYearData = mapToPieChartData(byMonthOfYear, 12);
+  const byMonthOfYearData = mapToPieChartData(
+    byMonthOfYear,
+    (month) => t(`month-long-${month}`),
+    12
+  );
   const byDayOfWeek = foldToArray(
     collection.transformObjectKeys(data, (dow) => {
       const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
       return [key, data.count.byTime.byDayOfWeek[dow]];
     }),
-    (dow) => t(`weekday-long-${format.dayOfWeek(dow)}`),
     numSortByKeyAsc
   );
-  const byDayOfWeekData = mapToPieChartData(byDayOfWeek);
+  const byDayOfWeekData = mapToPieChartData(byDayOfWeek, (dow) =>
+    t(`weekday-long-${format.dayOfWeek(dow)}`)
+  );
   const byHourOfDay = foldToArray(
     data.count.byTime.byHourOfDay,
-    format.identity,
     numSortByKeyAsc
   );
-  const byHourOfDayData = mapToPieChartData(byHourOfDay, 24);
+  const byHourOfDayData = mapToPieChartData(byHourOfDay, format.identity, 24);
 
   const byCameraMake = foldToArray(data.count.byGear.byCameraMake);
   const byCameraMakeData = mapToPieChartData(byCameraMake);
@@ -171,303 +225,277 @@ const Stats = ({ gallery, lang, countryData }) => {
 
   const byFocalLength = foldToArray(
     data.count.byExposure.byFocalLength,
-    format.focalLength,
     numSortByKeyAsc
   );
-  const byFocalLengthData = mapToPieChartData(byFocalLength, 0);
+  const byFocalLengthData = mapToPieChartData(
+    byFocalLength,
+    format.focalLength,
+    0
+  );
   const byAperture = foldToArray(
     data.count.byExposure.byAperture,
-    format.aperture,
     numSortByKeyAsc
   );
-  const byApertureData = mapToPieChartData(byAperture, 0);
+  const byApertureData = mapToPieChartData(byAperture, format.aperture, 0);
   const byExposureTime = foldToArray(
     data.count.byExposure.byExposureTime,
-    format.exposureTime,
     numSortByKeyDesc
   );
-  const byExposureTimeData = mapToPieChartData(byExposureTime, 0);
-  const byIso = foldToArray(
-    data.count.byExposure.byIso,
-    format.iso,
-    numSortByKeyAsc
+  const byExposureTimeData = mapToPieChartData(
+    byExposureTime,
+    format.exposureTime,
+    0
   );
-  const byIsoData = mapToPieChartData(byIso, 0);
+  const byIso = foldToArray(data.count.byExposure.byIso, numSortByKeyAsc);
+  const byIsoData = mapToPieChartData(byIso, format.iso, 0);
   const byExposureValue = foldToArray(
     data.count.byExposure.byExposureValue,
-    format.identity,
     numSortByKeyAsc
   );
-  const byExposureValueData = mapToPieChartData(byExposureValue, 0);
+  const byExposureValueData = mapToPieChartData(
+    byExposureValue,
+    format.identity,
+    0
+  );
   const byLightValue = foldToArray(
     data.count.byExposure.byLightValue,
-    format.identity,
     numSortByKeyAsc
   );
-  const byLightValueData = mapToPieChartData(byLightValue, 0);
+  const byLightValueData = mapToPieChartData(byLightValue, format.identity, 0);
+
+  const charts = [
+    {
+      name: "general",
+      title: <Trans>stats-category-general</Trans>,
+      charts: [
+        {
+          name: "author",
+          title: <Trans>stats-chart-author</Trans>,
+          pie: <Doughnut data={byAuthorData} options={doughnutOptions} />,
+          raw: byAuthor.map((entry) => [
+            entry.key,
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "country",
+          title: <Trans>stats-chart-country</Trans>,
+          pie: <Doughnut data={byCountryData} options={doughnutOptions} />,
+          raw: byCountry.map((entry) => [
+            <>
+              <FlagIcon code={entry.key} />{" "}
+              {format.countryName(entry.key, lang, countryData)}
+            </>,
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+      ],
+    },
+    {
+      name: "time",
+      title: <Trans>stats-category-time</Trans>,
+      charts: [
+        {
+          name: "year",
+          title: <Trans>stats-chart-year</Trans>,
+          pie: <Doughnut data={byYearData} options={doughnutOptions} />,
+          raw: byYear.map((entry) => [
+            entry.key,
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "month",
+          title: <Trans>stats-chart-month</Trans>,
+          pie: <Doughnut data={byMonthOfYearData} options={doughnutOptions} />,
+          raw: byMonthOfYear.map((entry) => [
+            t(`month-long-${entry.key}`),
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "weekday",
+          title: <Trans>stats-chart-weekday</Trans>,
+          pie: <Doughnut data={byDayOfWeekData} options={doughnutOptions} />,
+          raw: byDayOfWeek.map((entry) => [
+            t(`weekday-long-${format.dayOfWeek(entry.key)}`),
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "hour",
+          title: <Trans>stats-chart-hour</Trans>,
+          pie: <Doughnut data={byHourOfDayData} options={doughnutOptions} />,
+          raw: byHourOfDay.map((entry) => [
+            `${format.padNumber(entry.key, 2)}:00–`,
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+      ],
+    },
+    {
+      name: "gear",
+      title: <Trans>stats-category-gear</Trans>,
+      charts: [
+        {
+          name: "camera-make",
+          title: <Trans>stats-chart-camera-make</Trans>,
+          pie: <Doughnut data={byCameraMakeData} options={doughnutOptions} />,
+          raw: byCameraMake.map((entry) => [
+            entry.key,
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "camera",
+          title: <Trans>stats-chart-camera</Trans>,
+          pie: <Doughnut data={byCameraData} options={doughnutOptions} />,
+          raw: byCamera.map((entry) => [
+            entry.key,
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "lens",
+          title: <Trans>stats-chart-lens</Trans>,
+          pie: <Doughnut data={byLensData} options={doughnutOptions} />,
+          raw: byLens.map((entry) => [
+            entry.key,
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "camera-lens",
+          title: <Trans>stats-chart-camera-lens</Trans>,
+          pie: <Doughnut data={byCameraLensData} options={doughnutOptions} />,
+          raw: byCameraLens.map((entry) => [
+            entry.key,
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+      ],
+    },
+    {
+      name: "exposure",
+      title: <Trans>stats-category-exposure</Trans>,
+      charts: [
+        {
+          name: "focal-length",
+          title: <Trans>stats-chart-focal-length</Trans>,
+          pie: <Doughnut data={byFocalLengthData} options={doughnutOptions} />,
+          raw: byFocalLength.map((entry) => [
+            defaultToUnknown(format.focalLength(entry.key)),
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "aperture",
+          title: <Trans>stats-chart-aperture</Trans>,
+          pie: <Doughnut data={byApertureData} options={doughnutOptions} />,
+          raw: byAperture.map((entry) => [
+            defaultToUnknown(format.aperture(entry.key)),
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "exposure-time",
+          title: <Trans>stats-chart-exposure-time</Trans>,
+          pie: <Doughnut data={byExposureTimeData} options={doughnutOptions} />,
+          raw: byExposureTime.map((entry) => [
+            defaultToUnknown(format.exposureTime(entry.key)),
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "iso",
+          title: <Trans>stats-chart-iso</Trans>,
+          pie: <Doughnut data={byIsoData} options={doughnutOptions} />,
+          raw: byIso.map((entry) => [
+            defaultToUnknown(format.iso(entry.key)),
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "ev",
+          title: <Trans>stats-chart-ev</Trans>,
+          pie: (
+            <Doughnut data={byExposureValueData} options={doughnutOptions} />
+          ),
+          raw: byExposureValue.map((entry) => [
+            defaultToUnknown(entry.key),
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+        {
+          name: "lv",
+          title: <Trans>stats-chart-lv</Trans>,
+          pie: <Doughnut data={byLightValueData} options={doughnutOptions} />,
+          raw: byLightValue.map((entry) => [
+            defaultToUnknown(entry.key),
+            entry.value,
+            `${share(entry.value)}%`,
+          ]),
+        },
+      ],
+    },
+  ];
 
   return (
     <>
       <StatsTitle gallery={gallery} />
-      <div className="stats content">
+      <StyledRoot>
         <div>Total: {data.count.total}</div>
-        <section name="general" className="category">
-          <h3>
-            <Trans>stats-category-general</Trans>
-          </h3>
-          <section className="category-content">
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-author</Trans>
-              </h3>
-              <Doughnut data={byAuthorData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-country</Trans>
-              </h3>
-              <Doughnut data={byCountryData} options={doughnutOptions} />
-            </div>
-          </section>
-        </section>
-        <section name="time" className="category">
-          <h3>
-            <Trans>stats-category-time</Trans>
-          </h3>
-          <section className="category-content">
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-year</Trans>
-              </h3>
-              <Doughnut data={byYearData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-month</Trans>
-              </h3>
-              <Doughnut data={byMonthOfYearData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-weekday</Trans>
-              </h3>
-              <Doughnut data={byDayOfWeekData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-hour</Trans>
-              </h3>
-              <Doughnut data={byHourOfDayData} options={doughnutOptions} />
-            </div>
-          </section>
-        </section>
-        <section name="gear" className="category">
-          <h3>
-            <Trans>stats-category-gear</Trans>
-          </h3>
-          <section className="category-content">
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-camera-make</Trans>
-              </h3>
-              <Doughnut data={byCameraMakeData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-camera</Trans>
-              </h3>
-              <Doughnut data={byCameraData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-lens</Trans>
-              </h3>
-              <Doughnut data={byLensData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-camera-lens</Trans>
-              </h3>
-              <Doughnut data={byCameraLensData} options={doughnutOptions} />
-            </div>
-          </section>
-        </section>
-        <section name="exposure" className="category">
-          <h3>
-            <Trans>stats-category-exposure</Trans>
-          </h3>
-          <section className="category-content">
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-focal-length</Trans>
-              </h3>
-              <Doughnut data={byFocalLengthData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-aperture</Trans>
-              </h3>
-              <Doughnut data={byApertureData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-exposure-time</Trans>
-              </h3>
-              <Doughnut data={byExposureTimeData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-iso</Trans>
-              </h3>
-              <Doughnut data={byIsoData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-ev</Trans>
-              </h3>
-              <Doughnut data={byExposureValueData} options={doughnutOptions} />
-            </div>
-            <div className="chart">
-              <h3>
-                <Trans>stats-chart-lv</Trans>
-              </h3>
-              <Doughnut data={byLightValueData} options={doughnutOptions} />
-            </div>
-          </section>
-        </section>
-        <section id="raw-data">
-          <div className="category">
-            <div className="content">
-              <div className="data">
-                <h3>Author</h3>
-                <ul>
-                  {byAuthor.map((entry) => (
-                    <li key={entry.key}>
-                      {entry.key}: {entry.value} ({share(entry.value)}%)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="content">
-              <div className="data">
-                <h3>Country</h3>
-                <ul>
-                  {byCountry.map((entry) => (
-                    <li key={entry.key}>
-                      {entry.key}: {entry.value} ({share(entry.value)}%)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="category">
-            <div className="content">
-              <div className="data">
-                <h3>Camera Make</h3>
-                <ul>
-                  {byCameraMake.map((entry) => (
-                    <li key={entry.key}>
-                      {entry.key}: {entry.value} ({share(entry.value)}%)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="content">
-              <div className="data">
-                <h3>Camera</h3>
-                <ul>
-                  {byCamera.map((entry) => (
-                    <li key={entry.key}>
-                      {entry.key}: {entry.value} ({share(entry.value)}%)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="content">
-              <div className="data">
-                <h3>Lens</h3>
-                <ul>
-                  {byLens.map((entry) => (
-                    <li key={entry.key}>
-                      {entry.key}: {entry.value} ({share(entry.value)}%)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="content">
-              <div className="data">
-                <h3>Camera + Lens</h3>
-                <ul>
-                  {byCameraLens.map((entry) => (
-                    <li key={entry.key}>
-                      {entry.key}: {entry.value} ({share(entry.value)}%)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="category">
-            <div className="content">
-              <div className="data">
-                <h3>Focal Length</h3>
-                <ul>
-                  {byFocalLength.map((entry) => (
-                    <li key={entry.key}>
-                      {format.focalLength(entry.key)}: {entry.value} (
-                      {share(entry.value)}%)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="content">
-              <div className="data">
-                <h3>Aperture</h3>
-                <ul>
-                  {byAperture.map((entry) => (
-                    <li key={entry.key}>
-                      {format.aperture(entry.key)}: {entry.value} (
-                      {share(entry.value)}%)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="content">
-              <div className="data">
-                <h3>Exposure Time</h3>
-                <ul>
-                  {byExposureTime.map((entry) => (
-                    <li key={entry.key}>
-                      {format.exposureTime(entry.key)} / {entry.key}:{" "}
-                      {entry.value} ({share(entry.value)}%)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="content">
-              <div className="data">
-                <h3>ISO</h3>
-                <ul>
-                  {byIso.map((entry) => (
-                    <li key={entry.key}>
-                      {format.iso(entry.key)}: {entry.value} (
-                      {share(entry.value)}% )
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+        {charts.map((category) => (
+          <StyledCategory key={category.name} name={category.name}>
+            <StyledCategoryTitle>{category.title}</StyledCategoryTitle>
+            <StyledCharts>
+              {category.charts.map((chart) => (
+                <StyledChart key={`${category.name}:${chart.name}`}>
+                  <StyledChartTitle>{chart.title}</StyledChartTitle>
+                  <StyledPieContainer>{chart.pie}</StyledPieContainer>
+                  {chart.raw ? (
+                    <StyledRawContainer>
+                      <StyledRawBlock>
+                        {chart.raw.map((values, i) => (
+                          <StyledRawRow
+                            key={`${category.name}:${chart.name}:${i}`}
+                          >
+                            {values.map((value, j) => (
+                              <StyledRawCol
+                                key={`${category.name}:${chart.name}:${i}${j}`}
+                                col={j}
+                              >
+                                {value}
+                              </StyledRawCol>
+                            ))}
+                          </StyledRawRow>
+                        ))}
+                      </StyledRawBlock>
+                    </StyledRawContainer>
+                  ) : (
+                    <></>
+                  )}
+                </StyledChart>
+              ))}
+            </StyledCharts>
+          </StyledCategory>
+        ))}
+      </StyledRoot>
     </>
   );
 };
