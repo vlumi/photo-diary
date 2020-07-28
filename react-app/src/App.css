@@ -440,6 +440,7 @@ div.adjacent {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
+  align-items: flex-start;
 }
 #raw-data {
   display: none;
@@ -448,15 +449,8 @@ div.adjacent {
   text-align: left;
   writing-mode: vertical-rl;
 }
-.stats .gear {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
 .stats .category {
   width: 100%;
-  /* overflow: auto; */
   display: flex;
   flex-wrap: nowrap;
   justify-content: flex-start;

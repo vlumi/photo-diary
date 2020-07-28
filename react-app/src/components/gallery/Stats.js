@@ -231,24 +231,18 @@ const Stats = ({ gallery, lang, countryData }) => {
               </h3>
               <Doughnut data={byYearData} options={doughnutOptions} />
             </div>
-          </section>
-          <section className="category-content">
             <div className="chart">
               <h3>
                 <Trans>stats-chart-month</Trans>
               </h3>
               <Doughnut data={byMonthOfYearData} options={doughnutOptions} />
             </div>
-          </section>
-          <section className="category-content">
             <div className="chart">
               <h3>
                 <Trans>stats-chart-weekday</Trans>
               </h3>
               <Doughnut data={byDayOfWeekData} options={doughnutOptions} />
             </div>
-          </section>
-          <section className="category-content">
             <div className="chart">
               <h3>
                 <Trans>stats-chart-hour</Trans>
