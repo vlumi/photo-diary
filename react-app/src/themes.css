@@ -1,5 +1,5 @@
 .blue-theme {
-  --primary-color: #000;
+  --primary-color: #004;
   --primary-background: #ddf;
   --inactive-color: #999;
   --header-color: #fff;
@@ -12,12 +12,12 @@
   --extreme-color: #99b;
 }
 .red-theme {
-  --primary-color: #000;
+  --primary-color: #400;
   --primary-background: #fdd;
   --inactive-color: #999;
   --header-color: #fff;
   --header-sub-color: #fdd;
-  --header-background: #500;
+  --header-background: #400;
   --none-color: #fdd;
   --low-color: #ecc;
   --medium-color: #dbb;

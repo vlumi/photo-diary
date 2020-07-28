@@ -15,6 +15,11 @@ const doughnutOptions = {
   legend: {
     display: false,
   },
+  animation: {
+    animateRotate: false,
+    animateScale: false,
+  },
+  cutoutPercentage: 0,
 };
 
 const Stats = ({ gallery, lang, countryData }) => {
@@ -49,8 +54,8 @@ const Stats = ({ gallery, lang, countryData }) => {
 
   const foldToArray = (
     data,
-    fmt = format.identity,
-    sort = numSortByValueDesc
+    formatter = format.identity,
+    sorter = numSortByValueDesc
   ) =>
     Object.keys(data)
       .map((key) => {
@@ -59,31 +64,36 @@ const Stats = ({ gallery, lang, countryData }) => {
           value: data[key],
         };
       })
-      .sort(sort)
-      .map(formatKey(fmt));
+      .sort(sorter)
+      .map(formatKey(formatter));
 
-  const mapToChartJs = (data, maxEntries = 10) => {
+  const mapToPieChartData = (data, maxEntries = 10) => {
     const doMap = (data) => {
-      const valueIndex = Object.fromEntries(
+      const valueRanks = Object.fromEntries(
         data
           .map((_) => Number(_.value))
           .sort((a, b) => b - a)
           .map((value, i) => [value, i])
       );
       const colorGradients = stats.colorGradient(
-        [0, 0, 68],
-        [221, 221, 255],
+        // TODO: from configured theme: primary-color -> primary-background
+        [0, 0, 68], // #004
+        [221, 221, 255], // #ddf
         data.length
       );
+      const borderColor = "#fff";
       const colors = data
         .map((_) => Number(_.value))
-        .map((value) => colorGradients[valueIndex[value]]);
+        .map((value) => colorGradients[valueRanks[value]]);
       return {
         labels: data.map((_) => _.key),
         datasets: [
           {
             data: data.map((_) => _.value),
             backgroundColor: colors,
+            borderColor,
+            borderWidth: 0.25,
+            hoverBackgroundColor: "#0044",
           },
         ],
       };
@@ -113,12 +123,12 @@ const Stats = ({ gallery, lang, countryData }) => {
   // console.log("data", data);
 
   const byAuthor = foldToArray(data.count.byAuthor);
-  const byAuthorData = mapToChartJs(byAuthor);
+  const byAuthorData = mapToPieChartData(byAuthor);
 
   const byCountry = foldToArray(data.count.byCountry, (key) =>
     format.countryName(key, lang, countryData)
   );
-  const byCountryData = mapToChartJs(byCountry);
+  const byCountryData = mapToPieChartData(byCountry);
 
   // TODO: year/month distribution, average per day, total days, ...
 
@@ -127,13 +137,13 @@ const Stats = ({ gallery, lang, countryData }) => {
     format.identity,
     numSortByKeyAsc
   );
-  const byYearData = mapToChartJs(byYear, 0);
+  const byYearData = mapToPieChartData(byYear, 0);
   const byMonthOfYear = foldToArray(
     data.count.byTime.byMonthOfYear,
     (month) => t(`month-long-${month}`),
     numSortByKeyAsc
   );
-  const byMonthOfYearData = mapToChartJs(byMonthOfYear, 12);
+  const byMonthOfYearData = mapToPieChartData(byMonthOfYear, 12);
   const byDayOfWeek = foldToArray(
     collection.transformObjectKeys(data, (dow) => {
       const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
@@ -142,59 +152,59 @@ const Stats = ({ gallery, lang, countryData }) => {
     (dow) => t(`weekday-long-${format.dayOfWeek(dow)}`),
     numSortByKeyAsc
   );
-  const byDayOfWeekData = mapToChartJs(byDayOfWeek);
+  const byDayOfWeekData = mapToPieChartData(byDayOfWeek);
   const byHourOfDay = foldToArray(
     data.count.byTime.byHourOfDay,
     format.identity,
     numSortByKeyAsc
   );
-  const byHourOfDayData = mapToChartJs(byHourOfDay, 24);
+  const byHourOfDayData = mapToPieChartData(byHourOfDay, 24);
 
   const byCameraMake = foldToArray(data.count.byGear.byCameraMake);
-  const byCameraMakeData = mapToChartJs(byCameraMake);
+  const byCameraMakeData = mapToPieChartData(byCameraMake);
   const byCamera = foldToArray(data.count.byGear.byCamera);
-  const byCameraData = mapToChartJs(byCamera);
+  const byCameraData = mapToPieChartData(byCamera);
   const byLens = foldToArray(data.count.byGear.byLens);
-  const byLensData = mapToChartJs(byLens);
+  const byLensData = mapToPieChartData(byLens);
   const byCameraLens = foldToArray(data.count.byGear.byCameraLens);
-  const byCameraLensData = mapToChartJs(byCameraLens);
+  const byCameraLensData = mapToPieChartData(byCameraLens);
 
   const byFocalLength = foldToArray(
     data.count.byExposure.byFocalLength,
     format.focalLength,
     numSortByKeyAsc
   );
-  const byFocalLengthData = mapToChartJs(byFocalLength, 0);
+  const byFocalLengthData = mapToPieChartData(byFocalLength, 0);
   const byAperture = foldToArray(
     data.count.byExposure.byAperture,
     format.aperture,
     numSortByKeyAsc
   );
-  const byApertureData = mapToChartJs(byAperture, 0);
+  const byApertureData = mapToPieChartData(byAperture, 0);
   const byExposureTime = foldToArray(
     data.count.byExposure.byExposureTime,
     format.exposureTime,
     numSortByKeyDesc
   );
-  const byExposureTimeData = mapToChartJs(byExposureTime, 0);
+  const byExposureTimeData = mapToPieChartData(byExposureTime, 0);
   const byIso = foldToArray(
     data.count.byExposure.byIso,
     format.iso,
     numSortByKeyAsc
   );
-  const byIsoData = mapToChartJs(byIso, 0);
+  const byIsoData = mapToPieChartData(byIso, 0);
   const byExposureValue = foldToArray(
     data.count.byExposure.byExposureValue,
     format.identity,
     numSortByKeyAsc
   );
-  const byExposureValueData = mapToChartJs(byExposureValue, 0);
+  const byExposureValueData = mapToPieChartData(byExposureValue, 0);
   const byLightValue = foldToArray(
     data.count.byExposure.byLightValue,
     format.identity,
     numSortByKeyAsc
   );
-  const byLightValueData = mapToChartJs(byLightValue, 0);
+  const byLightValueData = mapToPieChartData(byLightValue, 0);
 
   return (
     <>
