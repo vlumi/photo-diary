@@ -6,6 +6,8 @@ const identity = (_) => _;
 
 const padNumber = (value, length) => String(value).padStart(length, "0");
 
+const share = (value, total) => Math.floor((value / total) * 1000) / 10;
+
 const date = ({ year, month, day, separator = "-" }) => {
   const parts = [];
   if (year) {
@@ -90,6 +92,7 @@ const coordinates = (latitude, longitude) => {
 export default {
   identity,
   padNumber,
+  share,
 
   date,
   time,

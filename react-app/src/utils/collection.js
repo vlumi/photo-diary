@@ -49,12 +49,66 @@ const compareArrays = (a, b) => {
   return 0;
 };
 
+// TODO: remove?
 const transformObjectKeys = (data, f) => {
-  return Object.fromEntries(Object.keys(data.count.byTime.byDayOfWeek).map(f));
+  return Object.fromEntries(Object.keys(data).map(f));
 };
+
+const transformObjectValue = (data, key, transformer) => {
+  return {
+    ...data,
+    [key]: transformer(data),
+  };
+};
+
+const objectFromArray = (source, value) =>
+  source.reduce((a, b) => {
+    a[b] = value;
+    return a;
+  }, {});
+
+const truncateAndProcess = (
+  data,
+  maxEntries,
+  doMap,
+  summaryLabel,
+  summarizer
+) => {
+  if (maxEntries > 0 && data.length > maxEntries) {
+    const other = summarizer(data.slice(maxEntries));
+    return doMap([
+      ...data.slice(0, maxEntries),
+      { key: summaryLabel, value: other },
+    ]);
+  }
+  return doMap(data);
+};
+
+const compareWithNaN = (a, b, f) => {
+  if (isNaN(a) && isNaN(b)) return 0;
+  if (isNaN(a)) return 1;
+  if (isNaN(b)) return -1;
+  return f();
+};
+const numSortByKeyDesc = (a, b) =>
+  compareWithNaN(a.key, b.key, () => b.key - a.key);
+const numSortByKeyAsc = (a, b) =>
+  compareWithNaN(a.key, b.key, () => a.key - b.key);
+const numSortByValueDesc = (a, b) =>
+  compareWithNaN(a.value, b.value, () => b.value - a.value);
+const numSortByValueAsc = (a, b) =>
+  compareWithNaN(a.value, b.value, () => a.value - b.value);
 
 export default {
   joinTruthyKeys,
   compareArrays,
   transformObjectKeys,
+  transformObjectValue,
+  objectFromArray,
+  truncateAndProcess,
+
+  numSortByKeyDesc,
+  numSortByKeyAsc,
+  numSortByValueDesc,
+  numSortByValueAsc,
 };

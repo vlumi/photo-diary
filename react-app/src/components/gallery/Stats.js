@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Trans, useTranslation } from "react-i18next";
 import styled from "styled-components";
 
-import { Doughnut, Polar, HorizontalBar } from "react-chartjs-2";
+import { Doughnut, Polar, HorizontalBar, Line } from "react-chartjs-2";
 
 import StatsTitle from "./StatsTitle";
 import FlagIcon from "../FlagIcon";
@@ -100,118 +100,10 @@ const Stats = ({ gallery, lang, countryData }) => {
     );
   }
 
-  const encodePieKey = (format) => (entry) => {
-    return {
-      key: [format(entry.key), share(entry.value)],
-      value: entry.value,
-    };
-  };
-  const decodePieKey = (key, value) =>
-    ` ${key[0]}: ${numberFormatter(value)} (${key[1]}%)`;
-
-  const doughnutOptions = {
-    legend: {
-      display: false,
-    },
-    animation: false,
-    cutoutPercentage: 0,
-    responsive: true,
-    maintainAspectRatio: false,
-    tooltips: {
-      mode: "label",
-      callbacks: {
-        title: () => "",
-        label: (tooltipItem, data) =>
-          decodePieKey(
-            data.labels[tooltipItem.index],
-            data.datasets[0].data[tooltipItem.index]
-          ),
-      },
-    },
-  };
-  const polarOptions = {
-    legend: {
-      display: false,
-    },
-    animation: false,
-    scale: {
-      ticks: {
-        display: false,
-      },
-    },
-    responsive: true,
-    maintainAspectRatio: false,
-    tooltips: {
-      mode: "label",
-      callbacks: {
-        title: () => "",
-        label: (tooltipItem, data) =>
-          decodePieKey(
-            data.labels[tooltipItem.index],
-            data.datasets[0].data[tooltipItem.index]
-          ),
-      },
-    },
-  };
-  const barOptions = {
-    legend: {
-      display: false,
-    },
-    animation: false,
-    scales: {
-      xAxes: [
-        {
-          offset: true,
-          display: false,
-          ticks: {
-            beginAtZero: true,
-          },
-        },
-      ],
-      yAxes: [
-        {
-          offset: true,
-          display: false,
-          ticks: {
-            beginAtZero: true,
-          },
-        },
-      ],
-    },
-    responsive: true,
-    maintainAspectRatio: false,
-    tooltips: {
-      mode: "label",
-      callbacks: {
-        title: () => "",
-        label: (tooltipItem, data) =>
-          decodePieKey(
-            data.labels[tooltipItem.index],
-            data.datasets[0].data[tooltipItem.index]
-          ),
-      },
-    },
-  };
-
   const defaultToUnknown = (key) =>
     key && key !== "N/A" && key !== "undefined" ? key : t("stats-unknown");
 
-  const compareWithNaN = (a, b, f) => {
-    if (isNaN(a) && isNaN(b)) return 0;
-    if (isNaN(a)) return 1;
-    if (isNaN(b)) return -1;
-    return f();
-  };
-  const numSortByKeyDesc = (a, b) =>
-    compareWithNaN(a.key, b.key, () => b.key - a.key);
-  const numSortByKeyAsc = (a, b) =>
-    compareWithNaN(a.key, b.key, () => a.key - b.key);
-  const numSortByValueDesc = (a, b) =>
-    compareWithNaN(a.value, b.value, () => b.value - a.value);
-
-  const share = (value) => Math.floor((value / data.count.total) * 1000) / 10;
-
-  const foldToArray = (data, sorter = numSortByValueDesc) =>
+  const foldToArray = (data, sorter = collection.numSortByValueDesc) =>
     Object.keys(data)
       .map((key) => {
         return {
@@ -221,7 +113,16 @@ const Stats = ({ gallery, lang, countryData }) => {
       })
       .sort(sorter);
 
-  const mapToPieData = (data, formatter = format.identity, maxEntries = 0) => {
+  const mapToChartData = (
+    foldedData,
+    formatter = format.identity,
+    maxEntries = 0
+  ) => {
+    const encodeLabelKey = (entry) =>
+      collection.transformObjectValue(entry, "key", (entry) => [
+        formatter(entry.key),
+        format.share(entry.value, data.count.total),
+      ]);
     const doMap = (data) => {
       const valueRanks = Object.fromEntries(
         data
@@ -239,7 +140,7 @@ const Stats = ({ gallery, lang, countryData }) => {
         .map((_) => Number(_.value))
         .map((value) => colorGradients[valueRanks[value]]);
       return {
-        labels: data.map(encodePieKey(formatter)).map((_) => _.key),
+        labels: data.map(encodeLabelKey).map((_) => _.key),
         datasets: [
           {
             data: data.map((_) => _.value),
@@ -253,27 +154,115 @@ const Stats = ({ gallery, lang, countryData }) => {
         ],
       };
     };
-    if (maxEntries > 0 && data.length > maxEntries) {
-      const other = data
-        .slice(maxEntries)
-        .map((_) => _.value)
-        .reduce((a, b) => a + b, 0);
-      return doMap([
-        ...data.slice(0, maxEntries),
-        { key: t("stats-other"), value: other },
-      ]);
-    }
-    return doMap(data);
+    return collection.truncateAndProcess(
+      foldedData,
+      maxEntries,
+      doMap,
+      t("stats-other"),
+      (data) => data.map((_) => _.value).reduce((a, b) => a + b, 0)
+    );
   };
+  const mapMultiSetToChartData = (foldedData, formatter = format.identity) => {
+    const colorGradients = stats.colorGradient(
+      // TODO: from configured theme: --header-background -> --header-color
+      "#004",
+      "#ddf",
+      foldedData.length
+    );
+
+    // const encodeLabelKey = (entry) =>
+    //   collection.transformObjectValue(entry, "key", (entry) => [
+    //     formatter(entry.key),
+    //     format.share(entry.value, data.count.total),
+    //   ]);
+
+    return {
+      labels: foldedData[0].value.map((_) => _.key),
+      datasets: foldedData.map((entry, i) => {
+        return {
+          label: entry.key,
+          backgroundColor: colorGradients[i],
+          data: entry.value.map((_) => _.value),
+        };
+      }),
+    };
+  };
+
+  const decodeLabelKey = (key, value) => {
+    const [name, share] = key;
+    return ` ${name}: ${numberFormatter(value)} (${share}%)`;
+  };
+  const chartOptions = {
+    common: {
+      legend: {
+        display: false,
+      },
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      tooltips: {
+        mode: "label",
+        callbacks: {
+          title: () => "",
+          label: (tooltipItem, data) =>
+            decodeLabelKey(
+              data.labels[tooltipItem.index],
+              data.datasets[0].data[tooltipItem.index]
+            ),
+        },
+      },
+    },
+  };
+  Object.assign(chartOptions, {
+    doughnut: {
+      ...chartOptions.common,
+      cutoutPercentage: 0,
+    },
+    polar: {
+      ...chartOptions.common,
+      scale: {
+        ticks: {
+          display: false,
+        },
+      },
+    },
+    bar: {
+      ...chartOptions.common,
+      scales: {
+        xAxes: [
+          {
+            offset: true,
+            display: false,
+            ticks: {
+              beginAtZero: true,
+            },
+          },
+        ],
+        yAxes: [
+          {
+            offset: true,
+            display: false,
+            ticks: {
+              beginAtZero: true,
+            },
+          },
+        ],
+      },
+    },
+    line: {
+      ...chartOptions.common,
+      tooltips: {},
+    },
+  });
 
   // TODO: year/month distribution, average per day, total days, ...
 
   const collectGeneral = () => {
     const byAuthor = foldToArray(data.count.byAuthor);
-    const byAuthorData = mapToPieData(byAuthor);
+    const byAuthorData = mapToChartData(byAuthor);
 
     const byCountry = foldToArray(data.count.byCountry);
-    const byCountryData = mapToPieData(byCountry, (key) =>
+    const byCountryData = mapToChartData(byCountry, (key) =>
       format.countryName(key, lang, countryData)
     );
     return {
@@ -286,17 +275,17 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byAuthorData} options={doughnutOptions} />
+                <Doughnut data={byAuthorData} options={chartOptions.doughnut} />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byAuthorData} options={barOptions} />
+                <HorizontalBar data={byAuthorData} options={chartOptions.bar} />
               </StyledBarContainer>
             </>
           ),
           raw: byAuthor.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -305,10 +294,16 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byCountryData} options={doughnutOptions} />
+                <Doughnut
+                  data={byCountryData}
+                  options={chartOptions.doughnut}
+                />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byCountryData} options={barOptions} />
+                <HorizontalBar
+                  data={byCountryData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
@@ -318,7 +313,7 @@ const Stats = ({ gallery, lang, countryData }) => {
               {format.countryName(entry.key, lang, countryData)}
             </>,
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
       ],
@@ -326,32 +321,67 @@ const Stats = ({ gallery, lang, countryData }) => {
   };
 
   const collectTime = () => {
-    const byYear = foldToArray(data.count.byTime.byYear, numSortByKeyAsc);
-    const byYearData = mapToPieData(byYear, format.identity, 0);
+    const byYear = foldToArray(
+      data.count.byTime.byYear,
+      collection.numSortByKeyAsc
+    );
+    const byYearData = mapToChartData(byYear, format.identity, 0);
+
+    const byYearMonth = Object.keys(data.count.byTime.byYearMonth)
+      .sort((a, b) => a - b)
+      .map((year) => {
+        const allMonths = collection.objectFromArray(
+          [...Array(12).keys()].map((_) => _ + 1),
+          0
+        );
+        const m = {
+          ...allMonths,
+          ...data.count.byTime.byYearMonth[year],
+        };
+        return {
+          key: year,
+          value: foldToArray(m, collection.numSortByKeyAsc).map((entry) =>
+            collection.transformObjectValue(entry, "key", (entry) =>
+              t(`month-long-${entry.key}`)
+            )
+          ),
+        };
+      });
+    const byYearMonthData = mapMultiSetToChartData(byYearMonth);
+    const byYearMonthFlat = byYearMonth
+      .sort((a, b) => a - b)
+      .flatMap((year) => {
+        return year.value
+          .sort((a, b) => a - b)
+          .map((month) => {
+            return { key: `${year.key} / ${month.key}`, value: month.value };
+          });
+      });
+
     const byMonthOfYear = foldToArray(
       data.count.byTime.byMonthOfYear,
-      numSortByKeyAsc
+      collection.numSortByKeyAsc
     );
-    const byMonthOfYearData = mapToPieData(
+    const byMonthOfYearData = mapToChartData(
       byMonthOfYear,
       (month) => t(`month-long-${month}`),
       12
     );
     const byDayOfWeek = foldToArray(
-      collection.transformObjectKeys(data, (dow) => {
+      collection.transformObjectKeys(data.count.byTime.byDayOfWeek, (dow) => {
         const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
         return [key, data.count.byTime.byDayOfWeek[dow]];
       }),
-      numSortByKeyAsc
+      collection.numSortByKeyAsc
     );
-    const byDayOfWeekData = mapToPieData(byDayOfWeek, (dow) =>
+    const byDayOfWeekData = mapToChartData(byDayOfWeek, (dow) =>
       t(`weekday-long-${format.dayOfWeek(dow)}`)
     );
     const byHourOfDay = foldToArray(
       data.count.byTime.byHourOfDay,
-      numSortByKeyAsc
+      collection.numSortByKeyAsc
     );
-    const byHourOfDayData = mapToPieData(byHourOfDay, format.identity, 24);
+    const byHourOfDayData = mapToChartData(byHourOfDay, format.identity, 24);
     return {
       name: "time",
       title: <Trans>stats-topic-time</Trans>,
@@ -362,17 +392,33 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byYearData} options={doughnutOptions} />
+                <Doughnut data={byYearData} options={chartOptions.doughnut} />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byYearData} options={barOptions} />
+                <HorizontalBar data={byYearData} options={chartOptions.bar} />
               </StyledBarContainer>
             </>
           ),
           raw: byYear.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
+          ]),
+        },
+        {
+          name: "year-month",
+          title: <Trans>stats-category-year-month</Trans>,
+          pie: (
+            <>
+              <StyledPieContainer>
+                <Line data={byYearMonthData} options={chartOptions.line} />
+              </StyledPieContainer>
+            </>
+          ),
+          raw: byYearMonthFlat.map((entry) => [
+            entry.key,
+            numberFormatter(entry.value),
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -381,17 +427,20 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Polar data={byMonthOfYearData} options={polarOptions} />
+                <Polar data={byMonthOfYearData} options={chartOptions.polar} />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byMonthOfYearData} options={barOptions} />
+                <HorizontalBar
+                  data={byMonthOfYearData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
           raw: byMonthOfYear.map((entry) => [
             t(`month-long-${entry.key}`),
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -400,17 +449,20 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Polar data={byDayOfWeekData} options={polarOptions} />
+                <Polar data={byDayOfWeekData} options={chartOptions.polar} />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byDayOfWeekData} options={barOptions} />
+                <HorizontalBar
+                  data={byDayOfWeekData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
           raw: byDayOfWeek.map((entry) => [
             t(`weekday-long-${format.dayOfWeek(entry.key)}`),
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -419,17 +471,20 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Polar data={byHourOfDayData} options={polarOptions} />
+                <Polar data={byHourOfDayData} options={chartOptions.polar} />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byHourOfDayData} options={barOptions} />
+                <HorizontalBar
+                  data={byHourOfDayData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
           raw: byHourOfDay.map((entry) => [
             `${format.padNumber(entry.key, 2)}:00–`,
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
       ],
@@ -438,13 +493,13 @@ const Stats = ({ gallery, lang, countryData }) => {
 
   const collectGear = () => {
     const byCameraMake = foldToArray(data.count.byGear.byCameraMake);
-    const byCameraMakeData = mapToPieData(byCameraMake);
+    const byCameraMakeData = mapToChartData(byCameraMake);
     const byCamera = foldToArray(data.count.byGear.byCamera);
-    const byCameraData = mapToPieData(byCamera);
+    const byCameraData = mapToChartData(byCamera);
     const byLens = foldToArray(data.count.byGear.byLens);
-    const byLensData = mapToPieData(byLens);
+    const byLensData = mapToChartData(byLens);
     const byCameraLens = foldToArray(data.count.byGear.byCameraLens);
-    const byCameraLensData = mapToPieData(byCameraLens);
+    const byCameraLensData = mapToChartData(byCameraLens, format.identity, 5);
     return {
       name: "gear",
       title: <Trans>stats-topic-gear</Trans>,
@@ -455,17 +510,23 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byCameraMakeData} options={doughnutOptions} />
+                <Doughnut
+                  data={byCameraMakeData}
+                  options={chartOptions.doughnut}
+                />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byCameraMakeData} options={barOptions} />
+                <HorizontalBar
+                  data={byCameraMakeData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
           raw: byCameraMake.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -474,17 +535,17 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byCameraData} options={doughnutOptions} />
+                <Doughnut data={byCameraData} options={chartOptions.doughnut} />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byCameraData} options={barOptions} />
+                <HorizontalBar data={byCameraData} options={chartOptions.bar} />
               </StyledBarContainer>
             </>
           ),
           raw: byCamera.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -493,17 +554,17 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byLensData} options={doughnutOptions} />
+                <Doughnut data={byLensData} options={chartOptions.doughnut} />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byLensData} options={barOptions} />
+                <HorizontalBar data={byLensData} options={chartOptions.bar} />
               </StyledBarContainer>
             </>
           ),
           raw: byLens.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -512,17 +573,23 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byCameraLensData} options={doughnutOptions} />
+                <Doughnut
+                  data={byCameraLensData}
+                  options={chartOptions.doughnut}
+                />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byCameraLensData} options={barOptions} />
+                <HorizontalBar
+                  data={byCameraLensData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
           raw: byCameraLens.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
       ],
@@ -532,43 +599,46 @@ const Stats = ({ gallery, lang, countryData }) => {
   const collectExposure = () => {
     const byFocalLength = foldToArray(
       data.count.byExposure.byFocalLength,
-      numSortByKeyAsc
+      collection.numSortByKeyAsc
     );
-    const byFocalLengthData = mapToPieData(
+    const byFocalLengthData = mapToChartData(
       byFocalLength,
       format.focalLength,
       0
     );
     const byAperture = foldToArray(
       data.count.byExposure.byAperture,
-      numSortByKeyAsc
+      collection.numSortByKeyAsc
     );
-    const byApertureData = mapToPieData(byAperture, format.aperture, 0);
+    const byApertureData = mapToChartData(byAperture, format.aperture, 0);
     const byExposureTime = foldToArray(
       data.count.byExposure.byExposureTime,
-      numSortByKeyDesc
+      collection.numSortByKeyDesc
     );
-    const byExposureTimeData = mapToPieData(
+    const byExposureTimeData = mapToChartData(
       byExposureTime,
       format.exposureTime,
       0
     );
-    const byIso = foldToArray(data.count.byExposure.byIso, numSortByKeyAsc);
-    const byIsoData = mapToPieData(byIso, format.iso, 0);
+    const byIso = foldToArray(
+      data.count.byExposure.byIso,
+      collection.numSortByKeyAsc
+    );
+    const byIsoData = mapToChartData(byIso, format.iso, 0);
     const byExposureValue = foldToArray(
       data.count.byExposure.byExposureValue,
-      numSortByKeyAsc
+      collection.numSortByKeyAsc
     );
-    const byExposureValueData = mapToPieData(
+    const byExposureValueData = mapToChartData(
       byExposureValue,
       format.identity,
       0
     );
     const byLightValue = foldToArray(
       data.count.byExposure.byLightValue,
-      numSortByKeyAsc
+      collection.numSortByKeyAsc
     );
-    const byLightValueData = mapToPieData(byLightValue, format.identity, 0);
+    const byLightValueData = mapToChartData(byLightValue, format.identity, 0);
     return {
       name: "exposure",
       title: <Trans>stats-topic-exposure</Trans>,
@@ -579,17 +649,23 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byFocalLengthData} options={doughnutOptions} />
+                <Doughnut
+                  data={byFocalLengthData}
+                  options={chartOptions.doughnut}
+                />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byFocalLengthData} options={barOptions} />
+                <HorizontalBar
+                  data={byFocalLengthData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
           raw: byFocalLength.map((entry) => [
             defaultToUnknown(format.focalLength(entry.key)),
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -598,17 +674,23 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byApertureData} options={doughnutOptions} />
+                <Doughnut
+                  data={byApertureData}
+                  options={chartOptions.doughnut}
+                />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byApertureData} options={barOptions} />
+                <HorizontalBar
+                  data={byApertureData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
           raw: byAperture.map((entry) => [
             defaultToUnknown(format.aperture(entry.key)),
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -617,17 +699,23 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byExposureTimeData} options={doughnutOptions} />
+                <Doughnut
+                  data={byExposureTimeData}
+                  options={chartOptions.doughnut}
+                />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byExposureTimeData} options={barOptions} />
+                <HorizontalBar
+                  data={byExposureTimeData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
           raw: byExposureTime.map((entry) => [
             defaultToUnknown(format.exposureTime(entry.key)),
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -636,17 +724,17 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byIsoData} options={doughnutOptions} />
+                <Doughnut data={byIsoData} options={chartOptions.doughnut} />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byIsoData} options={barOptions} />
+                <HorizontalBar data={byIsoData} options={chartOptions.bar} />
               </StyledBarContainer>
             </>
           ),
           raw: byIso.map((entry) => [
             defaultToUnknown(format.iso(entry.key)),
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -657,13 +745,13 @@ const Stats = ({ gallery, lang, countryData }) => {
               <StyledPieContainer>
                 <Doughnut
                   data={byExposureValueData}
-                  options={doughnutOptions}
+                  options={chartOptions.doughnut}
                 />
               </StyledPieContainer>
               <StyledBarContainer>
                 <HorizontalBar
                   data={byExposureValueData}
-                  options={barOptions}
+                  options={chartOptions.bar}
                 />
               </StyledBarContainer>
             </>
@@ -671,7 +759,7 @@ const Stats = ({ gallery, lang, countryData }) => {
           raw: byExposureValue.map((entry) => [
             defaultToUnknown(entry.key),
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
         {
@@ -680,17 +768,23 @@ const Stats = ({ gallery, lang, countryData }) => {
           pie: (
             <>
               <StyledPieContainer>
-                <Doughnut data={byLightValueData} options={doughnutOptions} />
+                <Doughnut
+                  data={byLightValueData}
+                  options={chartOptions.doughnut}
+                />
               </StyledPieContainer>
               <StyledBarContainer>
-                <HorizontalBar data={byLightValueData} options={barOptions} />
+                <HorizontalBar
+                  data={byLightValueData}
+                  options={chartOptions.bar}
+                />
               </StyledBarContainer>
             </>
           ),
           raw: byLightValue.map((entry) => [
             defaultToUnknown(entry.key),
             numberFormatter(entry.value),
-            `${share(entry.value)}%`,
+            `${format.share(entry.value, data.count.total)}%`,
           ]),
         },
       ],

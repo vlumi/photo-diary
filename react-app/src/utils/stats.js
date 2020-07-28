@@ -1,4 +1,5 @@
 import format from "./format";
+import collection from "./collection";
 
 const generate = async (gallery) => {
   return collectStatistics(gallery.photos());
@@ -176,22 +177,21 @@ const updateTimeDistribution = (byTime, year, month, day, hour) => {
 
   byTime.byMonthOfYear =
     byTime.byMonthOfYear ||
-    [...Array(12).keys()]
-      .map((month) => month + 1)
-      .reduce((a, b) => ((a[b] = 0), a), {});
+    collection.objectFromArray(
+      [...Array(12).keys()].map((month) => month + 1),
+      0
+    );
   byTime.byMonthOfYear[month] = byTime.byMonthOfYear[month] || 0;
   byTime.byMonthOfYear[month]++;
 
   const dow = new Date(year, month - 1, day).getDay();
   byTime.byDayOfWeek =
-    byTime.byDayOfWeek ||
-    [...Array(7).keys()].reduce((a, b) => ((a[b] = 0), a), {});
+    byTime.byDayOfWeek || collection.objectFromArray([...Array(7).keys()], 0);
   byTime.byDayOfWeek[dow] = byTime.byDayOfWeek[dow] || 0;
   byTime.byDayOfWeek[dow]++;
 
   byTime.byHourOfDay =
-    byTime.byHourOfDay ||
-    [...Array(24).keys()].reduce((a, b) => ((a[b] = 0), a), {});
+    byTime.byHourOfDay || collection.objectFromArray([...Array(24).keys()], 0);
   byTime.byHourOfDay[hour] = byTime.byHourOfDay[hour] || 0;
   byTime.byHourOfDay[hour]++;
 
