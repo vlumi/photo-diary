@@ -1,6 +1,6 @@
 {
   "name": "photo-diary-converter",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -15,8 +15,8 @@
   "dependencies": {
     "chokidar": "^3.4.1",
     "dotenv": "^8.2.0",
-    "eslint": "^7.4.0",
-    "exifr": "^5.0.2",
+    "eslint": "^7.5.0",
+    "exifr": "^5.0.3",
     "geo-coord": "^0.1.0",
     "gm": "^1.23.1",
     "image-size": "^0.8.3",

@@ -1,4 +1,4 @@
-const authorizer = require("../utils/authorizer")();
+const authorizer = require("../lib/authorizer")();
 const model = require("../models/photo")();
 
 const init = async () => {

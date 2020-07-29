@@ -1,5 +1,5 @@
-const CONST = require("../utils/constants");
-const logger = require("../utils/logger");
+const CONST = require("../lib/constants");
+const logger = require("../lib/logger");
 const db = require("../db");
 
 module.exports = () => {
@@ -24,8 +24,6 @@ const groupPhotosByYearMonthDay = (galleryPhotos) => {
       yearMap[photo.taken.instant.month] || {});
     const dayPhotos = (monthMap[photo.taken.instant.day] =
       monthMap[photo.taken.instant.day] || []);
-    // TODO: reduce meta for this?
-    // dayPhotos.push(reducePhotoForList(photo));
     dayPhotos.push(photo);
   });
   return photosByDate;

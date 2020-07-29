@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 
-const CONST = require("../utils/constants");
+const CONST = require("../lib/constants");
 
 /**
  * Dummy DB, with all DB values hard-coded.
@@ -10,19 +10,27 @@ module.exports = () => {
     init,
     loadUsers,
     createUser,
-    updateUser,
     loadUser,
+    updateUser,
 
     loadUserAccessControl,
 
     loadGalleries,
+    createGallery,
     loadGallery,
+    updateGallery,
 
     loadGalleryPhotos,
+    linkGalleryPhoto,
     loadGalleryPhoto,
+    unlinkGalleryPhoto,
+    unlinkAllPhotos,
+    unlinkAllGalleries,
 
     loadPhotos,
+    createPhoto,
     loadPhoto,
+    updatePhoto,
   };
 };
 
@@ -37,30 +45,25 @@ const loadUsers = async () => {
 const createUser = async () => {
   throw CONST.ERROR_NOT_IMPLEMENTED;
 };
-const updateUser = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
-};
 const loadUser = async (id) => {
   if (!(id in db.users)) {
     throw CONST.ERROR_NOT_FOUND;
   }
   return db.users[id];
 };
-const loadUserAccessControl = async (id) => {
-  if (!(id in db.accessControl)) {
-    throw CONST.ERROR_NOT_FOUND;
-  }
-  return db.accessControl[id];
+const updateUser = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
-// TODO: something like this for create/update user to hash the password:
-// {
-//   const saltRounds = 10;
-//   bcrypt.hash(password, saltRounds, function (err, hash) {
-//     db.users["admin"].password = hash;
-//   });
-// }
+
+const loadUserAccessControl = async (id) => {
+  return { ...db.accessControl[":guest"], ...db.accessControl[id] };
+};
+
 const loadGalleries = async () => {
   return Object.values(db.galleries).sort();
+};
+const createGallery = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 const loadGallery = async (galleryId) => {
   if (!(galleryId in db.galleries)) {
@@ -68,6 +71,10 @@ const loadGallery = async (galleryId) => {
   }
   return db.galleries[galleryId];
 };
+const updateGallery = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+
 const loadGalleryPhotos = async (galleryId) => {
   switch (galleryId) {
     case CONST.SPECIAL_GALLERY_ALL:
@@ -94,6 +101,9 @@ const loadGalleryPhotos = async (galleryId) => {
       return photos;
     }
   }
+};
+const linkGalleryPhoto = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 const loadGalleryPhoto = async (galleryId, photoId) => {
   const handleGalleryAll = async () => {
@@ -133,14 +143,30 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
       return await handleGallery();
   }
 };
+const unlinkGalleryPhoto = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const unlinkAllPhotos = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const unlinkAllGalleries = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+
 const loadPhotos = async () => {
   return db.photos;
+};
+const createPhoto = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 const loadPhoto = async (photoId) => {
   if (!(photoId in db.photos)) {
     throw CONST.ERROR_NOT_FOUND;
   }
   return db.photos[photoId];
+};
+const updatePhoto = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 
 const dbDump = JSON.stringify({

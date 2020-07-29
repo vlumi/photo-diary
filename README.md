@@ -1,10 +1,12 @@
 # Photo Diary
 
-**This project is a **_work in progress_**.**
+Photo Diary is a calendar based gallery for self-hosting. The photos are presented arranged by the date they were shot, in calendar-based views, aimed at diary and other similar photography projects.
 
-Photo Diary is a calendar based gallery for self-hosting.
+Key features include:
 
-This project is intended to create an online photo gallery, with the photos arranged by the date they were shot, in monthly views. This will (hopefully, eventually) replace the legacy [gallery](https://github.com/vlumi/gallery).
+- Fast browsing – gallery content (apart from actual photos) loaded once at startup
+- Calendar-based views (year, month, day, photo)
+- User management and basic access control
 
 ## Structure
 
@@ -14,94 +16,28 @@ Photo Diary is split into separate independent modules, each handling its own su
 - [server](server) – Back-end API
 - [converter](converter) – Back-end process for pre-processing new photos to be added to the gallery
 
-## Roadmap
+## Features
 
-### Milestone 0.2
-
-- Back-end
-  - New schema
-    - Users, authentication and authorization
-    - More photo metadata
-    - Migrate from SQLite -> ???
-  - New command-line tool for managing DB content
-
-### Milestone 0.3
-
-- Front-end
-  - Statistics
-    - More dynamic -- filters
-      - By gallery
-      - By gear
-      - By author
-      - By exposure settings
-      - By country
-      - By time
-        - By year
-        - By year/month
-        - By year/month/day
-        - By range
-
-### Milestone 1.0
-
-- Back-end
-  - Modification API
-    - User
-    - User-gallery ACL
-    - Gallery
-    - Photo
-    - Gallery-photo linking
-- Front-end
-  - Global admin view
-    - Manage users & ACL
-    - Manage galleries
-    - Manage photos
-    - Manage gallery/photo linking
-
-## Backlog
-
-This features would be nice to have, but are too far into the future to put on the roadmap.
-
-- Front-end
-  - Gallery view
-    - Multiple display sizes, dynamically chosen to match client window size
-    - Photo license information
-      - Permit/deny original size download by users
-  - Gallery admin view (TBD)
-    - Manage authorized galleries
-    - Manage photos linked to only authorized galleries
-    - Manage gallery/photo linking
-  - Support for localization
-    - English, Finnish, Japanese, ...
-
-## Planned Features
-
-- Photos segmented into galleries
+- Photos are segmented into galleries
   - Each photo can be in any number of galleries
   - Single level – no nesting
   - One gallery view at a time
-  - Virtual root configuration based on URL
-    - Host/domain, path
+  - Virtual default gallery to jump to based on hostname
   - Special galleries for more abstract concepts
     - :all includes all photos
-    - :none includes all photos that don't belong to any galleries
+    - :public includes all photos added to galleries
+    - :private includes photos not added to any galleries
 - SPA view
   - Fast transition between views
     - Pre-load current gallery
-  - Yearly view
-    - No thumbnails, just heat for months/days with photos
-      - Link to open month/day
-    - Navigation to previous/next year
-  - Monthly view
-    - Photos shown grouped by date, chronologically
-      - Thumbnails
-    - Navigation to previous/next month
-  - Single photo view
-    - As layer above current view
-    - Navigation to previous/next photo
-      - Thumbnail preview
-      - Previous/next photo pre-load caching
-      - Automatic switch of monthly view on crossing month boundary
-- Statistics view
+  - Fast navigation to previous/next item
+    - Left/right arrow keys
+    - Swipe left/right
+  - Yearly view – Calendar with heat-mapped days
+  - Monthly view – Thumbnails grouped by date
+  - Daily view – Thumbnails
+  - Single photo view – Maximize to visible space, with photo properties
+- Statistics view (TBD)
   - Number of photos by year/month
     - Total and average
   - Month-of-year distribution
@@ -115,7 +51,7 @@ This features would be nice to have, but are too far into the future to put on t
     - ISO
   - Author distribution
   - Country distribution
-- Admin view
+- Admin view (TBD)
   - Add new photos
     - Pick up from upload directory on the server
     - Metadata extraction from EXIF
@@ -135,35 +71,96 @@ This features would be nice to have, but are too far into the future to put on t
       - Create thumbnail and display size photos
 - Authentication
   - User login
-    - OAuth?
-  - Session management
+  - Token-based
+    - User-specific secrets for simple revocation
 - Authorization
   - Restricted access to galleries and functionality
     - No access restrictions planned for the actual photo content, which may be in a CDN
   - Multiple access levels
-    - Guest
-      - Not logged in
-      - View access to unrestricted galleries
+    - No access
+    - View access
+    - Admin access
+  - Access levels granted by scope
+    - Global scope (:all)
+    - Public scope (:public)
+    - Gallery scope
+  - Default access level
+    - Through guest user (:guest), inherited by all users
+
+## Roadmap
+
+### Milestone 0.3
+
+- Front-end
+  - Dynamic statistics, with filters/drill-down
+    - By gallery
+    - By gear
+    - By author
+    - By exposure settings
+    - By country
+    - By time
+      - By year
+      - By year/month
+      - By year/month/day
+      - By range
+
+### Milestone 1.0
+
+- Back-end
+  - Fully tested Modification API
     - User
-      - View access to unrestricted and granted galleries
-      - View/revoke own sessions
-      - Update own user information
-      - Delete own user
-    - Gallery admin
-      - On top of user access
-      - Admin access to granted galleries
-        - Add, update, unlink photos
-        - Remove photos that are only linked to granted galleries
-        - Grant/revoke user access to granted galleries
-    - Global admin
-      - View and admin access to all galleries
-        - Including special galleries
-      - Create, update, delete galleries
-      - Add, update, link, remove orphaned photos
-      - Add, update, remove users
+    - ACL
+    - Gallery
+    - Photo
+    - Gallery-photo linking
+- Front-end
+  - Global admin view
+    - Manage users & ACL
+    - Manage galleries
+    - Manage photos
+    - Manage gallery/photo linking
+
+## Backlog
+
+These features would be nice to have, but are too far into the future to put on the roadmap.
+
+- Front-end
+  - Gallery view
+    - Multiple display sizes, dynamically chosen to match client window size
+    - Photo license information
+      - Permit/deny original size download by users
+  - Gallery admin view (TBD)
+    - Manage authorized galleries
+    - Manage photos linked to only authorized galleries
+    - Manage gallery/photo linking
 
 ## Version History
 
+- v0.2.1 (2020-07-27)
+  - Embedded map with markers of the photo(s) on year, month, day, and photo views
+    - Marker popup with small thumbnail and date
+    - No grouping of nearby markers
+  - Language selection and minimal localization
+    - English, Finnish, Japanese
+- v0.2.0 (2020-07-25)
+  - Implement new `sqlite3` schema and driver
+    - More photo and gallery metadata
+    - User and ACL information
+    - CRUD
+  - Implement authentication and authorization
+  - Implement new command-line tools for managing the DB content, under `server/bin/`
+    - `add-user.js`
+      - Add a new, or update an existing user
+      - ID, password, and ACL information from command-line parameters
+    - `add-gallery`
+      - Add a new, or update an existing gallery
+      - Properties from command-line parameters
+    - `add-photo.js`
+      - Add new, or update existing photos
+      - Input from the JSON produced by [converter](converter) and command-line parameters
+      - Also set galleries (unlink & link)
+    - Any other management should be done directly to the DB
+      - Admin UI is in the pipeline
 - v0.1.1 (2020-07-20)
   - Usability improvements and polish
   - Setup to run in production mode

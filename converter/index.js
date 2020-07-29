@@ -3,9 +3,9 @@ const fs = require("fs");
 const path = require("path");
 const chokidar = require("chokidar");
 
-const CONST = require("./utils/constants");
-const config = require("./utils/config");
-const logger = require("./utils/logger");
+const CONST = require("./lib/constants");
+const config = require("./lib/config");
+const logger = require("./lib/logger");
 const extractProperties = require("./extract-properties");
 const convertImage = require("./convert-image");
 

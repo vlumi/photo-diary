@@ -1,9 +1,9 @@
 import PropTypes from "prop-types";
 
-import calendar from "../utils/calendar";
+import format from "../lib/format";
 
 const FormatDate = ({ year, month, day }) =>
-  calendar.formatDate({ year, month, day, separator: "-" });
+  format.date({ year, month, day, separator: "-" });
 
 FormatDate.propTypes = {
   year: PropTypes.number,

@@ -1,8 +1,9 @@
 const gm = require("gm").subClass({ imageMagick: true });
 const path = require("path");
+const fs = require("fs");
 
-const CONST = require("../utils/constants");
-const logger = require("../utils/logger");
+const CONST = require("../lib/constants");
+const logger = require("../lib/logger");
 
 module.exports = (fileName, root, target) => {
   return new Promise((resolve, reject) => {
@@ -16,10 +17,11 @@ module.exports = (fileName, root, target) => {
     gm(inputPath)
       .autoOrient()
       .resize(width, height)
-      .write(outputPath, (error) => {
+      .write(outputPath, async (error) => {
         if (error) {
           reject(error);
         } else {
+          await fs.promises.chmod(outputPath, "0644");
           resolve();
         }
       });

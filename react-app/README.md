@@ -27,13 +27,13 @@ PORT=3001 node start
 
 ### Environment Variables
 
-- `REACT_APP_PHOTO_ROOT` \*
-  - The URI to the physical photos, with the following sub-directories
+- `REACT_APP_PHOTO_ROOT_URL` \*
+  - The URL to the physical photos, with the following sub-directories
     - `display` – Display-size, large photos
     - `thumbnail` – Thumbnail-size, small photos
 - `PORT` (default: 3000)
 - `REACT_APP_THEME`
-  - The built-in color theme to use, configured in `themes.css`, with currently the following available
+  - The built-in color theme to use, configured in `themes.css`, with currently the following available:
     - `blue` (default)
     - `red`
     - `grayscale`

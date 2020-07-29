@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
-const CONST = require("../utils/constants");
-const config = require("../utils/config");
-const logger = require("../utils/logger");
+const CONST = require("../lib/constants");
+const config = require("../lib/config");
+const logger = require("../lib/logger");
 const db = require("../db");
 
 const secrets = {};
@@ -53,6 +53,8 @@ const authenticateUser = async (credentials) => {
   try {
     const user = await db.loadUser(credentials.id);
     await checkUserPassword(credentials, user);
+    // Make sure the secret is up-to-date
+    secrets[user.id] = user.secret;
   } catch (error) {
     throw CONST.ERROR_LOGIN;
   }

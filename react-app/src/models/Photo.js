@@ -1,26 +1,10 @@
-import i18n from "i18next";
-
-import calendar from "../utils/calendar";
-
-const registerCountryData = (i18n) => {
-  var countryData = require("i18n-iso-countries");
-  try {
-    countryData.registerLocale(
-      require("i18n-iso-countries/langs/" + i18n.language + ".json")
-    );
-  } catch (err) {
-    // Fall back to English
-    countryData.registerLocale(require("i18n-iso-countries/langs/en.json"));
-  }
-  return countryData;
-};
+import format from "../lib/format";
 
 const Photo = (photoData) => {
   const importPhotoData = (photoData) => {
     return photoData;
   };
 
-  const countryData = registerCountryData(i18n);
   const photo = importPhotoData(photoData);
 
   const self = {
@@ -28,60 +12,85 @@ const Photo = (photoData) => {
     index: () => photo.index,
     title: () => photo.title,
     description: () => photo.description,
+    author: () => photo.taken.author,
     ymd: () => [self.year(), self.month(), self.day()],
     year: () => photo.taken.instant.year,
     month: () => photo.taken.instant.month,
     day: () => photo.taken.instant.day,
+    hour: () => photo.taken.instant.hour,
+    minute: () => photo.taken.instant.minute,
+    second: () => photo.taken.instant.second,
     thumbnailDimensions: () => {
       return { ...photo.dimensions.thumbnail };
     },
     ratio: () =>
       photo.dimensions.display.width / photo.dimensions.display.height,
-    formatTimestamp: () => {
-      const ymd = calendar.formatDate({
+    formatDate: () => {
+      return format.date({
         year: photo.taken.instant.year,
         month: photo.taken.instant.month,
         day: photo.taken.instant.day,
       });
-      const hms = calendar.formatTime({
+    },
+    formatTimestamp: () => {
+      const ymd = format.date({
+        year: photo.taken.instant.year,
+        month: photo.taken.instant.month,
+        day: photo.taken.instant.day,
+      });
+      const hms = format.time({
         hour: photo.taken.instant.hour,
         minute: photo.taken.instant.minute,
         second: photo.taken.instant.second,
       });
       return `${ymd} ${hms}`;
     },
-    formatFocalLength: () => `ƒ=${photo.exposure.focalLength}mm`,
-    formatAperture: () => `ƒ/${photo.exposure.aperture}`,
-    formatExposureTime: () => {
-      const time = photo.exposure.exposureTime;
-      if (time >= 1) {
-        return `${time}s`;
-      }
-      const fraction = Math.round(1 / time);
-      return `1/${fraction}s`;
-    },
-    formatIso: () => `ISO${photo.exposure.iso}`,
+    focalLength: () => photo.exposure.focalLength,
+    aperture: () => photo.exposure.aperture,
+    exposureTime: () => photo.exposure.exposureTime,
+    iso: () => photo.exposure.iso,
+    formatFocalLength: () =>
+      photo.exposure.focalLength
+        ? format.focalLength(photo.exposure.focalLength)
+        : "",
+    formatAperture: () =>
+      photo.exposure.aperture ? format.aperture(photo.exposure.aperture) : "",
+    formatExposureTime: () =>
+      photo.exposure.exposureTime
+        ? format.exposureTime(photo.exposure.exposureTime)
+        : "",
+    formatIso: () => (photo.exposure.iso ? `ISO${photo.exposure.iso}` : ""),
     formatMegapixels: () =>
-      `${Math.round(
-        (photo.dimensions.original.width * photo.dimensions.original.height) /
-          10 ** 6
-      )}MP`,
+      format.megapixels(
+        photo.dimensions.original.width,
+        photo.dimensions.original.height
+      ),
     formatExposure: () => {
-      const focalLength = self.formatFocalLength();
-      const aperture = self.formatAperture();
-      const exposureTime = self.formatExposureTime();
-      const iso = self.formatIso();
-      const mpix = self.formatMegapixels();
-      return `${focalLength} ${aperture} ${exposureTime} ${iso} ${mpix}`;
+      return [
+        self.formatFocalLength(),
+        self.formatAperture(),
+        self.formatExposureTime(),
+        self.formatIso(),
+        self.formatMegapixels(),
+      ].join(" ");
     },
+    cameraMake: () => photo.camera.make,
+    hasCamera: () =>
+      photo &&
+      "camera" in photo &&
+      (("make" in photo.camera && photo.camera.make) ||
+        ("model" in photo.camera && photo.camera.model)),
+    formatCamera: () => format.gear(photo.camera.make, photo.camera.model),
+    hasLens: () =>
+      photo &&
+      "lens" in photo &&
+      (("make" in photo.lens && photo.lens.make) ||
+        ("model" in photo.lens && photo.lens.model)),
+    formatLens: () => format.gear(photo.lens.make, photo.lens.model),
     formatGear: () => {
-      const camera = [photo.camera.make, photo.camera.model]
-        .filter(Boolean)
-        .join(" ");
-      const lens = [photo.lens.make, photo.lens.model]
-        .filter(Boolean)
-        .join(" ");
-      return [camera, lens].filter(Boolean).join(", ");
+      const camera = self.formatCamera();
+      const lens = self.formatLens();
+      return [camera, lens].filter(Boolean).join(" + ");
     },
     hasCountry: () =>
       photo &&
@@ -90,11 +99,48 @@ const Photo = (photoData) => {
       "country" in photo.taken.location &&
       photo.taken.location.country,
     countryCode: () => photo.taken.location.country,
-    countryName: () => countryData.getName(self.countryCode(), i18n.language),
-    place: () =>
-      [photo.taken.location.place, self.countryName()]
-        .filter(Boolean)
-        .join(", "),
+    countryName: (lang, countryData) =>
+      self.hasCountry()
+        ? format.countryName(self.countryCode(), lang, countryData)
+        : "",
+    hasPlace: () =>
+      photo &&
+      "taken" in photo &&
+      "location" in photo.taken &&
+      "place" in photo.taken.location &&
+      photo.taken.location.place,
+    place: () => photo.taken.location.place,
+    hasCoordinates: () =>
+      photo &&
+      "taken" in photo &&
+      "location" in photo.taken &&
+      "coordinates" in photo.taken.location &&
+      "latitude" in photo.taken.location.coordinates &&
+      "longitude" in photo.taken.location.coordinates &&
+      photo.taken.location.coordinates.latitude &&
+      photo.taken.location.coordinates.longitude,
+    coordinates: () => [self.latitude(), self.longitude()],
+    latitude: () => {
+      if (!self.hasCoordinates()) {
+        return "";
+      }
+      return photo.taken.location.coordinates.latitude;
+    },
+    longitude: () => {
+      if (!self.hasCoordinates()) {
+        return "";
+      }
+      return photo.taken.location.coordinates.longitude;
+    },
+    formatCoordinates: () => {
+      if (!self.hasCoordinates()) {
+        return "";
+      }
+      return format.coordinates(
+        photo.taken.location.coordinates.latitude,
+        photo.taken.location.coordinates.longitude
+      );
+    },
     path: (gallery) => {
       const parts = [gallery.path(...self.ymd())];
       parts.push(photo.id);
@@ -103,52 +149,4 @@ const Photo = (photoData) => {
   };
   return self;
 };
-
-// const x = {
-//   id: "20170812_130718_X100F_2880.jpg",
-//   index: 2463,
-//   title: "",
-//   description: "",
-//   taken: {
-//     instant: {
-//       timestamp: "2017-08-12 13:07:18 +0900",
-//       year: 2017,
-//       month: 8,
-//       day: 12,
-//       hour: 13,
-//       minute: 7,
-//       second: 18,
-//     },
-//     author: "Ville Misaki",
-//     location: {
-//       country: "jp",
-//       place: "Kyoto railway museum",
-//       coordinates: {},
-//     },
-//   },
-//   camera: {
-//     model: "FUJIFILM X100F",
-//   },
-//   lens: {},
-//   exposure: {
-//     focalLength: 23,
-//     aperture: "4.0",
-//     exposureTime: 0.01,
-//     iso: "4000",
-//   },
-//   dimensions: {
-//     original: {
-//       width: 5871,
-//       height: 3914,
-//     },
-//     display: {
-//       width: 1000,
-//       height: 1500,
-//     },
-//     thumbnail: {
-//       width: 133,
-//       height: 200,
-//     },
-//   },
-// };
 export default Photo;

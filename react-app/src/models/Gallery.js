@@ -1,45 +1,53 @@
 import Photo from "./Photo";
 
-import calendar from "../utils/calendar";
-import collection from "../utils/collection";
-import config from "../utils/config";
+import calendar from "../lib/calendar";
+import format from "../lib/format";
+import collection from "../lib/collection";
+import config from "../lib/config";
 
 const Gallery = (galleryData) => {
   const importGalleryData = (galleryData) => {
     if (galleryData.epoch) {
       galleryData.epoch = new Date(galleryData.epoch);
     }
+    if (galleryData.hostname) {
+      galleryData.hostname = new RegExp(`^${galleryData.hostname}$`);
+    }
     return galleryData;
   };
-  const importPhotos = (photos) => {
-    Object.keys(photos).forEach((year) => {
-      Object.keys(photos[year]).forEach((month) => {
-        Object.keys(photos[year][month]).forEach((day) => {
-          photos[year][month][day] = photos[year][month][day].map((photo) =>
-            Photo(photo)
-          );
+  const importPhotos = (photosByYmd) => {
+    const photos = [];
+    Object.keys(photosByYmd).forEach((year) => {
+      Object.keys(photosByYmd[year]).forEach((month) => {
+        Object.keys(photosByYmd[year][month]).forEach((day) => {
+          photosByYmd[year][month][day] = photosByYmd[year][month][
+            day
+          ].map((photo) => Photo(photo));
+          photos.push(...photosByYmd[year][month][day]);
         });
       });
     });
-    return photos;
+    return [photos, photosByYmd];
   };
 
   const gallery = importGalleryData(galleryData);
-  const photos = importPhotos(gallery.photos || {});
+  const [photos, photosByYmd] = importPhotos(gallery.photos || {});
   const self = {
     id: () => gallery.id,
     isSpecial: () => gallery.id.startsWith(":"),
     title: (year, month, day, photo) => {
-      const ymd = calendar.formatDate({ year, month, day });
+      const ymd = format.date({ year, month, day });
       if (!ymd) {
         return gallery.title;
       }
       if (!photo) {
-        return `${gallery.title} — ${ymd} `;
+        return `${ymd} — ${gallery.title}`;
       }
-      return `${gallery.title} — ${ymd} #${photo.index() + 1}`;
+      return `#${photo.index() + 1} — ${ymd} — ${gallery.title}`;
     },
     description: () => gallery.description || "",
+    hasIcon: () => gallery && "icon" in gallery && gallery.icon,
+    icon: () => gallery.icon || "",
     hasEpoch: () => gallery && "epoch" in gallery && gallery.epoch,
     epoch: () => gallery.epoch,
     epochYmd: () => {
@@ -49,11 +57,18 @@ const Gallery = (galleryData) => {
         gallery.epoch.getDate(),
       ];
     },
+    epochType: () => gallery.epochType,
     hasTheme: () => gallery && "theme" in gallery && gallery.theme,
     theme: () => gallery.theme,
+    matchesHostname: (hostname) => {
+      if (!gallery.hostname) {
+        return false;
+      }
+      return gallery.hostname.test(hostname);
+    },
     path: (year, month, day) => {
       const parts = ["", "g", gallery.id];
-      const ymd = calendar.formatDate({ year, month, day, separator: "/" });
+      const ymd = format.date({ year, month, day, separator: "/" });
       if (ymd) {
         parts.push(ymd);
       }
@@ -80,93 +95,124 @@ const Gallery = (galleryData) => {
           return self.lastPhoto().path(self);
       }
     },
+    statsPath: () => ["", "g", gallery.id, "stats"].join("/"),
     includesPhotos: () =>
       "photos" in gallery && Object.keys(gallery.photos).length > 0,
-    includesYear: (year) => year in photos,
+    includesYear: (year) => year in photosByYmd,
     includesMonth: (year, month) =>
-      self.includesYear(year) && month in photos[year],
+      self.includesYear(year) && month in photosByYmd[year],
     includesDay: (year, month, day) =>
-      self.includesMonth(year, month) && day in photos[year][month],
+      self.includesMonth(year, month) && day in photosByYmd[year][month],
     includesPhoto: (year, month, day, photo) =>
       self.currentPhotoIndex(year, month, day, photo) >= 0,
     countPhotos: (year, month, day) => {
       if (
-        !photos ||
-        !(year in photos) ||
-        !(month in photos[year]) ||
-        !(day in photos[year][month])
+        !photosByYmd ||
+        !(year in photosByYmd) ||
+        !(month in photosByYmd[year]) ||
+        !(day in photosByYmd[year][month])
       ) {
         return 0;
       }
-      return photos[year][month][day].length;
+      return photosByYmd[year][month][day].length;
     },
     photos: (year, month, day) => {
+      if (!year && !month && !day) {
+        return photos;
+      }
       if (!self.includesDay(year, month, day)) {
         return [];
       }
-      return photos[year][month][day];
+      return photosByYmd[year][month][day];
     },
     photo: (year, month, day, photoId = "") => {
       if (!self.includesDay(year, month, day)) {
         return undefined;
       }
-      return photos[year][month][day].find((photo) => photo.id() === photoId);
+      return photosByYmd[year][month][day].find(
+        (photo) => photo.id() === photoId
+      );
     },
     mapYears: (f) => {
-      return Object.keys(photos).map(Number).map(f);
+      return Object.keys(photosByYmd).map(Number).map(f);
+    },
+    flatMapYears: (f) => {
+      return Object.keys(photosByYmd).map(Number).flatMap(f);
     },
     mapMonths: (year, f) => {
       if (!self.includesYear(year)) {
         return;
       }
-      return Object.keys(photos[year]).map(Number).map(f);
+      return Object.keys(photosByYmd[year]).map(Number).map(f);
+    },
+    flatMapMonths: (year, f) => {
+      if (!self.includesYear(year)) {
+        return;
+      }
+      return Object.keys(photosByYmd[year]).map(Number).flatMap(f);
     },
     mapDays: (year, month, f) => {
       if (!self.includesMonth(year, month)) {
         return;
       }
-      return Object.keys(photos[year][month]).map(Number).map(f);
+      return Object.keys(photosByYmd[year][month]).map(Number).map(f);
+    },
+    flatMapDays: (year, month, f) => {
+      if (!self.includesMonth(year, month)) {
+        return;
+      }
+      return Object.keys(photosByYmd[year][month]).map(Number).flatMap(f);
     },
 
     firstYear: () => {
       if (!self.includesPhotos()) {
         return undefined;
       }
-      return Math.min(...Object.keys(photos));
+      return Math.min(...Object.keys(photosByYmd));
     },
     firstMonth: () => {
       const year = self.firstYear();
-      if (!year || !(year in photos)) {
+      if (!year || !(year in photosByYmd)) {
         return [undefined, undefined];
       }
-      return [year, Math.min(...Object.keys(photos[year]))];
+      return [year, Math.min(...Object.keys(photosByYmd[year]))];
     },
     firstDay: () => {
       const [year, month] = self.firstMonth();
-      if (!year || !month || !(year in photos) || !(month in photos[year])) {
+      if (
+        !year ||
+        !month ||
+        !(year in photosByYmd) ||
+        !(month in photosByYmd[year])
+      ) {
         return [undefined, undefined, undefined];
       }
-      return [year, month, Math.min(...Object.keys(photos[year][month]))];
+      return [year, month, Math.min(...Object.keys(photosByYmd[year][month]))];
     },
     lastYear: () => {
       if (!self.includesPhotos()) {
         return undefined;
       }
-      return Math.max(...Object.keys(photos));
+      return Math.max(...Object.keys(photosByYmd));
     },
     lastMonth: () => {
       const year = self.lastYear();
-      if (!year || !(year in photos)) {
+      if (!year || !(year in photosByYmd)) {
         return [undefined, undefined];
       }
-      return [year, Math.max(...Object.keys(photos[year]))];
+      return [year, Math.max(...Object.keys(photosByYmd[year]))];
     },
     lastDay: () => {
       const [year, month] = self.lastMonth();
-      if (!year || !month || !(year in photos) || !(month in photos[year])) {
+      if (
+        !year ||
+        !month ||
+        !(year in photosByYmd) ||
+        !(month in photosByYmd[year])
+      ) {
         return [undefined, undefined, undefined];
       }
-      return [year, month, Math.max(...Object.keys(photos[year][month]))];
+      return [year, month, Math.max(...Object.keys(photosByYmd[year][month]))];
     },
 
     isFirstYear: (currentYear) => {
@@ -253,7 +299,7 @@ const Gallery = (galleryData) => {
       if (self.isBeforeFirstYear(currentYear)) {
         return self.firstYear();
       }
-      const previousYears = Object.keys(photos).filter(
+      const previousYears = Object.keys(photosByYmd).filter(
         (year) => year < currentYear
       );
       if (previousYears.length > 0) {
@@ -303,7 +349,7 @@ const Gallery = (galleryData) => {
       if (self.isAfterLasttYear(currentYear)) {
         return self.lastYear();
       }
-      const nextYears = Object.keys(photos).filter(
+      const nextYears = Object.keys(photosByYmd).filter(
         (year) => year > currentYear
       );
       if (nextYears.length > 0) {
@@ -349,15 +395,15 @@ const Gallery = (galleryData) => {
 
     currentPhotoIndex: (year, month, day, currentPhoto) => {
       if (
-        !photos ||
-        !(year in photos) ||
-        !(month in photos[year]) ||
-        !(day in photos[year][month]) ||
-        !photos[year][month][day]
+        !photosByYmd ||
+        !(year in photosByYmd) ||
+        !(month in photosByYmd[year]) ||
+        !(day in photosByYmd[year][month]) ||
+        !photosByYmd[year][month][day]
       ) {
         return -1;
       }
-      const currentDayPhotos = photos[year][month][day];
+      const currentDayPhotos = photosByYmd[year][month][day];
       const currentIndex = currentDayPhotos.findIndex(
         (photo) => photo.id() === currentPhoto.id()
       );

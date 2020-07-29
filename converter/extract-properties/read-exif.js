@@ -2,7 +2,7 @@ const path = require("path");
 const exifr = require("exifr");
 const moment = require("moment");
 
-const logger = require("../utils/logger");
+const logger = require("../lib/logger");
 const { GeoCoord } = require("geo-coord");
 
 module.exports = async (fileName, rootDir) => {
@@ -61,16 +61,12 @@ module.exports = async (fileName, rootDir) => {
 
     return {
       id: fileName,
-      title: undefined,
-      description: undefined,
       taken: {
         instant: parseTimestamp(
           exif.DateTimeOriginal || exif.CreateDate || exif.ModifyDate
         ),
         author: cleanString(exif.Artist),
         location: {
-          country: undefined,
-          place: undefined,
           ...parseGps(exif),
         },
       },

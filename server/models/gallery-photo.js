@@ -1,5 +1,4 @@
-const CONST = require("../utils/constants");
-const logger = require("../utils/logger");
+const logger = require("../lib/logger");
 const db = require("../db");
 
 module.exports = () => {
@@ -8,6 +7,8 @@ module.exports = () => {
     getGalleryPhoto,
     linkGalleryPhoto,
     unlinkGalleryPhoto,
+    unlinkAllPhotos,
+    unlinkAllGalleries,
   };
 };
 
@@ -19,9 +20,17 @@ const getGalleryPhoto = async (galleryId, photoId) => {
 };
 const linkGalleryPhoto = async (galleryId, photoId) => {
   logger.debug("Linking photo", photoId, "to gallery", galleryId);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  return await db.linkGalleryPhoto(galleryId, photoId);
 };
 const unlinkGalleryPhoto = async (galleryId, photoId) => {
   logger.debug("Unlinking photo", photoId, "from gallery", galleryId);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  return await db.unlinkGalleryPhoto([galleryId], [photoId]);
+};
+const unlinkAllPhotos = async (galleryId) => {
+  logger.debug("Unlinking all photos from gallery", galleryId);
+  return await db.unlinkAllPhotos(galleryId);
+};
+const unlinkAllGalleries = async (photoId) => {
+  logger.debug("Unlinking photo", photoId, "from all galleries");
+  return await db.unlinkAllGalleries(photoId);
 };

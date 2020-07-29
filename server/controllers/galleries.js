@@ -1,5 +1,4 @@
-const CONST = require("../utils/constants");
-const authorizer = require("../utils/authorizer")();
+const authorizer = require("../lib/authorizer")();
 const model = require("../models/gallery")();
 
 const init = async () => {
@@ -22,9 +21,7 @@ router.get("/", async (request, response) => {
     await authorizer.authorizeAdmin(request.user.id);
     response.json(galleries);
   } catch (error) {
-    const galleryIds = galleries
-      .map((gallery) => gallery.id)
-      .filter((id) => !CONST.isSpecialGallery(id));
+    const galleryIds = galleries.map((gallery) => gallery.id);
 
     const authorizedPromises = await Promise.allSettled(
       galleryIds.map((galleryId) =>

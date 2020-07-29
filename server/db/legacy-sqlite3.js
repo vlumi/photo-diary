@@ -1,26 +1,37 @@
 const sqlite3 = require("sqlite3").verbose();
 
-const CONST = require("../utils/constants");
-const config = require("../utils/config");
-const logger = require("../utils/logger");
+const CONST = require("../lib/constants");
+const config = require("../lib/config");
+const logger = require("../lib/logger");
 
 module.exports = () => {
   return {
     loadUsers,
     createUser,
-    updateUser,
     loadUser,
+    updateUser,
+    deleteUser,
 
     loadUserAccessControl,
 
     loadGalleries,
+    createGallery,
     loadGallery,
+    updateGallery,
+    deleteGallery,
 
     loadGalleryPhotos,
+    linkGalleryPhoto,
+    unlinkGalleryPhoto,
+    unlinkAllPhotos,
+    unlinkAllGalleries,
     loadGalleryPhoto,
 
     loadPhotos,
+    createPhoto,
     loadPhoto,
+    updatePhoto,
+    deletePhoto,
   };
 };
 
@@ -54,24 +65,29 @@ if (!config.DB_OPTS) {
 const db = new sqlite3.Database(config.DB_OPTS);
 logger.debug("Connected to DB");
 
-const loadUserAccessControl = async () => {
-  // No ACL implemented in the legacy Gallery, everyone has global view access.
-  return {
-    [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
-  };
-};
 const loadUsers = async () => {
   return [];
 };
 const createUser = async () => {
   throw CONST.ERROR_NOT_IMPLEMENTED;
 };
-const updateUser = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
-};
 const loadUser = async () => {
   throw CONST.NOT_FOUND;
 };
+const updateUser = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const deleteUser = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+
+const loadUserAccessControl = async () => {
+  // No ACL implemented in the legacy Gallery, everyone has global view access.
+  return {
+    [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+  };
+};
+
 const loadGalleries = async () => {
   const columns = SCHEMA.gallery.join(",");
   const query = `SELECT ${columns} FROM gallery`;
@@ -83,6 +99,9 @@ const loadGalleries = async () => {
       resolve(rows.map((row) => mapGalleryRow(row)));
     });
   });
+};
+const createGallery = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 const loadGallery = async (galleryId) => {
   const column = SCHEMA.gallery.join(",");
@@ -99,6 +118,13 @@ const loadGallery = async (galleryId) => {
     });
   });
 };
+const updateGallery = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const deleteGallery = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+
 const loadGalleryPhotos = async (galleryId) => {
   const getQuery = () => {
     const columns = SCHEMA.photo.join(",");
@@ -147,6 +173,9 @@ const loadGalleryPhotos = async (galleryId) => {
       resolve(rows.map((row, index) => mapPhotoRow(row, index)));
     });
   });
+};
+const linkGalleryPhoto = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 const loadGalleryPhoto = async (galleryId, photoId) => {
   const getQuery = () => {
@@ -210,6 +239,16 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
     });
   });
 };
+const unlinkGalleryPhoto = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const unlinkAllPhotos = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const unlinkAllGalleries = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+
 const loadPhotos = async () => {
   const columns = SCHEMA.photo.join(",");
   const query = `SELECT ${columns} FROM photo`;
@@ -221,6 +260,9 @@ const loadPhotos = async () => {
       resolve(rows.map((row) => mapPhotoRow(row)));
     });
   });
+};
+const createPhoto = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 const loadPhoto = async (photoId) => {
   const columns = SCHEMA.photo.join(",");
@@ -236,6 +278,12 @@ const loadPhoto = async (photoId) => {
       resolve(mapPhotoRow(rows[0]));
     });
   });
+};
+const updatePhoto = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const deletePhoto = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 
 const toString = (str) => {

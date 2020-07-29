@@ -1,7 +1,7 @@
 const path = require("path");
 const imageSize = require("image-size");
 
-const CONST = require("../utils/constants");
+const CONST = require("../lib/constants");
 
 module.exports = (fileName, rootDir, properties) => {
   const inboxFilePath = path.join(rootDir, CONST.DIR_INBOX, fileName);

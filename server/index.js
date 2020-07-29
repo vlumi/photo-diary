@@ -2,8 +2,8 @@ require("dotenv").config();
 const http = require("http");
 
 const { app, init } = require("./app");
-const config = require("./utils/config");
-const logger = require("./utils/logger");
+const config = require("./lib/config");
+const logger = require("./lib/logger");
 
 const server = http.createServer(app);
 

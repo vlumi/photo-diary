@@ -1,10 +1,24 @@
 body {
-  color: var(--primary-color);
-  background: var(--primary-background);
   text-align: center;
   font-family: sans-serif;
   padding: 0;
   margin: 0;
+  color: var(--primary-color);
+  background: var(--primary-background);
+}
+
+#root {
+  color: var(--primary-color);
+  background: var(--primary-background);
+}
+
+form {
+  display: inline;
+}
+
+a {
+  text-decoration: none;
+  color: var(--primary-color);
 }
 
 .error {
@@ -17,7 +31,7 @@ body {
   height: 25px;
   color: var(--header-color);
   background: var(--header-background);
-  margin: 50px 0 0 0;
+  margin: 0;
   padding: 0;
   font-size: small;
 }
@@ -29,6 +43,10 @@ body {
   align-items: stretch;
   flex-wrap: nowrap;
   white-space: nowrap;
+}
+
+.top-menu form {
+  max-width: 300px;
 }
 
 .top-menu .login,
@@ -46,9 +64,29 @@ body {
   flex-grow: 1;
   text-align: left;
 }
-.top-menu .login,
-.top-menu .logout {
+.top-menu .lang {
+  margin: auto 0;
+}
+.top-menu .lang input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.top-menu .lang label {
+  margin: auto 5px;
+  color: var(--inactive-color);
+}
+.top-menu .lang label.checked {
+  color: var(--header-color);
+}
+
+.top-menu .login {
   flex-grow: 1;
+  text-align: right;
+}
+.top-menu .logout {
   text-align: right;
 }
 .top-menu .login input {
@@ -58,14 +96,18 @@ body {
   height: 21px;
   border: 1px;
   margin: 0 2px;
+  color: var(--header-background);
+  background-color: var(--header-sub-color);
 }
 .top-menu button {
   height: 23px;
   margin: 1px;
   padding: 0 1em;
-  border: none;
-}
-.top-menu button.show {
+  border-width: 1px;
+  border-style: outset;
+  border-color: var(--header-sub-color);
+  background-color: var(--header-background);
+  color: var(--header-sub-color);
 }
 .top-menu button.hide {
   color: var(--header-color);
@@ -74,20 +116,23 @@ body {
   width: 23px;
 }
 
-form {
-  display: inline;
+.gallery-menu {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px;
 }
-
-a {
-  text-decoration: none;
-  color: var(--primary-color);
+.gallery-menu .top {
+  text-align: left;
+}
+.gallery-menu .stats {
+  text-align: right;
 }
 
 h1 {
   margin: 0;
 }
 h2 {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   z-index: 1;
@@ -152,7 +197,7 @@ h3 > span {
 }
 .gallery {
   width: 214px;
-  height: 238px;
+  min-height: 200px;
   margin: 5px;
   padding: 0;
   border-style: solid;
@@ -162,7 +207,13 @@ h3 > span {
 .gallery > h3 {
   margin: 0;
 }
-.gallery > div {
+.gallery > .icon {
+  margin: 0;
+}
+.gallery > .icon > img {
+  width: 100%;
+}
+.gallery > .description {
   margin: 5px;
   text-align: left;
 }
@@ -356,6 +407,15 @@ div.adjacent {
   padding: 2px;
   border: solid #004 1px;
 }
+.footer .copyright {
+  flex-grow: 1;
+  text-align: center;
+  margin: 0 10px;
+  font-size: x-small;
+}
+.footer span {
+  display: inline-block;
+}
 .footer .description {
   flex-grow: 1;
   text-align: center;
@@ -366,11 +426,16 @@ div.adjacent {
   padding: 0;
   text-align: center;
 }
+.leaflet-container {
+  width: 100%;
+  height: 400px;
+  margin: 10px 0;
+}
+.map-popup {
+  text-align: center;
+}
 
-.footer .exposure,
-.footer .gear,
-.footer .location,
-.footer .age {
+.footer .details {
   font-size: small;
   text-align: right;
   color: var(--inactive-color);

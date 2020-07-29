@@ -6,7 +6,7 @@ import User from "../models/User";
 
 import tokenService from "../services/tokens";
 
-import token from "../utils/token";
+import token from "../lib/token";
 
 const Login = ({ setUser }) => {
   const [userId, setUserId] = React.useState("");
@@ -17,7 +17,6 @@ const Login = ({ setUser }) => {
       const response = await tokenService.login(userId, password);
       const rawToken = response.data.token;
       const user = User(jwt.decode(rawToken), rawToken);
-      console.log("got user", user);
 
       token.setToken(rawToken);
       window.localStorage.setItem("user", user.toJson());
@@ -38,7 +37,7 @@ const Login = ({ setUser }) => {
 
   return (
     <>
-      <form onSubmit={handleLogin}>
+      <form className="login" onSubmit={handleLogin}>
         <span className="login">
           <input
             type="text"

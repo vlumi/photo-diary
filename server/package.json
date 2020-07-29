@@ -1,13 +1,13 @@
 {
   "name": "photo-diary-server",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=dev node index.js",
     "prod": "cross-env NODE_ENV=prod pm2 start index.js",
     "dev": "cross-env NODE_ENV=dev nodemon run index.js",
-    "test": "cross-env DB_DRIVER=dummy NODE_ENV=test jest --runInBand --detectOpenHandles --forceExit --verbose",
+    "test": "cross-env DB_DRIVER=dummy NODE_ENV=test jest --runInBand --forceExit --detectOpenHandles --verbose",
     "lint": "eslint .",
     "build:ui": "cd ../react-app && npm run build --prod && rm -rf ../server/build && cp -r build ../server/"
   },
@@ -26,7 +26,8 @@
     "morgan": "^1.10.0",
     "pm2": "^4.4.0",
     "sqlite3": "^5.0.0",
-    "uuid": "^8.2.0"
+    "uuid": "^8.3.0",
+    "yargs": "^15.4.1"
   },
   "devDependencies": {
     "eslint": "^7.5.0",
