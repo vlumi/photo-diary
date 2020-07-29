@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 const CONST = require("./constants");
-const logger = require("../utils/logger");
+const logger = require("../lib/logger");
 
 const getDirectory = () => {
   const directory = CONST.PHOTO_ROOT_DIR;

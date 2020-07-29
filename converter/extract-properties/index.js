@@ -1,6 +1,6 @@
 const path = require("path");
 
-const CONST = require("../utils/constants");
+const CONST = require("../lib/constants");
 const readExif = require("./read-exif");
 const setDimensions = require("./set-dimensions");
 const saveJson = require("./save-json");
