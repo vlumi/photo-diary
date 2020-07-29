@@ -49,11 +49,25 @@ const compareArrays = (a, b) => {
   return 0;
 };
 
-// TODO: remove?
-const transformObjectKeys = (data, f) => {
-  return Object.fromEntries(Object.keys(data).map(f));
+/**
+ * Transform all of the property keys of the object, passing the old key and value of each property to the transformer
+ *
+ * @param {object} data
+ * @param {function} transformer
+ */
+const transformObjectKeys = (data, transformer) => {
+  return Object.fromEntries(
+    Object.keys(data).map((key) => transformer(key, data[key]))
+  );
 };
 
+/**
+ * Transform the value of a property, returning a new shallow copy of the object.
+ *
+ * @param {object} data
+ * @param {string} key
+ * @param {function} transformer
+ */
 const transformObjectValue = (data, key, transformer) => {
   return {
     ...data,
@@ -61,27 +75,65 @@ const transformObjectValue = (data, key, transformer) => {
   };
 };
 
-const objectFromArray = (source, value) =>
-  source.reduce((a, b) => {
+/**
+ * Trim leading and trailing elements of the array that do not match the given predicate.
+ *
+ * @param {array} data The array to trim.
+ * @param {function} predicate The predicate should return true for elements that should be kept.
+ */
+const trim = (data, predicate) => {
+  if (data.length === 0) {
+    return data;
+  }
+  let first = 0;
+  while (first < data.length && !predicate(data[first])) {
+    first++;
+  }
+  let last = data.length - 1;
+  while (last >= 0 && !predicate(data[last])) {
+    last--;
+  }
+  if (first > last) {
+    return [];
+  }
+  if (first === last) {
+    return [data[first]];
+  }
+  return data.slice(first, last + 1);
+};
+
+/**
+ * Transform an array into object, with the array values as keys and the given value as
+ * the value of each property.
+ *
+ * @param {array} data The array to transform.
+ * @param {any} value The value to set to each property.
+ */
+const objectFromArray = (data, value) =>
+  data.reduce((a, b) => {
     a[b] = value;
     return a;
   }, {});
 
-const truncateAndProcess = (
-  data,
-  maxEntries,
-  doMap,
-  summaryLabel,
-  summarizer
-) => {
+/**
+ * Truncate the given array `data` to at most `maxEntries` elements. The rest of the elements
+ * will be summarized into a new element at the end using `summarizer`. The truncated array
+ * with the summarized data is passed to `processor`
+ *
+ * @param {array} data The array to truncate and process.
+ * @param {number} maxEntries Maximum number of entries to allow, or zero to not truncate.
+ * @param {function} processor The function to send the truncated and summarized data.
+ * @param {function} summarizer The function to summarize the truncated elements.
+ */
+const truncateAndProcess = (data, maxEntries, processor, summarizer) => {
   if (maxEntries > 0 && data.length > maxEntries) {
     const other = summarizer(data.slice(maxEntries));
-    return doMap([
+    return processor([
       ...data.slice(0, maxEntries),
-      { key: summaryLabel, value: other },
+      summarizer(data.slice(maxEntries)),
     ]);
   }
-  return doMap(data);
+  return processor(data);
 };
 
 const compareWithNaN = (a, b, f) => {
@@ -91,8 +143,23 @@ const compareWithNaN = (a, b, f) => {
   return f();
 };
 
+/**
+ * Sort the object-containing array by the property `key` in numeric ascending order.
+ *
+ * Any non-numeric fields will be placed at the end, in non-deterministic order.
+ *
+ * @param {string} key The property to sort by.
+ */
 const numSortByFieldAsc = (key) => (a, b) =>
   compareWithNaN(a[key], b[key], () => a[key] - b[key]);
+
+/**
+ * Sort the object-containing array by the property `key` in numeric descending order.
+ *
+ * Any non-numeric fields will be placed at the end, in non-deterministic order.
+ *
+ * @param {string} key The property to sort by.
+ */
 const numSortByFieldDesc = (key) => (a, b) =>
   compareWithNaN(a[key], b[key], () => b[key] - a[key]);
 
@@ -103,6 +170,7 @@ export default {
   transformObjectValue,
   objectFromArray,
   truncateAndProcess,
+  trim,
 
   numSortByFieldAsc,
   numSortByFieldDesc,

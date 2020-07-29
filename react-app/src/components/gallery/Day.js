@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
+import { useTranslation } from "react-i18next";
 
 import DayNav from "./DayNav";
 import DayContent from "./DayContent";
@@ -12,6 +13,8 @@ import useKeyPress from "../../utils/keypress";
 
 const Day = ({ gallery, year, month, day, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
+
+  const { t } = useTranslation();
 
   const handlMoveToFirst = () => {
     if (!gallery.isFirstDay(year, month, day)) {
@@ -75,7 +78,9 @@ const Day = ({ gallery, year, month, day, lang, countryData }) => {
   return (
     <>
       <Helmet>
-        <title>{gallery.title(year, month, day)}</title>
+        <title>
+          {gallery.title(year, month, day)} — {t("nav-gallery")}
+        </title>
       </Helmet>
       <DayNav gallery={gallery} year={year} month={month} day={day} />
       <Swipeable onSwiped={handleSwipe}>

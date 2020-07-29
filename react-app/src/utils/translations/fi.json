@@ -56,10 +56,10 @@
     "stats-unknown": "N/A",
     "stats-other": "Muut",
 
-    "stats-topic-general": "Yleiset",
+    "stats-topic-general": "Yleiset tiedot",
     "stats-category-author": "Valokuvaaja",
     "stats-category-country": "Maa",
-    "stats-topic-time": "Aika",
+    "stats-topic-time": "Ajankohta",
     "stats-category-year": "Vuosi",
     "stats-category-year-month": "Vuosi ja kuukausi",
     "stats-category-month": "Kuukausi",

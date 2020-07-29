@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { Helmet } from "react-helmet";
 import { Trans, useTranslation } from "react-i18next";
 import styled from "styled-components";
 
@@ -160,8 +161,12 @@ const Stats = ({ gallery, lang, countryData }) => {
       foldedData,
       maxEntries,
       doMap,
-      t("stats-other"),
-      (data) => data.map((_) => _.value).reduce((a, b) => a + b, 0)
+      (data) => {
+        return {
+          key: t("stats-other"),
+          value: data.map((_) => _.value).reduce((a, b) => a + b, 0),
+        };
+      }
     );
   };
 
@@ -370,15 +375,18 @@ const Stats = ({ gallery, lang, countryData }) => {
       };
     };
     const byYearMonthData = mapYearMonthToChartData(byYearMonth);
-    const byYearMonthFlat = byYearMonth
-      .sort((a, b) => a - b)
-      .flatMap((year) => {
-        return year.value
-          .sort((a, b) => a - b)
-          .map((month) => {
-            return { key: `${year.key} / ${month.key}`, value: month.value };
-          });
-      });
+    const byYearMonthFlat = collection.trim(
+      byYearMonth
+        .sort((a, b) => a - b)
+        .flatMap((year) => {
+          return year.value
+            .sort((a, b) => a - b)
+            .map((month) => {
+              return { key: `${year.key} / ${month.key}`, value: month.value };
+            });
+        }),
+      (entry) => entry.value > 0
+    );
 
     const byMonthOfYear = foldToArray(
       data.count.byTime.byMonthOfYear,
@@ -390,9 +398,9 @@ const Stats = ({ gallery, lang, countryData }) => {
       12
     );
     const byDayOfWeek = foldToArray(
-      collection.transformObjectKeys(data.count.byTime.byDayOfWeek, (dow) => {
+      collection.transformObjectKeys(data.count.byTime.byDayOfWeek, (dow, value) => {
         const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
-        return [key, data.count.byTime.byDayOfWeek[dow]];
+        return [key, value];
       }),
       collection.numSortByFieldAsc("key")
     );
@@ -897,6 +905,11 @@ const Stats = ({ gallery, lang, countryData }) => {
 
   return (
     <>
+      <Helmet>
+        <title>
+          {gallery.title()} — {t("nav-gallery-stats")}
+        </title>
+      </Helmet>
       <StatsTitle gallery={gallery} />
       <StyledRoot>
         <div>Total: {data.count.total}</div>

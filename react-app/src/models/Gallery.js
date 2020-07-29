@@ -41,9 +41,9 @@ const Gallery = (galleryData) => {
         return gallery.title;
       }
       if (!photo) {
-        return `${gallery.title} — ${ymd} `;
+        return `${ymd} — ${gallery.title}`;
       }
-      return `${gallery.title} — ${ymd} #${photo.index() + 1}`;
+      return `#${photo.index() + 1} — ${ymd} — ${gallery.title}`;
     },
     description: () => gallery.description || "",
     hasIcon: () => gallery && "icon" in gallery && gallery.icon,
