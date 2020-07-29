@@ -78,6 +78,9 @@ const loadById = async (schema, id) => {
 };
 const updateById = async (schema, id, data) => {
   const { query, values } = schema.buildUpdateByIdQuery(data);
+  if (!query || !values) {
+    return;
+  }
   await db.serialize(() => {
     var stmt = db.prepare(query);
     stmt.run([...values, id]);

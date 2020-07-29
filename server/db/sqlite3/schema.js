@@ -416,12 +416,13 @@ const buildSelectByIdQuery = (schema) => {
   );
 };
 const buildUpdateByIdQuery = (schema, data) => {
+  console.log("here!", schema, data, "foo");
   if (!data) {
-    return undefined;
+    return { query: undefined, values: undefined };
   }
   schema.primaryKey.forEach((key) => delete data[key]);
   if (Object.keys(data).length === 0) {
-    return undefined;
+    return { query: undefined, values: undefined };
   }
   const columnData = schema.mapToRow(data);
   const columns = schema.columns.filter((column) => column in columnData);
