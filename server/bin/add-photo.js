@@ -161,33 +161,40 @@ const processPhoto = (photo) => {
   }
 };
 
+const processJson = async (filePath) => {
+  try {
+    const json = await fs.promises.readFile(filePath, {
+      encoding: "utf-8",
+    });
+    const data = JSON.parse(json);
+    if (Array.isArray(data)) {
+      data.forEach((photo) => {
+        processPhoto(photo);
+      });
+    } else if (!("id" in data)) {
+      Object.values(data).forEach((photo) => {
+        processPhoto(photo);
+      });
+    } else {
+      processPhoto(data);
+    }
+  } catch (error) {
+    logger.error("Failed:", error);
+  }
+};
+const processJpeg = (filePath) => {
+  const fileName = path.basename(filePath);
+  processPhoto({ id: fileName });
+};
+
 argv._.forEach(async (filePath) => {
   logger.debug(`Processing "${filePath}"`);
   switch (path.extname(filePath)) {
     case ".json":
-      try {
-        const json = await fs.promises.readFile(filePath, {
-          encoding: "utf-8",
-        });
-        const data = JSON.parse(json);
-        if (Array.isArray(data)) {
-          data.forEach((photo) => {
-            processPhoto(photo);
-          });
-        } else if (!("id" in data)) {
-          Object.values(data).forEach((photo) => {
-            processPhoto(photo);
-          });
-        } else {
-          processPhoto(data);
-        }
-      } catch (error) {
-        logger.error("Failed:", error);
-      }
+      await processJson(filePath);
       break;
     case ".jpg":
-      const fileName = path.basename(filePath);
-      processPhoto({ id: fileName });
+      processJpeg(filePath);
       break;
   }
 });

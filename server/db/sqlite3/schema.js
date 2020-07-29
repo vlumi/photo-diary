@@ -416,7 +416,6 @@ const buildSelectByIdQuery = (schema) => {
   );
 };
 const buildUpdateByIdQuery = (schema, data) => {
-  console.log("here!", schema, data, "foo");
   if (!data) {
     return { query: undefined, values: undefined };
   }
