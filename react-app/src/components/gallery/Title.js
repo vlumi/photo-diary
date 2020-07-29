@@ -18,7 +18,9 @@ const Title = ({ gallery }) => {
           <Link to={gallery.statsPath()}>{t("nav-gallery-stats")}</Link>
         </span>
       </span>
-      <h1>{gallery.title()}</h1>
+      <h1>
+        {gallery.title()} — {t("nav-gallery")}
+      </h1>
     </>
   );
 };

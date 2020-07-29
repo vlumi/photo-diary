@@ -22,7 +22,7 @@ const StatsTitle = ({ gallery }) => {
           <Link to={gallery.lastPath()}>{t("nav-gallery")}</Link>
         </span>
       </span>
-      <h1>{gallery.title()}</h1>
+      <h1>{gallery.title()} — {t("nav-gallery-stats")}</h1>
     </>
   );
 };

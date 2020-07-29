@@ -8,6 +8,7 @@ import StatsRaw from "./StatsRaw";
 
 const Root = styled.div`
   width: 330px;
+  margin: 0 1px 2px;
 `;
 const Title = styled.h3``;
 const StatsCategory = ({ topic, category, lang }) => {
