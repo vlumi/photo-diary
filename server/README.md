@@ -103,11 +103,6 @@ The required access level is listed in brackets at the end of each resource meth
     1. `user`
     - Returns `user`
   - `DELETE ../:userId` – Delete user **[admin]**
-- `/stats` – (TBD: under consideration for removal, in favor of app-side processing)
-  - `GET` – Global statistics **[view]**
-    - Returns `stats`
-  - `GET ../:galleryId` – Gallery statistics **[view]**
-    - Returns `stats`
 - `/galleries`
   - `GET` – List all galleries the user has access to **[view]**
     - Returns `galleries`
@@ -143,7 +138,6 @@ TBD
 
 - `session`
 - `user`
-- `stats` – (TBD: under consideration for removal, in favor of app-side processing)
 - `galleries`
 - `gallery`
 - `photos`

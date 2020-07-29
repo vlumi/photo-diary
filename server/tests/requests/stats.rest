@@ -1,3 +1,0 @@
-GET http://localhost:4200/api/stats
-Content-type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwiaXNBZG1pbiI6dHJ1ZSwiaWF0IjoxNTk1NTE1OTE4fQ.js-or12lwtGVOWBlcBKaLkRFarruvbNXyI--N-JImAw

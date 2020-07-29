@@ -8,8 +8,8 @@ import galleryService from "../../services/galleries";
 
 import Gallery from "../../models/Gallery";
 
-import config from "../../utils/config";
-import theme from "../../utils/theme";
+import config from "../../lib/config";
+import theme from "../../lib/theme";
 
 const Galleries = ({ user }) => {
   const [galleries, setGalleries] = useState([]);

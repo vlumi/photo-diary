@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet";
 
 import Link from "./Link";
 
-import useKeyPress from "../../utils/keypress";
+import useKeyPress from "../../lib/keypress";
 
 const Empty = ({ gallery }) => {
   const [redirect, setRedirect] = React.useState(undefined);

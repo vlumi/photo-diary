@@ -9,7 +9,7 @@ import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
 
-import config from "../utils/config";
+import config from "../lib/config";
 
 let DefaultIcon = Leaflet.icon({
   ...Leaflet.Icon.Default.prototype.options,

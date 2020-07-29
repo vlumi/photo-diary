@@ -1,10 +1,10 @@
-const CONST = require("../../utils/constants");
+const CONST = require("../../lib/constants");
 const {
   authorizeView,
   authorizeAdmin,
   authorizeGalleryView,
   authorizeGalleryAdmin,
-} = require("../../utils/authorizer")();
+} = require("../../lib/authorizer")();
 
 const db = require("../../db");
 jest.mock("../../db");

@@ -3,8 +3,8 @@ import PropTypes from "prop-types";
 
 import Link from "./Link";
 
-import config from "../../utils/config";
-import collection from "../../utils/collection";
+import config from "../../lib/config";
+import collection from "../../lib/collection";
 
 const ListBody = ({ galleries }) => {
   const renderDescription = (gallery) => {

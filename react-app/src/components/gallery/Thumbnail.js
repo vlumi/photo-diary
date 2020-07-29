@@ -5,7 +5,7 @@ import FlagIcon from "../FlagIcon";
 
 import Link from "./Link";
 
-import config from "../../utils/config";
+import config from "../../lib/config";
 
 const Thumbnail = ({ gallery, photo, lang, countryData }) => {
   const url = `url("${config.PHOTO_ROOT_URL}thumbnail/${photo.id()}")`;

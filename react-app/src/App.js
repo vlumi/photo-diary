@@ -16,8 +16,8 @@ import TopMenu from "./components/TopMenu";
 import GalleryList from "./components/gallery/List";
 import Top from "./components/gallery/Top";
 
-import config from "./utils/config";
-import token from "./utils/token";
+import config from "./lib/config";
+import token from "./lib/token";
 
 const registerCountryData = (lang) => {
   const countryData = require("i18n-iso-countries");
@@ -69,6 +69,14 @@ const App = () => {
       <TopMenu user={user} setUser={setUser} lang={lang} />
       <Router>
         <Switch>
+          <Route path="/g/:galleryId/stats">
+            <Top
+              user={user}
+              lang={lang}
+              countryData={countryData}
+              stats={true}
+            />
+          </Route>
           <Route path="/g/:galleryId/:year/:month/:day/:photoId">
             <Top user={user} lang={lang} countryData={countryData} />
           </Route>

@@ -1,16 +1,4 @@
-import { GeoCoord } from "geo-coord";
-
-import calendar from "../utils/calendar";
-
-const joinMakeAndModel = (make, model) => {
-  if (!make && !model) return "";
-  if (!make) return model;
-  if (!model) return make;
-  if (model.startsWith(make)) {
-    return model;
-  }
-  return [make, model].join(" ");
-};
+import format from "../lib/format";
 
 const Photo = (photoData) => {
   const importPhotoData = (photoData) => {
@@ -29,54 +17,54 @@ const Photo = (photoData) => {
     year: () => photo.taken.instant.year,
     month: () => photo.taken.instant.month,
     day: () => photo.taken.instant.day,
+    hour: () => photo.taken.instant.hour,
+    minute: () => photo.taken.instant.minute,
+    second: () => photo.taken.instant.second,
     thumbnailDimensions: () => {
       return { ...photo.dimensions.thumbnail };
     },
     ratio: () =>
       photo.dimensions.display.width / photo.dimensions.display.height,
     formatDate: () => {
-      return calendar.formatDate({
+      return format.date({
         year: photo.taken.instant.year,
         month: photo.taken.instant.month,
         day: photo.taken.instant.day,
       });
     },
     formatTimestamp: () => {
-      const ymd = calendar.formatDate({
+      const ymd = format.date({
         year: photo.taken.instant.year,
         month: photo.taken.instant.month,
         day: photo.taken.instant.day,
       });
-      const hms = calendar.formatTime({
+      const hms = format.time({
         hour: photo.taken.instant.hour,
         minute: photo.taken.instant.minute,
         second: photo.taken.instant.second,
       });
       return `${ymd} ${hms}`;
     },
+    focalLength: () => photo.exposure.focalLength,
+    aperture: () => photo.exposure.aperture,
+    exposureTime: () => photo.exposure.exposureTime,
+    iso: () => photo.exposure.iso,
     formatFocalLength: () =>
-      photo.exposure.focalLength ? `ƒ=${photo.exposure.focalLength}mm` : "",
+      photo.exposure.focalLength
+        ? format.focalLength(photo.exposure.focalLength)
+        : "",
     formatAperture: () =>
-      photo.exposure.aperture ? `ƒ/${photo.exposure.aperture}` : "",
-    formatExposureTime: () => {
-      const time = photo.exposure.exposureTime;
-      if (!time) {
-        return "";
-      }
-      if (time >= 1) {
-        return `${time}s`;
-      }
-      const fraction = Math.round(1 / time);
-      return `1/${fraction}s`;
-    },
+      photo.exposure.aperture ? format.aperture(photo.exposure.aperture) : "",
+    formatExposureTime: () =>
+      photo.exposure.exposureTime
+        ? format.exposureTime(photo.exposure.exposureTime)
+        : "",
     formatIso: () => (photo.exposure.iso ? `ISO${photo.exposure.iso}` : ""),
-    formatMegapixels: () => {
-      const mpix = Math.round(
-        (photo.dimensions.original.width * photo.dimensions.original.height) /
-          10 ** 6
-      );
-      return mpix ? `${mpix}MP` : "";
-    },
+    formatMegapixels: () =>
+      format.megapixels(
+        photo.dimensions.original.width,
+        photo.dimensions.original.height
+      ),
     formatExposure: () => {
       return [
         self.formatFocalLength(),
@@ -86,8 +74,19 @@ const Photo = (photoData) => {
         self.formatMegapixels(),
       ].join(" ");
     },
-    formatCamera: () => joinMakeAndModel(photo.camera.make, photo.camera.model),
-    formatLens: () => joinMakeAndModel(photo.lens.make, photo.lens.model),
+    cameraMake: () => photo.camera.make,
+    hasCamera: () =>
+      photo &&
+      "camera" in photo &&
+      (("make" in photo.camera && photo.camera.make) ||
+        ("model" in photo.camera && photo.camera.model)),
+    formatCamera: () => format.gear(photo.camera.make, photo.camera.model),
+    hasLens: () =>
+      photo &&
+      "lens" in photo &&
+      (("make" in photo.lens && photo.lens.make) ||
+        ("model" in photo.lens && photo.lens.model)),
+    formatLens: () => format.gear(photo.lens.make, photo.lens.model),
     formatGear: () => {
       const camera = self.formatCamera();
       const lens = self.formatLens();
@@ -100,9 +99,10 @@ const Photo = (photoData) => {
       "country" in photo.taken.location &&
       photo.taken.location.country,
     countryCode: () => photo.taken.location.country,
-    // TODO: this should not be here...
     countryName: (lang, countryData) =>
-      countryData.getName(self.countryCode(), lang),
+      self.hasCountry()
+        ? format.countryName(self.countryCode(), lang, countryData)
+        : "",
     hasPlace: () =>
       photo &&
       "taken" in photo &&
@@ -136,10 +136,10 @@ const Photo = (photoData) => {
       if (!self.hasCoordinates()) {
         return "";
       }
-      return new GeoCoord(
+      return format.coordinates(
         photo.taken.location.coordinates.latitude,
         photo.taken.location.coordinates.longitude
-      ).toString();
+      );
     },
     path: (gallery) => {
       const parts = [gallery.path(...self.ymd())];

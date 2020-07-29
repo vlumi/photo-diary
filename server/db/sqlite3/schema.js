@@ -1,4 +1,4 @@
-const CONST = require("../../utils/constants");
+const CONST = require("../../lib/constants");
 
 module.exports = () => {
   return {

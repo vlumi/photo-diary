@@ -1,9 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import galleryService from "../../services/galleries";
 
+import Stats from "./Stats";
 import Empty from "./Empty";
 import Full from "./Full";
 import Year from "./Year";
@@ -13,12 +15,14 @@ import Photo from "./Photo";
 
 import GalleryModel from "../../models/Gallery";
 
-import config from "../../utils/config";
-import theme from "../../utils/theme";
+import config from "../../lib/config";
+import theme from "../../lib/theme";
 
-const Top = ({ user, lang, countryData }) => {
+const Top = ({ user, lang, countryData, stats = false }) => {
   const [gallery, setGallery] = React.useState(undefined);
   const [error, setError] = React.useState("");
+
+  const { t } = useTranslation();
 
   if (gallery && gallery.hasTheme()) {
     theme.setTheme(gallery.theme());
@@ -55,12 +59,17 @@ const Top = ({ user, lang, countryData }) => {
     if (!gallery) {
       return (
         <>
-          <div>Loading...</div>
+          <div>{t("loading")}</div>
         </>
       );
     }
     if (!gallery.includesPhotos()) {
       return <Empty gallery={gallery} />;
+    }
+    if (stats) {
+      return (
+        <Stats gallery={gallery} lang={lang} countryData={countryData} />
+      );
     }
     if (!year) {
       return <Full gallery={gallery} />;
@@ -118,5 +127,6 @@ Top.propTypes = {
   user: PropTypes.object,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
+  stats: PropTypes.bool,
 };
 export default Top;

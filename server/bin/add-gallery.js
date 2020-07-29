@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const logger = require("../utils/logger");
+const logger = require("../lib/logger");
 const db = require("../db");
 
 const { argv } = require("yargs")

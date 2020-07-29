@@ -3,15 +3,18 @@ import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
+import { useTranslation } from "react-i18next";
 
 import MonthNav from "./MonthNav";
 import MonthContent from "./MonthContent";
 import MonthFooter from "./MonthFooter";
 
-import useKeyPress from "../../utils/keypress";
+import useKeyPress from "../../lib/keypress";
 
 const Month = ({ gallery, year, month, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
+
+  const { t } = useTranslation();
 
   const handlMoveToFirst = () => {
     if (!gallery.isFirstMonth(year, month)) {
@@ -75,7 +78,9 @@ const Month = ({ gallery, year, month, lang, countryData }) => {
   return (
     <>
       <Helmet>
-        <title>{gallery.title(year, month)}</title>
+        <title>
+          {gallery.title(year, month)} — {t("nav-gallery")}
+        </title>
       </Helmet>
       <MonthNav gallery={gallery} year={year} month={month} />
       <Swipeable onSwiped={handleSwipe}>

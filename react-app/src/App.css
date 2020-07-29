@@ -1,10 +1,15 @@
 body {
-  color: var(--primary-color);
-  background: var(--primary-background);
   text-align: center;
   font-family: sans-serif;
   padding: 0;
   margin: 0;
+  color: var(--primary-color);
+  background: var(--primary-background);
+}
+
+#root {
+  color: var(--primary-color);
+  background: var(--primary-background);
 }
 
 form {
@@ -109,6 +114,18 @@ a {
   background: var(--header-background);
   padding: 0;
   width: 23px;
+}
+
+.gallery-menu {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px;
+}
+.gallery-menu .top {
+  text-align: left;
+}
+.gallery-menu .stats {
+  text-align: right;
 }
 
 h1 {

@@ -3,23 +3,18 @@ import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
+import { useTranslation } from "react-i18next";
 
 import PhotoNav from "./PhotoNav";
 import PhotoContent from "./PhotoContent";
 import PhotoFooter from "./PhotoFooter";
 
-import useKeyPress from "../../utils/keypress";
+import useKeyPress from "../../lib/keypress";
 
-const Photo = ({
-  gallery,
-  year,
-  month,
-  day,
-  photo,
-  lang,
-  countryData,
-}) => {
+const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
+
+  const { t } = useTranslation();
 
   const handlMoveToFirst = () => {
     if (!gallery.isFirstPhoto(photo)) {
@@ -83,7 +78,9 @@ const Photo = ({
   return (
     <>
       <Helmet>
-        <title>{gallery.title(year, month, day, photo)}</title>
+        <title>
+          {gallery.title(year, month, day, photo)} — {t("nav-gallery")}
+        </title>
       </Helmet>
       <PhotoNav
         gallery={gallery}

@@ -3,16 +3,19 @@ import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
+import { useTranslation } from "react-i18next";
 
 import Title from "./Title";
 import YearNav from "./YearNav";
 import YearContent from "./YearContent";
 import YearFooter from "./YearFooter";
 
-import useKeyPress from "../../utils/keypress";
+import useKeyPress from "../../lib/keypress";
 
 const Year = ({ gallery, year }) => {
   const [redirect, setRedirect] = React.useState(undefined);
+
+  const { t } = useTranslation();
 
   const handlMoveToFirst = () => {
     if (!gallery.isFirstYear(year)) {
@@ -90,7 +93,9 @@ const Year = ({ gallery, year }) => {
     return (
       <>
         <Helmet>
-          <title>{gallery.title(year)}</title>
+          <title>
+            {gallery.title(year)} — {t("nav-gallery")}
+          </title>
         </Helmet>
         <YearNav gallery={gallery} year={year} />
         <Swipeable onSwiped={handleSwipe}>

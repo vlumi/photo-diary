@@ -5,7 +5,8 @@ import { useTranslation } from "react-i18next";
 import Title from "./Title";
 import Link from "./Link";
 
-import calendar from "../../utils/calendar";
+import calendar from "../../lib/calendar";
+import format from "../../lib/format";
 
 const calculateHeat = (photos) => {
   if (photos < 1) return "none";
@@ -44,7 +45,7 @@ const YearContent = ({ gallery, year }) => {
   const renderDayCell = (gallery, year, month, day, index) => {
     const photoCount = gallery.countPhotos(year, month, day);
     const heat = calculateHeat(photoCount);
-    const title = `${calendar.formatDate({
+    const title = `${format.date({
       year,
       month,
       day,

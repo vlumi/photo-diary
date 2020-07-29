@@ -9,7 +9,7 @@ import Title from "./Title";
 import Thumbnails from "./Thumbnails";
 import Link from "./Link";
 
-import calendar from "../../utils/calendar";
+import calendar from "../../lib/calendar";
 
 const MonthContent = ({ gallery, year, month, lang, countryData }) => {
   const { t } = useTranslation();

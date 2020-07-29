@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import token from "../utils/token";
+import token from "../lib/token";
 
 const baseUrl = "/api/tokens";
 

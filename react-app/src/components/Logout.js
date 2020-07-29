@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import token from "../utils/token";
+import token from "../lib/token";
 
 const Logout = ({ setUser }) => {
   const handleLogout = (event) => {
