@@ -74,9 +74,16 @@
     "stats-topic-exposure": "Exposure",
     "stats-category-focal-length": "Focal Length",
     "stats-category-aperture": "Aperture",
-    "stats-category-exposure-time": "Exposure Time",
+    "stats-category-exposure-time": "Shutter Speed",
     "stats-category-iso": "Sensitivity",
     "stats-category-ev": "EV",
-    "stats-category-lv": "EV @ ISO100"
+    "stats-category-lv": "EV @ ISO100",
+
+    "stats-kpi-title-photos": "Photos",
+    "stats-kpi-photos": "{{count}}",
+    "stats-kpi-title-days": "Days",
+    "stats-kpi-days": "{{count}}",
+    "stats-kpi-title-average": "Average",
+    "stats-kpi-average": "{{count}}/day"
   }
 }

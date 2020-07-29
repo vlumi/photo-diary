@@ -77,6 +77,13 @@
     "stats-category-exposure-time": "Valotusaika",
     "stats-category-iso": "Herkkyys",
     "stats-category-ev": "EV",
-    "stats-category-lv": "EV @ ISO100"
+    "stats-category-lv": "EV @ ISO100",
+
+    "stats-kpi-title-photos": "Valokuvia",
+    "stats-kpi-photos": "{{count}}",
+    "stats-kpi-title-days": "Päiviä",
+    "stats-kpi-days": "{{count}}",
+    "stats-kpi-title-average": "Keskiarvo",
+    "stats-kpi-average": "{{count}}/päivä"
   }
 }

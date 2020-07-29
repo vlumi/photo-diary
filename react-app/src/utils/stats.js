@@ -153,8 +153,7 @@ const collectTopics = (data, lang, t, countryData) => {
       name: "summary",
       title: t("stats-category-summary"),
       kpi: collection.foldToArray({
-        // TODO: more kpis
-        total: count.total,
+        photos: count.total,
         days: count.byTime.days,
         average:
           Math.round((count.total * 100) / (count.byTime.days || 1)) / 100,
