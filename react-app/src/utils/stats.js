@@ -11,8 +11,6 @@ const generate = async (gallery, unknownLabel) => {
   return collectStatistics(gallery.photos(), unknownLabel);
 };
 
-// TODO: year/month distribution, average per day, total days, ...
-
 const collectTopics = (data, lang, t, countryData) => {
   const numberFormatter = new Intl.NumberFormat(lang).format;
 
@@ -150,6 +148,19 @@ const collectTopics = (data, lang, t, countryData) => {
     return [flat, data];
   };
 
+  const collectSummary = (count) => {
+    return {
+      name: "summary",
+      title: t("stats-category-summary"),
+      kpi: collection.foldToArray({
+        // TODO: more kpis
+        total: count.total,
+        days: count.byTime.days,
+        average:
+          Math.round((count.total * 100) / (count.byTime.days || 1)) / 100,
+      }),
+    };
+  };
   const collectAuthor = (byAuthor, total) => {
     const [flat, data] = transformData({
       rawData: byAuthor,
@@ -161,6 +172,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: true,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
@@ -182,6 +194,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: true,
       rawColumns: [
         { align: "right" },
         { align: "left" },
@@ -209,6 +222,7 @@ const collectTopics = (data, lang, t, countryData) => {
       name: "general",
       title: t("stats-topic-general"),
       categories: [
+        collectSummary(count),
         collectAuthor(count.byAuthor, total),
         collectCountry(count.byCountry, total),
       ],
@@ -227,6 +241,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
@@ -294,6 +309,7 @@ const collectTopics = (data, lang, t, countryData) => {
       name: "year-month",
       title: t("stats-category-year-month"),
       charts: [{ type: "line", data, options: chartOptions.line }],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
@@ -316,6 +332,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         t(`month-long-${entry.key}`),
@@ -341,6 +358,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         t(`weekday-long-${format.dayOfWeek(entry.key)}`),
@@ -363,6 +381,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         `${format.padNumber(entry.key, 2)}:00–`,
@@ -398,6 +417,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: true,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
@@ -417,6 +437,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: true,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
@@ -436,6 +457,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: true,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
@@ -456,6 +478,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: true,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
@@ -491,6 +514,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         format.focalLength(entry.key),
@@ -511,6 +535,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         format.aperture(entry.key),
@@ -531,6 +556,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         format.exposureTime(entry.key),
@@ -551,6 +577,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         format.iso(entry.key),
@@ -571,6 +598,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
@@ -591,6 +619,7 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
+      rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,

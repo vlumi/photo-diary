@@ -18,6 +18,11 @@ const Row = styled.tr`
     background-color: var(--header-background);
   }
 `;
+const Header = styled.th`
+  font-weight: bold;
+  text-align: right;
+  width: 1em;
+`;
 const Column = styled.td`
   padding: 0 2px;
   vertical-align: top;
@@ -33,6 +38,7 @@ const StatsRaw = ({ topic, category }) => {
       <Block>
         {category.raw.map((values, i) => (
           <Row key={`${topic.name}:${category.name}:${i}`}>
+            {category.rawHeader ? <Header>{i + 1}</Header> : <></>}
             {values.map((value, j) => (
               <Column
                 key={`${topic.name}:${category.name}:${i}${j}`}

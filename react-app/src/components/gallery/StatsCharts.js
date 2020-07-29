@@ -19,6 +19,12 @@ const StyledChartContainer = styled.div`
   flex-shrink: 1;
   margin: 0 2px;
 `;
+const StyledChartContainer2 = styled.div`
+  width: 300px;
+  flex-grow: 1;
+  flex-shrink: 1;
+  margin: 0 2px;
+`;
 
 const StatsCharts = ({ category }) => {
   if (!("charts" in category) || !category.charts) {
@@ -49,9 +55,9 @@ const StatsCharts = ({ category }) => {
             );
           case "line":
             return (
-              <StyledChartContainer key={key}>
+              <StyledChartContainer2 key={key}>
                 <Line data={chart.data} options={chart.options} />
-              </StyledChartContainer>
+              </StyledChartContainer2>
             );
           default:
             return <></>;
