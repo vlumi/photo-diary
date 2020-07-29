@@ -505,6 +505,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectFocalLength = (byFocalLength, total) => {
     const [flat, data] = transformData({
       rawData: byFocalLength,
+      formatter: format.focalLength,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -526,6 +527,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectAperture = (byAperture, total) => {
     const [flat, data] = transformData({
       rawData: byAperture,
+      formatter: format.aperture,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -547,6 +549,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectExposureTime = (byExposureTime, total) => {
     const [flat, data] = transformData({
       rawData: byExposureTime,
+      formatter: format.exposureTime,
       comparator: collection.numSortByFieldDesc("key"),
     });
     return {
@@ -568,6 +571,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectIso = (byIso, total) => {
     const [flat, data] = transformData({
       rawData: byIso,
+      formatter: format.iso,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
