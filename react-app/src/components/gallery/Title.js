@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
+import { Link as ReactLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import GLink from "./Link";
+import Link from "./Link";
 
 const Title = ({ gallery }) => {
   const { t } = useTranslation();
@@ -12,10 +12,10 @@ const Title = ({ gallery }) => {
     <>
       <span className="gallery-menu">
         <span className="top">
-          <GLink>{t("nav-gallery-top")}</GLink>
+          <Link>{t("nav-gallery-top")}</Link>
         </span>
         <span className="stats">
-          <Link to={gallery.statsPath()}>{t("nav-gallery-stats")}</Link>
+          <ReactLink to={gallery.statsPath()}>{t("nav-gallery-stats")}</ReactLink>
         </span>
       </span>
       <h1>
