@@ -19,13 +19,18 @@ const Categories = styled.section`
   flex-wrap: wrap;
   justify-content: flex-start;
 `;
-const StatsTopic = ({ topic }) => {
+const StatsTopic = ({ topic, lang }) => {
   return (
     <Root key={topic.name} name={topic.name}>
       <Title>{topic.title}</Title>
       <Categories>
         {topic.categories.map((category) => (
-          <StatsCategory key={`${category.name}:${topic.name}`} topic={topic} category={category} />
+          <StatsCategory
+            key={`${category.name}:${topic.name}`}
+            topic={topic}
+            category={category}
+            lang={lang}
+          />
         ))}
       </Categories>
     </Root>
@@ -33,5 +38,6 @@ const StatsTopic = ({ topic }) => {
 };
 StatsTopic.propTypes = {
   topic: PropTypes.object,
+  lang: PropTypes.string.isRequired,
 };
 export default StatsTopic;

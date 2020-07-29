@@ -177,7 +177,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         entry.key,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -211,7 +211,7 @@ const collectTopics = (data, lang, t, countryData) => {
         </>,
         <>{format.countryName(entry.key, lang, countryData)}</>,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -246,7 +246,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         entry.key,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -314,7 +314,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         entry.key,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -337,7 +337,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         t(`month-long-${entry.key}`),
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -363,7 +363,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         t(`weekday-long-${format.dayOfWeek(entry.key)}`),
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -386,7 +386,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         `${format.padNumber(entry.key, 2)}:00–`,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -422,7 +422,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         entry.key,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -442,7 +442,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         entry.key,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -462,7 +462,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         entry.key,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -483,7 +483,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         entry.key,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -520,7 +520,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         format.focalLength(entry.key),
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -542,7 +542,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         format.aperture(entry.key),
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -564,7 +564,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         format.exposureTime(entry.key),
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -586,7 +586,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         format.iso(entry.key),
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -607,7 +607,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         entry.key,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -628,7 +628,7 @@ const collectTopics = (data, lang, t, countryData) => {
       raw: flat.map((entry) => [
         entry.key,
         numberFormatter(entry.value),
-        `${format.share(entry.value, total)}%`,
+        `${numberFormatter(format.share(entry.value, total))}%`,
       ]),
     };
   };

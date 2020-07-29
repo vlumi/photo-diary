@@ -37,7 +37,7 @@ const Stats = ({ gallery, lang, countryData }) => {
       <StatsTitle gallery={gallery} />
       <Root>
         {stats.collectTopics(data, lang, t, countryData).map((topic) => (
-          <StatsTopic key={topic.name} topic={topic} />
+          <StatsTopic key={topic.name} topic={topic} lang={lang} />
         ))}
       </Root>
     </>
