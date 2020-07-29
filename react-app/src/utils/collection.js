@@ -115,6 +115,17 @@ const objectFromArray = (data, value) =>
     return a;
   }, {});
 
+const foldToArray = (data, comparator) => {
+  return Object.keys(data)
+    .map((key) => {
+      return {
+        key: key,
+        value: data[key],
+      };
+    })
+    .sort(comparator);
+};
+
 /**
  * Truncate the given array `data` to at most `maxEntries` elements. The rest of the elements
  * will be summarized into a new element at the end using `summarizer`. The truncated array
@@ -127,7 +138,6 @@ const objectFromArray = (data, value) =>
  */
 const truncateAndProcess = (data, maxEntries, processor, summarizer) => {
   if (maxEntries > 0 && data.length > maxEntries) {
-    const other = summarizer(data.slice(maxEntries));
     return processor([
       ...data.slice(0, maxEntries),
       summarizer(data.slice(maxEntries)),
@@ -169,6 +179,7 @@ export default {
   transformObjectKeys,
   transformObjectValue,
   objectFromArray,
+  foldToArray,
   truncateAndProcess,
   trim,
 

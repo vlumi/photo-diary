@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -8,6 +9,11 @@ const StatsTitle = ({ gallery }) => {
 
   return (
     <>
+      <Helmet>
+        <title>
+          {gallery.title()} — {t("nav-gallery-stats")}
+        </title>
+      </Helmet>
       <span className="gallery-menu">
         <span className="top">
           <Link to="/g">{t("nav-gallery-top")}</Link>

@@ -1,60 +1,625 @@
+import React from "react";
+
+import FlagIcon from "../components/FlagIcon";
+
 import format from "./format";
 import collection from "./collection";
+import color from "./color";
+import config from "./config";
 
 const generate = async (gallery, unknownLabel) => {
   return collectStatistics(gallery.photos(), unknownLabel);
 };
 
-const toHexRgb = ({ r, g, b }) =>
-  "#" +
-  format.padNumber(r.toString(16), 2) +
-  format.padNumber(g.toString(16), 2) +
-  format.padNumber(b.toString(16), 2);
+// TODO: year/month distribution, average per day, total days, ...
 
-const fromHexRgb = (hex) => {
-  if (!hex.startsWith("#")) {
-    return [0, 0, 0];
-  }
-  const rawValue = parseInt(hex.substr(1), 16);
-  switch (hex.length) {
-    case 4:
-      return [
-        (((rawValue >> 8) & 0xf) << 4) + ((rawValue >> 8) & 0xf),
-        (((rawValue >> 4) & 0xf) << 4) + ((rawValue >> 4) & 0xf),
-        ((rawValue & 0xf) << 4) + (rawValue & 0xf),
-      ];
-    case 7:
-      return [(rawValue >> 16) & 0xff, (rawValue >> 8) & 0xff, rawValue & 0xff];
-    default:
-      return [0, 0, 0];
-  }
-};
+const collectTopics = (data, lang, t, countryData) => {
+  const numberFormatter = new Intl.NumberFormat(lang).format;
 
-const colorGradient = (start, end, steps) => {
-  if (steps < 1) return [];
-  if (steps < 2) return [start];
-  if (steps < 3) return [start, end];
+  const decodeLabelKey = (key, value) => {
+    const [name, share] = key;
+    return ` ${name}: ${numberFormatter(value)} (${share}%)`;
+  };
+  const chartOptions = {
+    common: {
+      legend: {
+        display: false,
+      },
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      tooltips: {
+        mode: "label",
+        callbacks: {
+          title: () => "",
+          label: (tooltipItem, data) =>
+            decodeLabelKey(
+              data.labels[tooltipItem.index],
+              data.datasets[0].data[tooltipItem.index]
+            ),
+        },
+      },
+    },
+  };
+  Object.assign(chartOptions, {
+    doughnut: {
+      ...chartOptions.common,
+      cutoutPercentage: 0,
+    },
+    polar: {
+      ...chartOptions.common,
+      scale: {
+        ticks: {
+          display: false,
+        },
+      },
+    },
+    bar: {
+      ...chartOptions.common,
+      scales: {
+        xAxes: [
+          {
+            offset: true,
+            display: false,
+            ticks: {
+              beginAtZero: true,
+            },
+          },
+        ],
+        yAxes: [
+          {
+            offset: true,
+            display: false,
+            ticks: {
+              beginAtZero: true,
+            },
+          },
+        ],
+      },
+    },
+    line: {
+      ...chartOptions.common,
+      tooltips: {},
+      scales: {
+        yAxes: [
+          {
+            stacked: true,
+          },
+        ],
+      },
+    },
+  });
 
-  const [r1, g1, b1] = fromHexRgb(start);
-  const [r2, g2, b2] = fromHexRgb(end);
-
-  const linearStep = (start, end, step, lastStep) =>
-    end > start
-      ? Math.round(start + ((end - start) * step) / lastStep)
-      : Math.round(start - ((start - end) * step) / lastStep);
-
-  return [...Array(steps).keys()]
-    .map((step) => {
+  const mapToChartData = (
+    foldedData,
+    formatter = format.identity,
+    maxEntries = 0
+  ) => {
+    const encodeLabelKey = (entry) =>
+      collection.transformObjectValue(entry, "key", (entry) => [
+        formatter(entry.key),
+        format.share(entry.value, data.count.total),
+      ]);
+    const doMap = (data) => {
+      const valueRanks = Object.fromEntries(
+        data
+          .map((_) => Number(_.value))
+          .sort((a, b) => b - a)
+          .map((value, i) => [value, i])
+      );
+      // TODO: from configured theme: --header-background -> --header-color
+      const colorGradients = color.colorGradient("#004", "#ddf", data.length);
+      const colors = data
+        .map((_) => Number(_.value))
+        .map((value) => colorGradients[valueRanks[value]]);
       return {
-        r: linearStep(r1, r2, step, steps - 1),
-        g: linearStep(g1, g2, step, steps - 1),
-        b: linearStep(b1, b2, step, steps - 1),
+        labels: data.map(encodeLabelKey).map((_) => _.key),
+        datasets: [
+          {
+            data: data.map((_) => _.value),
+            backgroundColor: colors,
+            borderWidth: 0.5,
+            barThickness: "flex",
+            minBarLength: 3,
+            barPercentage: 1,
+            categoryPercentage: 1,
+          },
+        ],
       };
-    })
-    .map(toHexRgb);
+    };
+    return collection.truncateAndProcess(
+      foldedData,
+      maxEntries,
+      doMap,
+      (data) => {
+        return {
+          key: t("stats-other"),
+          value: data.map((_) => _.value).reduce((a, b) => a + b, 0),
+        };
+      }
+    );
+  };
+  const transformData = ({
+    rawData,
+    comparator = collection.numSortByFieldDesc("value"),
+    formatter = format.identity,
+    limit = 0,
+  }) => {
+    const flat = collection.foldToArray(rawData, comparator);
+    const data = mapToChartData(flat, formatter, limit);
+    return [flat, data];
+  };
+
+  const collectAuthor = (byAuthor, total) => {
+    const [flat, data] = transformData({
+      rawData: byAuthor,
+    });
+    return {
+      name: "author",
+      title: t("stats-category-author"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        entry.key,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectCountry = (byCountry, total) => {
+    const [flat, data] = transformData({
+      rawData: byCountry,
+      formatter: (countryCode) =>
+        format.countryName(countryCode, lang, countryData),
+    });
+    return {
+      name: "country",
+      title: t("stats-category-country"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [
+        { align: "right" },
+        { align: "left" },
+        { align: "right" },
+        { align: "right" },
+      ],
+      raw: flat.map((entry) => [
+        <>
+          {countryData.isValid(entry.key) ? (
+            <FlagIcon code={entry.key} />
+          ) : (
+            <></>
+          )}
+        </>,
+        <>{format.countryName(entry.key, lang, countryData)}</>,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectGeneral = () => {
+    const count = data.count;
+    const total = count.total;
+    return {
+      name: "general",
+      title: t("stats-topic-general"),
+      categories: [
+        collectAuthor(count.byAuthor, total),
+        collectCountry(count.byCountry, total),
+      ],
+    };
+  };
+
+  const collectYear = (byYear, total) => {
+    const [flat, data] = transformData({
+      rawData: byYear,
+      comparator: collection.numSortByFieldAsc("key"),
+    });
+    return {
+      name: "year",
+      title: t("stats-category-year"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        entry.key,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectYearMonth = (byYearMonth, total) => {
+    const deep = Object.keys(byYearMonth)
+      .sort((a, b) => a - b)
+      .map((year) => {
+        const allMonths = collection.objectFromArray(
+          [...Array(12).keys()].map((_) => _ + 1),
+          0
+        );
+        const m = {
+          ...allMonths,
+          ...byYearMonth[year],
+        };
+        return {
+          key: year,
+          value: collection
+            .foldToArray(m, collection.numSortByFieldAsc("key"))
+            .map((entry) =>
+              collection.transformObjectValue(entry, "key", (entry) =>
+                t(`month-long-${entry.key}`)
+              )
+            ),
+        };
+      });
+    const mapToChartData = (flat) => {
+      // TODO: from configured theme: --header-background -> --header-color
+      const colorGradients = color.colorGradient("#004", "#ddf", flat.length);
+      return {
+        labels: flat[0].value.map((_) => _.key),
+        datasets: flat.map((entry, i) => {
+          return {
+            label: entry.key,
+            backgroundColor: colorGradients[i],
+            data: entry.value.map((_) => _.value),
+            fill: true,
+            lineTension: 0.4,
+          };
+        }),
+      };
+    };
+    const data = mapToChartData(deep);
+    const flat = collection.trim(
+      deep
+        .sort((a, b) => a - b)
+        .flatMap((year) => {
+          return year.value
+            .sort((a, b) => a - b)
+            .map((month) => {
+              return {
+                key: `${year.key} / ${month.key}`,
+                value: month.value,
+              };
+            });
+        }),
+      (entry) => entry.value > 0
+    );
+    return {
+      name: "year-month",
+      title: t("stats-category-year-month"),
+      charts: [{ type: "line", data, options: chartOptions.line }],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        entry.key,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectMonth = (byMonth, total) => {
+    const [flat, data] = transformData({
+      rawData: byMonth,
+      comparator: collection.numSortByFieldAsc("key"),
+      formatter: (month) => t(`month-long-${month}`),
+      limit: 12,
+    });
+    return {
+      name: "month",
+      title: t("stats-category-month"),
+      charts: [
+        { type: "polar", data, options: chartOptions.polar },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        t(`month-long-${entry.key}`),
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectWeekday = (byWeekday, total) => {
+    const [flat, data] = transformData({
+      rawData: collection.transformObjectKeys(byWeekday, (dow, value) => {
+        const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
+        return [key, value];
+      }),
+      comparator: collection.numSortByFieldAsc("key"),
+      formatter: (dow) => t(`weekday-long-${format.dayOfWeek(dow)}`),
+      limit: 24,
+    });
+    return {
+      name: "weekday",
+      title: t("stats-category-weekday"),
+      charts: [
+        { type: "polar", data, options: chartOptions.polar },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        t(`weekday-long-${format.dayOfWeek(entry.key)}`),
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectHour = (byHour, total) => {
+    const [flat, data] = transformData({
+      rawData: byHour,
+      comparator: collection.numSortByFieldAsc("key"),
+      formatter: (hour) => `${format.padNumber(hour, 2)}:00–`,
+      limit: 24,
+    });
+    return {
+      name: "hour",
+      title: t("stats-category-hour"),
+      charts: [
+        { type: "polar", data, options: chartOptions.polar },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        `${format.padNumber(entry.key, 2)}:00–`,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectTime = () => {
+    const total = data.count.total;
+    const byTime = data.count.byTime;
+    return {
+      name: "time",
+      title: t("stats-topic-time"),
+      categories: [
+        collectYear(byTime.byYear, total),
+        collectYearMonth(byTime.byYearMonth, total),
+        collectMonth(byTime.byMonthOfYear, total),
+        collectWeekday(byTime.byDayOfWeek, total),
+        collectHour(byTime.byHourOfDay, total),
+      ],
+    };
+  };
+
+  const collectCameraMake = (byCameraMake, total) => {
+    const [flat, data] = transformData({
+      rawData: byCameraMake,
+    });
+    return {
+      name: "camera-make",
+      title: t("stats-category-camera-make"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        entry.key,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectCamera = (byCamera, total) => {
+    const [flat, data] = transformData({
+      rawData: byCamera,
+    });
+    return {
+      name: "camera",
+      title: t("stats-category-camera"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        entry.key,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectLens = (byLens, total) => {
+    const [flat, data] = transformData({
+      rawData: byLens,
+    });
+    return {
+      name: "lens",
+      title: t("stats-category-lens"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        entry.key,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectCameraLens = (byCameraLens, total) => {
+    const [flat, data] = transformData({
+      rawData: byCameraLens,
+      limit: 20,
+    });
+    return {
+      name: "camera-lens",
+      title: t("stats-category-camera-lens"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        entry.key,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectGear = () => {
+    const total = data.count.total;
+    const byGear = data.count.byGear;
+    return {
+      name: "gear",
+      title: t("stats-topic-gear"),
+      categories: [
+        collectCameraMake(byGear.byCameraMake, total),
+        collectCamera(byGear.byCamera, total),
+        collectLens(byGear.byLens, total),
+        collectCameraLens(byGear.byCameraLens, total),
+      ],
+    };
+  };
+
+  const collectFocalLength = (byFocalLength, total) => {
+    const [flat, data] = transformData({
+      rawData: byFocalLength,
+      comparator: collection.numSortByFieldAsc("key"),
+    });
+    return {
+      name: "focal-length",
+      title: t("stats-category-focal-length"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        format.focalLength(entry.key),
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectAperture = (byAperture, total) => {
+    const [flat, data] = transformData({
+      rawData: byAperture,
+      comparator: collection.numSortByFieldAsc("key"),
+    });
+    return {
+      name: "aperture",
+      title: t("stats-category-aperture"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        format.aperture(entry.key),
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectExposureTime = (byExposureTime, total) => {
+    const [flat, data] = transformData({
+      rawData: byExposureTime,
+      comparator: collection.numSortByFieldDesc("key"),
+    });
+    return {
+      name: "exposure-time",
+      title: t("stats-category-exposure-time"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        format.exposureTime(entry.key),
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectIso = (byIso, total) => {
+    const [flat, data] = transformData({
+      rawData: byIso,
+      comparator: collection.numSortByFieldAsc("key"),
+    });
+    return {
+      name: "iso",
+      title: t("stats-category-iso"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        format.iso(entry.key),
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectEv = (byEv, total) => {
+    const [flat, data] = transformData({
+      rawData: byEv,
+      comparator: collection.numSortByFieldAsc("key"),
+    });
+    return {
+      name: "ev",
+      title: t("stats-category-ev"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        entry.key,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectLv = (byLv, total) => {
+    const [flat, data] = transformData({
+      rawData: byLv,
+      comparator: collection.numSortByFieldAsc("key"),
+    });
+    return {
+      name: "lv",
+      title: t("stats-category-lv"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        entry.key,
+        numberFormatter(entry.value),
+        `${format.share(entry.value, total)}%`,
+      ]),
+    };
+  };
+  const collectExposure = () => {
+    const total = data.count.total;
+    const byExposure = data.count.byExposure;
+    return {
+      name: "exposure",
+      title: t("stats-topic-exposure"),
+      categories: [
+        collectFocalLength(byExposure.byFocalLength, total),
+        collectAperture(byExposure.byAperture, total),
+        collectExposureTime(byExposure.byExposureTime, total),
+        collectIso(byExposure.byIso, total),
+        collectEv(byExposure.byExposureValue, total),
+        collectLv(byExposure.byLightValue, total),
+      ],
+    };
+  };
+
+  return [collectGeneral(), collectTime(), collectGear(), collectExposure()];
 };
 
-export default { generate, colorGradient };
+export default { generate, collectTopics };
 
 /**
  * Collect statistics from photos
