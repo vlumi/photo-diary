@@ -1,7 +1,5 @@
 import { GeoCoord } from "geo-coord";
 
-let UNKNOWN = undefined;
-
 const identity = (_) => _;
 
 const padNumber = (value, length) => String(value).padStart(length, "0");
@@ -41,24 +39,24 @@ const dayOfWeek = (dow) => {
 };
 
 const countryName = (countryCode, lang, countryData) => {
-  return countryData.getName(countryCode, lang);
+  return countryData.getName(countryCode, lang) || countryCode;
 };
 
 const focalLength = (focalLength) => {
   if (isNaN(focalLength)) {
-    return UNKNOWN;
+    return focalLength;
   }
   return `ƒ=${focalLength}mm`;
 };
 const aperture = (aperture) => {
   if (isNaN(aperture)) {
-    return UNKNOWN;
+    return aperture;
   }
   return `ƒ/${aperture}`;
 };
 const exposureTime = (exposureTime) => {
   if (isNaN(exposureTime)) {
-    return UNKNOWN;
+    return exposureTime;
   }
   if (exposureTime >= 1) {
     return `${exposureTime}s`;
@@ -68,7 +66,7 @@ const exposureTime = (exposureTime) => {
 };
 const iso = (iso) => {
   if (isNaN(iso)) {
-    return UNKNOWN;
+    return iso;
   }
   return `ISO${iso}`;
 };

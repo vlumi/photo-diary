@@ -76,9 +76,9 @@ const StyledRawRow = styled.tr`
   }
 `;
 const StyledRawCol = styled.td`
-  padding: 0 10px;
+  padding: 0 2px;
   vertical-align: top;
-  text-align: ${(props) => (props.col === 0 ? "left" : "right")};
+  text-align: ${(props) => props.align};
   overflow: hidden;
 `;
 
@@ -89,7 +89,7 @@ const Stats = ({ gallery, lang, countryData }) => {
   const numberFormatter = new Intl.NumberFormat(lang).format;
 
   React.useEffect(() => {
-    stats.generate(gallery).then((stats) => setData(stats));
+    stats.generate(gallery, t("stats-unknown")).then((stats) => setData(stats));
   }, [gallery]);
 
   if (!data) {
@@ -99,19 +99,21 @@ const Stats = ({ gallery, lang, countryData }) => {
       </>
     );
   }
+  console.log("data", data);
 
-  const defaultToUnknown = (key) =>
-    key && key !== "N/A" && key !== "undefined" ? key : t("stats-unknown");
-
-  const foldToArray = (data, sorter = collection.numSortByValueDesc) =>
-    Object.keys(data)
+  const foldToArray = (
+    data,
+    sorter = collection.numSortByFieldDesc("value")
+  ) => {
+    return Object.keys(data)
       .map((key) => {
         return {
-          key: defaultToUnknown(key),
+          key: key,
           value: data[key],
         };
       })
       .sort(sorter);
+  };
 
   const mapToChartData = (
     foldedData,
@@ -264,6 +266,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byAuthor.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
@@ -289,11 +296,21 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "right" },
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byCountry.map((entry) => [
             <>
-              <FlagIcon code={entry.key} />{" "}
-              {format.countryName(entry.key, lang, countryData)}
+              {countryData.isValid(entry.key) ? (
+                <FlagIcon code={entry.key} />
+              ) : (
+                <></>
+              )}
             </>,
+            <>{format.countryName(entry.key, lang, countryData)}</>,
             numberFormatter(entry.value),
             `${format.share(entry.value, data.count.total)}%`,
           ]),
@@ -305,7 +322,7 @@ const Stats = ({ gallery, lang, countryData }) => {
   const collectTime = () => {
     const byYear = foldToArray(
       data.count.byTime.byYear,
-      collection.numSortByKeyAsc
+      collection.numSortByFieldAsc("key")
     );
     const byYearData = mapToChartData(byYear, format.identity, 0);
 
@@ -322,7 +339,10 @@ const Stats = ({ gallery, lang, countryData }) => {
         };
         return {
           key: year,
-          value: foldToArray(m, collection.numSortByKeyAsc).map((entry) =>
+          value: foldToArray(
+            m,
+            collection.numSortByFieldAsc("key")
+          ).map((entry) =>
             collection.transformObjectValue(entry, "key", (entry) =>
               t(`month-long-${entry.key}`)
             )
@@ -362,7 +382,7 @@ const Stats = ({ gallery, lang, countryData }) => {
 
     const byMonthOfYear = foldToArray(
       data.count.byTime.byMonthOfYear,
-      collection.numSortByKeyAsc
+      collection.numSortByFieldAsc("key")
     );
     const byMonthOfYearData = mapToChartData(
       byMonthOfYear,
@@ -374,14 +394,14 @@ const Stats = ({ gallery, lang, countryData }) => {
         const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
         return [key, data.count.byTime.byDayOfWeek[dow]];
       }),
-      collection.numSortByKeyAsc
+      collection.numSortByFieldAsc("key")
     );
     const byDayOfWeekData = mapToChartData(byDayOfWeek, (dow) =>
       t(`weekday-long-${format.dayOfWeek(dow)}`)
     );
     const byHourOfDay = foldToArray(
       data.count.byTime.byHourOfDay,
-      collection.numSortByKeyAsc
+      collection.numSortByFieldAsc("key")
     );
     const byHourOfDayData = mapToChartData(byHourOfDay, format.identity, 24);
     return {
@@ -401,6 +421,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byYear.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
@@ -417,6 +442,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledPieContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byYearMonthFlat.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
@@ -439,6 +469,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byMonthOfYear.map((entry) => [
             t(`month-long-${entry.key}`),
             numberFormatter(entry.value),
@@ -461,6 +496,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byDayOfWeek.map((entry) => [
             t(`weekday-long-${format.dayOfWeek(entry.key)}`),
             numberFormatter(entry.value),
@@ -483,6 +523,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byHourOfDay.map((entry) => [
             `${format.padNumber(entry.key, 2)}:00–`,
             numberFormatter(entry.value),
@@ -525,6 +570,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byCameraMake.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
@@ -544,6 +594,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byCamera.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
@@ -563,6 +618,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byLens.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
@@ -588,6 +648,11 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byCameraLens.map((entry) => [
             entry.key,
             numberFormatter(entry.value),
@@ -601,7 +666,7 @@ const Stats = ({ gallery, lang, countryData }) => {
   const collectExposure = () => {
     const byFocalLength = foldToArray(
       data.count.byExposure.byFocalLength,
-      collection.numSortByKeyAsc
+      collection.numSortByFieldAsc("key")
     );
     const byFocalLengthData = mapToChartData(
       byFocalLength,
@@ -610,12 +675,12 @@ const Stats = ({ gallery, lang, countryData }) => {
     );
     const byAperture = foldToArray(
       data.count.byExposure.byAperture,
-      collection.numSortByKeyAsc
+      collection.numSortByFieldAsc("key")
     );
     const byApertureData = mapToChartData(byAperture, format.aperture, 0);
     const byExposureTime = foldToArray(
       data.count.byExposure.byExposureTime,
-      collection.numSortByKeyDesc
+      collection.numSortByFieldDesc("key")
     );
     const byExposureTimeData = mapToChartData(
       byExposureTime,
@@ -624,12 +689,12 @@ const Stats = ({ gallery, lang, countryData }) => {
     );
     const byIso = foldToArray(
       data.count.byExposure.byIso,
-      collection.numSortByKeyAsc
+      collection.numSortByFieldAsc("key")
     );
     const byIsoData = mapToChartData(byIso, format.iso, 0);
     const byExposureValue = foldToArray(
       data.count.byExposure.byExposureValue,
-      collection.numSortByKeyAsc
+      collection.numSortByFieldAsc("key")
     );
     const byExposureValueData = mapToChartData(
       byExposureValue,
@@ -638,7 +703,7 @@ const Stats = ({ gallery, lang, countryData }) => {
     );
     const byLightValue = foldToArray(
       data.count.byExposure.byLightValue,
-      collection.numSortByKeyAsc
+      collection.numSortByFieldAsc("key")
     );
     const byLightValueData = mapToChartData(byLightValue, format.identity, 0);
     return {
@@ -664,8 +729,13 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byFocalLength.map((entry) => [
-            defaultToUnknown(format.focalLength(entry.key)),
+            format.focalLength(entry.key),
             numberFormatter(entry.value),
             `${format.share(entry.value, data.count.total)}%`,
           ]),
@@ -689,8 +759,13 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byAperture.map((entry) => [
-            defaultToUnknown(format.aperture(entry.key)),
+            format.aperture(entry.key),
             numberFormatter(entry.value),
             `${format.share(entry.value, data.count.total)}%`,
           ]),
@@ -714,8 +789,13 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byExposureTime.map((entry) => [
-            defaultToUnknown(format.exposureTime(entry.key)),
+            format.exposureTime(entry.key),
             numberFormatter(entry.value),
             `${format.share(entry.value, data.count.total)}%`,
           ]),
@@ -733,8 +813,13 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byIso.map((entry) => [
-            defaultToUnknown(format.iso(entry.key)),
+            format.iso(entry.key),
             numberFormatter(entry.value),
             `${format.share(entry.value, data.count.total)}%`,
           ]),
@@ -758,8 +843,13 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byExposureValue.map((entry) => [
-            defaultToUnknown(entry.key),
+            entry.key,
             numberFormatter(entry.value),
             `${format.share(entry.value, data.count.total)}%`,
           ]),
@@ -783,8 +873,13 @@ const Stats = ({ gallery, lang, countryData }) => {
               </StyledBarContainer>
             </>
           ),
+          rawColumns: [
+            { align: "left" },
+            { align: "right" },
+            { align: "right" },
+          ],
           raw: byLightValue.map((entry) => [
-            defaultToUnknown(entry.key),
+            entry.key,
             numberFormatter(entry.value),
             `${format.share(entry.value, data.count.total)}%`,
           ]),
@@ -823,7 +918,7 @@ const Stats = ({ gallery, lang, countryData }) => {
                             {values.map((value, j) => (
                               <StyledRawCol
                                 key={`${topic.name}:${category.name}:${i}${j}`}
-                                col={j}
+                                align={category.rawColumns[j].align}
                               >
                                 {value}
                               </StyledRawCol>

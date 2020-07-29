@@ -1,8 +1,8 @@
 import format from "./format";
 import collection from "./collection";
 
-const generate = async (gallery) => {
-  return collectStatistics(gallery.photos());
+const generate = async (gallery, unknownLabel) => {
+  return collectStatistics(gallery.photos(), unknownLabel);
 };
 
 const toHexRgb = ({ r, g, b }) =>
@@ -62,7 +62,7 @@ export default { generate, colorGradient };
  * @param {array} photos The photos over which the statistics should be collected.
  * @return Distribution statistics of the given photos over various parameters and their combinations.
  */
-const collectStatistics = (photos) => {
+const collectStatistics = (photos, unknownLabel) => {
   const stats = {
     count: {
       total: 0,
@@ -74,7 +74,7 @@ const collectStatistics = (photos) => {
     },
   };
 
-  populateDistributions(photos, stats);
+  populateDistributions(photos, stats, unknownLabel);
   return stats;
 };
 
@@ -84,18 +84,16 @@ const collectStatistics = (photos) => {
  * @param {array} photos The photos over which the statistics should be collected.
  * @param {object} stats The target structure for collecting statistics.
  */
-const populateDistributions = (photos, stats) => {
+const populateDistributions = (photos, stats, unknownLabel) => {
   photos.forEach((photo) => {
     stats.count.total++;
 
-    if (photo.hasCountry()) {
-      const countryCode = photo.countryCode();
-      stats.count.byCountry[countryCode] =
-        stats.count.byCountry[countryCode] || 0;
-      stats.count.byCountry[countryCode]++;
-    }
+    const countryCode = photo.countryCode() || unknownLabel;
+    stats.count.byCountry[countryCode] =
+      stats.count.byCountry[countryCode] || 0;
+    stats.count.byCountry[countryCode]++;
 
-    const author = photo.author();
+    const author = photo.author() || unknownLabel;
     stats.count.byAuthor[author] = stats.count.byAuthor[author] || 0;
     stats.count.byAuthor[author]++;
 
@@ -108,10 +106,10 @@ const populateDistributions = (photos, stats) => {
     );
     const adjustExposure = () => {
       const focalLength =
-        photo.focalLength() > 0 ? photo.focalLength() : undefined;
-      const aperture = photo.aperture() || undefined;
-      const exposureTime = photo.exposureTime() || undefined;
-      const iso = photo.iso() || undefined;
+        photo.focalLength() > 0 ? photo.focalLength() : unknownLabel;
+      const aperture = photo.aperture() || unknownLabel;
+      const exposureTime = photo.exposureTime() || unknownLabel;
+      const iso = photo.iso() || unknownLabel;
 
       return {
         focalLength,
@@ -121,8 +119,8 @@ const populateDistributions = (photos, stats) => {
       };
     };
     photo.exposure = adjustExposure();
-    updateExposureDistribution(stats.count.byExposure, photo);
-    updateGear(stats.count.byGear, photo);
+    updateExposureDistribution(stats.count.byExposure, photo, unknownLabel);
+    updateGear(stats.count.byGear, photo, unknownLabel);
   });
 };
 
@@ -214,25 +212,25 @@ const updateTimeDistribution = (byTime, year, month, day, hour) => {
  * @param {object} byExposure Target for collecting the exposure distribution over all photos.
  * @param {object} photo Exposure values of the current photo.
  */
-const updateExposureDistribution = (byExposure, photo) => {
-  const focalLength = Number(photo.focalLength()) || undefined;
+const updateExposureDistribution = (byExposure, photo, unknownLabel) => {
+  const focalLength = Number(photo.focalLength()) || unknownLabel;
   byExposure.byFocalLength = byExposure.byFocalLength || {};
   byExposure.byFocalLength[focalLength] =
     byExposure.byFocalLength[focalLength] || 0;
   byExposure.byFocalLength[focalLength]++;
 
-  const aperture = Number(photo.aperture()) || undefined;
+  const aperture = Number(photo.aperture()) || unknownLabel;
   byExposure.byAperture = byExposure.byAperture || {};
   byExposure.byAperture[aperture] = byExposure.byAperture[aperture] || 0;
   byExposure.byAperture[aperture]++;
 
-  const exposureTime = Number(photo.exposureTime()) || undefined;
+  const exposureTime = Number(photo.exposureTime()) || unknownLabel;
   byExposure.byExposureTime = byExposure.byExposureTime || {};
   byExposure.byExposureTime[exposureTime] =
     byExposure.byExposureTime[exposureTime] || 0;
   byExposure.byExposureTime[exposureTime]++;
 
-  const iso = Number(photo.iso()) || undefined;
+  const iso = Number(photo.iso()) || unknownLabel;
   byExposure.byIso = byExposure.byIso || {};
   byExposure.byIso[iso] = byExposure.byIso[iso] || 0;
   byExposure.byIso[iso]++;
@@ -241,7 +239,7 @@ const updateExposureDistribution = (byExposure, photo) => {
     // Round EV and LV to the closest half
     const roundEv = (value) => Math.round(value * 2) / 2;
     const fullExposureValue = Math.log2(aperture ** 2 / exposureTime);
-    const exposureValue = roundEv(fullExposureValue) || undefined;
+    const exposureValue = roundEv(fullExposureValue) || unknownLabel;
     byExposure.byExposureValue = byExposure.byExposureValue || {};
     byExposure.byExposureValue[exposureValue] =
       byExposure.byExposureValue[exposureValue] || 0;
@@ -249,7 +247,7 @@ const updateExposureDistribution = (byExposure, photo) => {
 
     // LV = EV at ISO 100
     const fullLightValue = fullExposureValue + Math.log2(iso / 100);
-    const lightValue = roundEv(fullLightValue) || undefined;
+    const lightValue = roundEv(fullLightValue) || unknownLabel;
     byExposure.byLightValue = byExposure.byLightValue || {};
     byExposure.byLightValue[lightValue] =
       byExposure.byLightValue[lightValue] || 0;
@@ -274,16 +272,14 @@ const updateExposureDistribution = (byExposure, photo) => {
  * @param {object} byGear Target for collecting the gear distribution over all photos.
  * @param {object} photo The current photo.
  */
-const updateGear = (byGear, photo) => {
-  const cameraMake = photo.cameraMake();
-  if (cameraMake) {
-    byGear.byCameraMake = byGear.byCameraMake || {};
-    byGear.byCameraMake[cameraMake] = byGear.byCameraMake[cameraMake] || 0;
-    byGear.byCameraMake[cameraMake]++;
-  }
+const updateGear = (byGear, photo, unknownLabel) => {
+  const cameraMake = photo.cameraMake() || unknownLabel;
+  byGear.byCameraMake = byGear.byCameraMake || {};
+  byGear.byCameraMake[cameraMake] = byGear.byCameraMake[cameraMake] || 0;
+  byGear.byCameraMake[cameraMake]++;
 
-  const camera = photo.formatCamera() || undefined;
-  const lens = photo.formatLens() || undefined;
+  const camera = photo.formatCamera() || unknownLabel;
+  const lens = photo.formatLens() || unknownLabel;
   byGear.byCamera = byGear.byCamera || {};
   byGear.byCamera[camera] = byGear.byCamera[camera] || 0;
   byGear.byCamera[camera]++;

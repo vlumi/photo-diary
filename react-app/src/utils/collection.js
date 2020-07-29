@@ -90,14 +90,11 @@ const compareWithNaN = (a, b, f) => {
   if (isNaN(b)) return -1;
   return f();
 };
-const numSortByKeyDesc = (a, b) =>
-  compareWithNaN(a.key, b.key, () => b.key - a.key);
-const numSortByKeyAsc = (a, b) =>
-  compareWithNaN(a.key, b.key, () => a.key - b.key);
-const numSortByValueDesc = (a, b) =>
-  compareWithNaN(a.value, b.value, () => b.value - a.value);
-const numSortByValueAsc = (a, b) =>
-  compareWithNaN(a.value, b.value, () => a.value - b.value);
+
+const numSortByFieldAsc = (key) => (a, b) =>
+  compareWithNaN(a[key], b[key], () => a[key] - b[key]);
+const numSortByFieldDesc = (key) => (a, b) =>
+  compareWithNaN(a[key], b[key], () => b[key] - a[key]);
 
 export default {
   joinTruthyKeys,
@@ -107,8 +104,6 @@ export default {
   objectFromArray,
   truncateAndProcess,
 
-  numSortByKeyDesc,
-  numSortByKeyAsc,
-  numSortByValueDesc,
-  numSortByValueAsc,
+  numSortByFieldAsc,
+  numSortByFieldDesc,
 };
