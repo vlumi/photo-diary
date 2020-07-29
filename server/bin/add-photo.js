@@ -43,7 +43,7 @@ const { argv } = require("yargs")
 
 const fs = require("fs");
 
-const logger = require("../utils/logger");
+const logger = require("../lib/logger");
 const db = require("../db");
 
 const addToGalleries = (photoId, galleries) => {
