@@ -6,7 +6,7 @@ import User from "../models/User";
 
 import tokenService from "../services/tokens";
 
-import token from "../utils/token";
+import token from "../lib/token";
 
 const Login = ({ setUser }) => {
   const [userId, setUserId] = React.useState("");

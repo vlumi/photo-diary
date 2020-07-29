@@ -1,4 +1,4 @@
-const config = require("../utils/config");
+const config = require("../lib/config");
 
 const DRIVER = {
   dummy: () => require("./dummy"),

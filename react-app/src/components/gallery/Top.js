@@ -15,8 +15,8 @@ import Photo from "./Photo";
 
 import GalleryModel from "../../models/Gallery";
 
-import config from "../../utils/config";
-import theme from "../../utils/theme";
+import config from "../../lib/config";
+import theme from "../../lib/theme";
 
 const Top = ({ user, lang, countryData, stats = false }) => {
   const [gallery, setGallery] = React.useState(undefined);

@@ -1,5 +1,5 @@
-const CONST = require("../utils/constants");
-const logger = require("../utils/logger");
+const CONST = require("../lib/constants");
+const logger = require("../lib/logger");
 const db = require("../db");
 
 module.exports = () => {

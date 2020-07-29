@@ -1,4 +1,4 @@
-import format from "../utils/format";
+import format from "../lib/format";
 
 const Photo = (photoData) => {
   const importPhotoData = (photoData) => {

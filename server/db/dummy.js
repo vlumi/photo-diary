@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 
-const CONST = require("../utils/constants");
+const CONST = require("../lib/constants");
 
 /**
  * Dummy DB, with all DB values hard-coded.

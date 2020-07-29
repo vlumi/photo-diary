@@ -8,7 +8,7 @@ import MapContainer from "../MapContainer";
 
 import Link from "./Link";
 
-import config from "../../utils/config";
+import config from "../../lib/config";
 
 const PhotoFooter = ({
   gallery,

@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import Title from "./Title";
 import Link from "./Link";
 
-import calendar from "../../utils/calendar";
-import format from "../../utils/format";
+import calendar from "../../lib/calendar";
+import format from "../../lib/format";
 
 const calculateHeat = (photos) => {
   if (photos < 1) return "none";

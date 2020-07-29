@@ -1,8 +1,8 @@
 const sqlite3 = require("sqlite3").verbose();
 
-const CONST = require("../utils/constants");
-const config = require("../utils/config");
-const logger = require("../utils/logger");
+const CONST = require("../lib/constants");
+const config = require("../lib/config");
+const logger = require("../lib/logger");
 
 module.exports = () => {
   return {

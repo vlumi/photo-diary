@@ -3,7 +3,7 @@
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 
-const logger = require("../utils/logger");
+const logger = require("../lib/logger");
 const db = require("../db");
 
 const saltRounds = 10;

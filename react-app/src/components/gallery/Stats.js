@@ -6,7 +6,7 @@ import styled from "styled-components";
 import StatsTitle from "./StatsTitle";
 import StatsTopic from "./StatsTopic";
 
-import stats from "../../utils/stats";
+import stats from "../../lib/stats";
 
 const Root = styled.div`
   display: flex;

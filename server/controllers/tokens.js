@@ -1,7 +1,7 @@
-const CONST = require("../utils/constants");
-const logger = require("../utils/logger");
+const CONST = require("../lib/constants");
+const logger = require("../lib/logger");
 
-const authorizer = require("../utils/authorizer")();
+const authorizer = require("../lib/authorizer")();
 const model = require("../models/token")();
 
 const init = async () => {

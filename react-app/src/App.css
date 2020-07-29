@@ -3,6 +3,8 @@ body {
   font-family: sans-serif;
   padding: 0;
   margin: 0;
+  color: var(--primary-color);
+  background: var(--primary-background);
 }
 
 #root {

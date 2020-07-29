@@ -3,7 +3,7 @@ const cors = require("cors");
 const compression = require("compression");
 require("express-async-errors");
 
-const config = require("./utils/config");
+const config = require("./lib/config");
 
 const tokens = require("./controllers/tokens");
 const users = require("./controllers/users");
@@ -12,8 +12,8 @@ const galleries = require("./controllers/galleries");
 const photos = require("./controllers/photos");
 const galleryPhotos = require("./controllers/gallery-photos");
 
-const middleware = require("./utils/middleware");
-const logger = require("./utils/logger");
+const middleware = require("./lib/middleware");
+const logger = require("./lib/logger");
 
 const app = express();
 app.use(cors());

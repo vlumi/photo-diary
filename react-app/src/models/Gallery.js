@@ -1,9 +1,9 @@
 import Photo from "./Photo";
 
-import calendar from "../utils/calendar";
-import format from "../utils/format";
-import collection from "../utils/collection";
-import config from "../utils/config";
+import calendar from "../lib/calendar";
+import format from "../lib/format";
+import collection from "../lib/collection";
+import config from "../lib/config";
 
 const Gallery = (galleryData) => {
   const importGalleryData = (galleryData) => {

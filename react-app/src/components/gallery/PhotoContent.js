@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import config from "../../utils/config";
+import config from "../../lib/config";
 
 function calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio) {
   if (maxRatio > photoRatio) {

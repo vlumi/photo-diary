@@ -9,7 +9,7 @@ import PhotoNav from "./PhotoNav";
 import PhotoContent from "./PhotoContent";
 import PhotoFooter from "./PhotoFooter";
 
-import useKeyPress from "../../utils/keypress";
+import useKeyPress from "../../lib/keypress";
 
 const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);

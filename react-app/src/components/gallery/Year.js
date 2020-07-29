@@ -10,7 +10,7 @@ import YearNav from "./YearNav";
 import YearContent from "./YearContent";
 import YearFooter from "./YearFooter";
 
-import useKeyPress from "../../utils/keypress";
+import useKeyPress from "../../lib/keypress";
 
 const Year = ({ gallery, year }) => {
   const [redirect, setRedirect] = React.useState(undefined);

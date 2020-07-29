@@ -1,4 +1,4 @@
-const authManager = require("../utils/authorizer")();
+const authManager = require("../lib/authorizer")();
 const model = require("../models/statistics")();
 
 const init = async () => {

@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 
-import format from "../utils/format";
+import format from "../lib/format";
 
 const FormatDate = ({ year, month, day }) =>
   format.date({ year, month, day, separator: "-" });

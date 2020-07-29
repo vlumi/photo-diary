@@ -16,8 +16,8 @@ import TopMenu from "./components/TopMenu";
 import GalleryList from "./components/gallery/List";
 import Top from "./components/gallery/Top";
 
-import config from "./utils/config";
-import token from "./utils/token";
+import config from "./lib/config";
+import token from "./lib/token";
 
 const registerCountryData = (lang) => {
   const countryData = require("i18n-iso-countries");

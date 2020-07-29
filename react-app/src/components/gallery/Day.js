@@ -9,7 +9,7 @@ import DayNav from "./DayNav";
 import DayContent from "./DayContent";
 import DayFooter from "./DayFooter";
 
-import useKeyPress from "../../utils/keypress";
+import useKeyPress from "../../lib/keypress";
 
 const Day = ({ gallery, year, month, day, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);

@@ -9,7 +9,7 @@ import MonthNav from "./MonthNav";
 import MonthContent from "./MonthContent";
 import MonthFooter from "./MonthFooter";
 
-import useKeyPress from "../../utils/keypress";
+import useKeyPress from "../../lib/keypress";
 
 const Month = ({ gallery, year, month, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
