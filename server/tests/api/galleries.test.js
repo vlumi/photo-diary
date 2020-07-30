@@ -29,14 +29,8 @@ const expectGallery1 = (result) => {
   const photos = result.body.photos;
   expect(photos).toBeDefined();
   expect(Object.keys(photos).length).toBe(2);
-  expect(Object.keys(photos[2018]).length).toBe(1);
-  expect(Object.keys(photos[2018][5]).length).toBe(1);
-  expect(Object.keys(photos[2018][5][4]).length).toBe(1);
-  expect(photos[2018][5][4][0].id).toBe("gallery1photo.jpg");
-  expect(Object.keys(photos[2020]).length).toBe(1);
-  expect(Object.keys(photos[2020][7]).length).toBe(1);
-  expect(Object.keys(photos[2020][7][4]).length).toBe(1);
-  expect(photos[2020][7][4][0].id).toBe("gallery12photo.jpg");
+  expect(photos[0].id).toBe("gallery1photo.jpg");
+  expect(photos[1].id).toBe("gallery12photo.jpg");
 };
 const expectGallery2 = (result) => {
   expect(result.body.id).toBe("gallery2");
@@ -44,13 +38,9 @@ const expectGallery2 = (result) => {
   expect(result.body.description).toBe("This is the second gallery");
   const photos = result.body.photos;
   expect(photos).toBeDefined();
-  expect(Object.keys(photos).length).toBe(1);
-  expect(Object.keys(photos[2020]).length).toBe(1);
-  expect(Object.keys(photos[2020][7]).length).toBe(2);
-  expect(Object.keys(photos[2020][7][4]).length).toBe(1);
-  expect(photos[2020][7][4][0].id).toBe("gallery12photo.jpg");
-  expect(Object.keys(photos[2020][7][5]).length).toBe(1);
-  expect(photos[2020][7][5][0].id).toBe("gallery2photo.jpg");
+  expect(Object.keys(photos).length).toBe(2);
+  expect(photos[0].id).toBe("gallery12photo.jpg");
+  expect(photos[1].id).toBe("gallery2photo.jpg");
 };
 const expectGallery3 = (result) => {
   expect(result.body.id).toBe("gallery3");
@@ -59,59 +49,35 @@ const expectGallery3 = (result) => {
   const photos = result.body.photos;
   expect(photos).toBeDefined();
   expect(Object.keys(photos).length).toBe(1);
-  expect(Object.keys(photos[2020]).length).toBe(1);
-  expect(Object.keys(photos[2020][7]).length).toBe(1);
-  expect(Object.keys(photos[2020][7][6]).length).toBe(1);
-  expect(photos[2020][7][6][0].id).toBe("gallery3photo.jpg");
+  expect(photos[0].id).toBe("gallery3photo.jpg");
 };
 const expectGalleryAll = (result) => {
   expect(result.body.id).toBe(":all");
   const photos = result.body.photos;
   expect(photos).toBeDefined();
-  expect(Object.keys(photos).length).toBe(2);
-  expect(Object.keys(photos[2018]).length).toBe(1);
-  expect(Object.keys(photos[2018][5]).length).toBe(1);
-  expect(Object.keys(photos[2018][5][4]).length).toBe(1);
-  expect(photos[2018][5][4][0].id).toBe("gallery1photo.jpg");
-  expect(Object.keys(photos[2020]).length).toBe(2);
-  expect(Object.keys(photos[2020][7]).length).toBe(3);
-  expect(Object.keys(photos[2020][7][4]).length).toBe(1);
-  expect(photos[2020][7][4][0].id).toBe("gallery12photo.jpg");
-  expect(Object.keys(photos[2020][7][5]).length).toBe(1);
-  expect(photos[2020][7][5][0].id).toBe("gallery2photo.jpg");
-  expect(Object.keys(photos[2020][7][6]).length).toBe(1);
-  expect(photos[2020][7][6][0].id).toBe("gallery3photo.jpg");
-  expect(Object.keys(photos[2020][8]).length).toBe(1);
-  expect(Object.keys(photos[2020][8][5]).length).toBe(1);
-  expect(photos[2020][8][5][0].id).toBe("orphanphoto.jpg");
+  expect(Object.keys(photos).length).toBe(5);
+  expect(photos[0].id).toBe("gallery1photo.jpg");
+  expect(photos[1].id).toBe("gallery12photo.jpg");
+  expect(photos[2].id).toBe("gallery2photo.jpg");
+  expect(photos[3].id).toBe("gallery3photo.jpg");
+  expect(photos[4].id).toBe("orphanphoto.jpg");
 };
 const expectGalleryPublic = (result) => {
   expect(result.body.id).toBe(":public");
   const photos = result.body.photos;
   expect(photos).toBeDefined();
-  expect(Object.keys(photos).length).toBe(2);
-  expect(Object.keys(photos[2018]).length).toBe(1);
-  expect(Object.keys(photos[2018][5]).length).toBe(1);
-  expect(Object.keys(photos[2018][5][4]).length).toBe(1);
-  expect(photos[2018][5][4][0].id).toBe("gallery1photo.jpg");
-  expect(Object.keys(photos[2020]).length).toBe(1);
-  expect(Object.keys(photos[2020][7]).length).toBe(3);
-  expect(Object.keys(photos[2020][7][4]).length).toBe(1);
-  expect(photos[2020][7][4][0].id).toBe("gallery12photo.jpg");
-  expect(Object.keys(photos[2020][7][5]).length).toBe(1);
-  expect(photos[2020][7][5][0].id).toBe("gallery2photo.jpg");
-  expect(Object.keys(photos[2020][7][6]).length).toBe(1);
-  expect(photos[2020][7][6][0].id).toBe("gallery3photo.jpg");
+  expect(Object.keys(photos).length).toBe(4);
+  expect(photos[0].id).toBe("gallery1photo.jpg");
+  expect(photos[1].id).toBe("gallery12photo.jpg");
+  expect(photos[2].id).toBe("gallery2photo.jpg");
+  expect(photos[3].id).toBe("gallery3photo.jpg");
 };
 const expectGalleryPrivate = (result) => {
   expect(result.body.id).toBe(":private");
   const photos = result.body.photos;
   expect(photos).toBeDefined();
   expect(Object.keys(photos).length).toBe(1);
-  expect(Object.keys(photos[2020]).length).toBe(1);
-  expect(Object.keys(photos[2020][8]).length).toBe(1);
-  expect(Object.keys(photos[2020][8][5]).length).toBe(1);
-  expect(photos[2020][8][5][0].id).toBe("orphanphoto.jpg");
+  expect(photos[0].id).toBe("orphanphoto.jpg");
 };
 
 describe("As guest", () => {

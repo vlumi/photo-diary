@@ -5,7 +5,7 @@ This is a web application for the Photo Diary, implemented using React.
 ## Requirements
 
 - Recent [Node.js](https://nodejs.org) stack
-  - [npm](https://www.npmjs.com/) (tested on 6.14.6)
+  - [npm](https://www.npmjs.com/) (tested on 6.14.7)
   - [React](https://reactjs.org/) (tested on 16.13.1)
 - Dependencies
   - Photo Diary server

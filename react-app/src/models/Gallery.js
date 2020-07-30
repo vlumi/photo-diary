@@ -15,23 +15,28 @@ const Gallery = (galleryData) => {
     }
     return galleryData;
   };
-  const importPhotos = (photosByYmd) => {
-    const photos = [];
-    Object.keys(photosByYmd).forEach((year) => {
-      Object.keys(photosByYmd[year]).forEach((month) => {
-        Object.keys(photosByYmd[year][month]).forEach((day) => {
-          photosByYmd[year][month][day] = photosByYmd[year][month][
-            day
-          ].map((photo) => Photo(photo));
-          photos.push(...photosByYmd[year][month][day]);
-        });
-      });
+  const groupPhotosByYearMonthDay = (photos) => {
+    const photosByDate = {};
+    photos.forEach((photo) => {
+      const yearMap = (photosByDate[photo.year()] =
+        photosByDate[photo.year()] || {});
+      const monthMap = (yearMap[photo.month()] = yearMap[photo.month()] || {});
+      const dayPhotos = (monthMap[photo.day()] = monthMap[photo.day()] || []);
+      dayPhotos.push(photo);
     });
-    return [photos, photosByYmd];
+    return photosByDate;
+  };
+  const importPhotos = (photos) => {
+    console.log("importing photos", photos);
+    const photosFlat = photos.map((photo) => Photo(photo));
+    console.log("importing photos flat", photosFlat);
+    const photosByYmd = groupPhotosByYearMonthDay(photosFlat);
+    return [photosFlat, photosByYmd];
   };
 
   const gallery = importGalleryData(galleryData);
-  const [photos, photosByYmd] = importPhotos(gallery.photos || {});
+  console.log("gallery", gallery);
+  const [photos, photosByYmd] = importPhotos(gallery.photos || []);
   const self = {
     id: () => gallery.id,
     isSpecial: () => gallery.id.startsWith(":"),
@@ -458,6 +463,7 @@ const Gallery = (galleryData) => {
     },
     isLastPhoto: (photo) => photo === self.lastPhoto(),
   };
+  console.log("ok...?");
   return self;
 };
 

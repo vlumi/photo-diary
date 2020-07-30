@@ -38,7 +38,7 @@ Certain parameters are passed through environment veriables. These can be either
     - `sqlite3` – Path to the DB file
     - `dummy` – Not used
     - `legacy_sqlite3` – Path to the DB file
-- `REACT_APP_PHOTO_ROOT_DIR` \*
+- `PHOTO_ROOT_DIR` \*
   - The path to the physical photos, with the following sub-directories
     - `inbox` – New photos to be added, or their extracted JSON files
     - `display` – Display-size, large photos
