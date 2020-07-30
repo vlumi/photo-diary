@@ -22,7 +22,7 @@ const collectTopics = (data, lang, t, countryData) => {
     });
   const decodeLabelKey = (key, value) => {
     const { name, share } = key;
-    return ` ${name}: ${number.oneDecimal(value)} (${share}%)`;
+    return ` ${name}: ${number.default(value)} (${number.oneDecimal(share)}%)`;
   };
   const chartOptions = {
     common: {
