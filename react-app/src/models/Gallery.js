@@ -27,15 +27,12 @@ const Gallery = (galleryData) => {
     return photosByDate;
   };
   const importPhotos = (photos) => {
-    console.log("importing photos", photos);
     const photosFlat = photos.map((photo) => Photo(photo));
-    console.log("importing photos flat", photosFlat);
     const photosByYmd = groupPhotosByYearMonthDay(photosFlat);
     return [photosFlat, photosByYmd];
   };
 
   const gallery = importGalleryData(galleryData);
-  console.log("gallery", gallery);
   const [photos, photosByYmd] = importPhotos(gallery.photos || []);
   const self = {
     id: () => gallery.id,
@@ -463,7 +460,6 @@ const Gallery = (galleryData) => {
     },
     isLastPhoto: (photo) => photo === self.lastPhoto(),
   };
-  console.log("ok...?");
   return self;
 };
 
