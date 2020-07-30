@@ -76,6 +76,20 @@ const Title = ({ galleries, gallery, context }) => {
     );
   };
 
+  const renderTitle = () => {
+    if (Object.keys(galleries).length > 1) {
+      return (
+        <GallerySelect value={gallery.id()} onChange={galleryChangeHandler}>
+          {galleries.map((gallery) => (
+            <GalleryOption key={gallery.id()} value={gallery.id()}>
+              {gallery.title()}
+            </GalleryOption>
+          ))}
+        </GallerySelect>
+      );
+    }
+    return <>{gallery.title()}</>;
+  };
   return (
     <>
       <span className="gallery-menu">
@@ -85,13 +99,7 @@ const Title = ({ galleries, gallery, context }) => {
         {renderContextSwitch()}
       </span>
       <Root>
-        <GallerySelect value={gallery.id()} onChange={galleryChangeHandler}>
-          {galleries.map((gallery) => (
-            <GalleryOption key={gallery.id()} value={gallery.id()}>
-              {gallery.title()}
-            </GalleryOption>
-          ))}
-        </GallerySelect>
+        {renderTitle()}
         {context ? <> — {t(`nav-${context}`)}</> : ""}
       </Root>
     </>
