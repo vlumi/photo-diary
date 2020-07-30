@@ -75,29 +75,32 @@ const updateGallery = async () => {
   throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 
+const comparePhotos = (a, b) =>
+  a.taken.instant.timestamp.localeCompare(b.taken.instant.timestamp);
+
 const loadGalleryPhotos = async (galleryId) => {
   switch (galleryId) {
     case CONST.SPECIAL_GALLERY_ALL:
-      return Object.values(db.photos).sort();
+      return Object.values(db.photos).sort(comparePhotos);
     case CONST.SPECIAL_GALLERY_PUBLIC:
       return [...new Set(Object.values(db.galleryPhotos).flat())]
-        .sort()
-        .map((photoId) => db.photos[photoId]);
+        .map((photoId) => db.photos[photoId])
+        .sort(comparePhotos);
     case CONST.SPECIAL_GALLERY_PRIVATE: {
       const galleriesPhotos = Object.values(db.galleryPhotos).flat();
       const photos = Object.keys(db.photos)
         .filter((photoId) => !galleriesPhotos.includes(photoId))
         .map((photoId) => db.photos[photoId])
-        .sort();
+        .sort(comparePhotos);
       return photos;
     }
     default: {
       if (!(galleryId in db.galleries)) {
         throw CONST.ERROR_NOT_FOUND;
       }
-      const photos = db.galleryPhotos[galleryId].map(
-        (photoId) => db.photos[photoId]
-      );
+      const photos = db.galleryPhotos[galleryId]
+        .map((photoId) => db.photos[photoId])
+        .sort(comparePhotos);
       return photos;
     }
   }
@@ -115,7 +118,7 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
       .filter((id) => id === photoId)
       .filter((id) => !galleriesPhotos.includes(id))
       .map((id) => db.photos[id])
-      .sort();
+      .sort(comparePhotos);
     if (photos.length === 0) {
       throw CONST.ERROR_NOT_FOUND;
     }
