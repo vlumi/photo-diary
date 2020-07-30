@@ -2,18 +2,38 @@ import { GeoCoord } from "geo-coord";
 
 const identity = (_) => _;
 
-const padNumber = (value, length) => String(value).padStart(length, "0");
+const number = (lang) => {
+  return {
+    default: new Intl.NumberFormat(lang).format,
+    twoDecimal: new Intl.NumberFormat(lang, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format,
+    oneDecimal: new Intl.NumberFormat(lang, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format,
+  };
+};
 
-const share = (value, total) => Math.floor((value / total) * 1000) / 10;
+const padNumber = (value, length) => padLeft(value, length, "0");
+
+const share = (value, total) => (value * 100) / total;
+
+const padLeft = (value, length, filler) =>
+  String(value).padStart(length, filler);
+
+const padRight = (value, length, filler) =>
+  String(value).padEnd(length, filler);
 
 const date = ({ year, month, day, separator = "-" }) => {
   const parts = [];
   if (year) {
-    parts.push(padNumber(year, 4));
+    parts.push(padLeft(year, 4));
     if (month) {
-      parts.push(padNumber(month, 2));
+      parts.push(padLeft(month, 2));
       if (day) {
-        parts.push(padNumber(day, 2));
+        parts.push(padLeft(day, 2));
       }
     }
   }
@@ -22,11 +42,11 @@ const date = ({ year, month, day, separator = "-" }) => {
 const time = ({ hour, minute, second, separator = ":" }) => {
   const parts = [];
   if (hour) {
-    parts.push(padNumber(hour, 2));
+    parts.push(padLeft(hour, 2));
     if (minute) {
-      parts.push(padNumber(minute, 2));
+      parts.push(padLeft(minute, 2));
       if (second) {
-        parts.push(padNumber(second, 2));
+        parts.push(padLeft(second, 2));
       }
     }
   }
@@ -91,8 +111,12 @@ const coordinates = (latitude, longitude) => {
 
 export default {
   identity,
+  number,
   padNumber,
   share,
+
+  padLeft,
+  padRight,
 
   date,
   time,

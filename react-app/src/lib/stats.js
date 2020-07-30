@@ -12,8 +12,7 @@ const generate = async (gallery, unknownLabel) => {
 };
 
 const collectTopics = (data, lang, t, countryData) => {
-  const numberFormatter = new Intl.NumberFormat(lang).format;
-
+  const number = format.number(lang);
   const encodeLabelKey = (formatter) => (entry) =>
     collection.transformObjectValue(entry, "key", (entry) => {
       return {
@@ -23,7 +22,7 @@ const collectTopics = (data, lang, t, countryData) => {
     });
   const decodeLabelKey = (key, value) => {
     const { name, share } = key;
-    return ` ${name}: ${numberFormatter(value)} (${share}%)`;
+    return ` ${name}: ${number.oneDecimal(value)} (${share}%)`;
   };
   const chartOptions = {
     common: {
@@ -85,6 +84,9 @@ const collectTopics = (data, lang, t, countryData) => {
     line: {
       ...chartOptions.common,
       tooltips: {},
+      tooltips: {
+        mode: "index",
+      },
       scales: {
         yAxes: [
           {
@@ -155,10 +157,9 @@ const collectTopics = (data, lang, t, countryData) => {
       name: "summary",
       title: t("stats-category-summary"),
       kpi: collection.foldToArray({
-        photos: count.total,
-        days: count.byTime.days,
-        average:
-          Math.round((count.total * 100) / (count.byTime.days || 1)) / 100,
+        photos: number.default(count.total),
+        days: number.default(count.byTime.days),
+        average: number.twoDecimal(count.total / (count.byTime.days || 1)),
       }),
     };
   };
@@ -177,8 +178,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -211,8 +212,8 @@ const collectTopics = (data, lang, t, countryData) => {
           )}
         </>,
         <>{format.countryName(entry.key, lang, countryData)}</>,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -230,7 +231,7 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
 
-  const collectYear = (byYear, total) => {
+  const collectYear = (byYear, daysInYear, total) => {
     const [flat, data] = transformData({
       rawData: byYear,
       comparator: collection.numSortByFieldAsc("key"),
@@ -246,12 +247,14 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        t("stats-per-day", {
+          count: number.twoDecimal(entry.value / daysInYear[entry.key]),
+        }),
       ]),
     };
   };
-  const collectYearMonth = (byYearMonth, total) => {
+  const collectYearMonth = (byYearMonth, daysInYearMonth, total) => {
     const deep = Object.keys(byYearMonth)
       .sort((a, b) => a - b)
       .map((year) => {
@@ -265,20 +268,19 @@ const collectTopics = (data, lang, t, countryData) => {
         };
         return {
           key: year,
-          value: collection
-            .foldToArray(m, collection.numSortByFieldAsc("key"))
-            .map((entry) =>
-              collection.transformObjectValue(entry, "key", (entry) =>
-                t(`month-long-${entry.key}`)
-              )
-            ),
+          value: collection.foldToArray(m, collection.numSortByFieldAsc("key")),
+          // .map((entry) =>
+          //   collection.transformObjectValue(entry, "key", (entry) =>
+          //     t(`month-long-${entry.key}`)
+          //   )
+          // ),
         };
       });
     const mapToChartData = (flat) => {
       // TODO: from configured theme: --header-background -> --header-color
       const colorGradients = color.colorGradient("#004", "#ddf", flat.length);
       return {
-        labels: flat[0].value.map((_) => _.key),
+        labels: flat[0].value.map((entry) => t(`month-long-${entry.key}`)),
         datasets: flat.map((entry, i) => {
           return {
             label: entry.key,
@@ -299,7 +301,7 @@ const collectTopics = (data, lang, t, countryData) => {
             .sort((a, b) => a - b)
             .map((month) => {
               return {
-                key: `${year.key} / ${month.key}`,
+                key: [year.key, month.key],
                 value: month.value,
               };
             });
@@ -312,11 +314,15 @@ const collectTopics = (data, lang, t, countryData) => {
       charts: [{ type: "line", data, options: chartOptions.line }],
       rawHeader: false,
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
-        entry.key,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
-      ]),
+      raw: flat.map((entry) => {
+        const [year, month] = entry.key;
+        return [
+          t("stats-year-month", { year, month: t(`month-long-${month}`) }),
+          number.default(entry.value),
+          number.twoDecimal(entry.value / daysInYearMonth[year][month]),
+          // `${number.oneDecimal(format.share(entry.value, total))}%`,
+        ];
+      }),
     };
   };
   const collectMonth = (byMonth, total) => {
@@ -337,8 +343,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         t(`month-long-${entry.key}`),
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -363,8 +369,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         t(`weekday-long-${format.dayOfWeek(entry.key)}`),
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -386,8 +392,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         `${format.padNumber(entry.key, 2)}:00–`,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -398,11 +404,11 @@ const collectTopics = (data, lang, t, countryData) => {
       name: "time",
       title: t("stats-topic-time"),
       categories: [
-        collectYear(byTime.byYear, total),
-        collectYearMonth(byTime.byYearMonth, total),
-        collectMonth(byTime.byMonthOfYear, total),
-        collectWeekday(byTime.byDayOfWeek, total),
-        collectHour(byTime.byHourOfDay, total),
+        collectYear(byTime.byYear, byTime.daysInYear, total),
+        collectYearMonth(byTime.byYearMonth, byTime.daysInYearMonth, total),
+        collectMonth(byTime.byMonth, total),
+        collectWeekday(byTime.byWeekday, total),
+        collectHour(byTime.byHour, total),
       ],
     };
   };
@@ -422,8 +428,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -442,8 +448,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -462,8 +468,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -483,8 +489,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -520,8 +526,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         format.focalLength(entry.key),
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -542,8 +548,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         format.aperture(entry.key),
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -564,8 +570,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         format.exposureTime(entry.key),
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -586,8 +592,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         format.iso(entry.key),
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -607,8 +613,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -628,8 +634,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         entry.key,
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -650,8 +656,8 @@ const collectTopics = (data, lang, t, countryData) => {
       rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
       raw: flat.map((entry) => [
         format.resolution(entry.key),
-        numberFormatter(entry.value),
-        `${numberFormatter(format.share(entry.value, total))}%`,
+        number.default(entry.value),
+        `${number.oneDecimal(format.share(entry.value, total))}%`,
       ]),
     };
   };
@@ -753,9 +759,9 @@ const populateDistributions = (photos, stats, unknownLabel) => {
  *
  * - byYear[year]
  * - byYearMonth[year][month]
- * - byMonthOfYear[month]
- * - byDayOfWeek[day]
- * - byHourOfDay[hour]
+ * - byMonth[month]
+ * - byWeekday[day]
+ * - byHour[hour]
  * - days
  * - daysInYear[year]
  * - daysInYearMonth[year][month]
@@ -797,25 +803,25 @@ const updateTimeDistribution = (byTime, year, month, day, hour) => {
   byTime.byYearMonth[year][month] = byTime.byYearMonth[year][month] || 0;
   byTime.byYearMonth[year][month]++;
 
-  byTime.byMonthOfYear =
-    byTime.byMonthOfYear ||
+  byTime.byMonth =
+    byTime.byMonth ||
     collection.objectFromArray(
       [...Array(12).keys()].map((month) => month + 1),
       0
     );
-  byTime.byMonthOfYear[month] = byTime.byMonthOfYear[month] || 0;
-  byTime.byMonthOfYear[month]++;
+  byTime.byMonth[month] = byTime.byMonth[month] || 0;
+  byTime.byMonth[month]++;
 
   const dow = new Date(year, month - 1, day).getDay();
-  byTime.byDayOfWeek =
-    byTime.byDayOfWeek || collection.objectFromArray([...Array(7).keys()], 0);
-  byTime.byDayOfWeek[dow] = byTime.byDayOfWeek[dow] || 0;
-  byTime.byDayOfWeek[dow]++;
+  byTime.byWeekday =
+    byTime.byWeekday || collection.objectFromArray([...Array(7).keys()], 0);
+  byTime.byWeekday[dow] = byTime.byWeekday[dow] || 0;
+  byTime.byWeekday[dow]++;
 
-  byTime.byHourOfDay =
-    byTime.byHourOfDay || collection.objectFromArray([...Array(24).keys()], 0);
-  byTime.byHourOfDay[hour] = byTime.byHourOfDay[hour] || 0;
-  byTime.byHourOfDay[hour]++;
+  byTime.byHour =
+    byTime.byHour || collection.objectFromArray([...Array(24).keys()], 0);
+  byTime.byHour[hour] = byTime.byHour[hour] || 0;
+  byTime.byHour[hour]++;
 
   calculateNumberOfDays(byTime);
 };

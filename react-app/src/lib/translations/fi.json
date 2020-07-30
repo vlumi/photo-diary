@@ -55,6 +55,8 @@
 
     "stats-unknown": "N/A",
     "stats-other": "Muut",
+    "stats-year-month": "{{month}} {{year}}",
+    "stats-per-day": "{{count}}/päivä",
 
     "stats-topic-general": "Yleiset tiedot",
     "stats-category-summary": "Yhteenveto",

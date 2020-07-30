@@ -60,8 +60,6 @@ const Value = styled.span`
 const StatsSummary = ({ category, lang }) => {
   const { t } = useTranslation();
 
-  const numberFormatter = new Intl.NumberFormat(lang).format;
-
   if (!("kpi" in category) || !category.kpi) {
     return <></>;
   }
@@ -75,7 +73,7 @@ const StatsSummary = ({ category, lang }) => {
             <Value>
               <Box>
                 {t(`stats-kpi-${kpi.key}`, {
-                  count: numberFormatter(kpi.value),
+                  count: kpi.value,
                 })}
               </Box>
             </Value>

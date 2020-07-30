@@ -55,6 +55,8 @@
 
     "stats-unknown": "N/A",
     "stats-other": "Other",
+    "stats-year-month": "{{month}} {{year}}",
+    "stats-per-day": "{{count}}/day",
 
     "stats-topic-general": "General",
     "stats-category-summary": "Summary",

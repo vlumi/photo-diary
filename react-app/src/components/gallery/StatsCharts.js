@@ -7,7 +7,7 @@ import { Doughnut, Polar, HorizontalBar, Line } from "react-chartjs-2";
 const Root = styled.div`
   margin: 5px;
   width: 100%;
-  height: 200px;
+  height: 250px;
   display: flex;
   justify-content: center;
   align-items: stretch;
