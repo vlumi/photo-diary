@@ -2,7 +2,6 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-import Title from "./Title";
 import Link from "./Link";
 
 import calendar from "../../lib/calendar";
@@ -16,7 +15,7 @@ const calculateHeat = (photos) => {
   return "extreme";
 };
 
-const YearContent = ({ gallery, year }) => {
+const YearContent = ({ children, gallery, year }) => {
   const { t } = useTranslation();
 
   const renderMonthTitle = (gallery, year, month) => {
@@ -96,7 +95,7 @@ const YearContent = ({ gallery, year }) => {
 
   return (
     <>
-      <Title gallery={gallery} />
+      {children}
       <div className="year">
         <div className="calendars">
           {calendar
@@ -113,6 +112,7 @@ const YearContent = ({ gallery, year }) => {
   );
 };
 YearContent.propTypes = {
+  children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };

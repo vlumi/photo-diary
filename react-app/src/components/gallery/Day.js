@@ -11,7 +11,7 @@ import DayFooter from "./DayFooter";
 
 import useKeyPress from "../../lib/keypress";
 
-const Day = ({ gallery, year, month, day, lang, countryData }) => {
+const Day = ({ children, gallery, year, month, day, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -92,7 +92,9 @@ const Day = ({ gallery, year, month, day, lang, countryData }) => {
             day={day}
             lang={lang}
             countryData={countryData}
-          />
+          >
+            {children}
+          </DayContent>
         </div>
       </Swipeable>
       <DayFooter gallery={gallery} year={year} month={month} day={day} />
@@ -100,6 +102,7 @@ const Day = ({ gallery, year, month, day, lang, countryData }) => {
   );
 };
 Day.propTypes = {
+  children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,

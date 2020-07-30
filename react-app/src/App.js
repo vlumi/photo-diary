@@ -13,7 +13,6 @@ import "./App.css";
 
 import User from "./models/User";
 import TopMenu from "./components/TopMenu";
-import GalleryList from "./components/gallery/List";
 import Top from "./components/gallery/Top";
 
 import config from "./lib/config";
@@ -84,7 +83,7 @@ const App = () => {
             <Top user={user} lang={lang} countryData={countryData} />
           </Route>
           <Route path="/g">
-            <GalleryList user={user} />
+            <Top user={user} lang={lang} countryData={countryData} />
           </Route>
           <Route path="/">
             <Redirect to="/g" />

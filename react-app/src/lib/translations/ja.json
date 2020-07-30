@@ -1,7 +1,9 @@
 {
   "translation": {
     "loading": "ロード中",
+    "empty": "空",
 
+    "nav-galleries": "ギャラリー",
     "nav-gallery-top": "トップへ",
     "nav-gallery": "ギャラリー",
     "nav-gallery-stats": "統計",

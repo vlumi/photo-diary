@@ -1,7 +1,9 @@
 {
   "translation": {
     "loading": "Ladataan...",
+    "empty": "Tyhjä",
 
+    "nav-galleries": "Galleriat",
     "nav-gallery-top": "Palaa alkuun",
     "nav-gallery": "Galleria",
     "nav-gallery-stats": "Tilastot",

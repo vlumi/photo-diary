@@ -12,7 +12,7 @@ import YearFooter from "./YearFooter";
 
 import useKeyPress from "../../lib/keypress";
 
-const Year = ({ gallery, year }) => {
+const Year = ({ children, gallery, year }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -100,7 +100,9 @@ const Year = ({ gallery, year }) => {
         <YearNav gallery={gallery} year={year} />
         <Swipeable onSwiped={handleSwipe}>
           <div id="content">
-            <YearContent gallery={gallery} year={year} />
+            <YearContent gallery={gallery} year={year}>
+              {children}
+            </YearContent>
           </div>{" "}
         </Swipeable>
         <YearFooter gallery={gallery} year={year} />
@@ -109,6 +111,7 @@ const Year = ({ gallery, year }) => {
   }
 };
 Year.propTypes = {
+  children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };

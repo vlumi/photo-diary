@@ -11,7 +11,7 @@ import MonthFooter from "./MonthFooter";
 
 import useKeyPress from "../../lib/keypress";
 
-const Month = ({ gallery, year, month, lang, countryData }) => {
+const Month = ({ children, gallery, year, month, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -91,7 +91,9 @@ const Month = ({ gallery, year, month, lang, countryData }) => {
             month={month}
             lang={lang}
             countryData={countryData}
-          />
+          >
+            {children}
+          </MonthContent>
         </div>
       </Swipeable>
       <MonthFooter gallery={gallery} year={year} month={month} />
@@ -99,6 +101,7 @@ const Month = ({ gallery, year, month, lang, countryData }) => {
   );
 };
 Month.propTypes = {
+  children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,

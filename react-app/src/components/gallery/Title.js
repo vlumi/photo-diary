@@ -5,8 +5,28 @@ import { useTranslation } from "react-i18next";
 
 import Link from "./Link";
 
-const Title = ({ gallery }) => {
+const Title = ({ gallery, context }) => {
   const { t } = useTranslation();
+
+  const renderContextSwitch = () => {
+    switch (context) {
+      case "gallery-stats":
+        return (
+          <span className="stats">
+            <Link gallery={gallery}>{t("nav-gallery")}</Link>
+          </span>
+        );
+      case "gallery":
+      default:
+        return (
+          <span className="stats">
+            <ReactLink to={gallery.statsPath()}>
+              {t("nav-gallery-stats")}
+            </ReactLink>
+          </span>
+        );
+    }
+  };
 
   return (
     <>
@@ -14,17 +34,18 @@ const Title = ({ gallery }) => {
         <span className="top">
           <Link>{t("nav-gallery-top")}</Link>
         </span>
-        <span className="stats">
-          <ReactLink to={gallery.statsPath()}>{t("nav-gallery-stats")}</ReactLink>
-        </span>
+        {renderContextSwitch()}
       </span>
       <h1>
-        {gallery.title()} — {t("nav-gallery")}
+        {gallery.title()}
+        {context ? <> — {t(`nav-${context}`)}</> : ""}
       </h1>
     </>
   );
 };
 Title.propTypes = {
+  galleries: PropTypes.array.isRequired,
   gallery: PropTypes.object.isRequired,
+  context: PropTypes.string,
 };
 export default Title;

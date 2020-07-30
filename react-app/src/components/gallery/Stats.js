@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 
-import StatsTitle from "./StatsTitle";
 import StatsTopic from "./StatsTopic";
 
 import stats from "../../lib/stats";
@@ -15,7 +14,7 @@ const Root = styled.div`
   align-items: flex-start;
 `;
 
-const Stats = ({ gallery, lang, countryData }) => {
+const Stats = ({ children, gallery, lang, countryData }) => {
   const [data, setData] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -34,7 +33,7 @@ const Stats = ({ gallery, lang, countryData }) => {
 
   return (
     <>
-      <StatsTitle gallery={gallery} />
+      {children}
       <Root>
         {stats.collectTopics(data, lang, t, countryData).map((topic) => (
           <StatsTopic key={topic.name} topic={topic} lang={lang} />
@@ -44,6 +43,8 @@ const Stats = ({ gallery, lang, countryData }) => {
   );
 };
 Stats.propTypes = {
+  children: PropTypes.any,
+  galleries: PropTypes.array.isRequired,
   gallery: PropTypes.object.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,

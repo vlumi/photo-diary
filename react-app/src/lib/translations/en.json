@@ -1,7 +1,9 @@
 {
   "translation": {
     "loading": "Loading...",
+    "empty": "Empty",
 
+    "nav-galleries": "Galleries",
     "nav-gallery-top": "Back to top",
     "nav-gallery": "Gallery",
     "nav-gallery-stats": "Statistics",

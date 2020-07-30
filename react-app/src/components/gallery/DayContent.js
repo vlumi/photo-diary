@@ -5,6 +5,7 @@ import Title from "./Title";
 import Thumbnails from "./Thumbnails";
 
 const DayContent = ({
+  children,
   gallery,
   year,
   month,
@@ -30,12 +31,13 @@ const DayContent = ({
   // TODO: epoch & epochMode
   return (
     <>
-      <Title gallery={gallery} />
+      {children}
       <div className="day">{renderContent()}</div>
     </>
   );
 };
 DayContent.propTypes = {
+  children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,

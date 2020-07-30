@@ -7,7 +7,7 @@ import Link from "./Link";
 
 import useKeyPress from "../../lib/keypress";
 
-const Empty = ({ gallery }) => {
+const Empty = ({ children, gallery }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   useKeyPress("Escape", () => {
@@ -44,11 +44,13 @@ const Empty = ({ gallery }) => {
         <span style={style}>→</span>
         <span style={style}>⇥</span>
       </h2>
+      {children}
       <i>Empty</i>
     </>
   );
 };
 Empty.propTypes = {
+  children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
 };
 export default Empty;

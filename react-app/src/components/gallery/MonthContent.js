@@ -11,7 +11,14 @@ import Link from "./Link";
 
 import calendar from "../../lib/calendar";
 
-const MonthContent = ({ gallery, year, month, lang, countryData }) => {
+const MonthContent = ({
+  children,
+  gallery,
+  year,
+  month,
+  lang,
+  countryData,
+}) => {
   const { t } = useTranslation();
 
   if (!gallery.includesMonth(year, month)) {
@@ -83,12 +90,13 @@ const MonthContent = ({ gallery, year, month, lang, countryData }) => {
 
   return (
     <>
-      <Title gallery={gallery} />
+      {children}
       <div className="month">{gallery.mapDays(year, month, renderDay)}</div>
     </>
   );
 };
 MonthContent.propTypes = {
+  children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
