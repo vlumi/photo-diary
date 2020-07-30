@@ -34,7 +34,11 @@ const Gallery = (galleryData) => {
 
   const gallery = importGalleryData(galleryData);
   const [photos, photosByYmd] = importPhotos(gallery.photos || []);
+
   const self = {
+    withPhotos: (photos) => {
+      return Gallery({ ...galleryData, photos });
+    },
     id: () => gallery.id,
     isSpecial: () => gallery.id.startsWith(":"),
     title: (year, month, day, photo) => {

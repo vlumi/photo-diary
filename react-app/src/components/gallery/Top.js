@@ -4,6 +4,7 @@ import { Redirect, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import galleryService from "../../services/galleries";
+import galleryPhotosService from "../../services/gallery-photos";
 
 import Title from "./Title";
 import ListBody from "./ListBody";
@@ -23,6 +24,8 @@ import theme from "../../lib/theme";
 const Top = ({ user, lang, countryData, stats = false }) => {
   const [galleries, setGalleries] = React.useState(undefined);
   const [gallery, setGallery] = React.useState(undefined);
+  const [photos, setPhotos] = React.useState(undefined);
+  // const [filter, setFilter] = React.useState([]);
   const [error, setError] = React.useState("");
 
   const { t } = useTranslation();
@@ -34,12 +37,15 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   const month = Number(useParams().month || 0);
   const day = Number(useParams().day || 0);
 
+  const selectedGallery =
+    galleries && galleries.find((gallery) => gallery.id() === galleryId);
+
   if (gallery && gallery.id() !== galleryId) {
     setGallery(undefined);
   }
 
-  if (gallery && gallery.hasTheme()) {
-    theme.setTheme(gallery.theme());
+  if (selectedGallery && selectedGallery.hasTheme()) {
+    theme.setTheme(selectedGallery.theme());
   } else {
     theme.setTheme(config.DEFAULT_THEME);
   }
@@ -57,17 +63,20 @@ const Top = ({ user, lang, countryData, stats = false }) => {
     if (!galleryId) {
       return;
     }
-    galleryService
+    galleryPhotosService
       .get(galleryId)
-      .then((loadedGallery) => {
-        const gallery = GalleryModel(loadedGallery);
-        if (gallery.hasTheme()) {
-          theme.setTheme(gallery.theme());
-        }
-        setGallery(gallery);
+      .then((photos) => {
+        setPhotos(photos);
       })
       .catch((error) => setError(error.message));
   }, [galleryId, user]);
+  React.useEffect(() => {
+    if (!selectedGallery || !photos) {
+      return;
+    }
+    // TODO: filter photos here
+    setGallery(selectedGallery.withPhotos(photos));
+  }, [selectedGallery, photos]);
 
   if (error) {
     theme.setTheme("grayscale");
@@ -128,9 +137,10 @@ const Top = ({ user, lang, countryData, stats = false }) => {
       </Empty>
     );
   }
+  // TODO: filter here
   if (stats) {
     return (
-      <Stats gallery={gallery} lang={lang} countryData={countryData}>
+      <Stats photos={gallery.photos()} lang={lang} countryData={countryData}>
         <Title
           galleries={galleries}
           gallery={gallery}

@@ -14,14 +14,14 @@ const Root = styled.div`
   align-items: flex-start;
 `;
 
-const Stats = ({ children, gallery, lang, countryData }) => {
+const Stats = ({ children, photos, lang, countryData }) => {
   const [data, setData] = React.useState(undefined);
 
   const { t } = useTranslation();
 
   React.useEffect(() => {
-    stats.generate(gallery, t("stats-unknown")).then((stats) => setData(stats));
-  }, [gallery, t]);
+    stats.generate(photos, t("stats-unknown")).then((stats) => setData(stats));
+  }, [photos, t]);
 
   if (!data) {
     return (
@@ -44,7 +44,7 @@ const Stats = ({ children, gallery, lang, countryData }) => {
 };
 Stats.propTypes = {
   children: PropTypes.any,
-  gallery: PropTypes.object.isRequired,
+  photos: PropTypes.object.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };

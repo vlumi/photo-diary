@@ -7,8 +7,8 @@ import collection from "./collection";
 import color from "./color";
 import config from "./config";
 
-const generate = async (gallery, unknownLabel) => {
-  return collectStatistics(gallery.photos(), unknownLabel);
+const generate = async (photos, unknownLabel) => {
+  return collectStatistics(photos, unknownLabel);
 };
 
 const collectTopics = (data, lang, t, countryData) => {
