@@ -1,31 +1,79 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Link as ReactLink } from "react-router-dom";
+import { Redirect } from "react-router-dom";
+import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 
 import Link from "./Link";
+const Root = styled.h1`
+  margin: 0;
+`;
+const GallerySelect = styled.select`
+  font-size: 1em;
+  background: none;
+  border: none;
+  font-weight: bold;
+  text-align-last: right;
+`;
+const GalleryOption = styled.option``;
 
-const Title = ({ gallery, context }) => {
+const Title = ({ galleries, gallery, context }) => {
+  const [redirect, setRedirect] = React.useState(undefined);
+
   const { t } = useTranslation();
 
-  const renderContextSwitch = () => {
-    switch (context) {
-      case "gallery-stats":
-        return (
-          <span className="stats">
-            <Link gallery={gallery}>{t("nav-gallery")}</Link>
-          </span>
-        );
-      case "gallery":
-      default:
-        return (
-          <span className="stats">
-            <ReactLink to={gallery.statsPath()}>
-              {t("nav-gallery-stats")}
-            </ReactLink>
-          </span>
-        );
+  React.useEffect(() => {
+    if (redirect) {
+      const handle = setTimeout(() => setRedirect(""), 0);
+      return () => {
+        setRedirect("");
+        clearTimeout(handle);
+      };
     }
+  }, [redirect]);
+  if (redirect) {
+    return <Redirect to={redirect} />;
+  }
+
+  const getRedirectPath = (gallery) => {
+    switch (context) {
+      default:
+      case "gallery":
+        return gallery.lastPath();
+      case "gallery-stats":
+        return gallery.statsPath();
+    }
+  };
+
+  const galleryChangeHandler = (event) => {
+    const targetGallery = galleries.find(
+      (element) => element.id() === event.target.value
+    );
+    if (targetGallery && gallery.id !== targetGallery.id) {
+      window.history.pushState({}, "");
+      setRedirect(getRedirectPath(targetGallery));
+    }
+  };
+
+  const getTargetContext = (context) => {
+    switch (context) {
+      default:
+      case "gallery":
+        return "gallery-stats";
+      case "gallery-stats":
+        return "gallery";
+    }
+  };
+
+  const renderContextSwitch = () => {
+    const targetContext = getTargetContext(context);
+    return (
+      <span className="stats">
+        <Link gallery={gallery} context={targetContext}>
+          {t(`nav-${targetContext}`)}
+        </Link>
+      </span>
+    );
   };
 
   return (
@@ -36,10 +84,16 @@ const Title = ({ gallery, context }) => {
         </span>
         {renderContextSwitch()}
       </span>
-      <h1>
-        {gallery.title()}
+      <Root>
+        <GallerySelect value={gallery.id()} onChange={galleryChangeHandler}>
+          {galleries.map((gallery) => (
+            <GalleryOption key={gallery.id()} value={gallery.id()}>
+              {gallery.title()}
+            </GalleryOption>
+          ))}
+        </GallerySelect>
         {context ? <> — {t(`nav-${context}`)}</> : ""}
-      </h1>
+      </Root>
     </>
   );
 };

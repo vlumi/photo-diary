@@ -27,18 +27,22 @@ const Top = ({ user, lang, countryData, stats = false }) => {
 
   const { t } = useTranslation();
 
-  if (gallery && gallery.hasTheme()) {
-    theme.setTheme(gallery.theme());
-  } else {
-    theme.setTheme(config.DEFAULT_THEME);
-  }
-
   const galleryId = useParams().galleryId;
   const photoId = useParams().photoId;
 
   const year = Number(useParams().year || 0);
   const month = Number(useParams().month || 0);
   const day = Number(useParams().day || 0);
+
+  if (gallery && gallery.id() !== galleryId) {
+    setGallery(undefined);
+  }
+
+  if (gallery && gallery.hasTheme()) {
+    theme.setTheme(gallery.theme());
+  } else {
+    theme.setTheme(config.DEFAULT_THEME);
+  }
 
   React.useEffect(() => {
     galleryService
@@ -108,14 +112,22 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   if (!gallery.includesPhotos()) {
     return (
       <Empty gallery={gallery}>
-        <Title galleries={galleries} gallery={gallery} context="gallery" />
+        <Title
+          galleries={galleries}
+          gallery={gallery}
+          context={stats ? "gallery-stats" : "gallery"}
+        />
       </Empty>
     );
   }
   if (stats) {
     return (
       <Stats gallery={gallery} lang={lang} countryData={countryData}>
-        <Title galleries={galleries} gallery={gallery} context="gallery-stats" />
+        <Title
+          galleries={galleries}
+          gallery={gallery}
+          context="gallery-stats"
+        />
       </Stats>
     );
   }

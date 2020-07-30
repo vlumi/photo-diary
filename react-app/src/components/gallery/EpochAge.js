@@ -45,6 +45,6 @@ EpochAge.propTypes = {
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   format: PropTypes.string,
-  separator: PropTypes.object,
+  separator: PropTypes.any,
 };
 export default EpochAge;
