@@ -5,7 +5,7 @@ import MapContainer from "../MapContainer";
 
 const YearFooter = ({ gallery, year }) => {
   const renderMap = (positions) => {
-    if (!positions) {
+    if (!positions || !positions.length) {
       return "";
     }
     return (
@@ -16,12 +16,15 @@ const YearFooter = ({ gallery, year }) => {
   };
 
   const photos = gallery
-    .flatMapMonths(year, (month) =>
+    .flatMapMonths(year, (month) => {
       gallery.flatMapDays(year, month, (day) =>
         gallery.photos(year, month, day)
-      )
-    )
-    .filter((photo) => photo.hasCoordinates());
+      );
+    })
+    .filter(Boolean)
+    .filter((photo) => {
+      photo.hasCoordinates();
+    });
 
   return <div className="footer">{renderMap(photos)}</div>;
 };

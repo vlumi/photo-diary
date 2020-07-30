@@ -17,6 +17,7 @@ const MonthFooter = ({ gallery, year, month }) => {
 
   const photos = gallery
     .flatMapDays(year, month, (day) => gallery.photos(year, month, day))
+    .filter(Boolean)
     .filter((photo) => photo.hasCoordinates());
 
   return <div className="footer">{renderMap(photos)}</div>;
