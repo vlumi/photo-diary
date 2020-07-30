@@ -1,11 +1,13 @@
 # Photo Diary
 
-Photo Diary is a calendar based gallery for self-hosting. The photos are presented arranged by the date they were shot, in calendar-based views, aimed at diary and other similar photography projects.
+**Photo Diary** is a calendar-based photo gallery platform for self-hosting. The photos are arranged by the date they were shot, in calendar-based views, aimed at diaries and other, date-based photography projects.
 
 Key features include:
 
-- Fast browsing – gallery content (apart from actual photos) loaded once at startup
 - Calendar-based views (year, month, day, photo)
+  - Including map from embedded GPS information
+- Comprehensive photo statistics (time, gear, exposure settings, etc.)
+- Fast browsing – gallery content (apart from actual photos) loaded once at startup
 - User management and basic access control
 
 ## Structure
@@ -16,41 +18,40 @@ Photo Diary is split into separate independent modules, each handling its own su
 - [server](server) – Back-end API
 - [converter](converter) – Back-end process for pre-processing new photos to be added to the gallery
 
+### Setup
+
+TBD
+
 ## Features
 
 - Photos are segmented into galleries
   - Each photo can be in any number of galleries
   - Single level – no nesting
   - One gallery view at a time
-  - Virtual default gallery to jump to based on hostname
   - Special galleries for more abstract concepts
     - :all includes all photos
     - :public includes all photos added to galleries
     - :private includes photos not added to any galleries
+  - Hostname-based default gallery selection
 - SPA view
   - Fast transition between views
     - Pre-load current gallery
   - Fast navigation to previous/next item
     - Left/right arrow keys
     - Swipe left/right
-  - Yearly view – Calendar with heat-mapped days
-  - Monthly view – Thumbnails grouped by date
-  - Daily view – Thumbnails
+    - Pre-load previous/next photo
+  - Year view – Calendar with heat-mapped days
+  - Month view – Thumbnails grouped by date
+  - Day view – Thumbnails
   - Single photo view – Maximize to visible space, with photo properties
-- Statistics view (TBD)
-  - Number of photos by year/month
-    - Total and average
-  - Month-of-year distribution
-  - Weekday distribution
-  - Time-of-day distribution
-  - Camera/lens make/model distribution
-  - Exposure value distribution
-    - Focal length
-    - Aperture
-    - Shutter speed
-    - ISO
-  - Author distribution
-  - Country distribution
+- Statistics view
+  - General statistics
+    - Summary: total photos, total days, average per day
+    - By author
+    - By country
+  - Time distribution by year, year/month, month, weekday, hour
+  - Gear distribution by camera make, camera, lens, camera/lens
+  - Exposure distribution by focal length, aperture, shutter speed, sensitivity, EV, LV, resolution
 - Admin view (TBD)
   - Add new photos
     - Pick up from upload directory on the server
@@ -93,7 +94,6 @@ Photo Diary is split into separate independent modules, each handling its own su
 
 - Front-end
   - Dynamic statistics, with filters/drill-down
-    - By gallery
     - By gear
     - By author
     - By exposure settings
@@ -125,6 +125,11 @@ Photo Diary is split into separate independent modules, each handling its own su
 These features would be nice to have, but are too far into the future to put on the roadmap.
 
 - Front-end
+  - Gallery filters
+    - Filter the displayed photos
+  - Hybrid galleries
+    - Combine galleries to form new galleries
+    - Apply filters to an existing gallery
   - Gallery view
     - Multiple display sizes, dynamically chosen to match client window size
     - Photo license information
@@ -136,6 +141,13 @@ These features would be nice to have, but are too far into the future to put on 
 
 ## Version History
 
+- v0.3.0 (TBD)
+  - Statistics view
+    - Separate for each gallery, including virtual
+  - Marker paths to embedded map, in chronological order
+  - API changes
+    - Remove `/api/stats`, moving the statistics generation client-side
+    - Flatten the returned `photos` in `/api/gallery`, removing the year/month/day hierarchy
 - v0.2.1 (2020-07-27)
   - Embedded map with markers of the photo(s) on year, month, day, and photo views
     - Marker popup with small thumbnail and date
