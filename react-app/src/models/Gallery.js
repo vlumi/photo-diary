@@ -1,5 +1,3 @@
-import Photo from "./Photo";
-
 import calendar from "../lib/calendar";
 import format from "../lib/format";
 import collection from "../lib/collection";
@@ -27,9 +25,8 @@ const Gallery = (galleryData) => {
     return photosByDate;
   };
   const importPhotos = (photos) => {
-    const photosFlat = photos.map((photo) => Photo(photo));
-    const photosByYmd = groupPhotosByYearMonthDay(photosFlat);
-    return [photosFlat, photosByYmd];
+    const photosByYmd = groupPhotosByYearMonthDay(photos);
+    return [photos, photosByYmd];
   };
 
   const gallery = importGalleryData(galleryData);

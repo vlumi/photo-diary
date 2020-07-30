@@ -21,7 +21,12 @@ const MonthContent = ({
   const { t } = useTranslation();
 
   if (!gallery.includesMonth(year, month)) {
-    return <i>Empty</i>;
+    return (
+      <>
+        {children}
+        <i>Empty</i>
+      </>
+    );
   }
 
   const renderEpochInfo = (day) => {

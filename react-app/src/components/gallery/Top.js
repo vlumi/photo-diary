@@ -17,6 +17,7 @@ import Day from "./Day";
 import Photo from "./Photo";
 
 import GalleryModel from "../../models/Gallery";
+import PhotoModel from "../../models/Photo";
 
 import config from "../../lib/config";
 import theme from "../../lib/theme";
@@ -25,7 +26,7 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   const [galleries, setGalleries] = React.useState(undefined);
   const [gallery, setGallery] = React.useState(undefined);
   const [photos, setPhotos] = React.useState(undefined);
-  // const [filter, setFilter] = React.useState([]);
+  const [filters, setFilters] = React.useState({});
   const [error, setError] = React.useState("");
 
   const { t } = useTranslation();
@@ -37,18 +38,10 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   const month = Number(useParams().month || 0);
   const day = Number(useParams().day || 0);
 
+  const staleGallery = gallery && gallery.id() !== galleryId;
+
   const selectedGallery =
     galleries && galleries.find((gallery) => gallery.id() === galleryId);
-
-  if (gallery && gallery.id() !== galleryId) {
-    setGallery(undefined);
-  }
-
-  if (selectedGallery && selectedGallery.hasTheme()) {
-    theme.setTheme(selectedGallery.theme());
-  } else {
-    theme.setTheme(config.DEFAULT_THEME);
-  }
 
   React.useEffect(() => {
     galleryService
@@ -65,18 +58,41 @@ const Top = ({ user, lang, countryData, stats = false }) => {
     }
     galleryPhotosService
       .get(galleryId)
-      .then((photos) => {
-        setPhotos(photos);
-      })
+      .then((photos) => setPhotos(photos.map((photo) => PhotoModel(photo))))
       .catch((error) => setError(error.message));
   }, [galleryId, user]);
   React.useEffect(() => {
     if (!selectedGallery || !photos) {
       return;
     }
-    // TODO: filter photos here
-    setGallery(selectedGallery.withPhotos(photos));
-  }, [selectedGallery, photos]);
+    const filteredPhotos = photos.filter((photo) => {
+      return Object.values(filters).every((categoryFilters) =>
+        categoryFilters.every((filter) => filter(photo))
+      );
+    });
+    setGallery(selectedGallery.withPhotos(filteredPhotos));
+  }, [selectedGallery, photos, filters]);
+
+  if (staleGallery) {
+    setGallery(undefined);
+    setPhotos(undefined);
+  }
+
+  if (selectedGallery && selectedGallery.hasTheme()) {
+    theme.setTheme(selectedGallery.theme());
+  } else {
+    theme.setTheme(config.DEFAULT_THEME);
+  }
+
+  if (Object.keys(filters).length > 0) {
+    setFilters({});
+    // setFilters({
+    //   iso: [(photo) => [160, 200].includes(photo.iso())],
+    //   aperture: [(photo) => [1.2, 1.4].includes(photo.aperture())],
+    // });
+    setGallery(undefined);
+    setPhotos(undefined);
+  }
 
   if (error) {
     theme.setTheme("grayscale");
@@ -88,7 +104,7 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   }
   if (!galleryId) {
     if (galleries.length === 1) {
-      return <Redirect to={galleries[0].lastPath()} />;
+      return <Redirect to={galleries[0].path()} />;
     }
 
     const galleriesMatchingHostname = galleries.filter((gallery) =>
@@ -99,11 +115,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         (gallery) => gallery.id() === config.DEFAULT_GALLERY
       );
       if (targetGallery) {
-        return <Redirect to={targetGallery.lastPath()} />;
+        return <Redirect to={targetGallery.path()} />;
       }
     }
     if (galleriesMatchingHostname.length === 1) {
-      return <Redirect to={galleriesMatchingHostname[0].lastPath()} />;
+      return <Redirect to={galleriesMatchingHostname[0].path()} />;
     }
 
     if (galleries.length === 0) {
@@ -122,7 +138,7 @@ const Top = ({ user, lang, countryData, stats = false }) => {
     );
   }
 
-  if (!gallery) {
+  if (staleGallery || !gallery) {
     return <div>{t("loading")}</div>;
   }
 
@@ -132,18 +148,21 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context={stats ? "gallery-stats" : "gallery"}
         />
       </Empty>
     );
   }
-  // TODO: filter here
   if (stats) {
     return (
       <Stats photos={gallery.photos()} lang={lang} countryData={countryData}>
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery-stats"
         />
       </Stats>
@@ -155,6 +174,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery"
           view="year"
         />
@@ -167,6 +188,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery"
           view="month"
         />
@@ -185,6 +208,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery"
           view="day"
         />
@@ -204,6 +229,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery"
           view="day"
         />
@@ -224,6 +251,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
       <Title
         galleries={galleries}
         gallery={gallery}
+        filters={filters}
+        setFilters={setFilters}
         context="gallery"
         view="photo"
       />

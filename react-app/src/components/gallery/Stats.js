@@ -44,7 +44,7 @@ const Stats = ({ children, photos, lang, countryData }) => {
 };
 Stats.propTypes = {
   children: PropTypes.any,
-  photos: PropTypes.object.isRequired,
+  photos: PropTypes.array.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
