@@ -329,36 +329,6 @@ div.photos {
   flex-wrap: wrap;
   justify-content: flex-start;
 }
-div.thumbnail-block {
-  vertical-align: top;
-  display: flex;
-  flex-wrap: nowrap;
-}
-div.thumbnail {
-  height: 212px;
-  margin: 1px;
-  background-color: #bbb;
-}
-
-div.thumbnail > .flag {
-  display: inline;
-  position: relative;
-  top: -19px;
-  left: 3px;
-}
-div.thumbnail > .flag > .flag-icon {
-  display: block;
-}
-
-span.thumbnail {
-  display: block;
-  background-repeat: no-repeat;
-  background-position: 5px 5px;
-  border: solid #004 1px;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-}
 
 div.photo {
   flex-grow: 1;
