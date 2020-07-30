@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import EpochAge from "./EpochAge";
 import EpochDayIndex from "./EpochDayIndex";
 
-import Title from "./Title";
 import Thumbnails from "./Thumbnails";
 import Link from "./Link";
 

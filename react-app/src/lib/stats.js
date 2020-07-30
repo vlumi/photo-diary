@@ -83,7 +83,6 @@ const collectTopics = (data, lang, t, countryData) => {
     },
     line: {
       ...chartOptions.common,
-      tooltips: {},
       tooltips: {
         mode: "index",
       },
@@ -231,7 +230,7 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
 
-  const collectYear = (byYear, daysInYear, total) => {
+  const collectYear = (byYear, daysInYear) => {
     const [flat, data] = transformData({
       rawData: byYear,
       comparator: collection.numSortByFieldAsc("key"),
@@ -254,7 +253,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ]),
     };
   };
-  const collectYearMonth = (byYearMonth, daysInYearMonth, total) => {
+  const collectYearMonth = (byYearMonth, daysInYearMonth) => {
     const deep = Object.keys(byYearMonth)
       .sort((a, b) => a - b)
       .map((year) => {
@@ -269,11 +268,6 @@ const collectTopics = (data, lang, t, countryData) => {
         return {
           key: year,
           value: collection.foldToArray(m, collection.numSortByFieldAsc("key")),
-          // .map((entry) =>
-          //   collection.transformObjectValue(entry, "key", (entry) =>
-          //     t(`month-long-${entry.key}`)
-          //   )
-          // ),
         };
       });
     const mapToChartData = (flat) => {
@@ -320,7 +314,6 @@ const collectTopics = (data, lang, t, countryData) => {
           t("stats-year-month", { year, month: t(`month-long-${month}`) }),
           number.default(entry.value),
           number.twoDecimal(entry.value / daysInYearMonth[year][month]),
-          // `${number.oneDecimal(format.share(entry.value, total))}%`,
         ];
       }),
     };
@@ -404,8 +397,8 @@ const collectTopics = (data, lang, t, countryData) => {
       name: "time",
       title: t("stats-topic-time"),
       categories: [
-        collectYear(byTime.byYear, byTime.daysInYear, total),
-        collectYearMonth(byTime.byYearMonth, byTime.daysInYearMonth, total),
+        collectYear(byTime.byYear, byTime.daysInYear),
+        collectYearMonth(byTime.byYearMonth, byTime.daysInYearMonth),
         collectMonth(byTime.byMonth, total),
         collectWeekday(byTime.byWeekday, total),
         collectHour(byTime.byHour, total),

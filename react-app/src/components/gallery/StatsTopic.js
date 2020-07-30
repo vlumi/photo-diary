@@ -19,7 +19,7 @@ const Categories = styled.section`
   flex-wrap: wrap;
   justify-content: flex-start;
 `;
-const StatsTopic = ({ topic, lang }) => {
+const StatsTopic = ({ topic }) => {
   return (
     <Root key={topic.name} name={topic.name}>
       <Title>{topic.title}</Title>
@@ -29,7 +29,6 @@ const StatsTopic = ({ topic, lang }) => {
             key={`${category.name}:${topic.name}`}
             topic={topic}
             category={category}
-            lang={lang}
           />
         ))}
       </Categories>
@@ -38,6 +37,5 @@ const StatsTopic = ({ topic, lang }) => {
 };
 StatsTopic.propTypes = {
   topic: PropTypes.object,
-  lang: PropTypes.string.isRequired,
 };
 export default StatsTopic;

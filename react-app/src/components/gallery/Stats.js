@@ -36,7 +36,7 @@ const Stats = ({ children, gallery, lang, countryData }) => {
       {children}
       <Root>
         {stats.collectTopics(data, lang, t, countryData).map((topic) => (
-          <StatsTopic key={topic.name} topic={topic} lang={lang} />
+          <StatsTopic key={topic.name} topic={topic} />
         ))}
       </Root>
     </>
@@ -44,7 +44,6 @@ const Stats = ({ children, gallery, lang, countryData }) => {
 };
 Stats.propTypes = {
   children: PropTypes.any,
-  galleries: PropTypes.array.isRequired,
   gallery: PropTypes.object.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,

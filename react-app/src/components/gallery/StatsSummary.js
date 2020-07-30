@@ -57,13 +57,12 @@ const Value = styled.span`
   vertical-align: middle;
 `;
 
-const StatsSummary = ({ category, lang }) => {
+const StatsSummary = ({ category }) => {
   const { t } = useTranslation();
 
   if (!("kpi" in category) || !category.kpi) {
     return <></>;
   }
-  // TODO; format through StatsKpi
   return (
     <Root>
       <List>
@@ -85,6 +84,5 @@ const StatsSummary = ({ category, lang }) => {
 };
 StatsSummary.propTypes = {
   category: PropTypes.object,
-  lang: PropTypes.string.isRequired,
 };
 export default StatsSummary;

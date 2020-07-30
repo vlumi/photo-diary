@@ -11,11 +11,11 @@ const Root = styled.div`
   margin: 0 1px 2px;
 `;
 const Title = styled.h3``;
-const StatsCategory = ({ topic, category, lang }) => {
+const StatsCategory = ({ topic, category }) => {
   return (
     <Root key={`${topic.name}:${category.name}`}>
       <Title>{category.title}</Title>
-      <StatsSummary category={category} lang={lang} />
+      <StatsSummary category={category} />
       <StatsCharts category={category} />
       <StatsRaw topic={topic} category={category} />
     </Root>
@@ -24,6 +24,5 @@ const StatsCategory = ({ topic, category, lang }) => {
 StatsCategory.propTypes = {
   topic: PropTypes.object,
   category: PropTypes.object,
-  lang: PropTypes.string.isRequired,
 };
 export default StatsCategory;

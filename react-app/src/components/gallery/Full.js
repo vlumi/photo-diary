@@ -9,7 +9,6 @@ const Full = ({ gallery }) => {
 
 Full.propTypes = {
   children: PropTypes.any,
-  galleries: PropTypes.array.isRequired,
   gallery: PropTypes.object.isRequired,
 };
 export default Full;
