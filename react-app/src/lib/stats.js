@@ -14,8 +14,15 @@ const generate = async (gallery, unknownLabel) => {
 const collectTopics = (data, lang, t, countryData) => {
   const numberFormatter = new Intl.NumberFormat(lang).format;
 
+  const encodeLabelKey = (formatter) => (entry) =>
+    collection.transformObjectValue(entry, "key", (entry) => {
+      return {
+        name: formatter(entry.key),
+        share: format.share(entry.value, data.count.total),
+      };
+    });
   const decodeLabelKey = (key, value) => {
-    const [name, share] = key;
+    const { name, share } = key;
     return ` ${name}: ${numberFormatter(value)} (${share}%)`;
   };
   const chartOptions = {
@@ -93,11 +100,6 @@ const collectTopics = (data, lang, t, countryData) => {
     formatter = format.identity,
     maxEntries = 0
   ) => {
-    const encodeLabelKey = (entry) =>
-      collection.transformObjectValue(entry, "key", (entry) => [
-        formatter(entry.key),
-        format.share(entry.value, data.count.total),
-      ]);
     const doMap = (data) => {
       const valueRanks = Object.fromEntries(
         data
@@ -111,7 +113,7 @@ const collectTopics = (data, lang, t, countryData) => {
         .map((_) => Number(_.value))
         .map((value) => colorGradients[valueRanks[value]]);
       return {
-        labels: data.map(encodeLabelKey).map((_) => _.key),
+        labels: data.map(encodeLabelKey(formatter)).map((_) => _.key),
         datasets: [
           {
             data: data.map((_) => _.value),
