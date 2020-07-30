@@ -16,16 +16,13 @@ const YearFooter = ({ gallery, year }) => {
   };
 
   const photos = gallery
-    .flatMapMonths(year, (month) => {
+    .flatMapMonths(year, (month) =>
       gallery.flatMapDays(year, month, (day) =>
         gallery.photos(year, month, day)
-      );
-    })
+      )
+    )
     .filter(Boolean)
-    .filter((photo) => {
-      photo.hasCoordinates();
-    });
-
+    .filter((photo) => photo.hasCoordinates());
   return <div className="footer">{renderMap(photos)}</div>;
 };
 YearFooter.propTypes = {
