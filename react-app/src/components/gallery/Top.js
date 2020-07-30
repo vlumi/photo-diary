@@ -85,6 +85,14 @@ const Top = ({ user, lang, countryData, stats = false }) => {
     const galleriesMatchingHostname = galleries.filter((gallery) =>
       gallery.matchesHostname(window.location.hostname)
     );
+    if (config.DEFAULT_GALLERY) {
+      const targetGallery = galleries.find(
+        (gallery) => gallery.id() === config.DEFAULT_GALLERY
+      );
+      if (targetGallery) {
+        return <Redirect to={targetGallery.lastPath()} />;
+      }
+    }
     if (galleriesMatchingHostname.length === 1) {
       return <Redirect to={galleriesMatchingHostname[0].lastPath()} />;
     }

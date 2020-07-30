@@ -47,7 +47,7 @@ const Title = ({ galleries, gallery, context }) => {
 
   const galleryChangeHandler = (event) => {
     const targetGallery = galleries.find(
-      (element) => element.id() === event.target.value
+      (gallery) => gallery.id() === event.target.value
     );
     if (targetGallery && gallery.id !== targetGallery.id) {
       window.history.pushState({}, "");
