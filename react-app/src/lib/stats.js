@@ -101,32 +101,32 @@ const collectTopics = (data, lang, t, countryData) => {
     formatter = format.identity,
     maxEntries = 0
   ) => {
+    const valueRanks = collection.calculateRanks(foldedData, (_) =>
+      Number(_.value)
+    );
     const doMap = (data) => {
-      const valueRanks = Object.fromEntries(
-        data
-          .map((_) => Number(_.value))
-          .sort((a, b) => b - a)
-          .map((value, i) => [value, i])
-      );
       // TODO: from configured theme: --header-background -> --header-color
       const colorGradients = color.colorGradient("#004", "#ddf", data.length);
       const colors = data
         .map((_) => Number(_.value))
         .map((value) => colorGradients[valueRanks[value]]);
-      return {
-        labels: data.map(encodeLabelKey(formatter)).map((_) => _.key),
-        datasets: [
-          {
-            data: data.map((_) => _.value),
-            backgroundColor: colors,
-            borderWidth: 0.5,
-            barThickness: "flex",
-            minBarLength: 3,
-            barPercentage: 1,
-            categoryPercentage: 1,
-          },
-        ],
-      };
+      return [
+        {
+          labels: data.map(encodeLabelKey(formatter)).map((_) => _.key),
+          datasets: [
+            {
+              data: data.map((_) => _.value),
+              backgroundColor: colors,
+              borderWidth: 0.5,
+              barThickness: "flex",
+              minBarLength: 3,
+              barPercentage: 1,
+              categoryPercentage: 1,
+            },
+          ],
+        },
+        valueRanks,
+      ];
     };
     return collection.truncateAndProcess(
       foldedData,
@@ -141,14 +141,14 @@ const collectTopics = (data, lang, t, countryData) => {
     );
   };
   const transformData = ({
-    rawData,
+    original,
     comparator = collection.numSortByFieldDesc("value"),
     formatter = format.identity,
     limit = 0,
   }) => {
-    const flat = collection.foldToArray(rawData, comparator);
-    const data = mapToChartData(flat, formatter, limit);
-    return [flat, data];
+    const flat = collection.foldToArray(original, comparator);
+    const [data, valueRanks] = mapToChartData(flat, formatter, limit);
+    return [flat, data, valueRanks];
   };
 
   const collectSummary = (count) => {
@@ -164,7 +164,7 @@ const collectTopics = (data, lang, t, countryData) => {
   };
   const collectAuthor = (byAuthor, total) => {
     const [flat, data] = transformData({
-      rawData: byAuthor,
+      original: byAuthor,
     });
     return {
       name: "author",
@@ -173,9 +173,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: true,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "author", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry, index) => [
+        number.default(index + 1),
         entry.key,
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -184,7 +189,7 @@ const collectTopics = (data, lang, t, countryData) => {
   };
   const collectCountry = (byCountry, total) => {
     const [flat, data] = transformData({
-      rawData: byCountry,
+      original: byCountry,
       formatter: (countryCode) =>
         format.countryName(countryCode, lang, countryData),
     });
@@ -195,14 +200,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: true,
-      rawColumns: [
-        { align: "right" },
-        { align: "left" },
-        { align: "right" },
-        { align: "right" },
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "flag", align: "right", header: true },
+        { title: "country", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
       ],
-      raw: flat.map((entry) => [
+      table: flat.map((entry, index) => [
+        number.default(index + 1),
         <>
           {countryData.isValid(entry.key) ? (
             <FlagIcon code={entry.key} />
@@ -231,8 +237,8 @@ const collectTopics = (data, lang, t, countryData) => {
   };
 
   const collectYear = (byYear, daysInYear) => {
-    const [flat, data] = transformData({
-      rawData: byYear,
+    const [flat, data, valueRanks] = transformData({
+      original: byYear,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -242,9 +248,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "year", align: "left" },
+        { title: "count", align: "right" },
+        { title: "average", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         entry.key,
         number.default(entry.value),
         t("stats-per-day", {
@@ -302,15 +313,21 @@ const collectTopics = (data, lang, t, countryData) => {
         }),
       (entry) => entry.value > 0
     );
+    const valueRanks = collection.calculateRanks(flat, (_) => Number(_.value));
     return {
       name: "year-month",
       title: t("stats-category-year-month"),
       charts: [{ type: "line", data, options: chartOptions.line }],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => {
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "year-month", align: "left" },
+        { title: "count", align: "right" },
+        { title: "average", align: "right" },
+      ],
+      table: flat.map((entry) => {
         const [year, month] = entry.key;
         return [
+          number.default(valueRanks[entry.value] + 1),
           t("stats-year-month", { year, month: t(`month-long-${month}`) }),
           number.default(entry.value),
           number.twoDecimal(entry.value / daysInYearMonth[year][month]),
@@ -319,8 +336,8 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
   const collectMonth = (byMonth, total) => {
-    const [flat, data] = transformData({
-      rawData: byMonth,
+    const [flat, data, valueRanks] = transformData({
+      original: byMonth,
       comparator: collection.numSortByFieldAsc("key"),
       formatter: (month) => t(`month-long-${month}`),
       limit: 12,
@@ -332,9 +349,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "month", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         t(`month-long-${entry.key}`),
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -342,8 +364,8 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
   const collectWeekday = (byWeekday, total) => {
-    const [flat, data] = transformData({
-      rawData: collection.transformObjectKeys(byWeekday, (dow, value) => {
+    const [flat, data, valueRanks] = transformData({
+      original: collection.transformObjectKeys(byWeekday, (dow, value) => {
         const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
         return [key, value];
       }),
@@ -358,9 +380,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "weekday", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         t(`weekday-long-${format.dayOfWeek(entry.key)}`),
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -368,8 +395,8 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
   const collectHour = (byHour, total) => {
-    const [flat, data] = transformData({
-      rawData: byHour,
+    const [flat, data, valueRanks] = transformData({
+      original: byHour,
       comparator: collection.numSortByFieldAsc("key"),
       formatter: (hour) => `${format.padNumber(hour, 2)}:00–`,
       limit: 24,
@@ -381,9 +408,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "hour", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         `${format.padNumber(entry.key, 2)}:00–`,
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -408,7 +440,7 @@ const collectTopics = (data, lang, t, countryData) => {
 
   const collectCameraMake = (byCameraMake, total) => {
     const [flat, data] = transformData({
-      rawData: byCameraMake,
+      original: byCameraMake,
     });
     return {
       name: "camera-make",
@@ -417,9 +449,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: true,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "camera-make", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry, index) => [
+        number.default(index + 1),
         entry.key,
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -428,7 +465,7 @@ const collectTopics = (data, lang, t, countryData) => {
   };
   const collectCamera = (byCamera, total) => {
     const [flat, data] = transformData({
-      rawData: byCamera,
+      original: byCamera,
     });
     return {
       name: "camera",
@@ -437,9 +474,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: true,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "camera", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry, index) => [
+        number.default(index + 1),
         entry.key,
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -448,7 +490,7 @@ const collectTopics = (data, lang, t, countryData) => {
   };
   const collectLens = (byLens, total) => {
     const [flat, data] = transformData({
-      rawData: byLens,
+      original: byLens,
     });
     return {
       name: "lens",
@@ -457,9 +499,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: true,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "lens", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry, index) => [
+        number.default(index + 1),
         entry.key,
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -468,7 +515,7 @@ const collectTopics = (data, lang, t, countryData) => {
   };
   const collectCameraLens = (byCameraLens, total) => {
     const [flat, data] = transformData({
-      rawData: byCameraLens,
+      original: byCameraLens,
       limit: 20,
     });
     return {
@@ -478,9 +525,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: true,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "camera-lens", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry, index) => [
+        number.default(index + 1),
         entry.key,
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -503,8 +555,8 @@ const collectTopics = (data, lang, t, countryData) => {
   };
 
   const collectFocalLength = (byFocalLength, total) => {
-    const [flat, data] = transformData({
-      rawData: byFocalLength,
+    const [flat, data, valueRanks] = transformData({
+      original: byFocalLength,
       formatter: format.focalLength,
       comparator: collection.numSortByFieldAsc("key"),
     });
@@ -515,9 +567,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "focal-length", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         format.focalLength(entry.key),
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -525,8 +582,8 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
   const collectAperture = (byAperture, total) => {
-    const [flat, data] = transformData({
-      rawData: byAperture,
+    const [flat, data, valueRanks] = transformData({
+      original: byAperture,
       formatter: format.aperture,
       comparator: collection.numSortByFieldAsc("key"),
     });
@@ -537,9 +594,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "aperture", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         format.aperture(entry.key),
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -547,8 +609,8 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
   const collectExposureTime = (byExposureTime, total) => {
-    const [flat, data] = transformData({
-      rawData: byExposureTime,
+    const [flat, data, valueRanks] = transformData({
+      original: byExposureTime,
       formatter: format.exposureTime,
       comparator: collection.numSortByFieldDesc("key"),
     });
@@ -559,9 +621,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "exposure-time", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         format.exposureTime(entry.key),
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -569,8 +636,8 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
   const collectIso = (byIso, total) => {
-    const [flat, data] = transformData({
-      rawData: byIso,
+    const [flat, data, valueRanks] = transformData({
+      original: byIso,
       formatter: format.iso,
       comparator: collection.numSortByFieldAsc("key"),
     });
@@ -581,9 +648,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "iso", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         format.iso(entry.key),
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -591,8 +663,8 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
   const collectEv = (byEv, total) => {
-    const [flat, data] = transformData({
-      rawData: byEv,
+    const [flat, data, valueRanks] = transformData({
+      original: byEv,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -602,9 +674,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "ev", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         entry.key,
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -612,8 +689,8 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
   const collectLv = (byLv, total) => {
-    const [flat, data] = transformData({
-      rawData: byLv,
+    const [flat, data, valueRanks] = transformData({
+      original: byLv,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -623,9 +700,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "lv", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         entry.key,
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,
@@ -633,8 +715,8 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
   const collectResolution = (byResolution, total) => {
-    const [flat, data] = transformData({
-      rawData: byResolution,
+    const [flat, data, valueRanks] = transformData({
+      original: byResolution,
       formatter: format.resolution,
       comparator: collection.numSortByFieldAsc("key"),
     });
@@ -645,9 +727,14 @@ const collectTopics = (data, lang, t, countryData) => {
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
       ],
-      rawHeader: false,
-      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
-      raw: flat.map((entry) => [
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "resolution", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => [
+        number.default(valueRanks[entry.value] + 1),
         format.resolution(entry.key),
         number.default(entry.value),
         `${number.oneDecimal(format.share(entry.value, total))}%`,

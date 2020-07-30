@@ -89,6 +89,34 @@
     "stats-kpi-title-days": "Päiviä",
     "stats-kpi-days": "{{count}}",
     "stats-kpi-title-average": "Keskiarvo",
-    "stats-kpi-average": "{{count}}/päivä"
+    "stats-kpi-average": "{{count}}/päivä",
+
+    "stats-col-rank": "#",
+    "stats-col-count": "Lukumäärä",
+    "stats-col-share": "Osuus",
+    "stats-col-average": "Keskiarvo",
+
+    "stats-col-author": "Valokuvaaja",
+    "stats-col-flag": "",
+    "stats-col-country": "Maa",
+
+    "stats-col-year": "Vuosi",
+    "stats-col-year-month": "Vuosi ja kuukausi",
+    "stats-col-month": "Kuukausi",
+    "stats-col-weekday": "Viikonpäivä",
+    "stats-col-hour": "Tunti",
+
+    "stats-col-camera-make": "Valmistaja",
+    "stats-col-camera": "Kamera",
+    "stats-col-lens": "Objektiivi",
+    "stats-col-camera-lens": "Kamera ja objektiivi",
+
+    "stats-col-focal-length": "Polttoväli",
+    "stats-col-aperture": "Aukko",
+    "stats-col-exposure-time": "Valotusaika",
+    "stats-col-iso": "Herkkyys",
+    "stats-col-ev": "EV",
+    "stats-col-lv": "EV @ ISO100",
+    "stats-col-resolution": "Resoluutio"
   }
 }

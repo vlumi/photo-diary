@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 import StatsSummary from "./StatsSummary";
 import StatsCharts from "./StatsCharts";
-import StatsRaw from "./StatsRaw";
+import StatsTable from "./StatsTable";
 
 const Root = styled.div`
   width: 330px;
@@ -17,7 +17,7 @@ const StatsCategory = ({ topic, category }) => {
       <Title>{category.title}</Title>
       <StatsSummary category={category} />
       <StatsCharts category={category} />
-      <StatsRaw topic={topic} category={category} />
+      <StatsTable topic={topic} category={category} />
     </Root>
   );
 };

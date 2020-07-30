@@ -89,6 +89,34 @@
     "stats-kpi-title-days": "Days",
     "stats-kpi-days": "{{count}}",
     "stats-kpi-title-average": "Average",
-    "stats-kpi-average": "{{count}}/day"
+    "stats-kpi-average": "{{count}}/day",
+
+    "stats-col-rank": "#",
+    "stats-col-count": "Count",
+    "stats-col-share": "Share",
+    "stats-col-average": "Average",
+
+    "stats-col-author": "Author",
+    "stats-col-flag": "",
+    "stats-col-country": "Country",
+
+    "stats-col-year": "Year",
+    "stats-col-year-month": "Year + Month",
+    "stats-col-month": "Month",
+    "stats-col-weekday": "Weekday",
+    "stats-col-hour": "Hour",
+
+    "stats-col-camera-make": "Make",
+    "stats-col-camera": "Camera",
+    "stats-col-lens": "Lens",
+    "stats-col-camera-lens": "Camera + Lens",
+
+    "stats-col-focal-length": "Focal Length",
+    "stats-col-aperture": "Aperture",
+    "stats-col-exposure-time": "Shutter Speed",
+    "stats-col-iso": "Sensitivity",
+    "stats-col-ev": "EV",
+    "stats-col-lv": "EV @ ISO100",
+    "stats-col-resolution": "Resolution"
   }
 }

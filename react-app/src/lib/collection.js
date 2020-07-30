@@ -127,6 +127,29 @@ const foldToArray = (data, comparator) => {
 };
 
 /**
+ * Produces an object with the values of the array as keys, and their respective sorted, 1-based rank as the value.
+ *
+ * In case of duplicate values, the lowest rank for the values will be chosen, producing a gap in the ranks.
+ *
+ * @param {array} data The array whose values to rank.
+ * @param {function} valueMapper A function that extracts the value to rank by.
+ * @param {function} comparator A comparator function for ranking the values
+ */
+const calculateRanks = (data, valueMapper, comparator = (a, b) => b - a) => {
+  return data
+    .map(valueMapper)
+    .sort(comparator)
+    .reduce((acc, value, index) => {
+      if (value in acc) {
+        acc[value] = Math.min(index, acc[value]);
+      } else {
+        acc[value] = index;
+      }
+      return acc;
+    }, {});
+};
+
+/**
  * Truncate the given array `data` to at most `maxEntries` elements. The rest of the elements
  * will be summarized into a new element at the end using `summarizer`. The truncated array
  * with the summarized data is passed to `processor`
@@ -180,6 +203,7 @@ export default {
   transformObjectValue,
   objectFromArray,
   foldToArray,
+  calculateRanks,
   truncateAndProcess,
   trim,
 
