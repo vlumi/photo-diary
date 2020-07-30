@@ -49,6 +49,11 @@ const Photo = (photoData) => {
     aperture: () => photo.exposure.aperture,
     exposureTime: () => photo.exposure.exposureTime,
     iso: () => photo.exposure.iso,
+    resolution: () =>
+      Math.round(
+        (photo.dimensions.original.width * photo.dimensions.original.height) /
+          10 ** 6
+      ),
     formatFocalLength: () =>
       photo.exposure.focalLength
         ? format.focalLength(photo.exposure.focalLength)
@@ -59,19 +64,15 @@ const Photo = (photoData) => {
       photo.exposure.exposureTime
         ? format.exposureTime(photo.exposure.exposureTime)
         : "",
-    formatIso: () => (photo.exposure.iso ? `ISO${photo.exposure.iso}` : ""),
-    formatMegapixels: () =>
-      format.megapixels(
-        photo.dimensions.original.width,
-        photo.dimensions.original.height
-      ),
+    formatIso: () => (photo.exposure.iso ? format.iso(photo.exposure.iso) : ""),
+    formatResolution: () => format.resolution(self.resolution()),
     formatExposure: () => {
       return [
         self.formatFocalLength(),
         self.formatAperture(),
         self.formatExposureTime(),
         self.formatIso(),
-        self.formatMegapixels(),
+        self.formatResolution(),
       ].join(" ");
     },
     cameraMake: () => photo.camera.make,

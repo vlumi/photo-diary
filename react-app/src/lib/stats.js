@@ -631,6 +631,28 @@ const collectTopics = (data, lang, t, countryData) => {
       ]),
     };
   };
+  const collectResolution = (byResolution, total) => {
+    const [flat, data] = transformData({
+      rawData: byResolution,
+      formatter: format.resolution,
+      comparator: collection.numSortByFieldAsc("key"),
+    });
+    return {
+      name: "resolution",
+      title: t("stats-category-resolution"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      rawHeader: false,
+      rawColumns: [{ align: "left" }, { align: "right" }, { align: "right" }],
+      raw: flat.map((entry) => [
+        format.resolution(entry.key),
+        numberFormatter(entry.value),
+        `${numberFormatter(format.share(entry.value, total))}%`,
+      ]),
+    };
+  };
   const collectExposure = () => {
     const total = data.count.total;
     const byExposure = data.count.byExposure;
@@ -644,6 +666,7 @@ const collectTopics = (data, lang, t, countryData) => {
         collectIso(byExposure.byIso, total),
         collectEv(byExposure.byExposureValue, total),
         collectLv(byExposure.byLightValue, total),
+        collectResolution(byExposure.byResolution, total),
       ],
     };
   };
@@ -850,6 +873,12 @@ const updateExposureDistribution = (byExposure, photo, unknownLabel) => {
       byExposure.byLightValue[lightValue] || 0;
     byExposure.byLightValue[lightValue]++;
   }
+
+  const resolution = Number(photo.resolution()) || unknownLabel;
+  byExposure.byResolution = byExposure.byResolution || {};
+  byExposure.byResolution[resolution] =
+    byExposure.byResolution[resolution] || 0;
+  byExposure.byResolution[resolution]++;
 };
 /**
  * Update the current photo's ger values into the gear (camera, lens) distribution.

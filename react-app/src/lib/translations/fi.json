@@ -78,6 +78,7 @@
     "stats-category-iso": "Herkkyys",
     "stats-category-ev": "EV",
     "stats-category-lv": "EV @ ISO100",
+    "stats-category-resolution": "Resoluutio",
 
     "stats-kpi-title-photos": "Valokuvia",
     "stats-kpi-photos": "{{count}}",

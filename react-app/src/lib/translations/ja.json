@@ -75,6 +75,7 @@
     "stats-category-iso": "感度",
     "stats-category-ev": "EV",
     "stats-category-lv": "EV @ ISO100",
+    "stats-category-resolution": "解像度",
 
     "stats-kpi-title-photos": "写真",
     "stats-kpi-photos": "{{count}}",

@@ -78,6 +78,7 @@
     "stats-category-iso": "Sensitivity",
     "stats-category-ev": "EV",
     "stats-category-lv": "EV @ ISO100",
+    "stats-category-resolution": "Resolution",
 
     "stats-kpi-title-photos": "Photos",
     "stats-kpi-photos": "{{count}}",

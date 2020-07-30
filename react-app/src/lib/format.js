@@ -70,9 +70,11 @@ const iso = (iso) => {
   }
   return `ISO${iso}`;
 };
-const megapixels = (width, height) => {
-  const mpix = Math.round((width * height) / 10 ** 6);
-  return mpix ? `${mpix}MP` : "";
+const resolution = (resolution) => {
+  if (isNaN(resolution)) {
+    return resolution;
+  }
+  return `${resolution}MP`;
 };
 const gear = (make, model) => {
   if (!make && !model) return "";
@@ -102,7 +104,7 @@ export default {
   aperture,
   exposureTime,
   iso,
-  megapixels,
+  resolution,
   gear,
   coordinates,
 };
