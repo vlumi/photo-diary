@@ -29,11 +29,11 @@ const padRight = (value, length, filler) =>
 const date = ({ year, month, day, separator = "-" }) => {
   const parts = [];
   if (year) {
-    parts.push(padLeft(year, 4));
+    parts.push(padNumber(year, 4));
     if (month) {
-      parts.push(padLeft(month, 2));
+      parts.push(padNumber(month, 2));
       if (day) {
-        parts.push(padLeft(day, 2));
+        parts.push(padNumber(day, 2));
       }
     }
   }
@@ -42,11 +42,11 @@ const date = ({ year, month, day, separator = "-" }) => {
 const time = ({ hour, minute, second, separator = ":" }) => {
   const parts = [];
   if (hour) {
-    parts.push(padLeft(hour, 2));
+    parts.push(padNumber(hour, 2));
     if (minute) {
-      parts.push(padLeft(minute, 2));
+      parts.push(padNumber(minute, 2));
       if (second) {
-        parts.push(padLeft(second, 2));
+        parts.push(padNumber(second, 2));
       }
     }
   }
