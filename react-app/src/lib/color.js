@@ -1,13 +1,22 @@
 import format from "./format";
 
-const toHexRgb = ({ r, g, b }) =>
-  "#" +
-  format.padNumber(r.toString(16), 2) +
-  format.padNumber(g.toString(16), 2) +
-  format.padNumber(b.toString(16), 2);
+const isValidChannel = (channel) =>
+  Number.isInteger(channel) && channel >= 0 && channel <= 255;
+
+const toHexRgb = ({ r, g, b }) => {
+  if (!isValidChannel(r) || !isValidChannel(g) || !isValidChannel(b)) {
+    return "#000000";
+  }
+  return (
+    "#" +
+    format.padNumber(r.toString(16), 2) +
+    format.padNumber(g.toString(16), 2) +
+    format.padNumber(b.toString(16), 2)
+  );
+};
 
 const fromHexRgb = (hex) => {
-  if (!hex.startsWith("#")) {
+  if (!hex || !hex.startsWith("#")) {
     return [0, 0, 0];
   }
   const rawValue = parseInt(hex.substr(1), 16);
@@ -26,7 +35,7 @@ const fromHexRgb = (hex) => {
 };
 
 const colorGradient = (start, end, steps) => {
-  if (steps < 1) return [];
+  if (steps < 1 || !start || !end) return [];
   if (steps < 2) return [start];
   if (steps < 3) return [start, end];
 
@@ -49,4 +58,4 @@ const colorGradient = (start, end, steps) => {
     .map(toHexRgb);
 };
 
-export default { colorGradient };
+export default { toHexRgb, fromHexRgb, colorGradient };
