@@ -90,19 +90,18 @@ TBD
 
 ## Roadmap
 
-### Milestone 0.3
+### Milestone 0.4
 
 - Front-end
-  - Dynamic statistics, with filters/drill-down
-    - By gear
-    - By author
-    - By exposure settings
-    - By country
-    - By time
-      - By year
-      - By year/month
-      - By year/month/day
-      - By range
+  - Photo metadata filters
+    - Gallery and statistics views
+    - Only include photos matching the filters
+
+### Milestone 0.5
+
+- Hybrid galleries
+  - Combine galleries to form new galleries
+  - Apply filters to an existing gallery
 
 ### Milestone 1.0
 
@@ -125,11 +124,6 @@ TBD
 These features would be nice to have, but are too far into the future to put on the roadmap.
 
 - Front-end
-  - Gallery filters
-    - Filter the displayed photos
-  - Hybrid galleries
-    - Combine galleries to form new galleries
-    - Apply filters to an existing gallery
   - Gallery view
     - Multiple display sizes, dynamically chosen to match client window size
     - Photo license information
