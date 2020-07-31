@@ -141,7 +141,7 @@ These features would be nice to have, but are too far into the future to put on 
 
 ## Version History
 
-- v0.3.0 (TBD)
+- v0.3.0 (2020-07-31)
   - Statistics view
     - Separate for each gallery, including virtual
   - Marker paths to embedded map, in chronological order
