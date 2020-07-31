@@ -148,6 +148,53 @@ const Photo = (photoData) => {
       parts.push(photo.id);
       return parts.join("/");
     },
+    matches: (category, value) => {
+      switch (category) {
+        case "author":
+          return value === self.author();
+        case "country":
+          return value === self.countryCode();
+        case "year":
+          return Number(value) === self.year();
+        case "year-month":
+          // TODO: implement
+          return true;
+        case "month":
+          return Number(value) === self.month();
+        case "weekday":
+          // TODO: implement
+          return true;
+        case "hour":
+          return Number(value) === self.hour();
+        case "camera-make":
+          return value === self.cameraMake();
+        case "camera":
+          return value === self.formatCamera();
+        case "lens":
+          return value === self.formatLens();
+        case "camera-lens":
+          // TODO: implement
+          return true;
+        case "focal-length":
+          return [value, Number(value)].includes(self.focalLength());
+        case "aperture":
+          return [value, Number(value)].includes(self.aperture());
+        case "exposure-time":
+          return [value, Number(value)].includes(self.exposureTime());
+        case "iso":
+          return [value, Number(value)].includes(self.iso());
+        case "ev":
+          // TODO: implement
+          return true;
+        case "lv":
+          // TODO: implement
+          return true;
+        case "resolution":
+          return [value, Number(value)].includes(self.resolution());
+        default:
+          return true;
+      }
+    },
   };
   return self;
 };

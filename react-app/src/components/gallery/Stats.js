@@ -14,7 +14,14 @@ const Root = styled.div`
   align-items: flex-start;
 `;
 
-const Stats = ({ children, photos, lang, countryData }) => {
+const Stats = ({
+  children,
+  photos,
+  filters,
+  setFilters,
+  lang,
+  countryData,
+}) => {
   const [data, setData] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -36,7 +43,12 @@ const Stats = ({ children, photos, lang, countryData }) => {
       {children}
       <Root>
         {stats.collectTopics(data, lang, t, countryData).map((topic) => (
-          <StatsTopic key={topic.name} topic={topic} />
+          <StatsTopic
+            key={topic.key}
+            topic={topic}
+            filters={filters}
+            setFilters={setFilters}
+          />
         ))}
       </Root>
     </>
@@ -45,6 +57,8 @@ const Stats = ({ children, photos, lang, countryData }) => {
 Stats.propTypes = {
   children: PropTypes.any,
   photos: PropTypes.array.isRequired,
+  filters: PropTypes.object.isRequired,
+  setFilters: PropTypes.func.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };

@@ -65,11 +65,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
     if (!selectedGallery || !photos) {
       return;
     }
-    const filteredPhotos = photos.filter((photo) => {
-      return Object.values(filters).every((categoryFilters) =>
-        categoryFilters.every((filter) => filter(photo))
-      );
-    });
+    const filteredPhotos = photos.filter((photo) =>
+      Object.values(filters).every((categoryFilters) =>
+        Object.values(categoryFilters).every((filter) => filter(photo))
+      )
+    );
     setGallery(selectedGallery.withPhotos(filteredPhotos));
   }, [selectedGallery, photos, filters]);
 
@@ -82,16 +82,6 @@ const Top = ({ user, lang, countryData, stats = false }) => {
     theme.setTheme(selectedGallery.theme());
   } else {
     theme.setTheme(config.DEFAULT_THEME);
-  }
-
-  if (Object.keys(filters).length > 0) {
-    setFilters({});
-    // setFilters({
-    //   iso: [(photo) => [160, 200].includes(photo.iso())],
-    //   aperture: [(photo) => [1.2, 1.4].includes(photo.aperture())],
-    // });
-    setGallery(undefined);
-    setPhotos(undefined);
   }
 
   if (error) {
@@ -157,7 +147,13 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   }
   if (stats) {
     return (
-      <Stats photos={gallery.photos()} lang={lang} countryData={countryData}>
+      <Stats
+        photos={gallery.photos()}
+        filters={filters}
+        setFilters={setFilters}
+        lang={lang}
+        countryData={countryData}
+      >
         <Title
           galleries={galleries}
           gallery={gallery}

@@ -52,7 +52,7 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "第{{count}}日",
 
-    "stats-unknown": "N/A",
+    "stats-unknown": "未定",
     "stats-other": "他",
     "stats-year-month": "{{year}}年{{month}}",
     "stats-per-day": "{{count}}/day",

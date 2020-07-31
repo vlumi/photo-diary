@@ -36,46 +36,97 @@ const Column = styled.td`
   text-align: ${(props) => props.align};
   overflow: hidden;
 `;
-const StatsTable = ({ topic, category }) => {
+const StatsTable = ({ topic, category, filters, setFilters }) => {
   const { t } = useTranslation();
+
+  const applyNewFilter = (filters, category, key, newFilter) => {
+    const newFilters = { ...filters };
+    if (!(category in newFilters)) {
+      newFilters[category] = { [key]: newFilter };
+      return newFilters;
+    }
+    newFilters[category] = { ...newFilters[category] };
+    if (!(key in newFilters[category])) {
+      newFilters[category][key] = newFilter;
+      return newFilters;
+    }
+    delete newFilters[category][key];
+    if (!Object.keys(newFilters[category]).length) {
+      delete newFilters[category];
+    }
+    return newFilters;
+  };
+
+  const handleClick = (event) => {
+    const keyElement = event.target.closest("tr");
+    const categoryElement = event.target.closest("[data-type=category]");
+
+    if (!keyElement || !categoryElement) {
+      return;
+    }
+    const category = categoryElement.getAttribute("data-key");
+    const key = keyElement.getAttribute("data-key");
+
+    if (!category || !key) {
+      return;
+    }
+    const normalizedKey = key === t("stats-unknown") ? undefined : key;
+    // TODO: put to tentative filters first, to allow selecting multiple items...
+    const newFilters = applyNewFilter(filters, category, key, (photo) =>
+      photo.matches(category, normalizedKey)
+    );
+    setFilters(newFilters);
+  };
 
   if (!("table" in category) || !category.table) {
     return <></>;
   }
+  // console.log("category.table", category.table);
+  const renderColumns = (values, i) => {
+    return category.tableColumns.map((column) =>
+      column.header ? (
+        <RowHeader
+          key={`${topic.key}:${category.key}:${i}${column.title}`}
+          align={column.align}
+        >
+          {values[column.title]}
+        </RowHeader>
+      ) : (
+        <Column
+          key={`${topic.key}:${category.key}:${i}${column.title}`}
+          align={column.align}
+        >
+          {values[column.title]}
+        </Column>
+      )
+    );
+  };
+  const renderRows = (table) => {
+    return table.map((values, i) => (
+      <Row
+        key={`${topic.key}:${category.key}:${i}`}
+        onClick={handleClick}
+        data-key={values.key}
+      >
+        {renderColumns(values, i)}
+      </Row>
+    ));
+  };
+
   return (
     <Root>
       <Block>
         <Row>
           {category.tableColumns.map((column) => (
             <Header
-              key={`${topic.name}:header:${column.title}`}
+              key={`${topic.key}:header:${column.title}`}
               align={column.align}
             >
               {t(`stats-col-${column.title}`)}
             </Header>
           ))}
         </Row>
-        {category.table.map((values, i) => (
-          <Row key={`${topic.name}:${category.name}:${i}`}>
-            {values.map((value, j) =>
-              category.tableColumns[j].header ? (
-                <RowHeader
-                  key={`${topic.name}:${category.name}:${i}${j}`}
-                  align={category.tableColumns[j].align}
-                >
-                  {value}
-                </RowHeader>
-              ) : (
-                <Column
-                  key={`${topic.name}:${category.name}:${i}${j}`}
-                  align={category.tableColumns[j].align}
-                >
-                  {value}
-                </Column>
-              )
-            )}
-          </Row>
-        ))}
+        {renderRows(category.table)}
       </Block>
     </Root>
   );
@@ -83,5 +134,7 @@ const StatsTable = ({ topic, category }) => {
 StatsTable.propTypes = {
   topic: PropTypes.object,
   category: PropTypes.object,
+  filters: PropTypes.object.isRequired,
+  setFilters: PropTypes.func.isRequired,
 };
 export default StatsTable;

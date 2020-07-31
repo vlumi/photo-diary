@@ -153,7 +153,7 @@ const collectTopics = (data, lang, t, countryData) => {
 
   const collectSummary = (count) => {
     return {
-      name: "summary",
+      key: "summary",
       title: t("stats-category-summary"),
       kpi: collection.foldToArray({
         photos: number.default(count.total),
@@ -167,7 +167,7 @@ const collectTopics = (data, lang, t, countryData) => {
       original: byAuthor,
     });
     return {
-      name: "author",
+      key: "author",
       title: t("stats-category-author"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -179,12 +179,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => [
-        number.default(index + 1),
-        entry.key,
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry, index) => {
+        return {
+          key: entry.key,
+          rank: number.default(index + 1),
+          author: entry.key,
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectCountry = (byCountry, total) => {
@@ -194,7 +197,7 @@ const collectTopics = (data, lang, t, countryData) => {
         format.countryName(countryCode, lang, countryData),
     });
     return {
-      name: "country",
+      key: "country",
       title: t("stats-category-country"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -207,26 +210,31 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => [
-        number.default(index + 1),
-        <>
-          {countryData.isValid(entry.key) ? (
-            <FlagIcon code={entry.key} />
-          ) : (
-            <></>
-          )}
-        </>,
-        <>{format.countryName(entry.key, lang, countryData)}</>,
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry, index) => {
+        return {
+          key: entry.key,
+          rank: number.default(index + 1),
+          flag: (
+            <>
+              {countryData.isValid(entry.key) ? (
+                <FlagIcon code={entry.key} />
+              ) : (
+                <></>
+              )}
+            </>
+          ),
+          country: <>{format.countryName(entry.key, lang, countryData)}</>,
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectGeneral = () => {
     const count = data.count;
     const total = count.total;
     return {
-      name: "general",
+      key: "general",
       title: t("stats-topic-general"),
       categories: [
         collectSummary(count),
@@ -242,7 +250,7 @@ const collectTopics = (data, lang, t, countryData) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
-      name: "year",
+      key: "year",
       title: t("stats-category-year"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -254,14 +262,17 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "average", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        entry.key,
-        number.default(entry.value),
-        t("stats-per-day", {
-          count: number.twoDecimal(entry.value / daysInYear[entry.key]),
-        }),
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          year: entry.key,
+          count: number.default(entry.value),
+          average: t("stats-per-day", {
+            count: number.twoDecimal(entry.value / daysInYear[entry.key]),
+          }),
+        };
+      }),
     };
   };
   const collectYearMonth = (byYearMonth, daysInYearMonth) => {
@@ -321,7 +332,7 @@ const collectTopics = (data, lang, t, countryData) => {
     );
     const valueRanks = collection.calculateRanks(flat, (_) => Number(_.value));
     return {
-      name: "year-month",
+      key: "year-month",
       title: t("stats-category-year-month"),
       charts: [{ type: "line", data, options: chartOptions.line }],
       tableColumns: [
@@ -332,12 +343,18 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         const [year, month] = entry.key;
-        return [
-          number.default(valueRanks[entry.value] + 1),
-          t("stats-year-month", { year, month: t(`month-long-${month}`) }),
-          number.default(entry.value),
-          number.twoDecimal(entry.value / daysInYearMonth[year][month]),
-        ];
+        return {
+          key: entry.key.join("-"),
+          rank: number.default(valueRanks[entry.value] + 1),
+          "year-month": t("stats-year-month", {
+            year,
+            month: t(`month-long-${month}`),
+          }),
+          count: number.default(entry.value),
+          average: number.twoDecimal(
+            entry.value / daysInYearMonth[year][month]
+          ),
+        };
       }),
     };
   };
@@ -349,7 +366,7 @@ const collectTopics = (data, lang, t, countryData) => {
       limit: 12,
     });
     return {
-      name: "month",
+      key: "month",
       title: t("stats-category-month"),
       charts: [
         { type: "polar", data, options: chartOptions.polar },
@@ -361,12 +378,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        t(`month-long-${entry.key}`),
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          month: t(`month-long-${entry.key}`),
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectWeekday = (byWeekday, total) => {
@@ -380,7 +400,7 @@ const collectTopics = (data, lang, t, countryData) => {
       limit: 24,
     });
     return {
-      name: "weekday",
+      key: "weekday",
       title: t("stats-category-weekday"),
       charts: [
         { type: "polar", data, options: chartOptions.polar },
@@ -392,12 +412,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        t(`weekday-long-${format.dayOfWeek(entry.key)}`),
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          weekday: t(`weekday-long-${format.dayOfWeek(entry.key)}`),
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectHour = (byHour, total) => {
@@ -408,7 +431,7 @@ const collectTopics = (data, lang, t, countryData) => {
       limit: 24,
     });
     return {
-      name: "hour",
+      key: "hour",
       title: t("stats-category-hour"),
       charts: [
         { type: "polar", data, options: chartOptions.polar },
@@ -420,19 +443,22 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        `${format.padNumber(entry.key, 2)}:00–`,
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          hour: `${format.padNumber(entry.key, 2)}:00–`,
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectTime = () => {
     const total = data.count.total;
     const byTime = data.count.byTime;
     return {
-      name: "time",
+      key: "time",
       title: t("stats-topic-time"),
       categories: [
         collectYear(byTime.byYear, byTime.daysInYear),
@@ -449,7 +475,7 @@ const collectTopics = (data, lang, t, countryData) => {
       original: byCameraMake,
     });
     return {
-      name: "camera-make",
+      key: "camera-make",
       title: t("stats-category-camera-make"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -461,12 +487,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => [
-        number.default(index + 1),
-        entry.key,
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry, index) => {
+        return {
+          key: entry.key,
+          rank: number.default(index + 1),
+          "camera-make": entry.key,
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectCamera = (byCamera, total) => {
@@ -474,7 +503,7 @@ const collectTopics = (data, lang, t, countryData) => {
       original: byCamera,
     });
     return {
-      name: "camera",
+      key: "camera",
       title: t("stats-category-camera"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -486,12 +515,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => [
-        number.default(index + 1),
-        entry.key,
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry, index) => {
+        return {
+          key: entry.key,
+          rank: number.default(index + 1),
+          camera: entry.key,
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectLens = (byLens, total) => {
@@ -499,7 +531,7 @@ const collectTopics = (data, lang, t, countryData) => {
       original: byLens,
     });
     return {
-      name: "lens",
+      key: "lens",
       title: t("stats-category-lens"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -511,12 +543,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => [
-        number.default(index + 1),
-        entry.key,
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry, index) => {
+        return {
+          key: entry.key,
+          rank: number.default(index + 1),
+          lens: entry.key,
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectCameraLens = (byCameraLens, total) => {
@@ -525,7 +560,7 @@ const collectTopics = (data, lang, t, countryData) => {
       limit: 20,
     });
     return {
-      name: "camera-lens",
+      key: "camera-lens",
       title: t("stats-category-camera-lens"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -537,19 +572,22 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => [
-        number.default(index + 1),
-        entry.key,
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry, index) => {
+        return {
+          key: entry.key,
+          rank: number.default(index + 1),
+          "camera-lens": entry.key,
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectGear = () => {
     const total = data.count.total;
     const byGear = data.count.byGear;
     return {
-      name: "gear",
+      key: "gear",
       title: t("stats-topic-gear"),
       categories: [
         collectCameraMake(byGear.byCameraMake, total),
@@ -567,7 +605,7 @@ const collectTopics = (data, lang, t, countryData) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
-      name: "focal-length",
+      key: "focal-length",
       title: t("stats-category-focal-length"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -579,12 +617,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        format.focalLength(entry.key),
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          "focal-length": format.focalLength(entry.key),
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectAperture = (byAperture, total) => {
@@ -594,7 +635,7 @@ const collectTopics = (data, lang, t, countryData) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
-      name: "aperture",
+      key: "aperture",
       title: t("stats-category-aperture"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -606,12 +647,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        format.aperture(entry.key),
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          aperture: format.aperture(entry.key),
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectExposureTime = (byExposureTime, total) => {
@@ -621,7 +665,7 @@ const collectTopics = (data, lang, t, countryData) => {
       comparator: collection.numSortByFieldDesc("key"),
     });
     return {
-      name: "exposure-time",
+      key: "exposure-time",
       title: t("stats-category-exposure-time"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -633,12 +677,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        format.exposureTime(entry.key),
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          "exposure-time": format.exposureTime(entry.key),
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectIso = (byIso, total) => {
@@ -648,7 +695,7 @@ const collectTopics = (data, lang, t, countryData) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
-      name: "iso",
+      key: "iso",
       title: t("stats-category-iso"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -660,12 +707,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        format.iso(entry.key),
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          iso: format.iso(entry.key),
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectEv = (byEv, total) => {
@@ -674,7 +724,7 @@ const collectTopics = (data, lang, t, countryData) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
-      name: "ev",
+      key: "ev",
       title: t("stats-category-ev"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -686,12 +736,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        entry.key,
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          ev: entry.key,
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectLv = (byLv, total) => {
@@ -700,7 +753,7 @@ const collectTopics = (data, lang, t, countryData) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
-      name: "lv",
+      key: "lv",
       title: t("stats-category-lv"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -712,12 +765,15 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        entry.key,
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          lv: entry.key,
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectResolution = (byResolution, total) => {
@@ -727,7 +783,7 @@ const collectTopics = (data, lang, t, countryData) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
-      name: "resolution",
+      key: "resolution",
       title: t("stats-category-resolution"),
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
@@ -739,19 +795,22 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => [
-        number.default(valueRanks[entry.value] + 1),
-        format.resolution(entry.key),
-        number.default(entry.value),
-        `${number.oneDecimal(format.share(entry.value, total))}%`,
-      ]),
+      table: flat.map((entry) => {
+        return {
+          key: entry.key,
+          rank: number.default(valueRanks[entry.value] + 1),
+          resolution: format.resolution(entry.key),
+          count: number.default(entry.value),
+          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+        };
+      }),
     };
   };
   const collectExposure = () => {
     const total = data.count.total;
     const byExposure = data.count.byExposure;
     return {
-      name: "exposure",
+      key: "exposure",
       title: t("stats-topic-exposure"),
       categories: [
         collectFocalLength(byExposure.byFocalLength, total),
@@ -959,6 +1018,7 @@ const updateExposureDistribution = (byExposure, photo, unknownLabel) => {
 
   if (exposureTime) {
     // Round EV and LV to the closest half
+    // TODO: move to models/Photo
     const roundEv = (value) => Math.round(value * 2) / 2;
     const fullExposureValue = Math.log2(aperture ** 2 / exposureTime);
     const exposureValue = roundEv(fullExposureValue) || unknownLabel;
@@ -968,6 +1028,7 @@ const updateExposureDistribution = (byExposure, photo, unknownLabel) => {
     byExposure.byExposureValue[exposureValue]++;
 
     // LV = EV at ISO 100
+    // TODO: move to models/Photo
     const fullLightValue = fullExposureValue + Math.log2(iso / 100);
     const lightValue = roundEv(fullLightValue) || unknownLabel;
     byExposure.byLightValue = byExposure.byLightValue || {};

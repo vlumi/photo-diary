@@ -1,7 +1,7 @@
 const User = (userData, token) => {
   const importUserData = (userData, token) => {
     if (!userData || !("id" in userData) || !userData.id) {
-      throw "Invalid user";
+      throw new Error("Invalid user");
     }
     return {
       id: userData.id,
