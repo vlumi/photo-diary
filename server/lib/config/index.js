@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 require("dotenv").config();
 
 const CONST = require("../constants");
