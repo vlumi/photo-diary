@@ -222,7 +222,7 @@ const Gallery = (galleryData) => {
       return collection.compareArrays([currentYear], [self.firstYear()]) === 0;
     },
     isBeforeFirstYear: (currentYear) => {
-      return collection.compareArrays([currentYear], [self.firstYear()]) >= 0;
+      return collection.compareArrays([currentYear], [self.firstYear()]) <= 0;
     },
     isFirstMonth: (currentYear, currentMonth) => {
       return (
@@ -237,7 +237,7 @@ const Gallery = (galleryData) => {
         collection.compareArrays(
           [currentYear, currentMonth],
           self.firstMonth()
-        ) >= 0
+        ) <= 0
       );
     },
     isFirstDay: (currentYear, currentMonth, currentDay) => {
@@ -253,14 +253,14 @@ const Gallery = (galleryData) => {
         collection.compareArrays(
           [currentYear, currentMonth, currentDay],
           self.firstDay()
-        ) >= 0
+        ) <= 0
       );
     },
     isLastYear: (currentYear) => {
       return collection.compareArrays([currentYear], [self.lastYear()]) === 0;
     },
     isAfterLasttYear: (currentYear) => {
-      return collection.compareArrays([currentYear], [self.lastYear()]) <= 0;
+      return collection.compareArrays([currentYear], [self.lastYear()]) >= 0;
     },
     isLastMonth: (currentYear, currentMonth) => {
       return (
@@ -275,7 +275,7 @@ const Gallery = (galleryData) => {
         collection.compareArrays(
           [currentYear, currentMonth],
           self.lastMonth()
-        ) <= 0
+        ) >= 0
       );
     },
     isLastDay: (currentYear, currentMonth, currentDay) => {
@@ -291,7 +291,7 @@ const Gallery = (galleryData) => {
         collection.compareArrays(
           [currentYear, currentMonth, currentDay],
           self.lastDay()
-        ) <= 0
+        ) >= 0
       );
     },
 

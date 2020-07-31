@@ -11,7 +11,7 @@ const joinTruthyKeys = (map, separator = " ") =>
     .join(separator);
 
 /**
- * Compare two arrays' contents.
+ * Compare two arrays' contents, assuming numeric content.
  *
  * - The first element from the beginning to differ will determine the order.
  * - If one array is shorter, and its elements are equal to the other, the shorter element is considered smaller.
@@ -22,28 +22,28 @@ const joinTruthyKeys = (map, separator = " ") =>
  * @return {number} `0` if the arrays are equal, a negative value if `a` is smaller, a positive value if `b` is smaller.
  */
 const compareArrays = (a, b) => {
-  if (typeof a !== "object" && typeof b !== "object") {
+  if (!Array.isArray(a) && !Array.isArray(b)) {
     return undefined;
   }
-  if (typeof a !== "object") {
+  if (!Array.isArray(a)) {
     return undefined;
   }
-  if (typeof b !== "object") {
+  if (!Array.isArray(b)) {
     return undefined;
   }
   const maxLength = Math.max(a.length, b.length);
   for (const i in [...Array(maxLength).keys()]) {
-    if (b.length <= i) {
+    if (a.length <= i) {
       return -1;
     }
-    if (a.length <= i) {
+    if (b.length <= i) {
       return 1;
     }
     if (a[i] > b[i]) {
-      return -1;
+      return 1;
     }
     if (a[i] < b[i]) {
-      return 1;
+      return -1;
     }
   }
   return 0;
@@ -56,6 +56,9 @@ const compareArrays = (a, b) => {
  * @param {function} transformer
  */
 const transformObjectKeys = (data, transformer) => {
+  if (!data) {
+    return data;
+  }
   return Object.fromEntries(
     Object.keys(data).map((key) => transformer(key, data[key]))
   );
@@ -69,6 +72,9 @@ const transformObjectKeys = (data, transformer) => {
  * @param {function} transformer
  */
 const transformObjectValue = (data, key, transformer) => {
+  if (!data || !(key in data)) {
+    return data;
+  }
   return {
     ...data,
     [key]: transformer(data),
@@ -82,8 +88,8 @@ const transformObjectValue = (data, key, transformer) => {
  * @param {function} predicate The predicate should return true for elements that should be kept.
  */
 const trim = (data, predicate) => {
-  if (data.length === 0) {
-    return data;
+  if (!data || !data.length) {
+    return [];
   }
   let first = 0;
   while (first < data.length && !predicate(data[first])) {
@@ -109,12 +115,24 @@ const trim = (data, predicate) => {
  * @param {array} data The array to transform.
  * @param {any} value The value to set to each property.
  */
-const objectFromArray = (data, value) =>
-  data.reduce((a, b) => {
-    a[b] = value;
-    return a;
+const objectFromArray = (data, value) => {
+  if (!data || !data.length) {
+    return {};
+  }
+  return data.reduce((accumulator, element) => {
+    accumulator[element] = value;
+    return accumulator;
   }, {});
+};
 
+/**
+ *  Transform an object into an array of objects, with the original key in the property `key`,
+ *  and the original value in the property `value`, sorting the resulting array with `comparator`.
+ *
+ * @param {object} data The object to transform.
+ * @param {function} comparator The comparator to use for sorting.
+ * @returns {array}
+ */
 const foldToArray = (data, comparator) => {
   if (!data || !Object.keys(data).length) {
     return [];
@@ -139,6 +157,9 @@ const foldToArray = (data, comparator) => {
  * @param {function} comparator A comparator function for ranking the values
  */
 const calculateRanks = (data, valueMapper, comparator = (a, b) => b - a) => {
+  if (!data || !data.length) {
+    return {};
+  }
   return data
     .map(valueMapper)
     .sort(comparator)
@@ -163,10 +184,10 @@ const calculateRanks = (data, valueMapper, comparator = (a, b) => b - a) => {
  * @param {function} summarizer The function to summarize the truncated elements.
  */
 const truncateAndProcess = (data, maxEntries, processor, summarizer) => {
-  if (maxEntries > 0 && data.length > maxEntries) {
+  if (maxEntries > 0 && data && data.length > maxEntries) {
     return processor([
-      ...data.slice(0, maxEntries),
-      summarizer(data.slice(maxEntries)),
+      ...data.slice(0, maxEntries - 1),
+      summarizer(data.slice(maxEntries - 1)),
     ]);
   }
   return processor(data);
