@@ -17,6 +17,7 @@ const DayFooter = ({ gallery, year, month, day }) => {
 
   const photos = gallery
     .photos(year, month, day)
+    .filter(Boolean)
     .filter((photo) => photo.hasCoordinates());
 
   return <div className="footer">{renderMap(photos)}</div>;

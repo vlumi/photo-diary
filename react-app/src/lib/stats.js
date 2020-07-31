@@ -7,8 +7,8 @@ import collection from "./collection";
 import color from "./color";
 import config from "./config";
 
-const generate = async (gallery, unknownLabel) => {
-  return collectStatistics(gallery.photos(), unknownLabel);
+const generate = async (photos, unknownLabel) => {
+  return collectStatistics(photos, unknownLabel);
 };
 
 const collectTopics = (data, lang, t, countryData) => {
@@ -282,6 +282,12 @@ const collectTopics = (data, lang, t, countryData) => {
         };
       });
     const mapToChartData = (flat) => {
+      if (!flat || !flat.length) {
+        return {
+          labels: [],
+          datasets: [],
+        };
+      }
       // TODO: from configured theme: --header-background -> --header-color
       const colorGradients = color.colorGradient("#004", "#ddf", flat.length);
       return {
@@ -774,7 +780,15 @@ const collectStatistics = (photos, unknownLabel) => {
   const stats = {
     count: {
       total: 0,
-      byTime: {},
+      byTime: {
+        byYear: {},
+        byYearMonth: {},
+        byMonth: {},
+        byWeekday: {},
+        byHour: {},
+        daysInYear: 0,
+        daysInYearMonth: {},
+      },
       byExposure: {},
       byGear: {},
       byAuthor: {},

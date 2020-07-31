@@ -4,6 +4,7 @@ import { Redirect, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import galleryService from "../../services/galleries";
+import galleryPhotosService from "../../services/gallery-photos";
 
 import Title from "./Title";
 import ListBody from "./ListBody";
@@ -16,6 +17,7 @@ import Day from "./Day";
 import Photo from "./Photo";
 
 import GalleryModel from "../../models/Gallery";
+import PhotoModel from "../../models/Photo";
 
 import config from "../../lib/config";
 import theme from "../../lib/theme";
@@ -23,6 +25,8 @@ import theme from "../../lib/theme";
 const Top = ({ user, lang, countryData, stats = false }) => {
   const [galleries, setGalleries] = React.useState(undefined);
   const [gallery, setGallery] = React.useState(undefined);
+  const [photos, setPhotos] = React.useState(undefined);
+  const [filters, setFilters] = React.useState({});
   const [error, setError] = React.useState("");
 
   const { t } = useTranslation();
@@ -34,15 +38,10 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   const month = Number(useParams().month || 0);
   const day = Number(useParams().day || 0);
 
-  if (gallery && gallery.id() !== galleryId) {
-    setGallery(undefined);
-  }
+  const staleGallery = gallery && gallery.id() !== galleryId;
 
-  if (gallery && gallery.hasTheme()) {
-    theme.setTheme(gallery.theme());
-  } else {
-    theme.setTheme(config.DEFAULT_THEME);
-  }
+  const selectedGallery =
+    galleries && galleries.find((gallery) => gallery.id() === galleryId);
 
   React.useEffect(() => {
     galleryService
@@ -57,17 +56,43 @@ const Top = ({ user, lang, countryData, stats = false }) => {
     if (!galleryId) {
       return;
     }
-    galleryService
+    galleryPhotosService
       .get(galleryId)
-      .then((loadedGallery) => {
-        const gallery = GalleryModel(loadedGallery);
-        if (gallery.hasTheme()) {
-          theme.setTheme(gallery.theme());
-        }
-        setGallery(gallery);
-      })
+      .then((photos) => setPhotos(photos.map((photo) => PhotoModel(photo))))
       .catch((error) => setError(error.message));
   }, [galleryId, user]);
+  React.useEffect(() => {
+    if (!selectedGallery || !photos) {
+      return;
+    }
+    const filteredPhotos = photos.filter((photo) => {
+      return Object.values(filters).every((categoryFilters) =>
+        categoryFilters.every((filter) => filter(photo))
+      );
+    });
+    setGallery(selectedGallery.withPhotos(filteredPhotos));
+  }, [selectedGallery, photos, filters]);
+
+  if (staleGallery) {
+    setGallery(undefined);
+    setPhotos(undefined);
+  }
+
+  if (selectedGallery && selectedGallery.hasTheme()) {
+    theme.setTheme(selectedGallery.theme());
+  } else {
+    theme.setTheme(config.DEFAULT_THEME);
+  }
+
+  if (Object.keys(filters).length > 0) {
+    setFilters({});
+    // setFilters({
+    //   iso: [(photo) => [160, 200].includes(photo.iso())],
+    //   aperture: [(photo) => [1.2, 1.4].includes(photo.aperture())],
+    // });
+    setGallery(undefined);
+    setPhotos(undefined);
+  }
 
   if (error) {
     theme.setTheme("grayscale");
@@ -79,7 +104,7 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   }
   if (!galleryId) {
     if (galleries.length === 1) {
-      return <Redirect to={galleries[0].lastPath()} />;
+      return <Redirect to={galleries[0].path()} />;
     }
 
     const galleriesMatchingHostname = galleries.filter((gallery) =>
@@ -90,11 +115,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         (gallery) => gallery.id() === config.DEFAULT_GALLERY
       );
       if (targetGallery) {
-        return <Redirect to={targetGallery.lastPath()} />;
+        return <Redirect to={targetGallery.path()} />;
       }
     }
     if (galleriesMatchingHostname.length === 1) {
-      return <Redirect to={galleriesMatchingHostname[0].lastPath()} />;
+      return <Redirect to={galleriesMatchingHostname[0].path()} />;
     }
 
     if (galleries.length === 0) {
@@ -113,7 +138,7 @@ const Top = ({ user, lang, countryData, stats = false }) => {
     );
   }
 
-  if (!gallery) {
+  if (staleGallery || !gallery) {
     return <div>{t("loading")}</div>;
   }
 
@@ -123,6 +148,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context={stats ? "gallery-stats" : "gallery"}
         />
       </Empty>
@@ -130,10 +157,12 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   }
   if (stats) {
     return (
-      <Stats gallery={gallery} lang={lang} countryData={countryData}>
+      <Stats photos={gallery.photos()} lang={lang} countryData={countryData}>
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery-stats"
         />
       </Stats>
@@ -145,6 +174,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery"
           view="year"
         />
@@ -157,6 +188,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery"
           view="month"
         />
@@ -175,6 +208,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery"
           view="day"
         />
@@ -194,6 +229,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          filters={filters}
+          setFilters={setFilters}
           context="gallery"
           view="day"
         />
@@ -214,6 +251,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
       <Title
         galleries={galleries}
         gallery={gallery}
+        filters={filters}
+        setFilters={setFilters}
         context="gallery"
         view="photo"
       />

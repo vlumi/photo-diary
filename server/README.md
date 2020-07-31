@@ -127,6 +127,8 @@ The required access level is listed in brackets at the end of each resource meth
     - Returns `photo`
   - `DELETE ../:photoId` – Delete photo **[admin]**
 - `/gallery-photos`
+  - `GET ../:galleryId/` – Get all photos in the gallery **[gallery/view]**
+    - Returns `photos`
   - `GET ../:galleryId/:photoId` – Get photo in gallery context **[gallery/view]**
     - Returns `photo`
   - `PUT ../:galleryId/:photoId` – Link photo to gallery **[gallery/admin]**

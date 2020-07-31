@@ -39,7 +39,7 @@ const Title = ({ galleries, gallery, context }) => {
     switch (context) {
       default:
       case "gallery":
-        return gallery.lastPath();
+        return gallery.path();
       case "gallery-stats":
         return gallery.statsPath();
     }
@@ -90,6 +90,7 @@ const Title = ({ galleries, gallery, context }) => {
     }
     return <>{gallery.title()}</>;
   };
+  // TODO: show filters, allowing modification (clear, remove part, add part)
   return (
     <>
       <span className="gallery-menu">
@@ -108,6 +109,8 @@ const Title = ({ galleries, gallery, context }) => {
 Title.propTypes = {
   galleries: PropTypes.array.isRequired,
   gallery: PropTypes.object.isRequired,
+  filters: PropTypes.object.isRequired,
+  setFilters: PropTypes.func.isRequired,
   context: PropTypes.string,
 };
 export default Title;

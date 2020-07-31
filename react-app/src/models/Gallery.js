@@ -1,5 +1,3 @@
-import Photo from "./Photo";
-
 import calendar from "../lib/calendar";
 import format from "../lib/format";
 import collection from "../lib/collection";
@@ -27,14 +25,17 @@ const Gallery = (galleryData) => {
     return photosByDate;
   };
   const importPhotos = (photos) => {
-    const photosFlat = photos.map((photo) => Photo(photo));
-    const photosByYmd = groupPhotosByYearMonthDay(photosFlat);
-    return [photosFlat, photosByYmd];
+    const photosByYmd = groupPhotosByYearMonthDay(photos);
+    return [photos, photosByYmd];
   };
 
   const gallery = importGalleryData(galleryData);
   const [photos, photosByYmd] = importPhotos(gallery.photos || []);
+
   const self = {
+    withPhotos: (photos) => {
+      return Gallery({ ...galleryData, photos });
+    },
     id: () => gallery.id,
     isSpecial: () => gallery.id.startsWith(":"),
     title: (year, month, day, photo) => {
@@ -100,7 +101,7 @@ const Gallery = (galleryData) => {
     statsPath: () => ["", "g", gallery.id, "stats"].join("/"),
     includesPhotos: () =>
       "photos" in gallery && Object.keys(gallery.photos).length > 0,
-    includesYear: (year) => year in photosByYmd,
+    includesYear: (year) => photosByYmd && year in photosByYmd,
     includesMonth: (year, month) =>
       self.includesYear(year) && month in photosByYmd[year],
     includesDay: (year, month, day) =>
@@ -149,7 +150,7 @@ const Gallery = (galleryData) => {
     },
     flatMapMonths: (year, f) => {
       if (!self.includesYear(year)) {
-        return;
+        return [];
       }
       return Object.keys(photosByYmd[year]).map(Number).flatMap(f);
     },
@@ -161,7 +162,7 @@ const Gallery = (galleryData) => {
     },
     flatMapDays: (year, month, f) => {
       if (!self.includesMonth(year, month)) {
-        return;
+        return [];
       }
       return Object.keys(photosByYmd[year][month]).map(Number).flatMap(f);
     },

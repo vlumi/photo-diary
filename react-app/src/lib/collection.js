@@ -116,6 +116,9 @@ const objectFromArray = (data, value) =>
   }, {});
 
 const foldToArray = (data, comparator) => {
+  if (!data || !Object.keys(data).length) {
+    return [];
+  }
   return Object.keys(data)
     .map((key) => {
       return {

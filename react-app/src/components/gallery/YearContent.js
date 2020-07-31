@@ -26,7 +26,7 @@ const YearContent = ({ children, gallery, year }) => {
         </Link>
       );
     }
-    return <h3>month</h3>;
+    return <h3>{month}</h3>;
   };
   const renderDayValue = (gallery, year, month, day, photoCount) => {
     if (day === 0) {

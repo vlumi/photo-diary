@@ -14,6 +14,17 @@ module.exports = {
 /**
  * Get the properties of a photo in gallery context.
  */
+router.get("/:galleryId/", async (request, response) => {
+  await authorizer.authorizeGalleryView(
+    request.user.id,
+    request.params.galleryId
+  );
+  const photo = await model.getGalleryPhotos(request.params.galleryId);
+  response.json(photo);
+});
+/**
+ * Get the properties of a photo in gallery context.
+ */
 router.get("/:galleryId/:photoId", async (request, response) => {
   await authorizer.authorizeGalleryView(
     request.user.id,
