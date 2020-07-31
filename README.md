@@ -135,65 +135,75 @@ These features would be nice to have, but are too far into the future to put on 
 
 ## Version History
 
-- v0.3.0 (2020-07-31)
-  - Statistics view
-    - Separate for each gallery, including virtual
-  - Marker paths to embedded map, in chronological order
-  - API changes
-    - Remove `/api/stats`, moving the statistics generation client-side
-    - Flatten the returned `photos` in `/api/gallery`, removing the year/month/day hierarchy
-- v0.2.1 (2020-07-27)
-  - Embedded map with markers of the photo(s) on year, month, day, and photo views
-    - Marker popup with small thumbnail and date
-    - No grouping of nearby markers
-  - Language selection and minimal localization
-    - English, Finnish, Japanese
-- v0.2.0 (2020-07-25)
-  - Implement new `sqlite3` schema and driver
-    - More photo and gallery metadata
-    - User and ACL information
-    - CRUD
-  - Implement authentication and authorization
-  - Implement new command-line tools for managing the DB content, under `server/bin/`
-    - `add-user.js`
-      - Add a new, or update an existing user
-      - ID, password, and ACL information from command-line parameters
-    - `add-gallery`
-      - Add a new, or update an existing gallery
-      - Properties from command-line parameters
-    - `add-photo.js`
-      - Add new, or update existing photos
-      - Input from the JSON produced by [converter](converter) and command-line parameters
-      - Also set galleries (unlink & link)
-    - Any other management should be done directly to the DB
-      - Admin UI is in the pipeline
-- v0.1.1 (2020-07-20)
-  - Usability improvements and polish
-  - Setup to run in production mode
-- v0.1.0 (2020-07-18)
-  - New front-end app
-    - Read-only views for browsing/viewing
-      - Front page with list of galleries
-        - Can be skipped by setting a default gallery
-      - Year view
-        - Optionally all years by setting the year parameter negative
-        - Calendar layout, with days heat-mapped by number of photos
-      - Month view
-        - Photos group by day, same as [gallery](https://github.com/vlumi/gallery)
-      - Day view
-        - Same as month view, but restricted to a single day
-      - Single photo view
-        - A single photo in larger size with properties
-  - Back-end API
-    - RESTful JSON API
-    - Abstract DAO layer for future DB migration
-      - Legacy [gallery](https://github.com/vlumi/gallery), read-only DB driver
-      - Dummy DB driver for unit tests
-    - Currently unused features already implemented
-      - Token-based user and access control
-      - More photo metadata
-  - Dependent on parts of [gallery](https://github.com/vlumi/gallery)
-    - DB
-    - Admin tools
-    - Statistics
-- Initial commit (2020-07-04)
+### v0.3.0 (2020-07-31)
+
+- Statistics view
+  - Separate for each gallery, including virtual
+- Marker paths to embedded map, in chronological order
+- API changes
+  - Remove `/api/stats`, moving the statistics generation client-side
+  - Flatten the returned `photos` in `/api/gallery`, removing the year/month/day hierarchy
+
+### v0.2.1 (2020-07-27)
+
+- Embedded map with markers of the photo(s) on year, month, day, and photo views
+  - Marker popup with small thumbnail and date
+  - No grouping of nearby markers
+- Language selection and minimal localization
+  - English, Finnish, Japanese
+
+### v0.2.0 (2020-07-25)
+
+- Implement new `sqlite3` schema and driver
+  - More photo and gallery metadata
+  - User and ACL information
+  - CRUD
+- Implement authentication and authorization
+- Implement new command-line tools for managing the DB content, under `server/bin/`
+  - `add-user.js`
+    - Add a new, or update an existing user
+    - ID, password, and ACL information from command-line parameters
+  - `add-gallery`
+    - Add a new, or update an existing gallery
+    - Properties from command-line parameters
+  - `add-photo.js`
+    - Add new, or update existing photos
+    - Input from the JSON produced by [converter](converter) and command-line parameters
+    - Also set galleries (unlink & link)
+  - Any other management should be done directly to the DB
+    - Admin UI is in the pipeline
+
+### v0.1.1 (2020-07-20)
+
+- Usability improvements and polish
+- Setup to run in production mode
+
+### v0.1.0 (2020-07-18)
+
+- New front-end app
+  - Read-only views for browsing/viewing
+    - Front page with list of galleries
+      - Can be skipped by setting a default gallery
+    - Year view
+      - Optionally all years by setting the year parameter negative
+      - Calendar layout, with days heat-mapped by number of photos
+    - Month view
+      - Photos group by day, same as [gallery](https://github.com/vlumi/gallery)
+    - Day view
+      - Same as month view, but restricted to a single day
+    - Single photo view
+      - A single photo in larger size with properties
+- Back-end API
+  - RESTful JSON API
+  - Abstract DAO layer for future DB migration
+    - Legacy [gallery](https://github.com/vlumi/gallery), read-only DB driver
+    - Dummy DB driver for unit tests
+  - Currently unused features already implemented
+    - Token-based user and access control
+    - More photo metadata
+- Dependent on parts of [gallery](https://github.com/vlumi/gallery)
+  - DB
+  - Admin tools
+  - Statistics
+
+### Initial commit (2020-07-04)
