@@ -1,5 +1,8 @@
 const User = (userData, token) => {
-  const importGalleryData = (userData, token) => {
+  const importUserData = (userData, token) => {
+    if (!userData || !("id" in userData) || !userData.id) {
+      throw "Invalid user";
+    }
     return {
       id: userData.id,
       token: token || userData.token,
@@ -7,11 +10,11 @@ const User = (userData, token) => {
     };
   };
 
-  const user = importGalleryData(userData, token);
+  const user = importUserData(userData, token);
   const self = {
     id: () => user.id,
     token: () => user.token,
-    isAdmin: () => user.isAdmin,
+    isAdmin: () => !!user.isAdmin,
     toJson: () => JSON.stringify(user),
   };
   return self;

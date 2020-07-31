@@ -5,6 +5,7 @@ import config from "../lib/config";
 
 const Gallery = (galleryData) => {
   const importGalleryData = (galleryData) => {
+    // TODO: validate
     if (galleryData.epoch) {
       galleryData.epoch = new Date(galleryData.epoch);
     }

@@ -16,12 +16,8 @@ const number = (lang) => {
   };
 };
 
-const padNumber = (value, length) => {
-  const number = Number(value);
-  return value < 0
-    ? "-" + padLeft(-value, length, "0")
-    : padLeft(value, length, "0");
-};
+const padNumber = (value, length) =>
+  value < 0 ? "-" + padLeft(-value, length, "0") : padLeft(value, length, "0");
 
 const share = (value, total) => (value * 100) / total;
 
