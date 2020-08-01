@@ -3,21 +3,42 @@ import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import styled from "styled-components";
 import { useTranslation } from "react-i18next";
+import { BsFillHouseFill } from "react-icons/bs";
 
+import Filters from "./Filters";
 import Link from "./Link";
 const Root = styled.h1`
   margin: 0;
 `;
-const GallerySelect = styled.select`
+const TitleMenu = styled.span`
+  display: flex;
+  justify-content: space-between;
+  margin: 5px;
+`;
+const TitleSelect = styled.select`
   font-size: 1em;
   background: none;
   border: none;
   font-weight: bold;
   text-align-last: right;
 `;
-const GalleryOption = styled.option``;
+const GallerySelect = styled(TitleSelect)`
+  text-align-last: right;
+`;
+const ContextSelect = styled(TitleSelect)`
+  text-align-last: left;
+`;
+const TitleOption = styled.option``;
 
-const Title = ({ galleries, gallery, context }) => {
+const Title = ({
+  galleries,
+  gallery,
+  filters,
+  setFilters,
+  context,
+  lang,
+  countryData,
+}) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -35,7 +56,7 @@ const Title = ({ galleries, gallery, context }) => {
     return <Redirect to={redirect} />;
   }
 
-  const getRedirectPath = (gallery) => {
+  const getRedirectPath = (gallery, context) => {
     switch (context) {
       default:
       case "gallery":
@@ -45,64 +66,69 @@ const Title = ({ galleries, gallery, context }) => {
     }
   };
 
-  const galleryChangeHandler = (event) => {
-    const targetGallery = galleries.find(
-      (gallery) => gallery.id() === event.target.value
-    );
-    if (targetGallery && gallery.id !== targetGallery.id) {
-      window.history.pushState({}, "");
-      setRedirect(getRedirectPath(targetGallery));
-    }
-  };
-
-  const getTargetContext = (context) => {
-    switch (context) {
-      default:
-      case "gallery":
-        return "gallery-stats";
-      case "gallery-stats":
-        return "gallery";
-    }
-  };
-
-  const renderContextSwitch = () => {
-    const targetContext = getTargetContext(context);
-    return (
-      <span className="stats">
-        <Link gallery={gallery} context={targetContext}>
-          {t(`nav-${targetContext}`)}
-        </Link>
-      </span>
-    );
-  };
-
   const renderTitle = () => {
+    const changeHandler = (event) => {
+      const targetGallery = galleries.find(
+        (gallery) => gallery.id() === event.target.value
+      );
+      if (targetGallery && gallery.id !== targetGallery.id) {
+        window.history.pushState({}, "");
+        setRedirect(getRedirectPath(targetGallery, context));
+      }
+    };
+
     if (Object.keys(galleries).length > 1) {
       return (
-        <GallerySelect value={gallery.id()} onChange={galleryChangeHandler}>
+        <GallerySelect value={gallery.id()} onChange={changeHandler}>
           {galleries.map((gallery) => (
-            <GalleryOption key={gallery.id()} value={gallery.id()}>
+            <TitleOption key={gallery.id()} value={gallery.id()}>
               {gallery.title()}
-            </GalleryOption>
+            </TitleOption>
           ))}
         </GallerySelect>
       );
     }
     return <>{gallery.title()}</>;
   };
-  // TODO: show filters, allowing modification (clear, remove part, add part)
+  const renderContext = () => {
+    const changeHandler = (event) => {
+      const targetContext = event.target.value;
+      if (targetContext && context !== targetContext) {
+        window.history.pushState({}, "");
+        setRedirect(getRedirectPath(gallery, targetContext));
+      }
+    };
+    return (
+      <ContextSelect value={context} onChange={changeHandler}>
+        {["gallery", "gallery-stats"].map((context) => (
+          <TitleOption key={context} value={context}>
+            {t(`nav-${context}`)}
+          </TitleOption>
+        ))}
+      </ContextSelect>
+    );
+  };
+
   return (
     <>
-      <span className="gallery-menu">
-        <span className="top">
-          <Link>{t("nav-gallery-top")}</Link>
-        </span>
-        {renderContextSwitch()}
-      </span>
+      <TitleMenu>
+        <Link>
+          <BsFillHouseFill />
+          {t("nav-gallery-top")}
+        </Link>
+        {/* <Link gallery={gallery} context={targetContext}>
+          {t(`nav-${targetContext}`)}
+        </Link> */}
+      </TitleMenu>
       <Root>
-        {renderTitle()}
-        {context ? <> — {t(`nav-${context}`)}</> : ""}
+        {renderTitle()} — {renderContext()}
       </Root>
+      <Filters
+        filters={filters}
+        setFilters={setFilters}
+        lang={lang}
+        countryData={countryData}
+      />
     </>
   );
 };
@@ -111,6 +137,8 @@ Title.propTypes = {
   gallery: PropTypes.object.isRequired,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
-  context: PropTypes.string,
+  context: PropTypes.string.isRequired,
+  lang: PropTypes.string.isRequired,
+  countryData: PropTypes.object.isRequired,
 };
 export default Title;

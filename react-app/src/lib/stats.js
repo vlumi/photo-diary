@@ -7,13 +7,32 @@ import collection from "./collection";
 import color from "./color";
 import config from "./config";
 
+const UNKNOWN = "unknown";
+
 const generate = async (photos, unknownLabel) => {
   return collectStatistics(photos, unknownLabel);
+};
+
+const decodeTableRowKey = (key) => {
+  if (!key) {
+    return key;
+  }
+  const { value, isUnknown } = JSON.parse(key);
+  if (isUnknown) return UNKNOWN;
+  return value;
 };
 
 const collectTopics = (data, lang, t, countryData) => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang);
+
+  const unknownLabel = t("stats-unknown");
+  const encodeTableKey = (value) =>
+    JSON.stringify({
+      value: value,
+      isUnknown: value === unknownLabel,
+    });
+
   const encodeLabelKey = (formatter) => (entry) =>
     collection.transformObjectValue(entry, "key", (entry) => {
       return {
@@ -160,7 +179,6 @@ const collectTopics = (data, lang, t, countryData) => {
     );
     return [flat, data, valueRanks];
   };
-
   const collectSummary = (count) => {
     return {
       key: "summary",
@@ -193,7 +211,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
           author: entry.key,
           count: formatNumber.default(entry.value),
@@ -208,7 +226,7 @@ const collectTopics = (data, lang, t, countryData) => {
     const [flat, data] = transformData({
       original: byCountry,
       formatter: (countryCode) =>
-        format.countryName(countryCode, lang, countryData),
+        format.countryName(lang, countryData)(countryCode),
     });
     return {
       key: "country",
@@ -226,7 +244,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
           flag: (
             <>
@@ -237,7 +255,7 @@ const collectTopics = (data, lang, t, countryData) => {
               )}
             </>
           ),
-          country: <>{format.countryName(entry.key, lang, countryData)}</>,
+          country: <>{format.countryName(lang, countryData)(entry.key)}</>,
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -280,7 +298,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           year: entry.key,
           count: formatNumber.default(entry.value),
@@ -360,7 +378,7 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         const [year, month] = entry.key;
         return {
-          key: entry.key.join("-"),
+          key: encodeTableKey(entry.key.join("-")),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           "year-month": t("stats-year-month", {
             year,
@@ -396,7 +414,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           month: t(`month-long-${entry.key}`),
           count: formatNumber.default(entry.value),
@@ -432,7 +450,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           weekday: t(`weekday-long-${format.dayOfWeek(entry.key)}`),
           count: formatNumber.default(entry.value),
@@ -465,7 +483,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           hour: `${format.padNumber(entry.key, 2)}:00–`,
           count: formatNumber.default(entry.value),
@@ -511,7 +529,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
           "camera-make": entry.key,
           count: formatNumber.default(entry.value),
@@ -541,7 +559,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
           camera: entry.key,
           count: formatNumber.default(entry.value),
@@ -570,9 +588,8 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "share", align: "right" },
       ],
       table: flat.map((entry, index) => {
-        // const [camera, lens] = JSON.parse(entry.key);
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
           lens: entry.key,
           count: formatNumber.default(entry.value),
@@ -605,7 +622,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
           "camera-lens": JSON.parse(entry.key).join(" + "),
           count: formatNumber.default(entry.value),
@@ -652,7 +669,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           "focal-length": formatExposure.focalLength(entry.key),
           count: formatNumber.default(entry.value),
@@ -684,7 +701,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           aperture: formatExposure.aperture(entry.key),
           count: formatNumber.default(entry.value),
@@ -716,7 +733,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           "exposure-time": formatExposure.exposureTime(entry.key),
           count: formatNumber.default(entry.value),
@@ -748,7 +765,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           iso: formatExposure.iso(entry.key),
           count: formatNumber.default(entry.value),
@@ -780,7 +797,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           ev: formatExposure.ev(entry.key),
           count: formatNumber.default(entry.value),
@@ -812,7 +829,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           lv: formatExposure.ev(entry.key),
           count: formatNumber.default(entry.value),
@@ -844,7 +861,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key, // TODO: de-localize unknown
+          key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           resolution: formatExposure.resolution(entry.key),
           count: formatNumber.default(entry.value),
@@ -876,7 +893,7 @@ const collectTopics = (data, lang, t, countryData) => {
   return [collectGeneral(), collectTime(), collectGear(), collectExposure()];
 };
 
-export default { generate, collectTopics };
+export default { UNKNOWN, decodeTableRowKey, generate, collectTopics };
 
 /**
  * Collect statistics from photos

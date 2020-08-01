@@ -110,7 +110,7 @@ const Photo = (photoData) => {
     countryCode: () => photo.taken.location.country,
     countryName: (lang, countryData) =>
       self.hasCountry()
-        ? format.countryName(self.countryCode(), lang, countryData)
+        ? format.countryName(lang, countryData)(self.countryCode())
         : "",
     hasPlace: () =>
       photo &&

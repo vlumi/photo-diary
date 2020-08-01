@@ -141,6 +141,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
           filters={filters}
           setFilters={setFilters}
           context={stats ? "gallery-stats" : "gallery"}
+          lang={lang}
+          countryData={countryData}
         />
       </Empty>
     );
@@ -160,6 +162,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
           filters={filters}
           setFilters={setFilters}
           context="gallery-stats"
+          lang={lang}
+          countryData={countryData}
         />
       </Stats>
     );
@@ -174,6 +178,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
           setFilters={setFilters}
           context="gallery"
           view="year"
+          lang={lang}
+          countryData={countryData}
         />
       </Full>
     );
@@ -188,6 +194,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
           setFilters={setFilters}
           context="gallery"
           view="month"
+          lang={lang}
+          countryData={countryData}
         />
       </Year>
     );
@@ -208,6 +216,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
           setFilters={setFilters}
           context="gallery"
           view="day"
+          lang={lang}
+          countryData={countryData}
         />
       </Month>
     );
@@ -229,6 +239,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
           setFilters={setFilters}
           context="gallery"
           view="day"
+          lang={lang}
+          countryData={countryData}
         />
       </Day>
     );
@@ -251,6 +263,8 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         setFilters={setFilters}
         context="gallery"
         view="photo"
+        lang={lang}
+        countryData={countryData}
       />
     </Photo>
   );

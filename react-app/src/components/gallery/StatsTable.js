@@ -3,6 +3,9 @@ import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 
+import stats from "../../lib/stats";
+import filter from "../../lib/filter";
+
 const Root = styled.table`
   width: 100%;
   text-align: left;
@@ -13,7 +16,9 @@ const Root = styled.table`
   border-collapse: collapse;
 `;
 const Block = styled.tbody``;
+const HeaderRow = styled.tr``;
 const Row = styled.tr`
+  cursor: pointer;
   &:hover {
     color: var(--header-color);
     background-color: var(--header-background);
@@ -39,37 +44,6 @@ const Column = styled.td`
 const StatsTable = ({ topic, category, filters, setFilters }) => {
   const { t } = useTranslation();
 
-  const applyNewFilter = (filters, category, key, newFilter) => {
-    const newFilters = { ...filters };
-    if (!(category in newFilters)) {
-      newFilters[category] = { [key]: newFilter };
-      return newFilters;
-    }
-    newFilters[category] = { ...newFilters[category] };
-    if (!(key in newFilters[category])) {
-      newFilters[category][key] = newFilter;
-      return newFilters;
-    }
-    delete newFilters[category][key];
-    if (!Object.keys(newFilters[category]).length) {
-      delete newFilters[category];
-    }
-    return newFilters;
-  };
-
-  // TODO: fixed, non-localized key for unknown
-  const normalizeKeyValue = (key) => {
-    try {
-      return JSON.stringify(
-        JSON.parse(key).map((part) =>
-          part === t("stats-unknown") ? undefined : part
-        )
-      );
-    } catch (e) {
-      return key === t("stats-unknown") ? undefined : key;
-    }
-  };
-
   const handleClick = (event) => {
     const keyElement = event.target.closest("tr");
     const categoryElement = event.target.closest("[data-type=category]");
@@ -83,10 +57,12 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
     if (!category || !key) {
       return;
     }
-    const normalizedKey = normalizeKeyValue(key, t);
     // TODO: put to tentative filters first, to allow selecting multiple items...
-    const newFilters = applyNewFilter(filters, category, key, (photo) =>
-      photo.matches(category, normalizedKey)
+    const newFilters = filter.applyNewFilter(
+      filters,
+      category,
+      key,
+      stats.UNKNOWN
     );
     setFilters(newFilters);
   };
@@ -118,7 +94,7 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
       <Row
         key={`${topic.key}:${category.key}:${i}`}
         onClick={handleClick}
-        data-key={values.key}
+        data-key={stats.decodeTableRowKey(values.key)}
       >
         {renderColumns(values, i)}
       </Row>
@@ -128,7 +104,7 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
   return (
     <Root>
       <Block>
-        <Row>
+        <HeaderRow>
           {category.tableColumns.map((column) => (
             <Header
               key={`${topic.key}:header:${column.title}`}
@@ -137,7 +113,7 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
               {t(`stats-col-${column.title}`)}
             </Header>
           ))}
-        </Row>
+        </HeaderRow>
         {renderRows(category.table)}
       </Block>
     </Root>

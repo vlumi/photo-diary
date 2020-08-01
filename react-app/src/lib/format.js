@@ -59,9 +59,8 @@ const dayOfWeek = (dow) => {
   return DOW[dow % 7];
 };
 
-const countryName = (countryCode, lang, countryData) => {
-  return countryData.getName(countryCode, lang) || countryCode;
-};
+const countryName = (lang, countryData) => (countryCode) =>
+  countryData.getName(countryCode, lang) || countryCode;
 
 const exposure = (lang) => {
   const formatNumber = number(lang);
@@ -109,7 +108,7 @@ const exposure = (lang) => {
   };
 };
 const gear = (make, model) => {
-  if (!make && !model) return "";
+  if (!make && !model) return undefined;
   if (!make) return model;
   if (!model) return make;
   if (model.startsWith(make)) {
@@ -119,6 +118,57 @@ const gear = (make, model) => {
 };
 const coordinates = (latitude, longitude) => {
   return new GeoCoord(latitude, longitude).toString();
+};
+const categoryValue = (lang, t, countryData) => {
+  const formatExposure = exposure(lang);
+  return (category) => {
+    switch (category) {
+      case "author":
+        return identity;
+      case "country":
+        return countryName(lang, countryData);
+      case "year":
+        return identity;
+      case "year-month":
+        return (yearMonth) => {
+          const [year, month] = yearMonth.split("-");
+          return t("stats-year-month", {
+            year,
+            month: t(`month-long-${month}`),
+          });
+        };
+      case "month":
+        return (month) => t(`month-long-${month}`);
+      case "weekday":
+        return (dow) => t(`weekday-long-${dayOfWeek(dow)}`);
+      case "hour":
+        return (hour) => `${padNumber(hour, 2)}:00–`;
+      case "camera-make":
+        return identity;
+      case "camera":
+        return identity;
+      case "lens":
+        return identity;
+      case "camera-lens":
+        return (cameraLens) => JSON.parse(cameraLens).join(" + ");
+      case "focal-length":
+        return formatExposure.focalLength;
+      case "aperture":
+        return formatExposure.aperture;
+      case "exposure-time":
+        return formatExposure.exposureTime;
+      case "iso":
+        return formatExposure.iso;
+      case "ev":
+        return formatExposure.ev;
+      case "lv":
+        return formatExposure.ev;
+      case "resolution":
+        return formatExposure.resolution;
+      default:
+        return identity;
+    }
+  };
 };
 
 export default {
@@ -139,4 +189,6 @@ export default {
   exposure,
   gear,
   coordinates,
+
+  categoryValue,
 };

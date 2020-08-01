@@ -97,9 +97,9 @@ describe("countryName", () => {
     },
   };
   test("Finland", () =>
-    expect(format.countryName("fi", "en", countryData)).toBe("Finland"));
+    expect(format.countryName("en", countryData)("fi")).toBe("Finland"));
   test("England", () =>
-    expect(format.countryName("en", "en", countryData)).toBe("en"));
+    expect(format.countryName("en", countryData)("en")).toBe("en"));
 });
 describe("focalLength", () => {
   const formatExposure = format.exposure("en");
@@ -140,7 +140,7 @@ describe("resolution", () => {
   test("13", () => expect(formatExposure.resolution(13)).toBe("13"));
 });
 describe("gear", () => {
-  test("empty", () => expect(format.gear()).toBe(""));
+  test("empty", () => expect(format.gear()).toBeUndefined());
   test("make only", () => expect(format.gear("Canon")).toBe("Canon"));
   test("model only", () => expect(format.gear("", "EOS 10D")).toBe("EOS 10D"));
   test("make and model", () =>
