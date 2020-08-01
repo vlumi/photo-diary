@@ -70,7 +70,7 @@ const exposure = (lang) => {
       if (isNaN(focalLength)) {
         return focalLength;
       }
-      return `ƒ=${formatNumber.default(focalLength)}mm`;
+      return formatNumber.default(focalLength);
     },
     aperture: (aperture) => {
       if (isNaN(aperture)) {
@@ -83,16 +83,16 @@ const exposure = (lang) => {
         return exposureTime;
       }
       if (exposureTime >= 1) {
-        return `${formatNumber.default(exposureTime)}s`;
+        return formatNumber.default(exposureTime);
       }
       const fraction = Math.round(1 / exposureTime);
-      return `1⁄${fraction}s`;
+      return `1⁄${fraction}`;
     },
     iso: (iso) => {
       if (isNaN(iso)) {
         return iso;
       }
-      return `ISO${formatNumber.default(iso)}`;
+      return iso;
     },
     ev: (ev) => {
       if (isNaN(ev)) {
@@ -104,58 +104,10 @@ const exposure = (lang) => {
       if (isNaN(resolution)) {
         return resolution;
       }
-      return `${formatNumber.default(resolution)}MP`;
+      return formatNumber.default(resolution);
     },
   };
 };
-// TODO: remove ->
-// TODO: number.default()
-const focalLength = (focalLength) => {
-  if (isNaN(focalLength)) {
-    return focalLength;
-  }
-  return `ƒ=${focalLength}mm`;
-};
-// TODO: number.default()
-const aperture = (aperture) => {
-  if (isNaN(aperture)) {
-    return aperture;
-  }
-  return `ƒ/${aperture}`;
-};
-// TODO: number.default()
-const exposureTime = (exposureTime) => {
-  if (isNaN(exposureTime)) {
-    return exposureTime;
-  }
-  if (exposureTime >= 1) {
-    return `${exposureTime}s`;
-  }
-  const fraction = Math.round(1 / exposureTime);
-  return `1/${fraction}s`;
-};
-// TODO: number.default()
-const iso = (iso) => {
-  if (isNaN(iso)) {
-    return iso;
-  }
-  return `ISO${iso}`;
-};
-// TODO: number.default()
-const ev = (ev) => {
-  if (isNaN(ev)) {
-    return ev;
-  }
-  return Math.round(ev * 2) / 2;
-};
-// TODO: number.default()
-const resolution = (resolution) => {
-  if (isNaN(resolution)) {
-    return resolution;
-  }
-  return `${resolution}MP`;
-};
-// TODO: -> remove
 const gear = (make, model) => {
   if (!make && !model) return "";
   if (!make) return model;
@@ -185,12 +137,6 @@ export default {
   countryName,
 
   exposure,
-  focalLength,
-  aperture,
-  exposureTime,
-  iso,
-  ev,
-  resolution,
   gear,
   coordinates,
 };

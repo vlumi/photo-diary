@@ -111,12 +111,12 @@
     "stats-col-lens": "Objektiivi",
     "stats-col-camera-lens": "Kamera ja objektiivi",
 
-    "stats-col-focal-length": "Polttoväli",
+    "stats-col-focal-length": "Millimetriä",
     "stats-col-aperture": "Aukko",
-    "stats-col-exposure-time": "Valotusaika",
-    "stats-col-iso": "Herkkyys",
+    "stats-col-exposure-time": "Sekuntia",
+    "stats-col-iso": "ISO",
     "stats-col-ev": "EV",
     "stats-col-lv": "EV @ ISO100",
-    "stats-col-resolution": "Resoluutio"
+    "stats-col-resolution": "Megapikseliä"
   }
 }

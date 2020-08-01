@@ -9,6 +9,7 @@ import MapContainer from "../MapContainer";
 import Link from "./Link";
 
 import config from "../../lib/config";
+import format from "../../lib/format";
 
 const PhotoFooter = ({
   gallery,
@@ -21,6 +22,7 @@ const PhotoFooter = ({
 }) => {
   const previousPhoto = gallery.previousPhoto(year, month, day, photo);
   const nextPhoto = gallery.nextPhoto(year, month, day, photo);
+  const formatExposure = format.exposure(lang);
 
   const renderAdjacentPhoto = (adjacentPhoto) => {
     if (adjacentPhoto === photo) {
@@ -75,6 +77,28 @@ const PhotoFooter = ({
       return <></>;
     }
     return <div className="details">{photo.formatCoordinates()}</div>;
+  };
+  const renderExposure = () => {
+    const x = () => {
+      return [
+        photo.focalLength()
+          ? `ƒ=${formatExposure.focalLength(photo.focalLength())}㎜`
+          : "",
+        photo.aperture() ? formatExposure.aperture(photo.aperture()) : "",
+        photo.exposureTime()
+          ? `${formatExposure.exposureTime(photo.exposureTime())}s`
+          : "",
+        photo.iso() ? `ISO${formatExposure.iso(photo.iso())}` : "",
+        photo.resolution()
+          ? `${formatExposure.resolution(photo.resolution())}MP`
+          : "",
+        photo.exposureValue()
+          ? `EV${formatExposure.ev(photo.exposureValue())}`
+          : "",
+        photo.lightValue() ? `LV${formatExposure.ev(photo.lightValue())}` : "",
+      ].join(" ");
+    };
+    return <div className="details">{x()}</div>;
   };
   const renderGear = () => {
     const camera = photo.formatCamera();
@@ -168,7 +192,7 @@ const PhotoFooter = ({
             {photo.title()}
             {renderLocation()}
             {renderCoordinates()}
-            <div className="details">{photo.formatExposure()}</div>
+            {renderExposure()}
             <div className="details">{renderGear()}</div>
             {/* TODO: epochMode */}
             {renderEpochInfo()}

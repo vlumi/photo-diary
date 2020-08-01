@@ -108,12 +108,12 @@
     "stats-col-lens": "Lens",
     "stats-col-camera-lens": "Camera + Lens",
 
-    "stats-col-focal-length": "Focal Length",
+    "stats-col-focal-length": "Millimeters",
     "stats-col-aperture": "Aperture",
-    "stats-col-exposure-time": "Shutter Speed",
-    "stats-col-iso": "Sensitivity",
+    "stats-col-exposure-time": "Seconds",
+    "stats-col-iso": "ISO",
     "stats-col-ev": "EV",
     "stats-col-lv": "EV @ ISO100",
-    "stats-col-resolution": "Resolution"
+    "stats-col-resolution": "Megapixels"
   }
 }
