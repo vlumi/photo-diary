@@ -92,7 +92,7 @@ const exposure = (lang) => {
       if (isNaN(iso)) {
         return iso;
       }
-      return iso;
+      return String(iso);
     },
     ev: (ev) => {
       if (isNaN(ev)) {

@@ -102,31 +102,42 @@ describe("countryName", () => {
     expect(format.countryName("en", "en", countryData)).toBe("en"));
 });
 describe("focalLength", () => {
-  test("N/A", () => expect(format.focalLength("N/A")).toBe("N/A"));
-  test("50", () => expect(format.focalLength(50)).toBe("ƒ=50mm"));
-  test("23.5", () => expect(format.focalLength(23.5)).toBe("ƒ=23.5mm"));
+  const formatExposure = format.exposure("en");
+  test("N/A", () => expect(formatExposure.focalLength("N/A")).toBe("N/A"));
+  test("50", () => expect(formatExposure.focalLength(50)).toBe("50"));
+  test("23.5", () => expect(formatExposure.focalLength(23.5)).toBe("23.5"));
 });
 describe("aperture", () => {
-  test("N/A", () => expect(format.aperture("N/A")).toBe("N/A"));
-  test("4.0", () => expect(format.aperture(4.0)).toBe("ƒ/4"));
-  test("2.8", () => expect(format.aperture(2.8)).toBe("ƒ/2.8"));
+  const formatExposure = format.exposure("en");
+  test("N/A", () => expect(formatExposure.aperture("N/A")).toBe("N/A"));
+  test("4.0", () => expect(formatExposure.aperture(4.0)).toBe("ƒ/4"));
+  test("2.8", () => expect(formatExposure.aperture(2.8)).toBe("ƒ/2.8"));
 });
 describe("exposureTime", () => {
-  test("N/A", () => expect(format.exposureTime("N/A")).toBe("N/A"));
-  test("2.5", () => expect(format.exposureTime(2.5)).toBe("2.5s"));
-  test("1", () => expect(format.exposureTime(1)).toBe("1s"));
-  test("0.5", () => expect(format.exposureTime(0.5)).toBe("1/2s"));
-  test("0.01", () => expect(format.exposureTime(0.01)).toBe("1/100s"));
+  const formatExposure = format.exposure("en");
+  test("N/A", () => expect(formatExposure.exposureTime("N/A")).toBe("N/A"));
+  test("2.5", () => expect(formatExposure.exposureTime(2.5)).toBe("2.5"));
+  test("1", () => expect(formatExposure.exposureTime(1)).toBe("1"));
+  test("0.5", () => expect(formatExposure.exposureTime(0.5)).toBe("1⁄2"));
+  test("0.01", () => expect(formatExposure.exposureTime(0.01)).toBe("1⁄100"));
 });
 describe("iso", () => {
-  test("N/A", () => expect(format.iso("N/A")).toBe("N/A"));
-  test("100", () => expect(format.iso(100)).toBe("ISO100"));
-  test("400", () => expect(format.iso(400)).toBe("ISO400"));
+  const formatExposure = format.exposure("en");
+  test("N/A", () => expect(formatExposure.iso("N/A")).toBe("N/A"));
+  test("100", () => expect(formatExposure.iso(100)).toBe("100"));
+  test("400", () => expect(formatExposure.iso(400)).toBe("400"));
+});
+describe("ev", () => {
+  const formatExposure = format.exposure("en");
+  test("N/A", () => expect(formatExposure.ev("N/A")).toBe("N/A"));
+  test("5.0", () => expect(formatExposure.ev(5.0)).toBe("5"));
+  test("13", () => expect(formatExposure.ev(13)).toBe("13"));
 });
 describe("resolution", () => {
-  test("N/A", () => expect(format.resolution("N/A")).toBe("N/A"));
-  test("5.0", () => expect(format.resolution(5.0)).toBe("5MP"));
-  test("13", () => expect(format.resolution(13)).toBe("13MP"));
+  const formatExposure = format.exposure("en");
+  test("N/A", () => expect(formatExposure.resolution("N/A")).toBe("N/A"));
+  test("5.0", () => expect(formatExposure.resolution(5.0)).toBe("5"));
+  test("13", () => expect(formatExposure.resolution(13)).toBe("13"));
 });
 describe("gear", () => {
   test("empty", () => expect(format.gear()).toBe(""));
