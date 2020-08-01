@@ -12,7 +12,8 @@ const generate = async (photos, unknownLabel) => {
 };
 
 const collectTopics = (data, lang, t, countryData) => {
-  const number = format.number(lang);
+  const formatNumber = format.number(lang);
+  const formatExposure = format.exposure(lang);
   const encodeLabelKey = (formatter) => (entry) =>
     collection.transformObjectValue(entry, "key", (entry) => {
       return {
@@ -22,7 +23,9 @@ const collectTopics = (data, lang, t, countryData) => {
     });
   const decodeLabelKey = (key, value) => {
     const { name, share } = key;
-    return ` ${name}: ${number.default(value)} (${number.oneDecimal(share)}%)`;
+    return ` ${name}: ${formatNumber.default(value)} (${formatNumber.oneDecimal(
+      share
+    )}%)`;
   };
   const chartOptions = {
     common: {
@@ -156,9 +159,11 @@ const collectTopics = (data, lang, t, countryData) => {
       key: "summary",
       title: t("stats-category-summary"),
       kpi: collection.foldToArray({
-        photos: number.default(count.total),
-        days: number.default(count.byTime.days),
-        average: number.twoDecimal(count.total / (count.byTime.days || 1)),
+        photos: formatNumber.default(count.total),
+        days: formatNumber.default(count.byTime.days),
+        average: formatNumber.twoDecimal(
+          count.total / (count.byTime.days || 1)
+        ),
       }),
     };
   };
@@ -182,10 +187,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry, index) => {
         return {
           key: entry.key,
-          rank: number.default(index + 1),
+          rank: formatNumber.default(index + 1),
           author: entry.key,
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -213,7 +220,7 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry, index) => {
         return {
           key: entry.key,
-          rank: number.default(index + 1),
+          rank: formatNumber.default(index + 1),
           flag: (
             <>
               {countryData.isValid(entry.key) ? (
@@ -224,8 +231,10 @@ const collectTopics = (data, lang, t, countryData) => {
             </>
           ),
           country: <>{format.countryName(entry.key, lang, countryData)}</>,
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -265,11 +274,11 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           year: entry.key,
-          count: number.default(entry.value),
+          count: formatNumber.default(entry.value),
           average: t("stats-per-day", {
-            count: number.twoDecimal(entry.value / daysInYear[entry.key]),
+            count: formatNumber.twoDecimal(entry.value / daysInYear[entry.key]),
           }),
         };
       }),
@@ -345,13 +354,13 @@ const collectTopics = (data, lang, t, countryData) => {
         const [year, month] = entry.key;
         return {
           key: entry.key.join("-"),
-          rank: number.default(valueRanks[entry.value] + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           "year-month": t("stats-year-month", {
             year,
             month: t(`month-long-${month}`),
           }),
-          count: number.default(entry.value),
-          average: number.twoDecimal(
+          count: formatNumber.default(entry.value),
+          average: formatNumber.twoDecimal(
             entry.value / daysInYearMonth[year][month]
           ),
         };
@@ -381,10 +390,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           month: t(`month-long-${entry.key}`),
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -415,10 +426,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           weekday: t(`weekday-long-${format.dayOfWeek(entry.key)}`),
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -446,10 +459,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           hour: `${format.padNumber(entry.key, 2)}:00–`,
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -490,10 +505,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry, index) => {
         return {
           key: entry.key,
-          rank: number.default(index + 1),
+          rank: formatNumber.default(index + 1),
           "camera-make": entry.key,
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -518,10 +535,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry, index) => {
         return {
           key: entry.key,
-          rank: number.default(index + 1),
+          rank: formatNumber.default(index + 1),
           camera: entry.key,
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -546,10 +565,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry, index) => {
         return {
           key: entry.key,
-          rank: number.default(index + 1),
+          rank: formatNumber.default(index + 1),
           lens: entry.key,
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -575,10 +596,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry, index) => {
         return {
           key: entry.key,
-          rank: number.default(index + 1),
+          rank: formatNumber.default(index + 1),
           "camera-lens": entry.key,
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -601,7 +624,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectFocalLength = (byFocalLength, total) => {
     const [flat, data, valueRanks] = transformData({
       original: byFocalLength,
-      formatter: format.focalLength,
+      formatter: formatExposure.focalLength,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -620,10 +643,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
-          "focal-length": format.focalLength(entry.key),
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          "focal-length": formatExposure.focalLength(entry.key),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -631,7 +656,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectAperture = (byAperture, total) => {
     const [flat, data, valueRanks] = transformData({
       original: byAperture,
-      formatter: format.aperture,
+      formatter: formatExposure.aperture,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -650,10 +675,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
-          aperture: format.aperture(entry.key),
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          aperture: formatExposure.aperture(entry.key),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -661,7 +688,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectExposureTime = (byExposureTime, total) => {
     const [flat, data, valueRanks] = transformData({
       original: byExposureTime,
-      formatter: format.exposureTime,
+      formatter: formatExposure.exposureTime,
       comparator: collection.numSortByFieldDesc("key"),
     });
     return {
@@ -680,10 +707,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
-          "exposure-time": format.exposureTime(entry.key),
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          "exposure-time": formatExposure.exposureTime(entry.key),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -691,7 +720,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectIso = (byIso, total) => {
     const [flat, data, valueRanks] = transformData({
       original: byIso,
-      formatter: format.iso,
+      formatter: formatExposure.iso,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -710,17 +739,20 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
-          iso: format.iso(entry.key),
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          iso: formatExposure.iso(entry.key),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
   };
-  const collectEv = (byEv, total) => {
+  const collectExposureValue = (byExposureValue, total) => {
     const [flat, data, valueRanks] = transformData({
-      original: byEv,
+      original: byExposureValue,
+      formatter: formatExposure.ev,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -739,17 +771,20 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
-          ev: entry.key,
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          ev: formatExposure.ev(entry.key),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
   };
-  const collectLv = (byLv, total) => {
+  const collectLightValue = (byLightValue, total) => {
     const [flat, data, valueRanks] = transformData({
-      original: byLv,
+      original: byLightValue,
+      formatter: formatExposure.ev,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -768,10 +803,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
-          lv: entry.key,
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          lv: formatExposure.ev(entry.key),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -779,7 +816,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectResolution = (byResolution, total) => {
     const [flat, data, valueRanks] = transformData({
       original: byResolution,
-      formatter: format.resolution,
+      formatter: formatExposure.resolution,
       comparator: collection.numSortByFieldAsc("key"),
     });
     return {
@@ -798,10 +835,12 @@ const collectTopics = (data, lang, t, countryData) => {
       table: flat.map((entry) => {
         return {
           key: entry.key,
-          rank: number.default(valueRanks[entry.value] + 1),
-          resolution: format.resolution(entry.key),
-          count: number.default(entry.value),
-          share: `${number.oneDecimal(format.share(entry.value, total))}%`,
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          resolution: formatExposure.resolution(entry.key),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
         };
       }),
     };
@@ -817,8 +856,8 @@ const collectTopics = (data, lang, t, countryData) => {
         collectAperture(byExposure.byAperture, total),
         collectExposureTime(byExposure.byExposureTime, total),
         collectIso(byExposure.byIso, total),
-        collectEv(byExposure.byExposureValue, total),
-        collectLv(byExposure.byLightValue, total),
+        collectExposureValue(byExposure.byExposureValue, total),
+        collectLightValue(byExposure.byLightValue, total),
         collectResolution(byExposure.byResolution, total),
       ],
     };
@@ -1017,20 +1056,14 @@ const updateExposureDistribution = (byExposure, photo, unknownLabel) => {
   byExposure.byIso[iso]++;
 
   if (exposureTime) {
-    // Round EV and LV to the closest half
-    // TODO: move to models/Photo
-    const roundEv = (value) => Math.round(value * 2) / 2;
-    const fullExposureValue = Math.log2(aperture ** 2 / exposureTime);
-    const exposureValue = roundEv(fullExposureValue) || unknownLabel;
+    const exposureValue = Number(photo.exposureValue()) || unknownLabel;
     byExposure.byExposureValue = byExposure.byExposureValue || {};
     byExposure.byExposureValue[exposureValue] =
       byExposure.byExposureValue[exposureValue] || 0;
     byExposure.byExposureValue[exposureValue]++;
 
     // LV = EV at ISO 100
-    // TODO: move to models/Photo
-    const fullLightValue = fullExposureValue + Math.log2(iso / 100);
-    const lightValue = roundEv(fullLightValue) || unknownLabel;
+    const lightValue = Number(photo.lightValue()) || unknownLabel;
     byExposure.byLightValue = byExposure.byLightValue || {};
     byExposure.byLightValue[lightValue] =
       byExposure.byLightValue[lightValue] || 0;

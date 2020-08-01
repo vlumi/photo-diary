@@ -50,11 +50,34 @@ const Photo = (photoData) => {
     aperture: () => photo.exposure.aperture,
     exposureTime: () => photo.exposure.exposureTime,
     iso: () => photo.exposure.iso,
+    exposureValue: () => {
+      if (!self.exposureTime()) {
+        return undefined;
+      }
+      // Round EV and LV to the closest half
+      const roundEv = (value) => Math.round(value * 2) / 2;
+      const fullExposureValue = Math.log2(
+        self.aperture() ** 2 / self.exposureTime()
+      );
+      return roundEv(fullExposureValue);
+    },
+    lightValue: () => {
+      if (!self.exposureTime()) {
+        return undefined;
+      }
+      const roundEv = (value) => Math.round(value * 2) / 2;
+      const fullExposureValue = Math.log2(
+        self.aperture() ** 2 / self.exposureTime()
+      );
+      const fullLightValue = fullExposureValue + Math.log2(self.iso() / 100);
+      return roundEv(fullLightValue);
+    },
     resolution: () =>
       Math.round(
         (photo.dimensions.original.width * photo.dimensions.original.height) /
           10 ** 6
       ),
+    // TODO: remove, use format.exposure.* at caller (format.exposure.focalLength(photo.focalLength()))
     formatFocalLength: () =>
       photo.exposure.focalLength
         ? format.focalLength(photo.exposure.focalLength)
@@ -174,6 +197,7 @@ const Photo = (photoData) => {
           return value === self.formatLens();
         case "camera-lens":
           // TODO: implement
+          // return value == [self.formatCamera(), self.formatLens()].join(":");
           return true;
         case "focal-length":
           return [value, Number(value)].includes(self.focalLength());
@@ -184,11 +208,9 @@ const Photo = (photoData) => {
         case "iso":
           return [value, Number(value)].includes(self.iso());
         case "ev":
-          // TODO: implement
-          return true;
+          return [value, Number(value)].includes(self.exposureValue());
         case "lv":
-          // TODO: implement
-          return true;
+          return [value, Number(value)].includes(self.lightValue());
         case "resolution":
           return [value, Number(value)].includes(self.resolution());
         default:
