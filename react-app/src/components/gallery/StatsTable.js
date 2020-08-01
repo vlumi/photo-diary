@@ -57,6 +57,19 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
     return newFilters;
   };
 
+  // TODO: fixed, non-localized key for unknown
+  const normalizeKeyValue = (key) => {
+    try {
+      return JSON.stringify(
+        JSON.parse(key).map((part) =>
+          part === t("stats-unknown") ? undefined : part
+        )
+      );
+    } catch (e) {
+      return key === t("stats-unknown") ? undefined : key;
+    }
+  };
+
   const handleClick = (event) => {
     const keyElement = event.target.closest("tr");
     const categoryElement = event.target.closest("[data-type=category]");
@@ -70,7 +83,7 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
     if (!category || !key) {
       return;
     }
-    const normalizedKey = key === t("stats-unknown") ? undefined : key;
+    const normalizedKey = normalizeKeyValue(key, t);
     // TODO: put to tentative filters first, to allow selecting multiple items...
     const newFilters = applyNewFilter(filters, category, key, (photo) =>
       photo.matches(category, normalizedKey)
@@ -81,7 +94,6 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
   if (!("table" in category) || !category.table) {
     return <></>;
   }
-  // console.log("category.table", category.table);
   const renderColumns = (values, i) => {
     return category.tableColumns.map((column) =>
       column.header ? (

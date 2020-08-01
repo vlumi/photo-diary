@@ -18,6 +18,12 @@ const Photo = (photoData) => {
     year: () => photo.taken.instant.year,
     month: () => photo.taken.instant.month,
     day: () => photo.taken.instant.day,
+    weekday: () =>
+      new Date(
+        photo.taken.instant.year,
+        photo.taken.instant.month - 1,
+        photo.taken.instant.day
+      ).getDay(),
     hour: () => photo.taken.instant.hour,
     minute: () => photo.taken.instant.minute,
     second: () => photo.taken.instant.second,
@@ -158,13 +164,11 @@ const Photo = (photoData) => {
         case "year":
           return Number(value) === self.year();
         case "year-month":
-          // TODO: implement
-          return true;
+          return value === [self.year(), self.month()].join("-");
         case "month":
           return Number(value) === self.month();
         case "weekday":
-          // TODO: implement
-          return true;
+          return Number(value) === self.weekday();
         case "hour":
           return Number(value) === self.hour();
         case "camera-make":
@@ -173,10 +177,14 @@ const Photo = (photoData) => {
           return value === self.formatCamera();
         case "lens":
           return value === self.formatLens();
-        case "camera-lens":
-          // TODO: implement
-          // return value == [self.formatCamera(), self.formatLens()].join(":");
-          return true;
+        case "camera-lens": {
+          const [camera, lens] = JSON.parse(value);
+          return (
+            ((!camera && !self.hasCamera()) ||
+              camera === self.formatCamera()) &&
+            ((!lens && !self.hasLens()) || lens === self.formatLens())
+          );
+        }
         case "focal-length":
           return [value, Number(value)].includes(self.focalLength());
         case "aperture":

@@ -102,7 +102,8 @@ const collectTopics = (data, lang, t, countryData) => {
   const mapToChartData = (
     foldedData,
     formatter = format.identity,
-    maxEntries = 0
+    maxEntries = 0,
+    otherLabel = t("stats-other")
   ) => {
     const valueRanks = collection.calculateRanks(foldedData, (_) =>
       Number(_.value)
@@ -137,7 +138,7 @@ const collectTopics = (data, lang, t, countryData) => {
       doMap,
       (data) => {
         return {
-          key: t("stats-other"),
+          key: otherLabel,
           value: data.map((_) => _.value).reduce((a, b) => a + b, 0),
         };
       }
@@ -148,9 +149,15 @@ const collectTopics = (data, lang, t, countryData) => {
     comparator = collection.numSortByFieldDesc("value"),
     formatter = format.identity,
     limit = 0,
+    otherLabel = t("stats-other"),
   }) => {
     const flat = collection.foldToArray(original, comparator);
-    const [data, valueRanks] = mapToChartData(flat, formatter, limit);
+    const [data, valueRanks] = mapToChartData(
+      flat,
+      formatter,
+      limit,
+      otherLabel
+    );
     return [flat, data, valueRanks];
   };
 
@@ -186,7 +193,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(index + 1),
           author: entry.key,
           count: formatNumber.default(entry.value),
@@ -219,7 +226,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(index + 1),
           flag: (
             <>
@@ -504,7 +511,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(index + 1),
           "camera-make": entry.key,
           count: formatNumber.default(entry.value),
@@ -534,7 +541,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(index + 1),
           camera: entry.key,
           count: formatNumber.default(entry.value),
@@ -563,8 +570,9 @@ const collectTopics = (data, lang, t, countryData) => {
         { title: "share", align: "right" },
       ],
       table: flat.map((entry, index) => {
+        // const [camera, lens] = JSON.parse(entry.key);
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(index + 1),
           lens: entry.key,
           count: formatNumber.default(entry.value),
@@ -578,7 +586,9 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectCameraLens = (byCameraLens, total) => {
     const [flat, data] = transformData({
       original: byCameraLens,
+      formatter: (cameraLens) => JSON.parse(cameraLens).join(" + "),
       limit: 20,
+      otherLabel: JSON.stringify([t("stats-other"), t("stats-other")]),
     });
     return {
       key: "camera-lens",
@@ -595,9 +605,9 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry, index) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(index + 1),
-          "camera-lens": entry.key,
+          "camera-lens": JSON.parse(entry.key).join(" + "),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -642,7 +652,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           "focal-length": formatExposure.focalLength(entry.key),
           count: formatNumber.default(entry.value),
@@ -674,7 +684,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           aperture: formatExposure.aperture(entry.key),
           count: formatNumber.default(entry.value),
@@ -706,7 +716,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           "exposure-time": formatExposure.exposureTime(entry.key),
           count: formatNumber.default(entry.value),
@@ -738,7 +748,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           iso: formatExposure.iso(entry.key),
           count: formatNumber.default(entry.value),
@@ -770,7 +780,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           ev: formatExposure.ev(entry.key),
           count: formatNumber.default(entry.value),
@@ -802,7 +812,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           lv: formatExposure.ev(entry.key),
           count: formatNumber.default(entry.value),
@@ -834,7 +844,7 @@ const collectTopics = (data, lang, t, countryData) => {
       ],
       table: flat.map((entry) => {
         return {
-          key: entry.key,
+          key: entry.key, // TODO: de-localize unknown
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           resolution: formatExposure.resolution(entry.key),
           count: formatNumber.default(entry.value),
@@ -922,6 +932,7 @@ const populateDistributions = (photos, stats, unknownLabel) => {
       photo.year(),
       photo.month(),
       photo.day(),
+      photo.weekday(),
       photo.hour()
     );
     const adjustExposure = () => {
@@ -964,7 +975,7 @@ const populateDistributions = (photos, stats, unknownLabel) => {
  * @param {number} day Photo timestamp day of month.
  * @param {number} hour Photo timestamp hour.
  */
-const updateTimeDistribution = (byTime, year, month, day, hour) => {
+const updateTimeDistribution = (byTime, year, month, day, weekday, hour) => {
   const canonDate = (ymd) => ymd.year * 10000 + ymd.month * 100 + ymd.day;
 
   const canonYmd = canonDate({ year, month, day });
@@ -1004,11 +1015,10 @@ const updateTimeDistribution = (byTime, year, month, day, hour) => {
   byTime.byMonth[month] = byTime.byMonth[month] || 0;
   byTime.byMonth[month]++;
 
-  const dow = new Date(year, month - 1, day).getDay();
   byTime.byWeekday =
     byTime.byWeekday || collection.objectFromArray([...Array(7).keys()], 0);
-  byTime.byWeekday[dow] = byTime.byWeekday[dow] || 0;
-  byTime.byWeekday[dow]++;
+  byTime.byWeekday[weekday] = byTime.byWeekday[weekday] || 0;
+  byTime.byWeekday[weekday]++;
 
   byTime.byHour =
     byTime.byHour || collection.objectFromArray([...Array(24).keys()], 0);
@@ -1110,7 +1120,7 @@ const updateGear = (byGear, photo, unknownLabel) => {
   byGear.byLens[lens] = byGear.byLens[lens] || 0;
   byGear.byLens[lens]++;
 
-  const cameraLens = lens ? `${camera} + ${lens}` : camera;
+  const cameraLens = JSON.stringify([camera, lens]);
   byGear.byCameraLens = byGear.byCameraLens || {};
   byGear.byCameraLens[cameraLens] = byGear.byCameraLens[cameraLens] || 0;
   byGear.byCameraLens[cameraLens]++;
