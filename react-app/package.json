@@ -13,6 +13,7 @@
     "i18next": "^19.6.3",
     "jsonwebtoken": "^8.5.1",
     "leaflet": "^1.6.0",
+    "mathjs": "^7.1.0",
     "react": "^16.13.1",
     "react-chartjs-2": "^2.9.0",
     "react-dom": "^16.13.1",

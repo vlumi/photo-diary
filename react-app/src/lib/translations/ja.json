@@ -79,8 +79,8 @@
     "stats-category-aperture": "絞り",
     "stats-category-exposure-time": "シャッター速度",
     "stats-category-iso": "感度",
-    "stats-category-ev": "EV",
-    "stats-category-lv": "EV @ ISO100",
+    "stats-category-ev": "露出値",
+    "stats-category-lv": "露出値 @ ISO100",
     "stats-category-resolution": "解像度",
 
     "stats-kpi-title-photos": "写真",

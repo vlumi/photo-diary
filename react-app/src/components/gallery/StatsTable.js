@@ -24,6 +24,21 @@ const Row = styled.tr`
     background-color: var(--header-background);
   }
 `;
+const RowNone = styled(Row)`
+  background-color: var(--none-color);
+`;
+const RowLow = styled(Row)`
+  background-color: var(--low-color);
+`;
+const RowMedium = styled(Row)`
+  background-color: var(--medium-color);
+`;
+const RowHigh = styled(Row)`
+  background-color: var(--high-color);
+`;
+const RowExtreme = styled(Row)`
+  background-color: var(--extreme-color);
+`;
 const Header = styled.th`
   font-weight: bold;
   padding: 0 2px;
@@ -90,15 +105,62 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
     );
   };
   const renderRows = (table) => {
-    return table.map((values, i) => (
-      <Row
-        key={`${topic.key}:${category.key}:${i}`}
-        onClick={handleClick}
-        data-key={stats.decodeTableRowKey(values.key)}
-      >
-        {renderColumns(values, i)}
-      </Row>
-    ));
+    return table.map((values, i) => {
+      const key = `${topic.key}:${category.key}:${i}`;
+      if (values.standardScore < -0.5) {
+        return (
+          <RowNone
+            key={key}
+            onClick={handleClick}
+            data-key={stats.decodeTableRowKey(values.key)}
+          >
+            {renderColumns(values, i)}
+          </RowNone>
+        );
+      }
+      if (values.standardScore < -0.25) {
+        return (
+          <RowLow
+            key={key}
+            onClick={handleClick}
+            data-key={stats.decodeTableRowKey(values.key)}
+          >
+            {renderColumns(values, i)}
+          </RowLow>
+        );
+      }
+      if (values.standardScore < 0.25) {
+        return (
+          <RowMedium
+            key={key}
+            onClick={handleClick}
+            data-key={stats.decodeTableRowKey(values.key)}
+          >
+            {renderColumns(values, i)}
+          </RowMedium>
+        );
+      }
+      if (values.standardScore < 0.5) {
+        return (
+          <RowHigh
+            key={key}
+            onClick={handleClick}
+            data-key={stats.decodeTableRowKey(values.key)}
+          >
+            {renderColumns(values, i)}
+          </RowHigh>
+        );
+      }
+      return (
+        <RowExtreme
+          key={key}
+          onClick={handleClick}
+          data-key={stats.decodeTableRowKey(values.key)}
+        >
+          {renderColumns(values, i)}
+        </RowExtreme>
+      );
+    });
   };
 
   return (

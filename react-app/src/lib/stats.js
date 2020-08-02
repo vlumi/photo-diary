@@ -1,11 +1,15 @@
 import React from "react";
 
+import { create, all } from "mathjs";
+
 import FlagIcon from "../components/FlagIcon";
 
 import format from "./format";
 import collection from "./collection";
 import color from "./color";
 import config from "./config";
+
+const math = create(all, {});
 
 const UNKNOWN = "unknown";
 
@@ -180,7 +184,6 @@ const collectTopics = (data, lang, t, countryData) => {
     return [flat, data, valueRanks];
   };
   const collectSummary = (count) => {
-    console.log("count", count);
     return {
       key: "summary",
       title: t("stats-category-summary"),
@@ -205,6 +208,9 @@ const collectTopics = (data, lang, t, countryData) => {
     const [flat, data] = transformData({
       original: byAuthor,
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "author",
       title: t("stats-category-author"),
@@ -227,6 +233,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -237,6 +244,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: (countryCode) =>
         format.countryName(lang, countryData)(countryCode),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "country",
       title: t("stats-category-country"),
@@ -269,6 +279,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -327,7 +338,6 @@ const collectTopics = (data, lang, t, countryData) => {
       };
     };
     const data = mapToChartData(deep);
-    console.log("deep!", deep);
     const flat = collection.trim(
       deep
         .sort((a, b) => Number(b.key) - Number(a.key))
@@ -343,6 +353,9 @@ const collectTopics = (data, lang, t, countryData) => {
         }),
       (entry) => entry.value > 0
     );
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     const valueRanks = collection.calculateRanks(flat, (_) => Number(_.value));
     return {
       key: "year-month",
@@ -367,6 +380,7 @@ const collectTopics = (data, lang, t, countryData) => {
           average: formatNumber.twoDecimal(
             entry.value / daysInYearMonth[year][month]
           ),
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -376,6 +390,9 @@ const collectTopics = (data, lang, t, countryData) => {
       original: byYear,
       comparator: collection.numSortByFieldAsc("key"),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "year",
       title: t("stats-category-year"),
@@ -398,6 +415,7 @@ const collectTopics = (data, lang, t, countryData) => {
           average: t("stats-per-day", {
             count: formatNumber.twoDecimal(entry.value / daysInYear[entry.key]),
           }),
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -409,6 +427,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: (month) => t(`month-long-${month}`),
       limit: 12,
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "month",
       title: t("stats-category-month"),
@@ -431,6 +452,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -445,6 +467,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: (dow) => t(`weekday-long-${format.dayOfWeek(dow)}`),
       limit: 24,
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "weekday",
       title: t("stats-category-weekday"),
@@ -467,6 +492,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -478,6 +504,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: (hour) => `${format.padNumber(hour, 2)}:00–`,
       limit: 24,
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "hour",
       title: t("stats-category-hour"),
@@ -500,6 +529,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -524,6 +554,9 @@ const collectTopics = (data, lang, t, countryData) => {
     const [flat, data] = transformData({
       original: byCameraMake,
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "camera-make",
       title: t("stats-category-camera-make"),
@@ -546,6 +579,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -554,6 +588,9 @@ const collectTopics = (data, lang, t, countryData) => {
     const [flat, data] = transformData({
       original: byCamera,
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "camera",
       title: t("stats-category-camera"),
@@ -576,6 +613,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -584,6 +622,9 @@ const collectTopics = (data, lang, t, countryData) => {
     const [flat, data] = transformData({
       original: byLens,
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "lens",
       title: t("stats-category-lens"),
@@ -606,6 +647,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -617,6 +659,9 @@ const collectTopics = (data, lang, t, countryData) => {
       limit: 20,
       otherLabel: JSON.stringify([t("stats-other"), t("stats-other")]),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "camera-lens",
       title: t("stats-category-camera-lens"),
@@ -639,6 +684,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -664,6 +710,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: formatExposure.focalLength,
       comparator: collection.numSortByFieldAsc("key"),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "focal-length",
       title: t("stats-category-focal-length"),
@@ -686,6 +735,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -696,6 +746,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: formatExposure.aperture,
       comparator: collection.numSortByFieldAsc("key"),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "aperture",
       title: t("stats-category-aperture"),
@@ -718,6 +771,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -728,6 +782,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: formatExposure.exposureTime,
       comparator: collection.numSortByFieldDesc("key"),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "exposure-time",
       title: t("stats-category-exposure-time"),
@@ -750,6 +807,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -760,6 +818,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: formatExposure.iso,
       comparator: collection.numSortByFieldAsc("key"),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "iso",
       title: t("stats-category-iso"),
@@ -782,6 +843,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -792,6 +854,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: formatExposure.ev,
       comparator: collection.numSortByFieldAsc("key"),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "ev",
       title: t("stats-category-ev"),
@@ -814,6 +879,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -824,6 +890,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: formatExposure.ev,
       comparator: collection.numSortByFieldAsc("key"),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "lv",
       title: t("stats-category-lv"),
@@ -846,6 +915,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
@@ -856,6 +926,9 @@ const collectTopics = (data, lang, t, countryData) => {
       formatter: formatExposure.resolution,
       comparator: collection.numSortByFieldAsc("key"),
     });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
     return {
       key: "resolution",
       title: t("stats-category-resolution"),
@@ -878,6 +951,7 @@ const collectTopics = (data, lang, t, countryData) => {
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          standardScore: (entry.value - mean) / stddev,
         };
       }),
     };
