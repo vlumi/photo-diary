@@ -180,23 +180,24 @@ const collectTopics = (data, lang, t, countryData) => {
     return [flat, data, valueRanks];
   };
   const collectSummary = (count) => {
-    console.log("count", count)
+    console.log("count", count);
     return {
       key: "summary",
       title: t("stats-category-summary"),
       kpi: collection.foldToArray({
         photos: formatNumber.default(count.total),
+        average: formatNumber.twoDecimal(
+          count.total / (count.byTime.days || 1)
+        ),
         years: formatNumber.default(Object.keys(count.byTime.byYear).length),
         months: formatNumber.default(
           Object.keys(count.byTime.byYearMonth).reduce(
-            (acc, year) => acc + Object.keys(count.byTime.byYearMonth[year]).length,
+            (acc, year) =>
+              acc + Object.keys(count.byTime.byYearMonth[year]).length,
             0
           )
         ),
         days: formatNumber.default(count.byTime.days),
-        average: formatNumber.twoDecimal(
-          count.total / (count.byTime.days || 1)
-        ),
       }),
     };
   };
@@ -286,37 +287,6 @@ const collectTopics = (data, lang, t, countryData) => {
     };
   };
 
-  const collectYear = (byYear, daysInYear) => {
-    const [flat, data, valueRanks] = transformData({
-      original: byYear,
-      comparator: collection.numSortByFieldAsc("key"),
-    });
-    return {
-      key: "year",
-      title: t("stats-category-year"),
-      charts: [
-        { type: "doughnut", data, options: chartOptions.doughnut },
-        { type: "horizontal-bar", data, options: chartOptions.bar },
-      ],
-      tableColumns: [
-        { title: "rank", align: "right", header: true },
-        { title: "year", align: "left" },
-        { title: "count", align: "right" },
-        { title: "average", align: "right" },
-      ],
-      table: flat.map((entry) => {
-        return {
-          key: encodeTableKey(entry.key),
-          rank: formatNumber.default(valueRanks[entry.value] + 1),
-          year: entry.key,
-          count: formatNumber.default(entry.value),
-          average: t("stats-per-day", {
-            count: formatNumber.twoDecimal(entry.value / daysInYear[entry.key]),
-          }),
-        };
-      }),
-    };
-  };
   const collectYearMonth = (byYearMonth, daysInYearMonth) => {
     const deep = Object.keys(byYearMonth)
       .sort((a, b) => a - b)
@@ -357,12 +327,13 @@ const collectTopics = (data, lang, t, countryData) => {
       };
     };
     const data = mapToChartData(deep);
+    console.log("deep!", deep);
     const flat = collection.trim(
       deep
-        .sort((a, b) => a - b)
+        .sort((a, b) => Number(b.key) - Number(a.key))
         .flatMap((year) => {
           return year.value
-            .sort((a, b) => a - b)
+            .sort((a, b) => Number(b.key) - Number(a.key))
             .map((month) => {
               return {
                 key: [year.key, month.key],
@@ -396,6 +367,37 @@ const collectTopics = (data, lang, t, countryData) => {
           average: formatNumber.twoDecimal(
             entry.value / daysInYearMonth[year][month]
           ),
+        };
+      }),
+    };
+  };
+  const collectYear = (byYear, daysInYear) => {
+    const [flat, data, valueRanks] = transformData({
+      original: byYear,
+      comparator: collection.numSortByFieldAsc("key"),
+    });
+    return {
+      key: "year",
+      title: t("stats-category-year"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "year", align: "left" },
+        { title: "count", align: "right" },
+        { title: "average", align: "right" },
+      ],
+      table: flat.map((entry) => {
+        return {
+          key: encodeTableKey(entry.key),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          year: entry.key,
+          count: formatNumber.default(entry.value),
+          average: t("stats-per-day", {
+            count: formatNumber.twoDecimal(entry.value / daysInYear[entry.key]),
+          }),
         };
       }),
     };
@@ -509,8 +511,8 @@ const collectTopics = (data, lang, t, countryData) => {
       key: "time",
       title: t("stats-topic-time"),
       categories: [
-        collectYear(byTime.byYear, byTime.daysInYear),
         collectYearMonth(byTime.byYearMonth, byTime.daysInYearMonth),
+        collectYear(byTime.byYear, byTime.daysInYear),
         collectMonth(byTime.byMonth, total),
         collectWeekday(byTime.byWeekday, total),
         collectHour(byTime.byHour, total),
