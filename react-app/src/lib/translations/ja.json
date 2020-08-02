@@ -52,6 +52,8 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "第{{count}}日",
 
+    "filters": "フィルター",
+
     "stats-unknown": "未定",
     "stats-other": "他",
     "stats-year-month": "{{year}}年{{month}}",
@@ -83,6 +85,10 @@
 
     "stats-kpi-title-photos": "写真",
     "stats-kpi-photos": "{{count}}",
+    "stats-kpi-title-years": "Years",
+    "stats-kpi-years": "{{count}}",
+    "stats-kpi-title-months": "Months",
+    "stats-kpi-months": "{{count}}",
     "stats-kpi-title-days": "Days",
     "stats-kpi-days": "{{count}}",
     "stats-kpi-title-average": "Average",
@@ -93,13 +99,13 @@
     "stats-col-share": "Share",
     "stats-col-average": "Average",
 
-    "stats-col-author": "Author",
+    "stats-col-author": "撮影者",
     "stats-col-flag": "",
-    "stats-col-country": "Country",
+    "stats-col-country": "国",
 
-    "stats-col-year": "Year",
+    "stats-col-year": "年",
     "stats-col-year-month": "Year + Month",
-    "stats-col-month": "Month",
+    "stats-col-month": "月",
     "stats-col-weekday": "Weekday",
     "stats-col-hour": "Hour",
 
@@ -109,11 +115,11 @@
     "stats-col-camera-lens": "Camera + Lens",
 
     "stats-col-focal-length": "Millimeters",
-    "stats-col-aperture": "Aperture",
+    "stats-col-aperture": "絞り",
     "stats-col-exposure-time": "Seconds",
     "stats-col-iso": "ISO",
-    "stats-col-ev": "EV",
-    "stats-col-lv": "EV @ ISO100",
+    "stats-col-ev": "露出値",
+    "stats-col-lv": "露出値 @ ISO100",
     "stats-col-resolution": "Megapixels"
   }
 }

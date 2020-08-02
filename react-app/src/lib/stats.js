@@ -180,11 +180,19 @@ const collectTopics = (data, lang, t, countryData) => {
     return [flat, data, valueRanks];
   };
   const collectSummary = (count) => {
+    console.log("count", count)
     return {
       key: "summary",
       title: t("stats-category-summary"),
       kpi: collection.foldToArray({
         photos: formatNumber.default(count.total),
+        years: formatNumber.default(Object.keys(count.byTime.byYear).length),
+        months: formatNumber.default(
+          Object.keys(count.byTime.byYearMonth).reduce(
+            (acc, year) => acc + Object.keys(count.byTime.byYearMonth[year]).length,
+            0
+          )
+        ),
         days: formatNumber.default(count.byTime.days),
         average: formatNumber.twoDecimal(
           count.total / (count.byTime.days || 1)

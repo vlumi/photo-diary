@@ -55,6 +55,8 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "{{count}}. päivä",
 
+    "filters": "Suodattimet",
+
     "stats-unknown": "N/A",
     "stats-other": "Muut",
     "stats-year-month": "{{month}} {{year}}",
@@ -86,6 +88,10 @@
 
     "stats-kpi-title-photos": "Valokuvia",
     "stats-kpi-photos": "{{count}}",
+    "stats-kpi-title-years": "Vuosia",
+    "stats-kpi-years": "{{count}}",
+    "stats-kpi-title-months": "Kuukausia",
+    "stats-kpi-months": "{{count}}",
     "stats-kpi-title-days": "Päiviä",
     "stats-kpi-days": "{{count}}",
     "stats-kpi-title-average": "Keskiarvo",
