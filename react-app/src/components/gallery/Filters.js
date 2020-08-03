@@ -89,9 +89,9 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
 
   const formatCategoryValue = format.categoryValue(lang, t, countryData);
 
-  // if (!Object.keys(filters).length) {
-  //   return <></>;
-  // }
+  const handleToggleAddTopicClick = () => {
+    setTopicSelector(!topicSelector);
+  };
   const handleRemoveTopicClick = (event) => {
     const topicElement = event.target.closest("[data-type=topic]");
     if (!topicElement) {
@@ -103,6 +103,19 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
     }
     const newFilters = filter.removeTopic(filters, topic);
     setFilters(newFilters);
+  };
+
+  const handleToggleAddCategoryClick = (event) => {
+    const topicElement = event.target.closest("[data-type=topic]");
+    if (!topicElement) {
+      return;
+    }
+    const topic = topicElement.getAttribute("data-key");
+    if (!topic) {
+      return;
+    }
+    const state = !(topic in categorySelector) || !categorySelector[topic];
+    setCategorySelector({ [topic]: state });
   };
   const handleRemoveCategoryClick = (event) => {
     const topicElement = event.target.closest("[data-type=topic]");
@@ -117,6 +130,24 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
     }
     const newFilters = filter.removeCategory(filters, topic, category);
     setFilters(newFilters);
+  };
+
+  const handleToggleAddValueClick = (event) => {
+    const topicElement = event.target.closest("[data-type=topic]");
+    const categoryElement = event.target.closest("[data-type=category]");
+    if (!topicElement || !categoryElement) {
+      return;
+    }
+    const topic = topicElement.getAttribute("data-key");
+    const category = categoryElement.getAttribute("data-key");
+    if (!topic || !category) {
+      return;
+    }
+    const state =
+      !(topic in valueSelector) ||
+      !(category in valueSelector[topic]) ||
+      !valueSelector[topic][category];
+    setValueSelector({ [topic]: { [category]: state } });
   };
   const handleRemoveValueClick = (event) => {
     const topicElement = event.target.closest("[data-type=topic]");
@@ -140,53 +171,9 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
     );
     setFilters(newFilters);
   };
-  const handleToggleAddTopicClick = () => {
-    setTopicSelector(!topicSelector);
-  };
-  const handleToggleAddCategoryClick = (event) => {
-    const topicElement = event.target.closest("[data-type=topic]");
-    if (!topicElement) {
-      return;
-    }
-    const topic = topicElement.getAttribute("data-key");
-    if (!topic) {
-      return;
-    }
-    const state = !(topic in categorySelector) || !categorySelector[topic];
-    setCategorySelector({ [topic]: state });
-  };
-  const handleToggleAddValueClick = (event) => {
-    const topicElement = event.target.closest("[data-type=topic]");
-    const categoryElement = event.target.closest("[data-type=category]");
-    if (!topicElement || !categoryElement) {
-      return;
-    }
-    const topic = topicElement.getAttribute("data-key");
-    const category = categoryElement.getAttribute("data-key");
-    if (!topic || !category) {
-      return;
-    }
-    const state =
-      !(topic in valueSelector) ||
-      !(category in valueSelector[topic]) ||
-      !valueSelector[topic][category];
-    setValueSelector({ [topic]: { [category]: state } });
-  };
 
-  const renderValue = (category, value) => {
-    if (value === stats.UNKNOWN) {
-      return t("stats-unknown");
-    }
-    if (category === "country" && countryData.isValid(value)) {
-      return (
-        <Value>
-          <FlagIcon code={value} /> {formatCategoryValue(category)(value)}
-        </Value>
-      );
-    }
-    return <Value>{formatCategoryValue(category)(value)}</Value>;
-  };
   const renderTopicAdder = () => {
+    // TODO: (?) add all categories and values to the drop-down, in hierarchy -- only allow selecting values
     const handleSelect = (event) => {
       const topic = event.target.value;
       if (!topic) {
@@ -198,9 +185,9 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
     };
     const alreadyFiltered = (topic) => topic in filters;
     if (topicSelector) {
-      const topicsLeft = filter.topics().filter(
-        (topic) => !alreadyFiltered(topic)
-      );
+      const topicsLeft = filter
+        .topics()
+        .filter((topic) => !alreadyFiltered(topic));
       return (
         <>
           <NewValues defaultValue="" onChange={handleSelect}>
@@ -218,6 +205,7 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
     return <BsFillPlusCircleFill onClick={handleToggleAddTopicClick} />;
   };
   const renderCategoryAdder = (topic) => {
+    // TODO: (?) add all values to the drop-down, under each category -- only allow selecting values
     const handleSelect = (event) => {
       const topicElement = event.target.closest("[data-type=topic]");
       if (!topicElement) {
@@ -317,12 +305,27 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
     }
     return <BsFillPlusCircleFill onClick={handleToggleAddValueClick} />;
   };
+  const renderValue = (category, value) => {
+    if (value === stats.UNKNOWN) {
+      return t("stats-unknown");
+    }
+    if (category === "country" && countryData.isValid(value)) {
+      return (
+        <Value>
+          <FlagIcon code={value} /> {formatCategoryValue(category)(value)}
+        </Value>
+      );
+    }
+    return <Value>{formatCategoryValue(category)(value)}</Value>;
+  };
+
   return (
     <Root>
       {/* TODO: i18n */}
       <FilterTitle>Filters</FilterTitle>
       <FilterContainer>
-        {filter.topics()
+        {filter
+          .topics()
           .filter((topic) => topic in filters)
           .map((topic) => (
             <FilterTopic

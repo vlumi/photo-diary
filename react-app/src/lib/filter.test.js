@@ -14,7 +14,6 @@ describe("categories", () => {
   test("Invalid topic", () => expect(filter.categories("")).toStrictEqual([]));
   test("general", () =>
     expect(filter.categories("general")).toStrictEqual([
-      "summary",
       "author",
       "country",
     ]));

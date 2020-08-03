@@ -3,7 +3,7 @@ const topics = () => ["general", "time", "gear", "exposure"];
 const categories = (category) => {
   switch (category) {
     case "general":
-      return ["summary", "author", "country"];
+      return ["author", "country"];
     case "time":
       return ["year", "year-month", "month", "weekday", "hour"];
 
