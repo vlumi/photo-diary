@@ -10,6 +10,8 @@ import filter from "../../lib/filter";
 import stats from "../../lib/stats";
 
 const Root = styled.div`
+  color: var(--primary-color);
+  background-color: var(--primary-background);
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;

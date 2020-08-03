@@ -55,7 +55,7 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "{{count}}. päivä",
 
-    "filters": "Suodattimet",
+    "stats-filters": "Suodattimet",
 
     "stats-unknown": "N/A",
     "stats-other": "Muut",

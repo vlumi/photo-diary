@@ -9,13 +9,16 @@ import FiltersTopic from "./FiltersTopic";
 import filter from "../../lib/filter";
 
 const Root = styled.div`
-  width: 100%;
+  color: var(--header-color);
+  background-color: var(--header-background);
   display: flex;
   flex-wrap: nowrap;
   align-items: stretch;
   justify-content: flex-start;
+  padding: 2px 5px;
+  margin: 0 5px;
+  border-radius: 20px;
 `;
-// TODO: design
 const FilterTitle = styled.div`
   display: flex;
   align-items: center;
@@ -100,8 +103,7 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
 
   return (
     <Root>
-      {/* TODO: i18n */}
-      <FilterTitle>Filters</FilterTitle>
+      <FilterTitle>{t("stats-filters")}</FilterTitle>
       <FilterContainer>
         {filter
           .topics()

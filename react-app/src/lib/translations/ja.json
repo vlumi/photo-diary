@@ -52,7 +52,7 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "第{{count}}日",
 
-    "filters": "フィルター",
+    "stats-filters": "フィルター",
 
     "stats-unknown": "未定",
     "stats-other": "他",

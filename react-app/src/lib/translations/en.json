@@ -55,7 +55,7 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "Day number {{count}}",
 
-    "filters": "Filters",
+    "stats-filters": "Filters",
 
     "stats-unknown": "N/A",
     "stats-other": "Other",

@@ -10,7 +10,9 @@ const Root = styled.div`
   width: 330px;
   margin: 0 1px 2px;
 `;
-const Title = styled.h3``;
+const Title = styled.h3`
+  border-radius: 5px;
+`;
 const StatsCategory = ({ topic, category, filters, setFilters }) => {
   return (
     <Root

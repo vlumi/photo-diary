@@ -13,6 +13,7 @@ const Root = styled.section`
 const Title = styled.h3`
   text-align: left;
   writing-mode: vertical-rl;
+  border-radius: 10px 0;
 `;
 const Categories = styled.section`
   display: flex;
