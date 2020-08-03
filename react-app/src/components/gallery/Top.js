@@ -74,7 +74,10 @@ const Top = ({ user, lang, countryData, isStats = false }) => {
     }
     const newUniqueValues = photos
       .map((photo) => photo.uniqueValues())
-      .reduce(collection.mergeObjects, {});
+      .reduce(
+        collection.mergeObjects((a, b) => new Set([...a, ...b])),
+        {}
+      );
     const categoryValueFormatter = format.categoryValue(lang, t, countryData);
     Object.keys(newUniqueValues).forEach((topic) => {
       Object.keys(newUniqueValues[topic]).forEach((category) => {

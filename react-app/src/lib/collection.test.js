@@ -340,38 +340,43 @@ describe("truncateAndProcess()", () => {
   });
 });
 describe("mergeObjects()", () => {
+  const merger = (a, b) => new Set([...a, ...b]);
   test("Empty", () =>
-    expect(collection.mergeObjects({}, {})).toStrictEqual({}));
+    expect(collection.mergeObjects(merger)({}, {})).toStrictEqual({}));
   test("Right is empty", () =>
-    expect(collection.mergeObjects({ a: new Set([1]) }, {})).toStrictEqual({
+    expect(
+      collection.mergeObjects(merger)({ a: new Set([1]) }, {})
+    ).toStrictEqual({
       a: new Set([1]),
     }));
   test("Left is empty", () =>
-    expect(collection.mergeObjects({}, { a: new Set([1]) })).toStrictEqual({
+    expect(
+      collection.mergeObjects(merger)({}, { a: new Set([1]) })
+    ).toStrictEqual({
       a: new Set([1]),
     }));
   test("Non-overlapping objects", () =>
     expect(
-      collection.mergeObjects({ a: new Set([1]) }, { b: new Set([1]) })
+      collection.mergeObjects(merger)({ a: new Set([1]) }, { b: new Set([1]) })
     ).toStrictEqual({
       a: new Set([1]),
       b: new Set([1]),
     }));
   test("Equal values", () =>
     expect(
-      collection.mergeObjects({ a: new Set([1]) }, { a: new Set([1]) })
+      collection.mergeObjects(merger)({ a: new Set([1]) }, { a: new Set([1]) })
     ).toStrictEqual({
       a: new Set([1]),
     }));
   test("Differing values", () =>
     expect(
-      collection.mergeObjects({ a: new Set([1]) }, { a: new Set([2]) })
+      collection.mergeObjects(merger)({ a: new Set([1]) }, { a: new Set([2]) })
     ).toStrictEqual({
       a: new Set([1, 2]),
     }));
   test("Deep objects, Differing values", () =>
     expect(
-      collection.mergeObjects(
+      collection.mergeObjects(merger)(
         { a: { b: new Set([1]) } },
         { a: { b: new Set([2]) } }
       )
@@ -431,4 +436,32 @@ describe("numSortByFieldDesc()", () => {
     expect(
       collection.numSortByFieldDesc("key")({ key: "foo" }, { key: "bar" })
     ).toBe(0));
+});
+describe("strSortByFieldAsc()", () => {
+  test("First === Second", () =>
+    expect(
+      collection.strSortByFieldAsc("key")({ key: "a" }, { key: "a" })
+    ).toBe(0));
+  test("First < Second", () =>
+    expect(
+      collection.strSortByFieldAsc("key")({ key: "a" }, { key: "b" })
+    ).toBeLessThan(0));
+  test("First < Second", () =>
+    expect(
+      collection.strSortByFieldAsc("key")({ key: "b" }, { key: "a" })
+    ).toBeGreaterThan(0));
+});
+describe("strSortByFieldDesc()", () => {
+  test("First === Second", () =>
+    expect(
+      collection.strSortByFieldDesc("key")({ key: "a" }, { key: "a" })
+    ).toBe(0));
+  test("First < Second", () =>
+    expect(
+      collection.strSortByFieldDesc("key")({ key: "a" }, { key: "b" })
+    ).toBeGreaterThan(0));
+  test("First < Second", () =>
+    expect(
+      collection.strSortByFieldDesc("key")({ key: "b" }, { key: "a" })
+    ).toBeLessThan(0));
 });

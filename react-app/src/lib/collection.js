@@ -193,13 +193,10 @@ const truncateAndProcess = (data, maxEntries, processor, summarizer) => {
   return processor(data);
 };
 
-const mergeObjects = (a, b) => {
+const mergeObjects = (merger) => (a, b) => {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
   return Object.fromEntries(
     [...keys].map((key) => {
-      if (!(key in a) && !(key in b)) {
-        return [key, undefined];
-      }
       if (!(key in b)) {
         return [key, a[key]];
       }
@@ -207,9 +204,9 @@ const mergeObjects = (a, b) => {
         return [key, b[key]];
       }
       if (a[key] instanceof Set && b[key] instanceof Set) {
-        return [key, new Set([...a[key], ...b[key]])];
+        return [key, merger(a[key], b[key])];
       }
-      return [key, mergeObjects(a[key], b[key])];
+      return [key, mergeObjects(merger)(a[key], b[key])];
     })
   );
 };

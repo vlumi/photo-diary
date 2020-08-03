@@ -17,8 +17,6 @@ const Root = styled.div`
   justify-content: flex-start;
 `;
 const Box = styled.div`
-  color: var(--primary-color);
-  background-color: var(--primary-background);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -27,6 +25,7 @@ const Box = styled.div`
   border-radius: 10px;
   cursor: pointer;
 `;
+// TODO: design
 const FilterTitle = styled.h3`
   text-align: left;
   writing-mode: vertical-rl;
@@ -69,7 +68,10 @@ const CategoryBox = styled(Box)``;
 const Category = styled.div`
   padding: 0 5px;
 `;
-const ValueBox = styled(Box)``;
+const ValueBox = styled(Box)`
+  color: var(--primary-color);
+  background-color: var(--primary-background);
+`;
 const Value = styled.div`
   padding: 0 5px;
 `;
@@ -194,22 +196,20 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
       setTopicSelector(false);
       setFilters(newFilters);
     };
-    // TODO: check
-    // const alreadyFiltered = (value) => value in filters;
-    const alreadyFiltered = () => false;
+    const alreadyFiltered = (topic) => topic in filters;
     if (topicSelector) {
+      const topicsLeft = filter.topics().filter(
+        (topic) => !alreadyFiltered(topic)
+      );
       return (
         <>
           <NewValues defaultValue="" onChange={handleSelect}>
             <NewValue value="">Select...</NewValue>
-            {Object.keys(uniqueValues)
-              .sort()
-              .filter((topic) => !alreadyFiltered(topic))
-              .map((value) => (
-                <NewValue key={`${value}`} value={value}>
-                  {t(`stats-topic-${value}`)}
-                </NewValue>
-              ))}
+            {topicsLeft.map((value) => (
+              <NewValue key={`${value}`} value={value}>
+                {t(`stats-topic-${value}`)}
+              </NewValue>
+            ))}
           </NewValues>
           <BsFillXCircleFill onClick={handleToggleAddTopicClick} />
         </>
@@ -233,20 +233,26 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
       setFilters(newFilters);
     };
     if (topic in categorySelector && categorySelector[topic]) {
-      // TODO: hide when empty
-      const alreadyFiltered = (category) => category in filters;
+      const alreadyFiltered = (category) =>
+        topic in filters && category in filters[topic];
+      if (alreadyFiltered.length >= filters[topic].length) {
+        return <></>;
+      }
+      const categoriesLeft = filter
+        .categories(topic)
+        .filter((category) => !alreadyFiltered(category));
+      if (!categoriesLeft.length) {
+        return <></>;
+      }
       return (
         <>
           <NewValues defaultValue="" onChange={handleSelect}>
             <NewValue value="">Select...</NewValue>
-            {Object.keys(uniqueValues[topic])
-              .sort()
-              .filter((category) => !alreadyFiltered(category))
-              .map((value) => (
-                <NewValue key={`${topic}:${value}`} value={value}>
-                  {t(`stats-category-${value}`)}
-                </NewValue>
-              ))}
+            {categoriesLeft.map((value) => (
+              <NewValue key={`${topic}:${value}`} value={value}>
+                {t(`stats-category-${value}`)}
+              </NewValue>
+            ))}
           </NewValues>
           <BsFillXCircleFill onClick={handleToggleAddCategoryClick} />
         </>
@@ -282,23 +288,28 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
       category in valueSelector[topic] &&
       valueSelector[topic][category]
     ) {
-      // TODO: hide when empty
       const alreadyFiltered = (value) =>
-        category in filters && value in filters[category];
+        topic in filters &&
+        category in filters[topic] &&
+        value.key in filters[topic][category];
+      const valuesLeft = uniqueValues[topic][category].filter(
+        (value) => !alreadyFiltered(value)
+      );
+      if (!valuesLeft.length) {
+        return <></>;
+      }
       return (
         <>
           <NewValues defaultValue="" onChange={handleSelect}>
             <NewValue value="">Select...</NewValue>
-            {uniqueValues[topic][category]
-              .filter((value) => !alreadyFiltered(value))
-              .map((value) => (
-                <NewValue
-                  key={`${topic}:${category}:${value.key}`}
-                  value={value.key}
-                >
-                  {value.value}
-                </NewValue>
-              ))}
+            {valuesLeft.map((value) => (
+              <NewValue
+                key={`${topic}:${category}:${value.key}`}
+                value={value.key}
+              >
+                {value.value}
+              </NewValue>
+            ))}
           </NewValues>
           <BsFillXCircleFill onClick={handleToggleAddValueClick} />
         </>
@@ -308,45 +319,51 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
   };
   return (
     <Root>
+      {/* TODO: i18n */}
       <FilterTitle>Filters</FilterTitle>
       <FilterContainer>
-        {Object.keys(filters).map((topic) => (
-          <FilterTopic
-            key={`filter:${topic}`}
-            data-type="topic"
-            data-key={topic}
-          >
-            <TopicBox onClick={handleRemoveTopicClick}>
-              <Topic>{t(`stats-topic-${topic}`)}</Topic>
-              <BsFillXCircleFill />
-            </TopicBox>
-            {Object.keys(filters[topic]).map((category) => (
-              <FilterCategory
-                key={`filter:${topic}:${category}`}
-                data-type="category"
-                data-key={category}
-              >
-                <CategoryBox onClick={handleRemoveCategoryClick}>
-                  <Category>{t(`stats-category-${category}`)}</Category>
-                  <BsFillXCircleFill />
-                </CategoryBox>
-                {Object.keys(filters[topic][category]).map((value) => (
-                  <ValueBox
-                    key={`filter:${topic}:${category}:${value}`}
-                    data-type="value"
-                    data-key={value}
-                    onClick={handleRemoveValueClick}
+        {filter.topics()
+          .filter((topic) => topic in filters)
+          .map((topic) => (
+            <FilterTopic
+              key={`filter:${topic}`}
+              data-type="topic"
+              data-key={topic}
+            >
+              <TopicBox onClick={handleRemoveTopicClick}>
+                <Topic>{t(`stats-topic-${topic}`)}</Topic>
+                <BsFillXCircleFill />
+              </TopicBox>
+              {filter
+                .categories(topic)
+                .filter((category) => category in filters[topic])
+                .map((category) => (
+                  <FilterCategory
+                    key={`filter:${topic}:${category}`}
+                    data-type="category"
+                    data-key={category}
                   >
-                    {renderValue(category, value)}
-                    <BsFillXCircleFill />
-                  </ValueBox>
+                    <CategoryBox onClick={handleRemoveCategoryClick}>
+                      <Category>{t(`stats-category-${category}`)}</Category>
+                      <BsFillXCircleFill />
+                    </CategoryBox>
+                    {Object.keys(filters[topic][category]).map((value) => (
+                      <ValueBox
+                        key={`filter:${topic}:${category}:${value}`}
+                        data-type="value"
+                        data-key={value}
+                        onClick={handleRemoveValueClick}
+                      >
+                        {renderValue(category, value)}
+                        <BsFillXCircleFill />
+                      </ValueBox>
+                    ))}
+                    {renderValueAdder(topic, category)}
+                  </FilterCategory>
                 ))}
-                {renderValueAdder(topic, category)}
-              </FilterCategory>
-            ))}
-            {renderCategoryAdder(topic)}
-          </FilterTopic>
-        ))}
+              {renderCategoryAdder(topic)}
+            </FilterTopic>
+          ))}
         {renderTopicAdder()}
       </FilterContainer>
     </Root>

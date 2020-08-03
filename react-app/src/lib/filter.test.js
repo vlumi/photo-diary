@@ -1,5 +1,50 @@
 import filter from "./filter";
 
+describe("categories", () => {
+  test("Default", () =>
+    expect(filter.topics()).toStrictEqual([
+      "general",
+      "time",
+      "gear",
+      "exposure",
+    ]));
+});
+
+describe("categories", () => {
+  test("Invalid topic", () => expect(filter.categories("")).toStrictEqual([]));
+  test("general", () =>
+    expect(filter.categories("general")).toStrictEqual([
+      "summary",
+      "author",
+      "country",
+    ]));
+  test("time", () =>
+    expect(filter.categories("time")).toStrictEqual([
+      "year",
+      "year-month",
+      "month",
+      "weekday",
+      "hour",
+    ]));
+  test("gear", () =>
+    expect(filter.categories("gear")).toStrictEqual([
+      "camera-make",
+      "camera",
+      "lens",
+      "camera-lens",
+    ]));
+  test("exposure", () =>
+    expect(filter.categories("exposure")).toStrictEqual([
+      "focal-length",
+      "aperture",
+      "exposure-time",
+      "iso",
+      "ev",
+      "lv",
+      "resolution",
+    ]));
+});
+
 describe("newEmptyTopic", () => {
   test("Empty filters", () =>
     expect(filter.newEmptyTopic({}, "general")).toStrictEqual({ general: {} }));
@@ -81,7 +126,7 @@ describe("removeCategory", () => {
   test("Does not exist", () =>
     expect(
       filter.removeCategory({ exposure: {} }, "exposure", "aperture")
-    ).toStrictEqual({ exposure: {} }));
+    ).toStrictEqual({}));
   test("Exists", () =>
     expect(
       filter.removeCategory(
@@ -89,7 +134,7 @@ describe("removeCategory", () => {
         "exposure",
         "aperture"
       )
-    ).toStrictEqual({ exposure: {} }));
+    ).toStrictEqual({}));
   test("Only other exists", () =>
     expect(
       filter.removeCategory(

@@ -1,25 +1,28 @@
-const topics = ["general", "time", "gear", "exposure"];
+const topics = () => ["general", "time", "gear", "exposure"];
 
-const categoriesByTopic = [
-  { key: "general", value: ["summary", "author", "country"] },
-  {
-    key: "time",
-    value: ["year", "year-month", "month", "weekday", "hour"],
-  },
-  { key: "gear", value: ["camera-make", "camera", "lens", "camera-lens"] },
-  {
-    key: "exposure",
-    value: [
-      "focal-length",
-      "aperture",
-      "exposure-time",
-      "iso",
-      "ev",
-      "lv",
-      "resolution",
-    ],
-  },
-];
+const categories = (category) => {
+  switch (category) {
+    case "general":
+      return ["summary", "author", "country"];
+    case "time":
+      return ["year", "year-month", "month", "weekday", "hour"];
+
+    case "gear":
+      return ["camera-make", "camera", "lens", "camera-lens"];
+    case "exposure":
+      return [
+        "focal-length",
+        "aperture",
+        "exposure-time",
+        "iso",
+        "ev",
+        "lv",
+        "resolution",
+      ];
+    default:
+      return [];
+  }
+};
 
 const normalizeKeyValue = (key, unknownLabel) => {
   try {
@@ -59,6 +62,9 @@ const removeCategory = (filters, topic, category) => {
   if (topic in newFilters) {
     delete newFilters[topic][category];
   }
+  if (topic in newFilters && !Object.keys(newFilters[topic]).length) {
+    delete newFilters[topic];
+  }
   return newFilters;
 };
 
@@ -97,7 +103,7 @@ const applyNewFilter = (filters, topic, category, key, unknownLabel) => {
 
 export default {
   topics,
-  categoriesByTopic,
+  categories,
   newEmptyTopic,
   removeTopic,
   newEmptyCategory,
