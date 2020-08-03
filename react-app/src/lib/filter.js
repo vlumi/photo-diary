@@ -89,6 +89,9 @@ const applyNewFilter = (filters, topic, category, key, unknownLabel) => {
   if (!Object.keys(newFilters[topic][category]).length) {
     delete newFilters[topic][category];
   }
+  if (!Object.keys(newFilters[topic]).length) {
+    delete newFilters[topic];
+  }
   return newFilters;
 };
 
