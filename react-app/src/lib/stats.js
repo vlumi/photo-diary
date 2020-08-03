@@ -353,7 +353,10 @@ const collectTopics = (data, lang, t, countryData) => {
         }),
       (entry) => entry.value > 0
     );
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry) => {
+      const [year, month] = entry.key;
+      return entry.value / daysInYearMonth[year][month];
+    });
     const mean = math.mean(values);
     const stddev = math.std(values);
     const valueRanks = collection.calculateRanks(flat, (_) => Number(_.value));
