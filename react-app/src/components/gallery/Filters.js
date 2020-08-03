@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { useTranslation } from "react-i18next";
-import { BsFillXCircleFill } from "react-icons/bs";
+import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 import FlagIcon from "../FlagIcon";
 
 import filter from "../../lib/filter";
@@ -32,7 +32,7 @@ const FilterTopic = styled.div`
   flex-wrap: wrap;
   justify-content: flex-start;
   align-items: center;
-  padding: 2px 10px;
+  padding: 2px 5px;
   border-style: solid;
   border-width: 1px;
   border-radius: 20px;
@@ -45,8 +45,8 @@ const FilterCategory = styled.div`
   flex-wrap: wrap;
   justify-content: flex-start;
   align-items: center;
-  padding: 2px 10px;
-  margin: 0 0 0 5px;
+  padding: 2px 5px;
+  margin: 0 5px;
   border-radius: 15px;
 `;
 const ValueBox = styled.div`
@@ -56,7 +56,7 @@ const ValueBox = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 2px 5px;
-  margin: 0 0 0 5px;
+  margin: 0 5px;
   border-radius: 10px;
   cursor: pointer;
 `;
@@ -145,8 +145,12 @@ const Filters = ({ filters, setFilters, lang, countryData }) => {
                     <BsFillXCircleFill />
                   </ValueBox>
                 ))}
+                <BsFillPlusCircleFill />
+                {/* TODO: onClick: allow adding new values to the category filter */}
               </FilterCategory>
             ))}
+            <BsFillPlusCircleFill />
+            {/* TODO: onClick: allow adding new category + value to the topic filter */}
           </FilterTopic>
         ))}
       </FilterContainer>

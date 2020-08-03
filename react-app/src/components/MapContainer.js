@@ -28,7 +28,7 @@ const MapContainer = ({ positions: photos }) => {
   const bounds = Leaflet.latLngBounds(positions);
   return (
     <>
-      <Map bounds={bounds} maxZoom="10">
+      <Map bounds={bounds} maxZoom="14">
         <TileLayer
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

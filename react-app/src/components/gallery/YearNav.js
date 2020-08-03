@@ -1,13 +1,33 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
+import {
+  BsSkipBackwardFill,
+  BsCaretLeftFill,
+  BsFillHouseFill,
+  BsCaretRightFill,
+  BsSkipForwardFill,
+} from "react-icons/bs";
 
-import DateLink from "../DateLink";
+import FormatDate from "../FormatDate";
 
 import Link from "./Link";
 
+const NavLink = styled(Link)`
+  visibility: ${(props) => props.visibility};
+`;
+const TitleContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+const Title = styled.span`
+  margin: 0 5px;
+`;
+
 const YearNav = ({ gallery, year }) => {
-  const prevStyle = gallery.isFirstYear(year) ? { visibility: "hidden" } : {};
-  const nextStyle = gallery.isLastYear(year) ? { visibility: "hidden" } : {};
+  const prevVisibility = gallery.isFirstYear(year) ? "hidden" : "";
+  const nextVisibility = gallery.isLastYear(year) ? "hidden" : "";
 
   const firstYear = gallery.firstYear();
   const previousYear = gallery.previousYear(year);
@@ -15,19 +35,30 @@ const YearNav = ({ gallery, year }) => {
   const lastYear = gallery.lastYear();
   return (
     <h2>
-      <Link gallery={gallery} year={firstYear}>
-        <span style={prevStyle}>⇤</span>
+      <NavLink gallery={gallery} year={firstYear} visibility={prevVisibility}>
+        <BsSkipBackwardFill />
+      </NavLink>
+      <NavLink
+        gallery={gallery}
+        year={previousYear}
+        visibility={prevVisibility}
+      >
+        <BsCaretLeftFill />
+      </NavLink>
+      <Link gallery={gallery}>
+        <TitleContainer>
+          <BsFillHouseFill />
+          <Title>
+            <FormatDate year={year} />
+          </Title>
+        </TitleContainer>
       </Link>
-      <Link gallery={gallery} year={previousYear}>
-        <span style={prevStyle}>←</span>
-      </Link>
-      <DateLink gallery={gallery} year={year} />
-      <Link gallery={gallery} year={nextYear}>
-        <span style={nextStyle}>→</span>
-      </Link>
-      <Link gallery={gallery} year={lastYear}>
-        <span style={nextStyle}>⇥</span>
-      </Link>
+      <NavLink gallery={gallery} year={nextYear} visibility={nextVisibility}>
+        <BsCaretRightFill />
+      </NavLink>
+      <NavLink gallery={gallery} year={lastYear} visibility={nextVisibility}>
+        <BsSkipForwardFill />
+      </NavLink>
     </h2>
   );
 };

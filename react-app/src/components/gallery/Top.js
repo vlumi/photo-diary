@@ -7,6 +7,7 @@ import galleryService from "../../services/galleries";
 import galleryPhotosService from "../../services/gallery-photos";
 
 import Title from "./Title";
+import Filters from "./Filters";
 import ListBody from "./ListBody";
 import Stats from "./Stats";
 import Empty from "./Empty";
@@ -138,9 +139,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          context={stats ? "stats" : "gallery"}
+        />
+        <Filters
           filters={filters}
           setFilters={setFilters}
-          context={stats ? "gallery-stats" : "gallery"}
           lang={lang}
           countryData={countryData}
         />
@@ -159,9 +162,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         <Title
           galleries={galleries}
           gallery={gallery}
+          context="stats"
+        />
+        <Filters
           filters={filters}
           setFilters={setFilters}
-          context="gallery-stats"
           lang={lang}
           countryData={countryData}
         />
@@ -171,13 +176,10 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   if (!year) {
     return (
       <Full gallery={gallery}>
-        <Title
-          galleries={galleries}
-          gallery={gallery}
+        <Title galleries={galleries} gallery={gallery} context="gallery" />
+        <Filters
           filters={filters}
           setFilters={setFilters}
-          context="gallery"
-          view="year"
           lang={lang}
           countryData={countryData}
         />
@@ -187,13 +189,10 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   if (!month) {
     return (
       <Year gallery={gallery} year={year} lang={lang} countryData={countryData}>
-        <Title
-          galleries={galleries}
-          gallery={gallery}
+        <Title galleries={galleries} gallery={gallery} context="gallery" />
+        <Filters
           filters={filters}
           setFilters={setFilters}
-          context="gallery"
-          view="month"
           lang={lang}
           countryData={countryData}
         />
@@ -209,13 +208,10 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         lang={lang}
         countryData={countryData}
       >
-        <Title
-          galleries={galleries}
-          gallery={gallery}
+        <Title galleries={galleries} gallery={gallery} context="gallery" />
+        <Filters
           filters={filters}
           setFilters={setFilters}
-          context="gallery"
-          view="day"
           lang={lang}
           countryData={countryData}
         />
@@ -232,13 +228,10 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         lang={lang}
         countryData={countryData}
       >
-        <Title
-          galleries={galleries}
-          gallery={gallery}
+        <Title galleries={galleries} gallery={gallery} context="gallery" />
+        <Filters
           filters={filters}
           setFilters={setFilters}
-          context="gallery"
-          view="day"
           lang={lang}
           countryData={countryData}
         />
@@ -256,13 +249,10 @@ const Top = ({ user, lang, countryData, stats = false }) => {
       lang={lang}
       countryData={countryData}
     >
-      <Title
-        galleries={galleries}
-        gallery={gallery}
+      <Title galleries={galleries} gallery={gallery} context="gallery" />
+      <Filters
         filters={filters}
         setFilters={setFilters}
-        context="gallery"
-        view="photo"
         lang={lang}
         countryData={countryData}
       />

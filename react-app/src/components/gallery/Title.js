@@ -5,15 +5,17 @@ import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill } from "react-icons/bs";
 
-import Filters from "./Filters";
 import Link from "./Link";
-const Root = styled.h1`
-  margin: 0;
-`;
-const TitleMenu = styled.span`
+
+const Root = styled.div`
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
-  margin: 5px;
+  align-items: center;
+  padding: 0 5px;
+`;
+const MainTitle = styled.h1`
+  margin: 0;
 `;
 const TitleSelect = styled.select`
   font-size: 1em;
@@ -30,15 +32,7 @@ const ContextSelect = styled(TitleSelect)`
 `;
 const TitleOption = styled.option``;
 
-const Title = ({
-  galleries,
-  gallery,
-  filters,
-  setFilters,
-  context,
-  lang,
-  countryData,
-}) => {
+const Title = ({ galleries, gallery, context }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -61,7 +55,7 @@ const Title = ({
       default:
       case "gallery":
         return gallery.path();
-      case "gallery-stats":
+      case "stats":
         return gallery.statsPath();
     }
   };
@@ -100,7 +94,7 @@ const Title = ({
     };
     return (
       <ContextSelect value={context} onChange={changeHandler}>
-        {["gallery", "gallery-stats"].map((context) => (
+        {["gallery", "stats"].map((context) => (
           <TitleOption key={context} value={context}>
             {t(`nav-${context}`)}
           </TitleOption>
@@ -110,35 +104,18 @@ const Title = ({
   };
 
   return (
-    <>
-      <TitleMenu>
-        <Link>
-          <BsFillHouseFill />
-          {t("nav-gallery-top")}
-        </Link>
-        {/* <Link gallery={gallery} context={targetContext}>
-          {t(`nav-${targetContext}`)}
-        </Link> */}
-      </TitleMenu>
-      <Root>
-        {renderTitle()} — {renderContext()}
-      </Root>
-      <Filters
-        filters={filters}
-        setFilters={setFilters}
-        lang={lang}
-        countryData={countryData}
-      />
-    </>
+    <Root>
+      <Link>
+        <BsFillHouseFill />
+      </Link>
+      <MainTitle>{renderTitle()}</MainTitle>
+      {renderContext()}
+    </Root>
   );
 };
 Title.propTypes = {
   galleries: PropTypes.array.isRequired,
   gallery: PropTypes.object.isRequired,
-  filters: PropTypes.object.isRequired,
-  setFilters: PropTypes.func.isRequired,
   context: PropTypes.string.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Title;

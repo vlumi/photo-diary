@@ -24,6 +24,10 @@ const Row = styled.tr`
     background-color: var(--header-background);
   }
 `;
+const RowSelected = styled(Row)`
+  color: var(--header-color);
+  background-color: var(--header-background);
+`;
 const RowNone = styled(Row)`
   background-color: var(--none-color);
 `;
@@ -104,60 +108,49 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
       )
     );
   };
-  const renderRows = (table) => {
-    return table.map((values, i) => {
-      const key = `${topic.key}:${category.key}:${i}`;
-      if (values.standardScore < -0.5) {
+  const renderRows = (category, table) => {
+    return table.map((value, i) => {
+      const valueKey = stats.decodeTableRowKey(value.key);
+      const key = `${topic.key}:${category.key}:${valueKey}`;
+      // console.log("render row", category, valueKey, filters);
+      if (category in filters && valueKey in filters[category]) {
         return (
-          <RowNone
-            key={key}
-            onClick={handleClick}
-            data-key={stats.decodeTableRowKey(values.key)}
-          >
-            {renderColumns(values, i)}
+          <RowSelected key={key} onClick={handleClick} data-key={valueKey}>
+            {renderColumns(value, i)}
+          </RowSelected>
+        );
+      }
+      if (value.standardScore < -0.5) {
+        return (
+          <RowNone key={key} onClick={handleClick} data-key={valueKey}>
+            {renderColumns(value, i)}
           </RowNone>
         );
       }
-      if (values.standardScore < -0.25) {
+      if (value.standardScore < -0.25) {
         return (
-          <RowLow
-            key={key}
-            onClick={handleClick}
-            data-key={stats.decodeTableRowKey(values.key)}
-          >
-            {renderColumns(values, i)}
+          <RowLow key={key} onClick={handleClick} data-key={valueKey}>
+            {renderColumns(value, i)}
           </RowLow>
         );
       }
-      if (values.standardScore < 0.25) {
+      if (value.standardScore < 0.25) {
         return (
-          <RowMedium
-            key={key}
-            onClick={handleClick}
-            data-key={stats.decodeTableRowKey(values.key)}
-          >
-            {renderColumns(values, i)}
+          <RowMedium key={key} onClick={handleClick} data-key={valueKey}>
+            {renderColumns(value, i)}
           </RowMedium>
         );
       }
-      if (values.standardScore < 0.5) {
+      if (value.standardScore < 0.5) {
         return (
-          <RowHigh
-            key={key}
-            onClick={handleClick}
-            data-key={stats.decodeTableRowKey(values.key)}
-          >
-            {renderColumns(values, i)}
+          <RowHigh key={key} onClick={handleClick} data-key={valueKey}>
+            {renderColumns(value, i)}
           </RowHigh>
         );
       }
       return (
-        <RowExtreme
-          key={key}
-          onClick={handleClick}
-          data-key={stats.decodeTableRowKey(values.key)}
-        >
-          {renderColumns(values, i)}
+        <RowExtreme key={key} onClick={handleClick} data-key={valueKey}>
+          {renderColumns(value, i)}
         </RowExtreme>
       );
     });
@@ -176,7 +169,7 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
             </Header>
           ))}
         </HeaderRow>
-        {renderRows(category.table)}
+        {renderRows(category.key, category.table)}
       </Block>
     </Root>
   );

@@ -1,17 +1,33 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
+import {
+  BsSkipBackwardFill,
+  BsCaretLeftFill,
+  BsFillGrid3X3GapFill,
+  BsCaretRightFill,
+  BsSkipForwardFill,
+} from "react-icons/bs";
 
-import DateLink from "../DateLink";
+import FormatDate from "../FormatDate";
 
 import Link from "./Link";
 
+const NavLink = styled(Link)`
+  visibility: ${(props) => props.visibility};
+`;
+const TitleContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+const Title = styled.span`
+  margin: 0 5px;
+`;
+
 const DayNav = ({ gallery, year, month, day }) => {
-  const prevStyle = gallery.isFirstDay(year, month, day)
-    ? { visibility: "hidden" }
-    : {};
-  const nextStyle = gallery.isLastDay(year, month, day)
-    ? { visibility: "hidden" }
-    : {};
+  const prevVisibility = gallery.isFirstDay(year, month, day) ? "hidden" : "";
+  const nextVisibility = gallery.isLastDay(year, month, day) ? "hidden" : "";
 
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [previousYear, previousMonth, previousDay] = gallery.previousDay(
@@ -23,39 +39,50 @@ const DayNav = ({ gallery, year, month, day }) => {
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
   return (
     <h2>
-      <Link
+      <NavLink
         gallery={gallery}
         year={firstYear}
         month={firstMonth}
         day={firstDay}
+        visibility={prevVisibility}
       >
-        <span style={prevStyle}>⇤</span>
-      </Link>
-      <Link
+        <BsSkipBackwardFill />
+      </NavLink>
+      <NavLink
         gallery={gallery}
         year={previousYear}
         month={previousMonth}
         day={previousDay}
+        visibility={prevVisibility}
       >
-        <span style={prevStyle}>←</span>
+        <BsCaretLeftFill />
+      </NavLink>
+      <Link gallery={gallery} year={year} month={month}>
+        <TitleContainer>
+          <BsFillGrid3X3GapFill />
+          <Title>
+            <FormatDate year={year} month={month} day={day} />
+          </Title>
+        </TitleContainer>
       </Link>
-      <DateLink gallery={gallery} year={year} month={month} day={day} />
-      <Link
+      <NavLink
         gallery={gallery}
         year={nextYear}
         month={nextMonth}
         day={nextDay}
+        visibility={nextVisibility}
       >
-        <span style={nextStyle}>→</span>
-      </Link>
-      <Link
+        <BsCaretRightFill />
+      </NavLink>
+      <NavLink
         gallery={gallery}
         year={lastYear}
         month={lastMonth}
         day={lastDay}
+        visibility={nextVisibility}
       >
-        <span style={nextStyle}>⇥</span>
-      </Link>
+        <BsSkipForwardFill />
+      </NavLink>
     </h2>
   );
 };
