@@ -1,5 +1,8 @@
 import { GeoCoord } from "geo-coord";
 
+import collection from "./collection";
+import config from "./config";
+
 const identity = (_) => _;
 
 const number = (lang) => {
@@ -127,8 +130,6 @@ const categoryValue = (lang, t, countryData) => {
         return identity;
       case "country":
         return countryName(lang, countryData);
-      case "year":
-        return identity;
       case "year-month":
         return (yearMonth) => {
           const [year, month] = yearMonth.split("-");
@@ -137,6 +138,8 @@ const categoryValue = (lang, t, countryData) => {
             month: t(`month-long-${month}`),
           });
         };
+      case "year":
+        return identity;
       case "month":
         return (month) => t(`month-long-${month}`);
       case "weekday":
@@ -170,6 +173,54 @@ const categoryValue = (lang, t, countryData) => {
     }
   };
 };
+const categorySorter = (keyField, valueField) => (category) => {
+  switch (category) {
+    case "author":
+    case "country":
+      return collection.strSortByFieldAsc(valueField);
+    case "year-month":
+      return (a, b) => {
+        const [yearA, monthA] = a[keyField].split("-");
+        const [yearB, monthB] = b[keyField].split("-");
+        const yearComparison = collection.numSortByFieldAsc(keyField)(
+          yearA,
+          yearB
+        );
+        if (!yearComparison) {
+          return yearComparison;
+        }
+        return collection.numSortByFieldAsc(keyField)(monthA, monthB);
+      };
+    case "year":
+    case "month":
+      return collection.numSortByFieldAsc(keyField);
+    case "weekday":
+      return (a, b) => {
+        const dowA =
+          a[keyField] < config.FIRST_WEEKDAY ? Number(a[keyField]) + 7 : a[keyField];
+        const dowB =
+          b[keyField] < config.FIRST_WEEKDAY ? Number(b[keyField]) + 7 : b[keyField];
+        return collection.compareWithNaN(dowA, dowB, () => dowA - dowB);
+      };
+    case "hour":
+      return collection.numSortByFieldAsc(keyField);
+    case "camera-make":
+    case "camera":
+    case "lens":
+    case "camera-lens":
+      return collection.strSortByFieldAsc(keyField);
+    case "focal-length":
+    case "aperture":
+    case "exposure-time":
+    case "iso":
+    case "ev":
+    case "lv":
+    case "resolution":
+      return collection.numSortByFieldAsc(keyField);
+    default:
+      return identity;
+  }
+};
 
 export default {
   identity,
@@ -191,4 +242,5 @@ export default {
   coordinates,
 
   categoryValue,
+  categorySorter,
 };

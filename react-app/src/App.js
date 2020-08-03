@@ -73,7 +73,7 @@ const App = () => {
               user={user}
               lang={lang}
               countryData={countryData}
-              stats={true}
+              isStats={true}
             />
           </Route>
           <Route path="/g/:galleryId/:year/:month/:day/:photoId">

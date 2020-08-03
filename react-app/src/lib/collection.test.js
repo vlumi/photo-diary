@@ -339,6 +339,47 @@ describe("truncateAndProcess()", () => {
     ]);
   });
 });
+describe("mergeObjects()", () => {
+  test("Empty", () =>
+    expect(collection.mergeObjects({}, {})).toStrictEqual({}));
+  test("Right is empty", () =>
+    expect(collection.mergeObjects({ a: new Set([1]) }, {})).toStrictEqual({
+      a: new Set([1]),
+    }));
+  test("Left is empty", () =>
+    expect(collection.mergeObjects({}, { a: new Set([1]) })).toStrictEqual({
+      a: new Set([1]),
+    }));
+  test("Non-overlapping objects", () =>
+    expect(
+      collection.mergeObjects({ a: new Set([1]) }, { b: new Set([1]) })
+    ).toStrictEqual({
+      a: new Set([1]),
+      b: new Set([1]),
+    }));
+  test("Equal values", () =>
+    expect(
+      collection.mergeObjects({ a: new Set([1]) }, { a: new Set([1]) })
+    ).toStrictEqual({
+      a: new Set([1]),
+    }));
+  test("Differing values", () =>
+    expect(
+      collection.mergeObjects({ a: new Set([1]) }, { a: new Set([2]) })
+    ).toStrictEqual({
+      a: new Set([1, 2]),
+    }));
+  test("Deep objects, Differing values", () =>
+    expect(
+      collection.mergeObjects(
+        { a: { b: new Set([1]) } },
+        { a: { b: new Set([2]) } }
+      )
+    ).toStrictEqual({
+      a: { b: new Set([1, 2]) },
+    }));
+});
+
 describe("numSortByFieldAsc()", () => {
   test("First === Second", () =>
     expect(collection.numSortByFieldAsc("key")({ key: 1 }, { key: 1 })).toBe(

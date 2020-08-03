@@ -193,6 +193,27 @@ const truncateAndProcess = (data, maxEntries, processor, summarizer) => {
   return processor(data);
 };
 
+const mergeObjects = (a, b) => {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  return Object.fromEntries(
+    [...keys].map((key) => {
+      if (!(key in a) && !(key in b)) {
+        return [key, undefined];
+      }
+      if (!(key in b)) {
+        return [key, a[key]];
+      }
+      if (!(key in a)) {
+        return [key, b[key]];
+      }
+      if (a[key] instanceof Set && b[key] instanceof Set) {
+        return [key, new Set([...a[key], ...b[key]])];
+      }
+      return [key, mergeObjects(a[key], b[key])];
+    })
+  );
+};
+
 const compareWithNaN = (a, b, f) => {
   if (isNaN(a) && isNaN(b)) return 0;
   if (isNaN(a)) return 1;
@@ -220,17 +241,37 @@ const numSortByFieldAsc = (key) => (a, b) =>
 const numSortByFieldDesc = (key) => (a, b) =>
   compareWithNaN(a[key], b[key], () => b[key] - a[key]);
 
+/**
+ * Sort the object-containing array by the property `key` in string ascending order.
+ *
+ * @param {string} key The property to sort by.
+ */
+const strSortByFieldAsc = (key) => (a, b) =>
+  String(a[key]).localeCompare(String(b[key]));
+
+/**
+ * Sort the object-containing array by the property `key` in string descending order.
+ *
+ * @param {string} key The property to sort by.
+ */
+const strSortByFieldDesc = (key) => (a, b) =>
+  String(b[key]).localeCompare(String(a[key]));
+
 export default {
   joinTruthyKeys,
   compareArrays,
   transformObjectKeys,
   transformObjectValue,
+  trim,
   objectFromArray,
   foldToArray,
   calculateRanks,
   truncateAndProcess,
-  trim,
+  mergeObjects,
 
+  compareWithNaN,
   numSortByFieldAsc,
   numSortByFieldDesc,
+  strSortByFieldAsc,
+  strSortByFieldDesc,
 };

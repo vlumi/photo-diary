@@ -1,3 +1,5 @@
+const topics = ["general", "time", "gear", "exposure"];
+
 const categoriesByTopic = [
   { key: "general", value: ["summary", "author", "country"] },
   {
@@ -29,28 +31,73 @@ const normalizeKeyValue = (key, unknownLabel) => {
   }
 };
 
-const applyNewFilter = (filters, category, key, unknownLabel) => {
-  if (!category) {
-    return filters;
-  }
-  const normalizedKey = normalizeKeyValue(key, unknownLabel);
-  const newFilter = (photo) => photo.matches(category, normalizedKey);
-
+const newEmptyTopic = (filters, topic) => {
   const newFilters = { ...filters };
-  if (!(category in newFilters)) {
-    newFilters[category] = { [key]: newFilter };
-    return newFilters;
+  if (!(topic in newFilters)) {
+    newFilters[topic] = {};
   }
-  newFilters[category] = { ...newFilters[category] };
-  if (!(key in newFilters[category])) {
-    newFilters[category][key] = newFilter;
-    return newFilters;
+  return newFilters;
+};
+const removeTopic = (filters, topic) => {
+  const newFilters = { ...filters };
+  delete newFilters[topic];
+  return newFilters;
+};
+
+const newEmptyCategory = (filters, topic, category) => {
+  const newFilters = { ...filters };
+  if (!(topic in newFilters)) {
+    newFilters[topic] = {};
   }
-  delete newFilters[category][key];
-  if (!Object.keys(newFilters[category]).length) {
-    delete newFilters[category];
+  if (!(category in newFilters[topic])) {
+    newFilters[topic][category] = {};
+  }
+  return newFilters;
+};
+const removeCategory = (filters, topic, category) => {
+  const newFilters = { ...filters };
+  if (topic in newFilters) {
+    delete newFilters[topic][category];
   }
   return newFilters;
 };
 
-export default { categoriesByTopic, applyNewFilter };
+const applyNewFilter = (filters, topic, category, key, unknownLabel) => {
+  if (!topic || !category) {
+    return filters;
+  }
+
+  const newFilters = { ...filters };
+
+  const normalizedKey = normalizeKeyValue(key, unknownLabel);
+  const newFilter = (photo) => photo.matches(category, normalizedKey);
+
+  if (!(topic in newFilters)) {
+    newFilters[topic] = { [category]: { [key]: newFilter } };
+    return newFilters;
+  }
+  if (!(category in newFilters[topic])) {
+    newFilters[topic][category] = { [key]: newFilter };
+    return newFilters;
+  }
+  newFilters[topic][category] = { ...newFilters[topic][category] };
+  if (!(key in newFilters[topic][category])) {
+    newFilters[topic][category][key] = newFilter;
+    return newFilters;
+  }
+  delete newFilters[topic][category][key];
+  if (!Object.keys(newFilters[topic][category]).length) {
+    delete newFilters[topic][category];
+  }
+  return newFilters;
+};
+
+export default {
+  topics,
+  categoriesByTopic,
+  newEmptyTopic,
+  removeTopic,
+  newEmptyCategory,
+  removeCategory,
+  applyNewFilter,
+};

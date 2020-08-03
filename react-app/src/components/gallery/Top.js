@@ -20,17 +20,23 @@ import Photo from "./Photo";
 import GalleryModel from "../../models/Gallery";
 import PhotoModel from "../../models/Photo";
 
+import collection from "../../lib/collection";
 import config from "../../lib/config";
+import format from "../../lib/format";
+import statsx from "../../lib/stats";
 import theme from "../../lib/theme";
 
-const Top = ({ user, lang, countryData, stats = false }) => {
+const Top = ({ user, lang, countryData, isStats = false }) => {
   const [galleries, setGalleries] = React.useState(undefined);
   const [gallery, setGallery] = React.useState(undefined);
   const [photos, setPhotos] = React.useState(undefined);
+  const [uniqueValues, setUniqueValues] = React.useState(undefined);
   const [filters, setFilters] = React.useState({});
   const [error, setError] = React.useState("");
 
   const { t } = useTranslation();
+
+  const context = isStats ? "stats" : "gallery";
 
   const galleryId = useParams().galleryId;
   const photoId = useParams().photoId;
@@ -63,12 +69,42 @@ const Top = ({ user, lang, countryData, stats = false }) => {
       .catch((error) => setError(error.message));
   }, [galleryId, user]);
   React.useEffect(() => {
+    if (!photos) {
+      return;
+    }
+    const newUniqueValues = photos
+      .map((photo) => photo.uniqueValues())
+      .reduce(collection.mergeObjects, {});
+    const categoryValueFormatter = format.categoryValue(lang, t, countryData);
+    Object.keys(newUniqueValues).forEach((topic) => {
+      Object.keys(newUniqueValues[topic]).forEach((category) => {
+        newUniqueValues[topic][category] = [...newUniqueValues[topic][category]]
+          .map((value) => {
+            return {
+              key: value || statsx.UNKNOWN,
+              value: !value
+                ? t("stats-unknown")
+                : categoryValueFormatter(category)(value),
+            };
+          })
+          .sort(format.categorySorter("key", "value")(category));
+      });
+    });
+    setUniqueValues(newUniqueValues);
+  }, [photos, lang, t, countryData]);
+  React.useEffect(() => {
     if (!selectedGallery || !photos) {
       return;
     }
     const filteredPhotos = photos.filter((photo) =>
-      Object.values(filters).every((categoryFilters) =>
-        Object.values(categoryFilters).every((filter) => filter(photo))
+      Object.values(filters).every(
+        (topicFilters) =>
+          !Object.keys(topicFilters).length ||
+          Object.values(topicFilters).every(
+            (categoryFilters) =>
+              !Object.keys(categoryFilters).length ||
+              Object.values(categoryFilters).some((filter) => filter(photo))
+          )
       )
     );
     setGallery(selectedGallery.withPhotos(filteredPhotos));
@@ -77,6 +113,7 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   if (staleGallery) {
     setGallery(undefined);
     setPhotos(undefined);
+    setUniqueValues(undefined);
   }
 
   if (selectedGallery && selectedGallery.hasTheme()) {
@@ -129,28 +166,25 @@ const Top = ({ user, lang, countryData, stats = false }) => {
     );
   }
 
-  if (staleGallery || !gallery) {
+  if (staleGallery || !gallery || !uniqueValues) {
     return <div>{t("loading")}</div>;
   }
 
   if (!gallery.includesPhotos()) {
     return (
       <Empty gallery={gallery}>
-        <Title
-          galleries={galleries}
-          gallery={gallery}
-          context={stats ? "stats" : "gallery"}
-        />
+        <Title galleries={galleries} gallery={gallery} context={context} />
         <Filters
           filters={filters}
           setFilters={setFilters}
+          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
         />
       </Empty>
     );
   }
-  if (stats) {
+  if (isStats) {
     return (
       <Stats
         photos={gallery.photos()}
@@ -159,14 +193,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         lang={lang}
         countryData={countryData}
       >
-        <Title
-          galleries={galleries}
-          gallery={gallery}
-          context="stats"
-        />
+        <Title galleries={galleries} gallery={gallery} context={context} />
         <Filters
           filters={filters}
           setFilters={setFilters}
+          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
         />
@@ -176,10 +207,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   if (!year) {
     return (
       <Full gallery={gallery}>
-        <Title galleries={galleries} gallery={gallery} context="gallery" />
+        <Title galleries={galleries} gallery={gallery} context={context} />
         <Filters
           filters={filters}
           setFilters={setFilters}
+          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
         />
@@ -189,10 +221,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
   if (!month) {
     return (
       <Year gallery={gallery} year={year} lang={lang} countryData={countryData}>
-        <Title galleries={galleries} gallery={gallery} context="gallery" />
+        <Title galleries={galleries} gallery={gallery} context={context} />
         <Filters
           filters={filters}
           setFilters={setFilters}
+          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
         />
@@ -208,10 +241,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         lang={lang}
         countryData={countryData}
       >
-        <Title galleries={galleries} gallery={gallery} context="gallery" />
+        <Title galleries={galleries} gallery={gallery} context={context} />
         <Filters
           filters={filters}
           setFilters={setFilters}
+          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
         />
@@ -228,10 +262,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
         lang={lang}
         countryData={countryData}
       >
-        <Title galleries={galleries} gallery={gallery} context="gallery" />
+        <Title galleries={galleries} gallery={gallery} context={context} />
         <Filters
           filters={filters}
           setFilters={setFilters}
+          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
         />
@@ -249,10 +284,11 @@ const Top = ({ user, lang, countryData, stats = false }) => {
       lang={lang}
       countryData={countryData}
     >
-      <Title galleries={galleries} gallery={gallery} context="gallery" />
+      <Title galleries={galleries} gallery={gallery} context={context} />
       <Filters
         filters={filters}
         setFilters={setFilters}
+        uniqueValues={uniqueValues}
         lang={lang}
         countryData={countryData}
       />
@@ -263,6 +299,6 @@ Top.propTypes = {
   user: PropTypes.object,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
-  stats: PropTypes.bool,
+  isStats: PropTypes.bool,
 };
 export default Top;

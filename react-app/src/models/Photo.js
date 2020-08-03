@@ -203,6 +203,38 @@ const Photo = (photoData) => {
           return true;
       }
     },
+    uniqueValues: () => {
+      return {
+        general: {
+          author: new Set([self.author()]),
+          country: new Set([self.countryCode()]),
+        },
+        time: {
+          year: new Set([self.year()]),
+          "year-month": new Set([[self.year(), self.month()].join("-")]),
+          month: new Set([self.month()]),
+          weekday: new Set([self.weekday()]),
+          hour: new Set([self.hour()]),
+        },
+        gear: {
+          "camera-make": new Set([self.cameraMake()]),
+          camera: new Set([self.formatCamera()]),
+          lens: new Set([self.formatLens()]),
+          "camera-lens": new Set([
+            JSON.stringify([self.formatCamera(), self.formatLens()]),
+          ]),
+        },
+        exposure: {
+          "focal-length": new Set([self.focalLength()]),
+          aperture: new Set([self.aperture()]),
+          "exposure-time": new Set([self.exposureTime()]),
+          iso: new Set([self.iso()]),
+          ev: new Set([self.exposureValue()]),
+          lv: new Set([self.lightValue()]),
+          resolution: new Set([self.resolution()]),
+        },
+      };
+    },
   };
   return self;
 };

@@ -64,12 +64,14 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
   const { t } = useTranslation();
 
   const handleClick = (event) => {
-    const keyElement = event.target.closest("tr");
+    const topicElement = event.target.closest("[data-type=topic]");
     const categoryElement = event.target.closest("[data-type=category]");
+    const keyElement = event.target.closest("tr");
 
     if (!keyElement || !categoryElement) {
       return;
     }
+    const topic = topicElement.getAttribute("data-key");
     const category = categoryElement.getAttribute("data-key");
     const key = keyElement.getAttribute("data-key");
 
@@ -79,6 +81,7 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
     // TODO: put to tentative filters first, to allow selecting multiple items...
     const newFilters = filter.applyNewFilter(
       filters,
+      topic,
       category,
       key,
       stats.UNKNOWN

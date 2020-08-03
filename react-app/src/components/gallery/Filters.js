@@ -16,6 +16,17 @@ const Root = styled.div`
   align-items: stretch;
   justify-content: flex-start;
 `;
+const Box = styled.div`
+  color: var(--primary-color);
+  background-color: var(--primary-background);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 5px;
+  margin: 0 5px;
+  border-radius: 10px;
+  cursor: pointer;
+`;
 const FilterTitle = styled.h3`
   text-align: left;
   writing-mode: vertical-rl;
@@ -24,7 +35,7 @@ const FilterContainer = styled.div`
   flex-grow: 1;
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
 `;
 const FilterTopic = styled.div`
@@ -33,10 +44,15 @@ const FilterTopic = styled.div`
   justify-content: flex-start;
   align-items: center;
   padding: 2px 5px;
+  margin: 0;
   border-style: solid;
   border-width: 1px;
   border-radius: 20px;
   border-color: var(--header-background);
+`;
+const TopicBox = styled(Box)``;
+const Topic = styled.div`
+  padding: 0 5px;
 `;
 const FilterCategory = styled.div`
   color: var(--header-color);
@@ -49,110 +65,289 @@ const FilterCategory = styled.div`
   margin: 0 5px;
   border-radius: 15px;
 `;
-const ValueBox = styled.div`
-  color: var(--primary-color);
-  background-color: var(--primary-background);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 2px 5px;
-  margin: 0 5px;
-  border-radius: 10px;
-  cursor: pointer;
+const CategoryBox = styled(Box)``;
+const Category = styled.div`
+  padding: 0 5px;
 `;
+const ValueBox = styled(Box)``;
 const Value = styled.div`
   padding: 0 5px;
 `;
+const NewValues = styled.select`
+  margin: 0 5px;
+`;
+const NewValue = styled.option``;
 
-const Filters = ({ filters, setFilters, lang, countryData }) => {
+const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
+  const [topicSelector, setTopicSelector] = React.useState(false);
+  const [categorySelector, setCategorySelector] = React.useState({});
+  const [valueSelector, setValueSelector] = React.useState({});
+
   const { t } = useTranslation();
 
   const formatCategoryValue = format.categoryValue(lang, t, countryData);
 
-  if (!Object.keys(filters).length) {
-    return <></>;
-  }
-  const handleClick = (event) => {
-    const keyElement = event.target.closest("[data-type=value");
-    const categoryElement = event.target.closest("[data-type=category]");
-
-    if (!keyElement || !categoryElement) {
+  // if (!Object.keys(filters).length) {
+  //   return <></>;
+  // }
+  const handleRemoveTopicClick = (event) => {
+    const topicElement = event.target.closest("[data-type=topic]");
+    if (!topicElement) {
       return;
     }
+    const topic = topicElement.getAttribute("data-key");
+    if (!topic) {
+      return;
+    }
+    const newFilters = filter.removeTopic(filters, topic);
+    setFilters(newFilters);
+  };
+  const handleRemoveCategoryClick = (event) => {
+    const topicElement = event.target.closest("[data-type=topic]");
+    const categoryElement = event.target.closest("[data-type=category]");
+    if (!topicElement || !categoryElement) {
+      return;
+    }
+    const topic = topicElement.getAttribute("data-key");
     const category = categoryElement.getAttribute("data-key");
-    const key = keyElement.getAttribute("data-key");
-
-    if (!category || !key) {
+    if (!topic || !category) {
+      return;
+    }
+    const newFilters = filter.removeCategory(filters, topic, category);
+    setFilters(newFilters);
+  };
+  const handleRemoveValueClick = (event) => {
+    const topicElement = event.target.closest("[data-type=topic]");
+    const categoryElement = event.target.closest("[data-type=category]");
+    const valueElement = event.target.closest("[data-type=value");
+    if (!categoryElement || !valueElement) {
+      return;
+    }
+    const topic = topicElement.getAttribute("data-key");
+    const category = categoryElement.getAttribute("data-key");
+    const value = valueElement.getAttribute("data-key");
+    if (!topic || !category || !value) {
       return;
     }
     const newFilters = filter.applyNewFilter(
       filters,
+      topic,
       category,
-      key,
+      value,
       stats.UNKNOWN
     );
     setFilters(newFilters);
   };
-
-  const activeFilters = filter.categoriesByTopic
-    .map((topic) => {
-      return {
-        ...topic,
-        value: topic.value
-          .filter((category) => category in filters)
-          .map((category) => {
-            return { key: category, value: Object.keys(filters[category]) };
-          }),
-      };
-    })
-    .filter((topic) => topic.value.length);
+  const handleToggleAddTopicClick = () => {
+    setTopicSelector(!topicSelector);
+  };
+  const handleToggleAddCategoryClick = (event) => {
+    const topicElement = event.target.closest("[data-type=topic]");
+    if (!topicElement) {
+      return;
+    }
+    const topic = topicElement.getAttribute("data-key");
+    if (!topic) {
+      return;
+    }
+    const state = !(topic in categorySelector) || !categorySelector[topic];
+    setCategorySelector({ [topic]: state });
+  };
+  const handleToggleAddValueClick = (event) => {
+    const topicElement = event.target.closest("[data-type=topic]");
+    const categoryElement = event.target.closest("[data-type=category]");
+    if (!topicElement || !categoryElement) {
+      return;
+    }
+    const topic = topicElement.getAttribute("data-key");
+    const category = categoryElement.getAttribute("data-key");
+    if (!topic || !category) {
+      return;
+    }
+    const state =
+      !(topic in valueSelector) ||
+      !(category in valueSelector[topic]) ||
+      !valueSelector[topic][category];
+    setValueSelector({ [topic]: { [category]: state } });
+  };
 
   const renderValue = (category, value) => {
     if (value === stats.UNKNOWN) {
       return t("stats-unknown");
     }
-    if (category.key === "country" && countryData.isValid(value)) {
+    if (category === "country" && countryData.isValid(value)) {
       return (
         <Value>
-          <FlagIcon code={value} /> {formatCategoryValue(category.key)(value)}
+          <FlagIcon code={value} /> {formatCategoryValue(category)(value)}
         </Value>
       );
     }
-    return <Value>{formatCategoryValue(category.key)(value)}</Value>;
+    return <Value>{formatCategoryValue(category)(value)}</Value>;
+  };
+  const renderTopicAdder = () => {
+    const handleSelect = (event) => {
+      const topic = event.target.value;
+      if (!topic) {
+        return;
+      }
+      const newFilters = filter.newEmptyTopic(filters, topic);
+      setTopicSelector(false);
+      setFilters(newFilters);
+    };
+    // TODO: check
+    // const alreadyFiltered = (value) => value in filters;
+    const alreadyFiltered = () => false;
+    if (topicSelector) {
+      return (
+        <>
+          <NewValues defaultValue="" onChange={handleSelect}>
+            <NewValue value="">Select...</NewValue>
+            {Object.keys(uniqueValues)
+              .sort()
+              .filter((topic) => !alreadyFiltered(topic))
+              .map((value) => (
+                <NewValue key={`${value}`} value={value}>
+                  {t(`stats-topic-${value}`)}
+                </NewValue>
+              ))}
+          </NewValues>
+          <BsFillXCircleFill onClick={handleToggleAddTopicClick} />
+        </>
+      );
+    }
+    return <BsFillPlusCircleFill onClick={handleToggleAddTopicClick} />;
+  };
+  const renderCategoryAdder = (topic) => {
+    const handleSelect = (event) => {
+      const topicElement = event.target.closest("[data-type=topic]");
+      if (!topicElement) {
+        return;
+      }
+      const topic = topicElement.getAttribute("data-key");
+      const category = event.target.value;
+      if (!topic || !category) {
+        return;
+      }
+      const newFilters = filter.newEmptyCategory(filters, topic, category);
+      setCategorySelector({});
+      setFilters(newFilters);
+    };
+    if (topic in categorySelector && categorySelector[topic]) {
+      // TODO: hide when empty
+      const alreadyFiltered = (category) => category in filters;
+      return (
+        <>
+          <NewValues defaultValue="" onChange={handleSelect}>
+            <NewValue value="">Select...</NewValue>
+            {Object.keys(uniqueValues[topic])
+              .sort()
+              .filter((category) => !alreadyFiltered(category))
+              .map((value) => (
+                <NewValue key={`${topic}:${value}`} value={value}>
+                  {t(`stats-category-${value}`)}
+                </NewValue>
+              ))}
+          </NewValues>
+          <BsFillXCircleFill onClick={handleToggleAddCategoryClick} />
+        </>
+      );
+    }
+    return <BsFillPlusCircleFill onClick={handleToggleAddCategoryClick} />;
+  };
+  const renderValueAdder = (topic, category) => {
+    const handleSelect = (event) => {
+      const topicElement = event.target.closest("[data-type=topic]");
+      const categoryElement = event.target.closest("[data-type=category]");
+      if (!topicElement || !categoryElement) {
+        return;
+      }
+      const topic = topicElement.getAttribute("data-key");
+      const category = categoryElement.getAttribute("data-key");
+      const value = event.target.value;
+      if (!topic || !category || !value) {
+        return;
+      }
+      const newFilters = filter.applyNewFilter(
+        filters,
+        topic,
+        category,
+        value,
+        stats.UNKNOWN
+      );
+      setValueSelector({});
+      setFilters(newFilters);
+    };
+    if (
+      topic in valueSelector &&
+      category in valueSelector[topic] &&
+      valueSelector[topic][category]
+    ) {
+      // TODO: hide when empty
+      const alreadyFiltered = (value) =>
+        category in filters && value in filters[category];
+      return (
+        <>
+          <NewValues defaultValue="" onChange={handleSelect}>
+            <NewValue value="">Select...</NewValue>
+            {uniqueValues[topic][category]
+              .filter((value) => !alreadyFiltered(value))
+              .map((value) => (
+                <NewValue
+                  key={`${topic}:${category}:${value.key}`}
+                  value={value.key}
+                >
+                  {value.value}
+                </NewValue>
+              ))}
+          </NewValues>
+          <BsFillXCircleFill onClick={handleToggleAddValueClick} />
+        </>
+      );
+    }
+    return <BsFillPlusCircleFill onClick={handleToggleAddValueClick} />;
   };
   return (
     <Root>
       <FilterTitle>Filters</FilterTitle>
       <FilterContainer>
-        {activeFilters.map((topic) => (
-          <FilterTopic key={`filter:${topic.key}`}>
-            {t(`stats-topic-${topic.key}`)}
-            {topic.value.map((category) => (
+        {Object.keys(filters).map((topic) => (
+          <FilterTopic
+            key={`filter:${topic}`}
+            data-type="topic"
+            data-key={topic}
+          >
+            <TopicBox onClick={handleRemoveTopicClick}>
+              <Topic>{t(`stats-topic-${topic}`)}</Topic>
+              <BsFillXCircleFill />
+            </TopicBox>
+            {Object.keys(filters[topic]).map((category) => (
               <FilterCategory
-                key={`filter:${topic.key}:${category.key}`}
+                key={`filter:${topic}:${category}`}
                 data-type="category"
-                data-key={category.key}
+                data-key={category}
               >
-                {t(`stats-category-${category.key}`)}
-                {category.value.map((value) => (
+                <CategoryBox onClick={handleRemoveCategoryClick}>
+                  <Category>{t(`stats-category-${category}`)}</Category>
+                  <BsFillXCircleFill />
+                </CategoryBox>
+                {Object.keys(filters[topic][category]).map((value) => (
                   <ValueBox
-                    key={`filter:${topic.key}:${category.key}:${value}`}
+                    key={`filter:${topic}:${category}:${value}`}
                     data-type="value"
                     data-key={value}
-                    onClick={handleClick}
+                    onClick={handleRemoveValueClick}
                   >
                     {renderValue(category, value)}
                     <BsFillXCircleFill />
                   </ValueBox>
                 ))}
-                <BsFillPlusCircleFill />
-                {/* TODO: onClick: allow adding new values to the category filter */}
+                {renderValueAdder(topic, category)}
               </FilterCategory>
             ))}
-            <BsFillPlusCircleFill />
-            {/* TODO: onClick: allow adding new category + value to the topic filter */}
+            {renderCategoryAdder(topic)}
           </FilterTopic>
         ))}
+        {renderTopicAdder()}
       </FilterContainer>
     </Root>
   );
@@ -160,6 +355,7 @@ const Filters = ({ filters, setFilters, lang, countryData }) => {
 Filters.propTypes = {
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
+  uniqueValues: PropTypes.object.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
