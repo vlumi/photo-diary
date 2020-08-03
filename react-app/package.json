@@ -15,7 +15,7 @@
     "leaflet": "^1.6.0",
     "mathjs": "^7.1.0",
     "react": "^16.13.1",
-    "react-chartjs-2": "^2.9.0",
+    "react-chartjs-2": "^2.10.0",
     "react-dom": "^16.13.1",
     "react-flag-icon-css": "^1.0.25",
     "react-helmet": "^6.1.0",
