@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 
-import FilterTopic from "./FilterTopic";
+import FiltersTopic from "./FiltersTopic";
 
 import filter from "../../lib/filter";
 
@@ -104,7 +104,7 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
           .topics()
           .filter((topic) => topic in filters)
           .map((topic) => (
-            <FilterTopic
+            <FiltersTopic
               key={`filter:${topic}`}
               topic={topic}
               filters={filters}

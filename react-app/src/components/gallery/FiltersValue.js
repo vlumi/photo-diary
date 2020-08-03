@@ -26,7 +26,7 @@ const Value = styled.div`
   padding: 0 5px;
 `;
 
-const FilterValue = ({
+const FiltersValue = ({
   topic,
   category,
   value,
@@ -88,7 +88,7 @@ const FilterValue = ({
     </ValueBox>
   );
 };
-FilterValue.propTypes = {
+FiltersValue.propTypes = {
   topic: PropTypes.string.isRequired,
   category: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
@@ -97,4 +97,4 @@ FilterValue.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default FilterValue;
+export default FiltersValue;

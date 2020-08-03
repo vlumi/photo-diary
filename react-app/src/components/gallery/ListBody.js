@@ -27,7 +27,7 @@ const ListBody = ({ galleries }) => {
       [`${gallery.theme()}-theme`]: gallery.hasTheme(),
     });
     return (
-      <Link gallery={gallery}>
+      <Link key={gallery.id()} gallery={gallery}>
         <div key={gallery.id()} className={className}>
           <h3>{gallery.title()}</h3>
           {renderIcon(gallery)}

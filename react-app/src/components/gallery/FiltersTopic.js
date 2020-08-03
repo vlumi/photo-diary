@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 
-import FilterCategory from "./FilterCategory";
+import FiltersCategory from "./FiltersCategory";
 
 import filter from "../../lib/filter";
 import stats from "../../lib/stats";
@@ -41,7 +41,7 @@ const NewCategoryGroup = styled.optgroup``;
 const NewCategory = styled.option``;
 const NewValue = styled.option``;
 
-const FilterTopic = ({
+const FiltersTopic = ({
   topic,
   filters,
   setFilters,
@@ -151,7 +151,7 @@ const FilterTopic = ({
         .categories(topic)
         .filter((category) => category in filters[topic])
         .map((category) => (
-          <FilterCategory
+          <FiltersCategory
             key={`filter:${topic}:${category}`}
             topic={topic}
             category={category}
@@ -166,7 +166,7 @@ const FilterTopic = ({
     </Root>
   );
 };
-FilterTopic.propTypes = {
+FiltersTopic.propTypes = {
   topic: PropTypes.string.isRequired,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
@@ -174,4 +174,4 @@ FilterTopic.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default FilterTopic;
+export default FiltersTopic;
