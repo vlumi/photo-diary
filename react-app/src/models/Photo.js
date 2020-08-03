@@ -57,26 +57,27 @@ const Photo = (photoData) => {
     exposureTime: () => photo.exposure.exposureTime,
     iso: () => photo.exposure.iso,
     exposureValue: () => {
-      if (!self.exposureTime()) {
+      if (!self.exposureTime() || !self.aperture()) {
         return undefined;
       }
-      // Round EV and LV to the closest half
-      const roundEv = (value) => Math.round(value * 2) / 2;
+      // Round the closest half
+      const round = (value) => Math.round(value * 2) / 2;
       const fullExposureValue = Math.log2(
         self.aperture() ** 2 / self.exposureTime()
       );
-      return roundEv(fullExposureValue);
+      return round(fullExposureValue);
     },
     lightValue: () => {
-      if (!self.exposureTime()) {
+      if (!self.exposureTime() || !self.aperture()) {
         return undefined;
       }
-      const roundEv = (value) => Math.round(value * 2) / 2;
+      // Round the closest half
+      const round = (value) => Math.round(value * 2) / 2;
       const fullExposureValue = Math.log2(
         self.aperture() ** 2 / self.exposureTime()
       );
       const fullLightValue = fullExposureValue + Math.log2(self.iso() / 100);
-      return roundEv(fullLightValue);
+      return round(fullLightValue);
     },
     resolution: () =>
       Math.round(
