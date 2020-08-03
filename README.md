@@ -52,6 +52,10 @@ TBD
   - Time distribution by year, year/month, month, weekday, hour
   - Gear distribution by camera make, camera, lens, camera/lens
   - Exposure distribution by focal length, aperture, shutter speed, sensitivity, EV, LV, resolution
+  - All distribution values can be used to filter the photos
+    - Filters apply to both gallery and statistics views
+    - Filter values within a single category are additive, photos matching any are included
+    - Filter values across categories are subtractive, photos only matching all are included
 - Admin view (TBD)
   - Add new photos
     - Pick up from upload directory on the server
@@ -87,15 +91,9 @@ TBD
     - Gallery scope
   - Default access level
     - Through guest user (:guest), inherited by all users
+    - Inheritance may be overridden by broadening or narrowing access
 
 ## Roadmap
-
-### Milestone 0.4
-
-- Front-end
-  - Photo metadata filters
-    - Gallery and statistics views
-    - Only include photos matching the filters
 
 ### Milestone 0.5
 
@@ -132,8 +130,28 @@ These features would be nice to have, but are too far into the future to put on 
     - Manage authorized galleries
     - Manage photos linked to only authorized galleries
     - Manage gallery/photo linking
+  - Photo property filter improvements
+    - Range filters for continuous variables: time, exposure values
+- Back-end
+  - Drivers for different DBs; PostgreSQL, MySQL/MariaDB, MongoDB, ...
 
 ## Version History
+
+### v0.4.0 (2020-08-03)
+
+- Photo property filters
+  - Filter the content by photo properties in any of the topics and categories of statistics
+    - General: author, country
+    - Time: year/month, year, month, weekday, hour
+    - Gear: camera make, camera, lens, camera/lens
+    - Exposure: focal length, aperture, shutter speed, sensitivity, EV, LV, resolution
+  - Filters within a category are additive, matching all photos that match any of them
+  - Filters across categories are subtractive, matching photos that match the filters in all categories
+  - Set filters apply in all views
+    - Gallery and statistics
+  - Filters can be added and cleared in all views
+    - Toolbar in all views
+    - Clicking on individual values on statistics tables
 
 ### v0.3.0 (2020-07-31)
 
