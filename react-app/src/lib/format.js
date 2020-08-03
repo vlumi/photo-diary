@@ -153,7 +153,10 @@ const categoryValue = (lang, t, countryData) => {
       case "lens":
         return identity;
       case "camera-lens":
-        return (cameraLens) => JSON.parse(cameraLens).join(" + ");
+        return (cameraLens) =>
+          JSON.parse(cameraLens)
+            .map((value) => (value ? value : t("stats-unknown")))
+            .join(" + ");
       case "focal-length":
         return formatExposure.focalLength;
       case "aperture":
@@ -197,9 +200,13 @@ const categorySorter = (keyField, valueField) => (category) => {
     case "weekday":
       return (a, b) => {
         const dowA =
-          a[keyField] < config.FIRST_WEEKDAY ? Number(a[keyField]) + 7 : a[keyField];
+          a[keyField] < config.FIRST_WEEKDAY
+            ? Number(a[keyField]) + 7
+            : a[keyField];
         const dowB =
-          b[keyField] < config.FIRST_WEEKDAY ? Number(b[keyField]) + 7 : b[keyField];
+          b[keyField] < config.FIRST_WEEKDAY
+            ? Number(b[keyField]) + 7
+            : b[keyField];
         return collection.compareWithNaN(dowA, dowB, () => dowA - dowB);
       };
     case "hour":

@@ -111,12 +111,16 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
       )
     );
   };
-  const renderRows = (category, table) => {
+  const renderRows = (topic, category, table) => {
     return table.map((value, i) => {
       const valueKey = stats.decodeTableRowKey(value.key);
       const key = `${topic.key}:${category.key}:${valueKey}`;
       // console.log("render row", category, valueKey, filters);
-      if (category in filters && valueKey in filters[category]) {
+      if (
+        topic in filters &&
+        category in filters[topic] &&
+        valueKey in filters[topic][category]
+      ) {
         return (
           <RowSelected key={key} onClick={handleClick} data-key={valueKey}>
             {renderColumns(value, i)}
@@ -172,7 +176,7 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
             </Header>
           ))}
         </HeaderRow>
-        {renderRows(category.key, category.table)}
+        {renderRows(topic.key, category.key, category.table)}
       </Block>
     </Root>
   );

@@ -16,9 +16,12 @@ const Root = styled.div`
   justify-content: flex-start;
 `;
 // TODO: design
-const FilterTitle = styled.h3`
-  text-align: left;
-  writing-mode: vertical-rl;
+const FilterTitle = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0 5px;
+  font-style: italic;
 `;
 const FilterContainer = styled.div`
   flex-grow: 1;

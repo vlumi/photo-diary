@@ -14,7 +14,7 @@ const Box = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 2px 5px;
-  margin: 0 5px;
+  margin: 1px 2px;
   border-radius: 10px;
   cursor: pointer;
 `;
