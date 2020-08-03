@@ -383,7 +383,7 @@ const collectTopics = (data, lang, t, countryData) => {
           average: formatNumber.twoDecimal(
             entry.value / daysInYearMonth[year][month]
           ),
-          standardScore: (entry.value - mean) / stddev,
+          standardScore: ((entry.value / daysInYearMonth[year][month]) - mean) / stddev,
         };
       }),
     };
