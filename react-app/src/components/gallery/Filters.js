@@ -2,7 +2,11 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { useTranslation } from "react-i18next";
-import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
+import {
+  BsFillFunnelFill,
+  BsFillXCircleFill,
+  BsFillPlusCircleFill,
+} from "react-icons/bs";
 
 import FiltersTopic from "./FiltersTopic";
 
@@ -103,7 +107,9 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
 
   return (
     <Root>
-      <FilterTitle>{t("stats-filters")}</FilterTitle>
+      <FilterTitle>
+        <BsFillFunnelFill />
+      </FilterTitle>
       <FilterContainer>
         {filter
           .topics()
