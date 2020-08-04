@@ -1,6 +1,6 @@
 import format from "../lib/format";
 
-const Photo = (photoData) => {
+const PhotoModel = (photoData) => {
   const importPhotoData = (photoData) => {
     if (
       !photoData ||
@@ -259,4 +259,4 @@ const Photo = (photoData) => {
   };
   return self;
 };
-export default Photo;
+export default PhotoModel;
