@@ -120,7 +120,7 @@ const gear = (make, model) => {
   return [make, model].join(" ");
 };
 const coordinates = (latitude, longitude) => {
-  return new GeoCoord(latitude, longitude).toString();
+  return new GeoCoord(latitude, longitude).roundToSeconds().toString();
 };
 const categoryValue = (lang, t, countryData) => {
   const formatExposure = exposure(lang);
