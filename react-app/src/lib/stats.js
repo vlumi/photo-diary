@@ -998,9 +998,12 @@ const collectStatistics = (photos, unknownLabel) => {
       byTime: {
         byYear: {},
         byYearMonth: {},
-        byMonth: {},
-        byWeekday: {},
-        byHour: {},
+        byMonth: collection.objectFromArray(
+          [...Array(12).keys()].map((month) => month + 1),
+          0
+        ),
+        byWeekday: collection.objectFromArray([...Array(7).keys()], 0),
+        byHour: collection.objectFromArray([...Array(24).keys()], 0),
         daysInYear: 0,
         daysInYearMonth: {},
       },
@@ -1104,31 +1107,19 @@ const updateTimeDistribution = (byTime, year, month, day, weekday, hour) => {
     };
   }
 
-  byTime.byYear = byTime.byYear || {};
   byTime.byYear[year] = byTime.byYear[year] || 0;
   byTime.byYear[year]++;
 
-  byTime.byYearMonth = byTime.byYearMonth || {};
   byTime.byYearMonth[year] = byTime.byYearMonth[year] || {};
   byTime.byYearMonth[year][month] = byTime.byYearMonth[year][month] || 0;
   byTime.byYearMonth[year][month]++;
 
-  byTime.byMonth =
-    byTime.byMonth ||
-    collection.objectFromArray(
-      [...Array(12).keys()].map((month) => month + 1),
-      0
-    );
   byTime.byMonth[month] = byTime.byMonth[month] || 0;
   byTime.byMonth[month]++;
 
-  byTime.byWeekday =
-    byTime.byWeekday || collection.objectFromArray([...Array(7).keys()], 0);
   byTime.byWeekday[weekday] = byTime.byWeekday[weekday] || 0;
   byTime.byWeekday[weekday]++;
 
-  byTime.byHour =
-    byTime.byHour || collection.objectFromArray([...Array(24).keys()], 0);
   byTime.byHour[hour] = byTime.byHour[hour] || 0;
   byTime.byHour[hour]++;
 
