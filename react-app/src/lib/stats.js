@@ -383,7 +383,8 @@ const collectTopics = (data, lang, t, countryData) => {
           average: formatNumber.twoDecimal(
             entry.value / daysInYearMonth[year][month]
           ),
-          standardScore: ((entry.value / daysInYearMonth[year][month]) - mean) / stddev,
+          standardScore:
+            (entry.value / daysInYearMonth[year][month] - mean) / stddev,
         };
       }),
     };
@@ -393,7 +394,9 @@ const collectTopics = (data, lang, t, countryData) => {
       original: byYear,
       comparator: collection.numSortByFieldAsc("key"),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry) => {
+      return entry.value / daysInYear[entry.key];
+    });
     const mean = math.mean(values);
     const stddev = math.std(values);
     return {
@@ -418,7 +421,7 @@ const collectTopics = (data, lang, t, countryData) => {
           average: t("stats-per-day", {
             count: formatNumber.twoDecimal(entry.value / daysInYear[entry.key]),
           }),
-          standardScore: (entry.value - mean) / stddev,
+          standardScore: (entry.value / daysInYear[entry.key] - mean) / stddev,
         };
       }),
     };
