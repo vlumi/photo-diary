@@ -4,7 +4,7 @@ import styled from "styled-components";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
-  BsFillGrid3X3GapFill,
+  BsFillCalendarFill,
   BsCaretRightFill,
   BsSkipForwardFill,
 } from "react-icons/bs";
@@ -53,7 +53,7 @@ const MonthNav = ({ gallery, year, month }) => {
       </NavLink>
       <Link gallery={gallery} year={year}>
         <TitleContainer>
-          <BsFillGrid3X3GapFill />
+          <BsFillCalendarFill />
           <Title>
             <FormatDate year={year} month={month} />
           </Title>

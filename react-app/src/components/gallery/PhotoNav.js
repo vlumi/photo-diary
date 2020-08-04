@@ -4,7 +4,7 @@ import styled from "styled-components";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
-  BsFillGrid3X3GapFill,
+  BsFillCalendarFill,
   BsCaretRightFill,
   BsSkipForwardFill,
 } from "react-icons/bs";
@@ -53,7 +53,7 @@ const PhotoNav = ({ gallery, year, month, day, photo }) => {
       </NavLink>
       <Link gallery={gallery} year={year} month={month}>
         <TitleContainer>
-          <BsFillGrid3X3GapFill />
+          <BsFillCalendarFill />
           <Title>#{photo ? photo.index() + 1 : ""}</Title>
         </TitleContainer>
       </Link>
