@@ -3,7 +3,7 @@ import format from "../lib/format";
 import collection from "../lib/collection";
 import config from "../lib/config";
 
-const Gallery = (galleryData) => {
+const GalleryModel = (galleryData) => {
   const importGalleryData = (galleryData) => {
     // TODO: validate
     if (galleryData.epoch) {
@@ -35,7 +35,7 @@ const Gallery = (galleryData) => {
 
   const self = {
     withPhotos: (photos) => {
-      return Gallery({ ...galleryData, photos });
+      return GalleryModel({ ...galleryData, photos });
     },
     id: () => gallery.id,
     isSpecial: () => gallery.id.startsWith(":"),
@@ -465,4 +465,4 @@ const Gallery = (galleryData) => {
   return self;
 };
 
-export default Gallery;
+export default GalleryModel;

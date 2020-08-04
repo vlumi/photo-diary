@@ -1,5 +1,5 @@
 import stats from "./stats";
-import PhotoModel from "../models/photo";
+import PhotoModel from "../models/PhotoModel";
 
 describe("decodeTableRowKey", () => {
   test("Number value", () =>

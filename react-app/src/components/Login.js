@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import jwt from "jsonwebtoken";
 
-import User from "../models/User";
+import UserModel from "../models/UserModel";
 
 import tokenService from "../services/tokens";
 
@@ -16,7 +16,7 @@ const Login = ({ setUser }) => {
     try {
       const response = await tokenService.login(userId, password);
       const rawToken = response.data.token;
-      const user = User(jwt.decode(rawToken), rawToken);
+      const user = UserModel(jwt.decode(rawToken), rawToken);
 
       token.setToken(rawToken);
       window.localStorage.setItem("user", user.toJson());

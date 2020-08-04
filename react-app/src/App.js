@@ -11,9 +11,10 @@ import { useTranslation } from "react-i18next";
 import "./themes.css";
 import "./App.css";
 
-import User from "./models/User";
 import TopMenu from "./components/TopMenu";
 import Top from "./components/gallery/Top";
+
+import UserModel from "./models/UserModel";
 
 import config from "./lib/config";
 import token from "./lib/token";
@@ -53,7 +54,7 @@ const App = () => {
   if (!user) {
     const storedUserJson = window.localStorage.getItem("user");
     if (storedUserJson) {
-      const storedUser = User(JSON.parse(storedUserJson));
+      const storedUser = UserModel(JSON.parse(storedUserJson));
       token.setToken(storedUser.token());
       setUser(storedUser);
     }

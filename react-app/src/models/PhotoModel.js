@@ -2,11 +2,29 @@ import format from "../lib/format";
 
 const Photo = (photoData) => {
   const importPhotoData = (photoData) => {
-    // TODO: validate
+    if (
+      !photoData ||
+      !photoData.id ||
+      !Number.isInteger(photoData.index) ||
+      !("taken" in photoData) ||
+      !("instant" in photoData.taken) ||
+      !photoData.taken.instant.year ||
+      !photoData.taken.instant.month ||
+      !photoData.taken.instant.day ||
+      !("dimensions" in photoData) ||
+      !("original" in photoData.dimensions) ||
+      !("display" in photoData.dimensions) ||
+      !("thumbnail" in photoData.dimensions)
+    ) {
+      return undefined;
+    }
     return photoData;
   };
 
   const photo = importPhotoData(photoData);
+  if (!photo) {
+    return undefined;
+  }
 
   const self = {
     id: () => photo.id,
@@ -14,6 +32,7 @@ const Photo = (photoData) => {
     title: () => photo.title,
     description: () => photo.description,
     author: () => photo.taken.author,
+
     ymd: () => [self.year(), self.month(), self.day()],
     year: () => photo.taken.instant.year,
     month: () => photo.taken.instant.month,
@@ -27,11 +46,6 @@ const Photo = (photoData) => {
     hour: () => photo.taken.instant.hour,
     minute: () => photo.taken.instant.minute,
     second: () => photo.taken.instant.second,
-    thumbnailDimensions: () => {
-      return { ...photo.dimensions.thumbnail };
-    },
-    ratio: () =>
-      photo.dimensions.display.width / photo.dimensions.display.height,
     formatDate: () => {
       return format.date({
         year: photo.taken.instant.year,
@@ -52,29 +66,36 @@ const Photo = (photoData) => {
       });
       return `${ymd} ${hms}`;
     },
+
+    thumbnailDimensions: () => {
+      return { ...photo.dimensions.thumbnail };
+    },
+    ratio: () =>
+      photo.dimensions.display.width / photo.dimensions.display.height,
+
     focalLength: () => photo.exposure.focalLength,
     aperture: () => photo.exposure.aperture,
     exposureTime: () => photo.exposure.exposureTime,
     iso: () => photo.exposure.iso,
     exposureValue: () => {
-      if (!self.exposureTime() || !self.aperture()) {
+      if (!photo.exposure.aperture || !photo.exposure.exposureTime) {
         return undefined;
       }
       // Round the closest half
       const round = (value) => Math.round(value * 2) / 2;
       const fullExposureValue = Math.log2(
-        self.aperture() ** 2 / self.exposureTime()
+        photo.exposure.aperture ** 2 / photo.exposure.exposureTime
       );
       return round(fullExposureValue);
     },
     lightValue: () => {
-      if (!self.exposureTime() || !self.aperture()) {
+      if (!photo.exposure.aperture || !photo.exposure.exposureTime) {
         return undefined;
       }
       // Round the closest half
       const round = (value) => Math.round(value * 2) / 2;
       const fullExposureValue = Math.log2(
-        self.aperture() ** 2 / self.exposureTime()
+        photo.exposure.aperture ** 2 / photo.exposure.exposureTime
       );
       const fullLightValue = fullExposureValue + Math.log2(self.iso() / 100);
       return round(fullLightValue);
@@ -84,15 +105,14 @@ const Photo = (photoData) => {
         (photo.dimensions.original.width * photo.dimensions.original.height) /
           10 ** 6
       ),
+
     cameraMake: () => photo.camera.make,
     hasCamera: () =>
-      photo &&
       "camera" in photo &&
       (("make" in photo.camera && photo.camera.make) ||
         ("model" in photo.camera && photo.camera.model)),
     formatCamera: () => format.gear(photo.camera.make, photo.camera.model),
     hasLens: () =>
-      photo &&
       "lens" in photo &&
       (("make" in photo.lens && photo.lens.make) ||
         ("model" in photo.lens && photo.lens.model)),
@@ -102,8 +122,8 @@ const Photo = (photoData) => {
       const lens = self.formatLens();
       return [camera, lens].filter(Boolean).join(" + ");
     },
+
     hasCountry: () =>
-      photo &&
       "taken" in photo &&
       "location" in photo.taken &&
       "country" in photo.taken.location &&
@@ -114,14 +134,12 @@ const Photo = (photoData) => {
         ? format.countryName(lang, countryData)(self.countryCode())
         : "",
     hasPlace: () =>
-      photo &&
       "taken" in photo &&
       "location" in photo.taken &&
       "place" in photo.taken.location &&
       photo.taken.location.place,
     place: () => photo.taken.location.place,
     hasCoordinates: () =>
-      photo &&
       "taken" in photo &&
       "location" in photo.taken &&
       "coordinates" in photo.taken.location &&
@@ -151,11 +169,13 @@ const Photo = (photoData) => {
         photo.taken.location.coordinates.longitude
       );
     },
+
     path: (gallery) => {
       const parts = [gallery.path(...self.ymd())];
       parts.push(photo.id);
       return parts.join("/");
     },
+
     matches: (category, value) => {
       switch (category) {
         case "author":

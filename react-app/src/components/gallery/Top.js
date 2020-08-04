@@ -17,8 +17,8 @@ import Month from "./Month";
 import Day from "./Day";
 import Photo from "./Photo";
 
-import GalleryModel from "../../models/Gallery";
-import PhotoModel from "../../models/Photo";
+import GalleryModel from "../../models/GalleryModel";
+import PhotoModel from "../../models/PhotoModel";
 
 import collection from "../../lib/collection";
 import config from "../../lib/config";
@@ -65,7 +65,12 @@ const Top = ({ user, lang, countryData, isStats = false }) => {
     }
     galleryPhotosService
       .get(galleryId)
-      .then((photos) => setPhotos(photos.map((photo) => PhotoModel(photo))))
+      .then((photos) => {
+        const mappedPhotos = photos
+          .map((photo) => PhotoModel(photo))
+          .filter((photo) => !!photo);
+        setPhotos(mappedPhotos);
+      })
       .catch((error) => setError(error.message));
   }, [galleryId, user]);
   React.useEffect(() => {

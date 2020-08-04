@@ -1,4 +1,4 @@
-const User = (userData, token) => {
+const UserModel = (userData, token) => {
   const importUserData = (userData, token) => {
     if (!userData || !("id" in userData) || !userData.id) {
       throw new Error("Invalid user");
@@ -20,4 +20,4 @@ const User = (userData, token) => {
   return self;
 };
 
-export default User;
+export default UserModel;
