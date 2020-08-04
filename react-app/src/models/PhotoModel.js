@@ -6,6 +6,7 @@ const PhotoModel = (photoData) => {
       !photoData ||
       !photoData.id ||
       !Number.isInteger(photoData.index) ||
+      photoData.index < 0 ||
       !("taken" in photoData) ||
       !("instant" in photoData.taken) ||
       !photoData.taken.instant.year ||
@@ -108,14 +109,18 @@ const PhotoModel = (photoData) => {
 
     cameraMake: () => photo.camera.make,
     hasCamera: () =>
-      "camera" in photo &&
-      (("make" in photo.camera && photo.camera.make) ||
-        ("model" in photo.camera && photo.camera.model)),
+      !!(
+        "camera" in photo &&
+        (("make" in photo.camera && photo.camera.make) ||
+          ("model" in photo.camera && photo.camera.model))
+      ),
     formatCamera: () => format.gear(photo.camera.make, photo.camera.model),
     hasLens: () =>
-      "lens" in photo &&
-      (("make" in photo.lens && photo.lens.make) ||
-        ("model" in photo.lens && photo.lens.model)),
+      !!(
+        "lens" in photo &&
+        (("make" in photo.lens && photo.lens.make) ||
+          ("model" in photo.lens && photo.lens.model))
+      ),
     formatLens: () => format.gear(photo.lens.make, photo.lens.model),
     formatGear: () => {
       const camera = self.formatCamera();
@@ -124,29 +129,35 @@ const PhotoModel = (photoData) => {
     },
 
     hasCountry: () =>
-      "taken" in photo &&
-      "location" in photo.taken &&
-      "country" in photo.taken.location &&
-      photo.taken.location.country,
+      !!(
+        "taken" in photo &&
+        "location" in photo.taken &&
+        "country" in photo.taken.location &&
+        photo.taken.location.country
+      ),
     countryCode: () => photo.taken.location.country,
     countryName: (lang, countryData) =>
       self.hasCountry()
         ? format.countryName(lang, countryData)(self.countryCode())
         : "",
     hasPlace: () =>
-      "taken" in photo &&
-      "location" in photo.taken &&
-      "place" in photo.taken.location &&
-      photo.taken.location.place,
+      !!(
+        "taken" in photo &&
+        "location" in photo.taken &&
+        "place" in photo.taken.location &&
+        photo.taken.location.place
+      ),
     place: () => photo.taken.location.place,
     hasCoordinates: () =>
-      "taken" in photo &&
-      "location" in photo.taken &&
-      "coordinates" in photo.taken.location &&
-      "latitude" in photo.taken.location.coordinates &&
-      "longitude" in photo.taken.location.coordinates &&
-      photo.taken.location.coordinates.latitude &&
-      photo.taken.location.coordinates.longitude,
+      !!(
+        "taken" in photo &&
+        "location" in photo.taken &&
+        "coordinates" in photo.taken.location &&
+        "latitude" in photo.taken.location.coordinates &&
+        "longitude" in photo.taken.location.coordinates &&
+        photo.taken.location.coordinates.latitude &&
+        photo.taken.location.coordinates.longitude
+      ),
     coordinates: () => [self.latitude(), self.longitude()],
     latitude: () => {
       if (!self.hasCoordinates()) {
