@@ -45,11 +45,11 @@ const date = ({ year, month, day, separator = "-" }) => {
 };
 const time = ({ hour, minute, second, separator = ":" }) => {
   const parts = [];
-  if (hour) {
+  if (!isNaN(hour)) {
     parts.push(padNumber(hour, 2));
-    if (minute) {
+    if (!isNaN(minute)) {
       parts.push(padNumber(minute, 2));
-      if (second) {
+      if (!isNaN(second)) {
         parts.push(padNumber(second, 2));
       }
     }

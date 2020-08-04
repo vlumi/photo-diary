@@ -81,6 +81,10 @@ describe("time", () => {
     expect(
       format.time({ hour: 10, minute: 51, second: 13, separator: "." })
     ).toBe("10.51.13"));
+  test("10.00.00", () =>
+    expect(
+      format.time({ hour: 10, minute: 0, second: 0, separator: "." })
+    ).toBe("10.00.00"));
 });
 describe("dayOfWeek", () => {
   test("Monday", () => expect(format.dayOfWeek(1)).toBe("mon"));
