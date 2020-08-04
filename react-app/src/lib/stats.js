@@ -1004,7 +1004,7 @@ const collectStatistics = (photos, unknownLabel) => {
         ),
         byWeekday: collection.objectFromArray([...Array(7).keys()], 0),
         byHour: collection.objectFromArray([...Array(24).keys()], 0),
-        daysInYear: 0,
+        daysInYear: {},
         daysInYearMonth: {},
       },
       byExposure: {},
@@ -1163,20 +1163,17 @@ const updateExposureDistribution = (byExposure, photo, unknownLabel) => {
   byExposure.byIso[iso] = byExposure.byIso[iso] || 0;
   byExposure.byIso[iso]++;
 
-  if (exposureTime) {
-    const exposureValue = Number(photo.exposureValue()) || unknownLabel;
-    byExposure.byExposureValue = byExposure.byExposureValue || {};
-    byExposure.byExposureValue[exposureValue] =
-      byExposure.byExposureValue[exposureValue] || 0;
-    byExposure.byExposureValue[exposureValue]++;
+  const exposureValue = Number(photo.exposureValue()) || unknownLabel;
+  byExposure.byExposureValue = byExposure.byExposureValue || {};
+  byExposure.byExposureValue[exposureValue] =
+    byExposure.byExposureValue[exposureValue] || 0;
+  byExposure.byExposureValue[exposureValue]++;
 
-    // LV = EV at ISO 100
-    const lightValue = Number(photo.lightValue()) || unknownLabel;
-    byExposure.byLightValue = byExposure.byLightValue || {};
-    byExposure.byLightValue[lightValue] =
-      byExposure.byLightValue[lightValue] || 0;
-    byExposure.byLightValue[lightValue]++;
-  }
+  const lightValue = Number(photo.lightValue()) || unknownLabel;
+  byExposure.byLightValue = byExposure.byLightValue || {};
+  byExposure.byLightValue[lightValue] =
+    byExposure.byLightValue[lightValue] || 0;
+  byExposure.byLightValue[lightValue]++;
 
   const resolution = Number(photo.resolution()) || unknownLabel;
   byExposure.byResolution = byExposure.byResolution || {};
@@ -1243,58 +1240,55 @@ const calculateNumberOfDays = (byTime) => {
     false: [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
   };
 
-  if (byTime.minDate && byTime.maxDate) {
-    const minYear = byTime.minDate.year;
-    const maxYear = byTime.maxDate.year;
-    byTime.daysInYear = byTime.daysInYear || {};
-    byTime.daysInYear[minYear] = 0;
-    byTime.daysInYearMonth = byTime.daysInYearMonth || {};
-    byTime.daysInYearMonth[minYear] = {};
+  const minYear = byTime.minDate.year;
+  const maxYear = byTime.maxDate.year;
+  byTime.daysInYear[minYear] = 0;
+  byTime.daysInYearMonth[minYear] = {};
 
-    const maxMonth = minYear === maxYear ? byTime.maxDate.month : 12;
-    for (let m = byTime.minDate.month; m <= maxMonth; m++) {
-      byTime.byYearMonth[minYear][m] = byTime.byYearMonth[minYear][m] || 0;
-      if (minYear === maxYear && byTime.minDate.month === maxMonth) {
-        byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
-          byTime.maxDate.day - byTime.minDate.day + 1;
-      } else if (m === byTime.minDate.month) {
-        byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
-          MONTH_LENGTH[isLeap(minYear)][m] - byTime.minDate.day + 1;
-      } else {
-        byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
-          MONTH_LENGTH[isLeap(minYear)][m];
-      }
-    }
-
-    for (let y = minYear + 1; y < maxYear; y++) {
-      const leap = isLeap(y);
-      byTime.byYear[y] = byTime.byYear[y] || 0;
-      byTime.daysInYear[y] = leap ? 366 : 365;
-
-      byTime.byYearMonth[y] = byTime.byYearMonth[y] || {};
-      byTime.daysInYearMonth[y] = {};
-      for (let m = 1; m <= 12; m++) {
-        byTime.byYearMonth[y][m] = byTime.byYearMonth[y][m] || 0;
-        byTime.daysInYearMonth[y][m] = MONTH_LENGTH[leap][m];
-      }
-    }
-
-    byTime.daysInYear[maxYear] = 0;
-    byTime.daysInYearMonth[maxYear] = {};
-    const minMonth = minYear === maxYear ? byTime.minDate.month : 1;
-    for (let m = minMonth; m <= byTime.maxDate.month; m++) {
-      byTime.byYearMonth[maxYear][m] = byTime.byYearMonth[maxYear][m] || 0;
-      if (minYear === maxYear && minMonth === byTime.maxDate.month) {
-        byTime.daysInYear[maxYear] += byTime.daysInYearMonth[maxYear][m] =
-          byTime.maxDate.day - byTime.minDate.day + 1;
-      } else if (m === byTime.maxDate.month) {
-        byTime.daysInYear[maxYear] += byTime.daysInYearMonth[maxYear][m] =
-          byTime.maxDate.day;
-      } else {
-        byTime.daysInYear[maxYear] += byTime.daysInYearMonth[maxYear][m] =
-          MONTH_LENGTH[isLeap(maxYear)][m];
-      }
+  const maxMonth = minYear === maxYear ? byTime.maxDate.month : 12;
+  for (let m = byTime.minDate.month; m <= maxMonth; m++) {
+    byTime.byYearMonth[minYear][m] = byTime.byYearMonth[minYear][m] || 0;
+    if (minYear === maxYear && byTime.minDate.month === maxMonth) {
+      byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
+        byTime.maxDate.day - byTime.minDate.day + 1;
+    } else if (m === byTime.minDate.month) {
+      byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
+        MONTH_LENGTH[isLeap(minYear)][m] - byTime.minDate.day + 1;
+    } else {
+      byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
+        MONTH_LENGTH[isLeap(minYear)][m];
     }
   }
+
+  for (let y = minYear + 1; y < maxYear; y++) {
+    const leap = isLeap(y);
+    byTime.byYear[y] = byTime.byYear[y] || 0;
+    byTime.daysInYear[y] = leap ? 366 : 365;
+
+    byTime.byYearMonth[y] = byTime.byYearMonth[y] || {};
+    byTime.daysInYearMonth[y] = {};
+    for (let m = 1; m <= 12; m++) {
+      byTime.byYearMonth[y][m] = byTime.byYearMonth[y][m] || 0;
+      byTime.daysInYearMonth[y][m] = MONTH_LENGTH[leap][m];
+    }
+  }
+
+  byTime.daysInYear[maxYear] = 0;
+  byTime.daysInYearMonth[maxYear] = {};
+  const minMonth = minYear === maxYear ? byTime.minDate.month : 1;
+  for (let m = minMonth; m <= byTime.maxDate.month; m++) {
+    byTime.byYearMonth[maxYear][m] = byTime.byYearMonth[maxYear][m] || 0;
+    if (minYear === maxYear && minMonth === byTime.maxDate.month) {
+      byTime.daysInYear[maxYear] += byTime.daysInYearMonth[maxYear][m] =
+        byTime.maxDate.day - byTime.minDate.day + 1;
+    } else if (m === byTime.maxDate.month) {
+      byTime.daysInYear[maxYear] += byTime.daysInYearMonth[maxYear][m] =
+        byTime.maxDate.day;
+    } else {
+      byTime.daysInYear[maxYear] += byTime.daysInYearMonth[maxYear][m] =
+        MONTH_LENGTH[isLeap(maxYear)][m];
+    }
+  }
+
   byTime.days = Object.values(byTime.daysInYear).reduce((a, b) => a + b, 0);
 };
