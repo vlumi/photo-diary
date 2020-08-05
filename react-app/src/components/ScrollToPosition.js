@@ -11,7 +11,7 @@ const ScrollToPosition = ({ history, children, scrollState }) => {
     return () => {
       unlisten();
     };
-  }, [history]);
+  }, [history, scrollState]);
 
   return <Fragment>{children}</Fragment>;
 };

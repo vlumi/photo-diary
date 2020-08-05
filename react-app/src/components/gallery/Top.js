@@ -36,16 +36,15 @@ const Top = ({ user, lang, countryData, isStats = false, scrollState }) => {
 
   const { t } = useTranslation();
 
-  const handleScroll = () => {
-    scrollState.set(window.location.pathname, window.pageYOffset);
-  };
-
   React.useEffect(() => {
+    const handleScroll = () => {
+      scrollState.set(window.location.pathname, window.pageYOffset);
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [scrollState]);
 
   const context = isStats ? "stats" : "gallery";
 
