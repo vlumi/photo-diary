@@ -23,10 +23,10 @@ import PhotoModel from "../../models/PhotoModel";
 import collection from "../../lib/collection";
 import config from "../../lib/config";
 import format from "../../lib/format";
-import statsx from "../../lib/stats";
+import stats from "../../lib/stats";
 import theme from "../../lib/theme";
 
-const Top = ({ user, lang, countryData, isStats = false }) => {
+const Top = ({ user, lang, countryData, isStats = false, scrollState }) => {
   const [galleries, setGalleries] = React.useState(undefined);
   const [gallery, setGallery] = React.useState(undefined);
   const [photos, setPhotos] = React.useState(undefined);
@@ -35,6 +35,17 @@ const Top = ({ user, lang, countryData, isStats = false }) => {
   const [error, setError] = React.useState("");
 
   const { t } = useTranslation();
+
+  const handleScroll = () => {
+    scrollState.set(window.location.pathname, window.pageYOffset);
+  };
+
+  React.useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const context = isStats ? "stats" : "gallery";
 
@@ -89,7 +100,7 @@ const Top = ({ user, lang, countryData, isStats = false }) => {
         newUniqueValues[topic][category] = [...newUniqueValues[topic][category]]
           .map((value) => {
             return {
-              key: value || statsx.UNKNOWN,
+              key: value || stats.UNKNOWN,
               value: !value
                 ? t("stats-unknown")
                 : categoryValueFormatter(category)(value),
@@ -308,5 +319,6 @@ Top.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
   isStats: PropTypes.bool,
+  scrollState: PropTypes.object.isRequired,
 };
 export default Top;

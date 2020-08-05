@@ -11,12 +11,14 @@ import { useTranslation } from "react-i18next";
 import "./themes.css";
 import "./App.css";
 
+import ScrollToPosition from "./components/ScrollToPosition";
 import TopMenu from "./components/TopMenu";
 import Top from "./components/gallery/Top";
 
 import UserModel from "./models/UserModel";
 
 import config from "./lib/config";
+import scroll from "./lib/scroll";
 import token from "./lib/token";
 
 const registerCountryData = (lang) => {
@@ -38,6 +40,8 @@ const App = () => {
   const [countryData, setCountryData] = React.useState(
     registerCountryData(lang)
   );
+
+  const scrollState = scroll();
 
   const { i18n } = useTranslation();
   i18n.on("languageChanged", (lang) => {
@@ -68,31 +72,48 @@ const App = () => {
       </Helmet>
       <TopMenu user={user} setUser={setUser} lang={lang} />
       <Router>
-        <Switch>
-          <Route path="/g/:galleryId/stats">
-            <Top
-              user={user}
-              lang={lang}
-              countryData={countryData}
-              isStats={true}
-            />
-          </Route>
-          <Route path="/g/:galleryId/:year/:month/:day/:photoId">
-            <Top user={user} lang={lang} countryData={countryData} />
-          </Route>
-          <Route path="/g/:galleryId/:year?/:month?/:day?">
-            <Top user={user} lang={lang} countryData={countryData} />
-          </Route>
-          <Route path="/g">
-            <Top user={user} lang={lang} countryData={countryData} />
-          </Route>
-          <Route path="/">
-            <Redirect to="/g" />
-          </Route>
-        </Switch>
+        <ScrollToPosition scrollState={scrollState}>
+          <Switch>
+            <Route path="/g/:galleryId/stats">
+              <Top
+                user={user}
+                lang={lang}
+                countryData={countryData}
+                isStats={true}
+                scrollState={scrollState}
+              />
+            </Route>
+            <Route path="/g/:galleryId/:year/:month/:day/:photoId">
+              <Top
+                user={user}
+                lang={lang}
+                countryData={countryData}
+                scrollState={scrollState}
+              />
+            </Route>
+            <Route path="/g/:galleryId/:year?/:month?/:day?">
+              <Top
+                user={user}
+                lang={lang}
+                countryData={countryData}
+                scrollState={scrollState}
+              />
+            </Route>
+            <Route path="/g">
+              <Top
+                user={user}
+                lang={lang}
+                countryData={countryData}
+                scrollState={scrollState}
+              />
+            </Route>
+            <Route path="/">
+              <Redirect to="/g" />
+            </Route>
+          </Switch>
+        </ScrollToPosition>
       </Router>
     </>
   );
 };
-
 export default App;
