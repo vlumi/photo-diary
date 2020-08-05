@@ -39,6 +39,12 @@ describe("compareArrays()", () => {
     expect(collection.compareArrays([1], [1, 1])).toBe(-1));
   test("[1,1] > [1]", () =>
     expect(collection.compareArrays([1, 1], [1])).toBe(1));
+  test("[1] > [NaN]", () =>
+    expect(collection.compareArrays([1], [undefined])).toBe(-1));
+  test("[NaN] < [1]", () =>
+    expect(collection.compareArrays([undefined], [1])).toBe(1));
+  test("[NaN] === [NaN]", () =>
+    expect(collection.compareArrays([undefined], [undefined])).toBe(0));
 });
 describe("transformObjectKeys()", () => {
   const transformer = (key, value) => {

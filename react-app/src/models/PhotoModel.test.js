@@ -101,7 +101,7 @@ describe("Constructor", () => {
 });
 describe("With samples", () => {
   let samples;
-  beforeEach(() => {
+  beforeAll(() => {
     samples = {
       "empty.jpg": PhotoModel({
         id: "empty.jpg",
@@ -110,7 +110,7 @@ describe("With samples", () => {
         description: "",
         taken: {
           instant: {
-            timestamp: "2020-01-01 13:00:15",
+            timestamp: "2019-01-01 13:00:15",
             year: 2019,
             month: 1,
             day: 1,
@@ -146,7 +146,7 @@ describe("With samples", () => {
         description: "Some description",
         taken: {
           instant: {
-            timestamp: "2020-01-01 14:01:16",
+            timestamp: "2020-02-29 14:01:16",
             year: 2020,
             month: 2,
             day: 29,

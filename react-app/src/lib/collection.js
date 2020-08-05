@@ -10,6 +10,13 @@ const joinTruthyKeys = (map, separator = " ") =>
     .filter((key) => map[key])
     .join(separator);
 
+const compareWithNaN = (a, b, f) => {
+  if (isNaN(a) && isNaN(b)) return 0;
+  if (isNaN(a)) return 1;
+  if (isNaN(b)) return -1;
+  return f(a, b);
+};
+
 /**
  * Compare two arrays' contents, assuming numeric content.
  *
@@ -39,11 +46,17 @@ const compareArrays = (a, b) => {
     if (b.length <= i) {
       return 1;
     }
-    if (a[i] > b[i]) {
-      return 1;
-    }
-    if (a[i] < b[i]) {
-      return -1;
+    const result = compareWithNaN(a[i], b[i], (a, b) => {
+      if (a > b) {
+        return 1;
+      }
+      if (a < b) {
+        return -1;
+      }
+      return 0;
+    });
+    if (result !== 0) {
+      return result;
     }
   }
   return 0;
@@ -209,13 +222,6 @@ const mergeObjects = (merger) => (a, b) => {
       return [key, mergeObjects(merger)(a[key], b[key])];
     })
   );
-};
-
-const compareWithNaN = (a, b, f) => {
-  if (isNaN(a) && isNaN(b)) return 0;
-  if (isNaN(a)) return 1;
-  if (isNaN(b)) return -1;
-  return f();
 };
 
 /**

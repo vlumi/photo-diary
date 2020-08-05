@@ -6,6 +6,9 @@ import config from "../lib/config";
 const GalleryModel = (galleryData) => {
   const importGalleryData = (galleryData) => {
     // TODO: validate
+    if (!galleryData || !galleryData.id) {
+      return undefined;
+    }
     if (galleryData.epoch) {
       galleryData.epoch = new Date(galleryData.epoch);
     }
@@ -31,6 +34,10 @@ const GalleryModel = (galleryData) => {
   };
 
   const gallery = importGalleryData(galleryData);
+  if (!gallery) {
+    return undefined;
+  }
+
   const [photos, photosByYmd] = importPhotos(gallery.photos || []);
 
   const self = {
@@ -42,19 +49,22 @@ const GalleryModel = (galleryData) => {
     title: (year, month, day, photo) => {
       const ymd = format.date({ year, month, day });
       if (!ymd) {
-        return gallery.title;
+        return gallery.title || "";
       }
       if (!photo) {
-        return `${ymd} — ${gallery.title}`;
+        return `${ymd} — ${gallery.title || ""}`;
       }
-      return `#${photo.index() + 1} — ${ymd} — ${gallery.title}`;
+      return `#${photo.index() + 1} — ${ymd} — ${gallery.title || ""}`;
     },
     description: () => gallery.description || "",
-    hasIcon: () => gallery && "icon" in gallery && gallery.icon,
+    hasIcon: () => !!("icon" in gallery && gallery.icon),
     icon: () => gallery.icon || "",
-    hasEpoch: () => gallery && "epoch" in gallery && gallery.epoch,
+    hasEpoch: () => !!("epoch" in gallery && gallery.epoch),
     epoch: () => gallery.epoch,
     epochYmd: () => {
+      if (!gallery.epoch) {
+        return undefined;
+      }
       return [
         gallery.epoch.getFullYear(),
         gallery.epoch.getMonth() + 1,
@@ -62,7 +72,7 @@ const GalleryModel = (galleryData) => {
       ];
     },
     epochType: () => gallery.epochType,
-    hasTheme: () => gallery && "theme" in gallery && gallery.theme,
+    hasTheme: () => !!(gallery && "theme" in gallery && gallery.theme),
     theme: () => gallery.theme,
     matchesHostname: (hostname) => {
       if (!gallery.hostname) {
@@ -83,9 +93,6 @@ const GalleryModel = (galleryData) => {
         return self.path();
       }
       const [year, month, day] = self.lastDay();
-      if (!self.includesDay(year, month, day)) {
-        return self.path(new Date());
-      }
       const initialView = gallery.initialView || config.INITIAL_GALLERY_VIEW;
       switch (initialView) {
         case "year":
@@ -101,7 +108,7 @@ const GalleryModel = (galleryData) => {
     },
     statsPath: () => ["", "g", gallery.id, "stats"].join("/"),
     includesPhotos: () =>
-      "photos" in gallery && Object.keys(gallery.photos).length > 0,
+      !!("photos" in gallery && Object.keys(gallery.photos).length > 0),
     includesYear: (year) => photosByYmd && year in photosByYmd,
     includesMonth: (year, month) =>
       self.includesYear(year) && month in photosByYmd[year],
@@ -129,7 +136,7 @@ const GalleryModel = (galleryData) => {
       }
       return photosByYmd[year][month][day];
     },
-    photo: (year, month, day, photoId = "") => {
+    photo: (year, month, day, photoId) => {
       if (!self.includesDay(year, month, day)) {
         return undefined;
       }
@@ -138,9 +145,15 @@ const GalleryModel = (galleryData) => {
       );
     },
     mapYears: (f) => {
+      if (!self.includesPhotos()) {
+        return;
+      }
       return Object.keys(photosByYmd).map(Number).map(f);
     },
     flatMapYears: (f) => {
+      if (!self.includesPhotos()) {
+        return [];
+      }
       return Object.keys(photosByYmd).map(Number).flatMap(f);
     },
     mapMonths: (year, f) => {
@@ -306,10 +319,7 @@ const GalleryModel = (galleryData) => {
       const previousYears = Object.keys(photosByYmd).filter(
         (year) => year < currentYear
       );
-      if (previousYears.length > 0) {
-        return Math.max(...previousYears);
-      }
-      return currentYear;
+      return Math.max(...previousYears);
     },
     previousMonth: (currentYear, currentMonth) => {
       if (!self.includesPhotos()) {
@@ -320,13 +330,10 @@ const GalleryModel = (galleryData) => {
       }
       let year = currentYear;
       let month = currentMonth;
-      while (!self.isFirstMonth(year, month)) {
+      do {
         [year, month] = calendar.previousMonth(year, month);
-        if (self.includesMonth(year, month)) {
-          return [year, month];
-        }
-      }
-      return [currentYear, currentMonth];
+      } while (!self.includesMonth(year, month));
+      return [year, month];
     },
     previousDay: (currentYear, currentMonth, currentDay) => {
       if (!self.includesPhotos()) {
@@ -338,13 +345,10 @@ const GalleryModel = (galleryData) => {
       let year = currentYear;
       let month = currentMonth;
       let day = currentDay;
-      while (!self.isFirstDay(year, month, day)) {
+      do {
         [year, month, day] = calendar.previousDay(year, month, day);
-        if (self.includesDay(year, month, day)) {
-          return [year, month, day];
-        }
-      }
-      return [currentYear, currentMonth, currentDay];
+      } while (!self.includesDay(year, month, day));
+      return [year, month, day];
     },
     nextYear: (currentYear) => {
       if (!self.includesPhotos()) {
@@ -356,10 +360,7 @@ const GalleryModel = (galleryData) => {
       const nextYears = Object.keys(photosByYmd).filter(
         (year) => year > currentYear
       );
-      if (nextYears.length > 0) {
-        return Math.min(...nextYears);
-      }
-      return currentYear;
+      return Math.min(...nextYears);
     },
     nextMonth: (currentYear, currentMonth) => {
       if (!self.includesPhotos()) {
@@ -370,13 +371,10 @@ const GalleryModel = (galleryData) => {
       }
       let year = currentYear;
       let month = currentMonth;
-      while (!self.isLastMonth(year, month)) {
+      do {
         [year, month] = calendar.nextMonth(year, month);
-        if (self.includesMonth(year, month)) {
-          return [year, month];
-        }
-      }
-      return [currentYear, currentMonth];
+      } while (!self.includesMonth(year, month));
+      return [year, month];
     },
     nextDay: (currentYear, currentMonth, currentDay) => {
       if (!self.includesPhotos()) {
@@ -388,13 +386,10 @@ const GalleryModel = (galleryData) => {
       let year = currentYear;
       let month = currentMonth;
       let day = currentDay;
-      while (!self.isLastDay(year, month, day)) {
+      do {
         [year, month, day] = calendar.nextDay(year, month, day);
-        if (self.includesDay(year, month, day)) {
-          return [year, month, day];
-        }
-      }
-      return [currentYear, currentMonth, currentDay];
+      } while (!self.includesDay(year, month, day));
+      return [year, month, day];
     },
 
     currentPhotoIndex: (year, month, day, currentPhoto) => {
@@ -415,10 +410,10 @@ const GalleryModel = (galleryData) => {
     },
     firstPhoto: () => {
       const firstDayPhotos = self.photos(...self.firstDay());
-      if (firstDayPhotos.length > 0) {
-        return firstDayPhotos[0];
+      if (!firstDayPhotos.length) {
+        return undefined;
       }
-      return undefined;
+      return firstDayPhotos[0];
     },
     isFirstPhoto: (photo) => photo === self.firstPhoto(),
     previousPhoto: (year, month, day, photo) => {
@@ -455,10 +450,10 @@ const GalleryModel = (galleryData) => {
     },
     lastPhoto: () => {
       const lastDayPhotos = self.photos(...self.lastDay());
-      if (lastDayPhotos.length > 0) {
-        return lastDayPhotos[lastDayPhotos.length - 1];
+      if (!lastDayPhotos.length) {
+        return undefined;
       }
-      return undefined;
+      return lastDayPhotos[lastDayPhotos.length - 1];
     },
     isLastPhoto: (photo) => photo === self.lastPhoto(),
   };
