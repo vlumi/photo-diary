@@ -292,14 +292,6 @@ div.adjacent {
   padding: 0;
   text-align: center;
 }
-.leaflet-container {
-  width: 100%;
-  height: 400px;
-  margin: 10px 0;
-}
-.map-popup {
-  text-align: center;
-}
 
 .footer .details {
   font-size: small;
