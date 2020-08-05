@@ -3,6 +3,9 @@
     "loading": "ロード中",
     "empty": "空",
 
+    "login": "ログイン",
+    "logout": "ログアウト",
+
     "nav-galleries": "ギャラリー",
     "nav-gallery-top": "トップへ",
     "nav-gallery": "ギャラリー",

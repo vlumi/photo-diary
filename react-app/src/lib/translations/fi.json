@@ -3,6 +3,9 @@
     "loading": "Ladataan...",
     "empty": "Tyhjä",
 
+    "login": "Kirjaudu sisään",
+    "logout": "Kirjaudu ulos",
+
     "nav-galleries": "Galleriat",
     "nav-gallery-top": "Palaa alkuun",
     "nav-gallery": "Galleria",
