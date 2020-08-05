@@ -16,7 +16,7 @@
     "chokidar": "^3.4.1",
     "dotenv": "^8.2.0",
     "exifr": "^5.0.3",
-    "geo-coord": "^0.1.0",
+    "geo-coord": "^0.1.1",
     "gm": "^1.23.1",
     "image-size": "^0.8.3",
     "moment": "^2.27.0"
