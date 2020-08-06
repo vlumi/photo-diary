@@ -1,20 +1,39 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
 
 import config from "../../../lib/config";
 
-function calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio) {
+const Root = styled.div`
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+  margin: 5px 0;
+`;
+const Frame = styled.span`
+  border: solid #004 1px;
+  padding: 10px;
+  background-color: #bbb;
+  flex-grow: 0;
+  flex-shrink: 0;
+`;
+
+const calculateWidth = (photoRatio, maxWidth, maxHeight, maxRatio) => {
   if (maxRatio > photoRatio) {
     return Math.floor(maxHeight * photoRatio);
   }
   return maxWidth;
-}
-function calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio) {
+};
+const calculateHeight = (photoRatio, maxHeight, maxWidth, maxRatio) => {
   if (maxRatio > photoRatio) {
     return maxHeight;
   }
   return Math.floor(maxWidth / photoRatio);
-}
+};
 
 const toggleFullScreen = () => {
   if (!document.fullscreenElement) {

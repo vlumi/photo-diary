@@ -228,22 +228,3 @@ div.photos {
   flex-wrap: wrap;
   justify-content: flex-start;
 }
-
-div.photo {
-  flex-grow: 1;
-  position: relative;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  justify-content: center;
-  overflow: hidden;
-  margin: 5px 0;
-}
-
-span.photo {
-  border: solid #004 1px;
-  padding: 10px;
-  background-color: #bbb;
-  flex-grow: 0;
-  flex-shrink: 0;
-}
