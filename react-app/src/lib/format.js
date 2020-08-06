@@ -134,8 +134,8 @@ const categoryValue = (lang, t, countryData) => {
         return (yearMonth) => {
           const [year, month] = yearMonth.split("-");
           return t("stats-year-month", {
-            year,
-            month: t(`month-long-${month}`),
+            year: Number(year),
+            month: t(`month-long-${Number(month)}`),
           });
         };
       case "year":
@@ -176,7 +176,11 @@ const categoryValue = (lang, t, countryData) => {
     }
   };
 };
-const categorySorter = (keyField, valueField) => (category) => {
+const categorySorter = (
+  keyField,
+  valueField,
+  firstWeekday = config.FIRST_WEEKDAY
+) => (category) => {
   switch (category) {
     case "author":
     case "country":
@@ -186,13 +190,16 @@ const categorySorter = (keyField, valueField) => (category) => {
         const [yearA, monthA] = a[keyField].split("-");
         const [yearB, monthB] = b[keyField].split("-");
         const yearComparison = collection.numSortByFieldAsc(keyField)(
-          yearA,
-          yearB
+          { [keyField]: yearA },
+          { [keyField]: yearB }
         );
-        if (!yearComparison) {
+        if (yearComparison !== 0) {
           return yearComparison;
         }
-        return collection.numSortByFieldAsc(keyField)(monthA, monthB);
+        return collection.numSortByFieldAsc(keyField)(
+          { [keyField]: monthA },
+          { [keyField]: monthB }
+        );
       };
     case "year":
     case "month":
@@ -200,13 +207,9 @@ const categorySorter = (keyField, valueField) => (category) => {
     case "weekday":
       return (a, b) => {
         const dowA =
-          a[keyField] < config.FIRST_WEEKDAY
-            ? Number(a[keyField]) + 7
-            : a[keyField];
+          a[keyField] < firstWeekday ? Number(a[keyField]) + 7 : a[keyField];
         const dowB =
-          b[keyField] < config.FIRST_WEEKDAY
-            ? Number(b[keyField]) + 7
-            : b[keyField];
+          b[keyField] < firstWeekday ? Number(b[keyField]) + 7 : b[keyField];
         return collection.compareWithNaN(dowA, dowB, () => dowA - dowB);
       };
     case "hour":
