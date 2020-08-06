@@ -13,6 +13,14 @@ const Root = styled.section`
 const Title = styled.h3`
   text-align: left;
   writing-mode: vertical-rl;
+  color: var(--header-color);
+  background: var(--header-background);
+  font-size: 18pt;
+  margin: 1px;
+  padding: 5px 3px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--header-background);
   border-radius: 10px 0;
 `;
 const Categories = styled.section`

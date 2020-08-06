@@ -29,13 +29,6 @@ const DayTitle = styled.h3`
   border-radius: 15px 0 0 15px;
   height: 200px;
   min-width: 25px;
-
-  & > :link {
-    color: var(--header-color);
-  }
-  & > :visited {
-    color: var(--header-color);
-  }
 `;
 const DaySubTitle = styled.span`
   display: block;

@@ -11,6 +11,15 @@ const Root = styled.div`
   margin: 0 1px 2px;
 `;
 const Title = styled.h3`
+  color: var(--header-color);
+  background: var(--header-background);
+  font-size: 18pt;
+  text-align: center;
+  margin: 1px;
+  padding: 5px 3px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--header-background);
   border-radius: 5px;
 `;
 const Category = ({ topic, category, filters, setFilters }) => {
