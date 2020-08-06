@@ -1,6 +1,10 @@
 let token = undefined;
 const setToken = (newToken) => {
-  token = `bearer ${newToken}`;
+  if (newToken) {
+    token = `bearer ${newToken}`;
+  } else {
+    clearToken();
+  }
 };
 const clearToken = () => {
   token = undefined;
