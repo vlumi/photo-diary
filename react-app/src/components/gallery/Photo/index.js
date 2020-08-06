@@ -5,9 +5,9 @@ import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
 import { useTranslation } from "react-i18next";
 
-import PhotoNav from "./PhotoNav";
-import PhotoContent from "./PhotoContent";
-import PhotoFooter from "./PhotoFooter";
+import Navigation from "./Navigation";
+import Content from "./Content";
+import Footer from "./Footer";
 
 import useKeyPress from "../../../lib/keypress";
 
@@ -82,7 +82,7 @@ const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
           {gallery.title(year, month, day, photo)} — {t("nav-gallery")}
         </title>
       </Helmet>
-      <PhotoNav
+      <Navigation
         gallery={gallery}
         year={year}
         month={month}
@@ -91,7 +91,7 @@ const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
       />
       <Swipeable onSwiped={handleSwipe}>
         <div id="content">
-          <PhotoContent
+          <Content
             gallery={gallery}
             year={year}
             month={month}
@@ -99,7 +99,7 @@ const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
             photo={photo}
           />
         </div>
-        <PhotoFooter
+        <Footer
           gallery={gallery}
           year={year}
           month={month}

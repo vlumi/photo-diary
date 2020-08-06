@@ -26,7 +26,7 @@ const toggleFullScreen = () => {
   }
 };
 
-const PhotoContent = ({ gallery, year, month, day, photo }) => {
+const Content = ({ gallery, year, month, day, photo }) => {
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -80,11 +80,11 @@ const PhotoContent = ({ gallery, year, month, day, photo }) => {
     </>
   );
 };
-PhotoContent.propTypes = {
+Content.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
 };
-export default PhotoContent;
+export default Content;

@@ -23,7 +23,7 @@ const Title = styled.span`
   margin: 0 5px;
 `;
 
-const PhotoNav = ({ gallery, year, month, day, photo }) => {
+const Navigation = ({ gallery, year, month, day, photo }) => {
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
 
@@ -66,11 +66,11 @@ const PhotoNav = ({ gallery, year, month, day, photo }) => {
     </h2>
   );
 };
-PhotoNav.propTypes = {
+Navigation.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
 };
-export default PhotoNav;
+export default Navigation;

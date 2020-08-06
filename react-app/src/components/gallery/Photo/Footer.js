@@ -12,7 +12,7 @@ import Link from "../Link";
 import config from "../../../lib/config";
 import format from "../../../lib/format";
 
-const Footer = styled.div`
+const Container = styled.div`
   margin: 10px;
   flex-grow: 0;
   flex-shrink: 0;
@@ -32,7 +32,7 @@ const PreviousThumbnailContainer = styled(ThumbnailContainer)`
 const NextThumbnailContainer = styled(ThumbnailContainer)`
   justify-content: flex-end;
 `;
-const Adjacent = styled.div`
+const ThumbnailFrame = styled.div`
   margin: 0;
   padding: 2px;
   border: solid #004 1px;
@@ -57,15 +57,7 @@ const Copyright = styled.div`
   font-size: x-small;
 `;
 
-const PhotoFooter = ({
-  gallery,
-  year,
-  month,
-  day,
-  photo,
-  lang,
-  countryData,
-}) => {
+const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
   const previousPhoto = gallery.previousPhoto(year, month, day, photo);
   const nextPhoto = gallery.nextPhoto(year, month, day, photo);
   const formatExposure = format.exposure(lang);
@@ -83,9 +75,9 @@ const PhotoFooter = ({
 
     return (
       <Link gallery={gallery} photo={adjacentPhoto}>
-        <Adjacent style={style}>
+        <ThumbnailFrame style={style}>
           <img src={path} alt={adjacentPhoto.id()} style={style} />
-        </Adjacent>
+        </ThumbnailFrame>
       </Link>
     );
   };
@@ -228,7 +220,7 @@ const PhotoFooter = ({
     }
     return (
       <>
-        <Footer>
+        <Container>
           <PreviousThumbnailContainer>
             {renderAdjacentPhoto(previousPhoto)}
           </PreviousThumbnailContainer>
@@ -248,15 +240,15 @@ const PhotoFooter = ({
           <NextThumbnailContainer>
             {renderAdjacentPhoto(nextPhoto)}
           </NextThumbnailContainer>
-        </Footer>
-        <Footer>{renderMap()}</Footer>
+        </Container>
+        <Container>{renderMap()}</Container>
       </>
     );
   };
 
   return renderContent();
 };
-PhotoFooter.propTypes = {
+Footer.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
@@ -265,4 +257,4 @@ PhotoFooter.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default PhotoFooter;
+export default Footer;
