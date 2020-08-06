@@ -156,6 +156,9 @@ const Top = ({ user, lang, countryData, isStats = false, scrollState }) => {
     const galleriesMatchingHostname = galleries.filter((gallery) =>
       gallery.matchesHostname(window.location.hostname)
     );
+    if (galleriesMatchingHostname.length === 1) {
+      return <Redirect to={galleriesMatchingHostname[0].path()} />;
+    }
     if (config.DEFAULT_GALLERY) {
       const targetGallery = galleries.find(
         (gallery) => gallery.id() === config.DEFAULT_GALLERY
@@ -163,9 +166,6 @@ const Top = ({ user, lang, countryData, isStats = false, scrollState }) => {
       if (targetGallery) {
         return <Redirect to={targetGallery.path()} />;
       }
-    }
-    if (galleriesMatchingHostname.length === 1) {
-      return <Redirect to={galleriesMatchingHostname[0].path()} />;
     }
 
     if (galleries.length === 0) {
