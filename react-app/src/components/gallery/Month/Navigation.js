@@ -9,9 +9,9 @@ import {
   BsSkipForwardFill,
 } from "react-icons/bs";
 
-import FormatDate from "../FormatDate";
+import FormatDate from "../../FormatDate";
 
-import Link from "./Link";
+import Link from "../Link";
 
 const NavLink = styled(Link)`
   visibility: ${(props) => props.visibility};
@@ -25,7 +25,7 @@ const Title = styled.span`
   margin: 0 5px;
 `;
 
-const MonthNav = ({ gallery, year, month }) => {
+const Navigation = ({ gallery, year, month }) => {
   const prevVisibility = gallery.isFirstMonth(year, month) ? "hidden" : "";
   const nextVisibility = gallery.isLastMonth(year, month) ? "hidden" : "";
 
@@ -78,9 +78,9 @@ const MonthNav = ({ gallery, year, month }) => {
     </h2>
   );
 };
-MonthNav.propTypes = {
+Navigation.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
 };
-export default MonthNav;
+export default Navigation;

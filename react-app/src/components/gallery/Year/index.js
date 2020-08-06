@@ -5,12 +5,12 @@ import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
 import { useTranslation } from "react-i18next";
 
-import Title from "./Title";
-import YearNav from "./YearNav";
-import YearContent from "./YearContent";
-import YearFooter from "./YearFooter";
+import Title from "../Title";
+import Navigation from "./Navigation";
+import Content from "./Content";
+import Footer from "./Footer";
 
-import useKeyPress from "../../lib/keypress";
+import useKeyPress from "../../../lib/keypress";
 
 const Year = ({ children, gallery, year }) => {
   const [redirect, setRedirect] = React.useState(undefined);
@@ -84,7 +84,7 @@ const Year = ({ children, gallery, year }) => {
         {gallery.mapYears((year) => (
           // TODO: display year number somehow
           <div key={year} className="year">
-            <YearContent gallery={gallery} year={Number(year)} />
+            <Content gallery={gallery} year={Number(year)} />
           </div>
         ))}
       </>
@@ -97,15 +97,15 @@ const Year = ({ children, gallery, year }) => {
             {gallery.title(year)} — {t("nav-gallery")}
           </title>
         </Helmet>
-        <YearNav gallery={gallery} year={year} />
+        <Navigation gallery={gallery} year={year} />
         <Swipeable onSwiped={handleSwipe}>
           <div id="content">
-            <YearContent gallery={gallery} year={year}>
+            <Content gallery={gallery} year={year}>
               {children}
-            </YearContent>
+            </Content>
           </div>{" "}
         </Swipeable>
-        <YearFooter gallery={gallery} year={year} />
+        <Footer gallery={gallery} year={year} />
       </>
     );
   }

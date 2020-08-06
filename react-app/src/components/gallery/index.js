@@ -26,7 +26,7 @@ import format from "../../lib/format";
 import stats from "../../lib/stats";
 import theme from "../../lib/theme";
 
-const Top = ({ user, lang, countryData, isStats = false, scrollState }) => {
+const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
   const [galleries, setGalleries] = React.useState(undefined);
   const [gallery, setGallery] = React.useState(undefined);
   const [photos, setPhotos] = React.useState(undefined);
@@ -313,11 +313,11 @@ const Top = ({ user, lang, countryData, isStats = false, scrollState }) => {
     </Photo>
   );
 };
-Top.propTypes = {
+Gallery.propTypes = {
   user: PropTypes.object,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
   isStats: PropTypes.bool,
   scrollState: PropTypes.object.isRequired,
 };
-export default Top;
+export default Gallery;

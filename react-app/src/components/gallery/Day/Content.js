@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import Thumbnails from "./Thumbnails";
+import Thumbnails from "../Thumbnails";
 
-const DayContent = ({
+const Content = ({
   children,
   gallery,
   year,
@@ -35,7 +35,7 @@ const DayContent = ({
     </>
   );
 };
-DayContent.propTypes = {
+Content.propTypes = {
   children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
@@ -44,4 +44,4 @@ DayContent.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default DayContent;
+export default Content;

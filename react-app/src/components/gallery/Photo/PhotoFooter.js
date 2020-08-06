@@ -2,15 +2,15 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 
-import FlagIcon from "../FlagIcon";
-import EpochAge from "./EpochAge";
-import EpochDayIndex from "./EpochDayIndex";
-import MapContainer from "../MapContainer";
+import FlagIcon from "../../FlagIcon";
+import EpochAge from "../EpochAge";
+import EpochDayIndex from "../EpochDayIndex";
+import MapContainer from "../../MapContainer";
 
-import Link from "./Link";
+import Link from "../Link";
 
-import config from "../../lib/config";
-import format from "../../lib/format";
+import config from "../../../lib/config";
+import format from "../../../lib/format";
 
 const Footer = styled.div`
   margin: 10px;

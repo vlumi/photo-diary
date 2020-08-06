@@ -4,10 +4,10 @@ import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 
-import FiltersCategory from "./FiltersCategory";
+import Category from "./Category";
 
-import filter from "../../lib/filter";
-import stats from "../../lib/stats";
+import filter from "../../../lib/filter";
+import stats from "../../../lib/stats";
 
 const Root = styled.div`
   color: var(--primary-color);
@@ -33,7 +33,7 @@ const Box = styled.div`
   cursor: pointer;
 `;
 const TopicBox = styled(Box)``;
-const Topic = styled.div`
+const Title = styled.div`
   padding: 0 5px;
 `;
 const NewCategories = styled.select`
@@ -43,7 +43,7 @@ const NewCategoryGroup = styled.optgroup``;
 const NewCategory = styled.option``;
 const NewValue = styled.option``;
 
-const FiltersTopic = ({
+const Topic = ({
   topic,
   filters,
   setFilters,
@@ -146,14 +146,14 @@ const FiltersTopic = ({
   return (
     <Root data-type="topic" data-key={topic}>
       <TopicBox onClick={handleRemoveTopicClick}>
-        <Topic>{t(`stats-topic-${topic}`)}</Topic>
+        <Title>{t(`stats-topic-${topic}`)}</Title>
         <BsFillXCircleFill />
       </TopicBox>
       {filter
         .categories(topic)
         .filter((category) => category in filters[topic])
         .map((category) => (
-          <FiltersCategory
+          <Category
             key={`filter:${topic}:${category}`}
             topic={topic}
             category={category}
@@ -168,7 +168,7 @@ const FiltersTopic = ({
     </Root>
   );
 };
-FiltersTopic.propTypes = {
+Topic.propTypes = {
   topic: PropTypes.string.isRequired,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
@@ -176,4 +176,4 @@ FiltersTopic.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default FiltersTopic;
+export default Topic;

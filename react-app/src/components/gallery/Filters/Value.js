@@ -3,11 +3,11 @@ import PropTypes from "prop-types";
 import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill } from "react-icons/bs";
-import FlagIcon from "../FlagIcon";
+import FlagIcon from "../../FlagIcon";
 
-import filter from "../../lib/filter";
-import format from "../../lib/format";
-import stats from "../../lib/stats";
+import filter from "../../../lib/filter";
+import format from "../../../lib/format";
+import stats from "../../../lib/stats";
 
 const Box = styled.div`
   display: flex;
@@ -22,11 +22,11 @@ const ValueBox = styled(Box)`
   color: var(--primary-color);
   background-color: var(--primary-background);
 `;
-const Value = styled.div`
+const Title = styled.div`
   padding: 0 5px;
 `;
 
-const FiltersValue = ({
+const Value = ({
   topic,
   category,
   value,
@@ -68,12 +68,12 @@ const FiltersValue = ({
     }
     if (category === "country" && countryData.isValid(value)) {
       return (
-        <Value>
+        <Title>
           <FlagIcon code={value} /> {formatCategoryValue(category)(value)}
-        </Value>
+        </Title>
       );
     }
-    return <Value>{formatCategoryValue(category)(value)}</Value>;
+    return <Title>{formatCategoryValue(category)(value)}</Title>;
   };
 
   return (
@@ -88,7 +88,7 @@ const FiltersValue = ({
     </ValueBox>
   );
 };
-FiltersValue.propTypes = {
+Value.propTypes = {
   topic: PropTypes.string.isRequired,
   category: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
@@ -97,4 +97,4 @@ FiltersValue.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default FiltersValue;
+export default Value;

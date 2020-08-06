@@ -2,10 +2,10 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-import Link from "./Link";
+import Link from "../Link";
 
-import calendar from "../../lib/calendar";
-import format from "../../lib/format";
+import calendar from "../../../lib/calendar";
+import format from "../../../lib/format";
 
 const calculateHeat = (photos) => {
   if (photos < 1) return "none";
@@ -15,7 +15,7 @@ const calculateHeat = (photos) => {
   return "extreme";
 };
 
-const YearContent = ({ children, gallery, year }) => {
+const Content = ({ children, gallery, year }) => {
   const { t } = useTranslation();
 
   const renderMonthTitle = (gallery, year, month) => {
@@ -111,9 +111,9 @@ const YearContent = ({ children, gallery, year }) => {
     </>
   );
 };
-YearContent.propTypes = {
+Content.propTypes = {
   children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
 };
-export default YearContent;
+export default Content;

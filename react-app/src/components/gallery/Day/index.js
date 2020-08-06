@@ -5,39 +5,39 @@ import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
 import { useTranslation } from "react-i18next";
 
-import PhotoNav from "./PhotoNav";
-import PhotoContent from "./PhotoContent";
-import PhotoFooter from "./PhotoFooter";
+import Navigation from "./Navigation";
+import Content from "./Content";
+import Footer from "./Footer";
 
-import useKeyPress from "../../lib/keypress";
+import useKeyPress from "../../../lib/keypress";
 
-const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
+const Day = ({ children, gallery, year, month, day, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
 
   const handlMoveToFirst = () => {
-    if (!gallery.isFirstPhoto(photo)) {
+    if (!gallery.isFirstDay(year, month, day)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.firstPhoto().path(gallery));
+      setRedirect(gallery.path(...gallery.firstDay()));
     }
   };
   const handlMoveToPrevious = () => {
-    if (!gallery.isFirstPhoto(photo)) {
+    if (!gallery.isFirstDay(year, month, day)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.previousPhoto(year, month, day, photo).path(gallery));
+      setRedirect(gallery.path(...gallery.previousDay(year, month, day)));
     }
   };
   const handlMoveToNext = () => {
-    if (!gallery.isLastPhoto(photo)) {
+    if (!gallery.isLastDay(year, month, day)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.nextPhoto(year, month, day, photo).path(gallery));
+      setRedirect(gallery.path(...gallery.nextDay(year, month, day)));
     }
   };
   const handlMoveToLast = () => {
-    if (!gallery.isLastPhoto(photo)) {
+    if (!gallery.isLastDay(year, month, day)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.lastPhoto().path(gallery));
+      setRedirect(gallery.path(...gallery.lastDay()));
     }
   };
 
@@ -79,47 +79,35 @@ const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
     <>
       <Helmet>
         <title>
-          {gallery.title(year, month, day, photo)} — {t("nav-gallery")}
+          {gallery.title(year, month, day)} — {t("nav-gallery")}
         </title>
       </Helmet>
-      <PhotoNav
-        gallery={gallery}
-        year={year}
-        month={month}
-        day={day}
-        photo={photo}
-      />
+      <Navigation gallery={gallery} year={year} month={month} day={day} />
       <Swipeable onSwiped={handleSwipe}>
         <div id="content">
-          <PhotoContent
+          <Content
             gallery={gallery}
             year={year}
             month={month}
             day={day}
-            photo={photo}
-          />
+            lang={lang}
+            countryData={countryData}
+          >
+            {children}
+          </Content>
         </div>
-        <PhotoFooter
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
-          photo={photo}
-          lang={lang}
-          countryData={countryData}
-        />
       </Swipeable>
+      <Footer gallery={gallery} year={year} month={month} day={day} />
     </>
   );
 };
-Photo.propTypes = {
+Day.propTypes = {
   children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
-  photo: PropTypes.object.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default Photo;
+export default Day;

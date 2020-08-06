@@ -3,9 +3,9 @@ import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 
-import StatsTopic from "./StatsTopic";
+import Topic from "./Topic";
 
-import stats from "../../lib/stats";
+import stats from "../../../lib/stats";
 
 const Root = styled.div`
   display: flex;
@@ -43,7 +43,7 @@ const Stats = ({
       {children}
       <Root>
         {stats.collectTopics(data, lang, t, countryData).map((topic) => (
-          <StatsTopic
+          <Topic
             key={topic.key}
             topic={topic}
             filters={filters}

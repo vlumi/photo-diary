@@ -2,9 +2,9 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 
-import StatsSummary from "./StatsSummary";
-import StatsCharts from "./StatsCharts";
-import StatsTable from "./StatsTable";
+import Summary from "./Summary";
+import Charts from "./Charts";
+import Table from "./Table";
 
 const Root = styled.div`
   width: 330px;
@@ -13,7 +13,7 @@ const Root = styled.div`
 const Title = styled.h3`
   border-radius: 5px;
 `;
-const StatsCategory = ({ topic, category, filters, setFilters }) => {
+const Category = ({ topic, category, filters, setFilters }) => {
   return (
     <Root
       key={`${topic.key}:${category.key}`}
@@ -21,9 +21,9 @@ const StatsCategory = ({ topic, category, filters, setFilters }) => {
       data-key={category.key}
     >
       <Title>{category.title}</Title>
-      <StatsSummary category={category} />
-      <StatsCharts category={category} />
-      <StatsTable
+      <Summary category={category} />
+      <Charts category={category} />
+      <Table
         topic={topic}
         category={category}
         filters={filters}
@@ -32,10 +32,10 @@ const StatsCategory = ({ topic, category, filters, setFilters }) => {
     </Root>
   );
 };
-StatsCategory.propTypes = {
+Category.propTypes = {
   topic: PropTypes.object,
   category: PropTypes.object,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
 };
-export default StatsCategory;
+export default Category;

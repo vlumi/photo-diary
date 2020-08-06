@@ -3,8 +3,8 @@ import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 
-import stats from "../../lib/stats";
-import filter from "../../lib/filter";
+import stats from "../../../lib/stats";
+import filter from "../../../lib/filter";
 
 const Root = styled.table`
   width: 100%;
@@ -60,7 +60,7 @@ const Column = styled.td`
   text-align: ${(props) => props.align};
   overflow: hidden;
 `;
-const StatsTable = ({ topic, category, filters, setFilters }) => {
+const Table = ({ topic, category, filters, setFilters }) => {
   const { t } = useTranslation();
 
   const handleClick = (event) => {
@@ -181,10 +181,10 @@ const StatsTable = ({ topic, category, filters, setFilters }) => {
     </Root>
   );
 };
-StatsTable.propTypes = {
+Table.propTypes = {
   topic: PropTypes.object,
   category: PropTypes.object,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
 };
-export default StatsTable;
+export default Table;

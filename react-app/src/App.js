@@ -13,7 +13,7 @@ import "./App.css";
 
 import ScrollToPosition from "./components/ScrollToPosition";
 import TopMenu from "./components/TopMenu";
-import Top from "./components/gallery/Top";
+import Gallery from "./components/Gallery";
 
 import UserModel from "./models/UserModel";
 
@@ -75,7 +75,7 @@ const App = () => {
         <ScrollToPosition scrollState={scrollState}>
           <Switch>
             <Route path="/g/:galleryId/stats">
-              <Top
+              <Gallery
                 user={user}
                 lang={lang}
                 countryData={countryData}
@@ -84,7 +84,7 @@ const App = () => {
               />
             </Route>
             <Route path="/g/:galleryId/:year/:month/:day/:photoId">
-              <Top
+              <Gallery
                 user={user}
                 lang={lang}
                 countryData={countryData}
@@ -92,7 +92,7 @@ const App = () => {
               />
             </Route>
             <Route path="/g/:galleryId/:year?/:month?/:day?">
-              <Top
+              <Gallery
                 user={user}
                 lang={lang}
                 countryData={countryData}
@@ -100,7 +100,7 @@ const App = () => {
               />
             </Route>
             <Route path="/g">
-              <Top
+              <Gallery
                 user={user}
                 lang={lang}
                 countryData={countryData}

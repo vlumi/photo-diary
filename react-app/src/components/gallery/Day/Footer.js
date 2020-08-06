@@ -1,11 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import MapContainer from "../MapContainer";
+import MapContainer from "../../MapContainer";
 
-const YearFooter = ({ gallery, year }) => {
+const Footer = ({ gallery, year, month, day }) => {
   const renderMap = (positions) => {
-    if (!positions || !positions.length) {
+    if (!positions) {
       return "";
     }
     return (
@@ -16,17 +16,16 @@ const YearFooter = ({ gallery, year }) => {
   };
 
   const photos = gallery
-    .flatMapMonths(year, (month) =>
-      gallery.flatMapDays(year, month, (day) =>
-        gallery.photos(year, month, day)
-      )
-    )
+    .photos(year, month, day)
     .filter(Boolean)
     .filter((photo) => photo.hasCoordinates());
+
   return <div className="footer">{renderMap(photos)}</div>;
 };
-YearFooter.propTypes = {
+Footer.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
+  month: PropTypes.number.isRequired,
+  day: PropTypes.number.isRequired,
 };
-export default YearFooter;
+export default Footer;

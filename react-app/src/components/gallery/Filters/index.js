@@ -8,9 +8,9 @@ import {
   BsFillPlusCircleFill,
 } from "react-icons/bs";
 
-import FiltersTopic from "./FiltersTopic";
+import Topic from "./Topic";
 
-import filter from "../../lib/filter";
+import filter from "../../../lib/filter";
 
 const Root = styled.div`
   color: var(--header-color);
@@ -115,7 +115,7 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
           .topics()
           .filter((topic) => topic in filters)
           .map((topic) => (
-            <FiltersTopic
+            <Topic
               key={`filter:${topic}`}
               topic={topic}
               filters={filters}

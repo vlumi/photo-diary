@@ -57,7 +57,7 @@ const Value = styled.span`
   vertical-align: middle;
 `;
 
-const StatsSummary = ({ category }) => {
+const Summary = ({ category }) => {
   const { t } = useTranslation();
 
   if (!("kpi" in category) || !category.kpi) {
@@ -82,7 +82,7 @@ const StatsSummary = ({ category }) => {
     </Root>
   );
 };
-StatsSummary.propTypes = {
+Summary.propTypes = {
   category: PropTypes.object,
 };
-export default StatsSummary;
+export default Summary;

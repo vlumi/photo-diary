@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 
-import StatsCategory from "./StatsCategory";
+import Category from "./Category";
 
 const Root = styled.section`
   width: 100%;
@@ -20,13 +20,13 @@ const Categories = styled.section`
   flex-wrap: wrap;
   justify-content: flex-start;
 `;
-const StatsTopic = ({ topic, filters, setFilters }) => {
+const Topic = ({ topic, filters, setFilters }) => {
   return (
     <Root key={topic.key} data-type="topic" data-key={topic.key}>
       <Title>{topic.title}</Title>
       <Categories>
         {topic.categories.map((category) => (
-          <StatsCategory
+          <Category
             key={`${category.key}:${topic.key}`}
             topic={topic}
             category={category}
@@ -38,9 +38,9 @@ const StatsTopic = ({ topic, filters, setFilters }) => {
     </Root>
   );
 };
-StatsTopic.propTypes = {
+Topic.propTypes = {
   topic: PropTypes.object,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
 };
-export default StatsTopic;
+export default Topic;

@@ -26,7 +26,7 @@ const StyledChartContainer2 = styled.div`
   margin: 0 2px;
 `;
 
-const StatsCharts = ({ category }) => {
+const Charts = ({ category }) => {
   if (!("charts" in category) || !category.charts) {
     return <></>;
   }
@@ -66,7 +66,7 @@ const StatsCharts = ({ category }) => {
     </Root>
   );
 };
-StatsCharts.propTypes = {
+Charts.propTypes = {
   category: PropTypes.object,
 };
-export default StatsCharts;
+export default Charts;

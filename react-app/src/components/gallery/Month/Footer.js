@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import MapContainer from "../MapContainer";
+import MapContainer from "../../MapContainer";
 
-const MonthFooter = ({ gallery, year, month }) => {
+const Footer = ({ gallery, year, month }) => {
   const renderMap = (positions) => {
     if (!positions) {
       return "";
@@ -22,9 +22,9 @@ const MonthFooter = ({ gallery, year, month }) => {
 
   return <div className="footer">{renderMap(photos)}</div>;
 };
-MonthFooter.propTypes = {
+Footer.propTypes = {
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
 };
-export default MonthFooter;
+export default Footer;

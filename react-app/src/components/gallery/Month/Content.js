@@ -2,15 +2,15 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-import EpochAge from "./EpochAge";
-import EpochDayIndex from "./EpochDayIndex";
+import EpochAge from "../EpochAge";
+import EpochDayIndex from "../EpochDayIndex";
 
-import Thumbnails from "./Thumbnails";
-import Link from "./Link";
+import Thumbnails from "../Thumbnails";
+import Link from "../Link";
 
-import calendar from "../../lib/calendar";
+import calendar from "../../../lib/calendar";
 
-const MonthContent = ({
+const Content = ({
   children,
   gallery,
   year,
@@ -99,7 +99,7 @@ const MonthContent = ({
     </>
   );
 };
-MonthContent.propTypes = {
+Content.propTypes = {
   children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
@@ -107,4 +107,4 @@ MonthContent.propTypes = {
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default MonthContent;
+export default Content;

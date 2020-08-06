@@ -5,45 +5,45 @@ import { Helmet } from "react-helmet";
 import { Swipeable } from "react-swipeable";
 import { useTranslation } from "react-i18next";
 
-import DayNav from "./DayNav";
-import DayContent from "./DayContent";
-import DayFooter from "./DayFooter";
+import Navigation from "./Navigation";
+import Content from "./Content";
+import Footer from "./Footer";
 
-import useKeyPress from "../../lib/keypress";
+import useKeyPress from "../../../lib/keypress";
 
-const Day = ({ children, gallery, year, month, day, lang, countryData }) => {
+const Month = ({ children, gallery, year, month, lang, countryData }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
 
   const handlMoveToFirst = () => {
-    if (!gallery.isFirstDay(year, month, day)) {
+    if (!gallery.isFirstMonth(year, month)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.firstDay()));
+      setRedirect(gallery.path(...gallery.firstMonth()));
     }
   };
   const handlMoveToPrevious = () => {
-    if (!gallery.isFirstDay(year, month, day)) {
+    if (!gallery.isFirstMonth(year, month)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.previousDay(year, month, day)));
+      setRedirect(gallery.path(...gallery.previousMonth(year, month)));
     }
   };
   const handlMoveToNext = () => {
-    if (!gallery.isLastDay(year, month, day)) {
+    if (!gallery.isLastMonth(year, month)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.nextDay(year, month, day)));
+      setRedirect(gallery.path(...gallery.nextMonth(year, month)));
     }
   };
   const handlMoveToLast = () => {
-    if (!gallery.isLastDay(year, month, day)) {
+    if (!gallery.isLastMonth(year, month)) {
       window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.lastDay()));
+      setRedirect(gallery.path(...gallery.lastMonth()));
     }
   };
 
   useKeyPress("Escape", () => {
     window.history.pushState({}, "");
-    setRedirect(gallery.path(year, month));
+    setRedirect(gallery.path(year));
   });
   useKeyPress("Home", handlMoveToFirst);
   useKeyPress("ArrowLeft", handlMoveToPrevious);
@@ -79,35 +79,33 @@ const Day = ({ children, gallery, year, month, day, lang, countryData }) => {
     <>
       <Helmet>
         <title>
-          {gallery.title(year, month, day)} — {t("nav-gallery")}
+          {gallery.title(year, month)} — {t("nav-gallery")}
         </title>
       </Helmet>
-      <DayNav gallery={gallery} year={year} month={month} day={day} />
+      <Navigation gallery={gallery} year={year} month={month} />
       <Swipeable onSwiped={handleSwipe}>
         <div id="content">
-          <DayContent
+          <Content
             gallery={gallery}
             year={year}
             month={month}
-            day={day}
             lang={lang}
             countryData={countryData}
           >
             {children}
-          </DayContent>
+          </Content>
         </div>
       </Swipeable>
-      <DayFooter gallery={gallery} year={year} month={month} day={day} />
+      <Footer gallery={gallery} year={year} month={month} />
     </>
   );
 };
-Day.propTypes = {
+Month.propTypes = {
   children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
 };
-export default Day;
+export default Month;
