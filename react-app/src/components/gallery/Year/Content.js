@@ -1,11 +1,30 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 
 import Link from "../Link";
 
 import calendar from "../../../lib/calendar";
 import format from "../../../lib/format";
+
+const MonthTitle = styled.h3`
+  color: var(--header-color);
+  background: var(--header-background);
+  font-size: 18pt;
+  text-align: center;
+  margin: 1px;
+  padding: 5px 3px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--header-background);
+
+  display: block;
+  width: 212px;
+  height: 30px;
+  padding: 0;
+  margin: 0;
+`;
 
 const calculateHeat = (photos) => {
   if (photos < 1) return "none";
@@ -22,11 +41,11 @@ const Content = ({ children, gallery, year }) => {
     if (gallery.includesMonth(year, month)) {
       return (
         <Link gallery={gallery} year={year} month={month}>
-          <h3>{month}</h3>
+          <MonthTitle>{month}</MonthTitle>
         </Link>
       );
     }
-    return <h3>{month}</h3>;
+    return <MonthTitle>{month}</MonthTitle>;
   };
   const renderDayValue = (gallery, year, month, day, photoCount) => {
     if (day === 0) {

@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
+import Root from "./Navigation";
 import Link from "./Link";
 
 import useKeyPress from "../../lib/keypress";
@@ -33,17 +34,13 @@ const Empty = ({ children, gallery }) => {
       <Helmet>
         <title>{gallery.title()}</title>
       </Helmet>
-      <h2>
-        <span style={style}>⇤</span>
-        <span style={style}>←</span>
+      <Root>
         <Link gallery={gallery}>
           <span className="title">
             <i>Empty</i>
           </span>
         </Link>
-        <span style={style}>→</span>
-        <span style={style}>⇥</span>
-      </h2>
+      </Root>
       {children}
       <i>Empty</i>
     </>

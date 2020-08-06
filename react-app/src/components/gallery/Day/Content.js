@@ -1,7 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
 
 import Thumbnails from "../Thumbnails";
+
+const Root = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
 
 const Content = ({
   children,
@@ -31,7 +38,7 @@ const Content = ({
   return (
     <>
       {children}
-      <div className="day">{renderContent()}</div>
+      <Root>{renderContent()}</Root>
     </>
   );
 };

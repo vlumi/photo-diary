@@ -84,17 +84,15 @@ const Month = ({ children, gallery, year, month, lang, countryData }) => {
       </Helmet>
       <Navigation gallery={gallery} year={year} month={month} />
       <Swipeable onSwiped={handleSwipe}>
-        <div id="content">
-          <Content
-            gallery={gallery}
-            year={year}
-            month={month}
-            lang={lang}
-            countryData={countryData}
-          >
-            {children}
-          </Content>
-        </div>
+        <Content
+          gallery={gallery}
+          year={year}
+          month={month}
+          lang={lang}
+          countryData={countryData}
+        >
+          {children}
+        </Content>
       </Swipeable>
       <Footer gallery={gallery} year={year} month={month} />
     </>

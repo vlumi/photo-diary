@@ -1,10 +1,22 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
 
 import Link from "./Link";
 
 import config from "../../lib/config";
 import collection from "../../lib/collection";
+
+const GalleryTitle = styled.h3`
+  color: var(--header-color);
+  background: var(--header-background);
+  font-size: 18pt;
+  text-align: center;
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--header-background);
+  margin: 0;
+`;
 
 const ListBody = ({ galleries }) => {
   const renderDescription = (gallery) => {
@@ -29,7 +41,7 @@ const ListBody = ({ galleries }) => {
     return (
       <Link key={gallery.id()} gallery={gallery}>
         <div key={gallery.id()} className={className}>
-          <h3>{gallery.title()}</h3>
+          <GalleryTitle>{gallery.title()}</GalleryTitle>
           {renderIcon(gallery)}
           {renderDescription(gallery)}
         </div>

@@ -27,31 +27,6 @@ a {
   color: #f00;
 }
 
-h3 {
-  color: var(--header-color);
-  background: var(--header-background);
-  font-size: 18pt;
-  text-align: center;
-  margin: 1px;
-  padding: 5px 3px;
-  border-style: solid;
-  border-width: 1px;
-  border-color: var(--header-background);
-}
-h3 > :link {
-  color: var(--header-color);
-}
-h3 > :visited {
-  color: var(--header-color);
-}
-h3 > span {
-  display: block;
-  font-size: 8pt;
-  margin: 0;
-  color: var(--header-sub-color);
-  background: inherit;
-}
-
 .galleries {
   display: flex;
   flex-wrap: wrap;
@@ -65,9 +40,6 @@ h3 > span {
   border-style: solid;
   border-width: 1px;
   background-color: var(--none-color);
-}
-.gallery > h3 {
-  margin: 0;
 }
 .gallery > .icon {
   margin: 0;
@@ -100,15 +72,6 @@ h3 > span {
   border-style: solid;
   border-width: 1px;
   background-color: var(--none-color);
-}
-.calendar h3 {
-  display: block;
-  width: 212px;
-  height: 30px;
-  padding: 0;
-  margin: 0;
-  border-style: solid;
-  border-width: 1px;
 }
 .calendar-grid {
   display: block;
@@ -164,25 +127,6 @@ h3 > span {
 }
 .heat-extreme {
   background-color: var(--extreme-color);
-}
-
-.month {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-.month h3 {
-  height: 200px;
-  min-width: 25px;
-}
-.month h3 > span {
-  margin: 5px 0;
-}
-
-.day {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 
 .thumbnails {

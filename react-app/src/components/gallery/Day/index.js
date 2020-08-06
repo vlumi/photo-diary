@@ -84,18 +84,16 @@ const Day = ({ children, gallery, year, month, day, lang, countryData }) => {
       </Helmet>
       <Navigation gallery={gallery} year={year} month={month} day={day} />
       <Swipeable onSwiped={handleSwipe}>
-        <div id="content">
-          <Content
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            lang={lang}
-            countryData={countryData}
-          >
-            {children}
-          </Content>
-        </div>
+        <Content
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={day}
+          lang={lang}
+          countryData={countryData}
+        >
+          {children}
+        </Content>
       </Swipeable>
       <Footer gallery={gallery} year={year} month={month} day={day} />
     </>

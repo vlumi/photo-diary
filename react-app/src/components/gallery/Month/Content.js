@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 
 import EpochAge from "../EpochAge";
@@ -10,14 +11,42 @@ import Link from "../Link";
 
 import calendar from "../../../lib/calendar";
 
-const Content = ({
-  children,
-  gallery,
-  year,
-  month,
-  lang,
-  countryData,
-}) => {
+const Root = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+`;
+const DayTitle = styled.h3`
+  color: var(--header-color);
+  background: var(--header-background);
+  font-size: 18pt;
+  text-align: center;
+  margin: 1px;
+  padding: 5px 3px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--header-background);
+  border-radius: 15px 0 0 15px;
+  height: 200px;
+  min-width: 25px;
+
+  & > :link {
+    color: var(--header-color);
+  }
+  & > :visited {
+    color: var(--header-color);
+  }
+`;
+const DaySubTitle = styled.span`
+  display: block;
+  font-size: 8pt;
+  margin: 0;
+  color: var(--header-sub-color);
+  background: inherit;
+  margin: 5px 0;
+`;
+
+const Content = ({ children, gallery, year, month, lang, countryData }) => {
   const { t } = useTranslation();
 
   if (!gallery.includesMonth(year, month)) {
@@ -36,13 +65,13 @@ const Content = ({
     switch (gallery.epochType()) {
       case "birthday":
         return (
-          <span>
+          <DaySubTitle>
             <EpochAge gallery={gallery} year={year} month={month} day={day} />
-          </span>
+          </DaySubTitle>
         );
       case "1-index":
         return (
-          <span>
+          <DaySubTitle>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -50,11 +79,11 @@ const Content = ({
               day={day}
               lang={lang}
             />
-          </span>
+          </DaySubTitle>
         );
       case "0-index":
         return (
-          <span>
+          <DaySubTitle>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -63,7 +92,7 @@ const Content = ({
               lang={lang}
               start={0}
             />
-          </span>
+          </DaySubTitle>
         );
       default:
         return "";
@@ -80,13 +109,13 @@ const Content = ({
         countryData={countryData}
       >
         <Link gallery={gallery} year={year} month={month} day={day}>
-          <h3>
+          <DayTitle>
             {day}
-            <span>
+            <DaySubTitle>
               {t(`weekday-short-${calendar.dayOfWeek(year, month, day)}`)}
-            </span>
+            </DaySubTitle>
             {renderEpochInfo(day)}
-          </h3>
+          </DayTitle>
         </Link>
       </Thumbnails>
     );
@@ -95,7 +124,7 @@ const Content = ({
   return (
     <>
       {children}
-      <div className="month">{gallery.mapDays(year, month, renderDay)}</div>
+      <Root>{gallery.mapDays(year, month, renderDay)}</Root>
     </>
   );
 };

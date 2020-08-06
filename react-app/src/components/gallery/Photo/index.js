@@ -90,15 +90,13 @@ const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
         photo={photo}
       />
       <Swipeable onSwiped={handleSwipe}>
-        <div id="content">
-          <Content
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            photo={photo}
-          />
-        </div>
+        <Content
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={day}
+          photo={photo}
+        />
         <Footer
           gallery={gallery}
           year={year}

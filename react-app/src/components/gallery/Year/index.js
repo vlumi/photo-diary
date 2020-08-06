@@ -99,11 +99,9 @@ const Year = ({ children, gallery, year }) => {
         </Helmet>
         <Navigation gallery={gallery} year={year} />
         <Swipeable onSwiped={handleSwipe}>
-          <div id="content">
-            <Content gallery={gallery} year={year}>
-              {children}
-            </Content>
-          </div>{" "}
+          <Content gallery={gallery} year={year}>
+            {children}
+          </Content>
         </Swipeable>
         <Footer gallery={gallery} year={year} />
       </>
