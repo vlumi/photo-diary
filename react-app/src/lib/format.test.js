@@ -1,6 +1,6 @@
 import format from "./format";
 
-const config = require("./config");
+require("./config");
 jest.mock("./config", () => ({
   FIRST_WEEKDAY: 1,
 }));
@@ -344,11 +344,6 @@ describe("categorySorter", () => {
     { key: "3", value: "10" },
     { key: "10", value: "2" },
     { key: "2", value: "3" },
-  ];
-  const sortedByNumValueAsc = [
-    { key: "10", value: "2" },
-    { key: "2", value: "3" },
-    { key: "3", value: "10" },
   ];
   test("author", () =>
     expect(data.sort(keyValueSorter("author"))).toStrictEqual(

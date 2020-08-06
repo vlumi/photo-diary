@@ -1,6 +1,6 @@
 import calendar from "./calendar";
 
-const config = require("./config");
+require("./config");
 jest.mock("./config", () => ({
   FIRST_WEEKDAY: 1,
 }));
