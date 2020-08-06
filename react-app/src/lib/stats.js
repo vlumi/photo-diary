@@ -392,7 +392,7 @@ const collectTopics = (data, lang, t, countryData) => {
   const collectYear = (byYear, daysInYear) => {
     const [flat, data, valueRanks] = transformData({
       original: byYear,
-      comparator: collection.numSortByFieldAsc("key"),
+      comparator: collection.numSortByFieldDesc("key"),
     });
     const values = flat.map((entry) => {
       return entry.value / daysInYear[entry.key];
