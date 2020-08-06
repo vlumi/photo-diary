@@ -239,7 +239,12 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
   if (!month) {
     return (
       <Year gallery={gallery} year={year} lang={lang} countryData={countryData}>
-        <Title galleries={galleries} gallery={gallery} context={context} />
+        <Title
+          galleries={galleries}
+          gallery={gallery}
+          context={context}
+          year={year}
+        />
         <Filters
           filters={filters}
           setFilters={setFilters}
@@ -259,7 +264,13 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
         lang={lang}
         countryData={countryData}
       >
-        <Title galleries={galleries} gallery={gallery} context={context} />
+        <Title
+          galleries={galleries}
+          gallery={gallery}
+          context={context}
+          year={year}
+          month={month}
+        />
         <Filters
           filters={filters}
           setFilters={setFilters}
@@ -280,7 +291,14 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
         lang={lang}
         countryData={countryData}
       >
-        <Title galleries={galleries} gallery={gallery} context={context} />
+        <Title
+          galleries={galleries}
+          gallery={gallery}
+          context={context}
+          year={year}
+          month={month}
+          day={day}
+        />
         <Filters
           filters={filters}
           setFilters={setFilters}
@@ -302,7 +320,14 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
       lang={lang}
       countryData={countryData}
     >
-      <Title galleries={galleries} gallery={gallery} context={context} />
+      <Title
+        galleries={galleries}
+        gallery={gallery}
+        context={context}
+        year={year}
+        month={month}
+        day={day}
+      />
       <Filters
         filters={filters}
         setFilters={setFilters}

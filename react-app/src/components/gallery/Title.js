@@ -32,7 +32,7 @@ const ContextSelect = styled(TitleSelect)`
 `;
 const TitleOption = styled.option``;
 
-const Title = ({ galleries, gallery, context }) => {
+const Title = ({ galleries, gallery, context, year, month, day }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -54,7 +54,7 @@ const Title = ({ galleries, gallery, context }) => {
     switch (context) {
       default:
       case "gallery":
-        return gallery.path();
+        return gallery.path(year, month, day);
       case "stats":
         return gallery.statsPath();
     }
@@ -117,5 +117,8 @@ Title.propTypes = {
   galleries: PropTypes.array.isRequired,
   gallery: PropTypes.object.isRequired,
   context: PropTypes.string.isRequired,
+  year: PropTypes.number,
+  month: PropTypes.number,
+  day: PropTypes.number,
 };
 export default Title;
