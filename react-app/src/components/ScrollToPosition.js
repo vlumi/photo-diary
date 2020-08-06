@@ -1,4 +1,4 @@
-import React, { useEffect, Fragment } from "react";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import { withRouter } from "react-router-dom";
 
@@ -12,8 +12,7 @@ const ScrollToPosition = ({ history, children, scrollState }) => {
       unlisten();
     };
   }, [history, scrollState]);
-
-  return <Fragment>{children}</Fragment>;
+  return <>{children}</>;
 };
 ScrollToPosition.propTypes = {
   history: PropTypes.any,
