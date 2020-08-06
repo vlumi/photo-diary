@@ -27,40 +27,6 @@ a {
   color: #f00;
 }
 
-h2 {
-  position: sticky;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  width: 100%;
-  height: 50px;
-  color: var(--header-color);
-  background: var(--header-background);
-  font-size: 24pt;
-  font-weight: bold;
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  align-items: center;
-}
-h2 > * {
-  flex-grow: 1;
-  flex-shrink: 1;
-  vertical-align: middle;
-  position: relative;
-  display: inline;
-}
-h2 :link {
-  position: relative;
-  color: var(--header-color);
-}
-h2 :visited {
-  color: var(--header-color);
-}
-
 h3 {
   color: var(--header-color);
   background: var(--header-background);

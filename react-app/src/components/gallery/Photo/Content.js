@@ -20,6 +20,12 @@ const Frame = styled.span`
   background-color: #bbb;
   flex-grow: 0;
   flex-shrink: 0;
+  width: ${(props) => props.width};
+  height: ${(props) => props.height};
+`;
+const Image = styled.img`
+  width: ${(props) => props.width};
+  height: ${(props) => props.height};
 `;
 
 const calculateWidth = (photoRatio, maxWidth, maxHeight, maxRatio) => {
@@ -68,35 +74,29 @@ const Content = ({ gallery, year, month, day, photo }) => {
     }
     return 1;
   };
-  const renderPhoto = (photo) => {
-    const photoRatio = photo.ratio();
-    const scale = getScale();
-    const maxWidth = (dimensions.width - 62) * scale;
-    const maxHeight = (dimensions.height - 107) * scale;
-    const maxRatio = maxWidth / maxHeight;
 
-    const style = {
-      width: calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio),
-      height: calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio),
-    };
-    const path = `${config.PHOTO_ROOT_URL}display/${photo.id()}`;
+  const photoRatio = photo.ratio();
+  const scale = getScale();
+  const maxWidth = (dimensions.width - 62) * scale;
+  const maxHeight = (dimensions.height - 107) * scale;
+  const maxRatio = maxWidth / maxHeight;
 
-    return (
-      <span className="photo" style={style}>
-        <img
-          src={path}
-          alt={photo.id()}
-          style={style}
-          onClick={toggleFullScreen}
-        />
-      </span>
-    );
-  };
+  const path = `${config.PHOTO_ROOT_URL}display/${photo.id()}`;
+  const width = calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio);
+  const height = calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio);
 
   return (
-    <>
-      <div className="photo">{renderPhoto(photo)}</div>
-    </>
+    <Root>
+      <Frame width={width} height={height}>
+        <Image
+          src={path}
+          alt={photo.id()}
+          width={width}
+          height={height}
+          onClick={toggleFullScreen}
+        />
+      </Frame>
+    </Root>
   );
 };
 Content.propTypes = {

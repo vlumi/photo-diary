@@ -11,6 +11,7 @@ import {
 
 import FormatDate from "../../FormatDate";
 
+import Root from "../Navigation";
 import Link from "../Link";
 
 const NavLink = styled(Link)`
@@ -34,7 +35,7 @@ const Navigation = ({ gallery, year, month }) => {
   const [nextYear, nextMonth] = gallery.nextMonth(year, month);
   const [lastYear, lastMonth] = gallery.lastMonth();
   return (
-    <h2>
+    <Root>
       <NavLink
         gallery={gallery}
         year={firstYear}
@@ -75,7 +76,7 @@ const Navigation = ({ gallery, year, month }) => {
       >
         <BsSkipForwardFill />
       </NavLink>
-    </h2>
+    </Root>
   );
 };
 Navigation.propTypes = {

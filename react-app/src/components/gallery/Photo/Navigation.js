@@ -9,6 +9,7 @@ import {
   BsSkipForwardFill,
 } from "react-icons/bs";
 
+import Root from "../Navigation";
 import Link from "../Link";
 
 const NavLink = styled(Link)`
@@ -40,7 +41,7 @@ const Navigation = ({ gallery, year, month, day, photo }) => {
   const lastDayPhotos = gallery.photos(lastYear, lastMonth, lastDay);
   const lastPhoto = lastDayPhotos[lastDayPhotos.length - 1];
   return (
-    <h2 className="photo">
+    <Root>
       <NavLink gallery={gallery} photo={firstPhoto} visibility={prevVisibility}>
         <BsSkipBackwardFill />
       </NavLink>
@@ -63,7 +64,7 @@ const Navigation = ({ gallery, year, month, day, photo }) => {
       <NavLink gallery={gallery} photo={lastPhoto} visibility={nextVisibility}>
         <BsSkipForwardFill />
       </NavLink>
-    </h2>
+    </Root>
   );
 };
 Navigation.propTypes = {
