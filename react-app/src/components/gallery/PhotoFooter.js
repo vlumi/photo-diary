@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
 
 import FlagIcon from "../FlagIcon";
 import EpochAge from "./EpochAge";
@@ -10,6 +11,51 @@ import Link from "./Link";
 
 import config from "../../lib/config";
 import format from "../../lib/format";
+
+const Footer = styled.div`
+  margin: 10px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  overflow: hidden;
+`;
+const ThumbnailContainer = styled.span`
+  width: 70px;
+  height: 50px;
+  display: flex;
+`;
+const PreviousThumbnailContainer = styled(ThumbnailContainer)`
+  justify-content: flex-start;
+`;
+const NextThumbnailContainer = styled(ThumbnailContainer)`
+  justify-content: flex-end;
+`;
+const Adjacent = styled.div`
+  margin: 0;
+  padding: 2px;
+  border: solid #004 1px;
+`;
+const Description = styled.span`
+  flex-grow: 1;
+  text-align: center;
+  margin: 0 10px;
+`;
+const Details = styled.div`
+  font-size: small;
+  text-align: right;
+  color: var(--inactive-color);
+`;
+const Part = styled.span`
+  display: inline-block;
+`;
+const Copyright = styled.div`
+  flex-grow: 1;
+  text-align: center;
+  margin: 0 10px;
+  font-size: x-small;
+`;
 
 const PhotoFooter = ({
   gallery,
@@ -37,9 +83,9 @@ const PhotoFooter = ({
 
     return (
       <Link gallery={gallery} photo={adjacentPhoto}>
-        <div className="adjacent" style={style}>
+        <Adjacent style={style}>
           <img src={path} alt={adjacentPhoto.id()} style={style} />
-        </div>
+        </Adjacent>
       </Link>
     );
   };
@@ -48,57 +94,54 @@ const PhotoFooter = ({
     if (!photo.hasPlace()) {
       return "";
     }
-    return <span>{photo.place()}</span>;
+    return <Part>{photo.place()}</Part>;
   };
   const renderCountry = () => {
     if (!photo.hasCountry()) {
       return "";
     }
     return (
-      <span>
+      <Part>
         {photo.countryName(lang, countryData)}{" "}
         <FlagIcon code={photo.countryCode()} />
-      </span>
+      </Part>
     );
   };
   const renderLocation = () => {
     const country = renderCountry();
     const place = renderPlace();
     return (
-      <div className="details">
+      <Details>
         {place}
         {place && country ? ", " : ""}
         {country}
-      </div>
+      </Details>
     );
   };
   const renderCoordinates = () => {
     if (!photo.hasCoordinates()) {
       return <></>;
     }
-    return <div className="details">{photo.formatCoordinates()}</div>;
+    return <Details>{photo.formatCoordinates()}</Details>;
   };
   const renderExposure = () => {
-    const x = () => {
-      return [
-        photo.focalLength()
-          ? `ƒ=${formatExposure.focalLength(photo.focalLength())}㎜`
-          : "",
-        photo.aperture() ? formatExposure.aperture(photo.aperture()) : "",
-        photo.exposureTime()
-          ? `${formatExposure.exposureTime(photo.exposureTime())}s`
-          : "",
-        photo.iso() ? `ISO${formatExposure.iso(photo.iso())}` : "",
-        photo.resolution()
-          ? `${formatExposure.resolution(photo.resolution())}MP`
-          : "",
-        photo.exposureValue()
-          ? `EV${formatExposure.ev(photo.exposureValue())}`
-          : "",
-        photo.lightValue() ? `LV${formatExposure.ev(photo.lightValue())}` : "",
-      ].join(" ");
-    };
-    return <div className="details">{x()}</div>;
+    return [
+      photo.focalLength()
+        ? `ƒ=${formatExposure.focalLength(photo.focalLength())}㎜`
+        : "",
+      photo.aperture() ? formatExposure.aperture(photo.aperture()) : "",
+      photo.exposureTime()
+        ? `${formatExposure.exposureTime(photo.exposureTime())}s`
+        : "",
+      photo.iso() ? `ISO${formatExposure.iso(photo.iso())}` : "",
+      photo.resolution()
+        ? `${formatExposure.resolution(photo.resolution())}MP`
+        : "",
+      photo.exposureValue()
+        ? `EV${formatExposure.ev(photo.exposureValue())}`
+        : "",
+      photo.lightValue() ? `LV${formatExposure.ev(photo.lightValue())}` : "",
+    ].join(" ");
   };
   const renderGear = () => {
     const camera = photo.formatCamera();
@@ -115,7 +158,7 @@ const PhotoFooter = ({
     }
     return (
       <>
-        <span>{camera}</span> + <span>{lens}</span>
+        <Part>{camera}</Part> + <Part>{lens}</Part>
       </>
     );
   };
@@ -126,20 +169,20 @@ const PhotoFooter = ({
     switch (gallery.epochType()) {
       case "birthday":
         return (
-          <div className="details">
+          <Details>
             <EpochAge
               gallery={gallery}
               year={year}
               month={month}
               day={day}
               format="long"
-              separator=""
+              separator=" "
             />
-          </div>
+          </Details>
         );
       case "1-index":
         return (
-          <div className="details">
+          <Details>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -148,11 +191,11 @@ const PhotoFooter = ({
               lang={lang}
               format="long"
             />
-          </div>
+          </Details>
         );
       case "0-index":
         return (
-          <div className="details">
+          <Details>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -162,7 +205,7 @@ const PhotoFooter = ({
               format="long"
               start={0}
             />
-          </div>
+          </Details>
         );
       default:
         return "";
@@ -185,25 +228,28 @@ const PhotoFooter = ({
     }
     return (
       <>
-        <div className="footer">
-          <span className="previous">{renderAdjacentPhoto(previousPhoto)}</span>
-          <span className="description">
+        <Footer>
+          <PreviousThumbnailContainer>
+            {renderAdjacentPhoto(previousPhoto)}
+          </PreviousThumbnailContainer>
+          <Description>
             <h4>{photo.formatTimestamp()}</h4>
             {photo.title()}
             {renderLocation()}
             {renderCoordinates()}
-            {renderExposure()}
-            <div className="details">{renderGear()}</div>
-            {/* TODO: epochMode */}
+            <Details>{renderExposure()}</Details>
+            <Details>{renderGear()}</Details>
             {renderEpochInfo()}
-            <div className="copyright">
-              <span>Photo Copyright © {photo.author()}</span>{" "}
-              <span>All rights reserved.</span>
-            </div>
-          </span>
-          <div className="next">{renderAdjacentPhoto(nextPhoto)}</div>
-        </div>
-        <div className="footer">{renderMap()}</div>
+            <Copyright>
+              <Part>Photo Copyright © {photo.author()}</Part>{" "}
+              <Part>All rights reserved.</Part>
+            </Copyright>
+          </Description>
+          <NextThumbnailContainer>
+            {renderAdjacentPhoto(nextPhoto)}
+          </NextThumbnailContainer>
+        </Footer>
+        <Footer>{renderMap()}</Footer>
       </>
     );
   };

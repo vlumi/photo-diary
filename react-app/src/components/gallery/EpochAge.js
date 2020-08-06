@@ -1,8 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 
 import calendar from "../../lib/calendar";
+
+const Root = styled.div``;
+const Part = styled.span`
+  display: inline-block;
+`;
 
 const EpochAge = ({
   gallery,
@@ -33,11 +39,16 @@ const EpochAge = ({
     return "0" + t(`days-${format}`);
   }
 
-  return parts.map((part, index) => (
-    <span key={`age-${year}${month}${day}${index}`}>
-      {part} {separator}
-    </span>
-  ));
+  return (
+    <Root>
+      {parts.map((part, index) => (
+        <>
+          <Part key={`age-${year}${month}${day}${index}`}>{part}</Part>
+          {separator}
+        </>
+      ))}
+    </Root>
+  );
 };
 EpochAge.propTypes = {
   gallery: PropTypes.object.isRequired,
