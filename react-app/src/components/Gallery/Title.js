@@ -32,7 +32,7 @@ const ContextSelect = styled(TitleSelect)`
 `;
 const TitleOption = styled.option``;
 
-const Title = ({ galleries, gallery, context, year, month, day }) => {
+const Title = ({ user, galleries, gallery, context, year, month, day }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -57,6 +57,8 @@ const Title = ({ galleries, gallery, context, year, month, day }) => {
         return gallery.path(year, month, day);
       case "stats":
         return gallery.statsPath();
+      case "admin":
+        return gallery.adminPath(year, month, day);
     }
   };
 
@@ -92,9 +94,13 @@ const Title = ({ galleries, gallery, context, year, month, day }) => {
         setRedirect(getRedirectPath(gallery, targetContext));
       }
     };
+    const contexts = ["gallery", "stats"];
+    if (user && user.isAdmin()) {
+      contexts.push("admin");
+    }
     return (
       <ContextSelect value={context} onChange={changeHandler}>
-        {["gallery", "stats"].map((context) => (
+        {contexts.map((context) => (
           <TitleOption key={context} value={context}>
             {t(`nav-${context}`)}
           </TitleOption>
@@ -114,6 +120,7 @@ const Title = ({ galleries, gallery, context, year, month, day }) => {
   );
 };
 Title.propTypes = {
+  user: PropTypes.object,
   galleries: PropTypes.array.isRequired,
   gallery: PropTypes.object.isRequired,
   context: PropTypes.string.isRequired,

@@ -13,7 +13,6 @@ import "./App.css";
 import ScrollToPosition from "./components/ScrollToPosition";
 import TopMenu from "./components/TopMenu";
 import Gallery from "./components/Gallery";
-import AdminTop from "./components/AdminTop";
 
 import UserModel from "./models/UserModel";
 
@@ -79,7 +78,16 @@ const App = () => {
                 user={user}
                 lang={lang}
                 countryData={countryData}
-                isStats={true}
+                context="stats"
+                scrollState={scrollState}
+              />
+            </Route>
+            <Route path="/g/:galleryId/admin/:year?/:month?/:day?/:photoId?">
+              <Gallery
+                user={user}
+                lang={lang}
+                countryData={countryData}
+                context="admin"
                 scrollState={scrollState}
               />
             </Route>
@@ -106,9 +114,6 @@ const App = () => {
                 countryData={countryData}
                 scrollState={scrollState}
               />
-            </Route>
-            <Route path="/admin">
-              <AdminTop user={user} />
             </Route>
             <Route path="/">
               <Redirect to="/g" />

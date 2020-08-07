@@ -106,6 +106,17 @@ const GalleryModel = (galleryData) => {
           return self.lastPhoto().path(self);
       }
     },
+    adminPath: (year, month, day, photoId) => {
+      const parts = ["", "g", gallery.id, "admin"];
+      const ymd = format.date({ year, month, day, separator: "/" });
+      if (ymd) {
+        parts.push(ymd);
+        if (photoId) {
+          parts.push(photoId);
+        }
+      }
+      return parts.join("/");
+    },
     statsPath: () => ["", "g", gallery.id, "stats"].join("/"),
     includesPhotos: () =>
       !!("photos" in gallery && Object.keys(gallery.photos).length > 0),

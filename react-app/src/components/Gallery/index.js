@@ -10,6 +10,7 @@ import galleryPhotosService from "../../services/gallery-photos";
 import Title from "./Title";
 import Filters from "./Filters";
 import ListBody from "./ListBody";
+import Admin from "./Admin";
 import Stats from "./Stats";
 import Empty from "./Empty";
 import Full from "./Full";
@@ -27,7 +28,13 @@ import format from "../../lib/format";
 import stats from "../../lib/stats";
 import theme from "../../lib/theme";
 
-const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
+const Gallery = ({
+  user,
+  lang,
+  countryData,
+  context = "gallery",
+  scrollState,
+}) => {
   const [galleries, setGalleries] = React.useState(undefined);
   const [gallery, setGallery] = React.useState(undefined);
   const [photos, setPhotos] = React.useState(undefined);
@@ -46,8 +53,6 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [scrollState]);
-
-  const context = isStats ? "stats" : "gallery";
 
   const galleryId = useParams().galleryId;
   const photoId = useParams().photoId;
@@ -201,26 +206,58 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     );
   }
 
+  const renderx = () => (
+    <>
+      <Title
+        user={user}
+        galleries={galleries}
+        gallery={gallery}
+        context={context}
+        year={year}
+        month={month}
+        day={day}
+      />
+      <Filters
+        filters={filters}
+        setFilters={setFilters}
+        uniqueValues={uniqueValues}
+        lang={lang}
+        countryData={countryData}
+      />
+    </>
+  );
+
   const renderContent = () => {
     if (staleGallery || !gallery || !uniqueValues) {
       return <div>{t("loading")}</div>;
     }
 
     if (!gallery.includesPhotos()) {
+      return <Empty gallery={gallery}>{renderx()}</Empty>;
+    }
+
+    const photo = gallery.photo(year, month, day, photoId);
+
+    if (context === "admin") {
       return (
-        <Empty gallery={gallery}>
-          <Title galleries={galleries} gallery={gallery} context={context} />
-          <Filters
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
-        </Empty>
+        <Admin
+          user={user}
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={day}
+          photoId={photoId}
+          filters={filters}
+          setFilters={setFilters}
+          lang={lang}
+          countryData={countryData}
+          theme={activeTheme}
+        >
+          {renderx()}
+        </Admin>
       );
     }
-    if (isStats) {
+    if (context === "stats") {
       return (
         <Stats
           photos={gallery.photos()}
@@ -230,30 +267,12 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
           countryData={countryData}
           theme={activeTheme}
         >
-          <Title galleries={galleries} gallery={gallery} context={context} />
-          <Filters
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
+          {renderx()}
         </Stats>
       );
     }
     if (!year) {
-      return (
-        <Full gallery={gallery}>
-          <Title galleries={galleries} gallery={gallery} context={context} />
-          <Filters
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
-        </Full>
-      );
+      return <Full gallery={gallery}>{renderx()}</Full>;
     }
     if (!month) {
       return (
@@ -264,19 +283,7 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
           countryData={countryData}
           theme={activeTheme}
         >
-          <Title
-            galleries={galleries}
-            gallery={gallery}
-            context={context}
-            year={year}
-          />
-          <Filters
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
+          {renderx()}
         </Year>
       );
     }
@@ -289,20 +296,7 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
           lang={lang}
           countryData={countryData}
         >
-          <Title
-            galleries={galleries}
-            gallery={gallery}
-            context={context}
-            year={year}
-            month={month}
-          />
-          <Filters
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
+          {renderx()}
         </Month>
       );
     }
@@ -316,25 +310,10 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
           lang={lang}
           countryData={countryData}
         >
-          <Title
-            galleries={galleries}
-            gallery={gallery}
-            context={context}
-            year={year}
-            month={month}
-            day={day}
-          />
-          <Filters
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
+          {renderx()}
         </Day>
       );
     }
-    const photo = gallery.photo(year, month, day, photoId);
     return (
       <Photo
         gallery={gallery}
@@ -345,21 +324,7 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
         lang={lang}
         countryData={countryData}
       >
-        <Title
-          galleries={galleries}
-          gallery={gallery}
-          context={context}
-          year={year}
-          month={month}
-          day={day}
-        />
-        <Filters
-          filters={filters}
-          setFilters={setFilters}
-          uniqueValues={uniqueValues}
-          lang={lang}
-          countryData={countryData}
-        />
+        {renderx()}
       </Photo>
     );
   };
@@ -374,7 +339,7 @@ Gallery.propTypes = {
   user: PropTypes.object,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
-  isStats: PropTypes.bool,
+  context: PropTypes.string,
   scrollState: PropTypes.object.isRequired,
 };
 export default Gallery;
