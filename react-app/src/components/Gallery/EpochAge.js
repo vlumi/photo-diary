@@ -42,10 +42,10 @@ const EpochAge = ({
   return (
     <Root>
       {parts.map((part, index) => (
-        <>
-          <Part key={`age-${year}${month}${day}${index}`}>{part}</Part>
+        <React.Fragment key={index}>
+          <Part>{part}</Part>
           {separator}
-        </>
+        </React.Fragment>
       ))}
     </Root>
   );
