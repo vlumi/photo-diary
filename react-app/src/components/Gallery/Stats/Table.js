@@ -28,6 +28,7 @@ const RowSelected = styled(Row)`
   color: var(--header-color);
   background-color: var(--header-background);
 `;
+// TODO: replace by gradients
 const RowNone = styled(Row)`
   background-color: var(--none-color);
 `;
@@ -127,6 +128,7 @@ const Table = ({ topic, category, filters, setFilters }) => {
           </RowSelected>
         );
       }
+      // TODO: replace by gradients
       if (value.standardScore < -0.5) {
         return (
           <RowNone key={key} onClick={handleClick} data-key={valueKey}>

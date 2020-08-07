@@ -26,7 +26,7 @@ const decodeTableRowKey = (key) => {
   return value;
 };
 
-const collectTopics = (data, lang, t, countryData) => {
+const collectTopics = (data, lang, t, countryData, theme) => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang);
 
@@ -132,8 +132,11 @@ const collectTopics = (data, lang, t, countryData) => {
       Number(_.value)
     );
     const doMap = (data) => {
-      // TODO: from configured theme: --header-background -> --header-color
-      const colorGradients = color.colorGradient("#004", "#ddf", data.length);
+      const colorGradients = color.colorGradient(
+        theme.get("header-background"),
+        theme.get("header-color"),
+        data.length
+      );
       const colors = data
         .map((_) => Number(_.value))
         .map((value) => colorGradients[valueRanks[value]]);
@@ -322,8 +325,11 @@ const collectTopics = (data, lang, t, countryData) => {
           datasets: [],
         };
       }
-      // TODO: from configured theme: --header-background -> --header-color
-      const colorGradients = color.colorGradient("#004", "#ddf", flat.length);
+      const colorGradients = color.colorGradient(
+        theme.get("header-background"),
+        theme.get("header-color"),
+        flat.length
+      );
       return {
         labels: flat[0].value.map((entry) => t(`month-long-${entry.key}`)),
         datasets: flat.map((entry, i) => {

@@ -12,7 +12,7 @@ import Footer from "./Footer";
 
 import useKeyPress from "../../../lib/keypress";
 
-const Year = ({ children, gallery, year }) => {
+const Year = ({ children, gallery, year, theme }) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();
@@ -84,7 +84,7 @@ const Year = ({ children, gallery, year }) => {
         {gallery.mapYears((year) => (
           // TODO: display year number somehow
           <div key={year} className="year">
-            <Content gallery={gallery} year={Number(year)} />
+            <Content gallery={gallery} year={Number(year)} theme={theme} />
           </div>
         ))}
       </>
@@ -99,7 +99,7 @@ const Year = ({ children, gallery, year }) => {
         </Helmet>
         <Navigation gallery={gallery} year={year} />
         <Swipeable onSwiped={handleSwipe}>
-          <Content gallery={gallery} year={year}>
+          <Content gallery={gallery} year={year} theme={theme}>
             {children}
           </Content>
         </Swipeable>
@@ -112,5 +112,6 @@ Year.propTypes = {
   children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
+  theme: PropTypes.object.isRequired,
 };
 export default Year;

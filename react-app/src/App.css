@@ -1,3 +1,17 @@
+html {
+  --primary-color: #000;
+  --primary-background: #ddd;
+  --inactive-color: #999;
+  --header-color: #fff;
+  --header-sub-color: #ddd;
+  --header-background: #000;
+  --none-color: #fff;
+  --low-color: #eee;
+  --medium-color: #ddd;
+  --high-color: #ccc;
+  --extreme-color: #bbb;
+}
+
 body {
   text-align: center;
   font-family: sans-serif;
@@ -5,15 +19,6 @@ body {
   margin: 0;
   color: var(--primary-color);
   background: var(--primary-background);
-}
-
-#root {
-  color: var(--primary-color);
-  background: var(--primary-background);
-}
-
-form {
-  display: inline;
 }
 
 a {
@@ -50,19 +55,6 @@ a {
 .gallery > .description {
   margin: 5px;
   text-align: left;
-}
-
-.heat-low {
-  background-color: var(--low-color);
-}
-.heat-medium {
-  background-color: var(--medium-color);
-}
-.heat-high {
-  background-color: var(--high-color);
-}
-.heat-extreme {
-  background-color: var(--extreme-color);
 }
 
 .thumbnails {

@@ -8,15 +8,34 @@ import Link from "../Link";
 import color from "../../../lib/color";
 import format from "../../../lib/format";
 
-// TODO: from configured theme
-const heatColors = color.colorGradient("#ddf", "#99b", 11);
-
 const Some = styled(DayCell)``;
 const None = styled(DayCell)`
   color: var(--inactive-color);
 `;
 
-const Day = ({ gallery, year, month, day, maxCount }) => {
+const cachedHeatColors = {
+  from: undefined,
+  to: undefined,
+  values: [],
+};
+const getHeatColors = (theme) => {
+  const gradientFrom = theme.get("primary-background");
+  const gradientTo = theme.get("inactive-color");
+  if (
+    cachedHeatColors.from === gradientFrom &&
+    cachedHeatColors.to === gradientTo
+  ) {
+    return cachedHeatColors.values;
+  }
+  cachedHeatColors.from = gradientFrom;
+  cachedHeatColors.to = gradientTo;
+  cachedHeatColors.values = color.colorGradient(gradientFrom, gradientTo, 11);
+  return cachedHeatColors.values;
+};
+
+const Day = ({ gallery, year, month, day, maxCount, theme }) => {
+  const heatColors = getHeatColors(theme);
+
   const renderDayValue = (gallery, year, month, day, photoCount) => {
     if (day === 0) {
       return <></>;
@@ -60,5 +79,6 @@ Day.propTypes = {
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   maxCount: PropTypes.number.isRequired,
+  theme: PropTypes.object.isRequired,
 };
 export default Day;

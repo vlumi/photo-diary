@@ -65,7 +65,7 @@ const WeekDay = styled(DayCell)`
   color: var(--inactive-color);
 `;
 
-const Month = ({ gallery, year, month, maxCount }) => {
+const Month = ({ gallery, year, month, maxCount,theme }) => {
   const { t } = useTranslation();
 
   const renderTitle = (gallery, year, month) => {
@@ -102,6 +102,7 @@ const Month = ({ gallery, year, month, maxCount }) => {
                     month={month}
                     day={day}
                     maxCount={maxCount}
+                    theme={theme}
                   />
                 ))}
               </Row>
@@ -117,5 +118,6 @@ Month.propTypes = {
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   maxCount: PropTypes.number.isRequired,
+  theme: PropTypes.object.isRequired,
 };
 export default Month;

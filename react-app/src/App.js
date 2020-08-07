@@ -8,7 +8,6 @@ import {
 import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
 
-import "./themes.css";
 import "./App.css";
 
 import ScrollToPosition from "./components/ScrollToPosition";

@@ -20,7 +20,7 @@ const Calendar = styled.div`
   max-width: 904px;
 `;
 
-const Content = ({ children, gallery, year }) => {
+const Content = ({ children, gallery, year, theme }) => {
   const maxCount = gallery.maxDayCount(year);
   return (
     <>
@@ -36,6 +36,7 @@ const Content = ({ children, gallery, year }) => {
                 year={year}
                 month={month}
                 maxCount={maxCount}
+                theme={theme}
               />
             ))}
         </Calendar>
@@ -47,5 +48,6 @@ Content.propTypes = {
   children: PropTypes.any,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
+  theme: PropTypes.object.isRequired,
 };
 export default Content;

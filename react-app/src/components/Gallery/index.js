@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { createGlobalStyle } from "styled-components";
 import { Redirect, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -140,6 +141,24 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     theme.setTheme(config.DEFAULT_THEME);
   }
 
+  const GlobalStyles = createGlobalStyle`
+    html {
+      --primary-color: ${theme.get("primary-color")};
+      --primary-background: ${theme.get("primary-background")};
+      --inactive-color: ${theme.get("inactive-color")};
+      --header-color: ${theme.get("header-color")};
+      --header-sub-color: ${theme.get("header-sub-color")};
+      --header-background: ${theme.get("header-background")};
+      ${"" /* TODO: remove  */}
+      --none-color: ${theme.get("none-color")};
+      --low-color: ${theme.get("low-color")};
+      --medium-color: ${theme.get("medium-color")};
+      --high-color: ${theme.get("high-color")};
+      --extreme-color: ${theme.get("extreme-color")};
+      filter: ${theme.get("filter")}
+    }
+  `;
+
   if (error) {
     theme.setTheme("grayscale");
     return <div className="error">Loading failed</div>;
@@ -184,110 +203,147 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     );
   }
 
-  if (staleGallery || !gallery || !uniqueValues) {
-    return <div>{t("loading")}</div>;
-  }
+  const renderContent = () => {
+    if (staleGallery || !gallery || !uniqueValues) {
+      return <div>{t("loading")}</div>;
+    }
 
-  if (!gallery.includesPhotos()) {
-    return (
-      <Empty gallery={gallery}>
-        <Title galleries={galleries} gallery={gallery} context={context} />
-        <Filters
+    if (!gallery.includesPhotos()) {
+      return (
+        <Empty gallery={gallery}>
+          <Title galleries={galleries} gallery={gallery} context={context} />
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            uniqueValues={uniqueValues}
+            lang={lang}
+            countryData={countryData}
+          />
+        </Empty>
+      );
+    }
+    if (isStats) {
+      return (
+        <Stats
+          photos={gallery.photos()}
           filters={filters}
           setFilters={setFilters}
-          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
-        />
-      </Empty>
-    );
-  }
-  if (isStats) {
-    return (
-      <Stats
-        photos={gallery.photos()}
-        filters={filters}
-        setFilters={setFilters}
-        lang={lang}
-        countryData={countryData}
-      >
-        <Title galleries={galleries} gallery={gallery} context={context} />
-        <Filters
-          filters={filters}
-          setFilters={setFilters}
-          uniqueValues={uniqueValues}
-          lang={lang}
-          countryData={countryData}
-        />
-      </Stats>
-    );
-  }
-  if (!year) {
-    return (
-      <Full gallery={gallery}>
-        <Title galleries={galleries} gallery={gallery} context={context} />
-        <Filters
-          filters={filters}
-          setFilters={setFilters}
-          uniqueValues={uniqueValues}
-          lang={lang}
-          countryData={countryData}
-        />
-      </Full>
-    );
-  }
-  if (!month) {
-    return (
-      <Year gallery={gallery} year={year} lang={lang} countryData={countryData}>
-        <Title
-          galleries={galleries}
+          theme={theme}
+        >
+          <Title galleries={galleries} gallery={gallery} context={context} />
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            uniqueValues={uniqueValues}
+            lang={lang}
+            countryData={countryData}
+          />
+        </Stats>
+      );
+    }
+    if (!year) {
+      return (
+        <Full gallery={gallery}>
+          <Title galleries={galleries} gallery={gallery} context={context} />
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            uniqueValues={uniqueValues}
+            lang={lang}
+            countryData={countryData}
+          />
+        </Full>
+      );
+    }
+    if (!month) {
+      return (
+        <Year
           gallery={gallery}
-          context={context}
           year={year}
-        />
-        <Filters
-          filters={filters}
-          setFilters={setFilters}
-          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
-        />
-      </Year>
-    );
-  }
-  if (!day) {
-    return (
-      <Month
-        gallery={gallery}
-        year={year}
-        month={month}
-        lang={lang}
-        countryData={countryData}
-      >
-        <Title
-          galleries={galleries}
+          theme={theme}
+        >
+          <Title
+            galleries={galleries}
+            gallery={gallery}
+            context={context}
+            year={year}
+          />
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            uniqueValues={uniqueValues}
+            lang={lang}
+            countryData={countryData}
+          />
+        </Year>
+      );
+    }
+    if (!day) {
+      return (
+        <Month
           gallery={gallery}
-          context={context}
           year={year}
           month={month}
-        />
-        <Filters
-          filters={filters}
-          setFilters={setFilters}
-          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
-        />
-      </Month>
-    );
-  }
-  if (!photoId) {
+        >
+          <Title
+            galleries={galleries}
+            gallery={gallery}
+            context={context}
+            year={year}
+            month={month}
+          />
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            uniqueValues={uniqueValues}
+            lang={lang}
+            countryData={countryData}
+          />
+        </Month>
+      );
+    }
+    if (!photoId) {
+      return (
+        <Day
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={day}
+          lang={lang}
+          countryData={countryData}
+        >
+          <Title
+            galleries={galleries}
+            gallery={gallery}
+            context={context}
+            year={year}
+            month={month}
+            day={day}
+          />
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            uniqueValues={uniqueValues}
+            lang={lang}
+            countryData={countryData}
+          />
+        </Day>
+      );
+    }
+    const photo = gallery.photo(year, month, day, photoId);
     return (
-      <Day
+      <Photo
         gallery={gallery}
         year={year}
         month={month}
         day={day}
+        photo={photo}
         lang={lang}
         countryData={countryData}
       >
@@ -306,36 +362,14 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
           lang={lang}
           countryData={countryData}
         />
-      </Day>
+      </Photo>
     );
-  }
-  const photo = gallery.photo(year, month, day, photoId);
+  };
   return (
-    <Photo
-      gallery={gallery}
-      year={year}
-      month={month}
-      day={day}
-      photo={photo}
-      lang={lang}
-      countryData={countryData}
-    >
-      <Title
-        galleries={galleries}
-        gallery={gallery}
-        context={context}
-        year={year}
-        month={month}
-        day={day}
-      />
-      <Filters
-        filters={filters}
-        setFilters={setFilters}
-        uniqueValues={uniqueValues}
-        lang={lang}
-        countryData={countryData}
-      />
-    </Photo>
+    <>
+      <GlobalStyles />
+      {renderContent()}
+    </>
   );
 };
 Gallery.propTypes = {

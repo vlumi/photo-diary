@@ -21,6 +21,7 @@ const Stats = ({
   setFilters,
   lang,
   countryData,
+  theme,
 }) => {
   const [data, setData] = React.useState(undefined);
 
@@ -42,7 +43,7 @@ const Stats = ({
     <>
       {children}
       <Root>
-        {stats.collectTopics(data, lang, t, countryData).map((topic) => (
+        {stats.collectTopics(data, lang, t, countryData, theme).map((topic) => (
           <Topic
             key={topic.key}
             topic={topic}
@@ -61,5 +62,6 @@ Stats.propTypes = {
   setFilters: PropTypes.func.isRequired,
   lang: PropTypes.string.isRequired,
   countryData: PropTypes.object.isRequired,
+  theme: PropTypes.object.isRequired,
 };
 export default Stats;
