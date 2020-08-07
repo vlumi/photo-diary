@@ -18,9 +18,14 @@ Photo Diary is split into separate independent modules, each handling its own su
 - [server](server) – Back-end API
 - [converter](converter) – Back-end process for pre-processing new photos to be added to the gallery
 
-### Setup
+### Basic Setup
 
-TBD
+- Create a reposity directory structure, separate from the code
+  - Must include the sub-directories `inbox`, `original`, `display`, and `thumbnail`
+  - Configure `PHOTO_ROOT_DIR` on [converter](converter) and [react-app](react-app) to point to this directory
+- Setup [server](server) and [converter](converter) to run as a background process, e.g. using [pm2](https://pm2.keymetrics.io/)
+- Build [react-app](react-app) into [server](server), running in the [server](server) directory:
+  - `npm run build:ui`
 
 ## Features
 
@@ -95,14 +100,14 @@ TBD
 
 ## Roadmap
 
-### Milestone 0.5
+Features planned for a 1.0 release.
 
-- Hybrid galleries
-  - Combine galleries to form new galleries
-  - Apply filters to an existing gallery
-
-### Milestone 1.0
-
+- Front-end
+  - Global admin view
+    - Manage users & ACL
+    - Manage galleries
+    - Manage photos
+    - Manage gallery/photo linking
 - Back-end
   - Fully tested Modification API
     - User
@@ -110,12 +115,9 @@ TBD
     - Gallery
     - Photo
     - Gallery-photo linking
-- Front-end
-  - Global admin view
-    - Manage users & ACL
-    - Manage galleries
-    - Manage photos
-    - Manage gallery/photo linking
+- Hybrid galleries
+  - Combine galleries to form new galleries
+  - Apply filters to an existing gallery
 
 ## Backlog
 
@@ -132,6 +134,7 @@ These features would be nice to have, but are too far into the future to put on 
     - Manage gallery/photo linking
   - Photo property filter improvements
     - Range filters for continuous variables: time, exposure values
+    - Coordinate filter, within a radius
 - Back-end
   - Drivers for different DBs; PostgreSQL, MySQL/MariaDB, MongoDB, ...
 
