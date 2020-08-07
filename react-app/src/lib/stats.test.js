@@ -825,6 +825,9 @@ describe("collectTopics", () => {
     isValid: jest.fn((country) => country === "jp"),
     getName: jest.fn(() => "Japan"),
   };
+  const mockTheme = {
+    get: jest.fn(() => "#000"),
+  };
   test("Empty", () => {
     const topics = stats.collectTopics(
       {
@@ -1139,7 +1142,8 @@ describe("collectTopics", () => {
       },
       "en",
       mockT,
-      mockCountryData
+      mockCountryData,
+      mockTheme
     );
     expect(topics.length).toBe(4);
     expect(topics[0].key).toBe("general");
