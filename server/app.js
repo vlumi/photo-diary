@@ -24,6 +24,7 @@ app.use("/g/*", express.static("build"));
 
 const registerPreProcessors = () => {
   app.use(middleware.tokenFilter);
+  /* istanbul ignore next */
   if (config.ENV !== "test") {
     app.use(middleware.requestLogger);
   }

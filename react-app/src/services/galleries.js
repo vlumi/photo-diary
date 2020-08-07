@@ -17,4 +17,4 @@ const get = async (galleryId) => {
   return response.data;
 };
 
-export default {  getAll, get };
+export default { getAll, get };

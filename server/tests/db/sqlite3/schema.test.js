@@ -11,9 +11,15 @@ describe("User", () => {
       "SELECT id,password,secret FROM user WHERE id = ? ORDER BY id ASC"
     ));
   test("Build update by id query: nothing", () =>
-    expect(schema.user.buildUpdateByIdQuery({})).toBe(undefined));
+    expect(schema.user.buildUpdateByIdQuery({})).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: id", () =>
-    expect(schema.user.buildUpdateByIdQuery({ id: "foo" })).toBe(undefined));
+    expect(schema.user.buildUpdateByIdQuery({ id: "foo" })).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: password", () =>
     expect(schema.user.buildUpdateByIdQuery({ password: "foo" })).toStrictEqual(
       {
@@ -73,19 +79,26 @@ describe("ACL", () => {
       `SELECT ${cols} FROM acl WHERE user_id = ? AND gallery_id = ? ORDER BY user_id ASC,gallery_id ASC`
     ));
   test("Build update by id query: nothing", () =>
-    expect(schema.acl.buildUpdateByIdQuery({})).toBe(undefined));
+    expect(schema.acl.buildUpdateByIdQuery({})).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: user_id", () =>
-    expect(schema.acl.buildUpdateByIdQuery({ user_id: "foo" })).toBe(
-      undefined
-    ));
+    expect(schema.acl.buildUpdateByIdQuery({ user_id: "foo" })).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: gallery_id", () =>
-    expect(schema.acl.buildUpdateByIdQuery({ gallery_id: "foo" })).toBe(
-      undefined
-    ));
+    expect(
+      schema.acl.buildUpdateByIdQuery({ gallery_id: "foo" })
+    ).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: user_id, gallery_id", () =>
     expect(
       schema.acl.buildUpdateByIdQuery({ user_id: "foo", gallery_id: "bar" })
-    ).toBe(undefined));
+    ).toStrictEqual({ query: undefined, values: undefined }));
   test("Build update by id query: level", () =>
     expect(schema.acl.buildUpdateByIdQuery({ level: 2 })).toStrictEqual({
       query: "UPDATE acl SET level=? WHERE user_id = ? AND gallery_id = ?",
@@ -143,9 +156,15 @@ describe("Gallery", () => {
       `SELECT ${cols} FROM gallery WHERE id = ? ORDER BY id ASC`
     ));
   test("Build update by id query: nothing", () =>
-    expect(schema.gallery.buildUpdateByIdQuery({})).toBe(undefined));
+    expect(schema.gallery.buildUpdateByIdQuery({})).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: id", () =>
-    expect(schema.gallery.buildUpdateByIdQuery({ id: "foo" })).toBe(undefined));
+    expect(schema.gallery.buildUpdateByIdQuery({ id: "foo" })).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: title", () =>
     expect(schema.gallery.buildUpdateByIdQuery({ title: "foo" })).toStrictEqual(
       {
@@ -222,22 +241,25 @@ describe("Gallery Photo", () => {
     ));
   // TODO: update
   test("Build update by id query: nothing", () =>
-    expect(schema.galleryPhoto.buildUpdateByIdQuery({})).toBe(undefined));
+    expect(schema.galleryPhoto.buildUpdateByIdQuery({})).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: gallery_id", () =>
     expect(
       schema.galleryPhoto.buildUpdateByIdQuery({ gallery_id: "foo" })
-    ).toBe(undefined));
+    ).toStrictEqual({ query: undefined, values: undefined }));
   test("Build update by id query: photo_id", () =>
-    expect(schema.galleryPhoto.buildUpdateByIdQuery({ photo_id: "foo" })).toBe(
-      undefined
-    ));
+    expect(
+      schema.galleryPhoto.buildUpdateByIdQuery({ photo_id: "foo" })
+    ).toStrictEqual({ query: undefined, values: undefined }));
   test("Build update by id query: gallery_id, photo_id", () =>
     expect(
       schema.galleryPhoto.buildUpdateByIdQuery({
         gallery_id: "foo",
         photo_id: "bar",
       })
-    ).toBe(undefined));
+    ).toStrictEqual({ query: undefined, values: undefined }));
   test("Build delete by id query", () =>
     expect(schema.galleryPhoto.buildDeleteByIdQuery()).toBe(
       "DELETE FROM gallery_photo WHERE gallery_id = ? AND photo_id = ?"
@@ -303,9 +325,15 @@ describe("Photo", () => {
     ));
   // TODO: update
   test("Build update by id query: nothing", () =>
-    expect(schema.photo.buildUpdateByIdQuery({})).toBe(undefined));
+    expect(schema.photo.buildUpdateByIdQuery({})).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: id", () =>
-    expect(schema.photo.buildUpdateByIdQuery({ id: "foo" })).toBe(undefined));
+    expect(schema.photo.buildUpdateByIdQuery({ id: "foo" })).toStrictEqual({
+      query: undefined,
+      values: undefined,
+    }));
   test("Build update by id query: title", () =>
     expect(schema.photo.buildUpdateByIdQuery({ title: "foo" })).toStrictEqual({
       query: "UPDATE photo SET title=? WHERE id = ?",

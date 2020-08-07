@@ -23,21 +23,22 @@ const monthDays = (year, month) =>
   Array.from(Array(daysInMonth(year, month) + 1).keys()).slice(1);
 
 const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-const daysOfWeek = () =>
+const daysOfWeek = (firstWeekday = config.FIRST_WEEKDAY) =>
   Array(7)
     .fill(0)
-    .map((x, index) => DOW[(index + config.FIRST_WEEKDAY) % 7]);
+    .map((x, index) => DOW[(index + firstWeekday) % 7]);
+
 const dayOfWeek = (year, month, day) => {
   return DOW[new Date(year, month - 1, day).getDay()];
 };
 
-const monthGrid = (year, month) => {
+const monthGrid = (year, month, firstWeekday = config.FIRST_WEEKDAY) => {
   const days = monthDays(year, month);
   const firstDow = new Date(year, month - 1, 1).getDay();
 
   const result = [];
   let row = 0;
-  let col = (firstDow + 7 - config.FIRST_WEEKDAY) % 7;
+  let col = (firstDow + 7 - firstWeekday) % 7;
   days.forEach((day) => {
     result[row] = result[row] || Array(7).fill(0);
     result[row][col] = day;
@@ -62,7 +63,7 @@ const previousDay = (year, month, day) => {
     return [year, month, day - 1];
   }
   if (month > 1) {
-    return [year, month - 1, daysInMonth(year, month)];
+    return [year, month - 1, daysInMonth(year, month - 1)];
   }
   return [year - 1, 12, daysInMonth(year, 12)];
 };
@@ -88,7 +89,11 @@ const sinceEpochYmd = (epoch, now) => {
   const [y1, m1, d1] = epoch;
   const [y2, m2, d2] = now;
 
-  if (y1 > y2 || (y1 === y2 && m1 > m2) || (m1 === m2 && y1 > y2)) {
+  if (
+    y1 > y2 ||
+    (y1 === y2 && m1 > m2) ||
+    (y1 === y2 && m1 === m2 && d1 > d2)
+  ) {
     return [0, 0, 0];
   }
 

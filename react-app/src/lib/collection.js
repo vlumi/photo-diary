@@ -10,8 +10,15 @@ const joinTruthyKeys = (map, separator = " ") =>
     .filter((key) => map[key])
     .join(separator);
 
+const compareWithNaN = (a, b, f) => {
+  if (isNaN(a) && isNaN(b)) return 0;
+  if (isNaN(a)) return 1;
+  if (isNaN(b)) return -1;
+  return f(a, b);
+};
+
 /**
- * Compare two arrays' contents.
+ * Compare two arrays' contents, assuming numeric content.
  *
  * - The first element from the beginning to differ will determine the order.
  * - If one array is shorter, and its elements are equal to the other, the shorter element is considered smaller.
@@ -22,28 +29,34 @@ const joinTruthyKeys = (map, separator = " ") =>
  * @return {number} `0` if the arrays are equal, a negative value if `a` is smaller, a positive value if `b` is smaller.
  */
 const compareArrays = (a, b) => {
-  if (typeof a !== "object" && typeof b !== "object") {
+  if (!Array.isArray(a) && !Array.isArray(b)) {
     return undefined;
   }
-  if (typeof a !== "object") {
+  if (!Array.isArray(a)) {
     return undefined;
   }
-  if (typeof b !== "object") {
+  if (!Array.isArray(b)) {
     return undefined;
   }
   const maxLength = Math.max(a.length, b.length);
   for (const i in [...Array(maxLength).keys()]) {
-    if (b.length <= i) {
-      return -1;
-    }
     if (a.length <= i) {
-      return 1;
-    }
-    if (a[i] > b[i]) {
       return -1;
     }
-    if (a[i] < b[i]) {
+    if (b.length <= i) {
       return 1;
+    }
+    const result = compareWithNaN(a[i], b[i], (a, b) => {
+      if (a > b) {
+        return 1;
+      }
+      if (a < b) {
+        return -1;
+      }
+      return 0;
+    });
+    if (result !== 0) {
+      return result;
     }
   }
   return 0;
@@ -56,6 +69,9 @@ const compareArrays = (a, b) => {
  * @param {function} transformer
  */
 const transformObjectKeys = (data, transformer) => {
+  if (!data) {
+    return data;
+  }
   return Object.fromEntries(
     Object.keys(data).map((key) => transformer(key, data[key]))
   );
@@ -69,6 +85,9 @@ const transformObjectKeys = (data, transformer) => {
  * @param {function} transformer
  */
 const transformObjectValue = (data, key, transformer) => {
+  if (!data || !(key in data)) {
+    return data;
+  }
   return {
     ...data,
     [key]: transformer(data),
@@ -82,8 +101,8 @@ const transformObjectValue = (data, key, transformer) => {
  * @param {function} predicate The predicate should return true for elements that should be kept.
  */
 const trim = (data, predicate) => {
-  if (data.length === 0) {
-    return data;
+  if (!data || !data.length) {
+    return [];
   }
   let first = 0;
   while (first < data.length && !predicate(data[first])) {
@@ -109,13 +128,28 @@ const trim = (data, predicate) => {
  * @param {array} data The array to transform.
  * @param {any} value The value to set to each property.
  */
-const objectFromArray = (data, value) =>
-  data.reduce((a, b) => {
-    a[b] = value;
-    return a;
+const objectFromArray = (data, value) => {
+  if (!data || !data.length) {
+    return {};
+  }
+  return data.reduce((accumulator, element) => {
+    accumulator[element] = value;
+    return accumulator;
   }, {});
+};
 
+/**
+ *  Transform an object into an array of objects, with the original key in the property `key`,
+ *  and the original value in the property `value`, sorting the resulting array with `comparator`.
+ *
+ * @param {object} data The object to transform.
+ * @param {function} comparator The comparator to use for sorting.
+ * @returns {array}
+ */
 const foldToArray = (data, comparator) => {
+  if (!data || !Object.keys(data).length) {
+    return [];
+  }
   return Object.keys(data)
     .map((key) => {
       return {
@@ -124,6 +158,32 @@ const foldToArray = (data, comparator) => {
       };
     })
     .sort(comparator);
+};
+
+/**
+ * Produces an object with the values of the array as keys, and their respective sorted, 1-based rank as the value.
+ *
+ * In case of duplicate values, the lowest rank for the values will be chosen, producing a gap in the ranks.
+ *
+ * @param {array} data The array whose values to rank.
+ * @param {function} valueMapper A function that extracts the value to rank by.
+ * @param {function} comparator A comparator function for ranking the values
+ */
+const calculateRanks = (data, valueMapper, comparator = (a, b) => b - a) => {
+  if (!data || !data.length) {
+    return {};
+  }
+  return data
+    .map(valueMapper)
+    .sort(comparator)
+    .reduce((acc, value, index) => {
+      if (value in acc) {
+        acc[value] = Math.min(index, acc[value]);
+      } else {
+        acc[value] = index;
+      }
+      return acc;
+    }, {});
 };
 
 /**
@@ -137,20 +197,31 @@ const foldToArray = (data, comparator) => {
  * @param {function} summarizer The function to summarize the truncated elements.
  */
 const truncateAndProcess = (data, maxEntries, processor, summarizer) => {
-  if (maxEntries > 0 && data.length > maxEntries) {
+  if (maxEntries > 0 && data && data.length > maxEntries) {
     return processor([
-      ...data.slice(0, maxEntries),
-      summarizer(data.slice(maxEntries)),
+      ...data.slice(0, maxEntries - 1),
+      summarizer(data.slice(maxEntries - 1)),
     ]);
   }
   return processor(data);
 };
 
-const compareWithNaN = (a, b, f) => {
-  if (isNaN(a) && isNaN(b)) return 0;
-  if (isNaN(a)) return 1;
-  if (isNaN(b)) return -1;
-  return f();
+const mergeObjects = (merger) => (a, b) => {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  return Object.fromEntries(
+    [...keys].map((key) => {
+      if (!(key in b)) {
+        return [key, a[key]];
+      }
+      if (!(key in a)) {
+        return [key, b[key]];
+      }
+      if (a[key] instanceof Set && b[key] instanceof Set) {
+        return [key, merger(a[key], b[key])];
+      }
+      return [key, mergeObjects(merger)(a[key], b[key])];
+    })
+  );
 };
 
 /**
@@ -173,16 +244,37 @@ const numSortByFieldAsc = (key) => (a, b) =>
 const numSortByFieldDesc = (key) => (a, b) =>
   compareWithNaN(a[key], b[key], () => b[key] - a[key]);
 
+/**
+ * Sort the object-containing array by the property `key` in string ascending order.
+ *
+ * @param {string} key The property to sort by.
+ */
+const strSortByFieldAsc = (key) => (a, b) =>
+  String(a[key]).localeCompare(String(b[key]));
+
+/**
+ * Sort the object-containing array by the property `key` in string descending order.
+ *
+ * @param {string} key The property to sort by.
+ */
+const strSortByFieldDesc = (key) => (a, b) =>
+  String(b[key]).localeCompare(String(a[key]));
+
 export default {
   joinTruthyKeys,
   compareArrays,
   transformObjectKeys,
   transformObjectValue,
+  trim,
   objectFromArray,
   foldToArray,
+  calculateRanks,
   truncateAndProcess,
-  trim,
+  mergeObjects,
 
+  compareWithNaN,
   numSortByFieldAsc,
   numSortByFieldDesc,
+  strSortByFieldAsc,
+  strSortByFieldDesc,
 };

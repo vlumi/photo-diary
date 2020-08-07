@@ -147,23 +147,23 @@ module.exports = () => {
             serial: toString(row.lens_serial),
           },
           exposure: {
-            focalLength: Number(row.focal),
-            aperture: Number(row.fstop),
-            exposureTime: Number(row.exposure_time),
-            iso: Number(row.iso),
+            focalLength: toNumber(row.focal),
+            aperture: toNumber(row.fstop),
+            exposureTime: toNumber(row.exposure_time),
+            iso: toNumber(row.iso),
           },
           dimensions: {
             original: {
-              width: Number(row.orig_width),
-              height: Number(row.orig_height),
+              width: toNumber(row.orig_width),
+              height: toNumber(row.orig_height),
             },
             display: {
-              width: Number(row.disp_width),
-              height: Number(row.disp_height),
+              width: toNumber(row.disp_width),
+              height: toNumber(row.disp_height),
             },
             thumbnail: {
-              width: Number(row.thumb_width),
-              height: Number(row.thumb_height),
+              width: toNumber(row.thumb_width),
+              height: toNumber(row.thumb_height),
             },
           },
         };
@@ -388,7 +388,13 @@ const toString = (str) => {
   if (str === null || str === undefined) {
     return "";
   }
-  return str.toString();
+  return String(str);
+};
+const toNumber = (num) => {
+  if (num === null || num === undefined) {
+    return undefined;
+  }
+  return Number(num);
 };
 
 const buildSelectQuery = (schema, conditions) => {

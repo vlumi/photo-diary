@@ -1,10 +1,34 @@
 import { GeoCoord } from "geo-coord";
 
+import collection from "./collection";
+import config from "./config";
+
 const identity = (_) => _;
 
-const padNumber = (value, length) => String(value).padStart(length, "0");
+const number = (lang) => {
+  return {
+    default: new Intl.NumberFormat(lang).format,
+    twoDecimal: new Intl.NumberFormat(lang, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format,
+    oneDecimal: new Intl.NumberFormat(lang, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format,
+  };
+};
 
-const share = (value, total) => Math.floor((value / total) * 1000) / 10;
+const padNumber = (value, length) =>
+  value < 0 ? "-" + padLeft(-value, length, "0") : padLeft(value, length, "0");
+
+const share = (value, total) => (value * 100) / total;
+
+const padLeft = (value, length, filler) =>
+  String(value).padStart(length, filler);
+
+const padRight = (value, length, filler) =>
+  String(value).padEnd(length, filler);
 
 const date = ({ year, month, day, separator = "-" }) => {
   const parts = [];
@@ -21,11 +45,11 @@ const date = ({ year, month, day, separator = "-" }) => {
 };
 const time = ({ hour, minute, second, separator = ":" }) => {
   const parts = [];
-  if (hour) {
+  if (!isNaN(hour)) {
     parts.push(padNumber(hour, 2));
-    if (minute) {
+    if (!isNaN(minute)) {
       parts.push(padNumber(minute, 2));
-      if (second) {
+      if (!isNaN(second)) {
         parts.push(padNumber(second, 2));
       }
     }
@@ -38,44 +62,56 @@ const dayOfWeek = (dow) => {
   return DOW[dow % 7];
 };
 
-const countryName = (countryCode, lang, countryData) => {
-  return countryData.getName(countryCode, lang) || countryCode;
-};
+const countryName = (lang, countryData) => (countryCode) =>
+  countryData.getName(countryCode, lang) || countryCode;
 
-const focalLength = (focalLength) => {
-  if (isNaN(focalLength)) {
-    return focalLength;
-  }
-  return `ƒ=${focalLength}mm`;
-};
-const aperture = (aperture) => {
-  if (isNaN(aperture)) {
-    return aperture;
-  }
-  return `ƒ/${aperture}`;
-};
-const exposureTime = (exposureTime) => {
-  if (isNaN(exposureTime)) {
-    return exposureTime;
-  }
-  if (exposureTime >= 1) {
-    return `${exposureTime}s`;
-  }
-  const fraction = Math.round(1 / exposureTime);
-  return `1/${fraction}s`;
-};
-const iso = (iso) => {
-  if (isNaN(iso)) {
-    return iso;
-  }
-  return `ISO${iso}`;
-};
-const megapixels = (width, height) => {
-  const mpix = Math.round((width * height) / 10 ** 6);
-  return mpix ? `${mpix}MP` : "";
+const exposure = (lang) => {
+  const formatNumber = number(lang);
+  return {
+    focalLength: (focalLength) => {
+      if (isNaN(focalLength)) {
+        return focalLength;
+      }
+      return formatNumber.default(focalLength);
+    },
+    aperture: (aperture) => {
+      if (isNaN(aperture)) {
+        return aperture;
+      }
+      return `ƒ/${formatNumber.default(aperture)}`;
+    },
+    exposureTime: (exposureTime) => {
+      if (isNaN(exposureTime)) {
+        return exposureTime;
+      }
+      if (exposureTime >= 1) {
+        return formatNumber.default(exposureTime);
+      }
+      const fraction = Math.round(1 / exposureTime);
+      return `1⁄${fraction}`;
+    },
+    iso: (iso) => {
+      if (isNaN(iso)) {
+        return iso;
+      }
+      return String(iso);
+    },
+    ev: (ev) => {
+      if (isNaN(ev)) {
+        return ev;
+      }
+      return formatNumber.default(Math.round(ev * 2) / 2);
+    },
+    resolution: (resolution) => {
+      if (isNaN(resolution)) {
+        return resolution;
+      }
+      return formatNumber.default(resolution);
+    },
+  };
 };
 const gear = (make, model) => {
-  if (!make && !model) return "";
+  if (!make && !model) return undefined;
   if (!make) return model;
   if (!model) return make;
   if (model.startsWith(make)) {
@@ -84,13 +120,126 @@ const gear = (make, model) => {
   return [make, model].join(" ");
 };
 const coordinates = (latitude, longitude) => {
-  return new GeoCoord(latitude, longitude).toString();
+  return new GeoCoord(latitude, longitude).roundToSeconds().toString();
+};
+const categoryValue = (lang, t, countryData) => {
+  const formatExposure = exposure(lang);
+  return (category) => {
+    switch (category) {
+      case "author":
+        return identity;
+      case "country":
+        return countryName(lang, countryData);
+      case "year-month":
+        return (yearMonth) => {
+          const [year, month] = yearMonth.split("-");
+          return t("stats-year-month", {
+            year: Number(year),
+            month: t(`month-long-${Number(month)}`),
+          });
+        };
+      case "year":
+        return identity;
+      case "month":
+        return (month) => t(`month-long-${month}`);
+      case "weekday":
+        return (dow) => t(`weekday-long-${dayOfWeek(dow)}`);
+      case "hour":
+        return (hour) => `${padNumber(hour, 2)}:00–`;
+      case "camera-make":
+        return identity;
+      case "camera":
+        return identity;
+      case "lens":
+        return identity;
+      case "camera-lens":
+        return (cameraLens) =>
+          JSON.parse(cameraLens)
+            .map((value) => (value ? value : t("stats-unknown")))
+            .join(" + ");
+      case "focal-length":
+        return formatExposure.focalLength;
+      case "aperture":
+        return formatExposure.aperture;
+      case "exposure-time":
+        return formatExposure.exposureTime;
+      case "iso":
+        return formatExposure.iso;
+      case "ev":
+        return formatExposure.ev;
+      case "lv":
+        return formatExposure.ev;
+      case "resolution":
+        return formatExposure.resolution;
+      default:
+        return identity;
+    }
+  };
+};
+const categorySorter = (
+  keyField,
+  valueField,
+  firstWeekday = config.FIRST_WEEKDAY
+) => (category) => {
+  switch (category) {
+    case "author":
+    case "country":
+      return collection.strSortByFieldAsc(valueField);
+    case "year-month":
+      return (a, b) => {
+        const [yearA, monthA] = a[keyField].split("-");
+        const [yearB, monthB] = b[keyField].split("-");
+        const yearComparison = collection.numSortByFieldAsc(keyField)(
+          { [keyField]: yearA },
+          { [keyField]: yearB }
+        );
+        if (yearComparison !== 0) {
+          return yearComparison;
+        }
+        return collection.numSortByFieldAsc(keyField)(
+          { [keyField]: monthA },
+          { [keyField]: monthB }
+        );
+      };
+    case "year":
+    case "month":
+      return collection.numSortByFieldAsc(keyField);
+    case "weekday":
+      return (a, b) => {
+        const dowA =
+          a[keyField] < firstWeekday ? Number(a[keyField]) + 7 : a[keyField];
+        const dowB =
+          b[keyField] < firstWeekday ? Number(b[keyField]) + 7 : b[keyField];
+        return collection.compareWithNaN(dowA, dowB, () => dowA - dowB);
+      };
+    case "hour":
+      return collection.numSortByFieldAsc(keyField);
+    case "camera-make":
+    case "camera":
+    case "lens":
+    case "camera-lens":
+      return collection.strSortByFieldAsc(keyField);
+    case "focal-length":
+    case "aperture":
+    case "exposure-time":
+    case "iso":
+    case "ev":
+    case "lv":
+    case "resolution":
+      return collection.numSortByFieldAsc(keyField);
+    default:
+      return identity;
+  }
 };
 
 export default {
   identity,
+  number,
   padNumber,
   share,
+
+  padLeft,
+  padRight,
 
   date,
   time,
@@ -98,11 +247,10 @@ export default {
 
   countryName,
 
-  focalLength,
-  aperture,
-  exposureTime,
-  iso,
-  megapixels,
+  exposure,
   gear,
   coordinates,
+
+  categoryValue,
+  categorySorter,
 };

@@ -38,7 +38,7 @@ Certain parameters are passed through environment veriables. These can be either
     - `sqlite3` – Path to the DB file
     - `dummy` – Not used
     - `legacy_sqlite3` – Path to the DB file
-- `REACT_APP_PHOTO_ROOT_DIR` \*
+- `PHOTO_ROOT_DIR` \*
   - The path to the physical photos, with the following sub-directories
     - `inbox` – New photos to be added, or their extracted JSON files
     - `display` – Display-size, large photos
@@ -127,6 +127,8 @@ The required access level is listed in brackets at the end of each resource meth
     - Returns `photo`
   - `DELETE ../:photoId` – Delete photo **[admin]**
 - `/gallery-photos`
+  - `GET ../:galleryId/` – Get all photos in the gallery **[gallery/view]**
+    - Returns `photos`
   - `GET ../:galleryId/:photoId` – Get photo in gallery context **[gallery/view]**
     - Returns `photo`
   - `PUT ../:galleryId/:photoId` – Link photo to gallery **[gallery/admin]**

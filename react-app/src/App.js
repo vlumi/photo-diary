@@ -8,16 +8,17 @@ import {
 import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
 
-import "./themes.css";
 import "./App.css";
 
-import User from "./models/User";
+import ScrollToPosition from "./components/ScrollToPosition";
 import TopMenu from "./components/TopMenu";
-import GalleryList from "./components/gallery/List";
-import Top from "./components/gallery/Top";
+import Gallery from "./components/Gallery";
 import AdminTop from "./components/AdminTop";
 
+import UserModel from "./models/UserModel";
+
 import config from "./lib/config";
+import scroll from "./lib/scroll";
 import token from "./lib/token";
 
 const registerCountryData = (lang) => {
@@ -40,6 +41,8 @@ const App = () => {
     registerCountryData(lang)
   );
 
+  const scrollState = scroll();
+
   const { i18n } = useTranslation();
   i18n.on("languageChanged", (lang) => {
     setLang(lang);
@@ -55,7 +58,7 @@ const App = () => {
   if (!user) {
     const storedUserJson = window.localStorage.getItem("user");
     if (storedUserJson) {
-      const storedUser = User(JSON.parse(storedUserJson));
+      const storedUser = UserModel(JSON.parse(storedUserJson));
       token.setToken(storedUser.token());
       setUser(storedUser);
     }
@@ -69,34 +72,51 @@ const App = () => {
       </Helmet>
       <TopMenu user={user} setUser={setUser} lang={lang} />
       <Router>
-        <Switch>
-          <Route path="/g/:galleryId/stats">
-            <Top
-              user={user}
-              lang={lang}
-              countryData={countryData}
-              stats={true}
-            />
-          </Route>
-          <Route path="/g/:galleryId/:year/:month/:day/:photoId">
-            <Top user={user} lang={lang} countryData={countryData} />
-          </Route>
-          <Route path="/g/:galleryId/:year?/:month?/:day?">
-            <Top user={user} lang={lang} countryData={countryData} />
-          </Route>
-          <Route path="/g">
-            <GalleryList user={user} />
-          </Route>
-          <Route path="/admin">
-            <AdminTop user={user} />
-          </Route>
-          <Route path="/">
-            <Redirect to="/g" />
-          </Route>
-        </Switch>
+        <ScrollToPosition scrollState={scrollState}>
+          <Switch>
+            <Route path="/g/:galleryId/stats">
+              <Gallery
+                user={user}
+                lang={lang}
+                countryData={countryData}
+                isStats={true}
+                scrollState={scrollState}
+              />
+            </Route>
+            <Route path="/g/:galleryId/:year/:month/:day/:photoId">
+              <Gallery
+                user={user}
+                lang={lang}
+                countryData={countryData}
+                scrollState={scrollState}
+              />
+            </Route>
+            <Route path="/g/:galleryId/:year?/:month?/:day?">
+              <Gallery
+                user={user}
+                lang={lang}
+                countryData={countryData}
+                scrollState={scrollState}
+              />
+            </Route>
+            <Route path="/g">
+              <Gallery
+                user={user}
+                lang={lang}
+                countryData={countryData}
+                scrollState={scrollState}
+              />
+            </Route>
+            <Route path="/admin">
+              <AdminTop user={user} />
+            </Route>
+            <Route path="/">
+              <Redirect to="/g" />
+            </Route>
+          </Switch>
+        </ScrollToPosition>
       </Router>
     </>
   );
 };
-
 export default App;

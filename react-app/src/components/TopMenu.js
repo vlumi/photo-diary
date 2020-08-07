@@ -1,83 +1,85 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 
-import Toggleable from "./Toggleable";
+import TopMenuLang from "./TopMenuLang";
+import TopMenuButton from "./TopMenuButton";
 import Login from "./Login";
 import Logout from "./Logout";
-import User from "./User";
+
+const Root = styled.div`
+  height: 25px;
+  color: var(--header-color);
+  background: var(--header-background);
+  margin: 0;
+  padding: 0;
+  font-size: small;
+`;
+const Container = styled.span`
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+`;
+const User = styled.span`
+  margin: auto 10px;
+  color: var(--inactive-color);
+  flex-grow: 1;
+  text-align: left;
+`;
+const ToggleBlock = styled.span`
+  display: ${(props) => (props.visible ? "" : "none")};
+`;
+const HideButton = styled(TopMenuButton)`
+  color: var(--header-color);
+  background: var(--header-background);
+  padding: 0;
+  width: 23px;
+`;
 
 const TopMenu = ({ user, setUser, lang }) => {
-  const { i18n } = useTranslation();
+  const { t } = useTranslation();
+  const [showLogin, setShowLogin] = React.useState(false);
 
-  const handleLangChange = (event) => {
-    const lang = event.target.value;
-    i18n.changeLanguage(lang);
-    window.localStorage.setItem("lang", lang);
-  };
+  const toggleShowLogin = () => setShowLogin(!showLogin);
 
-  const renderUserInfo = () => {
-    return (
-      <>
-        <User user={user} />{" "}
-        <span className="lang">
-          <form>
-            <label className={lang === "en" ? "checked" : ""}>
-              <input
-                type="radio"
-                value="en"
-                checked={lang === "en"}
-                onChange={handleLangChange}
-              />
-              English
-            </label>
-            |
-            <label className={lang === "fi" ? "checked" : ""}>
-              <input
-                type="radio"
-                value="fi"
-                checked={lang === "fi"}
-                onChange={handleLangChange}
-              />
-              Suomi
-            </label>
-            |
-            <label className={lang === "ja" ? "checked" : ""}>
-              <input
-                type="radio"
-                value="ja"
-                checked={lang === "ja"}
-                onChange={handleLangChange}
-              />
-              日本語
-            </label>
-          </form>
-        </span>
-      </>
-    );
-  };
   const renderContent = () => {
     if (user) {
+      if (showLogin) {
+        setShowLogin(false);
+      }
       return (
         <>
-          <span>
-            {renderUserInfo()}
+          <Container>
+            <User>{user.id()}</User> <TopMenuLang lang={lang} />
             <Logout setUser={setUser} />
-          </span>
+          </Container>
         </>
       );
     }
     return (
-      <Toggleable
-        showLabel="Login"
-        hideLabel="╳"
-        defaultBody={renderUserInfo()}
-      >
-        <Login setUser={setUser} />
-      </Toggleable>
+      <>
+        <ToggleBlock visible={!showLogin}>
+          <Container>
+            <TopMenuLang lang={lang} />
+            <TopMenuButton onClick={toggleShowLogin}>
+              {t("login")}
+            </TopMenuButton>
+          </Container>
+        </ToggleBlock>
+        <ToggleBlock visible={showLogin}>
+          <Container>
+            <Login setUser={setUser} />
+            <HideButton onClick={toggleShowLogin}>╳</HideButton>
+          </Container>
+        </ToggleBlock>
+      </>
     );
   };
-  return <div className="top-menu">{renderContent()}</div>;
+  return <Root>{renderContent()}</Root>;
 };
 TopMenu.propTypes = {
   user: PropTypes.object,

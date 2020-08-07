@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import styled from "styled-components";
 import Leaflet from "leaflet";
 import { Map, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 
@@ -10,6 +11,16 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
 
 import config from "../lib/config";
+
+const Root = styled.div`
+  width: 100%;
+  height: 400px;
+  padding: 0;
+  margin: 10px 0;
+`;
+const PopupContent = styled.span`
+  text-align: center;
+`;
 
 let DefaultIcon = Leaflet.icon({
   ...Leaflet.Icon.Default.prototype.options,
@@ -27,8 +38,8 @@ const MapContainer = ({ positions: photos }) => {
   const positions = photos.map((photo) => photo.coordinates());
   const bounds = Leaflet.latLngBounds(positions);
   return (
-    <>
-      <Map bounds={bounds} maxZoom="10">
+    <Root>
+      <Map bounds={bounds} maxZoom="14" style={{ height: "100%" }}>
         <TileLayer
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -41,7 +52,7 @@ const MapContainer = ({ positions: photos }) => {
           return (
             <Marker key={index} position={photo.coordinates()}>
               <Popup>
-                <span className="map-popup">
+                <PopupContent>
                   <img
                     alt={photo.id}
                     src={thumbnailUrl}
@@ -50,14 +61,14 @@ const MapContainer = ({ positions: photos }) => {
                   />
                   <br />
                   {photo.formatDate()}
-                </span>
+                </PopupContent>
               </Popup>
             </Marker>
           );
         })}
         <Polyline positions={positions} />
       </Map>
-    </>
+    </Root>
   );
 };
 MapContainer.propTypes = {

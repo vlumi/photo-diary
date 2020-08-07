@@ -1,4 +1,4 @@
-const config = require("./config");
+const { DEBUG } = require("./config");
 
 const timeStamp = () => {
   const toIsoString = (date) => {
@@ -14,8 +14,9 @@ const timeStamp = () => {
   return toIsoString(new Date());
 };
 
+/* istanbul ignore next */
 const debug = (...params) => {
-  if (config.DEBUG) console.log(`[${timeStamp()}] DEBUG:`, ...params);
+  if (DEBUG) console.log(`[${timeStamp()}] DEBUG:`, ...params);
 };
 const info = (...params) => console.log(`[${timeStamp()}] INFO:`, ...params);
 const error = (...params) =>

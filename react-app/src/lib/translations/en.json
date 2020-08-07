@@ -1,10 +1,15 @@
 {
   "translation": {
     "loading": "Loading...",
+    "empty": "Empty",
 
+    "login": "Login",
+    "logout": "Logout",
+
+    "nav-galleries": "Galleries",
     "nav-gallery-top": "Back to top",
     "nav-gallery": "Gallery",
-    "nav-gallery-stats": "Statistics",
+    "nav-stats": "Statistics",
 
     "weekday-short-mon": "Mon",
     "weekday-short-tue": "Tue",
@@ -53,8 +58,12 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "Day number {{count}}",
 
+    "stats-filters": "Filters",
+
     "stats-unknown": "N/A",
     "stats-other": "Other",
+    "stats-year-month": "{{month}} {{year}}",
+    "stats-per-day": "{{count}}/day",
 
     "stats-topic-general": "General",
     "stats-category-summary": "Summary",
@@ -78,12 +87,45 @@
     "stats-category-iso": "Sensitivity",
     "stats-category-ev": "EV",
     "stats-category-lv": "EV @ ISO100",
+    "stats-category-resolution": "Resolution",
 
     "stats-kpi-title-photos": "Photos",
     "stats-kpi-photos": "{{count}}",
+    "stats-kpi-title-years": "Years",
+    "stats-kpi-years": "{{count}}",
+    "stats-kpi-title-months": "Months",
+    "stats-kpi-months": "{{count}}",
     "stats-kpi-title-days": "Days",
     "stats-kpi-days": "{{count}}",
     "stats-kpi-title-average": "Average",
-    "stats-kpi-average": "{{count}}/day"
+    "stats-kpi-average": "{{count}}/day",
+
+    "stats-col-rank": "#",
+    "stats-col-count": "Count",
+    "stats-col-share": "Share",
+    "stats-col-average": "Average",
+
+    "stats-col-author": "Author",
+    "stats-col-flag": "",
+    "stats-col-country": "Country",
+
+    "stats-col-year": "Year",
+    "stats-col-year-month": "Year + Month",
+    "stats-col-month": "Month",
+    "stats-col-weekday": "Weekday",
+    "stats-col-hour": "Hour",
+
+    "stats-col-camera-make": "Make",
+    "stats-col-camera": "Camera",
+    "stats-col-lens": "Lens",
+    "stats-col-camera-lens": "Camera + Lens",
+
+    "stats-col-focal-length": "Millimeters",
+    "stats-col-aperture": "Aperture",
+    "stats-col-exposure-time": "Seconds",
+    "stats-col-iso": "ISO",
+    "stats-col-ev": "EV",
+    "stats-col-lv": "EV @ ISO100",
+    "stats-col-resolution": "Megapixels"
   }
 }

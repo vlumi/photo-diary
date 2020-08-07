@@ -4,6 +4,7 @@ const db = require("../db");
 module.exports = () => {
   return {
     init,
+    getGalleryPhotos,
     getGalleryPhoto,
     linkGalleryPhoto,
     unlinkGalleryPhoto,
@@ -14,6 +15,10 @@ module.exports = () => {
 
 const init = async () => {};
 
+const getGalleryPhotos = async (galleryId) => {
+  logger.debug("Getting photos from gallery", galleryId);
+  return await db.loadGalleryPhotos(galleryId);
+};
 const getGalleryPhoto = async (galleryId, photoId) => {
   logger.debug("Getting photo", photoId, "from gallery", galleryId);
   return await db.loadGalleryPhoto(galleryId, photoId);

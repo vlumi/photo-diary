@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 const morgan = require("morgan");
 
 morgan.token("userId", function (request) {

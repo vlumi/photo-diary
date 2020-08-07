@@ -15,20 +15,6 @@ module.exports = () => {
 
 const init = async () => {};
 
-const groupPhotosByYearMonthDay = (galleryPhotos) => {
-  const photosByDate = {};
-  galleryPhotos.forEach((photo) => {
-    const yearMap = (photosByDate[photo.taken.instant.year] =
-      photosByDate[photo.taken.instant.year] || {});
-    const monthMap = (yearMap[photo.taken.instant.month] =
-      yearMap[photo.taken.instant.month] || {});
-    const dayPhotos = (monthMap[photo.taken.instant.day] =
-      monthMap[photo.taken.instant.day] || []);
-    dayPhotos.push(photo);
-  });
-  return photosByDate;
-};
-
 const getGalleries = async () => {
   logger.debug("Getting all galleries");
   const galleries = await db.loadGalleries();
@@ -42,10 +28,9 @@ const getGallery = async (galleryId) => {
   logger.debug("Getting gallery", galleryId);
   const loadGalleryPhotos = async (gallery) => {
     const galleryPhotos = await db.loadGalleryPhotos(galleryId);
-    const photosByYearMonthDay = groupPhotosByYearMonthDay(galleryPhotos);
     return {
       ...gallery,
-      photos: photosByYearMonthDay,
+      photos: galleryPhotos,
     };
   };
   if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {

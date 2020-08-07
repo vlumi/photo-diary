@@ -1,10 +1,15 @@
 {
   "translation": {
     "loading": "Ladataan...",
+    "empty": "Tyhjä",
 
+    "login": "Kirjaudu sisään",
+    "logout": "Kirjaudu ulos",
+
+    "nav-galleries": "Galleriat",
     "nav-gallery-top": "Palaa alkuun",
     "nav-gallery": "Galleria",
-    "nav-gallery-stats": "Tilastot",
+    "nav-stats": "Tilastot",
 
     "weekday-short-mon": "ma",
     "weekday-short-tue": "ti",
@@ -53,8 +58,12 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "{{count}}. päivä",
 
+    "stats-filters": "Suodattimet",
+
     "stats-unknown": "N/A",
     "stats-other": "Muut",
+    "stats-year-month": "{{month}} {{year}}",
+    "stats-per-day": "{{count}}/päivä",
 
     "stats-topic-general": "Yleiset tiedot",
     "stats-category-summary": "Yhteenveto",
@@ -78,12 +87,45 @@
     "stats-category-iso": "Herkkyys",
     "stats-category-ev": "EV",
     "stats-category-lv": "EV @ ISO100",
+    "stats-category-resolution": "Resoluutio",
 
     "stats-kpi-title-photos": "Valokuvia",
     "stats-kpi-photos": "{{count}}",
+    "stats-kpi-title-years": "Vuosia",
+    "stats-kpi-years": "{{count}}",
+    "stats-kpi-title-months": "Kuukausia",
+    "stats-kpi-months": "{{count}}",
     "stats-kpi-title-days": "Päiviä",
     "stats-kpi-days": "{{count}}",
     "stats-kpi-title-average": "Keskiarvo",
-    "stats-kpi-average": "{{count}}/päivä"
+    "stats-kpi-average": "{{count}}/päivä",
+
+    "stats-col-rank": "#",
+    "stats-col-count": "Lukumäärä",
+    "stats-col-share": "Osuus",
+    "stats-col-average": "Keskiarvo",
+
+    "stats-col-author": "Valokuvaaja",
+    "stats-col-flag": "",
+    "stats-col-country": "Maa",
+
+    "stats-col-year": "Vuosi",
+    "stats-col-year-month": "Vuosi ja kuukausi",
+    "stats-col-month": "Kuukausi",
+    "stats-col-weekday": "Viikonpäivä",
+    "stats-col-hour": "Tunti",
+
+    "stats-col-camera-make": "Valmistaja",
+    "stats-col-camera": "Kamera",
+    "stats-col-lens": "Objektiivi",
+    "stats-col-camera-lens": "Kamera ja objektiivi",
+
+    "stats-col-focal-length": "Millimetriä",
+    "stats-col-aperture": "Aukko",
+    "stats-col-exposure-time": "Sekuntia",
+    "stats-col-iso": "ISO",
+    "stats-col-ev": "EV",
+    "stats-col-lv": "EV @ ISO100",
+    "stats-col-resolution": "Megapikseliä"
   }
 }
