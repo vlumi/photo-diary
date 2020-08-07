@@ -21,6 +21,7 @@ const Calendar = styled.div`
 `;
 
 const Content = ({ children, gallery, year }) => {
+  const maxCount = gallery.maxDayCount(year);
   return (
     <>
       {children}
@@ -29,7 +30,13 @@ const Content = ({ children, gallery, year }) => {
           {calendar
             .months(year, ...gallery.firstMonth(), ...gallery.lastMonth())
             .map((month) => (
-              <Month key={month} gallery={gallery} year={year} month={month} />
+              <Month
+                key={month}
+                gallery={gallery}
+                year={year}
+                month={month}
+                maxCount={maxCount}
+              />
             ))}
         </Calendar>
       </Root>

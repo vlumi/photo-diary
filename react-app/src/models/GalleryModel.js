@@ -118,7 +118,6 @@ const GalleryModel = (galleryData) => {
       self.currentPhotoIndex(year, month, day, photo) >= 0,
     countPhotos: (year, month, day) => {
       if (
-        !photosByYmd ||
         !(year in photosByYmd) ||
         !(month in photosByYmd[year]) ||
         !(day in photosByYmd[year][month])
@@ -126,6 +125,27 @@ const GalleryModel = (galleryData) => {
         return 0;
       }
       return photosByYmd[year][month][day].length;
+    },
+    maxDayCount: (year, month) => {
+      if (month) {
+        if (!(year in photosByYmd) || !(month in photosByYmd[year])) {
+          return 0;
+        }
+        return Object.keys(photosByYmd[year][month])
+          .map((day) => self.countPhotos(year, month, day))
+          .reduce((a, b) => Math.max(a, b), 0);
+      }
+      if (year) {
+        if (!(year in photosByYmd)) {
+          return 0;
+        }
+        return Object.keys(photosByYmd[year])
+          .map((month) => self.maxDayCount(year, month))
+          .reduce((a, b) => Math.max(a, b), 0);
+      }
+      return Object.keys(photosByYmd)
+        .map((year) => self.maxDayCount(year))
+        .reduce((a, b) => Math.max(a, b), 0);
     },
     photos: (year, month, day) => {
       if (!year && !month && !day) {

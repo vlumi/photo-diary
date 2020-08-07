@@ -5,23 +5,18 @@ import styled from "styled-components";
 import DayCell from "./DayCell";
 import Link from "../Link";
 
+import color from "../../../lib/color";
 import format from "../../../lib/format";
+
+// TODO: from configured theme
+const heatColors = color.colorGradient("#ddf", "#99b", 11);
 
 const Some = styled(DayCell)``;
 const None = styled(DayCell)`
   color: var(--inactive-color);
 `;
 
-const calculateHeat = (photos) => {
-  // TODO: make dynamic based on actual values, with color gradients
-  if (photos < 1) return "none";
-  if (photos < 2) return "low";
-  if (photos < 5) return "medium";
-  if (photos < 10) return "high";
-  return "extreme";
-};
-
-const Day = ({ gallery, year, month, day }) => {
+const Day = ({ gallery, year, month, day, maxCount }) => {
   const renderDayValue = (gallery, year, month, day, photoCount) => {
     if (day === 0) {
       return <></>;
@@ -37,7 +32,10 @@ const Day = ({ gallery, year, month, day }) => {
   };
 
   const photoCount = gallery.countPhotos(year, month, day);
-  const heat = calculateHeat(photoCount);
+  const heatColor = heatColors[Math.round((photoCount * 10) / maxCount)];
+  const style = {
+    backgroundColor: heatColor,
+  };
   const title = `${format.date({
     year,
     month,
@@ -51,7 +49,7 @@ const Day = ({ gallery, year, month, day }) => {
     );
   }
   return (
-    <Some className={`heat-${heat}`} title={title}>
+    <Some style={style} title={title}>
       {renderDayValue(gallery, year, month, day, photoCount)}
     </Some>
   );
@@ -61,5 +59,6 @@ Day.propTypes = {
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
+  maxCount: PropTypes.number.isRequired,
 };
 export default Day;

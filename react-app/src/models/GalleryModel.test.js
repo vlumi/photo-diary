@@ -298,6 +298,14 @@ describe("Without photos", () => {
     test(":all", () =>
       expect(samples[":all"].countPhotos(2020, 5, 27)).toBe(0));
   });
+  describe("maxDayCount", () => {
+    test("empty 2020-05-27", () =>
+      expect(samples.empty.maxDayCount(2020, 5, 27)).toBe(0));
+    test("empty 2020-05", () =>
+      expect(samples.empty.maxDayCount(2020, 5)).toBe(0));
+    test("empty 2020", () => expect(samples.empty.maxDayCount(2020)).toBe(0));
+    test("empty", () => expect(samples.empty.maxDayCount()).toBe(0));
+  });
   describe("photos", () => {
     test("empty", () => expect(samples.empty.photos()).toStrictEqual([]));
     test("testing", () => expect(samples.testing.photos()).toStrictEqual([]));
@@ -908,6 +916,19 @@ describe("With photos", () => {
       expect(g.testing.countPhotos(2020, 5, 27)).toBe(1));
     test("2020-05-27", () =>
       expect(g.testing.countPhotos(2020, 5, 28)).toBe(0));
+  });
+  describe("maxDayCount", () => {
+    test("testing 2020-05-27", () =>
+      expect(g.testing.maxDayCount(2020, 5, 27)).toBe(1));
+    test("testing 2020-05", () =>
+      expect(g.testing.maxDayCount(2020, 5)).toBe(1));
+    test("testing 2020", () => expect(g.testing.maxDayCount(2020)).toBe(1));
+    test("testing", () => expect(g.testing.maxDayCount()).toBe(1));
+    test("daily 2020-05-27", () =>
+      expect(g.daily.maxDayCount(2020, 5, 27)).toBe(2));
+    test("daily 2020-05", () => expect(g.daily.maxDayCount(2020, 5)).toBe(2));
+    test("daily 2020", () => expect(g.daily.maxDayCount(2020)).toBe(2));
+    test("daily", () => expect(g.daily.maxDayCount()).toBe(2));
   });
   describe("photos", () => {
     test("all", () =>
