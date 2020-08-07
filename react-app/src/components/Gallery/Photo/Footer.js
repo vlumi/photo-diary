@@ -2,25 +2,16 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 
-import FlagIcon from "../../FlagIcon";
 import EpochAge from "../EpochAge";
 import EpochDayIndex from "../EpochDayIndex";
-import MapContainer from "../../MapContainer";
-
+import FlagIcon from "../../FlagIcon";
 import Link from "../Link";
+import MapContainer from "../../MapContainer";
+import Root from "../Footer";
 
 import config from "../../../lib/config";
 import format from "../../../lib/format";
 
-const Container = styled.div`
-  margin: 10px;
-  flex-grow: 0;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  overflow: hidden;
-`;
 const ThumbnailContainer = styled.span`
   width: 70px;
   height: 50px;
@@ -207,11 +198,7 @@ const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
     if (!photo.hasCoordinates()) {
       return "";
     }
-    return (
-      <>
-        <MapContainer positions={[photo]} zoom="9" />
-      </>
-    );
+    return <MapContainer positions={[photo]} zoom="9" />;
   };
 
   const renderContent = () => {
@@ -220,7 +207,7 @@ const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
     }
     return (
       <>
-        <Container>
+        <Root>
           <PreviousThumbnailContainer>
             {renderAdjacentPhoto(previousPhoto)}
           </PreviousThumbnailContainer>
@@ -240,8 +227,8 @@ const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
           <NextThumbnailContainer>
             {renderAdjacentPhoto(nextPhoto)}
           </NextThumbnailContainer>
-        </Container>
-        <Container>{renderMap()}</Container>
+        </Root>
+        <Root>{renderMap()}</Root>
       </>
     );
   };

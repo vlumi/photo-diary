@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import MapContainer from "../../MapContainer";
+import Root from "../Footer";
 
 const Footer = ({ gallery, year }) => {
   const renderMap = (positions) => {
@@ -19,7 +20,7 @@ const Footer = ({ gallery, year }) => {
     )
     .filter(Boolean)
     .filter((photo) => photo.hasCoordinates());
-  return <div className="footer">{renderMap(photos)}</div>;
+  return <Root>{renderMap(photos)}</Root>;
 };
 Footer.propTypes = {
   gallery: PropTypes.object.isRequired,
