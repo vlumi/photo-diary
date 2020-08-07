@@ -135,32 +135,30 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     setUniqueValues(undefined);
   }
 
-  if (selectedGallery && selectedGallery.hasTheme()) {
-    theme.setTheme(selectedGallery.theme());
-  } else {
-    theme.setTheme(config.DEFAULT_THEME);
-  }
+  const activeTheme =
+    selectedGallery && selectedGallery.hasTheme()
+      ? theme.setTheme(selectedGallery.theme())
+      : theme.setTheme(config.DEFAULT_THEME);
 
   const GlobalStyles = createGlobalStyle`
     html {
-      --primary-color: ${theme.get("primary-color")};
-      --primary-background: ${theme.get("primary-background")};
-      --inactive-color: ${theme.get("inactive-color")};
-      --header-color: ${theme.get("header-color")};
-      --header-sub-color: ${theme.get("header-sub-color")};
-      --header-background: ${theme.get("header-background")};
+      --primary-color: ${activeTheme.get("primary-color")};
+      --primary-background: ${activeTheme.get("primary-background")};
+      --inactive-color: ${activeTheme.get("inactive-color")};
+      --header-color: ${activeTheme.get("header-color")};
+      --header-sub-color: ${activeTheme.get("header-sub-color")};
+      --header-background: ${activeTheme.get("header-background")};
       ${"" /* TODO: remove  */}
-      --none-color: ${theme.get("none-color")};
-      --low-color: ${theme.get("low-color")};
-      --medium-color: ${theme.get("medium-color")};
-      --high-color: ${theme.get("high-color")};
-      --extreme-color: ${theme.get("extreme-color")};
-      filter: ${theme.get("filter")}
+      --none-color: ${activeTheme.get("none-color")};
+      --low-color: ${activeTheme.get("low-color")};
+      --medium-color: ${activeTheme.get("medium-color")};
+      --high-color: ${activeTheme.get("high-color")};
+      --extreme-color: ${activeTheme.get("extreme-color")};
+      filter: ${activeTheme.get("filter")}
     }
   `;
 
   if (error) {
-    theme.setTheme("grayscale");
     return <div className="error">Loading failed</div>;
   }
 
@@ -230,7 +228,7 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
           setFilters={setFilters}
           lang={lang}
           countryData={countryData}
-          theme={theme}
+          theme={activeTheme}
         >
           <Title galleries={galleries} gallery={gallery} context={context} />
           <Filters
@@ -264,7 +262,7 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
           year={year}
           lang={lang}
           countryData={countryData}
-          theme={theme}
+          theme={activeTheme}
         >
           <Title
             galleries={galleries}

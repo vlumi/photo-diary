@@ -1,4 +1,3 @@
-let theme = "bw";
 const THEMES = {
   blue: {
     "primary-color": "#004",
@@ -77,19 +76,17 @@ const THEMES = {
   },
 };
 
-const setTheme = (newTheme) => {
-  if (newTheme in THEMES) {
-    theme = newTheme;
-  }
-};
-const get = (name) => {
-  if (!(theme in THEMES) || !(name in THEMES[theme])) {
-    return "";
-  }
-  return THEMES[theme][name];
+const setTheme = (theme) => {
+  return {
+    get: (name) => {
+      if (!(theme in THEMES) || !(name in THEMES[theme])) {
+        return "";
+      }
+      return THEMES[theme][name];
+    },
+  };
 };
 
 export default {
   setTheme,
-  get,
 };

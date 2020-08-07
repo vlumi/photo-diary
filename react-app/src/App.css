@@ -31,38 +31,3 @@ a {
   font-weight: bold;
   color: #f00;
 }
-
-.galleries {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.gallery {
-  width: 214px;
-  min-height: 200px;
-  margin: 5px;
-  padding: 0;
-  border-style: solid;
-  border-width: 1px;
-  background-color: var(--none-color);
-}
-.gallery > .icon {
-  margin: 0;
-}
-.gallery > .icon > img {
-  width: 100%;
-}
-.gallery > .description {
-  margin: 5px;
-  text-align: left;
-}
-
-.thumbnails {
-  vertical-align: top;
-}
-
-div.photos {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
