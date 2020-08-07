@@ -3,10 +3,11 @@ import PropTypes from "prop-types";
 import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 
+import Day from "./Day";
+import DayCell from "./DayCell";
 import Link from "../Link";
 
 import calendar from "../../../lib/calendar";
-import format from "../../../lib/format";
 
 const Root = styled.div`
   width: 214px;
@@ -57,42 +58,16 @@ const MonthGrid = styled.table`
 const Header = styled.thead``;
 const Body = styled.tbody``;
 const Row = styled.tr``;
-const Cell = styled.td`
-  border-width: 1px;
-  border-color: var(--none-color);
-  border-style: solid;
-  padding: 0;
-  margin: 0;
-  height: 28px;
-  width: 28px;
-  overflow: hidden;
-  display: inline-block;
-  white-space: nowrap;
-  text-align: center;
-`;
-const WeekDay = styled(Cell)`
+const WeekDay = styled(DayCell)`
   height: 20px;
   font-size: small;
   color: var(--inactive-color);
 `;
-const Day = styled(Cell)``;
-const DayNone = styled(Cell)`
-  color: var(--inactive-color);
-`;
-
-const calculateHeat = (photos) => {
-  // TODO: make dynamic based on actual values, with color gradients
-  if (photos < 1) return "none";
-  if (photos < 2) return "low";
-  if (photos < 5) return "medium";
-  if (photos < 10) return "high";
-  return "extreme";
-};
 
 const Month = ({ gallery, year, month }) => {
   const { t } = useTranslation();
 
-  const renderMonthTitle = (gallery, year, month) => {
+  const renderTitle = (gallery, year, month) => {
     if (gallery.includesMonth(year, month)) {
       return (
         <Link gallery={gallery} year={year} month={month}>
@@ -102,42 +77,10 @@ const Month = ({ gallery, year, month }) => {
     }
     return <MonthTitle>{month}</MonthTitle>;
   };
-  const renderDayValue = (gallery, year, month, day, photoCount) => {
-    if (day === 0) {
-      return <></>;
-    }
-    if (photoCount > 0) {
-      return (
-        <Link gallery={gallery} year={year} month={month} day={day}>
-          {day}
-        </Link>
-      );
-    }
-    return day;
-  };
-  const renderDayCell = (gallery, year, month, day, index) => {
-    const photoCount = gallery.countPhotos(year, month, day);
-    const heat = calculateHeat(photoCount);
-    const title = `${format.date({
-      year,
-      month,
-      day,
-    })}: ${photoCount} photos`;
-    if (photoCount === 0) {
-      return (
-        <DayNone key={index} title={title}>
-          {renderDayValue(gallery, year, month, day, photoCount)}
-        </DayNone>
-      );
-    }
-    return (
-      <Day key={index} className={`heat-${heat}`} title={title}>
-        {renderDayValue(gallery, year, month, day, photoCount)}
-      </Day>
-    );
-  };
-  const renderMonthGrid = (gallery, year, month) => {
-    return (
+
+  return (
+    <Root>
+      {renderTitle(gallery, year, month)}
       <MonthContainer>
         <MonthGrid>
           <Header>
@@ -150,21 +93,20 @@ const Month = ({ gallery, year, month }) => {
           <Body>
             {calendar.monthGrid(year, month).map((row, rowIndex) => (
               <Row key={rowIndex}>
-                {row.map((day, cellIndex) => {
-                  return renderDayCell(gallery, year, month, day, cellIndex);
-                })}
+                {row.map((day, cellIndex) => (
+                  <Day
+                    key={cellIndex}
+                    gallery={gallery}
+                    year={year}
+                    month={month}
+                    day={day}
+                  />
+                ))}
               </Row>
             ))}
           </Body>
         </MonthGrid>
       </MonthContainer>
-    );
-  };
-
-  return (
-    <Root>
-      {renderMonthTitle(gallery, year, month)}
-      {renderMonthGrid(gallery, year, month)}
     </Root>
   );
 };
