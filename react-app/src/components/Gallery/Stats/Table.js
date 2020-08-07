@@ -66,7 +66,7 @@ const getHeatColors = (theme) => {
   }
   cachedHeatColors.from = gradientFrom;
   cachedHeatColors.to = gradientTo;
-  cachedHeatColors.values = color.colorGradient(gradientFrom, gradientTo, 5);
+  cachedHeatColors.values = color.colorGradient(gradientFrom, gradientTo, 10);
   return cachedHeatColors.values;
 };
 
@@ -123,11 +123,16 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
   };
   const getScoreColor = (score) => {
     const heatColors = getHeatColors(theme);
-    if (score < -0.5) return heatColors[0];
-    if (score < -0.25) return heatColors[1];
-    if (score < 0.25) return heatColors[2];
-    if (score < 0.5) return heatColors[3];
-    return heatColors[4];
+    if (score < -1) return heatColors[0];
+    if (score < -0.75) return heatColors[1];
+    if (score < -0.5) return heatColors[2];
+    if (score < -0.25) return heatColors[3];
+    if (score < -0.125) return heatColors[4];
+    if (score < 0.125) return heatColors[5];
+    if (score < 0.25) return heatColors[6];
+    if (score < 0.5) return heatColors[7];
+    if (score < 0.75) return heatColors[8];
+    return heatColors[9];
   };
   const renderRows = (topic, category, table) => {
     return table.map((value, i) => {
