@@ -15,7 +15,9 @@ const Root = styled.div`
   margin: 5px;
   border-style: solid;
   border-width: 1px;
+  border-radius: 10px;
   background-color: var(--none-color);
+  overflow: hidden;
 `;
 const MonthTitle = styled.h3`
   color: var(--header-color);
@@ -29,9 +31,8 @@ const MonthTitle = styled.h3`
   border-color: var(--header-background);
 
   display: block;
-  width: 212px;
-  height: 30px;
-  padding: 0;
+  width: 100%;
+  padding: 2px 0;
   margin: 0;
 `;
 
