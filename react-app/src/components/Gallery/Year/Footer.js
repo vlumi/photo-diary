@@ -8,11 +8,7 @@ const Footer = ({ gallery, year }) => {
     if (!positions || !positions.length) {
       return "";
     }
-    return (
-      <>
-        <MapContainer positions={positions} zoom="9" />
-      </>
-    );
+    return <MapContainer positions={positions} zoom="9" />;
   };
 
   const photos = gallery

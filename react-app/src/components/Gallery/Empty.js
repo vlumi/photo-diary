@@ -28,7 +28,6 @@ const Empty = ({ children, gallery }) => {
   if (redirect) {
     return <Redirect to={redirect} />;
   }
-  const style = { visibility: "hidden" };
   return (
     <>
       <Helmet>
