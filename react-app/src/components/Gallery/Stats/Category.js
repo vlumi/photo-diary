@@ -22,7 +22,7 @@ const Title = styled.h3`
   border-color: var(--header-background);
   border-radius: 5px;
 `;
-const Category = ({ topic, category, filters, setFilters }) => {
+const Category = ({ topic, category, filters, setFilters, theme }) => {
   return (
     <Root
       key={`${topic.key}:${category.key}`}
@@ -37,6 +37,7 @@ const Category = ({ topic, category, filters, setFilters }) => {
         category={category}
         filters={filters}
         setFilters={setFilters}
+        theme={theme}
       />
     </Root>
   );
@@ -46,5 +47,6 @@ Category.propTypes = {
   category: PropTypes.object,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
+  theme: PropTypes.object.isRequired,
 };
 export default Category;

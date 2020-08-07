@@ -49,6 +49,7 @@ const Stats = ({
             topic={topic}
             filters={filters}
             setFilters={setFilters}
+            theme={theme}
           />
         ))}
       </Root>

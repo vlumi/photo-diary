@@ -28,7 +28,7 @@ const Categories = styled.section`
   flex-wrap: wrap;
   justify-content: flex-start;
 `;
-const Topic = ({ topic, filters, setFilters }) => {
+const Topic = ({ topic, filters, setFilters, theme }) => {
   return (
     <Root key={topic.key} data-type="topic" data-key={topic.key}>
       <Title>{topic.title}</Title>
@@ -40,6 +40,7 @@ const Topic = ({ topic, filters, setFilters }) => {
             category={category}
             filters={filters}
             setFilters={setFilters}
+            theme={theme}
           />
         ))}
       </Categories>
@@ -50,5 +51,6 @@ Topic.propTypes = {
   topic: PropTypes.object,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
+  theme: PropTypes.object.isRequired,
 };
 export default Topic;

@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 
+import color from "../../../lib/color";
 import stats from "../../../lib/stats";
 import filter from "../../../lib/filter";
 
@@ -28,21 +29,8 @@ const RowSelected = styled(Row)`
   color: var(--header-color);
   background-color: var(--header-background);
 `;
-// TODO: replace by gradients
-const RowNone = styled(Row)`
-  background-color: var(--none-color);
-`;
-const RowLow = styled(Row)`
-  background-color: var(--low-color);
-`;
-const RowMedium = styled(Row)`
-  background-color: var(--medium-color);
-`;
-const RowHigh = styled(Row)`
-  background-color: var(--high-color);
-`;
-const RowExtreme = styled(Row)`
-  background-color: var(--extreme-color);
+const RowHeat = styled(Row)`
+  background-color: ${(props) => props.color};
 `;
 const Header = styled.th`
   font-weight: bold;
@@ -61,7 +49,28 @@ const Column = styled.td`
   text-align: ${(props) => props.align};
   overflow: hidden;
 `;
-const Table = ({ topic, category, filters, setFilters }) => {
+
+const cachedHeatColors = {
+  from: undefined,
+  to: undefined,
+  values: [],
+};
+const getHeatColors = (theme) => {
+  const gradientFrom = theme.get("primary-background");
+  const gradientTo = theme.get("inactive-color");
+  if (
+    cachedHeatColors.from === gradientFrom &&
+    cachedHeatColors.to === gradientTo
+  ) {
+    return cachedHeatColors.values;
+  }
+  cachedHeatColors.from = gradientFrom;
+  cachedHeatColors.to = gradientTo;
+  cachedHeatColors.values = color.colorGradient(gradientFrom, gradientTo, 5);
+  return cachedHeatColors.values;
+};
+
+const Table = ({ topic, category, filters, setFilters, theme }) => {
   const { t } = useTranslation();
 
   const handleClick = (event) => {
@@ -112,6 +121,14 @@ const Table = ({ topic, category, filters, setFilters }) => {
       )
     );
   };
+  const getScoreColor = (score) => {
+    const heatColors = getHeatColors(theme);
+    if (score < -0.5) return heatColors[0];
+    if (score < -0.25) return heatColors[1];
+    if (score < 0.25) return heatColors[2];
+    if (score < 0.5) return heatColors[3];
+    return heatColors[4];
+  };
   const renderRows = (topic, category, table) => {
     return table.map((value, i) => {
       const valueKey = stats.decodeTableRowKey(value.key);
@@ -128,39 +145,16 @@ const Table = ({ topic, category, filters, setFilters }) => {
           </RowSelected>
         );
       }
-      // TODO: replace by gradients
-      if (value.standardScore < -0.5) {
-        return (
-          <RowNone key={key} onClick={handleClick} data-key={valueKey}>
-            {renderColumns(value, i)}
-          </RowNone>
-        );
-      }
-      if (value.standardScore < -0.25) {
-        return (
-          <RowLow key={key} onClick={handleClick} data-key={valueKey}>
-            {renderColumns(value, i)}
-          </RowLow>
-        );
-      }
-      if (value.standardScore < 0.25) {
-        return (
-          <RowMedium key={key} onClick={handleClick} data-key={valueKey}>
-            {renderColumns(value, i)}
-          </RowMedium>
-        );
-      }
-      if (value.standardScore < 0.5) {
-        return (
-          <RowHigh key={key} onClick={handleClick} data-key={valueKey}>
-            {renderColumns(value, i)}
-          </RowHigh>
-        );
-      }
+
       return (
-        <RowExtreme key={key} onClick={handleClick} data-key={valueKey}>
+        <RowHeat
+          key={key}
+          onClick={handleClick}
+          data-key={valueKey}
+          color={getScoreColor(value.standardScore)}
+        >
           {renderColumns(value, i)}
-        </RowExtreme>
+        </RowHeat>
       );
     });
   };
@@ -188,5 +182,6 @@ Table.propTypes = {
   category: PropTypes.object,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
+  theme: PropTypes.object.isRequired,
 };
 export default Table;
