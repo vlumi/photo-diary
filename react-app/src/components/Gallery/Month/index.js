@@ -100,6 +100,7 @@ const Month = ({ children, gallery, year, month, lang, countryData }) => {
 };
 Month.propTypes = {
   children: PropTypes.any,
+  user: PropTypes.object,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,

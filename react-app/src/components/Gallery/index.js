@@ -9,8 +9,7 @@ import galleryPhotosService from "../../services/gallery-photos";
 
 import Title from "./Title";
 import Filters from "./Filters";
-import ListBody from "./ListBody";
-import Admin from "./Admin";
+import List from "./List";
 import Stats from "./Stats";
 import Empty from "./Empty";
 import Full from "./Full";
@@ -64,14 +63,18 @@ const Gallery = ({
   const staleGallery = gallery && gallery.id() !== galleryId;
 
   const selectedGallery =
-    galleries && galleries.find((gallery) => gallery.id() === galleryId);
+    galleries &&
+    galleryId &&
+    galleries.find((gallery) => gallery.id() === galleryId);
 
   React.useEffect(() => {
     galleryService
       .getAll()
       .then((returnedGalleries) => {
-        const gals = returnedGalleries.map((gallery) => GalleryModel(gallery));
-        setGalleries(gals);
+        const galleries = returnedGalleries.map((gallery) =>
+          GalleryModel(gallery)
+        );
+        setGalleries(galleries);
       })
       .catch((error) => setError(error.message));
   }, [user]);
@@ -153,12 +156,6 @@ const Gallery = ({
       --header-color: ${activeTheme.get("header-color")};
       --header-sub-color: ${activeTheme.get("header-sub-color")};
       --header-background: ${activeTheme.get("header-background")};
-      ${"" /* TODO: remove  */}
-      --none-color: ${activeTheme.get("none-color")};
-      --low-color: ${activeTheme.get("low-color")};
-      --medium-color: ${activeTheme.get("medium-color")};
-      --high-color: ${activeTheme.get("high-color")};
-      --extreme-color: ${activeTheme.get("extreme-color")};
       filter: ${activeTheme.get("filter")}
     }
   `;
@@ -196,23 +193,29 @@ const Gallery = ({
 
     return (
       <>
-        <h2>
-          <span className="title">{t("nav-galleries")}</span>
-        </h2>
-        <div id="content">
-          <ListBody galleries={galleries} />
-        </div>
+        <GlobalStyles />
+        <List galleries={galleries}>
+          <Title
+            user={user}
+            context={context}
+            galleries={galleries}
+            gallery={gallery}
+            year={year}
+            month={month}
+            day={day}
+          />
+        </List>
       </>
     );
   }
 
-  const renderx = () => (
+  const renderTopItems = () => (
     <>
       <Title
         user={user}
+        context={gallery.isEditMode() ? "edit" : context}
         galleries={galleries}
         gallery={gallery}
-        context={context}
         year={year}
         month={month}
         day={day}
@@ -233,33 +236,19 @@ const Gallery = ({
     }
 
     if (!gallery.includesPhotos()) {
-      return <Empty gallery={gallery}>{renderx()}</Empty>;
+      return <Empty gallery={gallery}>{renderTopItems()}</Empty>;
+    }
+
+    if (gallery.isEditMode() && (!user || !user.isAdmin())) {
+      gallery.setViewMode();
     }
 
     const photo = gallery.photo(year, month, day, photoId);
 
-    if (context === "admin") {
-      return (
-        <Admin
-          user={user}
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
-          photoId={photoId}
-          filters={filters}
-          setFilters={setFilters}
-          lang={lang}
-          countryData={countryData}
-          theme={activeTheme}
-        >
-          {renderx()}
-        </Admin>
-      );
-    }
     if (context === "stats") {
       return (
         <Stats
+          user={user}
           photos={gallery.photos()}
           filters={filters}
           setFilters={setFilters}
@@ -267,42 +256,45 @@ const Gallery = ({
           countryData={countryData}
           theme={activeTheme}
         >
-          {renderx()}
+          {renderTopItems()}
         </Stats>
       );
     }
     if (!year) {
-      return <Full gallery={gallery}>{renderx()}</Full>;
+      return <Full gallery={gallery}>{renderTopItems()}</Full>;
     }
     if (!month) {
       return (
         <Year
+          user={user}
           gallery={gallery}
           year={year}
           lang={lang}
           countryData={countryData}
           theme={activeTheme}
         >
-          {renderx()}
+          {renderTopItems()}
         </Year>
       );
     }
     if (!day) {
       return (
         <Month
+          user={user}
           gallery={gallery}
           year={year}
           month={month}
           lang={lang}
           countryData={countryData}
         >
-          {renderx()}
+          {renderTopItems()}
         </Month>
       );
     }
     if (!photoId) {
       return (
         <Day
+          user={user}
           gallery={gallery}
           year={year}
           month={month}
@@ -310,12 +302,13 @@ const Gallery = ({
           lang={lang}
           countryData={countryData}
         >
-          {renderx()}
+          {renderTopItems()}
         </Day>
       );
     }
     return (
       <Photo
+        user={user}
         gallery={gallery}
         year={year}
         month={month}
@@ -324,7 +317,7 @@ const Gallery = ({
         lang={lang}
         countryData={countryData}
       >
-        {renderx()}
+        {renderTopItems()}
       </Photo>
     );
   };

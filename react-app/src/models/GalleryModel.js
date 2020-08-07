@@ -4,6 +4,8 @@ import collection from "../lib/collection";
 import config from "../lib/config";
 
 const GalleryModel = (galleryData) => {
+  let mode = "view";
+
   const importGalleryData = (galleryData) => {
     // TODO: validate
     if (!galleryData || !galleryData.id) {
@@ -80,6 +82,10 @@ const GalleryModel = (galleryData) => {
       }
       return gallery.hostname.test(hostname);
     },
+    setEditMode: () => (mode = "edit"),
+    setViewMode: () => (mode = "view"),
+    isEditMode: () => mode === "edit",
+    isViewMode: () => mode === "view",
     path: (year, month, day) => {
       const parts = ["", "g", gallery.id];
       const ymd = format.date({ year, month, day, separator: "/" });

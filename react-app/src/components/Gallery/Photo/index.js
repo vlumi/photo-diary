@@ -112,6 +112,7 @@ const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
 };
 Photo.propTypes = {
   children: PropTypes.any,
+  user: PropTypes.object,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,

@@ -110,6 +110,7 @@ const Year = ({ children, gallery, year, theme }) => {
 };
 Year.propTypes = {
   children: PropTypes.any,
+  user: PropTypes.object,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   theme: PropTypes.object.isRequired,

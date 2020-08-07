@@ -82,15 +82,6 @@ const App = () => {
                 scrollState={scrollState}
               />
             </Route>
-            <Route path="/g/:galleryId/admin/:year?/:month?/:day?/:photoId?">
-              <Gallery
-                user={user}
-                lang={lang}
-                countryData={countryData}
-                context="admin"
-                scrollState={scrollState}
-              />
-            </Route>
             <Route path="/g/:galleryId/:year/:month/:day/:photoId">
               <Gallery
                 user={user}

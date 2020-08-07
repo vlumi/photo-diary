@@ -101,6 +101,7 @@ const Day = ({ children, gallery, year, month, day, lang, countryData }) => {
 };
 Day.propTypes = {
   children: PropTypes.any,
+  user: PropTypes.object,
   gallery: PropTypes.object.isRequired,
   year: PropTypes.number.isRequired,
   month: PropTypes.number.isRequired,
