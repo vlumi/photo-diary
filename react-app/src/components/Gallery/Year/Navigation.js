@@ -46,7 +46,7 @@ const Navigation = ({ gallery, year }) => {
       >
         <BsCaretLeftFill />
       </NavLink>
-      <Link gallery={gallery}>
+      <Link>
         <TitleContainer>
           <BsFillHouseFill />
           <Title>
