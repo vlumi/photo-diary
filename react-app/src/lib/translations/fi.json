@@ -88,6 +88,7 @@
     "stats-category-ev": "EV",
     "stats-category-lv": "EV @ ISO100",
     "stats-category-resolution": "Resoluutio",
+    "stats-category-orientation": "Orientation",
 
     "stats-kpi-title-photos": "Valokuvia",
     "stats-kpi-photos": "{{count}}",
@@ -126,6 +127,10 @@
     "stats-col-iso": "ISO",
     "stats-col-ev": "EV",
     "stats-col-lv": "EV @ ISO100",
-    "stats-col-resolution": "Megapikseliä"
+    "stats-col-resolution": "Megapikseliä",
+    "stats-col-orientation": "Asento",
+    "stats-orientation-square": "Neliö",
+    "stats-orientation-landscape": "Vaaka",
+    "stats-orientation-portrait": "Pysty"
   }
 }

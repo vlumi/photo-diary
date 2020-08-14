@@ -171,6 +171,8 @@ const categoryValue = (lang, t, countryData) => {
         return formatExposure.ev;
       case "resolution":
         return formatExposure.resolution;
+      case "orientation":
+        return (value) => t(`stats-orientation-${value}`);
       default:
         return identity;
     }

@@ -18,6 +18,7 @@ const categories = (category) => {
         "ev",
         "lv",
         "resolution",
+        "orientation",
       ];
     default:
       return [];

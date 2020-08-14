@@ -88,6 +88,7 @@
     "stats-category-ev": "EV",
     "stats-category-lv": "EV @ ISO100",
     "stats-category-resolution": "Resolution",
+    "stats-category-orientation": "Orientation",
 
     "stats-kpi-title-photos": "Photos",
     "stats-kpi-photos": "{{count}}",
@@ -126,6 +127,10 @@
     "stats-col-iso": "ISO",
     "stats-col-ev": "EV",
     "stats-col-lv": "EV @ ISO100",
-    "stats-col-resolution": "Megapixels"
+    "stats-col-resolution": "Megapixels",
+    "stats-col-orientation": "Orientation",
+    "stats-orientation-square": "Square",
+    "stats-orientation-landscape": "Landscape",
+    "stats-orientation-portrait": "Portrait"
   }
 }

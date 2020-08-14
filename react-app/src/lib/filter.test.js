@@ -13,10 +13,7 @@ describe("categories", () => {
 describe("categories", () => {
   test("Invalid topic", () => expect(filter.categories("")).toStrictEqual([]));
   test("general", () =>
-    expect(filter.categories("general")).toStrictEqual([
-      "author",
-      "country",
-    ]));
+    expect(filter.categories("general")).toStrictEqual(["author", "country"]));
   test("time", () =>
     expect(filter.categories("time")).toStrictEqual([
       "year",
@@ -41,6 +38,7 @@ describe("categories", () => {
       "ev",
       "lv",
       "resolution",
+      "orientation",
     ]));
 });
 

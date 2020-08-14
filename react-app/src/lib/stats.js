@@ -968,6 +968,42 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
+  const collectOrientation = (byOrientation, total) => {
+    const [flat, data, valueRanks] = transformData({
+      original: byOrientation,
+      formatter: (value) => t(`stats-orientation-${value}`),
+      comparator: collection.numSortByFieldDesc("value"),
+    });
+    const values = flat.map((entry) => entry.value);
+    const mean = math.mean(values);
+    const stddev = math.std(values);
+    return {
+      key: "orientation",
+      title: t("stats-category-orientation"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "orientation", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => {
+        return {
+          key: encodeTableKey(entry.key),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          orientation: t(`stats-orientation-${entry.key}`),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
+          standardScore: (entry.value - mean) / stddev,
+        };
+      }),
+    };
+  };
   const collectExposure = () => {
     const total = data.count.total;
     const byExposure = data.count.byExposure;
@@ -982,6 +1018,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         collectExposureValue(byExposure.byExposureValue, total),
         collectLightValue(byExposure.byLightValue, total),
         collectResolution(byExposure.byResolution, total),
+        collectOrientation(byExposure.byOrientation, total),
       ],
     };
   };
@@ -1186,6 +1223,12 @@ const updateExposureDistribution = (byExposure, photo, unknownLabel) => {
   byExposure.byResolution[resolution] =
     byExposure.byResolution[resolution] || 0;
   byExposure.byResolution[resolution]++;
+
+  const orientation = photo.orientation() || unknownLabel;
+  byExposure.byOrientation = byExposure.byOrientation || {};
+  byExposure.byOrientation[orientation] =
+    byExposure.byOrientation[orientation] || 0;
+  byExposure.byOrientation[orientation]++;
 };
 /**
  * Update the current photo's ger values into the gear (camera, lens) distribution.

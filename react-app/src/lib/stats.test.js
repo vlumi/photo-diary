@@ -160,6 +160,9 @@ describe("generate", () => {
           byResolution: {
             "6": 1,
           },
+          byOrientation: {
+            landscape: 1,
+          },
         },
         byGear: {
           byCamera: {
@@ -326,6 +329,9 @@ describe("generate", () => {
           },
           byResolution: {
             "N/A": 1,
+          },
+          byOrientation: {
+            landscape: 1,
           },
         },
         byGear: {
@@ -537,6 +543,9 @@ describe("generate", () => {
           },
           byResolution: {
             "6": 2,
+          },
+          byOrientation: {
+            landscape: 2,
           },
         },
         byGear: {
@@ -859,6 +868,9 @@ describe("collectTopics", () => {
             },
             byResolution: {
               "6": 2,
+            },
+            byOrientation: {
+              landscape: 2,
             },
           },
           byGear: {
@@ -1208,6 +1220,6 @@ describe("collectTopics", () => {
     expect(topics[2].categories.length).toBe(4);
     expect(topics[3].key).toBe("exposure");
     expect(topics[3].title).toBe("stats-topic-exposure");
-    expect(topics[3].categories.length).toBe(7);
+    expect(topics[3].categories.length).toBe(8);
   });
 });

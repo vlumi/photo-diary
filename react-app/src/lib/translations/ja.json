@@ -85,6 +85,7 @@
     "stats-category-ev": "露出値",
     "stats-category-lv": "露出値 @ ISO100",
     "stats-category-resolution": "解像度",
+    "stats-category-orientation": "向き",
 
     "stats-kpi-title-photos": "写真",
     "stats-kpi-photos": "{{count}}枚",
@@ -123,6 +124,10 @@
     "stats-col-iso": "ISO",
     "stats-col-ev": "露出値",
     "stats-col-lv": "露出値 @ ISO100",
-    "stats-col-resolution": "メガピクセル"
+    "stats-col-resolution": "メガピクセル",
+    "stats-col-orientation": "向き",
+    "stats-orientation-square": "正方形",
+    "stats-orientation-landscape": "横",
+    "stats-orientation-portrait": "縦"
   }
 }

@@ -106,6 +106,17 @@ const PhotoModel = (photoData) => {
         (photo.dimensions.original.width * photo.dimensions.original.height) /
           10 ** 6
       ),
+    orientation: () => {
+      const ratio =
+        photo.dimensions.original.width / photo.dimensions.original.height;
+      if (Math.abs(ratio - 1) < 0.01) {
+        return "square";
+      }
+      if (ratio < 1) {
+        return "portrait";
+      }
+      return "landscape";
+    },
 
     cameraMake: () => photo.camera.make,
     hasCamera: () =>
@@ -231,6 +242,8 @@ const PhotoModel = (photoData) => {
           return [value, Number(value)].includes(self.lightValue());
         case "resolution":
           return [value, Number(value)].includes(self.resolution());
+        case "orientation":
+          return value === self.orientation();
         default:
           return true;
       }
