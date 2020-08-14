@@ -565,6 +565,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
   const collectCameraMake = (byCameraMake, total) => {
     const [flat, data] = transformData({
       original: byCameraMake,
+      limit: 20,
     });
     const values = flat.map((entry) => entry.value);
     const mean = math.mean(values);
@@ -599,6 +600,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
   const collectCamera = (byCamera, total) => {
     const [flat, data] = transformData({
       original: byCamera,
+      limit: 20,
     });
     const values = flat.map((entry) => entry.value);
     const mean = math.mean(values);
@@ -633,6 +635,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
   const collectLens = (byLens, total) => {
     const [flat, data] = transformData({
       original: byLens,
+      limit: 20,
     });
     const values = flat.map((entry) => entry.value);
     const mean = math.mean(values);
