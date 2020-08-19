@@ -99,11 +99,15 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
       Object.keys(newUniqueValues[topic]).forEach((category) => {
         newUniqueValues[topic][category] = [...newUniqueValues[topic][category]]
           .map((value) => {
+            if (value === "" || value === undefined || value === null) {
+              return {
+                key: stats.UNKNOWN,
+                value: t("stats-unknown"),
+              };
+            }
             return {
-              key: value || stats.UNKNOWN,
-              value: !value
-                ? t("stats-unknown")
-                : categoryValueFormatter(category)(value),
+              key: value,
+              value: categoryValueFormatter(category)(value),
             };
           })
           .sort(format.categorySorter("key", "value")(category));
@@ -206,20 +210,6 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
       return <div>{t("loading")}</div>;
     }
 
-    if (!gallery.includesPhotos()) {
-      return (
-        <Empty gallery={gallery}>
-          <Title galleries={galleries} gallery={gallery} context={context} />
-          <Filters
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
-        </Empty>
-      );
-    }
     if (isStats) {
       return (
         <Stats
@@ -240,6 +230,20 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
             countryData={countryData}
           />
         </Stats>
+      );
+    }
+    if (!gallery.includesPhotos()) {
+      return (
+        <Empty gallery={gallery}>
+          <Title galleries={galleries} gallery={gallery} context={context} />
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            uniqueValues={uniqueValues}
+            lang={lang}
+            countryData={countryData}
+          />
+        </Empty>
       );
     }
     if (!year) {

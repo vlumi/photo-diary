@@ -186,6 +186,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     );
     return [flat, data, valueRanks];
   };
+  const calculateStatistics = (values) => {
+    if (values.length === 0) {
+      return { mean: 0, stddev: 0 };
+    }
+    return { mean: math.mean(values), stddev: math.std(values) };
+  };
   const collectSummary = (count) => {
     return {
       key: "summary",
@@ -212,8 +218,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       original: byAuthor,
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "author",
       title: t("stats-category-author"),
@@ -227,7 +232,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => {
+      table: flat.map((entry) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -248,8 +253,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         format.countryName(lang, countryData)(countryCode),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "country",
       title: t("stats-category-country"),
@@ -264,7 +268,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => {
+      table: flat.map((entry) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -363,8 +367,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       const [year, month] = entry.key;
       return entry.value / daysInYearMonth[year][month];
     });
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     const valueRanks = collection.calculateRanks(flat, (_) => Number(_.value));
     return {
       key: "year-month",
@@ -403,8 +406,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     const values = flat.map((entry) => {
       return entry.value / daysInYear[entry.key];
     });
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "year",
       title: t("stats-category-year"),
@@ -440,8 +442,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       limit: 12,
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "month",
       title: t("stats-category-month"),
@@ -480,8 +481,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       limit: 24,
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "weekday",
       title: t("stats-category-weekday"),
@@ -517,8 +517,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       limit: 24,
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "hour",
       title: t("stats-category-hour"),
@@ -568,8 +567,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       limit: 20,
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "camera-make",
       title: t("stats-category-camera-make"),
@@ -603,8 +601,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       limit: 20,
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "camera",
       title: t("stats-category-camera"),
@@ -638,8 +635,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       limit: 20,
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "lens",
       title: t("stats-category-lens"),
@@ -675,8 +671,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       otherLabel: JSON.stringify([t("stats-other"), t("stats-other")]),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "camera-lens",
       title: t("stats-category-camera-lens"),
@@ -726,8 +721,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "focal-length",
       title: t("stats-category-focal-length"),
@@ -762,8 +756,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "aperture",
       title: t("stats-category-aperture"),
@@ -798,8 +791,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       comparator: collection.numSortByFieldDesc("key"),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "exposure-time",
       title: t("stats-category-exposure-time"),
@@ -834,8 +826,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "iso",
       title: t("stats-category-iso"),
@@ -870,8 +861,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "ev",
       title: t("stats-category-ev"),
@@ -906,8 +896,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "lv",
       title: t("stats-category-lv"),
@@ -942,8 +931,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       comparator: collection.numSortByFieldAsc("key"),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "resolution",
       title: t("stats-category-resolution"),
@@ -978,8 +966,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       comparator: collection.numSortByFieldDesc("value"),
     });
     const values = flat.map((entry) => entry.value);
-    const mean = math.mean(values);
-    const stddev = math.std(values);
+    const { mean, stddev } = calculateStatistics(values);
     return {
       key: "orientation",
       title: t("stats-category-orientation"),
@@ -1084,12 +1071,6 @@ const initializeStats = (uniqueValues, unknownLabel) => {
     }
     if ("time" in uniqueValues) {
       stats.count.byTime.byYear = setInitialValues(uniqueValues.time.year);
-      // TODO: year-month into a hierarchy
-      stats.count.byTime.byMonth = setInitialValues(uniqueValues.time.month);
-      stats.count.byTime.byWeekday = setInitialValues(
-        uniqueValues.time.weekday
-      );
-      stats.count.byTime.byHour = setInitialValues(uniqueValues.time.hour);
     }
     if ("gear" in uniqueValues) {
       stats.count.byGear.byCameraMake = setInitialValues(
