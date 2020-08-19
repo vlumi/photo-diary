@@ -17,6 +17,7 @@ const Root = styled.div`
 const Stats = ({
   children,
   photos,
+  uniqueValues,
   filters,
   setFilters,
   lang,
@@ -28,8 +29,10 @@ const Stats = ({
   const { t } = useTranslation();
 
   React.useEffect(() => {
-    stats.generate(photos, t("stats-unknown")).then((stats) => setData(stats));
-  }, [photos, t]);
+    stats
+      .generate(photos, uniqueValues, t("stats-unknown"))
+      .then((stats) => setData(stats));
+  }, [photos, uniqueValues, t]);
 
   if (!data) {
     return (
@@ -59,6 +62,7 @@ const Stats = ({
 Stats.propTypes = {
   children: PropTypes.any,
   photos: PropTypes.array.isRequired,
+  uniqueValues: PropTypes.object.isRequired,
   filters: PropTypes.object.isRequired,
   setFilters: PropTypes.func.isRequired,
   lang: PropTypes.string.isRequired,

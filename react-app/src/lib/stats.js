@@ -13,8 +13,8 @@ const math = create(all, {});
 
 const UNKNOWN = "unknown";
 
-const generate = async (photos, unknownLabel) => {
-  return collectStatistics(photos, unknownLabel);
+const generate = async (photos, uniqueValues, unknownLabel) => {
+  return collectStatistics(photos, uniqueValues, unknownLabel);
 };
 
 const decodeTableRowKey = (key) => {
@@ -1035,9 +1035,17 @@ export default { UNKNOWN, decodeTableRowKey, generate, collectTopics };
  * Collect statistics from photos
  *
  * @param {array} photos The photos over which the statistics should be collected.
+ * @param {object} uniqueValues
+ * @param {string} unknownLabel
  * @return Distribution statistics of the given photos over various parameters and their combinations.
  */
-const collectStatistics = (photos, unknownLabel) => {
+const collectStatistics = (photos, uniqueValues, unknownLabel) => {
+  const stats = initializeStats(uniqueValues, unknownLabel);
+  populateDistributions(photos, stats, unknownLabel);
+  return stats;
+};
+
+const initializeStats = (uniqueValues, unknownLabel) => {
   const stats = {
     count: {
       total: 0,
@@ -1059,8 +1067,67 @@ const collectStatistics = (photos, unknownLabel) => {
       byCountry: {},
     },
   };
-
-  populateDistributions(photos, stats, unknownLabel);
+  const setInitialValues = (source) => {
+    if (!Array.isArray(source)) {
+      return {};
+    }
+    return Object.fromEntries(
+      source
+        .map((e) => (e.key === UNKNOWN ? unknownLabel : e.key))
+        .map((k) => [k, 0])
+    );
+  };
+  if (uniqueValues) {
+    if ("general" in uniqueValues) {
+      stats.count.byAuthor = setInitialValues(uniqueValues.general.author);
+      stats.count.byCountry = setInitialValues(uniqueValues.general.country);
+    }
+    if ("time" in uniqueValues) {
+      stats.count.byTime.byYear = setInitialValues(uniqueValues.time.year);
+      // TODO: year-month into a hierarchy
+      stats.count.byTime.byMonth = setInitialValues(uniqueValues.time.month);
+      stats.count.byTime.byWeekday = setInitialValues(
+        uniqueValues.time.weekday
+      );
+      stats.count.byTime.byHour = setInitialValues(uniqueValues.time.hour);
+    }
+    if ("gear" in uniqueValues) {
+      stats.count.byGear.byCameraMake = setInitialValues(
+        uniqueValues.gear["camera-make"]
+      );
+      stats.count.byGear.byCamera = setInitialValues(uniqueValues.gear.camera);
+      stats.count.byGear.byLens = setInitialValues(uniqueValues.gear.lens);
+      stats.count.byGear.byCameraLens = setInitialValues(
+        uniqueValues.gear["camera-lens"]
+      );
+    }
+    if ("exposure" in uniqueValues) {
+      stats.count.byExposure.byFocalLength = setInitialValues(
+        uniqueValues.exposure["focal-length"]
+      );
+      stats.count.byExposure.byAperture = setInitialValues(
+        uniqueValues.exposure.aperture
+      );
+      stats.count.byExposure.byExposureTime = setInitialValues(
+        uniqueValues.exposure["exposure-time"]
+      );
+      stats.count.byExposure.byIso = setInitialValues(
+        uniqueValues.exposure.iso
+      );
+      stats.count.byExposure.byExposureValue = setInitialValues(
+        uniqueValues.exposure.ev
+      );
+      stats.count.byExposure.byLightValue = setInitialValues(
+        uniqueValues.exposure.lv
+      );
+      stats.count.byExposure.byResolution = setInitialValues(
+        uniqueValues.exposure.resolution
+      );
+      stats.count.byExposure.byOrientation = setInitialValues(
+        uniqueValues.exposure.orientation
+      );
+    }
+  }
   return stats;
 };
 

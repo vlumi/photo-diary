@@ -19,7 +19,7 @@ describe("decodeTableRowKey", () => {
 });
 describe("generate", () => {
   test("Empty", async () =>
-    expect(await stats.generate([], "N/A")).toStrictEqual({
+    expect(await stats.generate([], {}, "N/A")).toStrictEqual({
       count: {
         byAuthor: {},
         byCountry: {},
@@ -128,6 +128,7 @@ describe("generate", () => {
             },
           }),
         ],
+        {},
         "N/A"
       )
     ).toStrictEqual({
@@ -298,6 +299,7 @@ describe("generate", () => {
             },
           }),
         ],
+        {},
         "N/A"
       )
     ).toStrictEqual({
@@ -512,6 +514,7 @@ describe("generate", () => {
             },
           }),
         ],
+        {},
         "N/A"
       )
     ).toStrictEqual({

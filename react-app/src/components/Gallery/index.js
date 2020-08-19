@@ -224,6 +224,7 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
       return (
         <Stats
           photos={gallery.photos()}
+          uniqueValues={uniqueValues}
           filters={filters}
           setFilters={setFilters}
           lang={lang}
