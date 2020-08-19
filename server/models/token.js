@@ -15,6 +15,13 @@ const loadSecrets = async () => {
   logger.debug("Loading secrets done");
 };
 
+const getSecret = (userId) => {
+  if (!(userId in secrets)) {
+    return config.SECRET;
+  }
+  return `${secrets[userId]}${config.SECRET}`;
+};
+
 const init = async () => {
   await loadSecrets();
   // Reload every minute or so
@@ -46,7 +53,7 @@ const checkUserPassword = async (credentials, user) => {
 const createToken = async (id, isAdmin) => {
   const tokenContent = { id, isAdmin };
   // TODO: expiration
-  return await jwt.sign(tokenContent, secrets[id] || config.SECRET);
+  return await jwt.sign(tokenContent, getSecret(id));
 };
 const authenticateUser = async (credentials) => {
   logger.debug("Authenticating user", credentials);
@@ -63,7 +70,7 @@ const verifyToken = async (token) => {
   const decoded = jwt.decode(token);
   logger.debug("Verifying token", token, secrets[decoded.id]);
 
-  const user = jwt.verify(token, secrets[decoded.id] || config.SECRET);
+  const user = jwt.verify(token, getSecret(decoded.id));
   if (!user || user.id !== decoded.id) {
     throw CONST.ERROR_LOGIN;
   }
