@@ -32,6 +32,9 @@ const RowSelected = styled(Row)`
 const RowHeat = styled(Row)`
   background-color: ${(props) => props.color};
 `;
+const RowNone = styled(Row)`
+  color: var(--inactive-color);
+`;
 const Header = styled.th`
   font-weight: bold;
   padding: 0 2px;
@@ -151,6 +154,18 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
         );
       }
 
+      if (value.count === "0") {
+        return (
+          <RowNone
+            key={key}
+            onClick={handleClick}
+            data-key={valueKey}
+            color={getScoreColor(value.standardScore)}
+          >
+            {renderColumns(value, i)}
+          </RowNone>
+        );
+      }
       return (
         <RowHeat
           key={key}
