@@ -10,7 +10,7 @@
     "dotenv": "^8.2.0",
     "geo-coord": "^0.1.1",
     "i18n-iso-countries": "^6.0.0",
-    "i18next": "^19.6.3",
+    "i18next": "^19.7.0",
     "jsonwebtoken": "^8.5.1",
     "leaflet": "^1.6.0",
     "mathjs": "^7.1.0",
