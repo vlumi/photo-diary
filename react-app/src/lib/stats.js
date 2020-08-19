@@ -208,7 +208,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
   const collectAuthor = (byAuthor, total) => {
-    const [flat, data] = transformData({
+    const [flat, data, valueRanks] = transformData({
       original: byAuthor,
     });
     const values = flat.map((entry) => entry.value);
@@ -230,7 +230,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       table: flat.map((entry, index) => {
         return {
           key: encodeTableKey(entry.key),
-          rank: formatNumber.default(index + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           author: entry.key,
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
@@ -242,7 +242,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
   const collectCountry = (byCountry, total) => {
-    const [flat, data] = transformData({
+    const [flat, data, valueRanks] = transformData({
       original: byCountry,
       formatter: (countryCode) =>
         format.countryName(lang, countryData)(countryCode),
@@ -267,7 +267,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       table: flat.map((entry, index) => {
         return {
           key: encodeTableKey(entry.key),
-          rank: formatNumber.default(index + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           flag: (
             <>
               {countryData.isValid(entry.key) ? (
