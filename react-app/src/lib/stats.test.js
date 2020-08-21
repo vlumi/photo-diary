@@ -234,6 +234,8 @@ describe("generate", () => {
               "1": 1,
             },
           },
+          years: 1,
+          months: 1,
           days: 1,
           daysInYear: {
             "2020": 1,
@@ -404,6 +406,8 @@ describe("generate", () => {
               "1": 1,
             },
           },
+          years: 1,
+          months: 1,
           days: 1,
           daysInYear: {
             "2020": 1,
@@ -712,6 +716,8 @@ describe("generate", () => {
               "3": 1,
             },
           },
+          years: 7,
+          months: 75,
           days: 2261,
           daysInYear: {
             "1995": 365,
@@ -1037,6 +1043,8 @@ describe("collectTopics", () => {
                 "3": 1,
               },
             },
+            years: 7,
+            months: 75,
             days: 2261,
             daysInYear: {
               "1995": 365,

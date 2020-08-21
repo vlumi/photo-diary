@@ -209,14 +209,8 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         average: formatNumber.twoDecimal(
           count.total / (count.byTime.days || 1)
         ),
-        years: formatNumber.default(Object.keys(count.byTime.byYear).length),
-        months: formatNumber.default(
-          Object.keys(count.byTime.byYearMonth).reduce(
-            (acc, year) =>
-              acc + Object.keys(count.byTime.byYearMonth[year]).length,
-            0
-          )
-        ),
+        years: formatNumber.default(count.byTime.years),
+        months: formatNumber.default(count.byTime.months),
         days: formatNumber.default(count.byTime.days),
       }),
     };
@@ -324,17 +318,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     const deep = Object.keys(byYearMonth)
       .sort((a, b) => a - b)
       .map((year) => {
-        const allMonths = collection.objectFromArray(
-          [...Array(12).keys()].map((_) => _ + 1),
-          0
-        );
-        const m = {
-          ...allMonths,
-          ...byYearMonth[year],
-        };
         return {
           key: year,
-          value: collection.foldToArray(m, collection.numSortByFieldAsc("key")),
+          value: collection.foldToArray(
+            byYearMonth[year],
+            collection.numSortByFieldAsc("key")
+          ),
         };
       });
     const mapToChartData = (flat) => {
@@ -363,24 +352,31 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       };
     };
     const data = mapToChartData(deep);
-    const flat = collection.trim(
-      deep
-        .sort((a, b) => Number(b.key) - Number(a.key))
-        .flatMap((year) => {
-          return year.value
-            .sort((a, b) => Number(b.key) - Number(a.key))
-            .map((month) => {
-              return {
-                key: [year.key, month.key],
-                value: month.value,
-              };
-            });
-        }),
-      (entry) => entry.value > 0
-    );
+    const flat = deep
+      .sort((a, b) => Number(b.key) - Number(a.key))
+      .flatMap((year) => {
+        return year.value
+          .sort((a, b) => Number(b.key) - Number(a.key))
+          .map((month) => {
+            return {
+              key: [year.key, month.key],
+              value: month.value,
+            };
+          });
+      });
+    const average = (value, year, month) => {
+      if (
+        !("year" in daysInYearMonth) ||
+        !("month" in daysInYearMonth[year]) ||
+        !daysInYearMonth[year][month]
+      ) {
+        return 0;
+      }
+      return value / daysInYearMonth[year][month];
+    };
     const values = flat.map((entry) => {
       const [year, month] = entry.key;
-      return entry.value / daysInYearMonth[year][month];
+      return average(entry.value, year, month);
     });
     const { mean, stddev } = calculateStatistics(values);
     const valueRanks = collection.calculateRanks(flat, (_) => Number(_.value));
@@ -404,11 +400,8 @@ const collectTopics = (data, lang, t, countryData, theme) => {
             month: t(`month-long-${month}`),
           }),
           count: formatNumber.default(entry.value),
-          average: formatNumber.twoDecimal(
-            entry.value / daysInYearMonth[year][month]
-          ),
-          standardScore:
-            (entry.value / daysInYearMonth[year][month] - mean) / stddev,
+          average: formatNumber.twoDecimal(average(entry.value, year, month)),
+          standardScore: (average(entry.value, year, month) - mean) / stddev,
         };
       }),
     };
@@ -1085,6 +1078,13 @@ const initializeStats = (uniqueValues) => {
       stats.count.byCountry = setInitialValues(uniqueValues.general.country);
     }
     if ("time" in uniqueValues) {
+      stats.count.byTime.byYearMonth = uniqueValues.time["year-month"]
+        .map((_) => _.key.split("-"))
+        .reduce((acc, v) => {
+          acc[v[0]] = acc[v[0]] || {};
+          acc[v[0]][v[1]] = 0;
+          return acc;
+        }, {});
       stats.count.byTime.byYear = setInitialValues(uniqueValues.time.year);
     }
     if ("gear" in uniqueValues) {
@@ -1189,6 +1189,8 @@ const populateDistributions = (photos, stats) => {
  * - byMonth[month]
  * - byWeekday[day]
  * - byHour[hour]
+ * - years
+ * - months
  * - days
  * - daysInYear[year]
  * - daysInYearMonth[year][month]
@@ -1344,8 +1346,10 @@ const updateGear = (byGear, photo) => {
 /**
  * Calculate the number of days for the time distribution statistics, to allow calculating frequencies from the statistics.
  *
- * Produces the number of days in the following structure:
+ * Produces the number of years, months, and days in the following structure:
  *
+ * - years
+ * - months
  * - days
  * - daysInYear[year]
  * - daysInYearMonth[year][month]
@@ -1410,5 +1414,15 @@ const calculateNumberOfDays = (byTime) => {
     }
   }
 
+  byTime.years = maxYear - minYear + 1;
+  if (minYear === maxYear) {
+    byTime.months = byTime.maxDate.month - byTime.minDate.month + 1;
+  } else {
+    byTime.months =
+      (maxYear - minYear - 1) * 12 +
+      13 -
+      byTime.minDate.month +
+      byTime.maxDate.month;
+  }
   byTime.days = Object.values(byTime.daysInYear).reduce((a, b) => a + b, 0);
 };
