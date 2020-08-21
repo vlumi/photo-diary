@@ -366,8 +366,8 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       });
     const average = (value, year, month) => {
       if (
-        !("year" in daysInYearMonth) ||
-        !("month" in daysInYearMonth[year]) ||
+        !(year in daysInYearMonth) ||
+        !(month in daysInYearMonth[year]) ||
         !daysInYearMonth[year][month]
       ) {
         return 0;
