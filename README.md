@@ -140,6 +140,14 @@ These features would be nice to have, but are too far into the future to put on 
 
 ## Version History
 
+### v0.4.1 (2020-08-21)
+
+- UI tweaks and fixes
+- Major code refactoring
+  - Re-organize code hierarchy
+  - Switch to using styled components
+  - Better unit test coverage
+
 ### v0.4.0 (2020-08-03)
 
 - Photo property filters
