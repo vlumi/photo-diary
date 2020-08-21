@@ -19,7 +19,7 @@ const Gallery = styled.div`
   padding: 0;
   border-style: solid;
   border-width: 1px;
-  background-color: var(--none-color);
+  background-color: var(--header-color);
 `;
 const GalleryTitle = styled.h3`
   color: ${(props) => props.color};

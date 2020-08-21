@@ -16,7 +16,7 @@ const Root = styled.div`
   border-style: solid;
   border-width: 1px;
   border-radius: 10px;
-  background-color: var(--none-color);
+  background-color: var(--header-color);
   overflow: hidden;
 `;
 const MonthTitle = styled.h3`
@@ -53,7 +53,7 @@ const MonthGrid = styled.table`
   border-spacing: 0;
   white-space: nowrap;
   border-width: 1px;
-  border-color: var(--none-color);
+  border-color: var(--header-color);
   border-style: solid;
 `;
 const Header = styled.thead``;

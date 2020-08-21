@@ -315,19 +315,8 @@ const collectTopics = (data, lang, t, countryData, theme) => {
   };
 
   const collectYearMonth = (byYearMonth, daysInYearMonth) => {
-    const deep = Object.keys(byYearMonth)
-      .sort((a, b) => a - b)
-      .map((year) => {
-        return {
-          key: year,
-          value: collection.foldToArray(
-            byYearMonth[year],
-            collection.numSortByFieldAsc("key")
-          ),
-        };
-      });
-    const mapToChartData = (flat) => {
-      if (!flat || !flat.length) {
+    const mapToChartData = (deep) => {
+      if (!deep || !deep.length) {
         return {
           labels: [],
           datasets: [],
@@ -336,31 +325,42 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       const colorGradients = color.colorGradient(
         theme.get("header-background"),
         theme.get("header-color"),
-        flat.length
+        deep.length
       );
       return {
-        labels: flat[0].value.map((entry) => t(`month-long-${entry.key}`)),
-        datasets: flat.map((entry, i) => {
+        labels: [...Array(12).keys()].map((entry) =>
+          t(`month-long-${entry + 1}`)
+        ),
+        datasets: deep.map((entry, i) => {
           return {
             label: entry.key,
             backgroundColor: colorGradients[i],
-            data: entry.value.map((_) => _.value),
+            data: [...Array(12).keys()].map((month) => entry.value[month + 1]),
             fill: true,
             lineTension: 0.4,
           };
         }),
       };
     };
+    const deep = Object.keys(byYearMonth)
+      .sort((a, b) => a - b)
+      .map((year) => {
+        return {
+          key: year,
+          value: byYearMonth[year],
+        };
+      });
     const data = mapToChartData(deep);
     const flat = deep
       .sort((a, b) => Number(b.key) - Number(a.key))
       .flatMap((year) => {
-        return year.value
-          .sort((a, b) => Number(b.key) - Number(a.key))
+        return [...Array(12).keys()]
+          .sort((a, b) => b - a)
+          .filter((month) => `${month + 1}` in year.value)
           .map((month) => {
             return {
-              key: [year.key, month.key],
-              value: month.value,
+              key: [year.key, month + 1],
+              value: year.value[month + 1],
             };
           });
       });

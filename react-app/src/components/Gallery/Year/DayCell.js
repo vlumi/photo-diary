@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 const DayCell = styled.td`
   border-width: 1px;
-  border-color: var(--none-color);
+  border-color: var(--header-color);
   border-style: solid;
   padding: 0;
   margin: 0;

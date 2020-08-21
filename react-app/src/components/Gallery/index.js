@@ -27,6 +27,18 @@ import format from "../../lib/format";
 import stats from "../../lib/stats";
 import theme from "../../lib/theme";
 
+const GlobalStyles = createGlobalStyle`
+html {
+  --primary-color: ${(props) => props["primary-color"]};
+  --primary-background: ${(props) => props["primary-background"]};
+  --inactive-color: ${(props) => props["inactive-color"]};
+  --header-color: ${(props) => props["header-color"]};
+  --header-sub-color: ${(props) => props["header-sub-color"]};
+  --header-background: ${(props) => props["header-background"]};
+  filter: ${(props) => props["filter"]}
+}
+`;
+
 const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
   const [galleries, setGalleries] = React.useState(undefined);
   const [gallery, setGallery] = React.useState(undefined);
@@ -143,24 +155,6 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     selectedGallery && selectedGallery.hasTheme()
       ? theme.setTheme(selectedGallery.theme())
       : theme.setTheme(config.DEFAULT_THEME);
-
-  const GlobalStyles = createGlobalStyle`
-    html {
-      --primary-color: ${activeTheme.get("primary-color")};
-      --primary-background: ${activeTheme.get("primary-background")};
-      --inactive-color: ${activeTheme.get("inactive-color")};
-      --header-color: ${activeTheme.get("header-color")};
-      --header-sub-color: ${activeTheme.get("header-sub-color")};
-      --header-background: ${activeTheme.get("header-background")};
-      ${"" /* TODO: remove  */}
-      --none-color: ${activeTheme.get("none-color")};
-      --low-color: ${activeTheme.get("low-color")};
-      --medium-color: ${activeTheme.get("medium-color")};
-      --high-color: ${activeTheme.get("high-color")};
-      --extreme-color: ${activeTheme.get("extreme-color")};
-      filter: ${activeTheme.get("filter")}
-    }
-  `;
 
   if (error) {
     return <div className="error">Loading failed</div>;
@@ -368,9 +362,18 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
       </Photo>
     );
   };
+
   return (
     <>
-      <GlobalStyles />
+      <GlobalStyles
+        primary-color={activeTheme.get("primary-color")}
+        primary-background={activeTheme.get("primary-background")}
+        inactive-color={activeTheme.get("inactive-color")}
+        header-color={activeTheme.get("header-color")}
+        header-sub-color={activeTheme.get("header-sub-color")}
+        header-background={activeTheme.get("header-background")}
+        filter={activeTheme.get("filter")}
+      />
       {renderContent()}
     </>
   );
