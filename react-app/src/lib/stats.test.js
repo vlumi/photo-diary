@@ -19,7 +19,7 @@ describe("decodeTableRowKey", () => {
 });
 describe("generate", () => {
   test("Empty", async () =>
-    expect(await stats.generate([], {}, "N/A")).toStrictEqual({
+    expect(await stats.generate([], {})).toStrictEqual({
       count: {
         byAuthor: {},
         byCountry: {},
@@ -128,8 +128,7 @@ describe("generate", () => {
             },
           }),
         ],
-        {},
-        "N/A"
+        {}
       )
     ).toStrictEqual({
       count: {
@@ -299,38 +298,37 @@ describe("generate", () => {
             },
           }),
         ],
-        {},
-        "N/A"
+        {}
       )
     ).toStrictEqual({
       count: {
         byAuthor: {
-          "N/A": 1,
+          unknown: 1,
         },
         byCountry: {
-          "N/A": 1,
+          unknown: 1,
         },
         byExposure: {
           byAperture: {
-            "N/A": 1,
+            unknown: 1,
           },
           byExposureTime: {
-            "N/A": 1,
+            unknown: 1,
           },
           byExposureValue: {
-            "N/A": 1,
+            unknown: 1,
           },
           byFocalLength: {
-            "N/A": 1,
+            unknown: 1,
           },
           byIso: {
-            "N/A": 1,
+            unknown: 1,
           },
           byLightValue: {
-            "N/A": 1,
+            unknown: 1,
           },
           byResolution: {
-            "N/A": 1,
+            unknown: 1,
           },
           byOrientation: {
             landscape: 1,
@@ -338,16 +336,16 @@ describe("generate", () => {
         },
         byGear: {
           byCamera: {
-            "N/A": 1,
+            unknown: 1,
           },
           byCameraLens: {
-            '["N/A","N/A"]': 1,
+            '["unknown","unknown"]': 1,
           },
           byCameraMake: {
-            "N/A": 1,
+            unknown: 1,
           },
           byLens: {
-            "N/A": 1,
+            unknown: 1,
           },
         },
         byTime: {
@@ -514,8 +512,7 @@ describe("generate", () => {
             },
           }),
         ],
-        {},
-        "N/A"
+        {}
       )
     ).toStrictEqual({
       count: {

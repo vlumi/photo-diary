@@ -30,7 +30,7 @@ const Stats = ({
 
   React.useEffect(() => {
     stats
-      .generate(photos, uniqueValues, t("stats-unknown"))
+      .generate(photos, uniqueValues)
       .then((stats) => setData(stats));
   }, [photos, uniqueValues, t]);
 

@@ -201,7 +201,7 @@ const PhotoModel = (photoData) => {
     matches: (category, value) => {
       switch (category) {
         case "author":
-          return value === self.author();
+          return (!value && !self.author()) || value === self.author();
         case "country":
           return value === self.countryCode();
         case "year":

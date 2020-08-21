@@ -91,7 +91,6 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
     if (!category || !key) {
       return;
     }
-    // TODO: put to tentative filters first, to allow selecting multiple items...
     const newFilters = filter.applyNewFilter(
       filters,
       topic,
@@ -141,7 +140,6 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
     return table.map((value, i) => {
       const valueKey = stats.decodeTableRowKey(value.key);
       const key = `${topic.key}:${category.key}:${valueKey}`;
-      // console.log("render row", category, valueKey, filters);
       if (
         topic in filters &&
         category in filters[topic] &&

@@ -13,8 +13,8 @@ const math = create(all, {});
 
 const UNKNOWN = "unknown";
 
-const generate = async (photos, uniqueValues, unknownLabel) => {
-  return collectStatistics(photos, uniqueValues, unknownLabel);
+const generate = async (photos, uniqueValues) => {
+  return collectStatistics(photos, uniqueValues);
 };
 
 const decodeTableRowKey = (key) => {
@@ -30,17 +30,25 @@ const collectTopics = (data, lang, t, countryData, theme) => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang);
 
-  const unknownLabel = t("stats-unknown");
+  const localizeUnknownKey = (key, unknownLabel = t("stats-unknown")) => {
+    try {
+      return JSON.stringify(
+        JSON.parse(key).map((part) => (part === UNKNOWN ? unknownLabel : part))
+      );
+    } catch (e) {
+      return key === UNKNOWN ? unknownLabel : key;
+    }
+  };
+  // const UNKNOWN = t("stats-unknown");
   const encodeTableKey = (value) =>
     JSON.stringify({
       value: value,
-      isUnknown: value === unknownLabel,
+      isUnknown: value === UNKNOWN,
     });
-
   const encodeLabelKey = (formatter) => (entry) =>
     collection.transformObjectValue(entry, "key", (entry) => {
       return {
-        name: formatter(entry.key),
+        name: formatter(localizeUnknownKey(entry.key)),
         share: format.share(entry.value, data.count.total),
       };
     });
@@ -236,7 +244,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          author: entry.key,
+          author: localizeUnknownKey(entry.key),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -281,7 +289,14 @@ const collectTopics = (data, lang, t, countryData, theme) => {
               )}
             </>
           ),
-          country: <>{format.countryName(lang, countryData)(entry.key)}</>,
+          country: (
+            <>
+              {format.countryName(
+                lang,
+                countryData
+              )(localizeUnknownKey(entry.key))}
+            </>
+          ),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -585,7 +600,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
-          "camera-make": entry.key,
+          "camera-make": localizeUnknownKey(entry.key),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -619,7 +634,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
-          camera: entry.key,
+          camera: localizeUnknownKey(entry.key),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -653,7 +668,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
-          lens: entry.key,
+          lens: localizeUnknownKey(entry.key),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -668,7 +683,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       original: byCameraLens,
       formatter: (cameraLens) => JSON.parse(cameraLens).join(" + "),
       limit: 20,
-      otherLabel: JSON.stringify([t("stats-other"), t("stats-other")]),
+      otherLabel: JSON.stringify([t("stats-other")]),
     });
     const values = flat.map((entry) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -689,7 +704,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(index + 1),
-          "camera-lens": JSON.parse(entry.key).join(" + "),
+          "camera-lens": JSON.parse(localizeUnknownKey(entry.key)).join(" + "),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -739,7 +754,9 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          "focal-length": formatExposure.focalLength(entry.key),
+          "focal-length": formatExposure.focalLength(
+            localizeUnknownKey(entry.key)
+          ),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -774,7 +791,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          aperture: formatExposure.aperture(entry.key),
+          aperture: formatExposure.aperture(localizeUnknownKey(entry.key)),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -809,7 +826,9 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          "exposure-time": formatExposure.exposureTime(entry.key),
+          "exposure-time": formatExposure.exposureTime(
+            localizeUnknownKey(entry.key)
+          ),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -844,7 +863,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          iso: formatExposure.iso(entry.key),
+          iso: formatExposure.iso(localizeUnknownKey(entry.key)),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -879,7 +898,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          ev: formatExposure.ev(entry.key),
+          ev: formatExposure.ev(localizeUnknownKey(entry.key)),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -914,7 +933,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          lv: formatExposure.ev(entry.key),
+          lv: formatExposure.ev(localizeUnknownKey(entry.key)),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -949,7 +968,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          resolution: formatExposure.resolution(entry.key),
+          resolution: formatExposure.resolution(localizeUnknownKey(entry.key)),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -1023,16 +1042,16 @@ export default { UNKNOWN, decodeTableRowKey, generate, collectTopics };
  *
  * @param {array} photos The photos over which the statistics should be collected.
  * @param {object} uniqueValues
- * @param {string} unknownLabel
+ * @param {string} UNKNOWN
  * @return Distribution statistics of the given photos over various parameters and their combinations.
  */
-const collectStatistics = (photos, uniqueValues, unknownLabel) => {
-  const stats = initializeStats(uniqueValues, unknownLabel);
-  populateDistributions(photos, stats, unknownLabel);
+const collectStatistics = (photos, uniqueValues) => {
+  const stats = initializeStats(uniqueValues);
+  populateDistributions(photos, stats);
   return stats;
 };
 
-const initializeStats = (uniqueValues, unknownLabel) => {
+const initializeStats = (uniqueValues) => {
   const stats = {
     count: {
       total: 0,
@@ -1058,11 +1077,7 @@ const initializeStats = (uniqueValues, unknownLabel) => {
     if (!Array.isArray(source)) {
       return {};
     }
-    return Object.fromEntries(
-      source
-        .map((e) => (e.key === UNKNOWN ? unknownLabel : e.key))
-        .map((k) => [k, 0])
-    );
+    return Object.fromEntries(source.map((_) => [_.key, 0]));
   };
   if (uniqueValues) {
     if ("general" in uniqueValues) {
@@ -1079,7 +1094,12 @@ const initializeStats = (uniqueValues, unknownLabel) => {
       stats.count.byGear.byCamera = setInitialValues(uniqueValues.gear.camera);
       stats.count.byGear.byLens = setInitialValues(uniqueValues.gear.lens);
       stats.count.byGear.byCameraLens = setInitialValues(
-        uniqueValues.gear["camera-lens"]
+        uniqueValues.gear["camera-lens"].map((e) => {
+          const key = JSON.parse(e.key);
+          const camera = key[0] || UNKNOWN;
+          const lens = key[1] || UNKNOWN;
+          return { key: JSON.stringify([camera, lens]), value: e.value };
+        })
       );
     }
     if ("exposure" in uniqueValues) {
@@ -1118,16 +1138,16 @@ const initializeStats = (uniqueValues, unknownLabel) => {
  * @param {array} photos The photos over which the statistics should be collected.
  * @param {object} stats The target structure for collecting statistics.
  */
-const populateDistributions = (photos, stats, unknownLabel) => {
+const populateDistributions = (photos, stats) => {
   photos.forEach((photo) => {
     stats.count.total++;
 
-    const countryCode = photo.countryCode() || unknownLabel;
+    const countryCode = photo.countryCode() || UNKNOWN;
     stats.count.byCountry[countryCode] =
       stats.count.byCountry[countryCode] || 0;
     stats.count.byCountry[countryCode]++;
 
-    const author = photo.author() || unknownLabel;
+    const author = photo.author() || UNKNOWN;
     stats.count.byAuthor[author] = stats.count.byAuthor[author] || 0;
     stats.count.byAuthor[author]++;
 
@@ -1141,10 +1161,10 @@ const populateDistributions = (photos, stats, unknownLabel) => {
     );
     const adjustExposure = () => {
       const focalLength =
-        photo.focalLength() > 0 ? photo.focalLength() : unknownLabel;
-      const aperture = photo.aperture() || unknownLabel;
-      const exposureTime = photo.exposureTime() || unknownLabel;
-      const iso = photo.iso() || unknownLabel;
+        photo.focalLength() > 0 ? photo.focalLength() : UNKNOWN;
+      const aperture = photo.aperture() || UNKNOWN;
+      const exposureTime = photo.exposureTime() || UNKNOWN;
+      const iso = photo.iso() || UNKNOWN;
 
       return {
         focalLength,
@@ -1154,8 +1174,8 @@ const populateDistributions = (photos, stats, unknownLabel) => {
       };
     };
     photo.exposure = adjustExposure();
-    updateExposureDistribution(stats.count.byExposure, photo, unknownLabel);
-    updateGear(stats.count.byGear, photo, unknownLabel);
+    updateExposureDistribution(stats.count.byExposure, photo);
+    updateGear(stats.count.byGear, photo);
   });
 };
 
@@ -1234,48 +1254,48 @@ const updateTimeDistribution = (byTime, year, month, day, weekday, hour) => {
  * @param {object} byExposure Target for collecting the exposure distribution over all photos.
  * @param {object} photo Exposure values of the current photo.
  */
-const updateExposureDistribution = (byExposure, photo, unknownLabel) => {
-  const focalLength = Number(photo.focalLength()) || unknownLabel;
+const updateExposureDistribution = (byExposure, photo) => {
+  const focalLength = Number(photo.focalLength()) || UNKNOWN;
   byExposure.byFocalLength = byExposure.byFocalLength || {};
   byExposure.byFocalLength[focalLength] =
     byExposure.byFocalLength[focalLength] || 0;
   byExposure.byFocalLength[focalLength]++;
 
-  const aperture = Number(photo.aperture()) || unknownLabel;
+  const aperture = Number(photo.aperture()) || UNKNOWN;
   byExposure.byAperture = byExposure.byAperture || {};
   byExposure.byAperture[aperture] = byExposure.byAperture[aperture] || 0;
   byExposure.byAperture[aperture]++;
 
-  const exposureTime = Number(photo.exposureTime()) || unknownLabel;
+  const exposureTime = Number(photo.exposureTime()) || UNKNOWN;
   byExposure.byExposureTime = byExposure.byExposureTime || {};
   byExposure.byExposureTime[exposureTime] =
     byExposure.byExposureTime[exposureTime] || 0;
   byExposure.byExposureTime[exposureTime]++;
 
-  const iso = Number(photo.iso()) || unknownLabel;
+  const iso = Number(photo.iso()) || UNKNOWN;
   byExposure.byIso = byExposure.byIso || {};
   byExposure.byIso[iso] = byExposure.byIso[iso] || 0;
   byExposure.byIso[iso]++;
 
-  const exposureValue = Number(photo.exposureValue()) || unknownLabel;
+  const exposureValue = Number(photo.exposureValue()) || UNKNOWN;
   byExposure.byExposureValue = byExposure.byExposureValue || {};
   byExposure.byExposureValue[exposureValue] =
     byExposure.byExposureValue[exposureValue] || 0;
   byExposure.byExposureValue[exposureValue]++;
 
-  const lightValue = Number(photo.lightValue()) || unknownLabel;
+  const lightValue = Number(photo.lightValue()) || UNKNOWN;
   byExposure.byLightValue = byExposure.byLightValue || {};
   byExposure.byLightValue[lightValue] =
     byExposure.byLightValue[lightValue] || 0;
   byExposure.byLightValue[lightValue]++;
 
-  const resolution = Number(photo.resolution()) || unknownLabel;
+  const resolution = Number(photo.resolution()) || UNKNOWN;
   byExposure.byResolution = byExposure.byResolution || {};
   byExposure.byResolution[resolution] =
     byExposure.byResolution[resolution] || 0;
   byExposure.byResolution[resolution]++;
 
-  const orientation = photo.orientation() || unknownLabel;
+  const orientation = photo.orientation() || UNKNOWN;
   byExposure.byOrientation = byExposure.byOrientation || {};
   byExposure.byOrientation[orientation] =
     byExposure.byOrientation[orientation] || 0;
@@ -1299,14 +1319,14 @@ const updateExposureDistribution = (byExposure, photo, unknownLabel) => {
  * @param {object} byGear Target for collecting the gear distribution over all photos.
  * @param {object} photo The current photo.
  */
-const updateGear = (byGear, photo, unknownLabel) => {
-  const cameraMake = photo.cameraMake() || unknownLabel;
+const updateGear = (byGear, photo) => {
+  const cameraMake = photo.cameraMake() || UNKNOWN;
   byGear.byCameraMake = byGear.byCameraMake || {};
   byGear.byCameraMake[cameraMake] = byGear.byCameraMake[cameraMake] || 0;
   byGear.byCameraMake[cameraMake]++;
 
-  const camera = photo.formatCamera() || unknownLabel;
-  const lens = photo.formatLens() || unknownLabel;
+  const camera = photo.formatCamera() || UNKNOWN;
+  const lens = photo.formatLens() || UNKNOWN;
   byGear.byCamera = byGear.byCamera || {};
   byGear.byCamera[camera] = byGear.byCamera[camera] || 0;
   byGear.byCamera[camera]++;
