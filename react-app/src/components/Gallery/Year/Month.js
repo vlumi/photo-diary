@@ -55,6 +55,7 @@ const MonthGrid = styled.table`
   border-width: 1px;
   border-color: var(--header-color);
   border-style: solid;
+  margin: auto;
 `;
 const Header = styled.thead``;
 const Body = styled.tbody``;
