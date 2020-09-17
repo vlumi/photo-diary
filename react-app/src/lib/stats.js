@@ -39,7 +39,6 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       return key === UNKNOWN ? unknownLabel : key;
     }
   };
-  // const UNKNOWN = t("stats-unknown");
   const encodeTableKey = (value) =>
     JSON.stringify({
       value: value,
@@ -570,7 +569,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
   };
 
   const collectCameraMake = (byCameraMake, total) => {
-    const [flat, data] = transformData({
+    const [flat, data, valueRanks] = transformData({
       original: byCameraMake,
       limit: 20,
     });
@@ -592,7 +591,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       table: flat.map((entry, index) => {
         return {
           key: encodeTableKey(entry.key),
-          rank: formatNumber.default(index + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           "camera-make": localizeUnknownKey(entry.key),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
@@ -604,7 +603,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
   const collectCamera = (byCamera, total) => {
-    const [flat, data] = transformData({
+    const [flat, data, valueRanks] = transformData({
       original: byCamera,
       limit: 20,
     });
@@ -626,7 +625,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       table: flat.map((entry, index) => {
         return {
           key: encodeTableKey(entry.key),
-          rank: formatNumber.default(index + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           camera: localizeUnknownKey(entry.key),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
@@ -638,7 +637,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
   const collectLens = (byLens, total) => {
-    const [flat, data] = transformData({
+    const [flat, data,valueRanks] = transformData({
       original: byLens,
       limit: 20,
     });
@@ -660,7 +659,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       table: flat.map((entry, index) => {
         return {
           key: encodeTableKey(entry.key),
-          rank: formatNumber.default(index + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           lens: localizeUnknownKey(entry.key),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
@@ -672,7 +671,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
   const collectCameraLens = (byCameraLens, total) => {
-    const [flat, data] = transformData({
+    const [flat, data,valueRanks] = transformData({
       original: byCameraLens,
       formatter: (cameraLens) => JSON.parse(cameraLens).join(" + "),
       limit: 20,
@@ -696,7 +695,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       table: flat.map((entry, index) => {
         return {
           key: encodeTableKey(entry.key),
-          rank: formatNumber.default(index + 1),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
           "camera-lens": JSON.parse(localizeUnknownKey(entry.key)).join(" + "),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
