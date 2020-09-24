@@ -78,6 +78,7 @@ const App = () => {
       <Helmet>
         <title>Photo diary</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="robots" content="noindex" />
       </Helmet>
       <TopMenu user={user} setUser={setUser} lang={lang} />
       <Router>
