@@ -19,11 +19,11 @@
     "geo-coord": "^0.1.1",
     "gm": "^1.23.1",
     "image-size": "^0.8.3",
-    "moment": "^2.28.0"
+    "moment": "^2.29.1"
   },
   "devDependencies": {
-    "eslint": "^7.9.0",
-    "jest": "^26.4.2",
+    "eslint": "^7.11.0",
+    "jest": "^26.5.3",
     "nodemon": "^2.0.4"
   }
 }
