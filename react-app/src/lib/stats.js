@@ -588,7 +588,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => {
+      table: flat.map((entry) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -622,7 +622,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => {
+      table: flat.map((entry) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -637,7 +637,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
   const collectLens = (byLens, total) => {
-    const [flat, data,valueRanks] = transformData({
+    const [flat, data, valueRanks] = transformData({
       original: byLens,
       limit: 20,
     });
@@ -656,7 +656,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => {
+      table: flat.map((entry) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -671,7 +671,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
   const collectCameraLens = (byCameraLens, total) => {
-    const [flat, data,valueRanks] = transformData({
+    const [flat, data, valueRanks] = transformData({
       original: byCameraLens,
       formatter: (cameraLens) => JSON.parse(cameraLens).join(" + "),
       limit: 20,
@@ -692,7 +692,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry, index) => {
+      table: flat.map((entry) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
