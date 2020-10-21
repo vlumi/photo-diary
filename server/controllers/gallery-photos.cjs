@@ -1,5 +1,5 @@
-const authorizer = require("../lib/authorizer")();
-const model = require("../models/gallery-photo")();
+const authorizer = require("../lib/authorizer.cjs")();
+const model = require("../models/gallery-photo.cjs")();
 
 const init = async () => {
   await model.init();

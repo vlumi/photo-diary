@@ -1,5 +1,5 @@
-const CONST = require("./constants");
-const db = require("../db");
+const CONST = require("./constants.cjs");
+const db = require("../db/index.cjs");
 
 module.exports = () => {
   return {

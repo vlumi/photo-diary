@@ -1,5 +1,5 @@
-const authorizer = require("../lib/authorizer")();
-const model = require("../models/user")();
+const authorizer = require("../lib/authorizer.cjs")();
+const model = require("../models/user.cjs")();
 
 const init = async () => {
   await model.init();

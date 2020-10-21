@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-const { argv } = require("yargs")
+import yargs from "yargs";
+const argv = yargs(process.argv)
   .usage("Usage: $0 [options] [JSON-files]")
   .nargs("gallery", 1)
   .describe("gallery", "Set to gallery, repeat for multiple")
@@ -39,13 +40,13 @@ const { argv } = require("yargs")
   .describe("focal", "Focal length")
   .nargs("aperture", 1)
   .describe("aperture", "Aperture value (f-number)")
-  .demand(1);
+  .demand(1).argv;
 
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
-const logger = require("../lib/logger");
-const db = require("../db");
+import logger from "../lib/logger.cjs";
+import db from "../db/index.cjs";
 
 const addToGalleries = (photoId, galleries) => {
   if (!galleries) {

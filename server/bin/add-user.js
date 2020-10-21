@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
-const bcrypt = require("bcrypt");
-const { v4: uuidv4 } = require("uuid");
+import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
-const logger = require("../lib/logger");
-const db = require("../db");
+import logger from "../lib/logger.cjs";
+import db from "../db/index.cjs";
 
 const saltRounds = 10;
 
-const { argv } = require("yargs")
+import yargs from "yargs";
+const argv = yargs(process.argv)
   .alias("u", "user")
   .nargs("u", 1)
   .describe("u", "User ID")
@@ -16,7 +17,7 @@ const { argv } = require("yargs")
   .nargs("p", 1)
   .describe("p", "Password")
   .demandOption(["u", "p"])
-  .usage("Usage: $0 [options]");
+  .usage("Usage: $0 [options]").argv;
 
 const userId = argv.u;
 const password = argv.p;

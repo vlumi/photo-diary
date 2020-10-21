@@ -1,4 +1,4 @@
-const { isLeap } = require("../../lib/date-utils");
+const { isLeap } = require("../../lib/date-utils.cjs");
 
 describe("Invalid year", () => {
   test("isLeap of undefined", () => expect(isLeap(undefined)).toBe(undefined));

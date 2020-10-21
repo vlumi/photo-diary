@@ -1,5 +1,5 @@
-const logger = require("../lib/logger");
-const db = require("../db");
+const logger = require("../lib/logger.cjs");
+const db = require("../db/index.cjs");
 
 module.exports = () => {
   return {

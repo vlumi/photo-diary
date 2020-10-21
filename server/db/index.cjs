@@ -1,9 +1,9 @@
-const config = require("../lib/config");
+const config = require("../lib/config/index.cjs");
 
 const DRIVER = {
-  dummy: () => require("./dummy"),
-  sqlite3: () => require("./sqlite3"),
-  legacy_sqlite3: () => require("./legacy-sqlite3"),
+  dummy: () => require("./dummy.cjs"),
+  sqlite3: () => require("./sqlite3/index.cjs"),
+  legacy_sqlite3: () => require("./legacy-sqlite3.cjs"),
 };
 
 const connectDb = () => {

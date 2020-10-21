@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const CONST = require("../constants");
+const CONST = require("../constants.cjs");
 
 const DEBUG = process.env.DEBUG || CONST.DEFAULT_DEBUG;
 const DB_DRIVER = process.env.DB_DRIVER;

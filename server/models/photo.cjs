@@ -1,6 +1,6 @@
-const CONST = require("../lib/constants");
-const logger = require("../lib/logger");
-const db = require("../db");
+const CONST = require("../lib/constants.cjs");
+const logger = require("../lib/logger.cjs");
+const db = require("../db/index.cjs");
 
 module.exports = () => {
   return {

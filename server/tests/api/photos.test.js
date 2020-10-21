@@ -1,9 +1,9 @@
 const supertest = require("supertest");
-const { app, init } = require("../../app");
+const { app, init } = require("../../app.cjs");
 
 const api = supertest(app);
-const db = require("../../db/dummy")();
-const { loginUser } = require("./helper");
+const db = require("../../db/dummy.cjs")();
+const { loginUser } = require("./helper.cjs");
 
 beforeEach(async () => {
   await db.init();

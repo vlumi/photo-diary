@@ -1,8 +1,8 @@
 const supertest = require("supertest");
-const { app, init } = require("../../app");
+const { app, init } = require("../../app.cjs");
 
 const api = supertest(app);
-const { loginUser } = require("./helper");
+const { loginUser } = require("./helper.cjs");
 
 beforeEach(async () => {
   await init();

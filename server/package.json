@@ -3,6 +3,7 @@
   "version": "0.4.1",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=dev node index.js",
     "prod": "cross-env NODE_ENV=prod pm2 start index.js",

@@ -1,13 +1,13 @@
-const CONST = require("../../lib/constants");
+const CONST = require("../../lib/constants.cjs");
 const {
   authorizeView,
   authorizeAdmin,
   authorizeGalleryView,
   authorizeGalleryAdmin,
-} = require("../../lib/authorizer")();
+} = require("../../lib/authorizer.cjs")();
 
-const db = require("../../db");
-jest.mock("../../db");
+const db = require("../../db/index.cjs");
+jest.mock("../../db/index.cjs");
 
 const fail = (authorize, user, gallery) => {
   expect.assertions(1);

@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const { info, error } = require("../../lib/logger");
+const { info, error } = require("../../lib/logger.cjs");
 
 let mockError, mockLog;
 beforeEach(() => {

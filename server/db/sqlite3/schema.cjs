@@ -1,4 +1,4 @@
-const CONST = require("../../lib/constants");
+const CONST = require("../../lib/constants.cjs");
 
 module.exports = () => {
   return {

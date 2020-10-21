@@ -1,7 +1,7 @@
 const HttpStatus = require("http-status-codes");
 
-const CONST = require("../constants");
-const logger = require("../logger");
+const CONST = require("../constants.cjs");
+const logger = require("../logger.cjs");
 
 module.exports = function (error, request, response, next) {
   logger.debug(error);

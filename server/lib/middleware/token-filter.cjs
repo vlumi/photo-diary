@@ -1,6 +1,6 @@
-const CONST = require("../constants");
-const tokensModel = require("../../models/token")();
-const logger = require("../logger");
+const CONST = require("../constants.cjs");
+const tokensModel = require("../../models/token.cjs")();
+const logger = require("../logger.cjs");
 
 module.exports = (request, response, next) => {
   request.user = undefined;

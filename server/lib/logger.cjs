@@ -1,4 +1,5 @@
-const { DEBUG } = require("./config");
+/* eslint-disable no-console */
+const { DEBUG } = require("./config/index.cjs");
 
 const timeStamp = () => {
   const toIsoString = (date) => {

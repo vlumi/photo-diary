@@ -1,10 +1,10 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
-const CONST = require("../lib/constants");
-const config = require("../lib/config");
-const logger = require("../lib/logger");
-const db = require("../db");
+const CONST = require("../lib/constants.cjs");
+const config = require("../lib/config/index.cjs");
+const logger = require("../lib/logger.cjs");
+const db = require("../db/index.cjs");
 
 const secrets = {};
 
