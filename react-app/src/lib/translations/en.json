@@ -58,7 +58,8 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "Day number {{count}}",
 
-    "photo-count": "{{count}} photos",
+    "photo-count": "{{count}} photo",
+    "photo-count_plural": "{{count}} photos",
 
     "stats-filters": "Filters",
 

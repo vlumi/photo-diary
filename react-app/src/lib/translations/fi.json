@@ -58,7 +58,8 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "{{count}}. päivä",
 
-    "photo-count": "{{count}} kuvaa",
+    "photo-count": "{{count}} kuva",
+    "photo-count_plural": "{{count}} kuvaa",
 
     "stats-filters": "Suodattimet",
 
