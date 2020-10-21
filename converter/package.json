@@ -13,7 +13,7 @@
   "author": "Ville Misaki",
   "license": "MIT",
   "dependencies": {
-    "chokidar": "^3.4.2",
+    "chokidar": "^3.4.3",
     "dotenv": "^8.2.0",
     "exifr": "^5.0.6",
     "geo-coord": "^0.1.1",
@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "eslint": "^7.11.0",
-    "jest": "^26.5.3",
-    "nodemon": "^2.0.4"
+    "jest": "^26.6.0",
+    "nodemon": "^2.0.6"
   }
 }
