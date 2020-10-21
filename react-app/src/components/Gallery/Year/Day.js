@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 
 import DayCell from "./DayCell";
 import Link from "../Link";
@@ -36,6 +37,8 @@ const getHeatColors = (theme) => {
 const Day = ({ gallery, year, month, day, maxCount, theme }) => {
   const heatColors = getHeatColors(theme);
 
+  const { t } = useTranslation();
+
   const renderDayValue = (gallery, year, month, day, photoCount) => {
     if (day === 0) {
       return <></>;
@@ -59,7 +62,9 @@ const Day = ({ gallery, year, month, day, maxCount, theme }) => {
     year,
     month,
     day,
-  })}: ${photoCount} photos`;
+  })}: ${t("photo-count", {
+    count: photoCount,
+  })}`;
   if (photoCount === 0) {
     return (
       <None title={title}>

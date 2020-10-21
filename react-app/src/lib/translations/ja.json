@@ -55,6 +55,8 @@
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "第{{count}}日",
 
+    "photo-count": "{{count}}枚",
+
     "stats-filters": "フィルター",
 
     "stats-unknown": "未定",
