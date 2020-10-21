@@ -24,7 +24,7 @@ const Title = styled.span`
   margin: 0 5px;
 `;
 
-const Navigation = ({ gallery, year, month, day, photo }) => {
+const Navigation = ({ gallery, year, month, day, photo, lang }) => {
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
 
@@ -55,7 +55,10 @@ const Navigation = ({ gallery, year, month, day, photo }) => {
       <Link gallery={gallery} year={year} month={month}>
         <TitleContainer>
           <BsFillCalendarFill />
-          <Title>#{photo ? photo.index() + 1 : ""}</Title>
+          <Title>
+            #
+            {photo ? new Intl.NumberFormat(lang).format(photo.index() + 1) : ""}
+          </Title>
         </TitleContainer>
       </Link>
       <NavLink gallery={gallery} photo={nextPhoto} visibility={nextVisibility}>
@@ -73,5 +76,6 @@ Navigation.propTypes = {
   month: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
   photo: PropTypes.object.isRequired,
+  lang: PropTypes.string.isRequired,
 };
 export default Navigation;
