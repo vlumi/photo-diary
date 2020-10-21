@@ -2,7 +2,7 @@ const path = require("path");
 const exifr = require("exifr");
 const moment = require("moment");
 
-const logger = require("../lib/logger");
+const logger = require("../lib/logger.cjs");
 const { GeoCoord } = require("geo-coord");
 
 module.exports = async (fileName, rootDir) => {

@@ -1,4 +1,4 @@
-const constants = require("./constants");
+const constants = require("./constants.cjs");
 
 const timeStamp = () => {
   const toIsoString = (date) => {

@@ -2,8 +2,8 @@ const gm = require("gm").subClass({ imageMagick: true });
 const path = require("path");
 const fs = require("fs");
 
-const CONST = require("../lib/constants");
-const logger = require("../lib/logger");
+const CONST = require("../lib/constants.cjs");
+const logger = require("../lib/logger.cjs");
 
 module.exports = (fileName, root, target) => {
   return new Promise((resolve, reject) => {

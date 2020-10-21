@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const CONST = require("../lib/constants");
-const logger = require("../lib/logger");
+const CONST = require("../lib/constants.cjs");
+const logger = require("../lib/logger.cjs");
 
 module.exports = (fileName, rootDir, properties) => {
   return new Promise((resolve, reject) => {
