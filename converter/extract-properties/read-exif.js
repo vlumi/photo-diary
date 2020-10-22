@@ -3,7 +3,7 @@ import exifr from "exifr";
 import moment from "moment";
 
 import logger from "../lib/logger.js";
-import { GeoCoord } from "geo-coord";
+import GeoCoord from "geo-coord";
 
 export default async (fileName, rootDir) => {
   const filePath = path.join(rootDir, fileName);
