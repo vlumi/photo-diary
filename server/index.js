@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import http from "http";
 
-import { app, init } from "./app.cjs";
+import { app, init } from "./app.js";
 import config from "./lib/config/index.cjs";
 import logger from "./lib/logger.cjs";
 
