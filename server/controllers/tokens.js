@@ -1,15 +1,18 @@
-const CONST = require("../lib/constants.cjs");
-const logger = require("../lib/logger.cjs");
+import express from "express";
 
-const authorizer = require("../lib/authorizer.cjs")();
-const model = require("../models/token.cjs")();
+import authorizerClass from "../lib/authorizer.js";
+import modelClass from "../models/token.js";
+
+const router = express.Router();
+
+const authorizer = authorizerClass();
+const model = modelClass();
 
 const init = async () => {
   await model.init();
 };
-const router = require("express").Router();
 
-module.exports = {
+export default {
   init,
   router,
 };

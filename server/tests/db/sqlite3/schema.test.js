@@ -1,4 +1,5 @@
-const schema = require("../../../db/sqlite3/schema.cjs")();
+import schemaClass from "../../../db/sqlite3/schema.cjs";
+const schema = schemaClass();
 
 describe("User", () => {
   const cols = ["id", "password", "secret"].join(",");

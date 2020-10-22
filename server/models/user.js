@@ -1,8 +1,8 @@
-const CONST = require("../lib/constants.cjs");
-const logger = require("../lib/logger.cjs");
-const db = require("../db/index.cjs");
+import CONST from "../lib/constants.cjs";
+import logger from "../lib/logger.cjs";
+import db from "../db/index.js";
 
-module.exports = () => {
+export default () => {
   return {
     init,
     getUsers,

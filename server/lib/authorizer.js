@@ -1,7 +1,7 @@
-const CONST = require("./constants.cjs");
-const db = require("../db/index.cjs");
+import CONST from "./constants.cjs";
+import db from "../db/index.js";
 
-module.exports = () => {
+export default () => {
   return {
     authorizeView,
     authorizeAdmin,

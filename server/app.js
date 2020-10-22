@@ -5,13 +5,13 @@ import "express-async-errors";
 
 import config from "./lib/config/index.cjs";
 
-import tokens from "./controllers/tokens.cjs";
-import users from "./controllers/users.cjs";
-import galleries from "./controllers/galleries.cjs";
-import photos from "./controllers/photos.cjs";
-import galleryPhotos from "./controllers/gallery-photos.cjs";
+import tokens from "./controllers/tokens.js";
+import users from "./controllers/users.js";
+import galleries from "./controllers/galleries.js";
+import photos from "./controllers/photos.js";
+import galleryPhotos from "./controllers/gallery-photos.js";
 
-import middleware from "./lib/middleware/index.cjs";
+import middleware from "./lib/middleware/index.js";
 import logger from "./lib/logger.cjs";
 
 const app = express();

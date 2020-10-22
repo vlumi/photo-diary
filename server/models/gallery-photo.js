@@ -1,7 +1,7 @@
-const logger = require("../lib/logger.cjs");
-const db = require("../db/index.cjs");
+import logger from "../lib/logger.cjs";
+import db from "../db/index.js";
 
-module.exports = () => {
+export default () => {
   return {
     init,
     getGalleryPhotos,

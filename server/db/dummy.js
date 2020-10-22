@@ -1,11 +1,11 @@
-const { v4: uuidv4 } = require("uuid");
+import { v4 as uuidv4 } from "uuid";
 
-const CONST = require("../lib/constants.cjs");
+import CONST from "../lib/constants.cjs";
 
 /**
  * Dummy DB, with all DB values hard-coded.
  */
-module.exports = () => {
+export default () => {
   return {
     init,
     loadUsers,

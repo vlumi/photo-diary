@@ -1,10 +1,10 @@
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
-const CONST = require("../lib/constants.cjs");
-const config = require("../lib/config/index.cjs");
-const logger = require("../lib/logger.cjs");
-const db = require("../db/index.cjs");
+import CONST from "../lib/constants.cjs";
+import config from "../lib/config/index.cjs";
+import logger from "../lib/logger.cjs";
+import db from "../db/index.js";
 
 const secrets = {};
 
@@ -28,7 +28,7 @@ const init = async () => {
   setTimeout(async () => await init(), 60000);
 };
 
-module.exports = () => {
+export default () => {
   return {
     init,
     authenticateUser,
