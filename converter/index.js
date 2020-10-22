@@ -3,15 +3,15 @@ import fs from "fs";
 import path from "path";
 import chokidar from "chokidar";
 
-import CONST from "./lib/constants.cjs";
+import CONST from "./lib/constants.js";
 import config from "./lib/config.js";
-import logger from "./lib/logger.cjs";
-import extractProperties from "./extract-properties/index.cjs";
-import convertImage from "./convert-image/index.cjs";
-
-dotenv.config();
+import logger from "./lib/logger.js";
+import extractProperties from "./extract-properties/index.js";
+import convertImage from "./convert-image/index.js";
 
 try {
+  dotenv.config();
+
   const rootDir = config.getDirectory();
   const watchDir = path.join(rootDir, CONST.DIR_INBOX);
   logger.info(`Watching ${watchDir}`);

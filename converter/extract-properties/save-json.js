@@ -1,10 +1,10 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
-const CONST = require("../lib/constants.cjs");
-const logger = require("../lib/logger.cjs");
+import CONST from "../lib/constants.js";
+import logger from "../lib/logger.js";
 
-module.exports = (fileName, rootDir, properties) => {
+export default (fileName, rootDir, properties) => {
   return new Promise((resolve, reject) => {
     const inboxFilePath = path.join(rootDir, CONST.DIR_INBOX, fileName);
     const jsonFileName = `${inboxFilePath}.json`;

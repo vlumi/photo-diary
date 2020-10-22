@@ -2,7 +2,7 @@
 
 import path from "path";
 
-import readExif from "../extract-properties/read-exif.cjs";
+import readExif from "../extract-properties/read-exif.js";
 
 process.argv.slice(2).forEach((filePath) => {
   const fileName = path.basename(filePath);

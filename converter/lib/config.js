@@ -1,11 +1,8 @@
-import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 
-import CONST from "./constants.cjs";
-import logger from "./logger.cjs";
-
-dotenv.config();
+import CONST from "./constants.js";
+import logger from "./logger.js";
 
 const getDirectory = () => {
   const directory = CONST.PHOTO_ROOT_DIR;

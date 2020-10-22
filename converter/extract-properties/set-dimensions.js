@@ -1,9 +1,9 @@
-const path = require("path");
-const imageSize = require("image-size");
+import path from "path";
+import imageSize from "image-size";
 
-const CONST = require("../lib/constants.cjs");
+import CONST from "../lib/constants.js";
 
-module.exports = (fileName, rootDir, properties) => {
+export default (fileName, rootDir, properties) => {
   const inboxFilePath = path.join(rootDir, CONST.DIR_INBOX, fileName);
   const addFileDimensions = (properties, target, filePath) => {
     const dimensions = imageSize(filePath);

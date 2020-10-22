@@ -1,4 +1,4 @@
-const constants = require("./constants.cjs");
+import constants from "./constants.js";
 
 const timeStamp = () => {
   const toIsoString = (date) => {
@@ -21,7 +21,7 @@ const info = (...params) => console.log(`[${timeStamp()}] INFO:`, ...params);
 const error = (...params) =>
   console.error(`[${timeStamp()}] ERROR:`, ...params);
 
-module.exports = {
+export default {
   debug,
   info,
   error,
