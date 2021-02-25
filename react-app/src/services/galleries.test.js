@@ -17,5 +17,5 @@ test("get()", () => {
   axios.get.mockResolvedValue({ data: gallery });
 
   galleries.get("dummy").then((data) => expect(data).toStrictEqual(gallery));
-  expect(axios.get.mock.calls[1][0]).toBe("/api/galleries/dummy");
+  expect(axios.get.mock.calls[0][0]).toBe("/api/galleries/dummy");
 });

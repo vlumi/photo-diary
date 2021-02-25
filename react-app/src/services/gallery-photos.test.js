@@ -21,5 +21,5 @@ test("get()", () => {
   galleryPhotos
     .get("dummy")
     .then((data) => expect(data).toStrictEqual(gallery));
-  expect(axios.get.mock.calls[1][0]).toBe("/api/gallery-photos/dummy");
+  expect(axios.get.mock.calls[0][0]).toBe("/api/gallery-photos/dummy");
 });
