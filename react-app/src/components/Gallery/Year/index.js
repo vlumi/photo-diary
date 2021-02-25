@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { Swipeable } from "react-swipeable";
+import { Swipeable } from "../../Swipeable";
 import { useTranslation } from "react-i18next";
 
 import Title from "../Title";
