@@ -3,29 +3,27 @@
   "version": "0.4.1",
   "private": true,
   "dependencies": {
-    "@testing-library/user-event": "^7.2.1",
     "axios": "^0.21.1",
     "chart.js": "^2.9.4",
     "cross-env": "^7.0.3",
     "dotenv": "^8.2.0",
     "geo-coord": "^0.1.1",
     "i18n-iso-countries": "^6.5.0",
-    "i18next": "^19.8.9",
+    "i18next": "^19.9.0",
     "jsonwebtoken": "^8.5.1",
     "leaflet": "^1.7.1",
-    "mathjs": "^7.6.0",
-    "react": "^16.14.0",
+    "mathjs": "^9.2.0",
+    "react": "^17.0.1",
     "react-chartjs-2": "^2.11.1",
-    "react-dom": "^16.14.0",
-    "react-flag-icon-css": "^1.0.25",
+    "react-dom": "^17.0.1",
     "react-helmet": "^6.1.0",
-    "react-i18next": "^11.8.7",
-    "react-icons": "^3.11.0",
+    "react-i18next": "^11.8.8",
+    "react-icons": "^4.2.0",
     "react-is": "^17.0.1",
-    "react-leaflet": "^2.8.0",
+    "react-leaflet": "^3.1.0",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^3.4.4",
-    "react-swipeable": "^5.5.1",
+    "react-scripts": "^4.0.3",
+    "react-swipeable": "^6.0.1",
     "styled-components": "^5.2.1"
   },
   "scripts": {
@@ -51,9 +49,10 @@
     ]
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.5.0",
-    "eslint": "^6.8.0"
+    "@testing-library/jest-dom": "^5.11.9",
+    "@testing-library/react": "^11.2.5",
+    "@testing-library/user-event": "^12.7.3",
+    "eslint": "^7.20.0"
   },
   "repository": {
     "type": "git",
