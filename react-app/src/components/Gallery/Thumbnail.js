@@ -12,6 +12,7 @@ const Root = styled.div`
   height: 212px;
   margin: 1px;
   background-color: #bbb;
+  text-align: left;
 `;
 const TN = styled.span`
   display: block;
