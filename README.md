@@ -140,7 +140,7 @@ These features would be nice to have, but are too far into the future to put on 
 
 ## Version History
 
-### v0.4.1 (2021-02-26)
+### v0.4.2 (2021-02-26)
 - Upgrade all dependencies to latest, including React 17
 
 ### v0.4.1 (2020-08-21)
