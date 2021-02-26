@@ -1,9 +1,9 @@
-import * as React from "react";
 import PropTypes from "prop-types";
-import * as EmojiFlags from "emoji-flags";
+import * as React from "react";
+import ReactCountryFlag from "react-country-flag";
 
 const FlagIcon = ({ code }) => {
-  return <>{EmojiFlags.countryCode(code).emoji}</>;
+  return <ReactCountryFlag countryCode={code} svg />;
 };
 FlagIcon.propTypes = {
   code: PropTypes.string.isRequired,
