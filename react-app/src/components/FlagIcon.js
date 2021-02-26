@@ -1,14 +1,9 @@
 import * as React from "react";
 import PropTypes from "prop-types";
-// import FlagIconFactory from "react-flag-icon-css";
-
-// const FlagIcon = FlagIconFactory(React, { useCssModules: false });
+import * as EmojiFlags from "emoji-flags";
 
 const FlagIcon = ({ code }) => {
-  /* eslint-disable no-console */
-  console.log("TODO: add flag for " + code);
-  /* eslint-enable no-console */
-  return <></>;
+  return <>{EmojiFlags.countryCode(code).emoji}</>;
 };
 FlagIcon.propTypes = {
   code: PropTypes.string.isRequired,
