@@ -120,11 +120,9 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     line: {
       ...chartOptions.common,
       scales: {
-        yAxes: [
-          {
-            stacked: true,
-          },
-        ],
+        y: {
+          stacked: true,
+        },
       },
     },
   });
