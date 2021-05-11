@@ -100,7 +100,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         },
         tooltip: {
           callbacks: {
-            title: () => "x",
+            title: () => "",
             label: (context) => {
               return decodeLabelKey(
                 context.label,
