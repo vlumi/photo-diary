@@ -76,7 +76,9 @@ const collectTopics = (data, lang, t, countryData, theme) => {
             title: () => "",
             label: (context) => {
               return decodeLabelKey(
-                context.dataset.label || context.label,
+                context.dataset.label ||
+                  context.chart.data.labels[context.dataIndex] ||
+                  context.label,
                 context.dataset.data[context.dataIndex]
               );
             },
@@ -94,25 +96,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       cutout: 0,
     },
     polar: {
-      plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          callbacks: {
-            title: () => "",
-            label: (context) => {
-              return decodeLabelKey(
-                context.label,
-                context.dataset.data[context.dataIndex]
-              );
-            },
-          },
-        },
-      },
-      animation: false,
-      responsive: true,
-      maintainAspectRatio: false,
+      ...chartOptions.common,
       scales: {
         r: {
           ticks: {
