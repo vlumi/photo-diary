@@ -52,79 +52,77 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       };
     });
   const decodeLabelKey = (key, value) => {
-    const { name, share } = key;
-    return ` ${name}: ${formatNumber.default(value)} (${formatNumber.oneDecimal(
-      share
-    )}%)`;
+    try {
+      const { name, share } = JSON.parse(key);
+      if (name !== undefined && share !== undefined) {
+        return ` ${name}: ${formatNumber.default(
+          value
+        )} (${formatNumber.oneDecimal(share)}%)`;
+      }
+    } catch (e) {
+      // OK
+    }
+    return ` ${key}: ${formatNumber.default(value)}`;
   };
   const chartOptions = {
     common: {
-      legend: {
-        display: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          mode: "index",
+          callbacks: {
+            title: () => "",
+            label: (context) => {
+              return decodeLabelKey(
+                context.dataset.label ||
+                  context.chart.data.labels[context.dataIndex] ||
+                  context.label,
+                context.dataset.data[context.dataIndex]
+              );
+            },
+          },
+        },
       },
       animation: false,
       responsive: true,
       maintainAspectRatio: false,
-      tooltips: {
-        mode: "label",
-        callbacks: {
-          title: () => "",
-          label: (tooltipItem, data) =>
-            decodeLabelKey(
-              data.labels[tooltipItem.index],
-              data.datasets[0].data[tooltipItem.index]
-            ),
-        },
-      },
     },
   };
   Object.assign(chartOptions, {
     doughnut: {
       ...chartOptions.common,
-      cutoutPercentage: 0,
+      cutout: 0,
     },
     polar: {
       ...chartOptions.common,
-      scale: {
-        ticks: {
-          display: false,
+      scales: {
+        r: {
+          ticks: {
+            display: false,
+          },
         },
       },
     },
     bar: {
       ...chartOptions.common,
+      indexAxis: "y",
       scales: {
-        xAxes: [
-          {
-            offset: true,
-            display: false,
-            ticks: {
-              beginAtZero: true,
-            },
-          },
-        ],
-        yAxes: [
-          {
-            offset: true,
-            display: false,
-            ticks: {
-              beginAtZero: true,
-            },
-          },
-        ],
+        x: {
+          display: false,
+        },
+        y: {
+          display: false,
+        },
       },
     },
     line: {
       ...chartOptions.common,
-      tooltips: {
-        mode: "index",
-      },
       scales: {
-        yAxes: [
-          {
-            stacked: true,
-          },
-        ],
+        y: {
+          stacked: true,
+        },
       },
     },
   });
@@ -149,7 +147,9 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         .map((value) => colorGradients[valueRanks[value]]);
       return [
         {
-          labels: data.map(encodeLabelKey(formatter)).map((_) => _.key),
+          labels: data
+            .map(encodeLabelKey(formatter))
+            .map((_) => JSON.stringify(_.key)),
           datasets: [
             {
               data: data.map((_) => _.value),
@@ -1024,7 +1024,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
 
-  return [collectGeneral(), collectTime(), collectGear(), collectExposure()];
+  const topics = [
+    collectGeneral(),
+    collectTime(),
+    collectGear(),
+    collectExposure(),
+  ];
+  return topics;
 };
 
 export default { UNKNOWN, decodeTableRowKey, generate, collectTopics };

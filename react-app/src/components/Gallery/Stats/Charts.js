@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 
-import { Doughnut, Polar, HorizontalBar, Line } from "react-chartjs-2";
+import { Doughnut, PolarArea, Bar, Line } from "react-chartjs-2";
 
 const Root = styled.div`
   margin: 5px;
@@ -44,13 +44,13 @@ const Charts = ({ category }) => {
           case "polar":
             return (
               <StyledChartContainer key={key}>
-                <Polar data={chart.data} options={chart.options} />
+                <PolarArea data={chart.data} options={chart.options} />
               </StyledChartContainer>
             );
           case "horizontal-bar":
             return (
               <StyledChartContainer key={key}>
-                <HorizontalBar data={chart.data} options={chart.options} />
+                <Bar data={chart.data} options={chart.options} />
               </StyledChartContainer>
             );
           case "line":

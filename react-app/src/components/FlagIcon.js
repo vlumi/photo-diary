@@ -1,6 +1,11 @@
+import PropTypes from "prop-types";
 import * as React from "react";
-import FlagIconFactory from "react-flag-icon-css";
+import ReactCountryFlag from "react-country-flag";
 
-const FlagIcon = FlagIconFactory(React, { useCssModules: false });
-
+const FlagIcon = ({ code }) => {
+  return <ReactCountryFlag countryCode={code} svg />;
+};
+FlagIcon.propTypes = {
+  code: PropTypes.string.isRequired,
+};
 export default FlagIcon;

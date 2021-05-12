@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import Leaflet from "leaflet";
-import { Map, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
+import { MapContainer as Map, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
 // TODO: custom icons; first/last day
