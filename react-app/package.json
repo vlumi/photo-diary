@@ -6,6 +6,7 @@
     "axios": "^0.21.1",
     "chart.js": "^3.2.1",
     "cross-env": "^7.0.3",
+    "date-diff": "^0.2.2",
     "dotenv": "^9.0.2",
     "geo-coord": "^0.1.1",
     "i18n-iso-countries": "^6.7.0",

@@ -1,6 +1,7 @@
 import React from "react";
 
 import { create, all } from "mathjs";
+import DateDiff from "date-diff";
 
 import FlagIcon from "../components/FlagIcon";
 
@@ -200,6 +201,24 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     return { mean: math.mean(values), stddev: math.std(values) };
   };
   const collectSummary = (count) => {
+    const getTimeDiff = (count) => {
+      if (count.byTime.days < 1) {
+        const now = new Date();
+        return new DateDiff(now, now);
+      }
+      const minDate = new Date(
+        count.byTime.minDate.year,
+        count.byTime.minDate.month - 1,
+        count.byTime.minDate.day
+      );
+      const maxDate = new Date(
+        count.byTime.maxDate.year,
+        count.byTime.maxDate.month - 1,
+        count.byTime.maxDate.day + 1 // Offset by one to make the difference inclusive
+      );
+      return new DateDiff(maxDate, minDate);
+    };
+    const diff = getTimeDiff(count);
     return {
       key: "summary",
       title: t("stats-category-summary"),
@@ -208,9 +227,9 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         average: formatNumber.twoDecimal(
           count.total / (count.byTime.days || 1)
         ),
-        years: formatNumber.default(count.byTime.years),
-        months: formatNumber.default(count.byTime.months),
-        days: formatNumber.default(count.byTime.days),
+        years: formatNumber.default(diff.years()),
+        months: formatNumber.default(diff.months()),
+        days: formatNumber.default(diff.days()),
       }),
     };
   };
