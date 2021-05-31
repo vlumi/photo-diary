@@ -77,9 +77,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
             title: () => "",
             label: (context) => {
               return decodeLabelKey(
-                context.dataset.label ||
-                  context.chart.data.labels[context.dataIndex] ||
-                  context.label,
+                context.dataset.label || context.label,
                 context.dataset.data[context.dataIndex]
               );
             },
