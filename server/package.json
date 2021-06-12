@@ -29,8 +29,8 @@
     "yargs": "^17.0.1"
   },
   "devDependencies": {
-    "eslint": "^7.27.0",
-    "jest": "^27.0.3",
+    "eslint": "^7.28.0",
+    "jest": "^27.0.4",
     "nodemon": "^2.0.7",
     "supertest": "^6.1.3"
   },
