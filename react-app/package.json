@@ -3,31 +3,31 @@
   "version": "0.4.2",
   "private": true,
   "dependencies": {
-    "@react-leaflet/core": "^1.0.2",
+    "@react-leaflet/core": "^1.1.0",
     "axios": "^0.21.1",
-    "chart.js": "^3.3.2",
+    "chart.js": "^3.5.1",
     "cross-env": "^7.0.3",
     "date-diff": "^0.2.2",
     "dotenv": "^10.0.0",
     "geo-coord": "^0.1.1",
-    "i18n-iso-countries": "^6.7.0",
-    "i18next": "^20.3.1",
+    "i18n-iso-countries": "^6.8.0",
+    "i18next": "^20.4.0",
     "jsonwebtoken": "^8.5.1",
     "leaflet": "^1.7.1",
-    "mathjs": "^9.4.1",
+    "mathjs": "^9.4.4",
     "react": "^17.0.2",
-    "react-chartjs-2": "^3.0.3",
-    "react-country-flag": "^2.3.0",
+    "react-chartjs-2": "^3.0.4",
+    "react-country-flag": "^2.3.1",
     "react-dom": "^17.0.2",
     "react-helmet": "^6.1.0",
-    "react-i18next": "^11.10.0",
+    "react-i18next": "^11.11.4",
     "react-icons": "^4.2.0",
     "react-is": "^17.0.2",
-    "react-leaflet": "^3.1.0",
-    "react-router-dom": "^5.2.0",
+    "react-leaflet": "^3.2.1",
+    "react-router-dom": "^5.2.1",
     "react-scripts": "^4.0.3",
-    "react-swipeable": "^6.1.2",
-    "styled-components": "^5.3.0"
+    "react-swipeable": "^6.2.0",
+    "styled-components": "^5.3.1"
   },
   "scripts": {
     "start": "cross-env react-scripts start",
@@ -39,23 +39,16 @@
   "eslintConfig": {
     "extends": "react-app"
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ],
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.12.0",
-    "@testing-library/react": "^11.2.7",
-    "@testing-library/user-event": "^13.1.9",
-    "eslint": "^7.27.0"
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^12.0.0",
+    "@testing-library/user-event": "^13.2.1",
+    "eslint": "^7.32.0"
   },
   "repository": {
     "type": "git",
