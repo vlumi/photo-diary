@@ -9,6 +9,4 @@ const loginUser = async (api, id) => {
   return authRes.body.token;
 };
 
-module.exports = {
-  loginUser,
-};
+export { loginUser };

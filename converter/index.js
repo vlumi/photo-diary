@@ -1,15 +1,17 @@
-require("dotenv").config();
-const fs = require("fs");
-const path = require("path");
-const chokidar = require("chokidar");
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import chokidar from "chokidar";
 
-const CONST = require("./lib/constants");
-const config = require("./lib/config");
-const logger = require("./lib/logger");
-const extractProperties = require("./extract-properties");
-const convertImage = require("./convert-image");
+import CONST from "./lib/constants.js";
+import config from "./lib/config.js";
+import logger from "./lib/logger.js";
+import extractProperties from "./extract-properties/index.js";
+import convertImage from "./convert-image/index.js";
 
 try {
+  dotenv.config();
+
   const rootDir = config.getDirectory();
   const watchDir = path.join(rootDir, CONST.DIR_INBOX);
   logger.info(`Watching ${watchDir}`);
@@ -79,7 +81,9 @@ try {
         fileQueue.push(fileName);
       }
     })
-    .on("unlink", (fileName) => logger.debug(`[${fileName}] Removed from inbox`))
+    .on("unlink", (fileName) =>
+      logger.debug(`[${fileName}] Removed from inbox`)
+    )
     .on("error", (error) => logger.error("Error:", error));
 } catch (error) {
   console.error(error);

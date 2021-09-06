@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 const DEBUG = process.env.DEBUG || false;
 
 const PHOTO_ROOT_DIR = process.env.PHOTO_ROOT_DIR;
@@ -22,7 +25,7 @@ const TARGETS = [
   },
 ];
 
-module.exports = {
+export default {
   DEBUG,
 
   PHOTO_ROOT_DIR,

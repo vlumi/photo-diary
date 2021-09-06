@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 require("dotenv").config();
 
-const CONST = require("../constants");
+const CONST = require("../constants.cjs");
 
 const ENV = process.env.NODE_ENV || CONST.DEFAULT_ENV;
 
@@ -12,7 +12,7 @@ if (!SECRET) {
   throw "SECRET must be defined.";
 }
 
-const values = require(`./${ENV}-config`);
+const values = require(`./${ENV}-config.cjs`);
 
 module.exports = {
   ENV,

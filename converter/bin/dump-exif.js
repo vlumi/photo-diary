@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const path = require("path");
+import path from "path";
 
-const readExif = require("../extract-properties/read-exif");
+import readExif from "../extract-properties/read-exif.js";
 
 process.argv.slice(2).forEach((filePath) => {
   const fileName = path.basename(filePath);

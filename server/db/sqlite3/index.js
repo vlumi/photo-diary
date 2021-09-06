@@ -1,12 +1,14 @@
-const sqlite3 = require("sqlite3").verbose();
+import sqlite3 from "sqlite3";
 
-const CONST = require("../../lib/constants");
-const config = require("../../lib/config");
-const logger = require("../../lib/logger");
+import CONST from "../../lib/constants.cjs";
+import config from "../../lib/config/index.cjs";
+import logger from "../../lib/logger.cjs";
 
-const SCHEMA = require("./schema")();
+import schema from "./schema.js";
 
-module.exports = () => {
+const SCHEMA = schema();
+
+export default () => {
   return {
     loadUsers,
     createUser,

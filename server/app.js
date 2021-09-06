@@ -1,18 +1,18 @@
-const express = require("express");
-const cors = require("cors");
-const compression = require("compression");
-require("express-async-errors");
+import express from "express";
+import cors from "cors";
+import compression from "compression";
+import "express-async-errors";
 
-const config = require("./lib/config");
+import config from "./lib/config/index.cjs";
 
-const tokens = require("./controllers/tokens");
-const users = require("./controllers/users");
-const galleries = require("./controllers/galleries");
-const photos = require("./controllers/photos");
-const galleryPhotos = require("./controllers/gallery-photos");
+import tokens from "./controllers/tokens.js";
+import users from "./controllers/users.js";
+import galleries from "./controllers/galleries.js";
+import photos from "./controllers/photos.js";
+import galleryPhotos from "./controllers/gallery-photos.js";
 
-const middleware = require("./lib/middleware");
-const logger = require("./lib/logger");
+import middleware from "./lib/middleware/index.js";
+import logger from "./lib/logger.cjs";
 
 const app = express();
 app.use(cors());
@@ -53,7 +53,4 @@ const init = async () => {
   logger.debug("Initialize app done");
 };
 
-module.exports = {
-  app,
-  init,
-};
+export { app, init };

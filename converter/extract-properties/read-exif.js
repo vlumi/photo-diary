@@ -1,11 +1,11 @@
-const path = require("path");
-const exifr = require("exifr");
-const moment = require("moment");
+import path from "path";
+import exifr from "exifr";
+import moment from "moment";
 
-const logger = require("../lib/logger");
-const { GeoCoord } = require("geo-coord");
+import logger from "../lib/logger.js";
+import GeoCoord from "geo-coord";
 
-module.exports = async (fileName, rootDir) => {
+export default async (fileName, rootDir) => {
   const filePath = path.join(rootDir, fileName);
 
   const parseExif = (exif) => {

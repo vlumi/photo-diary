@@ -1,9 +1,8 @@
-require("dotenv").config();
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
-const CONST = require("./constants");
-const logger = require("../lib/logger");
+import CONST from "./constants.js";
+import logger from "./logger.js";
 
 const getDirectory = () => {
   const directory = CONST.PHOTO_ROOT_DIR;
@@ -39,6 +38,6 @@ const getDirectory = () => {
   return directory;
 };
 
-module.exports = {
+export default {
   getDirectory,
 };

@@ -1,6 +1,6 @@
-const CONST = require("../../lib/constants");
+import CONST from "../../lib/constants.cjs";
 
-module.exports = () => {
+export default () => {
   return {
     user: {
       mapRow: (row) => {

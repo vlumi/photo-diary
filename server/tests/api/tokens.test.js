@@ -1,8 +1,9 @@
-const supertest = require("supertest");
-const { app, init } = require("../../app");
+import supertest from "supertest";
+import { app, init } from "../../app.js";
+
+import { loginUser } from "./helper.js";
 
 const api = supertest(app);
-const { loginUser } = require("./helper");
 
 beforeEach(async () => {
   await init();

@@ -1,9 +1,9 @@
-const HttpStatus = require("http-status-codes");
+import HttpStatus from "http-status-codes";
 
-const CONST = require("../constants");
-const logger = require("../logger");
+import CONST from "../constants.cjs";
+import logger from "../logger.cjs";
 
-module.exports = function (error, request, response, next) {
+export default (error, request, response, next) => {
   logger.debug(error);
   switch (error) {
     case CONST.ERROR_NOT_FOUND:

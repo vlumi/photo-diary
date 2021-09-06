@@ -1,13 +1,14 @@
 {
   "name": "photo-diary-server",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=dev node index.js",
     "prod": "cross-env NODE_ENV=prod pm2 start index.js",
     "dev": "cross-env NODE_ENV=dev nodemon run index.js",
-    "test": "cross-env DB_DRIVER=dummy NODE_ENV=test jest --runInBand --forceExit --detectOpenHandles --verbose",
+    "test": "cross-env DB_DRIVER=dummy NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test jest --runInBand --forceExit --detectOpenHandles --verbose",
     "lint": "eslint .",
     "build:ui": "cd ../react-app && npm run build --prod && rm -rf ../server/build && cp -r build ../server/"
   },

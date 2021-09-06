@@ -1,9 +1,13 @@
-const config = require("../lib/config");
+import config from "../lib/config/index.cjs";
+
+import driverDummy from "./dummy.js";
+import driverSqlite3 from "./sqlite3/index.js";
+import driverLegacySqlite3 from "./legacy-sqlite3.cjs";
 
 const DRIVER = {
-  dummy: () => require("./dummy"),
-  sqlite3: () => require("./sqlite3"),
-  legacy_sqlite3: () => require("./legacy-sqlite3"),
+  dummy: driverDummy,
+  sqlite3: driverSqlite3,
+  legacy_sqlite3: driverLegacySqlite3,
 };
 
 const connectDb = () => {
@@ -11,11 +15,11 @@ const connectDb = () => {
   if (!driver) {
     throw "The DB_DRIVER environment variable must be set.";
   }
-  return DRIVER[driver]()();
+  return DRIVER[driver]();
 };
 const db = connectDb();
 
-module.exports = {
+export default {
   loadUsers: async () => {
     return await db.loadUsers();
   },

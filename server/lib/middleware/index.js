@@ -1,9 +1,9 @@
-const requestLogger = require("./request-logger");
-const unknownEndpoint = require("./fallback-route");
-const errorHandler = require("./error-handler");
-const tokenFilter = require("./token-filter");
+import requestLogger from "./request-logger.js";
+import unknownEndpoint from "./fallback-route.js";
+import errorHandler from "./error-handler.js";
+import tokenFilter from "./token-filter.js";
 
-module.exports = {
+export default {
   requestLogger,
   unknownEndpoint,
   errorHandler,

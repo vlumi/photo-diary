@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-const logger = require("../lib/logger");
-const db = require("../db");
+import logger from "../lib/logger.cjs";
+import db from "../db/index.cjs";
 
-const { argv } = require("yargs")
+import yargs from "yargs";
+const argv = yargs(process.argv)
   .nargs("id", 1)
   .describe("id", "ID")
   .nargs("title", 1)
@@ -23,7 +24,7 @@ const { argv } = require("yargs")
   )
   .describe("hostname", "Regex for hostnames that default to this gallery")
   .demandOption(["id"])
-  .usage("Usage: $0 [options]");
+  .usage("Usage: $0 [options]").argv;
 
 const galleryId = argv.id;
 

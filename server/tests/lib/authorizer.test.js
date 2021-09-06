@@ -1,13 +1,17 @@
-const CONST = require("../../lib/constants");
+import CONST from "../../lib/constants.cjs";
+import authorizer from "../../lib/authorizer.cjs";
+
+import dummyDb from "../../db/dummy.cjs";
+
 const {
   authorizeView,
   authorizeAdmin,
   authorizeGalleryView,
   authorizeGalleryAdmin,
-} = require("../../lib/authorizer")();
+} = authorizer();
+const db = dummyDb();
 
-const db = require("../../db");
-jest.mock("../../db");
+jest.mock("../../db/index.cjs");
 
 const fail = (authorize, user, gallery) => {
   expect.assertions(1);

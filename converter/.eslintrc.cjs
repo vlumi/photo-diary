@@ -10,6 +10,7 @@ module.exports = {
   extends: "eslint:recommended",
   parserOptions: {
     ecmaVersion: 11,
+    sourceType: "module",
   },
   rules: {
     indent: ["error", 2, { SwitchCase: 1 }],

@@ -1,12 +1,18 @@
-const authorizer = require("../lib/authorizer")();
-const model = require("../models/user")();
+import express from "express";
+
+import authorizerClass from "../lib/authorizer.js";
+import modelClass from "../models/user.js";
+
+const router = express.Router();
+
+const authorizer = authorizerClass();
+const model = modelClass();
 
 const init = async () => {
   await model.init();
 };
-const router = require("express").Router();
 
-module.exports = {
+export default {
   init,
   router,
 };

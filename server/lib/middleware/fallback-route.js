@@ -1,5 +1,5 @@
-const CONST = require("../constants");
+import CONST from "../constants.cjs";
 
-module.exports = (request, response) => {
+export default (request, response) => {
   response.status(404).send({ error: CONST.ERROR_NOT_FOUND });
 };
