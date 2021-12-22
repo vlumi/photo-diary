@@ -1043,8 +1043,8 @@ describe("collectTopics", () => {
                 3: 1,
               },
             },
-            years: 7,
-            months: 75,
+            years: 6.2,
+            months: 74.3,
             days: 2261,
             daysInYear: {
               1995: 365,
@@ -1175,8 +1175,8 @@ describe("collectTopics", () => {
       kpi: [
         { key: "photos", value: "2" },
         { key: "average", value: "0.00" },
-        { key: "years", value: "7" },
-        { key: "months", value: "75" },
+        { key: "years", value: "6.2" },
+        { key: "months", value: "74.3" },
         { key: "days", value: "2,261" },
       ],
     });
