@@ -11,7 +11,7 @@ test("getAll()", () => {
   galleryPhotos
     .getAll()
     .then((data) => expect(data).toStrictEqual(allGalleries));
-  expect(axios.get.mock.calls[0][0]).toBe("/api/gallery-photos");
+  expect(axios.get.mock.calls[0][0]).toBe("/api/v1/gallery-photos");
 });
 
 test("get()", () => {
@@ -21,5 +21,5 @@ test("get()", () => {
   galleryPhotos
     .get("dummy")
     .then((data) => expect(data).toStrictEqual(gallery));
-  expect(axios.get.mock.calls[0][0]).toBe("/api/gallery-photos/dummy");
+  expect(axios.get.mock.calls[0][0]).toBe("/api/v1/gallery-photos/dummy");
 });

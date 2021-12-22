@@ -2,7 +2,7 @@ import axios from "axios";
 
 import token from "../lib/token";
 
-const baseUrl = "/api/tokens";
+const baseUrl = "/api/v1/tokens";
 
 const login = async (id, password) => {
   return await axios.post(baseUrl, { id, password });

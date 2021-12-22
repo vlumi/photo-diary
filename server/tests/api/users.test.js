@@ -11,20 +11,20 @@ beforeEach(async () => {
 });
 
 const getUsers = async (token, status = 200) =>
-  api.get("/api/users").set("Authorization", `Bearer ${token}`).expect(status);
+  api.get("/api/v1/users").set("Authorization", `Bearer ${token}`).expect(status);
 
 const getUser = async (token, id, status = 200) =>
   api
-    .get(`/api/users/${id}`)
+    .get(`/api/v1/users/${id}`)
     .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 describe("As Guest", () => {
   test("Get users", async () => {
-    await api.get("/api/users").expect(403);
+    await api.get("/api/v1/users").expect(403);
   });
   test("Get admin", async () => {
-    await api.get("/api/users/admin").expect(403);
+    await api.get("/api/v1/users/admin").expect(403);
   });
 });
 

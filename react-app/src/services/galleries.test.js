@@ -9,7 +9,7 @@ test("getAll()", () => {
   axios.get.mockResolvedValue({ data: allGalleries });
 
   galleries.getAll().then((data) => expect(data).toStrictEqual(allGalleries));
-  expect(axios.get.mock.calls[0][0]).toBe("/api/galleries");
+  expect(axios.get.mock.calls[0][0]).toBe("/api/v1/galleries");
 });
 
 test("get()", () => {
@@ -17,5 +17,5 @@ test("get()", () => {
   axios.get.mockResolvedValue({ data: gallery });
 
   galleries.get("dummy").then((data) => expect(data).toStrictEqual(gallery));
-  expect(axios.get.mock.calls[0][0]).toBe("/api/galleries/dummy");
+  expect(axios.get.mock.calls[0][0]).toBe("/api/v1/galleries/dummy");
 });

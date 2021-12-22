@@ -5,11 +5,11 @@ require("express-async-errors");
 
 const config = require("./lib/config");
 
-const tokens = require("./controllers/tokens");
-const users = require("./controllers/users");
-const galleries = require("./controllers/galleries");
-const photos = require("./controllers/photos");
-const galleryPhotos = require("./controllers/gallery-photos");
+const tokensV1 = require("./controllers/tokens-v1");
+const usersV1 = require("./controllers/users-v1");
+const galleriesV1 = require("./controllers/galleries-v1");
+const photosV1 = require("./controllers/photos-v1");
+const galleryPhotosV1 = require("./controllers/gallery-photos-v1");
 
 const middleware = require("./lib/middleware");
 const logger = require("./lib/logger");
@@ -30,11 +30,11 @@ const registerPreProcessors = () => {
   }
 };
 const registerRoutes = () => {
-  app.use("/api/tokens", tokens.router);
-  app.use("/api/users", users.router);
-  app.use("/api/galleries", galleries.router);
-  app.use("/api/photos", photos.router);
-  app.use("/api/gallery-photos", galleryPhotos.router);
+  app.use("/api/v1/tokens", tokensV1.router);
+  app.use("/api/v1/users", usersV1.router);
+  app.use("/api/v1/galleries", galleriesV1.router);
+  app.use("/api/v1/photos", photosV1.router);
+  app.use("/api/v1/gallery-photos", galleryPhotosV1.router);
 };
 const registerPostProcessors = () => {
   app.use(middleware.unknownEndpoint);
@@ -46,10 +46,10 @@ registerPostProcessors();
 
 const init = async () => {
   logger.debug("Initialize app start");
-  await tokens.init();
-  await galleries.init();
-  await photos.init();
-  await galleryPhotos.init();
+  await tokensV1.init();
+  await galleriesV1.init();
+  await photosV1.init();
+  await galleryPhotosV1.init();
   logger.debug("Initialize app done");
 };
 

@@ -2,7 +2,7 @@ import axios from "axios";
 
 import token from "../lib/token";
 
-const baseUrl = "/api/galleries";
+const baseUrl = "/api/v1/galleries";
 
 const getAll = async () => {
   const response = await axios.get(baseUrl, token.createConfig());

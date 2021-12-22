@@ -11,11 +11,11 @@ beforeEach(async () => {
 });
 
 const getPhotos = async (token, status = 200) =>
-  api.get("/api/photos").set("Authorization", `Bearer ${token}`).expect(status);
+  api.get("/api/v1/photos").set("Authorization", `Bearer ${token}`).expect(status);
 
 const getPhoto = async (token, photoId, status = 200) =>
   api
-    .get(`/api/photos/${photoId}`)
+    .get(`/api/v1/photos/${photoId}`)
     .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
@@ -26,25 +26,25 @@ const expectPhoto = (result, photo) => {
 
 describe("As guest", () => {
   test("List photos", async () => {
-    await api.get("/api/photos").expect(403);
+    await api.get("/api/v1/photos").expect(403);
   });
   test("Get gallery1photo.jpg", async () => {
-    await api.get("/api/photo/gallery1photo.jpg").expect(404);
+    await api.get("/api/v1/photo/gallery1photo.jpg").expect(404);
   });
   test("Get gallery12photo.jpg", async () => {
-    await api.get("/api/photo/gallery12photo.jpg").expect(404);
+    await api.get("/api/v1/photo/gallery12photo.jpg").expect(404);
   });
   test("Get gallery2photo.jpg", async () => {
-    await api.get("/api/photo/gallery2photo.jpg").expect(404);
+    await api.get("/api/v1/photo/gallery2photo.jpg").expect(404);
   });
   test("Get gallery3photo.jpg", async () => {
-    await api.get("/api/photo/gallery3photo.jpg").expect(404);
+    await api.get("/api/v1/photo/gallery3photo.jpg").expect(404);
   });
   test("Get orphanphoto.jpg", async () => {
-    await api.get("/api/photo/orphanphoto.jpg").expect(404);
+    await api.get("/api/v1/photo/orphanphoto.jpg").expect(404);
   });
   test("Get invalid", async () => {
-    await api.get("/api/photo/invalid.jpg").expect(404);
+    await api.get("/api/v1/photo/invalid.jpg").expect(404);
   });
 });
 
