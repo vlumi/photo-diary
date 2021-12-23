@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [0.5.0] - 2021-12-23
 - Add version number (v1) to API path
 - Remove support for the old legacy_sqlite3 DB schema
 - Add instance metadata API and backing DB
@@ -111,7 +113,8 @@
 
 ## Initial commit - 2020-07-04
 
-[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/vlumi/photo-diary/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/vlumi/photo-diary/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/vlumi/photo-diary/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/vlumi/photo-diary/compare/v0.3.0...v0.4.0
