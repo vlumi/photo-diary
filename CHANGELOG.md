@@ -7,6 +7,8 @@
   - Remove the unused legacy SCHEMA_INFO table
   - Add the META table
   - Add new RESTful end-point `/api/v1/meta`
+- Use `cdn` from meta as the default photo root URL
+- Display the `name` and `description` from meta on the gallery list page
 
 ## [0.4.2] - 2021-02-26
 - Upgrade all dependencies to latest, including React 17
