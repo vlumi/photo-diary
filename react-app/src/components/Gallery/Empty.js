@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { BsFillHouseFill } from "react-icons/bs";
 
 import Root from "./Navigation";
 import Link from "./Link";
@@ -34,8 +35,9 @@ const Empty = ({ children, gallery }) => {
         <title>{gallery.title()}</title>
       </Helmet>
       <Root>
-        <Link gallery={gallery}>
+        <Link>
           <span className="title">
+            <BsFillHouseFill />
             <i>Empty</i>
           </span>
         </Link>
