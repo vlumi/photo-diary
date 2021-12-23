@@ -198,11 +198,37 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
       return <i>{t("empty")}</i>;
     }
 
+    const escapeHTML = (str) =>
+      str.replace(
+        /[&<>'"]/g,
+        (tag) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "'": "&#39;",
+            '"': "&quot;",
+          }[tag])
+      );
+
+    const title = meta.name ? (
+      <>{escapeHTML(meta.name)}</>
+    ) : (
+      <>{t("nav-galleries")}</>
+    );
+
+    const description = meta.description ? (
+      <p>{escapeHTML(meta.description)}</p>
+    ) : (
+      <></>
+    );
+
     return (
       <>
         <h2>
-          <span className="title">{t("nav-galleries")}</span>
+          <span className="title">{title}</span>
         </h2>
+        {description}
         <div id="content">
           <ListBody galleries={galleries} />
         </div>
