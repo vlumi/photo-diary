@@ -5,6 +5,7 @@ require("express-async-errors");
 
 const config = require("./lib/config");
 
+const metaV1 = require("./controllers/meta-v1");
 const tokensV1 = require("./controllers/tokens-v1");
 const usersV1 = require("./controllers/users-v1");
 const galleriesV1 = require("./controllers/galleries-v1");
@@ -30,6 +31,7 @@ const registerPreProcessors = () => {
   }
 };
 const registerRoutes = () => {
+  app.use("/api/v1/meta", metaV1.router);
   app.use("/api/v1/tokens", tokensV1.router);
   app.use("/api/v1/users", usersV1.router);
   app.use("/api/v1/galleries", galleriesV1.router);

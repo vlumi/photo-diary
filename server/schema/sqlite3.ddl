@@ -1,6 +1,13 @@
-CREATE TABLE schema_info (version INTEGER PRIMARY KEY);
-INSERT INTO schema_info (version)
-VALUES (3);
+CREATE TABLE meta (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);
+INSERT INTO meta (key, value) VALUES ('schema_version', '1');
+INSERT INTO meta (key, value) VALUES ('instance_name', '');
+INSERT INTO meta (key, value) VALUES ('instance_description', '');
+INSERT INTO meta (key, value) VALUES ('instance_cdn', '');
+INSERT INTO meta (key, value) VALUES ('instance_image', '');
+
 CREATE TABLE user (
   id TEXT PRIMARY KEY,
   password TEXT,

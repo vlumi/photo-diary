@@ -8,6 +8,12 @@ const SCHEMA = require("./schema")();
 
 module.exports = () => {
   return {
+    loadMetas,
+    createMeta,
+    loadMeta,
+    updateMeta,
+    deleteMeta,
+
     loadUsers,
     createUser,
     loadUser,
@@ -94,6 +100,22 @@ const deleteById = async (schema, id) => {
     stmt.run([id]);
     stmt.finalize();
   });
+};
+
+const loadMetas = async () => {
+  return await loadAll(SCHEMA.meta);
+};
+const createMeta = async (meta) => {
+  await create(SCHEMA.meta, meta);
+};
+const loadMeta = async (key) => {
+  return await loadById(SCHEMA.meta, key);
+};
+const updateMeta = async (key, meta) => {
+  await updateById(SCHEMA.meta, key, meta);
+};
+const deleteMeta = async (key) => {
+  await deleteById(SCHEMA.meta, key);
 };
 
 const loadUsers = async () => {

@@ -2,6 +2,24 @@ const CONST = require("../../lib/constants");
 
 module.exports = () => {
   return {
+    meta: {
+      mapRow: (row) => {
+        return {
+          [toString(row.key)]: toString(row.value),
+        };
+      },
+      mapInsert: (meta) => [meta.key, meta.value],
+
+      buildCreateQuery: () => buildCreateQuery(SCHEMA.meta),
+      buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.meta),
+      buildUpdateByIdQuery: (data) => buildUpdateByIdQuery(SCHEMA.meta, data),
+      buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.meta),
+
+      buildSelectQuery: (conditions) =>
+        buildSelectQuery(SCHEMA.meta, conditions),
+      buildDeleteQuery: (conditions) =>
+        buildDeleteQuery(SCHEMA.meta, conditions),
+    },
     user: {
       mapRow: (row) => {
         return {
@@ -218,6 +236,17 @@ module.exports = () => {
 };
 
 const SCHEMA = {
+  meta: {
+    table: "meta",
+    columns: ["key", "value"],
+    primaryKey: ["key"],
+    order: ["key ASC"],
+    mapToRow: (meta) => {
+      const result = {};
+      if ("key" in user) result[meta.key] = meta.value;
+      return result;
+    },
+  },
   user: {
     table: "user",
     columns: ["id", "password", "secret"],

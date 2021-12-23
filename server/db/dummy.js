@@ -8,6 +8,12 @@ const CONST = require("../lib/constants");
 module.exports = () => {
   return {
     init,
+
+    loadMetas,
+    createMeta,
+    loadMeta,
+    updateMeta,
+
     loadUsers,
     createUser,
     loadUser,
@@ -37,6 +43,22 @@ module.exports = () => {
 let db = undefined;
 const init = () => {
   db = JSON.parse(dbDump);
+};
+
+const loadMetas = async () => {
+  return Object.values(db.meta);
+};
+const createMeta = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
+};
+const loadMeta = async (key) => {
+  if (!(key in db.meta)) {
+    throw CONST.ERROR_NOT_FOUND;
+  }
+  return db.meta[key];
+};
+const updateMeta = async () => {
+  throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 
 const loadUsers = async () => {
@@ -187,6 +209,15 @@ const updatePhoto = async () => {
 };
 
 const dbDump = JSON.stringify({
+  meta: {
+    schema_version: { schema_version: "1" },
+    instance_name: { instance_name: "dummy instance" },
+    instance_description: {
+      instance_description: "dummy instance for automated tests",
+    },
+    instance_cdn: { instance_cdn: "http://localhost" },
+    instance_image: { instance_image: "dummy.jpg" },
+  },
   users: {
     admin: {
       id: "admin",

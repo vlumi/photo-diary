@@ -1,8 +1,12 @@
 # Changelog
 
 ## [Unreleased]
-- Add version number (v1) to API path.
-- Remove support for the old legacy_sqlite3 DB schema.
+- Add version number (v1) to API path
+- Remove support for the old legacy_sqlite3 DB schema
+- Add instance metadata API and backing DB
+  - Remove the unused legacy SCHEMA_INFO table
+  - Add the META table
+  - Add new RESTful end-point `/api/v1/meta`
 
 ## [0.4.2] - 2021-02-26
 - Upgrade all dependencies to latest, including React 17
