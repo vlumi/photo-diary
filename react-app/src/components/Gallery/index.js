@@ -4,6 +4,7 @@ import { createGlobalStyle } from "styled-components";
 import { Redirect, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
+import metaService from "../../services/meta";
 import galleryService from "../../services/galleries";
 import galleryPhotosService from "../../services/gallery-photos";
 
@@ -40,6 +41,7 @@ html {
 `;
 
 const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
+  const [meta, setMeta] = React.useState(undefined);
   const [galleries, setGalleries] = React.useState(undefined);
   const [gallery, setGallery] = React.useState(undefined);
   const [photos, setPhotos] = React.useState(undefined);
@@ -73,6 +75,15 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
   const selectedGallery =
     galleries && galleries.find((gallery) => gallery.id() === galleryId);
 
+  React.useEffect(() => {
+    metaService
+      .getAll()
+      .then((returnedMeta) => {
+        setMeta(returnedMeta);
+        config.PHOTO_ROOT_URL = returnedMeta.cdn || config.PHOTO_ROOT_URL;
+      })
+      .catch((error) => setError(error.message));
+  }, []);
   React.useEffect(() => {
     galleryService
       .getAll()
@@ -160,7 +171,7 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     return <div className="error">Loading failed</div>;
   }
 
-  if (!galleries) {
+  if (!meta || !galleries) {
     return <div>{t("loading")}</div>;
   }
   if (!galleryId) {
