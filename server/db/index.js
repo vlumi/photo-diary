@@ -3,7 +3,6 @@ const config = require("../lib/config");
 const DRIVER = {
   dummy: () => require("./dummy"),
   sqlite3: () => require("./sqlite3"),
-  legacy_sqlite3: () => require("./legacy-sqlite3"),
 };
 
 const connectDb = () => {

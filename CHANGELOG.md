@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 - Add version number (v1) to API path.
+- Remove support for the old legacy_sqlite3 DB schema.
 
 ## [0.4.2] - 2021-02-26
 - Upgrade all dependencies to latest, including React 17
