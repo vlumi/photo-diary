@@ -11,7 +11,7 @@ beforeEach(async () => {
 describe("Login", () => {
   test("Non-existing user", async () => {
     await api
-      .post("/api/tokens")
+      .post("/api/v1/tokens")
       .send({
         id: "wrong",
         password: "wrong",
@@ -20,7 +20,7 @@ describe("Login", () => {
   });
   test("Wrong password", async () => {
     await api
-      .post("/api/tokens")
+      .post("/api/v1/tokens")
       .send({
         id: "admin",
         password: "wrong",
@@ -29,7 +29,7 @@ describe("Login", () => {
   });
   test("Successful login", async () => {
     const result = await api
-      .post("/api/tokens")
+      .post("/api/v1/tokens")
       .send({
         id: "admin",
         password: "foobar",
@@ -46,7 +46,7 @@ describe("Keep-alive", () => {
 
   test("Success", async () => {
     await api
-      .get("/api/tokens")
+      .get("/api/v1/tokens")
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
   });
@@ -60,15 +60,15 @@ describe("Keep-alive", () => {
 
 //   test("Success", async () => {
 //     await api
-//       .get("/api/tokens")
+//       .get("/api/v1/tokens")
 //       .set("Authorization", `Bearer ${token}`)
 //       .expect(200);
 //     await api
-//       .delete("/api/tokens")
+//       .delete("/api/v1/tokens")
 //       .set("Authorization", `Bearer ${token}`)
 //       .expect(204);
 //     await api
-//       .get("/api/tokens")
+//       .get("/api/v1/tokens")
 //       .set("Authorization", `Bearer ${token}`)
 //       .expect(401);
 //   });
@@ -87,19 +87,19 @@ describe("Keep-alive", () => {
 //     Promise.all(
 //       tokens.map(async (token) => {
 //         api
-//           .get("/api/tokens")
+//           .get("/api/v1/tokens")
 //           .set("Authorization", `Bearer ${token}`)
 //           .expect(200);
 //       })
 //     );
 //     await api
-//       .delete("/api/tokens")
+//       .delete("/api/v1/tokens")
 //       .set("Authorization", `Bearer ${tokens[0]}`)
 //       .expect(204);
 //     Promise.all(
 //       tokens.map((token) => {
 //         api
-//           .get("/api/tokens")
+//           .get("/api/v1/tokens")
 //           .set("Authorization", `Bearer ${token}`)
 //           .expect(401);
 //       })
@@ -110,19 +110,19 @@ describe("Keep-alive", () => {
 //     Promise.all(
 //       tokens.map(async (token) => {
 //         api
-//           .get("/api/tokens")
+//           .get("/api/v1/tokens")
 //           .set("Authorization", `Bearer ${token}`)
 //           .expect(200);
 //       })
 //     );
 //     await api
-//       .delete("/api/tokens/plainUser")
+//       .delete("/api/v1/tokens/plainUser")
 //       .set("Authorization", `Bearer ${adminToken}`)
 //       .expect(204);
 //     Promise.all(
 //       tokens.map((token) => {
 //         api
-//           .get("/api/tokens")
+//           .get("/api/v1/tokens")
 //           .set("Authorization", `Bearer ${token}`)
 //           .expect(401);
 //       })
@@ -133,19 +133,19 @@ describe("Keep-alive", () => {
 //     Promise.all(
 //       tokens.map(async (token) => {
 //         api
-//           .get("/api/tokens")
+//           .get("/api/v1/tokens")
 //           .set("Authorization", `Bearer ${token}`)
 //           .expect(200);
 //       })
 //     );
 //     await api
-//       .delete("/api/tokens/plainUser")
+//       .delete("/api/v1/tokens/plainUser")
 //       .set("Authorization", `Bearer ${otherToken}`)
 //       .expect(403);
 //     Promise.all(
 //       tokens.map((token) => {
 //         api
-//           .get("/api/tokens")
+//           .get("/api/v1/tokens")
 //           .set("Authorization", `Bearer ${token}`)
 //           .expect(401);
 //       })

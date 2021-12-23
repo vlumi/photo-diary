@@ -12,7 +12,7 @@ module.exports = {
 };
 
 /**
- * Get the properties of a photo in gallery context.
+ * Get all photos in the gallery.
  */
 router.get("/:galleryId/", async (request, response) => {
   await authorizer.authorizeGalleryView(

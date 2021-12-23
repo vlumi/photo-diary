@@ -5,10 +5,10 @@ This server implements the RESTful API of the Photo Diary
 ## Requirements
 
 - Recent [Node.js](https://nodejs.org) stack
-  - [npm](https://www.npmjs.com/) (tested on 6.14.6)
-  - [Node.js](https://nodejs.org) (tested on 14.5.0)
+  - [npm](https://www.npmjs.com/) (tested on 7.23.0)
+  - [Node.js](https://nodejs.org) (tested on 16.13.1)
 - Dependencies
-  - [Express](https://expressjs.com/) (tested on 4.17.1)
+  - [Express](https://expressjs.com/)
   - Check `package.json` for more detailed dependencies
 
 ## Running Instructions
@@ -29,15 +29,10 @@ Certain parameters are passed through environment veriables. These can be either
   - Currently implemented:
     - `sqlite3` – Latest schema with all current features implemented
     - `dummy` – data hard-coded into the driver, for testing purposes only
-    - `legacy_sqlite3` – DB from [gallery](https://github.com/vlumi/gallery)
-      - No ACL (no admin access support, everyone has global view access)
-      - Limited photo property support (e.g. gear)
-    - TBD: `postgresql`, `mysql`, etc.
 - `DB_OPTS` (\* depends on `DB_DRIVER`)
   - This parameter will be passed to the `DB_DRIVER` during connection.
     - `sqlite3` – Path to the DB file
     - `dummy` – Not used
-    - `legacy_sqlite3` – Path to the DB file
 - `PHOTO_ROOT_DIR` \*
   - The path to the physical photos, with the following sub-directories
     - `inbox` – New photos to be added, or their extracted JSON files
@@ -84,6 +79,17 @@ The required access level is listed in brackets at the end of each resource meth
 5. **[none]** – A user with access explicitly denied
 6. **[any]** – Any user with an account
 
+- `/meta`
+  - `GET` – List all metadata **[any]**
+  - `POST` – Create a new metadata **[admin]**
+    1. `meta`
+    - Returns `meta`
+  - `GET ../:key` – Get metadata for the ky **[admin]**
+    - Returns `meta`
+  - `PUT ../:key` – Update metadata **[admin]**
+    1. `meta`
+    - Returns `meta`
+  - `DELETE ../:key` – Delete metadata **[admin]**
 - `/tokens`
   - `POST` – Login, create an authentication token **[any]**
     1. `id`
@@ -96,7 +102,7 @@ The required access level is listed in brackets at the end of each resource meth
   - `GET` – List all users **[admin]**
   - `POST` – Create a new user **[admin]**
     1. `user`
-    - Returnes `users`
+    - Returns `users`
   - `GET ../:userId` – Get user **[admin]**
     - Returns `user`
   - `PUT ../:userId` – Update user **[admin]**
@@ -149,6 +155,12 @@ TBD
 
 ### DB API
 
+- Meta
+  - `loadMetas()` – Load all metadata
+  - `createMeta(user)` – Create a metadata with the given properties
+  - `loadMeta(key)` – Load the metadata
+  - `updateMeta(key, meta)` – Update the metadata with the new properties
+  - `deleteMeta(key)` – Delete the metadata
 - User
   - `loadUsers()` – Load all users
   - `createUser(user)` – Create a user with the given properties

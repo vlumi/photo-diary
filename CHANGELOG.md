@@ -1,9 +1,17 @@
 # Changelog
 
-## v0.4.2 - 2021-02-26
+## [Unreleased]
+- Add version number (v1) to API path
+- Remove support for the old legacy_sqlite3 DB schema
+- Add instance metadata API and backing DB
+  - Remove the unused legacy SCHEMA_INFO table
+  - Add the META table
+  - Add new RESTful end-point `/api/v1/meta`
+
+## [0.4.2] - 2021-02-26
 - Upgrade all dependencies to latest, including React 17
 
-## v0.4.1 - 2020-08-21
+## [0.4.1] - 2020-08-21
 
 - UI tweaks and fixes
 - Major code refactoring
@@ -11,7 +19,7 @@
   - Switch to using styled components
   - Better unit test coverage
 
-## v0.4.0 - 2020-08-03
+## [0.4.0] - 2020-08-03
 
 - Photo property filters
   - Filter the content by photo properties in any of the topics and categories of statistics
@@ -27,7 +35,7 @@
     - Toolbar in all views
     - Clicking on individual values on statistics tables
 
-## v0.3.0 - 2020-07-31
+## [0.3.0] - 2020-07-31
 
 - Statistics view
   - Separate for each gallery, including virtual
@@ -36,7 +44,7 @@
   - Remove `/api/stats`, moving the statistics generation client-side
   - Flatten the returned `photos` in `/api/gallery`, removing the year/month/day hierarchy
 
-## v0.2.1 - 2020-07-27
+## [0.2.1] - 2020-07-27
 
 - Embedded map with markers of the photo(s) on year, month, day, and photo views
   - Marker popup with small thumbnail and date
@@ -44,7 +52,7 @@
 - Language selection and minimal localization
   - English, Finnish, Japanese
 
-## v0.2.0 - 2020-07-25
+## [0.2.0] - 2020-07-25
 
 - Implement new `sqlite3` schema and driver
   - More photo and gallery metadata
@@ -65,12 +73,12 @@
   - Any other management should be done directly to the DB
     - Admin UI is in the pipeline
 
-## v0.1.1 - 2020-07-20
+## [0.1.1] - 2020-07-20
 
 - Usability improvements and polish
 - Setup to run in production mode
 
-## v0.1.0 - 2020-07-18
+## [0.1.0] - 2020-07-18
 
 - New front-end app
   - Read-only views for browsing/viewing
@@ -99,3 +107,13 @@
   - Statistics
 
 ## Initial commit - 2020-07-04
+
+[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/vlumi/photo-diary/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/vlumi/photo-diary/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/vlumi/photo-diary/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/vlumi/photo-diary/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/vlumi/photo-diary/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/vlumi/photo-diary/compare/v0.1.1...v0.2.0
+[0.2.0]: https://github.com/vlumi/photo-diary/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/vlumi/photo-diary/releases/tag/v0.1.0

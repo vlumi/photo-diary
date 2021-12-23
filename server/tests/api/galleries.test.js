@@ -12,13 +12,13 @@ beforeEach(async () => {
 
 const getGalleries = async (token, status = 200) =>
   api
-    .get("/api/galleries")
+    .get("/api/v1/galleries")
     .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
 const getGallery = async (token, galleryId, status = 200) =>
   api
-    .get(`/api/galleries/${galleryId}`)
+    .get(`/api/v1/galleries/${galleryId}`)
     .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
@@ -83,32 +83,32 @@ const expectGalleryPrivate = (result) => {
 describe("As guest", () => {
   test("List galleries", async () => {
     const result = await api
-      .get("/api/galleries")
+      .get("/api/v1/galleries")
       .expect(200)
       .expect("Content-Type", /application\/json/);
     expect(result.body.length).toBe(1);
   });
   test("Get gallery1", async () => {
-    await api.get("/api/galleries/gallery1").expect(403);
+    await api.get("/api/v1/galleries/gallery1").expect(403);
   });
   test("Get gallery2", async () => {
-    await api.get("/api/galleries/gallery2").expect(403);
+    await api.get("/api/v1/galleries/gallery2").expect(403);
   });
   test("Get gallery3", async () => {
-    const result = await api.get("/api/galleries/gallery3").expect(200);
+    const result = await api.get("/api/v1/galleries/gallery3").expect(200);
     expectGallery3(result);
   });
   test("Get :all", async () => {
-    await api.get("/api/galleries/:all").expect(403);
+    await api.get("/api/v1/galleries/:all").expect(403);
   });
   test("Get :public", async () => {
-    await api.get("/api/galleries/:public").expect(403);
+    await api.get("/api/v1/galleries/:public").expect(403);
   });
   test("Get :private", async () => {
-    await api.get("/api/galleries/:private").expect(403);
+    await api.get("/api/v1/galleries/:private").expect(403);
   });
   test("Get invalid", async () => {
-    await api.get("/api/galleries/invalid").expect(403);
+    await api.get("/api/v1/galleries/invalid").expect(403);
   });
 });
 
@@ -129,7 +129,7 @@ describe("As blocked user", () => {
     await getGallery(token, "gallery2", 403);
   });
   test("Get gallery3", async () => {
-    const result = await api.get("/api/galleries/gallery3").expect(200);
+    const result = await api.get("/api/v1/galleries/gallery3").expect(200);
     expectGallery3(result);
   });
   test("Get :all", async () => {

@@ -12,7 +12,7 @@ beforeEach(async () => {
 
 const getGalleryPhoto = async (token, galleryId, photoId, status = 200) =>
   api
-    .get(`/api/gallery-photos/${galleryId}/${photoId}`)
+    .get(`/api/v1/gallery-photos/${galleryId}/${photoId}`)
     .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
@@ -20,102 +20,102 @@ describe("As guest", () => {
   describe("Gallery 1", () => {
     test("Get gallery1photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/gallery1/gallery1photo.jpg")
+        .get("/api/v1/gallery-photos/gallery1/gallery1photo.jpg")
         .expect(403);
     });
     test("Get gallery12photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/gallery1/gallery12photo.jpg")
+        .get("/api/v1/gallery-photos/gallery1/gallery12photo.jpg")
         .expect(403);
     });
     test("Get gallery2photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/gallery1/gallery2photo.jpg")
+        .get("/api/v1/gallery-photos/gallery1/gallery2photo.jpg")
         .expect(403);
     });
     test("Get orphanphoto.jpg", async () => {
-      await api.get("/api/gallery-photos/gallery1/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/gallery1/orphanphoto.jpg").expect(403);
     });
     test("Get invalid.jpg", async () => {
-      await api.get("/api/gallery-photos/gallery1/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/gallery1/orphanphoto.jpg").expect(403);
     });
   });
   describe("Gallery 2", () => {
     test("Get gallery1photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/gallery2/gallery1photo.jpg")
+        .get("/api/v1/gallery-photos/gallery2/gallery1photo.jpg")
         .expect(403);
     });
     test("Get gallery12photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/gallery2/gallery12photo.jpg")
+        .get("/api/v1/gallery-photos/gallery2/gallery12photo.jpg")
         .expect(403);
     });
     test("Get gallery2photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/gallery2/gallery2photo.jpg")
+        .get("/api/v1/gallery-photos/gallery2/gallery2photo.jpg")
         .expect(403);
     });
     test("Get orphanphoto.jpg", async () => {
-      await api.get("/api/gallery-photos/gallery2/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/gallery2/orphanphoto.jpg").expect(403);
     });
   });
   describe("Gallery :all", () => {
     test("Get gallery1photo.jpg", async () => {
-      await api.get("/api/gallery-photos/:all/gallery1photo.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/:all/gallery1photo.jpg").expect(403);
     });
     test("Get gallery12photo.jpg", async () => {
-      await api.get("/api/gallery-photos/:all/gallery12photo.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/:all/gallery12photo.jpg").expect(403);
     });
     test("Get gallery2photo.jpg", async () => {
-      await api.get("/api/gallery-photos/:all/gallery2photo.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/:all/gallery2photo.jpg").expect(403);
     });
     test("Get orphanphoto.jpg", async () => {
-      await api.get("/api/gallery-photos/:all/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/:all/orphanphoto.jpg").expect(403);
     });
     test("Get invalid.jpg", async () => {
-      await api.get("/api/gallery-photos/:all/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/:all/orphanphoto.jpg").expect(403);
     });
   });
   describe("Gallery :public", () => {
     test("Get gallery1photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/:public/gallery1photo.jpg")
+        .get("/api/v1/gallery-photos/:public/gallery1photo.jpg")
         .expect(403);
     });
     test("Get gallery12photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/:public/gallery12photo.jpg")
+        .get("/api/v1/gallery-photos/:public/gallery12photo.jpg")
         .expect(403);
     });
     test("Get gallery2photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/:public/gallery2photo.jpg")
+        .get("/api/v1/gallery-photos/:public/gallery2photo.jpg")
         .expect(403);
     });
     test("Get orphanphoto.jpg", async () => {
-      await api.get("/api/gallery-photos/:public/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/:public/orphanphoto.jpg").expect(403);
     });
     test("Get invalid.jpg", async () => {
-      await api.get("/api/gallery-photos/:public/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/:public/orphanphoto.jpg").expect(403);
     });
   });
   describe("Gallery :private", () => {
     test("Get gallery1photo.jpg", async () => {
       await api
-        .get("/api/gallery-photos/:private/gallery1photo.jpg")
+        .get("/api/v1/gallery-photos/:private/gallery1photo.jpg")
         .expect(403);
     });
     test("Get orphanphoto.jpg", async () => {
-      await api.get("/api/gallery-photos/:private/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/:private/orphanphoto.jpg").expect(403);
     });
     test("Get invalid.jpg", async () => {
-      await api.get("/api/gallery-photos/:private/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/:private/orphanphoto.jpg").expect(403);
     });
   });
   describe("Invalid gallery", () => {
     test("Get orphanphoto.jpg", async () => {
-      await api.get("/api/gallery-photos/gallery2/orphanphoto.jpg").expect(403);
+      await api.get("/api/v1/gallery-photos/gallery2/orphanphoto.jpg").expect(403);
     });
   });
 });

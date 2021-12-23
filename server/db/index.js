@@ -3,7 +3,6 @@ const config = require("../lib/config");
 const DRIVER = {
   dummy: () => require("./dummy"),
   sqlite3: () => require("./sqlite3"),
-  legacy_sqlite3: () => require("./legacy-sqlite3"),
 };
 
 const connectDb = () => {
@@ -16,6 +15,27 @@ const connectDb = () => {
 const db = connectDb();
 
 module.exports = {
+  loadMetas: async () => {
+    return (await db.loadMetas()).reduce((acc, obj) => {
+      return {
+        ...acc,
+        ...obj,
+      };
+    }, {});
+  },
+  createMeta: async (meta) => {
+    await db.createMeta(meta);
+  },
+  loadMeta: async (key) => {
+    return await db.loadMeta(key);
+  },
+  updateMeta: async (key, meta) => {
+    await db.updateMeta(key, meta);
+  },
+  deleteMeta: async (key) => {
+    await db.deleteMeta(key);
+  },
+
   loadUsers: async () => {
     return await db.loadUsers();
   },
