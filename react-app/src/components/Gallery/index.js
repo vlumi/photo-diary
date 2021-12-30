@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { createGlobalStyle } from "styled-components";
-import { Redirect, useParams } from "react-router-dom";
+import { Redirect, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import metaService from "../../services/meta";
@@ -50,16 +50,17 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
   const [error, setError] = React.useState("");
 
   const { t } = useTranslation();
+  const location = useLocation();
 
   React.useEffect(() => {
     const handleScroll = () => {
-      scrollState.set(window.location.pathname, window.pageYOffset);
+      scrollState.set(location.pathname, window.pageYOffset);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [scrollState]);
+  }, [location, scrollState]);
 
   const context = isStats ? "stats" : "gallery";
 
