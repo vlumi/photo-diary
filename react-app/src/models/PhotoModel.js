@@ -117,6 +117,45 @@ const PhotoModel = (photoData) => {
       }
       return "landscape";
     },
+    aspectRatio: () => {
+      const aspectRatios = [
+        { name: "1:1", ratio: 1 / 1 },
+        { name: "5:4", ratio: 5 / 4 },
+        { name: "11:8.5", ratio: 11 / 8.5 },
+        { name: "4:3", ratio: 4 / 3 },
+        { name: "7:5", ratio: 7 / 5 },
+        { name: "3:2", ratio: 3 / 2 },
+        { name: "14:9", ratio: 14 / 9 },
+        { name: "16:10", ratio: 16 / 10 },
+        { name: "16:9", ratio: 16 / 9 },
+        { name: "1.85.1", ratio: 1.85 / 1 },
+        { name: "2:1", ratio: 2 / 1 },
+        { name: "2:1", ratio: 2.35 / 1 },
+        { name: "3:1+", ratio: 3 / 1 },
+      ];
+      const ratio =
+        photo.dimensions.original.width > photo.dimensions.original.height
+          ? photo.dimensions.original.width / photo.dimensions.original.height
+          : photo.dimensions.original.height / photo.dimensions.original.width;
+      if (isNaN(ratio)) {
+        return undefined;
+      }
+      for (const [i, current] of aspectRatios.entries()) {
+        if (i === aspectRatios.length - 1) {
+          return current.name;
+        }
+        if (ratio <= current.ratio) {
+          return current.name;
+        }
+        if (
+          ratio < aspectRatios[i + 1].ratio &&
+          ratio - current.ratio <= aspectRatios[i + 1].ratio - ratio
+        ) {
+          return current.name;
+        }
+      }
+      return "";
+    },
 
     cameraMake: () => photo.camera.make,
     hasCamera: () =>
@@ -244,6 +283,8 @@ const PhotoModel = (photoData) => {
           return [value, Number(value)].includes(self.resolution());
         case "orientation":
           return value === self.orientation();
+        case "aspect-ratio":
+          return value === self.aspectRatio();
         default:
           return true;
       }
