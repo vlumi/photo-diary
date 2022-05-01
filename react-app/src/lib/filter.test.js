@@ -39,6 +39,7 @@ describe("categories", () => {
       "lv",
       "resolution",
       "orientation",
+      "aspect-ratio",
     ]));
 });
 

@@ -92,6 +92,7 @@
     "stats-category-lv": "EV @ ISO100",
     "stats-category-resolution": "Resoluutio",
     "stats-category-orientation": "Orientation",
+    "stats-category-aspect-ratio": "Kuvasuhde",
 
     "stats-kpi-title-photos": "Valokuvia",
     "stats-kpi-photos": "{{count}}",

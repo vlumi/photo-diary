@@ -987,6 +987,41 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
+  const collectAspectRatio = (byAspectRatio, total) => {
+    const [flat, data, valueRanks] = transformData({
+      original: byAspectRatio,
+      formatter: formatExposure.aspectRatio,
+      comparator: collection.numSortByFieldDesc("value"),
+    });
+    const values = flat.map((entry) => entry.value);
+    const { mean, stddev } = calculateStatistics(values);
+    return {
+      key: "aspect-ratio",
+      title: t("stats-category-aspect-ratio"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "aspect-ratio", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => {
+        return {
+          key: encodeTableKey(entry.key),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          "aspect-ratio": formatExposure.aspectRatio(entry.key),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
+          standardScore: (entry.value - mean) / stddev,
+        };
+      }),
+    };
+  };
   const collectOrientation = (byOrientation, total) => {
     const [flat, data, valueRanks] = transformData({
       original: byOrientation,
@@ -1037,6 +1072,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         collectLightValue(byExposure.byLightValue, total),
         collectResolution(byExposure.byResolution, total),
         collectOrientation(byExposure.byOrientation, total),
+        collectAspectRatio(byExposure.byAspectRatio, total),
       ],
     };
   };
@@ -1148,6 +1184,9 @@ const initializeStats = (uniqueValues) => {
       );
       stats.count.byExposure.byOrientation = setInitialValues(
         uniqueValues.exposure.orientation
+      );
+      stats.count.byExposure.byAspectRatio = setInitialValues(
+        uniqueValues.exposure.aspectRatio
       );
     }
   }
@@ -1324,6 +1363,12 @@ const updateExposureDistribution = (byExposure, photo) => {
   byExposure.byOrientation[orientation] =
     byExposure.byOrientation[orientation] || 0;
   byExposure.byOrientation[orientation]++;
+
+  const aspectRatio = photo.aspectRatio() || UNKNOWN;
+  byExposure.byAspectRatio = byExposure.byAspectRatio || {};
+  byExposure.byAspectRatio[aspectRatio] =
+    byExposure.byAspectRatio[aspectRatio] || 0;
+  byExposure.byAspectRatio[aspectRatio]++;
 };
 /**
  * Update the current photo's ger values into the gear (camera, lens) distribution.
