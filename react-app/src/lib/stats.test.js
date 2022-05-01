@@ -142,6 +142,9 @@ describe("generate", () => {
           byAperture: {
             2.8: 1,
           },
+          byAspectRatio: {
+            "3:2": 1,
+          },
           byExposureTime: {
             0.01: 1,
           },
@@ -312,6 +315,9 @@ describe("generate", () => {
         },
         byExposure: {
           byAperture: {
+            unknown: 1,
+          },
+          byAspectRatio: {
             unknown: 1,
           },
           byExposureTime: {
@@ -529,6 +535,9 @@ describe("generate", () => {
         byExposure: {
           byAperture: {
             2.8: 2,
+          },
+          byAspectRatio: {
+            "3:2": 2,
           },
           byExposureTime: {
             0.01: 2,
@@ -857,7 +866,10 @@ describe("collectTopics", () => {
             byAperture: {
               2.8: 2,
             },
-            byExposureTime: {
+            byAspectRatio: {
+              "3:2": 2,
+            },
+              byExposureTime: {
               0.01: 2,
             },
             byExposureValue: {
@@ -1228,6 +1240,6 @@ describe("collectTopics", () => {
     expect(topics[2].categories.length).toBe(4);
     expect(topics[3].key).toBe("exposure");
     expect(topics[3].title).toBe("stats-topic-exposure");
-    expect(topics[3].categories.length).toBe(8);
+    expect(topics[3].categories.length).toBe(9);
   });
 });

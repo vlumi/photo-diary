@@ -19,6 +19,7 @@ const categories = (category) => {
         "lv",
         "resolution",
         "orientation",
+        "aspect-ratio",
       ];
     default:
       return [];

@@ -108,6 +108,12 @@ const exposure = (lang) => {
       }
       return formatNumber.default(resolution);
     },
+    aspectRatio: (aspectRatio) => {
+      if (isNaN(aspectRatio)) {
+        return aspectRatio;
+      }
+      return String(aspectRatio);
+    },
   };
 };
 const gear = (make, model) => {
@@ -173,6 +179,8 @@ const categoryValue = (lang, t, countryData) => {
         return formatExposure.resolution;
       case "orientation":
         return (value) => t(`stats-orientation-${value}`);
+      case "aspect-ratio":
+        return formatExposure.aspectRatio;
       default:
         return identity;
     }
@@ -228,6 +236,7 @@ const categorySorter = (
     case "ev":
     case "lv":
     case "resolution":
+    case "aspect-ratio":
       return collection.numSortByFieldAsc(keyField);
     default:
       return identity;
