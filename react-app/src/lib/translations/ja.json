@@ -131,6 +131,7 @@
     "stats-col-orientation": "向き",
     "stats-orientation-square": "正方形",
     "stats-orientation-landscape": "横",
-    "stats-orientation-portrait": "縦"
+    "stats-orientation-portrait": "縦",
+    "stats-col-aspect-ratio": "アスペクト比"
   }
 }

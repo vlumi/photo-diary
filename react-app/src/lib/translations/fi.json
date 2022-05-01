@@ -135,6 +135,7 @@
     "stats-col-orientation": "Asento",
     "stats-orientation-square": "Neliö",
     "stats-orientation-landscape": "Vaaka",
-    "stats-orientation-portrait": "Pysty"
+    "stats-orientation-portrait": "Pysty",
+    "stats-col-aspect-ratio": "Kuvasuhde"
   }
 }

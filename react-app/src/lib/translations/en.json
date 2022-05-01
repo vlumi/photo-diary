@@ -92,6 +92,7 @@
     "stats-category-lv": "EV @ ISO100",
     "stats-category-resolution": "Resolution",
     "stats-category-orientation": "Orientation",
+    "stats-category-aspect-ratio": "Aspect Ratio",
 
     "stats-kpi-title-photos": "Photos",
     "stats-kpi-photos": "{{count}}",
@@ -134,6 +135,7 @@
     "stats-col-orientation": "Orientation",
     "stats-orientation-square": "Square",
     "stats-orientation-landscape": "Landscape",
-    "stats-orientation-portrait": "Portrait"
+    "stats-orientation-portrait": "Portrait",
+    "stats-col-aspect-ratio": "Aspect Ratio"
   }
 }
