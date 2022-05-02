@@ -9,7 +9,7 @@ const Footer = ({ gallery, year, month }) => {
     if (!positions) {
       return "";
     }
-    return <MapContainer positions={positions} zoom="9" />;
+    return <MapContainer positions={positions} zoom="9" drawLine="true" />;
   };
 
   const photos = gallery

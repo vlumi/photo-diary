@@ -2,7 +2,13 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import Leaflet from "leaflet";
-import { MapContainer as Map, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
+import {
+  MapContainer as Map,
+  TileLayer,
+  Marker,
+  Polyline,
+  Popup,
+} from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
 // TODO: custom icons; first/last day
@@ -14,7 +20,7 @@ import config from "../lib/config";
 
 const Root = styled.div`
   width: 100%;
-  height: 400px;
+  height: ${(props) => (props.height ? props.height : 400)}px;
   padding: 0;
   margin: 10px 0;
 `;
@@ -30,7 +36,11 @@ let DefaultIcon = Leaflet.icon({
 });
 Leaflet.Marker.prototype.options.icon = DefaultIcon;
 
-const MapContainer = ({ positions: photos }) => {
+const getPolyline = (positions) => {
+  return <Polyline positions={positions} />;
+};
+
+const MapContainer = ({ positions: photos, height, maxZoom, drawLine }) => {
   if (photos.length === 0) {
     return <></>;
   }
@@ -38,8 +48,12 @@ const MapContainer = ({ positions: photos }) => {
   const positions = photos.map((photo) => photo.coordinates());
   const bounds = Leaflet.latLngBounds(positions);
   return (
-    <Root>
-      <Map bounds={bounds} maxZoom="14" style={{ height: "100%" }}>
+    <Root height={height}>
+      <Map
+        bounds={bounds}
+        maxZoom={maxZoom ? maxZoom : 14}
+        style={{ height: "100%" }}
+      >
         <TileLayer
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -66,12 +80,15 @@ const MapContainer = ({ positions: photos }) => {
             </Marker>
           );
         })}
-        <Polyline positions={positions} />
+        {drawLine ? getPolyline(positions) : ""}
       </Map>
     </Root>
   );
 };
 MapContainer.propTypes = {
   positions: PropTypes.array.isRequired,
+  height: PropTypes.number,
+  maxZoom: PropTypes.number,
+  drawLine: PropTypes.bool,
 };
 export default MapContainer;
