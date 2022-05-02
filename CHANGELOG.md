@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+- Add map to statistics page
+- Cluster closely grouped markers on the map
 
 ## [0.5.1] - 2022-05-02
 - Add aspect ratio to statistics
