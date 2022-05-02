@@ -9,8 +9,10 @@ import {
   Polyline,
   Popup,
 } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-markercluster";
 
 import "leaflet/dist/leaflet.css";
+import "react-leaflet-markercluster/dist/styles.min.css";
 // TODO: custom icons; first/last day
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -58,28 +60,30 @@ const MapContainer = ({ positions: photos, height, maxZoom, drawLine }) => {
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {photos.map((photo, index) => {
-          const thumbnailUrl = `${
-            config.PHOTO_ROOT_URL
-          }thumbnail/${photo.id()}`;
-          const dimensions = photo.thumbnailDimensions();
-          return (
-            <Marker key={index} position={photo.coordinates()}>
-              <Popup>
-                <PopupContent>
-                  <img
-                    alt={photo.id}
-                    src={thumbnailUrl}
-                    width={dimensions.width / 2}
-                    height={dimensions.height / 2}
-                  />
-                  <br />
-                  {photo.formatDate()}
-                </PopupContent>
-              </Popup>
-            </Marker>
-          );
-        })}
+        <MarkerClusterGroup>
+          {photos.map((photo, index) => {
+            const thumbnailUrl = `${
+              config.PHOTO_ROOT_URL
+            }thumbnail/${photo.id()}`;
+            const dimensions = photo.thumbnailDimensions();
+            return (
+              <Marker key={index} position={photo.coordinates()}>
+                <Popup>
+                  <PopupContent>
+                    <img
+                      alt={photo.id}
+                      src={thumbnailUrl}
+                      width={dimensions.width / 2}
+                      height={dimensions.height / 2}
+                    />
+                    <br />
+                    {photo.formatDate()}
+                  </PopupContent>
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MarkerClusterGroup>
         {drawLine ? getPolyline(positions) : ""}
       </Map>
     </Root>
