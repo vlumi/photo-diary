@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 - Add aspect ratio to statistics
+- Fix orientation to keep all values in stats table even when filtered
 
 ## [0.5.0] - 2021-12-23
 - Add version number (v1) to API path
