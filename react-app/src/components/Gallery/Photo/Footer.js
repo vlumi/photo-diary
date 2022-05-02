@@ -120,6 +120,9 @@ const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
       photo.resolution()
         ? `${formatExposure.resolution(photo.resolution())}MP`
         : "",
+      photo.aspectRatio()
+        ? `${formatExposure.aspectRatio(photo.aspectRatio())}`
+        : "",
       photo.exposureValue()
         ? `EV${formatExposure.ev(photo.exposureValue())}`
         : "",
