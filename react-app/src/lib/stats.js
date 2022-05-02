@@ -1183,7 +1183,7 @@ const initializeStats = (uniqueValues) => {
         uniqueValues.exposure.orientation
       );
       stats.count.byExposure.byAspectRatio = setInitialValues(
-        uniqueValues.exposure.aspectRatio
+        uniqueValues.exposure["aspect-ratio"]
       );
     }
   }

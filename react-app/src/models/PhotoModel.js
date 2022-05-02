@@ -318,6 +318,8 @@ const PhotoModel = (photoData) => {
           ev: new Set([self.exposureValue()]),
           lv: new Set([self.lightValue()]),
           resolution: new Set([self.resolution()]),
+          orientation: new Set([self.orientation()]),
+          "aspect-ratio": new Set([self.aspectRatio()]),
         },
       };
     },
