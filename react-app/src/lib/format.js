@@ -65,7 +65,7 @@ const dayOfWeek = (dow) => {
 const countryName = (lang, countryData) => (countryCode) =>
   countryData.getName(countryCode, lang) || countryCode;
 
-const exposure = (lang) => {
+const exposure = (lang, t) => {
   const formatNumber = number(lang);
   return {
     focalLength: (focalLength) => {
@@ -108,6 +108,7 @@ const exposure = (lang) => {
       }
       return formatNumber.default(resolution);
     },
+    orientation: (value) => t(`stats-orientation-${value}`),
     aspectRatio: (aspectRatio) => {
       if (isNaN(aspectRatio)) {
         return aspectRatio;

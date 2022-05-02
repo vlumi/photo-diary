@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 
 import EpochAge from "../EpochAge";
@@ -49,9 +50,11 @@ const Copyright = styled.div`
 `;
 
 const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
+  const { t } = useTranslation();
+
   const previousPhoto = gallery.previousPhoto(year, month, day, photo);
   const nextPhoto = gallery.nextPhoto(year, month, day, photo);
-  const formatExposure = format.exposure(lang);
+  const formatExposure = format.exposure(lang, t);
 
   const renderAdjacentPhoto = (adjacentPhoto) => {
     if (adjacentPhoto === photo) {
@@ -119,6 +122,9 @@ const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
       photo.iso() ? `ISO${formatExposure.iso(photo.iso())}` : "",
       photo.resolution()
         ? `${formatExposure.resolution(photo.resolution())}MP`
+        : "",
+      photo.orientation()
+        ? `${formatExposure.orientation(photo.orientation())}`
         : "",
       photo.aspectRatio()
         ? `${formatExposure.aspectRatio(photo.aspectRatio())}`

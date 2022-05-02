@@ -111,7 +111,7 @@ describe("countryName()", () => {
     expect(format.countryName("en", countryData)("en")).toBe("en"));
 });
 describe("exposure", () => {
-  const formatExposure = format.exposure("en");
+  const formatExposure = format.exposure("en", (key) => { return key });
   describe("focalLength()", () => {
     test("N/A", () => expect(formatExposure.focalLength("N/A")).toBe("N/A"));
     test("50", () => expect(formatExposure.focalLength(50)).toBe("50"));
@@ -143,6 +143,17 @@ describe("exposure", () => {
     test("N/A", () => expect(formatExposure.resolution("N/A")).toBe("N/A"));
     test("5.0", () => expect(formatExposure.resolution(5.0)).toBe("5"));
     test("13", () => expect(formatExposure.resolution(13)).toBe("13"));
+  });
+  describe("orientation()", () => {
+    test("N/A", () => expect(formatExposure.orientation("N/A")).toBe("stats-orientation-N/A"));
+    test("square", () => expect(formatExposure.orientation("square")).toBe("stats-orientation-square"));
+    test("landscape", () => expect(formatExposure.orientation("landscape")).toBe("stats-orientation-landscape"));
+    test("portrait", () => expect(formatExposure.orientation("portrait")).toBe("stats-orientation-portrait"));
+  });
+  describe("aspectRatio()", () => {
+    test("N/A", () => expect(formatExposure.aspectRatio("N/A")).toBe("N/A"));
+    test("3/2", () => expect(formatExposure.aspectRatio("3/2")).toBe("3/2"));
+    test("1/1", () => expect(formatExposure.aspectRatio("1/1")).toBe("1/1"));
   });
 });
 describe("gear()", () => {

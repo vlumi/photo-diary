@@ -29,7 +29,7 @@ const decodeTableRowKey = (key) => {
 
 const collectTopics = (data, lang, t, countryData, theme) => {
   const formatNumber = format.number(lang);
-  const formatExposure = format.exposure(lang);
+  const formatExposure = format.exposure(lang, t);
 
   const localizeUnknownKey = (key, unknownLabel = t("stats-unknown")) => {
     try {
@@ -987,46 +987,10 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectAspectRatio = (byAspectRatio, total) => {
-    const [flat, data, valueRanks] = transformData({
-      original: byAspectRatio,
-      formatter: formatExposure.aspectRatio,
-      comparator: collection.numSortByFieldDesc("value"),
-    });
-    const values = flat.map((entry) => entry.value);
-    const { mean, stddev } = calculateStatistics(values);
-    return {
-      key: "aspect-ratio",
-      title: t("stats-category-aspect-ratio"),
-      charts: [
-        { type: "doughnut", data, options: chartOptions.doughnut },
-        { type: "horizontal-bar", data, options: chartOptions.bar },
-      ],
-      tableColumns: [
-        { title: "rank", align: "right", header: true },
-        { title: "aspect-ratio", align: "left" },
-        { title: "count", align: "right" },
-        { title: "share", align: "right" },
-      ],
-      table: flat.map((entry) => {
-        return {
-          key: encodeTableKey(entry.key),
-          rank: formatNumber.default(valueRanks[entry.value] + 1),
-          "aspect-ratio": formatExposure.aspectRatio(entry.key),
-          count: formatNumber.default(entry.value),
-          share: `${formatNumber.oneDecimal(
-            format.share(entry.value, total)
-          )}%`,
-          standardScore: (entry.value - mean) / stddev,
-        };
-      }),
-    };
-  };
   const collectOrientation = (byOrientation, total) => {
     const [flat, data, valueRanks] = transformData({
       original: byOrientation,
-      formatter: (value) => t(`stats-orientation-${value}`),
-      comparator: collection.numSortByFieldDesc("value"),
+      formatter: formatExposure.orientation,
     });
     const values = flat.map((entry) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -1048,6 +1012,39 @@ const collectTopics = (data, lang, t, countryData, theme) => {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           orientation: t(`stats-orientation-${entry.key}`),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
+          standardScore: (entry.value - mean) / stddev,
+        };
+      }),
+    };
+  };
+  const collectAspectRatio = (byAspectRatio, total) => {
+    const [flat, data, valueRanks] = transformData({
+      original: byAspectRatio
+    });
+    const values = flat.map((entry) => entry.value);
+    const { mean, stddev } = calculateStatistics(values);
+    return {
+      key: "aspect-ratio",
+      title: t("stats-category-aspect-ratio"),
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "aspect-ratio", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry) => {
+        return {
+          key: encodeTableKey(entry.key),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          "aspect-ratio": formatExposure.aspectRatio(entry.key),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
