@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 /**
  * The root URL for accessing the photo files. The display-sized photos should be inside `display`, and the thumbnails inside `thumbnail` directory.
  *

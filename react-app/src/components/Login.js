@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
-import jwt from "jsonwebtoken";
+import * as jose from "jose";
 import { useTranslation } from "react-i18next";
 
 import TopMenuButton from "./TopMenuButton";
@@ -34,7 +34,9 @@ const Login = ({ setUser }) => {
     try {
       const response = await tokenService.login(userId, password);
       const rawToken = response.data.token;
-      const user = UserModel(jwt.decode(rawToken), rawToken);
+      // TODO: sign/verify
+      const userData = JSON.parse(new TextDecoder().decode(jose.base64url.decode(rawToken.split(".")[1])));
+      const user = UserModel(userData, rawToken);
 
       token.setToken(rawToken);
       window.localStorage.setItem("user", user.toJson());
