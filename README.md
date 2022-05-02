@@ -56,7 +56,7 @@ Photo Diary is split into separate independent modules, each handling its own su
     - By country
   - Time distribution by year, year/month, month, weekday, hour
   - Gear distribution by camera make, camera, lens, camera/lens
-  - Exposure distribution by focal length, aperture, shutter speed, sensitivity, EV, LV, resolution
+  - Exposure distribution by focal length, aperture, shutter speed, sensitivity, EV, LV, resolution, orientation, aspect ratio
   - All distribution values can be used to filter the photos
     - Filters apply to both gallery and statistics views
     - Filter values within a single category are additive, photos matching any are included
