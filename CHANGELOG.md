@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [0.5.1] - 2022-05-02
 - Add aspect ratio to statistics
 - Fix orientation to keep all values in stats table even when filtered
 - Upgrade to react-scripts 5
@@ -116,7 +118,8 @@
 
 ## Initial commit - 2020-07-04
 
-[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/vlumi/photo-diary/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/vlumi/photo-diary/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/vlumi/photo-diary/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/vlumi/photo-diary/compare/v0.4.0...v0.4.1
