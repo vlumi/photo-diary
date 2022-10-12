@@ -19,7 +19,7 @@
     "geo-coord": "^0.1.1",
     "gm": "^1.23.1",
     "image-size": "^1.0.1",
-    "moment": "^2.29.3"
+    "moment": "^2.29.4"
   },
   "devDependencies": {
     "eslint": "^8.14.0",
