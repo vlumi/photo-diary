@@ -1,6 +1,6 @@
 {
   "name": "photo-diary-app",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "dependencies": {
     "@react-leaflet/core": "^1.1.1",
@@ -13,7 +13,7 @@
     "geo-coord": "^0.1.1",
     "i18n-iso-countries": "^7.2.0",
     "i18next": "^21.6.3",
-    "jose": "^4.8.0",
+    "jose": "^4.9.2",
     "leaflet": "^1.7.1",
     "mathjs": "^10.0.0",
     "react": "^17.0.2",
@@ -25,6 +25,7 @@
     "react-icons": "^4.3.1",
     "react-is": "^17.0.2",
     "react-leaflet": "^3.2.2",
+    "react-leaflet-markercluster": "^3.0.0-rc1",
     "react-router-dom": "^5.2.1",
     "react-scripts": "^5.0.1",
     "react-swipeable": "^6.2.0",

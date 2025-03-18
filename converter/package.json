@@ -1,6 +1,6 @@
 {
   "name": "photo-diary-converter",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -19,11 +19,11 @@
     "geo-coord": "^0.1.1",
     "gm": "^1.23.1",
     "image-size": "^1.0.1",
-    "moment": "^2.29.3"
+    "moment": "^2.29.4"
   },
   "devDependencies": {
     "eslint": "^8.14.0",
     "jest": "^28.0.3",
-    "nodemon": "^2.0.16"
+    "nodemon": "^2.0.20"
   }
 }

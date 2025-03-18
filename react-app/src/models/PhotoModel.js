@@ -120,6 +120,7 @@ const PhotoModel = (photoData) => {
     aspectRatio: () => {
       const aspectRatios = [
         { name: "1:1", ratio: 1 / 1 },
+        { name: "7:6", ratio: 7 / 6 },
         { name: "5:4", ratio: 5 / 4 },
         { name: "11:8.5", ratio: 11 / 8.5 },
         { name: "4:3", ratio: 4 / 3 },
@@ -130,7 +131,8 @@ const PhotoModel = (photoData) => {
         { name: "16:9", ratio: 16 / 9 },
         { name: "1.85.1", ratio: 1.85 / 1 },
         { name: "2:1", ratio: 2 / 1 },
-        { name: "2:1", ratio: 2.35 / 1 },
+        { name: "2.35:1", ratio: 2.35 / 1 },
+        { name: "65:24", ratio: 65 / 24 },
         { name: "3:1+", ratio: 3 / 1 },
       ];
       const ratio =
