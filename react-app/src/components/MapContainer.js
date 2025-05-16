@@ -60,7 +60,7 @@ const MapContainer = ({ positions: photos, height, maxZoom, drawLine }) => {
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <MarkerClusterGroup>
+        <MarkerClusterGroup maxClusterRadius="40">
           {photos.map((photo, index) => {
             const thumbnailUrl = `${
               config.PHOTO_ROOT_URL
