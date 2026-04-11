@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@react-leaflet/core": "^1.1.1",
-    "axios": "^0.30.3",
+    "axios": "^1.15.0",
     "buffer": "^6.0.3",
     "chart.js": "^3.6.2",
     "cross-env": "^7.0.3",
