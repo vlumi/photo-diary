@@ -6,6 +6,7 @@
   "main": "index.ts",
   "scripts": {
     "start": "tsx index.ts",
+    "prod": "NODE_ENV=prod pm2 start --interpreter tsx index.ts",
     "dev": "tsx watch index.ts",
     "dumpexif": "tsx bin/dump-exif.ts",
     "typecheck": "tsc --noEmit",
