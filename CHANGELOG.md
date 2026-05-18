@@ -11,6 +11,7 @@
 - Upgrade server ESLint to v9 with flat config
 - Upgrade converter dependencies (jest 29, nodemon 3, dotenv 17, etc.)
 - Upgrade converter ESLint to v9 with flat config
+- Migrate converter to ESM + TypeScript (chokidar 4, image-size 2)
 
 ## [0.5.1] - 2022-05-02
 
