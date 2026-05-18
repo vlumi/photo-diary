@@ -1,7 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import config from "../lib/config/index.js";
-
-type Row = Record<string, any>;
+import type {
+  Gallery,
+  GalleryInput,
+  MetaRow,
+  Photo,
+  PhotoInput,
+  User,
+} from "./sqlite3/schema.js";
 
 const drivers = {
   dummy: () => import("./dummy.js"),
@@ -25,17 +30,20 @@ const connectDb = async () => {
 const db = await connectDb();
 
 export default {
-  loadMetas: async () => {
-    const metas = (await db.loadMetas()) as Row[];
-    return metas.reduce<Row>((acc, obj) => ({ ...acc, ...obj }), {});
+  loadMetas: async (): Promise<Record<string, string>> => {
+    const metas = (await db.loadMetas()) as Array<Record<string, string>>;
+    return metas.reduce<Record<string, string>>(
+      (acc, obj) => ({ ...acc, ...obj }),
+      {}
+    );
   },
-  createMeta: async (meta: Row) => {
+  createMeta: async (meta: { key: string; value: string }) => {
     await db.createMeta(meta);
   },
   loadMeta: async (key: string) => {
     return await db.loadMeta(key);
   },
-  updateMeta: async (key: string, meta: Row) => {
+  updateMeta: async (key: string, meta: Partial<MetaRow>) => {
     await db.updateMeta(key, meta);
   },
   deleteMeta: async (key: string) => {
@@ -45,33 +53,35 @@ export default {
   loadUsers: async () => {
     return await db.loadUsers();
   },
-  createUser: async (user: Row) => {
+  createUser: async (user: User) => {
     await db.createUser(user);
   },
   loadUser: async (userId: string) => {
     return await db.loadUser(userId);
   },
-  updateUser: async (userId: string, user: Row) => {
+  updateUser: async (userId: string, user: Partial<User>) => {
     await db.updateUser(userId, user);
   },
   deleteUser: async (userId: string) => {
     await db.deleteUser(userId);
   },
 
-  loadUserAccessControl: async (userId: string): Promise<Record<string, number>> => {
+  loadUserAccessControl: async (
+    userId: string
+  ): Promise<Record<string, number>> => {
     return await db.loadUserAccessControl(userId);
   },
 
   loadGalleries: async () => {
     return await db.loadGalleries();
   },
-  createGallery: async (gallery: Row) => {
-    await db.createGallery(gallery);
+  createGallery: async (gallery: GalleryInput) => {
+    await db.createGallery(gallery as Gallery);
   },
   loadGallery: async (galleryId: string) => {
     return await db.loadGallery(galleryId);
   },
-  updateGallery: async (galleryId: string, gallery: Row) => {
+  updateGallery: async (galleryId: string, gallery: GalleryInput) => {
     await db.updateGallery(galleryId, gallery);
   },
   deleteGallery: async (galleryId: string) => {
@@ -100,16 +110,19 @@ export default {
   loadPhotos: async () => {
     return await db.loadPhotos();
   },
-  createPhoto: async (photo: Row) => {
+  createPhoto: async (photo: PhotoInput) => {
     await db.createPhoto(photo);
   },
   loadPhoto: async (photoId: string) => {
     return await db.loadPhoto(photoId);
   },
-  updatePhoto: async (photoId: string, photo: Row) => {
+  updatePhoto: async (photoId: string, photo: PhotoInput) => {
     await db.updatePhoto(photoId, photo);
   },
   deletePhoto: async (photoId: string) => {
     await db.deletePhoto(photoId);
   },
 };
+
+// Re-export shared types so models can use them without reaching into the driver.
+export type { Gallery, GalleryInput, MetaRow, Photo, PhotoInput, User };

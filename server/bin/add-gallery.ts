@@ -49,12 +49,12 @@ db.loadGallery(galleryId)
   .catch(async () => {
     const newGallery = {
       id: galleryId,
-      title: argv.title,
-      description: argv.description,
-      epoch: argv.epoch,
-      epoch_type: argv.epoch_type,
-      theme: argv.theme,
-      initial_view: argv.initial_view,
+      title: argv.title as string | undefined,
+      description: argv.description as string | undefined,
+      epoch: argv.epoch as string | undefined,
+      epochType: argv.epoch_type as string | undefined,
+      theme: argv.theme as string | undefined,
+      initialView: argv.initial_view as string | undefined,
     };
     db.createGallery(newGallery).catch((error) => {
       logger.error("Failed:", error);
