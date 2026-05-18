@@ -869,7 +869,7 @@ describe("collectTopics", () => {
             byAspectRatio: {
               "3:2": 2,
             },
-              byExposureTime: {
+            byExposureTime: {
               0.01: 2,
             },
             byExposureValue: {

@@ -10,7 +10,7 @@
     "dumpexif": "tsx bin/dump-exif.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node --import tsx/esm --test tests/**/*.test.ts"
+    "test": "tsx --test tests/**/*.test.ts"
   },
   "author": "Ville Misaki",
   "license": "MIT",

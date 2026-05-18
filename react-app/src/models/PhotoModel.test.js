@@ -739,11 +739,13 @@ describe("With samples", () => {
       expect(samples["empty.jpg"].uniqueValues()).toStrictEqual({
         exposure: {
           aperture: new Set([null]),
+          "aspect-ratio": new Set([undefined]),
           ev: new Set([undefined]),
           "exposure-time": new Set([null]),
           "focal-length": new Set([null]),
           iso: new Set([null]),
           lv: new Set([undefined]),
+          orientation: new Set(["landscape"]),
           resolution: new Set([0]),
         },
         gear: {
@@ -765,11 +767,13 @@ describe("With samples", () => {
       expect(samples["1.jpg"].uniqueValues()).toStrictEqual({
         exposure: {
           aperture: new Set([2.8]),
+          "aspect-ratio": new Set(["3:2"]),
           ev: new Set([9.5]),
           "exposure-time": new Set([0.01]),
           "focal-length": new Set([23]),
           iso: new Set([100]),
           lv: new Set([9.5]),
+          orientation: new Set(["portrait"]),
           resolution: new Set([6]),
         },
         gear: {
