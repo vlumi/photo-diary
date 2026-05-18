@@ -1,9 +1,9 @@
-const HttpStatus = require("http-status-codes");
+import * as HttpStatus from "http-status-codes";
 
-const CONST = require("../constants");
-const logger = require("../logger");
+import CONST from "../constants.js";
+import logger from "../logger.js";
 
-module.exports = function (error, request, response, _next) {
+export default function (error, request, response, _next) {
   logger.debug(error);
   switch (error) {
     case CONST.ERROR_NOT_FOUND:
@@ -29,4 +29,4 @@ module.exports = function (error, request, response, _next) {
       response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error });
       break;
   }
-};
+}

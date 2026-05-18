@@ -1,7 +1,7 @@
-const CONST = require("./constants");
-const db = require("../db");
+import CONST from "./constants.js";
+import db from "../db/index.js";
 
-module.exports = () => {
+export default () => {
   return {
     authorizeView,
     authorizeAdmin,

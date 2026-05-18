@@ -1,4 +1,6 @@
-const schema = require("../../../db/sqlite3/schema")();
+import schemaFactory from "../../../db/sqlite3/schema.js";
+
+const schema = schemaFactory();
 
 describe("User", () => {
   const cols = ["id", "password", "secret"].join(",");

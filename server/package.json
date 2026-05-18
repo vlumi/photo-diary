@@ -2,12 +2,13 @@
   "name": "photo-diary-server",
   "version": "0.5.1",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=dev node index.js",
-    "prod": "cross-env NODE_ENV=prod pm2 start index.js",
-    "dev": "cross-env NODE_ENV=dev nodemon run index.js",
-    "test": "cross-env DB_DRIVER=dummy NODE_ENV=test jest --runInBand --verbose",
+    "start": "NODE_ENV=dev node index.js",
+    "prod": "NODE_ENV=prod pm2 start index.js",
+    "dev": "NODE_ENV=dev node --watch index.js",
+    "test": "DB_DRIVER=dummy NODE_ENV=test vitest run",
     "lint": "eslint .",
     "build:ui": "cd ../react-app && npm run build --prod && rm -rf ../server/build && cp -r build ../server/"
   },
@@ -17,7 +18,6 @@
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
-    "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "http-status-codes": "^2.3.0",
@@ -31,9 +31,8 @@
     "@eslint/js": "^9.39.4",
     "eslint": "^9.39.4",
     "globals": "^16.5.0",
-    "jest": "^29.7.0",
-    "nodemon": "^3.1.14",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "vitest": "^2.1.8"
   },
   "repository": {
     "type": "git",

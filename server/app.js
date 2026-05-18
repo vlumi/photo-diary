@@ -1,20 +1,20 @@
-const express = require("express");
-const cors = require("cors");
-const compression = require("compression");
+import express from "express";
+import cors from "cors";
+import compression from "compression";
 
-const config = require("./lib/config");
+import config from "./lib/config/index.js";
 
-const metaV1 = require("./controllers/meta-v1");
-const tokensV1 = require("./controllers/tokens-v1");
-const usersV1 = require("./controllers/users-v1");
-const galleriesV1 = require("./controllers/galleries-v1");
-const photosV1 = require("./controllers/photos-v1");
-const galleryPhotosV1 = require("./controllers/gallery-photos-v1");
+import metaV1 from "./controllers/meta-v1.js";
+import tokensV1 from "./controllers/tokens-v1.js";
+import usersV1 from "./controllers/users-v1.js";
+import galleriesV1 from "./controllers/galleries-v1.js";
+import photosV1 from "./controllers/photos-v1.js";
+import galleryPhotosV1 from "./controllers/gallery-photos-v1.js";
 
-const middleware = require("./lib/middleware");
-const logger = require("./lib/logger");
+import middleware from "./lib/middleware/index.js";
+import logger from "./lib/logger.js";
 
-const app = express();
+export const app = express();
 app.use(cors());
 app.use(compression());
 app.use(express.json());
@@ -45,7 +45,7 @@ registerPreProcessors();
 registerRoutes();
 registerPostProcessors();
 
-const init = async () => {
+export const init = async () => {
   logger.debug("Initialize app start");
   await tokensV1.init();
   await galleriesV1.init();
@@ -54,7 +54,4 @@ const init = async () => {
   logger.debug("Initialize app done");
 };
 
-module.exports = {
-  app,
-  init,
-};
+export default { app, init };

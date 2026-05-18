@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
-const logger = require("../lib/logger");
-const db = require("../db");
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
-const { argv } = require("yargs")
+import logger from "../lib/logger.js";
+import db from "../db/index.js";
+
+const argv = yargs(hideBin(process.argv))
   .nargs("id", 1)
   .describe("id", "ID")
   .nargs("title", 1)
@@ -23,7 +26,8 @@ const { argv } = require("yargs")
   )
   .describe("hostname", "Regex for hostnames that default to this gallery")
   .demandOption(["id"])
-  .usage("Usage: $0 [options]");
+  .usage("Usage: $0 [options]")
+  .parseSync();
 
 const galleryId = argv.id;
 

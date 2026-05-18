@@ -1,8 +1,8 @@
-const CONST = require("../lib/constants");
-const logger = require("../lib/logger");
-const db = require("../db");
+import CONST from "../lib/constants.js";
+import logger from "../lib/logger.js";
+import db from "../db/index.js";
 
-module.exports = () => {
+export default () => {
   return {
     init,
     getMetas,

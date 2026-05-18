@@ -1,20 +1,21 @@
-const config = require("../lib/config");
+import config from "../lib/config/index.js";
 
-const DRIVER = {
-  dummy: () => require("./dummy"),
-  sqlite3: () => require("./sqlite3"),
+const drivers = {
+  dummy: () => import("./dummy.js"),
+  sqlite3: () => import("./sqlite3/index.js"),
 };
 
-const connectDb = () => {
+const connectDb = async () => {
   const driver = config.DB_DRIVER;
   if (!driver) {
     throw "The DB_DRIVER environment variable must be set.";
   }
-  return DRIVER[driver]()();
+  const mod = await drivers[driver]();
+  return mod.default();
 };
-const db = connectDb();
+const db = await connectDb();
 
-module.exports = {
+export default {
   loadMetas: async () => {
     return (await db.loadMetas()).reduce((acc, obj) => {
       return {

@@ -1,15 +1,17 @@
-const authorizer = require("../lib/authorizer")();
-const model = require("../models/photo")();
+import express from "express";
+
+import authorizerFactory from "../lib/authorizer.js";
+import modelFactory from "../models/photo.js";
+
+const authorizer = authorizerFactory();
+const model = modelFactory();
 
 const init = async () => {
   await model.init();
 };
-const router = require("express").Router();
+const router = express.Router();
 
-module.exports = {
-  init,
-  router,
-};
+export default { init, router };
 
 /**
  * Get all photos.

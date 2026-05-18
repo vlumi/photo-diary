@@ -58,7 +58,7 @@ const ACCESS_ADMIN = 2;
 const ACCESS_VIEW = 1;
 const ACCESS_NONE = 0;
 
-module.exports = {
+export default {
   DEFAULT_ENV,
   DEFAULT_DEBUG,
 

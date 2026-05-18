@@ -1,12 +1,12 @@
-const { SignJWT, jwtVerify, decodeJwt } = require("jose");
-const bcrypt = require("bcrypt");
+import { SignJWT, jwtVerify, decodeJwt } from "jose";
+import bcrypt from "bcrypt";
+
+import CONST from "../lib/constants.js";
+import config from "../lib/config/index.js";
+import logger from "../lib/logger.js";
+import db from "../db/index.js";
 
 const encodeSecret = (secret) => new TextEncoder().encode(secret);
-
-const CONST = require("../lib/constants");
-const config = require("../lib/config");
-const logger = require("../lib/logger");
-const db = require("../db");
 
 const secrets = {};
 let reloadTimer = undefined;
@@ -34,7 +34,7 @@ const init = async () => {
   reloadTimer.unref();
 };
 
-module.exports = () => {
+export default () => {
   return {
     init,
     authenticateUser,

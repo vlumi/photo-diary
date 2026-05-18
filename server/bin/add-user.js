@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 
-const bcrypt = require("bcrypt");
-const { v4: uuidv4 } = require("uuid");
+import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
-const logger = require("../lib/logger");
-const db = require("../db");
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+
+import logger from "../lib/logger.js";
+import db from "../db/index.js";
 
 const saltRounds = 10;
 
-const { argv } = require("yargs")
+const argv = yargs(hideBin(process.argv))
   .alias("l", "list")
   .describe("l", "List users")
   .alias("u", "user")
@@ -27,7 +30,8 @@ const { argv } = require("yargs")
     throw new Error("Error: either --list, or user and password is needed");
   })
   // .demandOption(["u", "p"])
-  .usage("Usage: $0 [options]");
+  .usage("Usage: $0 [options]")
+  .parseSync();
 
 if (argv.l) {
   db.loadUsers().then(async (users) => {
