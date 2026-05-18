@@ -1,14 +1,15 @@
-const supertest = require("supertest");
-const { app, init } = require("../../app");
-
-const api = supertest(app);
+const { init } = require("../../app");
 const db = require("../../db/dummy")();
-const { loginUser } = require("./helper");
+const { createApi, loginUser } = require("./helper");
+
+const { api, close } = createApi();
 
 beforeEach(async () => {
   await db.init();
   await init();
 });
+
+afterAll(close);
 
 const getPhotos = async (token, status = 200) =>
   api.get("/api/v1/photos").set("Authorization", `Bearer ${token}`).expect(status);
