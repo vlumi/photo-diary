@@ -1,22 +1,157 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import CONST from "../../lib/constants.js";
 
-type Row = Record<string, any>;
-type Conditions = string[] | undefined;
+// Raw DB row shapes (one per table). Mirror the SELECT column list exactly.
+export interface MetaRow {
+  key: string;
+  value: string;
+}
+export interface UserRow {
+  id: string;
+  password: string;
+  secret: string;
+}
+export interface AclRow {
+  user_id: string;
+  gallery_id: string;
+  level: number;
+}
+export interface GalleryRow {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  epoch: string;
+  epoch_type: string;
+  theme: string;
+  initial_view: string;
+  hostname: string;
+}
+export interface GalleryPhotoRow {
+  gallery_id: string;
+  photo_id: string;
+}
+export interface PhotoRow {
+  id: string;
+  title: string;
+  description: string;
+  author: string;
+  taken: string;
+  country_code: string | null;
+  place: string;
+  coord_lat: number | null;
+  coord_lon: number | null;
+  coord_alt: number | null;
+  camera_make: string;
+  camera_model: string;
+  camera_serial: string;
+  lens_make: string;
+  lens_model: string;
+  lens_serial: string;
+  focal: number | null;
+  fstop: number | null;
+  exposure_time: number | null;
+  iso: number | null;
+  orig_width: number | null;
+  orig_height: number | null;
+  disp_width: number | null;
+  disp_height: number | null;
+  thumb_width: number | null;
+  thumb_height: number | null;
+}
+
+// App-side shapes (what mapRow returns / mapInsert and mapToRow take).
+export type Meta = Record<string, string>;
+export type User = UserRow;
+export type Acl = [galleryId: string, level: number];
+export interface Gallery {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  epoch: string;
+  epochType: string;
+  theme: string;
+  initialView: string;
+  hostname: string;
+}
+export interface GalleryPhoto {
+  galleryId: string;
+  photoId: string;
+}
+export interface Photo {
+  id: string;
+  index: number;
+  title: string;
+  description: string;
+  taken: {
+    instant: {
+      timestamp: string;
+      year: number;
+      month: number;
+      day: number;
+      hour: number;
+      minute: number;
+      second: number;
+    };
+    author: string;
+    location: {
+      country: string | undefined;
+      place: string;
+      coordinates: {
+        latitude: number | null;
+        longitude: number | null;
+        altitude: number | null;
+      };
+    };
+  };
+  camera: { make: string; model: string; serial: string };
+  lens: { make: string; model: string; serial: string };
+  exposure: {
+    focalLength: number | undefined;
+    aperture: number | undefined;
+    exposureTime: number | undefined;
+    iso: number | undefined;
+  };
+  dimensions: {
+    original: { width: number | undefined; height: number | undefined };
+    display: { width: number | undefined; height: number | undefined };
+    thumbnail: { width: number | undefined; height: number | undefined };
+  };
+}
+
+// Partial input shapes for updates / inserts. DeepPartial so nested
+// subtrees (e.g. photo.taken.location) can also be partially filled.
+type DeepPartial<T> = T extends object
+  ? { [K in keyof T]?: DeepPartial<T[K]> }
+  : T;
+export type GalleryInput = DeepPartial<Gallery>;
+export type PhotoInput = DeepPartial<Photo>;
+
+type Conditions = string[];
+
+type TableSchema = {
+  table: string;
+  columns: string[];
+  primaryKey: string[];
+  order: string[];
+  mapToRow?: (data: Record<string, unknown>) => Record<string, unknown>;
+};
 
 export default () => {
   return {
     meta: {
-      mapRow: (row: Row) => {
-        return {
-          [toString(row.key)]: toString(row.value),
-        };
-      },
-      mapInsert: (meta: Row) => [meta.key, meta.value],
+      mapRow: (row: MetaRow): Meta => ({
+        [toString(row.key)]: toString(row.value),
+      }),
+      mapInsert: (meta: { key: string; value: string }): unknown[] => [
+        meta.key,
+        meta.value,
+      ],
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.meta),
       buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.meta),
-      buildUpdateByIdQuery: (data: Row) => buildUpdateByIdQuery(SCHEMA.meta, data),
+      buildUpdateByIdQuery: (data: Partial<MetaRow>) =>
+        buildUpdateByIdQuery(SCHEMA.meta, data),
       buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.meta),
 
       buildSelectQuery: (conditions?: Conditions) =>
@@ -25,18 +160,21 @@ export default () => {
         buildDeleteQuery(SCHEMA.meta, conditions),
     },
     user: {
-      mapRow: (row: Row) => {
-        return {
-          id: toString(row.id),
-          password: toString(row.password),
-          secret: toString(row.secret),
-        };
-      },
-      mapInsert: (user: Row) => [user.id, user.password, user.secret],
+      mapRow: (row: UserRow): User => ({
+        id: toString(row.id),
+        password: toString(row.password),
+        secret: toString(row.secret),
+      }),
+      mapInsert: (user: User): unknown[] => [
+        user.id,
+        user.password,
+        user.secret,
+      ],
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.user),
       buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.user),
-      buildUpdateByIdQuery: (data: Row) => buildUpdateByIdQuery(SCHEMA.user, data),
+      buildUpdateByIdQuery: (data: Partial<User>) =>
+        buildUpdateByIdQuery(SCHEMA.user, data),
       buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.user),
 
       buildSelectQuery: (conditions?: Conditions) =>
@@ -45,15 +183,14 @@ export default () => {
         buildDeleteQuery(SCHEMA.user, conditions),
     },
     acl: {
-      mapRow: (row: Row) => {
-        return [row.gallery_id, row.level];
-      },
-      mapInsert: () => {
+      mapRow: (row: AclRow): Acl => [row.gallery_id, row.level],
+      mapInsert: (): unknown[] => {
         throw CONST.ERROR_NOT_IMPLEMENTED;
       },
       buildCreateQuery: () => buildCreateQuery(SCHEMA.acl),
       buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.acl),
-      buildUpdateByIdQuery: (data: Row) => buildUpdateByIdQuery(SCHEMA.acl, data),
+      buildUpdateByIdQuery: (data: Partial<AclRow>) =>
+        buildUpdateByIdQuery(SCHEMA.acl, data),
       buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.acl),
 
       buildSelectQuery: (conditions?: Conditions) =>
@@ -62,36 +199,32 @@ export default () => {
         buildDeleteQuery(SCHEMA.acl, conditions),
     },
     gallery: {
-      mapRow: (row: Row) => {
-        return {
-          id: toString(row.id),
-          title: toString(row.title),
-          description: toString(row.description),
-          icon: toString(row.icon),
-          epoch: toString(row.epoch).substring(0, 10),
-          epochType: toString(row.epoch_type),
-          theme: toString(row.theme),
-          initialView: toString(row.initial_view),
-          hostname: toString(row.hostname),
-        };
-      },
-      mapInsert: (gallery: Row) => {
-        return [
-          gallery.id,
-          gallery.title,
-          gallery.description,
-          gallery.icon,
-          gallery.epoch,
-          gallery.epochType,
-          gallery.theme,
-          gallery.initialView,
-          gallery.hostname,
-        ];
-      },
+      mapRow: (row: GalleryRow): Gallery => ({
+        id: toString(row.id),
+        title: toString(row.title),
+        description: toString(row.description),
+        icon: toString(row.icon),
+        epoch: toString(row.epoch).substring(0, 10),
+        epochType: toString(row.epoch_type),
+        theme: toString(row.theme),
+        initialView: toString(row.initial_view),
+        hostname: toString(row.hostname),
+      }),
+      mapInsert: (gallery: Gallery): unknown[] => [
+        gallery.id,
+        gallery.title,
+        gallery.description,
+        gallery.icon,
+        gallery.epoch,
+        gallery.epochType,
+        gallery.theme,
+        gallery.initialView,
+        gallery.hostname,
+      ],
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.gallery),
       buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.gallery),
-      buildUpdateByIdQuery: (data: Row) =>
+      buildUpdateByIdQuery: (data: GalleryInput) =>
         buildUpdateByIdQuery(SCHEMA.gallery, data),
       buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.gallery),
 
@@ -101,16 +234,14 @@ export default () => {
         buildDeleteQuery(SCHEMA.gallery, conditions),
     },
     galleryPhoto: {
-      mapRow: () => {
+      mapRow: (): GalleryPhoto => {
         throw CONST.ERROR_NOT_IMPLEMENTED;
       },
-      mapInsert: (galleryPhoto: Row) => {
-        return [galleryPhoto.galleryId, galleryPhoto.photoId];
-      },
+      mapInsert: (link: GalleryPhoto): unknown[] => [link.galleryId, link.photoId],
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.galleryPhoto),
       buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.galleryPhoto),
-      buildUpdateByIdQuery: (data: Row) =>
+      buildUpdateByIdQuery: (data: Partial<GalleryPhotoRow>) =>
         buildUpdateByIdQuery(SCHEMA.galleryPhoto, data),
       buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.galleryPhoto),
 
@@ -120,32 +251,25 @@ export default () => {
         buildDeleteQuery(SCHEMA.galleryPhoto, conditions),
     },
     photo: {
-      mapRow: (row: Row, index: number) => {
+      mapRow: (row: PhotoRow, index: number): Photo => {
         const taken = new Date(toString(row.taken).substring(0, 19));
-        const year = 0 + taken.getFullYear();
-        const month = taken.getMonth() + 1;
-        const day = taken.getDate();
-        const hour = taken.getHours();
-        const minute = taken.getMinutes();
-        const second = taken.getSeconds();
-
-        const normalizeCountry = (country: string | undefined) =>
+        const normalizeCountry = (country: string | null) =>
           !country || country === "unknown" ? undefined : country;
 
         return {
           id: toString(row.id),
-          index: index,
+          index,
           title: toString(row.title),
           description: toString(row.description),
           taken: {
             instant: {
               timestamp: toString(row.taken),
-              year: year,
-              month: month,
-              day: day,
-              hour: hour,
-              minute: minute,
-              second: second,
+              year: taken.getFullYear(),
+              month: taken.getMonth() + 1,
+              day: taken.getDate(),
+              hour: taken.getHours(),
+              minute: taken.getMinutes(),
+              second: taken.getSeconds(),
             },
             author: toString(row.author),
             location: {
@@ -190,8 +314,8 @@ export default () => {
           },
         };
       },
-      mapInsert: (photo: Row) => {
-        const map = SCHEMA.photo.mapToRow(photo);
+      mapInsert: (photo: PhotoInput): unknown[] => {
+        const map = photoMapToRow(photo);
         return [
           photo.id,
           map.title,
@@ -228,7 +352,8 @@ export default () => {
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.photo),
       buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.photo),
-      buildUpdateByIdQuery: (data: Row) => buildUpdateByIdQuery(SCHEMA.photo, data),
+      buildUpdateByIdQuery: (data: PhotoInput) =>
+        buildUpdateByIdQuery(SCHEMA.photo, data),
       buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.photo),
 
       buildSelectQuery: (conditions?: Conditions) =>
@@ -239,40 +364,126 @@ export default () => {
   };
 };
 
+// Per-table mapToRow: app-shape (possibly partial) → flat DB-column subset.
+const metaMapToRow = (
+  meta: Partial<MetaRow>
+): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  if ("key" in meta && meta.key !== undefined && "value" in meta) {
+    result[meta.key] = meta.value;
+  }
+  return result;
+};
+const userMapToRow = (user: Partial<User>): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  if ("password" in user) result.password = user.password;
+  if ("secret" in user) result.secret = user.secret;
+  return result;
+};
+const aclMapToRow = (acl: Partial<AclRow>): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  if ("level" in acl) result.level = acl.level;
+  return result;
+};
+const galleryMapToRow = (
+  gallery: GalleryInput
+): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  if ("title" in gallery) result.title = gallery.title;
+  if ("description" in gallery) result.description = gallery.description;
+  if ("icon" in gallery) result.icon = gallery.icon;
+  if ("epoch" in gallery) result.epoch = gallery.epoch;
+  if ("epochType" in gallery) result.epoch_type = gallery.epochType;
+  if ("theme" in gallery) result.theme = gallery.theme;
+  if ("initialView" in gallery) result.initial_view = gallery.initialView;
+  if ("hostname" in gallery) result.hostname = gallery.hostname;
+  return result;
+};
+const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  if ("title" in photo) result.title = photo.title;
+  if ("description" in photo) result.description = photo.description;
+  if (photo.taken) {
+    const taken = photo.taken;
+    if ("author" in taken) result.author = taken.author;
+    if (taken.instant) {
+      const instant = taken.instant;
+      if ("timestamp" in instant) result.taken = instant.timestamp;
+    }
+    if (taken.location) {
+      const location = taken.location;
+      if ("country" in location) result.country_code = location.country;
+      if ("place" in location) result.place = location.place;
+      if (location.coordinates) {
+        const coordinates = location.coordinates;
+        if ("latitude" in coordinates) result.coord_lat = coordinates.latitude;
+        if ("longitude" in coordinates) result.coord_lon = coordinates.longitude;
+        if ("altitude" in coordinates) result.coord_alt = coordinates.altitude;
+      }
+    }
+  }
+  if (photo.camera) {
+    const camera = photo.camera;
+    if ("make" in camera) result.camera_make = camera.make;
+    if ("model" in camera) result.camera_model = camera.model;
+    if ("serial" in camera) result.camera_serial = camera.serial;
+  }
+  if (photo.lens) {
+    const lens = photo.lens;
+    if ("make" in lens) result.lens_make = lens.make;
+    if ("model" in lens) result.lens_model = lens.model;
+    if ("serial" in lens) result.lens_serial = lens.serial;
+  }
+  if (photo.exposure) {
+    const exposure = photo.exposure;
+    if ("focalLength" in exposure) result.focal = exposure.focalLength;
+    if ("aperture" in exposure) result.fstop = exposure.aperture;
+    if ("exposureTime" in exposure)
+      result.exposure_time = exposure.exposureTime;
+    if ("iso" in exposure) result.iso = exposure.iso;
+  }
+  if (photo.dimensions) {
+    const dimensions = photo.dimensions;
+    if (dimensions.original) {
+      const original = dimensions.original;
+      if ("width" in original) result.orig_width = original.width;
+      if ("height" in original) result.orig_height = original.height;
+    }
+    if (dimensions.display) {
+      const display = dimensions.display;
+      if ("width" in display) result.disp_width = display.width;
+      if ("height" in display) result.disp_height = display.height;
+    }
+    if (dimensions.thumbnail) {
+      const thumbnail = dimensions.thumbnail;
+      if ("width" in thumbnail) result.thumb_width = thumbnail.width;
+      if ("height" in thumbnail) result.thumb_height = thumbnail.height;
+    }
+  }
+  return result;
+};
+
 const SCHEMA = {
   meta: {
     table: "meta",
     columns: ["key", "value"],
     primaryKey: ["key"],
     order: ["key ASC"],
-    mapToRow: (meta: Row) => {
-      const result: Row = {};
-      if ("key" in meta) result[meta.key] = meta.value;
-      return result;
-    },
+    mapToRow: metaMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
   user: {
     table: "user",
     columns: ["id", "password", "secret"],
     primaryKey: ["id"],
     order: ["id ASC"],
-    mapToRow: (user: Row) => {
-      const result: Row = {};
-      if ("password" in user) result.password = user.password;
-      if ("secret" in user) result.secret = user.secret;
-      return result;
-    },
+    mapToRow: userMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
   acl: {
     table: "acl",
     columns: ["user_id", "gallery_id", "level"],
     primaryKey: ["user_id", "gallery_id"],
     order: ["user_id ASC", "gallery_id ASC"],
-    mapToRow: (acl: Row) => {
-      const result: Row = {};
-      if ("level" in acl) result.level = acl.level;
-      return result;
-    },
+    mapToRow: aclMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
   gallery: {
     table: "gallery",
@@ -289,27 +500,14 @@ const SCHEMA = {
     ],
     primaryKey: ["id"],
     order: ["id ASC"],
-    mapToRow: (gallery: Row) => {
-      const result: Row = {};
-      if ("title" in gallery) result.title = gallery.title;
-      if ("description" in gallery) result.description = gallery.description;
-      if ("icon" in gallery) result.icon = gallery.icon;
-      if ("epoch" in gallery) result.epoch = gallery.epoch;
-      if ("epochType" in gallery) result.epoch_type = gallery.epochType;
-      if ("theme" in gallery) result.theme = gallery.theme;
-      if ("initialView" in gallery) result.initial_view = gallery.initialView;
-      if ("hostname" in gallery) result.hostname = gallery.hostname;
-      return result;
-    },
+    mapToRow: galleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
   galleryPhoto: {
     table: "gallery_photo",
     columns: ["gallery_id", "photo_id"],
     primaryKey: ["gallery_id", "photo_id"],
     order: ["gallery_id ASC", "photo_id ASC"],
-    mapToRow: () => {
-      return {};
-    },
+    mapToRow: (): Record<string, unknown> => ({}),
   },
   photo: {
     table: "photo",
@@ -347,77 +545,10 @@ const SCHEMA = {
     ],
     primaryKey: ["id"],
     order: ["taken ASC", "id ASC"],
-    mapToRow: (photo: Row) => {
-      const result: Row = {};
-      if ("title" in photo) result.title = photo.title;
-      if ("description" in photo) result.description = photo.description;
-      if (isSubTree(photo, "taken")) {
-        const taken = photo.taken;
-        if ("author" in taken) result.author = taken.author;
-        if (isSubTree(taken, "instant")) {
-          const instant = taken.instant;
-          if ("timestamp" in instant) result.taken = instant.timestamp;
-        }
-        if (isSubTree(taken, "location")) {
-          const location = taken.location;
-          if ("country" in location) result.country_code = location.country;
-          if ("place" in location) result.place = location.place;
-          if (isSubTree(location, "coordinates")) {
-            const coordinates = location.coordinates;
-            if ("latitude" in coordinates)
-              result.coord_lat = coordinates.latitude;
-            if ("longitude" in coordinates)
-              result.coord_lon = coordinates.longitude;
-            if ("altitude" in coordinates)
-              result.coord_alt = coordinates.altitude;
-          }
-        }
-      }
-      if (isSubTree(photo, "camera")) {
-        const camera = photo.camera;
-        if ("make" in camera) result.camera_make = camera.make;
-        if ("model" in camera) result.camera_model = camera.model;
-        if ("serial" in camera) result.camera_serial = camera.serial;
-      }
-      if (isSubTree(photo, "lens")) {
-        const lens = photo.lens;
-        if ("make" in lens) result.lens_make = lens.make;
-        if ("model" in lens) result.lens_model = lens.model;
-        if ("serial" in lens) result.lens_serial = lens.serial;
-      }
-      if (isSubTree(photo, "exposure")) {
-        const exposure = photo.exposure;
-        if ("focalLength" in exposure) result.focal = exposure.focalLength;
-        if ("aperture" in exposure) result.fstop = exposure.aperture;
-        if ("exposureTime" in exposure)
-          result.exposure_time = exposure.exposureTime;
-        if ("iso" in exposure) result.iso = exposure.iso;
-      }
-      if (isSubTree(photo, "dimensions")) {
-        const dimensions = photo.dimensions;
-        if (isSubTree(dimensions, "original")) {
-          const original = dimensions.original;
-          if ("width" in original) result.orig_width = original.width;
-          if ("height" in original) result.orig_height = original.height;
-        }
-        if (isSubTree(dimensions, "display")) {
-          const display = dimensions.display;
-          if ("width" in display) result.disp_width = display.width;
-          if ("height" in display) result.disp_height = display.height;
-        }
-        if (isSubTree(dimensions, "thumbnail")) {
-          const thumbnail = dimensions.thumbnail;
-          if ("width" in thumbnail) result.thumb_width = thumbnail.width;
-          if ("height" in thumbnail) result.thumb_height = thumbnail.height;
-        }
-      }
-      return result;
-    },
+    mapToRow: photoMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
-};
+} satisfies Record<string, TableSchema>;
 
-const isSubTree = (obj: Row, key: string) =>
-  key in obj && typeof obj[key] === "object";
 const toString = (str: unknown): string => {
   if (str === null || str === undefined) {
     return "";
@@ -429,14 +560,6 @@ const toNumber = (num: unknown): number | undefined => {
     return undefined;
   }
   return Number(num);
-};
-
-type TableSchema = {
-  table: string;
-  columns: string[];
-  primaryKey: string[];
-  order: string[];
-  mapToRow?: (data: Row) => Row;
 };
 
 const buildSelectQuery = (schema: TableSchema, conditions?: Conditions) => {
@@ -463,15 +586,19 @@ const buildSelectByIdQuery = (schema: TableSchema) => {
     ` ORDER BY ${schema.order}`
   );
 };
-const buildUpdateByIdQuery = (schema: TableSchema, data: Row) => {
+const buildUpdateByIdQuery = (
+  schema: TableSchema,
+  data: Record<string, unknown>
+) => {
   if (!data) {
     return { query: undefined, values: undefined };
   }
-  schema.primaryKey.forEach((key) => delete data[key]);
-  if (Object.keys(data).length === 0) {
+  const cleaned: Record<string, unknown> = { ...data };
+  schema.primaryKey.forEach((key) => delete cleaned[key]);
+  if (Object.keys(cleaned).length === 0) {
     return { query: undefined, values: undefined };
   }
-  const columnData = schema.mapToRow ? schema.mapToRow(data) : data;
+  const columnData = schema.mapToRow ? schema.mapToRow(cleaned) : cleaned;
   const columns = schema.columns.filter((column) => column in columnData);
   const cleanData = Object.fromEntries(
     columns.map((column) => [column, columnData[column]])

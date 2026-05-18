@@ -1,13 +1,21 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Database from "better-sqlite3";
 
 import CONST from "../../lib/constants.js";
 import config from "../../lib/config/index.js";
 import logger from "../../lib/logger.js";
 
-import schemaFactory from "./schema.js";
-
-type Row = Record<string, any>;
+import schemaFactory, {
+  type AclRow,
+  type Gallery,
+  type GalleryInput,
+  type GalleryPhoto,
+  type GalleryRow,
+  type MetaRow,
+  type PhotoInput,
+  type PhotoRow,
+  type User,
+  type UserRow,
+} from "./schema.js";
 
 const SCHEMA = schemaFactory();
 
@@ -54,68 +62,92 @@ if (!config.DB_OPTS) {
 const db = new Database(config.DB_OPTS);
 logger.debug("Connected to DB");
 
-type SchemaEntry = ReturnType<typeof schemaFactory>[keyof ReturnType<typeof schemaFactory>];
-
-const loadAll = (schema: SchemaEntry) => {
-  return (db.prepare(schema.buildSelectQuery()).all() as Row[]).map(
-    schema.mapRow as (row: Row) => Row
-  );
-};
-const create = (schema: SchemaEntry, data: Row) => {
-  db.prepare(schema.buildCreateQuery()).run(schema.mapInsert(data) as never[]);
-};
-const loadById = (schema: SchemaEntry, id: string) => {
-  const row = db.prepare(schema.buildSelectByIdQuery()).get(id) as
-    | Row
-    | undefined;
-  if (!row) {
-    throw CONST.ERROR_NOT_FOUND;
-  }
-  return (schema.mapRow as (row: Row) => Row)(row);
-};
-const updateById = (schema: SchemaEntry, id: string, data: Row) => {
-  const { query, values } = schema.buildUpdateByIdQuery(data);
-  if (!query || !values) {
-    return;
-  }
-  db.prepare(query).run([...values, id]);
-};
-const deleteById = (schema: SchemaEntry, id: string) => {
+const deleteById = (
+  schema: { buildDeleteByIdQuery: () => string },
+  id: string
+) => {
   db.prepare(schema.buildDeleteByIdQuery()).run([id]);
 };
 
-const loadMetas = async () => loadAll(SCHEMA.meta);
-const createMeta = async (meta: Row) => create(SCHEMA.meta, meta);
-const loadMeta = async (key: string) => loadById(SCHEMA.meta, key);
-const updateMeta = async (key: string, meta: Row) =>
-  updateById(SCHEMA.meta, key, meta);
+const loadMetas = async () => {
+  const rows = db.prepare(SCHEMA.meta.buildSelectQuery()).all() as MetaRow[];
+  return rows.map(SCHEMA.meta.mapRow);
+};
+const createMeta = async (meta: { key: string; value: string }) => {
+  db.prepare(SCHEMA.meta.buildCreateQuery()).run(SCHEMA.meta.mapInsert(meta));
+};
+const loadMeta = async (key: string) => {
+  const row = db.prepare(SCHEMA.meta.buildSelectByIdQuery()).get(key) as
+    | MetaRow
+    | undefined;
+  if (!row) throw CONST.ERROR_NOT_FOUND;
+  return SCHEMA.meta.mapRow(row);
+};
+const updateMeta = async (key: string, meta: Partial<MetaRow>) => {
+  const { query, values } = SCHEMA.meta.buildUpdateByIdQuery(meta);
+  if (!query || !values) return;
+  db.prepare(query).run([...values, key]);
+};
 const deleteMeta = async (key: string) => deleteById(SCHEMA.meta, key);
 
-const loadUsers = async () => loadAll(SCHEMA.user);
-const createUser = async (user: Row) => create(SCHEMA.user, user);
-const loadUser = async (userId: string) => loadById(SCHEMA.user, userId);
-const updateUser = async (userId: string, user: Row) =>
-  updateById(SCHEMA.user, userId, user);
+const loadUsers = async () => {
+  const rows = db.prepare(SCHEMA.user.buildSelectQuery()).all() as UserRow[];
+  return rows.map(SCHEMA.user.mapRow);
+};
+const createUser = async (user: User) => {
+  db.prepare(SCHEMA.user.buildCreateQuery()).run(SCHEMA.user.mapInsert(user));
+};
+const loadUser = async (userId: string) => {
+  const row = db.prepare(SCHEMA.user.buildSelectByIdQuery()).get(userId) as
+    | UserRow
+    | undefined;
+  if (!row) throw CONST.ERROR_NOT_FOUND;
+  return SCHEMA.user.mapRow(row);
+};
+const updateUser = async (userId: string, user: Partial<User>) => {
+  const { query, values } = SCHEMA.user.buildUpdateByIdQuery(user);
+  if (!query || !values) return;
+  db.prepare(query).run([...values, userId]);
+};
 const deleteUser = async (userId: string) => deleteById(SCHEMA.user, userId);
 
-const loadUserAccessControl = async (userId: string) => {
+const loadUserAccessControl = async (
+  userId: string
+): Promise<Record<string, number>> => {
   const schema = SCHEMA.acl;
   // TODO: cache in memory
   const stmt = db.prepare(schema.buildSelectQuery(["user_id IN (?)"]));
-  const userRows = stmt.all([userId]) as Row[];
-  const guestRows = stmt.all([":guest"]) as Row[];
+  const userRows = stmt.all([userId]) as AclRow[];
+  const guestRows = stmt.all([":guest"]) as AclRow[];
   return {
-    ...Object.fromEntries(guestRows.map((row) => schema.mapRow(row))),
-    ...Object.fromEntries(userRows.map((row) => schema.mapRow(row))),
+    ...Object.fromEntries(guestRows.map(schema.mapRow)),
+    ...Object.fromEntries(userRows.map(schema.mapRow)),
   };
 };
 
-const loadGalleries = async () => loadAll(SCHEMA.gallery);
-const createGallery = async (gallery: Row) => create(SCHEMA.gallery, gallery);
-const loadGallery = async (galleryId: string) =>
-  loadById(SCHEMA.gallery, galleryId);
-const updateGallery = async (galleryId: string, gallery: Row) =>
-  updateById(SCHEMA.gallery, galleryId, gallery);
+const loadGalleries = async () => {
+  const rows = db
+    .prepare(SCHEMA.gallery.buildSelectQuery())
+    .all() as GalleryRow[];
+  return rows.map(SCHEMA.gallery.mapRow);
+};
+const createGallery = async (gallery: Gallery) => {
+  db.prepare(SCHEMA.gallery.buildCreateQuery()).run(
+    SCHEMA.gallery.mapInsert(gallery)
+  );
+};
+const loadGallery = async (galleryId: string) => {
+  const row = db
+    .prepare(SCHEMA.gallery.buildSelectByIdQuery())
+    .get(galleryId) as GalleryRow | undefined;
+  if (!row) throw CONST.ERROR_NOT_FOUND;
+  return SCHEMA.gallery.mapRow(row);
+};
+const updateGallery = async (galleryId: string, gallery: GalleryInput) => {
+  const { query, values } = SCHEMA.gallery.buildUpdateByIdQuery(gallery);
+  if (!query || !values) return;
+  db.prepare(query).run([...values, galleryId]);
+};
 const deleteGallery = async (galleryId: string) =>
   deleteById(SCHEMA.gallery, galleryId);
 
@@ -143,15 +175,19 @@ const loadGalleryPhotos = async (galleryId: string) => {
   const stmt = db.prepare(getQuery());
   const rows = (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)
     ? stmt.all()
-    : stmt.all(galleryId)) as Row[];
+    : stmt.all(galleryId)) as PhotoRow[];
   return rows.map((row, index) => schema.mapRow(row, index));
 };
-const linkGalleryPhoto = async (galleryIds: string[], photoIds: string[]) => {
+const linkGalleryPhoto = async (
+  galleryIds: string[],
+  photoIds: string[]
+) => {
   const stmt = db.prepare(SCHEMA.galleryPhoto.buildCreateQuery());
   const insertAll = db.transaction(() => {
     photoIds.forEach((photoId) => {
       galleryIds.forEach((galleryId) => {
-        stmt.run(SCHEMA.galleryPhoto.mapInsert({ galleryId, photoId }));
+        const link: GalleryPhoto = { galleryId, photoId };
+        stmt.run(SCHEMA.galleryPhoto.mapInsert(link));
       });
     });
   });
@@ -186,19 +222,22 @@ const loadGalleryPhoto = async (galleryId: string, photoId: string) => {
   const stmt = db.prepare(getQuery());
   const rows = (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)
     ? stmt.all(photoId)
-    : stmt.all(galleryId, photoId)) as Row[];
+    : stmt.all(galleryId, photoId)) as PhotoRow[];
   if (rows.length === 0) {
     throw CONST.ERROR_NOT_FOUND;
   }
   return schema.mapRow(rows[0], 0);
 };
 const unlinkGalleryPhoto = async (galleryId: string, photoId: string) => {
-  db.prepare(SCHEMA.galleryPhoto.buildDeleteByIdQuery()).run([galleryId, photoId]);
+  db.prepare(SCHEMA.galleryPhoto.buildDeleteByIdQuery()).run([
+    galleryId,
+    photoId,
+  ]);
 };
 const unlinkAllPhotos = async (galleryId: string) => {
-  db.prepare(SCHEMA.galleryPhoto.buildDeleteQuery(["gallery_id = ?"])).run([
-    galleryId,
-  ]);
+  db.prepare(
+    SCHEMA.galleryPhoto.buildDeleteQuery(["gallery_id = ?"])
+  ).run([galleryId]);
 };
 const unlinkAllGalleries = async (photoId: string) => {
   db.prepare(SCHEMA.galleryPhoto.buildDeleteQuery(["photo_id = ?"])).run([
@@ -206,9 +245,26 @@ const unlinkAllGalleries = async (photoId: string) => {
   ]);
 };
 
-const loadPhotos = async () => loadAll(SCHEMA.photo);
-const createPhoto = async (photo: Row) => create(SCHEMA.photo, photo);
-const loadPhoto = async (photoId: string) => loadById(SCHEMA.photo, photoId);
-const updatePhoto = async (photoId: string, photo: Row) =>
-  updateById(SCHEMA.photo, photoId, photo);
-const deletePhoto = async (photoId: string) => deleteById(SCHEMA.photo, photoId);
+const loadPhotos = async () => {
+  const rows = db.prepare(SCHEMA.photo.buildSelectQuery()).all() as PhotoRow[];
+  return rows.map((row, index) => SCHEMA.photo.mapRow(row, index));
+};
+const createPhoto = async (photo: PhotoInput) => {
+  db.prepare(SCHEMA.photo.buildCreateQuery()).run(
+    SCHEMA.photo.mapInsert(photo)
+  );
+};
+const loadPhoto = async (photoId: string) => {
+  const row = db.prepare(SCHEMA.photo.buildSelectByIdQuery()).get(photoId) as
+    | PhotoRow
+    | undefined;
+  if (!row) throw CONST.ERROR_NOT_FOUND;
+  return SCHEMA.photo.mapRow(row, 0);
+};
+const updatePhoto = async (photoId: string, photo: PhotoInput) => {
+  const { query, values } = SCHEMA.photo.buildUpdateByIdQuery(photo);
+  if (!query || !values) return;
+  db.prepare(query).run([...values, photoId]);
+};
+const deletePhoto = async (photoId: string) =>
+  deleteById(SCHEMA.photo, photoId);
