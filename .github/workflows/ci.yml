@@ -13,6 +13,10 @@ jobs:
     defaults:
       run:
         working-directory: server
+    env:
+      # Required by lib/config/index.js at module load. Value doesn't
+      # matter for tests (DB_DRIVER=dummy), it just has to exist.
+      SECRET: ci-test-secret
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
