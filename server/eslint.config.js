@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 import globals from "globals";
 
 export default [
@@ -6,6 +7,7 @@ export default [
     ignores: ["build/", "node_modules/"],
   },
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     languageOptions: {
       ecmaVersion: 2022,
@@ -16,7 +18,8 @@ export default [
       },
     },
     rules: {
-      "no-unused-vars": [
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
         "error",
         { caughtErrors: "none", argsIgnorePattern: "^_" },
       ],
@@ -32,13 +35,13 @@ export default [
     },
   },
   {
-    files: ["**/logger.js"],
+    files: ["**/logger.{js,ts}"],
     rules: {
       "no-console": "off",
     },
   },
   {
-    files: ["tests/**/*.js"],
+    files: ["tests/**/*.{js,ts}"],
     languageOptions: {
       globals: {
         ...globals.vitest,

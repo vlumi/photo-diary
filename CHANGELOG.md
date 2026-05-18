@@ -15,6 +15,7 @@
 - Add GitHub Actions CI for server, converter, and react-app
 - Migrate server to ESM (vitest replaces jest, drops cross-env and nodemon)
 - Swap sqlite3 for better-sqlite3 (sync API, simpler driver code)
+- Migrate server to TypeScript (strict mode, tsx runtime)
 
 ## [0.5.1] - 2022-05-02
 
