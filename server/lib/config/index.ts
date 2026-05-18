@@ -1,5 +1,6 @@
 /* istanbul ignore file */
-import "dotenv/config";
+import { config as dotenvConfig } from "dotenv";
+dotenvConfig({ quiet: true });
 
 import CONST from "../constants.js";
 import devConfig from "./dev-config.js";
