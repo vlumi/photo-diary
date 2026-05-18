@@ -1,14 +1,13 @@
 import path from "node:path";
 import exifr from "exifr";
-import moment from "moment";
 
 import * as logger from "../lib/logger.js";
 import { GeoCoord } from "geo-coord";
 
 type ExifData = Record<string, unknown> & {
-  DateTimeOriginal?: string;
-  CreateDate?: string;
-  ModifyDate?: string;
+  DateTimeOriginal?: Date | string;
+  CreateDate?: Date | string;
+  ModifyDate?: Date | string;
   Artist?: string;
   Make?: string;
   Model?: string;
@@ -75,16 +74,43 @@ export default async (
     }
   };
 
-  const parseTimestamp = (timestampString: string | undefined) => {
-    const timestamp = moment(timestampString, "YYYY:MM:DD HH:mm:ss");
+  // EXIF DateTime is "YYYY:MM:DD HH:mm:ss", but exifr parses it into a
+  // Date object by default.
+  const parseTimestamp = (input: Date | string | undefined) => {
+    const invalid = {
+      timestamp: "Invalid date",
+      year: null,
+      month: null,
+      day: null,
+      hour: null,
+      minute: null,
+      second: null,
+    };
+    const date =
+      input instanceof Date
+        ? input
+        : typeof input === "string" &&
+            /^\d{4}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}$/.test(input)
+          ? new Date(input.replace(":", "-").replace(":", "-"))
+          : undefined;
+    if (!date || Number.isNaN(date.getTime())) {
+      return invalid;
+    }
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const y = date.getFullYear();
+    const mo = date.getMonth() + 1;
+    const d = date.getDate();
+    const h = date.getHours();
+    const mi = date.getMinutes();
+    const se = date.getSeconds();
     return {
-      timestamp: timestamp.format("YYYY-MM-DD HH:mm:ss"),
-      year: timestamp.year(),
-      month: timestamp.month() + 1,
-      day: timestamp.date(),
-      hour: timestamp.hour(),
-      minute: timestamp.minute(),
-      second: timestamp.second(),
+      timestamp: `${y}-${pad(mo)}-${pad(d)} ${pad(h)}:${pad(mi)}:${pad(se)}`,
+      year: y,
+      month: mo,
+      day: d,
+      hour: h,
+      minute: mi,
+      second: se,
     };
   };
 
