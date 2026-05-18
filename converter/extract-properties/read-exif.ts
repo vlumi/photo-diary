@@ -128,6 +128,6 @@ export default async (
     dimensions: {},
   });
 
-  const exifData = (await exifr.parse(filePath)) as ExifData;
+  const exifData = ((await exifr.parse(filePath)) ?? {}) as ExifData;
   return parseExif(exifData);
 };
