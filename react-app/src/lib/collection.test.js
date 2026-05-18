@@ -196,13 +196,13 @@ describe("truncateAndProcess()", () => {
   let mockProcessor;
   let summarizer;
   beforeEach(() => {
-    mockProcessor = jest.fn((x) => {
+    mockProcessor = vi.fn((x) => {
       if (!x) {
         return 0;
       }
       return x.length;
     });
-    summarizer = jest.fn((data) => {
+    summarizer = vi.fn((data) => {
       return {
         key: "other",
         value: data.map((_) => _.value).reduce((a, b) => a + b, 0),

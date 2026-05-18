@@ -32,8 +32,8 @@ const Login = ({ setUser }) => {
 
   const login = async (userId, password) => {
     try {
-      const response = await tokenService.login(userId, password);
-      const rawToken = response.data.token;
+      const data = await tokenService.login(userId, password);
+      const rawToken = data.token;
       // TODO: sign/verify
       const userData = JSON.parse(new TextDecoder().decode(jose.base64url.decode(rawToken.split(".")[1])));
       const user = UserModel(userData, rawToken);

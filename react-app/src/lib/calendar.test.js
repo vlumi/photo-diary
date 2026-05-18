@@ -1,8 +1,7 @@
 import calendar from "./calendar";
 
-require("./config");
-jest.mock("./config", () => ({
-  FIRST_WEEKDAY: 1,
+vi.mock("./config", () => ({
+  default: { FIRST_WEEKDAY: 1 },
 }));
 
 describe("daysInMonth()", () => {

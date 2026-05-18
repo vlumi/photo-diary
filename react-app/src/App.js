@@ -6,8 +6,13 @@ import {
   Redirect,
 } from "react-router-dom";
 import styled from "styled-components";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
+
+import countryData from "i18n-iso-countries";
+import countryEn from "i18n-iso-countries/langs/en.json";
+import countryFi from "i18n-iso-countries/langs/fi.json";
+import countryJa from "i18n-iso-countries/langs/ja.json";
 
 import "./App.css";
 
@@ -21,6 +26,8 @@ import config from "./lib/config";
 import scroll from "./lib/scroll";
 import token from "./lib/token";
 
+const countryLocales = { en: countryEn, fi: countryFi, ja: countryJa };
+
 const Footer = styled.div`
   width: 100%;
   text-align: right;
@@ -31,15 +38,7 @@ const Footer = styled.div`
 `;
 
 const registerCountryData = (lang) => {
-  const countryData = require("i18n-iso-countries");
-  try {
-    countryData.registerLocale(
-      require("i18n-iso-countries/langs/" + lang + ".json")
-    );
-  } catch (err) {
-    // Fall back to English
-    countryData.registerLocale(require("i18n-iso-countries/langs/en.json"));
-  }
+  countryData.registerLocale(countryLocales[lang] ?? countryLocales.en);
   return countryData;
 };
 

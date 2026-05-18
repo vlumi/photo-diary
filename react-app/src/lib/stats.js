@@ -1,9 +1,22 @@
 import React from "react";
 
 import { create, all } from "mathjs";
-import DateDiff from "date-diff";
 
 import FlagIcon from "../components/FlagIcon";
+
+// Small inline replacement for date-diff (unmaintained). Uses the same
+// 365.25-day-year, 30.4375-day-month conventions that date-diff used.
+const MS_PER_DAY = 86400000;
+const MS_PER_YEAR = MS_PER_DAY * 365.25;
+const MS_PER_MONTH = MS_PER_YEAR / 12;
+const dateDiff = (a, b) => {
+  const ms = a - b;
+  return {
+    years: () => ms / MS_PER_YEAR,
+    months: () => ms / MS_PER_MONTH,
+    days: () => ms / MS_PER_DAY,
+  };
+};
 
 import format from "./format";
 import collection from "./collection";
@@ -202,7 +215,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     const getTimeDiff = (count) => {
       if (count.byTime.days < 1) {
         const now = new Date();
-        return new DateDiff(now, now);
+        return dateDiff(now, now);
       }
       const minDate = new Date(
         count.byTime.minDate.year,
@@ -214,7 +227,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         count.byTime.maxDate.month - 1,
         count.byTime.maxDate.day + 1 // Offset by one to make the difference inclusive
       );
-      return new DateDiff(maxDate, minDate);
+      return dateDiff(maxDate, minDate);
     };
     const diff = getTimeDiff(count);
     return {
@@ -225,8 +238,8 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         average: formatNumber.twoDecimal(
           count.total / (count.byTime.days || 1)
         ),
-        years: formatNumber.default(diff.years()),
-        months: formatNumber.default(diff.months()),
+        years: formatNumber.oneDecimal(diff.years()),
+        months: formatNumber.oneDecimal(diff.months()),
         days: formatNumber.default(diff.days()),
       }),
     };

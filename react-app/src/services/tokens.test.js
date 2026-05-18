@@ -1,22 +1,34 @@
-import axios from "axios";
+import { vi, beforeEach, test, expect } from "vitest";
 
 import tokens from "./tokens";
 
-jest.mock("axios");
+const mockFetch = (body = "") =>
+  vi.fn().mockResolvedValue({
+    ok: true,
+    text: async () => (body === "" ? "" : JSON.stringify(body)),
+  });
 
-test("login()", () => {
-  tokens.login("user", "password").then((data) => expect(data).toBeUndefined());
-  expect(axios.post.mock.calls[0][0]).toBe("/api/v1/tokens");
-  expect(axios.post.mock.calls[0][1]).toStrictEqual({
+beforeEach(() => {
+  vi.restoreAllMocks();
+});
+
+test("login()", async () => {
+  global.fetch = mockFetch({});
+
+  await tokens.login("user", "password");
+  expect(global.fetch.mock.calls[0][0]).toBe("/api/v1/tokens");
+  const init = global.fetch.mock.calls[0][1];
+  expect(init.method).toBe("POST");
+  expect(JSON.parse(init.body)).toStrictEqual({
     id: "user",
     password: "password",
   });
 });
 
-test("logout()", () => {
-  axios.delete.mockResolvedValue({ data: {} });
+test("logout()", async () => {
+  global.fetch = mockFetch();
 
-  tokens.logout().then((data) => expect(data).toStrictEqual({}));
-  expect(axios.delete.mock.calls[0][0]).toBe("/api/v1/tokens");
-  expect(axios.delete.mock.calls[0][1]).toStrictEqual({});
+  await expect(tokens.logout()).resolves.toStrictEqual({});
+  expect(global.fetch.mock.calls[0][0]).toBe("/api/v1/tokens");
+  expect(global.fetch.mock.calls[0][1].method).toBe("DELETE");
 });
