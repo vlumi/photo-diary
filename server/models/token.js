@@ -1,5 +1,7 @@
-const jwt = require("jsonwebtoken");
+const { SignJWT, jwtVerify, decodeJwt } = require("jose");
 const bcrypt = require("bcrypt");
+
+const encodeSecret = (secret) => new TextEncoder().encode(secret);
 
 const CONST = require("../lib/constants");
 const config = require("../lib/config");
@@ -53,7 +55,10 @@ const checkUserPassword = async (credentials, user) => {
 const createToken = async (id, isAdmin) => {
   const tokenContent = { id, isAdmin };
   // TODO: expiration
-  return await jwt.sign(tokenContent, getSecret(id));
+  return await new SignJWT(tokenContent)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .sign(encodeSecret(getSecret(id)));
 };
 const authenticateUser = async (credentials) => {
   logger.debug("Authenticating user", credentials);
@@ -67,12 +72,12 @@ const authenticateUser = async (credentials) => {
   }
 };
 const verifyToken = async (token) => {
-  const decoded = jwt.decode(token);
+  const decoded = decodeJwt(token);
   logger.debug("Verifying token", token, secrets[decoded.id]);
 
-  const user = jwt.verify(token, getSecret(decoded.id));
-  if (!user || user.id !== decoded.id) {
+  const { payload } = await jwtVerify(token, encodeSecret(getSecret(decoded.id)));
+  if (!payload || payload.id !== decoded.id) {
     throw CONST.ERROR_LOGIN;
   }
-  return user;
+  return payload;
 };
