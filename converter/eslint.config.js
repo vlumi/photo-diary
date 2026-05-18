@@ -1,24 +1,24 @@
-const js = require("@eslint/js");
-const globals = require("globals");
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
+import globals from "globals";
 
-module.exports = [
+export default [
   {
     ignores: ["node_modules/"],
   },
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     languageOptions: {
-      ecmaVersion: 2020,
-      sourceType: "commonjs",
+      ecmaVersion: 2022,
+      sourceType: "module",
       globals: {
         ...globals.node,
-        ...globals.browser,
-        ...globals.commonjs,
-        ...globals.jest,
       },
     },
     rules: {
-      "no-unused-vars": [
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
         "error",
         { caughtErrors: "none", argsIgnorePattern: "^_" },
       ],
