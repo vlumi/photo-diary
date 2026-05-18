@@ -1,5 +1,4 @@
-import { config as dotenvConfig } from "dotenv";
-dotenvConfig({ quiet: true });
+import "dotenv/config";
 import http from "node:http";
 
 import { app, init } from "./app.js";

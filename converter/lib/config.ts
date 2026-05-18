@@ -1,5 +1,4 @@
-import { config as dotenvConfig } from "dotenv";
-dotenvConfig({ quiet: true });
+import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 
