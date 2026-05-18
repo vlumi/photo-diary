@@ -111,7 +111,7 @@ describe("countryName()", () => {
     expect(format.countryName("en", countryData)("en")).toBe("en"));
 });
 describe("exposure", () => {
-  const formatExposure = format.exposure("en", (key) => { return key });
+  const formatExposure = format.exposure("en", (key) => { return key; });
   describe("focalLength()", () => {
     test("N/A", () => expect(formatExposure.focalLength("N/A")).toBe("N/A"));
     test("50", () => expect(formatExposure.focalLength(50)).toBe("50"));
