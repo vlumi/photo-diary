@@ -1,6 +1,8 @@
-const { init } = require("../../app");
-const db = require("../../db/dummy")();
-const { createApi } = require("./helper");
+import { init } from "../../app.js";
+import dummyFactory from "../../db/dummy.js";
+import { createApi } from "./helper.js";
+
+const db = dummyFactory();
 
 const { api, close } = createApi();
 

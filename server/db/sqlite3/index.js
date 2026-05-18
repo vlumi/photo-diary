@@ -1,12 +1,15 @@
-const sqlite3 = require("sqlite3").verbose();
+import sqlite3pkg from "sqlite3";
 
-const CONST = require("../../lib/constants");
-const config = require("../../lib/config");
-const logger = require("../../lib/logger");
+import CONST from "../../lib/constants.js";
+import config from "../../lib/config/index.js";
+import logger from "../../lib/logger.js";
 
-const SCHEMA = require("./schema")();
+import schemaFactory from "./schema.js";
 
-module.exports = () => {
+const sqlite3 = sqlite3pkg.verbose();
+const SCHEMA = schemaFactory();
+
+export default () => {
   return {
     loadMetas,
     createMeta,

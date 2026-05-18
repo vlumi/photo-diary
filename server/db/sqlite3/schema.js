@@ -1,6 +1,6 @@
-const CONST = require("../../lib/constants");
+import CONST from "../../lib/constants.js";
 
-module.exports = () => {
+export default () => {
   return {
     meta: {
       mapRow: (row) => {

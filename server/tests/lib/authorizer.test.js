@@ -1,13 +1,19 @@
-const CONST = require("../../lib/constants");
+import CONST from "../../lib/constants.js";
+import authorizerFactory from "../../lib/authorizer.js";
+import db from "../../db/index.js";
+
+vi.mock("../../db/index.js", () => ({
+  default: {
+    loadUserAccessControl: vi.fn(),
+  },
+}));
+
 const {
   authorizeView,
   authorizeAdmin,
   authorizeGalleryView,
   authorizeGalleryAdmin,
-} = require("../../lib/authorizer")();
-
-const db = require("../../db");
-jest.mock("../../db");
+} = authorizerFactory();
 
 const fail = (authorize, user, gallery) => {
   expect.assertions(1);

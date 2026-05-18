@@ -1,4 +1,4 @@
-const { DEBUG } = require("./config");
+import config from "./config/index.js";
 
 const timeStamp = () => {
   const toIsoString = (date) => {
@@ -15,15 +15,12 @@ const timeStamp = () => {
 };
 
 /* istanbul ignore next */
-const debug = (...params) => {
-  if (DEBUG) console.log(`[${timeStamp()}] DEBUG:`, ...params);
+export const debug = (...params) => {
+  if (config.DEBUG) console.log(`[${timeStamp()}] DEBUG:`, ...params);
 };
-const info = (...params) => console.log(`[${timeStamp()}] INFO:`, ...params);
-const error = (...params) =>
+export const info = (...params) =>
+  console.log(`[${timeStamp()}] INFO:`, ...params);
+export const error = (...params) =>
   console.error(`[${timeStamp()}] ERROR:`, ...params);
 
-module.exports = {
-  debug,
-  info,
-  error,
-};
+export default { debug, info, error };

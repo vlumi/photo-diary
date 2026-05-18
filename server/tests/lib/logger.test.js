@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
-const { info, error } = require("../../lib/logger");
+import { info, error } from "../../lib/logger.js";
 
 let mockError, mockLog;
 beforeEach(() => {
-  mockError = jest.fn();
-  mockLog = jest.fn();
+  mockError = vi.fn();
+  mockLog = vi.fn();
   global.console = { error: mockError, log: mockLog };
 });
 

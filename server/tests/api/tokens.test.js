@@ -1,5 +1,5 @@
-const { init } = require("../../app");
-const { createApi, loginUser } = require("./helper");
+import { init } from "../../app.js";
+import { createApi, loginUser } from "./helper.js";
 
 const { api, close } = createApi();
 

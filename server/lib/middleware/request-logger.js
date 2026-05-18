@@ -1,5 +1,5 @@
 /* istanbul ignore file */
-const morgan = require("morgan");
+import morgan from "morgan";
 
 morgan.token("userId", function (request) {
   if ("user" in request && "id" in request.user) {
@@ -9,6 +9,6 @@ morgan.token("userId", function (request) {
   }
 });
 
-module.exports = morgan(
+export default morgan(
   ":method :url :status :res[content-length] - :response-time ms :userId"
 );

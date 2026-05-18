@@ -1,4 +1,4 @@
-const { isLeap } = require("../../lib/date-utils");
+import { isLeap } from "../../lib/date-utils.js";
 
 describe("Invalid year", () => {
   test("isLeap of undefined", () => expect(isLeap(undefined)).toBe(undefined));

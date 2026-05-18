@@ -1,7 +1,10 @@
 /* istanbul ignore file */
-require("dotenv").config();
+import "dotenv/config";
 
-const CONST = require("../constants");
+import CONST from "../constants.js";
+import devConfig from "./dev-config.js";
+import prodConfig from "./prod-config.js";
+import testConfig from "./test-config.js";
 
 const ENV = process.env.NODE_ENV || CONST.DEFAULT_ENV;
 
@@ -12,9 +15,10 @@ if (!SECRET) {
   throw "SECRET must be defined.";
 }
 
-const values = require(`./${ENV}-config`);
+const configs = { dev: devConfig, prod: prodConfig, test: testConfig };
+const values = configs[ENV];
 
-module.exports = {
+export default {
   ENV,
   PHOTO_ROOT_DIR,
   PORT,

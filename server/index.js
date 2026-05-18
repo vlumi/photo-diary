@@ -1,9 +1,9 @@
-require("dotenv").config();
-const http = require("http");
+import "dotenv/config";
+import http from "node:http";
 
-const { app, init } = require("./app");
-const config = require("./lib/config");
-const logger = require("./lib/logger");
+import { app, init } from "./app.js";
+import config from "./lib/config/index.js";
+import logger from "./lib/logger.js";
 
 const server = http.createServer(app);
 
