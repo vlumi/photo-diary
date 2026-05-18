@@ -159,7 +159,7 @@ describe("removeCategory", () => {
 describe("applyNewFilter", () => {
   let mockPhoto;
   beforeEach(() => {
-    mockPhoto = { matches: jest.fn() };
+    mockPhoto = { matches: vi.fn() };
   });
   describe("No previous filters", () => {
     test("Empty category", () => {

@@ -1,8 +1,7 @@
 import format from "./format";
 
-require("./config");
-jest.mock("./config", () => ({
-  FIRST_WEEKDAY: 1,
+vi.mock("./config", () => ({
+  default: { FIRST_WEEKDAY: 1 },
 }));
 
 describe("identity()", () => {
@@ -172,7 +171,7 @@ describe("coordinates()", () => {
 describe("categoryValue()", () => {
   let mockT;
   beforeEach(() => {
-    mockT = jest.fn(() => "Mocked");
+    mockT = vi.fn(() => "Mocked");
   });
   const countryData = {
     getName: (code) => {

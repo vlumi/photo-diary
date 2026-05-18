@@ -50,13 +50,11 @@ jobs:
       - run: npm test
 
   react-app:
-    name: React app (lint + test)
+    name: React app (lint + build + test)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: react-app
-    env:
-      CI: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -66,4 +64,5 @@ jobs:
           cache-dependency-path: react-app/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm run build
       - run: npm test

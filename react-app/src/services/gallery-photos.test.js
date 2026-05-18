@@ -1,25 +1,29 @@
-import axios from "axios";
+import { vi, beforeEach, test, expect } from "vitest";
 
 import galleryPhotos from "./gallery-photos";
 
-jest.mock("axios");
+const mockFetch = (body) =>
+  vi.fn().mockResolvedValue({
+    ok: true,
+    text: async () => JSON.stringify(body),
+  });
 
-test("getAll()", () => {
-  const allGalleries = [{ name: "Dummy" }];
-  axios.get.mockResolvedValue({ data: allGalleries });
-
-  galleryPhotos
-    .getAll()
-    .then((data) => expect(data).toStrictEqual(allGalleries));
-  expect(axios.get.mock.calls[0][0]).toBe("/api/v1/gallery-photos");
+beforeEach(() => {
+  vi.restoreAllMocks();
 });
 
-test("get()", () => {
-  const gallery = [{ name: "Dummy" }];
-  axios.get.mockResolvedValue({ data: gallery });
+test("getAll()", async () => {
+  const allGalleries = [{ name: "Dummy" }];
+  global.fetch = mockFetch(allGalleries);
 
-  galleryPhotos
-    .get("dummy")
-    .then((data) => expect(data).toStrictEqual(gallery));
-  expect(axios.get.mock.calls[0][0]).toBe("/api/v1/gallery-photos/dummy");
+  await expect(galleryPhotos.getAll()).resolves.toStrictEqual(allGalleries);
+  expect(global.fetch.mock.calls[0][0]).toBe("/api/v1/gallery-photos");
+});
+
+test("get()", async () => {
+  const gallery = [{ name: "Dummy" }];
+  global.fetch = mockFetch(gallery);
+
+  await expect(galleryPhotos.get("dummy")).resolves.toStrictEqual(gallery);
+  expect(global.fetch.mock.calls[0][0]).toBe("/api/v1/gallery-photos/dummy");
 });

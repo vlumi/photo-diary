@@ -16,6 +16,7 @@
 - Migrate server to ESM (vitest replaces jest, drops cross-env and nodemon)
 - Swap sqlite3 for better-sqlite3 (sync API, simpler driver code)
 - Migrate server to TypeScript (strict mode, tsx runtime)
+- Replace CRA with Vite + Vitest for the react-app; swap react-helmet for react-helmet-async, axios for native fetch, drop date-diff
 
 ## [0.5.1] - 2022-05-02
 

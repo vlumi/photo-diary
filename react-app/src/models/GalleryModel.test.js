@@ -330,7 +330,7 @@ describe("Without photos", () => {
   describe("Mappers", () => {
     let mock;
     beforeEach(() => {
-      mock = jest.fn();
+      mock = vi.fn();
     });
     describe("mapYears", () => {
       test("empty", () => {
@@ -962,7 +962,7 @@ describe("With photos", () => {
   describe("Mappers", () => {
     let mock;
     beforeEach(() => {
-      mock = jest.fn((year) => [year]);
+      mock = vi.fn((year) => [year]);
     });
     describe("mapYears", () => {
       test("testing", () => {

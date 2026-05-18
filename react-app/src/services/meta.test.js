@@ -1,21 +1,29 @@
-import axios from "axios";
+import { vi, beforeEach, test, expect } from "vitest";
 
 import meta from "./meta";
 
-jest.mock("axios");
+const mockFetch = (body) =>
+  vi.fn().mockResolvedValue({
+    ok: true,
+    text: async () => JSON.stringify(body),
+  });
 
-test("getAll()", () => {
-  const allMeta = { name: "Dummy" };
-  axios.get.mockResolvedValue({ data: allMeta });
-
-  meta.getAll().then((data) => expect(data).toStrictEqual(allMeta));
-  expect(axios.get.mock.calls[0][0]).toBe("/api/v1/meta");
+beforeEach(() => {
+  vi.restoreAllMocks();
 });
 
-test("get()", () => {
-  const data = { name: "Dummy" };
-  axios.get.mockResolvedValue({ data: data });
+test("getAll()", async () => {
+  const allMeta = { name: "Dummy" };
+  global.fetch = mockFetch(allMeta);
 
-  meta.get("dummy").then((data) => expect(data).toStrictEqual(data));
-  expect(axios.get.mock.calls[0][0]).toBe("/api/v1/meta/dummy");
+  await expect(meta.getAll()).resolves.toStrictEqual(allMeta);
+  expect(global.fetch.mock.calls[0][0]).toBe("/api/v1/meta");
+});
+
+test("get()", async () => {
+  const data = { name: "Dummy" };
+  global.fetch = mockFetch(data);
+
+  await expect(meta.get("dummy")).resolves.toStrictEqual(data);
+  expect(global.fetch.mock.calls[0][0]).toBe("/api/v1/meta/dummy");
 });

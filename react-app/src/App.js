@@ -6,7 +6,7 @@ import {
   Redirect,
 } from "react-router-dom";
 import styled from "styled-components";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 
 import "./App.css";

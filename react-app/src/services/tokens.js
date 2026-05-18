@@ -1,16 +1,14 @@
-import axios from "axios";
-
-import token from "../lib/token";
+import api from "../lib/api";
 
 const baseUrl = "/api/v1/tokens";
 
-const login = async (id, password) => {
-  return await axios.post(baseUrl, { id, password });
-};
+const login = async (id, password) =>
+  api(baseUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, password }),
+  });
 
-const logout = async () => {
-  const response = await axios.delete(baseUrl, token.createConfig());
-  return response.data;
-};
+const logout = async () => api(baseUrl, { method: "DELETE" });
 
 export default { login, logout };
