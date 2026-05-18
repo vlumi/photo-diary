@@ -17,6 +17,7 @@
 - Swap sqlite3 for better-sqlite3 (sync API, simpler driver code)
 - Migrate server to TypeScript (strict mode, tsx runtime)
 - Replace CRA with Vite + Vitest for the react-app; swap react-helmet for react-helmet-async, axios for native fetch, drop date-diff
+  - **Breaking (deployment):** frontend env vars in `react-app/.env` (and any per-environment `.env`) renamed from `REACT_APP_*` to `VITE_*`. Update each deployed environment's config: `REACT_APP_PHOTO_ROOT_URL` → `VITE_PHOTO_ROOT_URL`, `REACT_APP_THEME` → `VITE_THEME`, `REACT_APP_DEFAULT_LANGUAGE` → `VITE_DEFAULT_LANGUAGE`, `REACT_APP_DEFAULT_GALLERY` → `VITE_DEFAULT_GALLERY`, `REACT_APP_INITIAL_GALLERY_VIEW` → `VITE_INITIAL_GALLERY_VIEW`, `REACT_APP_FIRST_WEEKDAY` → `VITE_FIRST_WEEKDAY`. Old names are silently ignored at build time.
 
 ## [0.5.1] - 2022-05-02
 
