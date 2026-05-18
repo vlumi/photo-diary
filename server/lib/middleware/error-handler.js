@@ -3,8 +3,7 @@ const HttpStatus = require("http-status-codes");
 const CONST = require("../constants");
 const logger = require("../logger");
 
-// eslint-disable-next-line no-unused-vars
-module.exports = function (error, request, response, next) {
+module.exports = function (error, request, response, _next) {
   logger.debug(error);
   switch (error) {
     case CONST.ERROR_NOT_FOUND:
