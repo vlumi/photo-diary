@@ -9,6 +9,7 @@ const logger = require("../lib/logger");
 const db = require("../db");
 
 const secrets = {};
+let reloadTimer = undefined;
 
 const loadSecrets = async () => {
   logger.debug("Loading secrets");
@@ -26,8 +27,11 @@ const getSecret = (userId) => {
 
 const init = async () => {
   await loadSecrets();
-  // Reload every minute or so
-  setTimeout(async () => await init(), 60000);
+  if (reloadTimer) clearTimeout(reloadTimer);
+  // Reload every minute or so. unref() so the timer doesn't keep the
+  // event loop alive on its own (matters in tests).
+  reloadTimer = setTimeout(async () => await init(), 60000);
+  reloadTimer.unref();
 };
 
 module.exports = () => {

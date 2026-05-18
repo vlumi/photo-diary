@@ -3,6 +3,7 @@ const HttpStatus = require("http-status-codes");
 const CONST = require("../constants");
 const logger = require("../logger");
 
+// eslint-disable-next-line no-unused-vars
 module.exports = function (error, request, response, next) {
   logger.debug(error);
   switch (error) {
@@ -29,5 +30,4 @@ module.exports = function (error, request, response, next) {
       response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error });
       break;
   }
-  next(error);
 };

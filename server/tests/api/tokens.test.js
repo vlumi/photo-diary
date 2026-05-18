@@ -1,12 +1,13 @@
-const supertest = require("supertest");
-const { app, init } = require("../../app");
+const { init } = require("../../app");
+const { createApi, loginUser } = require("./helper");
 
-const api = supertest(app);
-const { loginUser } = require("./helper");
+const { api, close } = createApi();
 
 beforeEach(async () => {
   await init();
 });
+
+afterAll(close);
 
 describe("Login", () => {
   test("Non-existing user", async () => {
