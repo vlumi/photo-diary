@@ -12,8 +12,9 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["**/*.ts", "**/*.js"],
+  "include": ["**/*.ts", "**/*.js", "types/**/*.d.ts"],
   "exclude": ["node_modules", "build", "dist"]
 }

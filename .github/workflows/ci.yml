@@ -8,13 +8,13 @@ on:
 
 jobs:
   server:
-    name: Server (lint + test)
+    name: Server (lint + typecheck + test)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: server
     env:
-      # Required by lib/config/index.js at module load. Value doesn't
+      # Required by lib/config/index.ts at module load. Value doesn't
       # matter for tests (DB_DRIVER=dummy), it just has to exist.
       SECRET: ci-test-secret
     steps:
@@ -26,6 +26,7 @@ jobs:
           cache-dependency-path: server/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm run typecheck
       - run: npm test
 
   converter:
