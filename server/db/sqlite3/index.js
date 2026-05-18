@@ -1,4 +1,4 @@
-import sqlite3pkg from "sqlite3";
+import Database from "better-sqlite3";
 
 import CONST from "../../lib/constants.js";
 import config from "../../lib/config/index.js";
@@ -6,7 +6,6 @@ import logger from "../../lib/logger.js";
 
 import schemaFactory from "./schema.js";
 
-const sqlite3 = sqlite3pkg.verbose();
 const SCHEMA = schemaFactory();
 
 export default () => {
@@ -49,138 +48,63 @@ export default () => {
 if (!config.DB_OPTS) {
   throw "The path to the SQLite3 database must be set to DB_OPTS.";
 }
-const db = new sqlite3.Database(config.DB_OPTS);
+const db = new Database(config.DB_OPTS);
 logger.debug("Connected to DB");
 
-const loadAll = async (schema) => {
-  const query = schema.buildSelectQuery();
-  return new Promise((resolve, reject) => {
-    db.all(query, (error, rows) => {
-      if (error) {
-        return reject(error);
-      }
-      resolve(rows.map(schema.mapRow));
-    });
-  });
+const loadAll = (schema) => {
+  return db.prepare(schema.buildSelectQuery()).all().map(schema.mapRow);
 };
-const create = async (schema, data) => {
-  const query = schema.buildCreateQuery();
-  await db.serialize(() => {
-    var stmt = db.prepare(query);
-    stmt.run(schema.mapInsert(data));
-    stmt.finalize();
-  });
+const create = (schema, data) => {
+  db.prepare(schema.buildCreateQuery()).run(schema.mapInsert(data));
 };
-const loadById = async (schema, id) => {
-  const query = schema.buildSelectByIdQuery();
-  return new Promise((resolve, reject) => {
-    db.all(query, id, (error, rows) => {
-      if (error) {
-        return reject(error);
-      }
-      if (rows.length !== 1) {
-        return reject(CONST.ERROR_NOT_FOUND);
-      }
-      resolve(schema.mapRow(rows[0]));
-    });
-  });
+const loadById = (schema, id) => {
+  const row = db.prepare(schema.buildSelectByIdQuery()).get(id);
+  if (!row) {
+    throw CONST.ERROR_NOT_FOUND;
+  }
+  return schema.mapRow(row);
 };
-const updateById = async (schema, id, data) => {
+const updateById = (schema, id, data) => {
   const { query, values } = schema.buildUpdateByIdQuery(data);
   if (!query || !values) {
     return;
   }
-  await db.serialize(() => {
-    var stmt = db.prepare(query);
-    stmt.run([...values, id]);
-    stmt.finalize();
-  });
+  db.prepare(query).run([...values, id]);
 };
-const deleteById = async (schema, id) => {
-  const query = schema.buildDeleteByIdQuery();
-  await db.serialize(() => {
-    var stmt = db.prepare(query);
-    stmt.run([id]);
-    stmt.finalize();
-  });
+const deleteById = (schema, id) => {
+  db.prepare(schema.buildDeleteByIdQuery()).run([id]);
 };
 
-const loadMetas = async () => {
-  return await loadAll(SCHEMA.meta);
-};
-const createMeta = async (meta) => {
-  await create(SCHEMA.meta, meta);
-};
-const loadMeta = async (key) => {
-  return await loadById(SCHEMA.meta, key);
-};
-const updateMeta = async (key, meta) => {
-  await updateById(SCHEMA.meta, key, meta);
-};
-const deleteMeta = async (key) => {
-  await deleteById(SCHEMA.meta, key);
-};
+const loadMetas = async () => loadAll(SCHEMA.meta);
+const createMeta = async (meta) => create(SCHEMA.meta, meta);
+const loadMeta = async (key) => loadById(SCHEMA.meta, key);
+const updateMeta = async (key, meta) => updateById(SCHEMA.meta, key, meta);
+const deleteMeta = async (key) => deleteById(SCHEMA.meta, key);
 
-const loadUsers = async () => {
-  return await loadAll(SCHEMA.user);
-};
-const createUser = async (user) => {
-  await create(SCHEMA.user, user);
-};
-const loadUser = async (userId) => {
-  return await loadById(SCHEMA.user, userId);
-};
-const updateUser = async (userId, user) => {
-  await updateById(SCHEMA.user, userId, user);
-};
-const deleteUser = async (userId) => {
-  await deleteById(SCHEMA.user, userId);
-};
+const loadUsers = async () => loadAll(SCHEMA.user);
+const createUser = async (user) => create(SCHEMA.user, user);
+const loadUser = async (userId) => loadById(SCHEMA.user, userId);
+const updateUser = async (userId, user) => updateById(SCHEMA.user, userId, user);
+const deleteUser = async (userId) => deleteById(SCHEMA.user, userId);
 
 const loadUserAccessControl = async (userId) => {
   const schema = SCHEMA.acl;
   // TODO: cache in memory
-  const query = schema.buildSelectQuery(["user_id IN (?)"]);
-  return await new Promise((resolve, reject) => {
-    db.all(query, [userId], (error, rows) => {
-      if (error) {
-        return reject(CONST.ERROR_NOT_FOUND);
-      }
-      const mappedRows = Object.fromEntries(
-        rows.map((row) => schema.mapRow(row))
-      );
-      db.all(query, [":guest"], (error, rows) => {
-        if (!error) {
-          const mappedGuestRows = Object.fromEntries(
-            rows.map((row) => schema.mapRow(row))
-          );
-          resolve({
-            ...mappedGuestRows,
-            ...mappedRows,
-          });
-        } else {
-          resolve(mappedRows);
-        }
-      });
-    });
-  });
+  const stmt = db.prepare(schema.buildSelectQuery(["user_id IN (?)"]));
+  const userRows = stmt.all([userId]);
+  const guestRows = stmt.all([":guest"]);
+  return {
+    ...Object.fromEntries(guestRows.map((row) => schema.mapRow(row))),
+    ...Object.fromEntries(userRows.map((row) => schema.mapRow(row))),
+  };
 };
 
-const loadGalleries = async () => {
-  return await loadAll(SCHEMA.gallery);
-};
-const createGallery = async (gallery) => {
-  await create(SCHEMA.gallery, gallery);
-};
-const loadGallery = async (galleryId) => {
-  return await loadById(SCHEMA.gallery, galleryId);
-};
-const updateGallery = async (galleryId, gallery) => {
-  await updateById(SCHEMA.gallery, galleryId, gallery);
-};
-const deleteGallery = async (galleryId) => {
-  await deleteById(SCHEMA.gallery, galleryId);
-};
+const loadGalleries = async () => loadAll(SCHEMA.gallery);
+const createGallery = async (gallery) => create(SCHEMA.gallery, gallery);
+const loadGallery = async (galleryId) => loadById(SCHEMA.gallery, galleryId);
+const updateGallery = async (galleryId, gallery) =>
+  updateById(SCHEMA.gallery, galleryId, gallery);
+const deleteGallery = async (galleryId) => deleteById(SCHEMA.gallery, galleryId);
 
 const loadGalleryPhotos = async (galleryId) => {
   const schema = SCHEMA.photo;
@@ -203,35 +127,28 @@ const loadGalleryPhotos = async (galleryId) => {
     }
   };
 
-  if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-    return new Promise((resolve, reject) => {
-      db.all(getQuery(), function (error, rows) {
-        if (error) {
-          return reject(error);
-        }
-        resolve(rows.map(schema.mapRow));
-      });
-    });
-  }
-  return new Promise((resolve, reject) => {
-    db.all(getQuery(), galleryId, function (error, rows) {
-      if (error) {
-        return reject(error);
-      }
-      resolve(rows.map(schema.mapRow));
-    });
-  });
+  const stmt = db.prepare(getQuery());
+  const rows = galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)
+    ? stmt.all()
+    : stmt.all(galleryId);
+  return rows.map(schema.mapRow);
 };
 const linkGalleryPhoto = async (galleryIds, photoIds) => {
-  await db.serialize(() => {
-    photoIds.forEach(async (photoId) => {
-      galleryIds.forEach(async (galleryId) => {
-        await create(SCHEMA.galleryPhoto, { galleryId, photoId });
+  const stmt = db.prepare(SCHEMA.galleryPhoto.buildCreateQuery());
+  const insertAll = db.transaction(() => {
+    photoIds.forEach((photoId) => {
+      galleryIds.forEach((galleryId) => {
+        stmt.run(SCHEMA.galleryPhoto.mapInsert({ galleryId, photoId }));
       });
     });
   });
+  insertAll();
 };
 const loadGalleryPhoto = async (galleryId, photoId) => {
+  if (galleryId === CONST.SPECIAL_GALLERY_ALL) {
+    // TODO: fix
+    return loadPhoto(photoId);
+  }
   const schema = SCHEMA.photo;
   const getQuery = () => {
     switch (galleryId) {
@@ -253,74 +170,32 @@ const loadGalleryPhoto = async (galleryId, photoId) => {
     }
   };
 
-  if (galleryId === CONST.SPECIAL_GALLERY_ALL) {
-    // TODO: fix
-    return await loadPhoto(photoId);
+  const stmt = db.prepare(getQuery());
+  const rows = galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)
+    ? stmt.all(photoId)
+    : stmt.all(galleryId, photoId);
+  if (rows.length === 0) {
+    throw CONST.ERROR_NOT_FOUND;
   }
-  if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-    return new Promise((resolve, reject) => {
-      db.all(getQuery(), photoId, function (error, rows) {
-        if (error) {
-          return reject(error);
-        }
-        const photos = rows.map(schema.mapRow);
-        if (photos.length === 0) {
-          return reject(CONST.ERROR_NOT_FOUND);
-        }
-        resolve(photos[0]);
-      });
-    });
-  }
-  return new Promise((resolve, reject) => {
-    db.all(getQuery(), galleryId, photoId, function (error, rows) {
-      if (error) {
-        return reject(error);
-      }
-      const photos = rows.map(schema.mapRow);
-      if (photos.length === 0) {
-        return reject(CONST.ERROR_NOT_FOUND);
-      }
-      resolve(photos[0]);
-    });
-  });
+  return schema.mapRow(rows[0]);
 };
 const unlinkGalleryPhoto = async (galleryId, photoId) => {
-  const query = SCHEMA.galleryPhoto.buildDeleteByIdQuery();
-  await db.serialize(() => {
-    var stmt = db.prepare(query);
-    stmt.run([galleryId, photoId]);
-    stmt.finalize();
-  });
+  db.prepare(SCHEMA.galleryPhoto.buildDeleteByIdQuery()).run([galleryId, photoId]);
 };
 const unlinkAllPhotos = async (galleryId) => {
-  const query = SCHEMA.galleryPhoto.buildDeleteQuery(["gallery_id = ?"]);
-  await db.serialize(() => {
-    var stmt = db.prepare(query);
-    stmt.run([galleryId]);
-    stmt.finalize();
-  });
+  db.prepare(SCHEMA.galleryPhoto.buildDeleteQuery(["gallery_id = ?"])).run([
+    galleryId,
+  ]);
 };
 const unlinkAllGalleries = async (photoId) => {
-  const query = SCHEMA.galleryPhoto.buildDeleteQuery(["photo_id = ?"]);
-  await db.serialize(() => {
-    var stmt = db.prepare(query);
-    stmt.run([photoId]);
-    stmt.finalize();
-  });
+  db.prepare(SCHEMA.galleryPhoto.buildDeleteQuery(["photo_id = ?"])).run([
+    photoId,
+  ]);
 };
 
-const loadPhotos = async () => {
-  return loadAll(SCHEMA.photo);
-};
-const createPhoto = async (photo) => {
-  await create(SCHEMA.photo, photo);
-};
-const loadPhoto = async (photoId) => {
-  return loadById(SCHEMA.photo, photoId);
-};
-const updatePhoto = async (photoId, photo) => {
-  await updateById(SCHEMA.photo, photoId, photo);
-};
-const deletePhoto = async (photoId) => {
-  await deleteById(SCHEMA.photo, photoId);
-};
+const loadPhotos = async () => loadAll(SCHEMA.photo);
+const createPhoto = async (photo) => create(SCHEMA.photo, photo);
+const loadPhoto = async (photoId) => loadById(SCHEMA.photo, photoId);
+const updatePhoto = async (photoId, photo) =>
+  updateById(SCHEMA.photo, photoId, photo);
+const deletePhoto = async (photoId) => deleteById(SCHEMA.photo, photoId);

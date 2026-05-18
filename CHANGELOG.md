@@ -14,6 +14,7 @@
 - Migrate converter to ESM + TypeScript (chokidar 4, image-size 2)
 - Add GitHub Actions CI for server, converter, and react-app
 - Migrate server to ESM (vitest replaces jest, drops cross-env and nodemon)
+- Swap sqlite3 for better-sqlite3 (sync API, simpler driver code)
 
 ## [0.5.1] - 2022-05-02
 
