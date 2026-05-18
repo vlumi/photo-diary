@@ -1,4 +1,5 @@
-import "dotenv/config";
+import { config as dotenvConfig } from "dotenv";
+dotenvConfig({ quiet: true });
 import path from "node:path";
 import chokidar from "chokidar";
 

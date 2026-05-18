@@ -1,4 +1,5 @@
-import "dotenv/config";
+import { config as dotenvConfig } from "dotenv";
+dotenvConfig({ quiet: true });
 
 const DEBUG = false;
 const DB_DRIVER = "dummy";
