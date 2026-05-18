@@ -5,6 +5,10 @@
 - Add map to statistics page
 - Cluster closely grouped markers on the map
 - Replace jsonwebtoken with jose to unblock Node 26
+- Upgrade server test infrastructure (jest 29, supertest 7, nodemon 3)
+- Upgrade server runtime dependencies (bcrypt 6, dotenv 17, uuid 11, cross-env 10, etc.)
+- Upgrade server to Express 5
+- Upgrade server ESLint to v9 with flat config
 
 ## [0.5.1] - 2022-05-02
 
