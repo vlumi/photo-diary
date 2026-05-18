@@ -9,6 +9,8 @@
 - Upgrade server runtime dependencies (bcrypt 6, dotenv 17, uuid 11, cross-env 10, etc.)
 - Upgrade server to Express 5
 - Upgrade server ESLint to v9 with flat config
+- Upgrade converter dependencies (jest 29, nodemon 3, dotenv 17, etc.)
+- Upgrade converter ESLint to v9 with flat config
 
 ## [0.5.1] - 2022-05-02
 
