@@ -1187,8 +1187,8 @@ describe("collectTopics", () => {
       kpi: [
         { key: "photos", value: "2" },
         { key: "average", value: "0.00" },
-        { key: "years", value: "6.19" },
-        { key: "months", value: "74.283" },
+        { key: "years", value: "6.2" },
+        { key: "months", value: "74.3" },
         { key: "days", value: "2,261" },
       ],
     });

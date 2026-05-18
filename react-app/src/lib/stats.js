@@ -238,8 +238,8 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         average: formatNumber.twoDecimal(
           count.total / (count.byTime.days || 1)
         ),
-        years: formatNumber.default(diff.years()),
-        months: formatNumber.default(diff.months()),
+        years: formatNumber.oneDecimal(diff.years()),
+        months: formatNumber.oneDecimal(diff.months()),
         days: formatNumber.default(diff.days()),
       }),
     };
