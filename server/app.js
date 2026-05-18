@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const compression = require("compression");
-require("express-async-errors");
 
 const config = require("./lib/config");
 
@@ -21,7 +20,7 @@ app.use(compression());
 app.use(express.json());
 app.use(express.static("build"));
 app.use("/g", express.static("build"));
-app.use("/g/*", express.static("build"));
+app.use("/g/*splat", express.static("build"));
 
 const registerPreProcessors = () => {
   app.use(middleware.tokenFilter);
