@@ -12,6 +12,6 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts", "types/**/*.d.ts"],
+  "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
