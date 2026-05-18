@@ -18,6 +18,12 @@
 - Migrate server to TypeScript (strict mode, tsx runtime)
 - Replace CRA with Vite + Vitest for the react-app; swap react-helmet for react-helmet-async, axios for native fetch, drop date-diff
   - **Breaking (deployment):** frontend env vars in `react-app/.env` (and any per-environment `.env`) renamed from `REACT_APP_*` to `VITE_*`. Update each deployed environment's config: `REACT_APP_PHOTO_ROOT_URL` → `VITE_PHOTO_ROOT_URL`, `REACT_APP_THEME` → `VITE_THEME`, `REACT_APP_DEFAULT_LANGUAGE` → `VITE_DEFAULT_LANGUAGE`, `REACT_APP_DEFAULT_GALLERY` → `VITE_DEFAULT_GALLERY`, `REACT_APP_INITIAL_GALLERY_VIEW` → `VITE_INITIAL_GALLERY_VIEW`, `REACT_APP_FIRST_WEEKDAY` → `VITE_FIRST_WEEKDAY`. Old names are silently ignored at build time.
+- Refresh server and converter dependencies to latest majors: vitest 4, uuid 14, jose 6, yargs 18, TypeScript 6, ESLint 10, chokidar 5, `@types/*` packages
+- Type the SQLite row shapes per table in the server's db layer; drop the `Record<string, any>` escape hatches. Fixed two latent bugs in `bin/add-gallery.ts` (snake_case keys instead of camelCase, untyped argv accesses) surfaced by the new strict types.
+- Quieten dotenv 17 "tip" output in tests by passing `{ quiet: true }` at every config load site
+- Tighten server `tsconfig.json`: drop `allowJs`/`checkJs` now that no `.js` source remains
+- Replace `gm` with `sharp` in the converter; image processing is ~20× faster on real-size photos
+  - **Breaking (deployment):** the converter no longer requires the ImageMagick (or GraphicsMagick) CLI on the host — sharp ships its own libvips bindings via npm. You can `apt-get remove imagemagick` (or equivalent) on the converter host. CI's converter job no longer installs imagemagick.
 
 ## [0.5.1] - 2022-05-02
 
