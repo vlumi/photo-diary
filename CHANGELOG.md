@@ -1,15 +1,19 @@
 # Changelog
 
 ## [Unreleased]
+
 - Add map to statistics page
 - Cluster closely grouped markers on the map
+- Replace jsonwebtoken with jose to unblock Node 26
 
 ## [0.5.1] - 2022-05-02
+
 - Add aspect ratio to statistics
 - Fix orientation to keep all values in stats table even when filtered
 - Upgrade to react-scripts 5
 
 ## [0.5.0] - 2021-12-23
+
 - Add version number (v1) to API path
 - Remove support for the old legacy_sqlite3 DB schema
 - Add instance metadata API and backing DB
@@ -21,6 +25,7 @@
 - Fix empty title to be a link to the gallery list
 
 ## [0.4.2] - 2021-02-26
+
 - Upgrade all dependencies to latest, including React 17
 
 ## [0.4.1] - 2020-08-21
@@ -129,5 +134,5 @@
 [0.3.0]: https://github.com/vlumi/photo-diary/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/vlumi/photo-diary/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/vlumi/photo-diary/compare/v0.1.1...v0.2.0
-[0.2.0]: https://github.com/vlumi/photo-diary/compare/v0.1.0...v0.1.1
+[0.1.1]: https://github.com/vlumi/photo-diary/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/vlumi/photo-diary/releases/tag/v0.1.0
