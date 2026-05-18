@@ -1,6 +1,6 @@
 const { init } = require("../../app");
 const db = require("../../db/dummy")();
-const { createApi, loginUser } = require("./helper");
+const { createApi } = require("./helper");
 
 const { api, close } = createApi();
 
@@ -41,5 +41,3 @@ describe("As guest", () => {
     expect(result.body.name).toBe("dummy instance");
   });
 });
-
-afterAll(() => {});

@@ -18,7 +18,10 @@ module.exports = [
       },
     },
     rules: {
-      "no-unused-vars": ["error", { caughtErrors: "none" }],
+      "no-unused-vars": [
+        "error",
+        { caughtErrors: "none", argsIgnorePattern: "^_" },
+      ],
       indent: ["error", 2, { SwitchCase: 1 }],
       "linebreak-style": ["error", "unix"],
       quotes: ["error", "double", { avoidEscape: true }],

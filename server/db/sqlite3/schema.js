@@ -243,7 +243,7 @@ const SCHEMA = {
     order: ["key ASC"],
     mapToRow: (meta) => {
       const result = {};
-      if ("key" in user) result[meta.key] = meta.value;
+      if ("key" in meta) result[meta.key] = meta.value;
       return result;
     },
   },
