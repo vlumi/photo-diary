@@ -2,6 +2,9 @@
   "name": "photo-diary-app",
   "version": "0.5.1",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@react-leaflet/core": "^1.1.1",
     "axios": "^0.30.3",
