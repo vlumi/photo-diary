@@ -4,19 +4,25 @@ This server implements the RESTful API of the Photo Diary
 
 ## Requirements
 
-- Recent [Node.js](https://nodejs.org) stack
-  - [npm](https://www.npmjs.com/) (tested on 7.23.0)
-  - [Node.js](https://nodejs.org) (tested on 16.13.1)
-- Dependencies
-  - [Express](https://expressjs.com/)
-  - Check `package.json` for more detailed dependencies
+- [Node.js](https://nodejs.org) 22 or newer; npm 10+ recommended
+- Dependencies (see `package.json` for the full list)
+  - [Express](https://expressjs.com/) 5
+  - [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) for the default SQLite driver
+  - [jose](https://github.com/panva/jose) for JWT signing/verification
+  - [tsx](https://github.com/privatenumber/tsx) as the TypeScript runtime (no separate build step)
 
 ## Running Instructions
 
-The back-end server can be started as:
+The server is TypeScript and runs via tsx (no build step). Common scripts:
 
-```
-node index.js
+```sh
+npm run dev        # tsx watch index.ts (NODE_ENV=dev)
+npm start          # tsx index.ts       (NODE_ENV=dev)
+npm run prod       # pm2 start --interpreter tsx index.ts (NODE_ENV=prod)
+npm test           # vitest run
+npm run typecheck  # tsc --noEmit
+npm run lint       # eslint .
+npm run build:ui   # builds the react-app and copies it into server/build/ for prod
 ```
 
 ### Environment Variables
@@ -27,12 +33,14 @@ Certain parameters are passed through environment veriables. These can be either
 - `DB_DRIVER` \*
   - The driver to use for the backend DB connection.
   - Currently implemented:
-    - `sqlite3` – Latest schema with all current features implemented
+    - `sqlite3` – Default driver, backed by better-sqlite3 (synchronous API)
     - `dummy` – data hard-coded into the driver, for testing purposes only
 - `DB_OPTS` (\* depends on `DB_DRIVER`)
   - This parameter will be passed to the `DB_DRIVER` during connection.
     - `sqlite3` – Path to the DB file
     - `dummy` – Not used
+- `SECRET` \*
+  - HMAC secret used to sign JWT tokens issued at login. Required — the server refuses to start without it.
 - `PHOTO_ROOT_DIR` \*
   - The path to the physical photos, with the following sub-directories
     - `inbox` – New photos to be added, or their extracted JSON files
@@ -46,9 +54,9 @@ Certain parameters are passed through environment veriables. These can be either
   - `npm run dev`
   - `npm run prod`
 - With the variables inlined:
-  - `DB_DRIVER=dummy npm run dev`
-  - `DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
-  - `DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm prod`
+  - `SECRET=test DB_DRIVER=dummy npm run dev`
+  - `SECRET=… DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
+  - `SECRET=… DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm run prod`
 
 ## Public API
 
@@ -98,7 +106,7 @@ The required access level is listed in brackets at the end of each resource meth
   - `GET` – Verify the current authenticatio ntoken **[any]**
   - `DELETE` – Logout, revoke all tokens for the current user **[any]**
   - `DELETE ../:userId` – Logout, revoke all tokens for the user **[admin]**
-- `/user`
+- `/users`
   - `GET` – List all users **[admin]**
   - `POST` – Create a new user **[admin]**
     1. `user`
