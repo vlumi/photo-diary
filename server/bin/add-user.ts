@@ -1,7 +1,8 @@
 #!/usr/bin/env -S npx tsx
 
+import { randomUUID } from "node:crypto";
+
 import bcrypt from "bcrypt";
-import { v4 as uuidv4 } from "uuid";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -47,7 +48,7 @@ if (argv.l) {
     db.loadUser(userId)
       .then(async (user) => {
         const u = user as { id: string };
-        db.updateUser(u.id, { password: hash, secret: uuidv4() }).catch(
+        db.updateUser(u.id, { password: hash, secret: randomUUID() }).catch(
           (error) => {
             logger.error("Failed:", error);
           }
@@ -55,7 +56,7 @@ if (argv.l) {
         logger.info(`Existing user "${userId}" found and updated.`);
       })
       .catch(async () => {
-        db.createUser({ id: userId, password: hash, secret: uuidv4() }).catch(
+        db.createUser({ id: userId, password: hash, secret: randomUUID() }).catch(
           (error) => {
             logger.error("Failed:", error);
           }

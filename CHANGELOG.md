@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Server
+
+- Replace the `uuid` dep with the built-in `crypto.randomUUID()`
+
 ## [0.6.0] - 2026-05-19
 
 ### Features
