@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
-import styled from "styled-components";
+import styled from "@emotion/styled";
 
 import EpochAge from "../EpochAge";
 import EpochDayIndex from "../EpochDayIndex";

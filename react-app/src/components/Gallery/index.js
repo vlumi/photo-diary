@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { createGlobalStyle } from "styled-components";
+import { Global, css } from "@emotion/react";
 import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -28,16 +28,16 @@ import format from "../../lib/format";
 import stats from "../../lib/stats";
 import theme from "../../lib/theme";
 
-const GlobalStyles = createGlobalStyle`
-html {
-  --primary-color: ${(props) => props["primary-color"]};
-  --primary-background: ${(props) => props["primary-background"]};
-  --inactive-color: ${(props) => props["inactive-color"]};
-  --header-color: ${(props) => props["header-color"]};
-  --header-sub-color: ${(props) => props["header-sub-color"]};
-  --header-background: ${(props) => props["header-background"]};
-  filter: ${(props) => props["filter"]}
-}
+const globalStyles = (theme) => css`
+  html {
+    --primary-color: ${theme.get("primary-color")};
+    --primary-background: ${theme.get("primary-background")};
+    --inactive-color: ${theme.get("inactive-color")};
+    --header-color: ${theme.get("header-color")};
+    --header-sub-color: ${theme.get("header-sub-color")};
+    --header-background: ${theme.get("header-background")};
+    filter: ${theme.get("filter")};
+  }
 `;
 
 const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
@@ -403,15 +403,7 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
 
   return (
     <>
-      <GlobalStyles
-        primary-color={activeTheme.get("primary-color")}
-        primary-background={activeTheme.get("primary-background")}
-        inactive-color={activeTheme.get("inactive-color")}
-        header-color={activeTheme.get("header-color")}
-        header-sub-color={activeTheme.get("header-sub-color")}
-        header-background={activeTheme.get("header-background")}
-        filter={activeTheme.get("filter")}
-      />
+      <Global styles={globalStyles(activeTheme)} />
       {renderContent()}
     </>
   );

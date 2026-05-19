@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import styled from "styled-components";
+import styled from "@emotion/styled";
 import Leaflet from "leaflet";
 import {
   MapContainer as Map,
@@ -20,9 +20,9 @@ import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
 
 import config from "../lib/config";
 
-const Root = styled.div`
+const Root = styled("div", { shouldForwardProp: (prop) => prop !== "$height" })`
   width: 100%;
-  height: ${(props) => (props.height ? props.height : 400)}px;
+  height: ${(props) => (props.$height ? props.$height : 400)}px;
   padding: 0;
   margin: 10px 0;
 `;
@@ -50,7 +50,7 @@ const MapContainer = ({ positions: photos, height, maxZoom, drawLine }) => {
   const positions = photos.map((photo) => photo.coordinates());
   const bounds = Leaflet.latLngBounds(positions);
   return (
-    <Root height={height}>
+    <Root $height={height}>
       <Map
         bounds={bounds}
         maxZoom={maxZoom ? maxZoom : 14}
