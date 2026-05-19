@@ -6,6 +6,10 @@
 
 - Replace the `uuid` dep with the built-in `crypto.randomUUID()`
 
+### Frontend
+
+- Replace `mathjs` with inline native `mean`/`stddev` helpers in `stats.tsx`; production bundle drops ~40% (1.5 MB → 876 kB raw, 460 kB → 282 kB gzipped)
+
 ## [0.6.0] - 2026-05-19
 
 ### Features
