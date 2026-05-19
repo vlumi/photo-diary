@@ -1,16 +1,19 @@
 /**
  * Join a conditional list of keys, where the inclusion of each key is determined on the truthiness of its value.
- *
- * @param {object} map The source data.
- * @param {string} separator The separator used for joining the keys.
- * @return {string} The keys whose values are truthy, joined by the separator.
  */
-const joinTruthyKeys = (map, separator = " ") =>
+const joinTruthyKeys = (
+  map: Record<string, unknown>,
+  separator = " "
+): string =>
   Object.keys(map)
     .filter((key) => map[key])
     .join(separator);
 
-const compareWithNaN = (a, b, f) => {
+const compareWithNaN = (
+  a: number,
+  b: number,
+  f: (a: number, b: number) => number
+): number => {
   if (isNaN(a) && isNaN(b)) return 0;
   if (isNaN(a)) return 1;
   if (isNaN(b)) return -1;
@@ -19,16 +22,8 @@ const compareWithNaN = (a, b, f) => {
 
 /**
  * Compare two arrays' contents, assuming numeric content.
- *
- * - The first element from the beginning to differ will determine the order.
- * - If one array is shorter, and its elements are equal to the other, the shorter element is considered smaller.
- * - If all elements are equal, the arrays are considered equal.
- *
- * @param {array} a
- * @param {array} b
- * @return {number} `0` if the arrays are equal, a negative value if `a` is smaller, a positive value if `b` is smaller.
  */
-const compareArrays = (a, b) => {
+const compareArrays = (a: unknown, b: unknown): number | undefined => {
   if (!Array.isArray(a) && !Array.isArray(b)) {
     return undefined;
   }
@@ -39,18 +34,18 @@ const compareArrays = (a, b) => {
     return undefined;
   }
   const maxLength = Math.max(a.length, b.length);
-  for (const i in [...Array(maxLength).keys()]) {
+  for (let i = 0; i < maxLength; i++) {
     if (a.length <= i) {
       return -1;
     }
     if (b.length <= i) {
       return 1;
     }
-    const result = compareWithNaN(a[i], b[i], (a, b) => {
-      if (a > b) {
+    const result = compareWithNaN(a[i], b[i], (x, y) => {
+      if (x > y) {
         return 1;
       }
-      if (a < b) {
+      if (x < y) {
         return -1;
       }
       return 0;
@@ -64,11 +59,11 @@ const compareArrays = (a, b) => {
 
 /**
  * Transform all of the property keys of the object, passing the old key and value of each property to the transformer
- *
- * @param {object} data
- * @param {function} transformer
  */
-const transformObjectKeys = (data, transformer) => {
+const transformObjectKeys = <T,>(
+  data: Record<string, T> | undefined | null,
+  transformer: (key: string, value: T) => [string, T]
+): Record<string, T> | undefined | null => {
   if (!data) {
     return data;
   }
@@ -79,12 +74,12 @@ const transformObjectKeys = (data, transformer) => {
 
 /**
  * Transform the value of a property, returning a new shallow copy of the object.
- *
- * @param {object} data
- * @param {string} key
- * @param {function} transformer
  */
-const transformObjectValue = (data, key, transformer) => {
+const transformObjectValue = <T extends Record<string, unknown>>(
+  data: T | undefined | null,
+  key: string,
+  transformer: (data: T) => unknown
+): T | undefined | null => {
   if (!data || !(key in data)) {
     return data;
   }
@@ -96,11 +91,11 @@ const transformObjectValue = (data, key, transformer) => {
 
 /**
  * Trim leading and trailing elements of the array that do not match the given predicate.
- *
- * @param {array} data The array to trim.
- * @param {function} predicate The predicate should return true for elements that should be kept.
  */
-const trim = (data, predicate) => {
+const trim = <T,>(
+  data: T[] | undefined | null,
+  predicate: (e: T) => boolean = Boolean
+): T[] => {
   if (!data || !data.length) {
     return [];
   }
@@ -124,39 +119,41 @@ const trim = (data, predicate) => {
 /**
  * Transform an array into object, with the array values as keys and the given value as
  * the value of each property.
- *
- * @param {array} data The array to transform.
- * @param {any} value The value to set to each property.
  */
-const objectFromArray = (data, value) => {
+const objectFromArray = <T,>(
+  data: (string | number)[] | undefined | null,
+  value?: T
+): Record<string, T | undefined> => {
   if (!data || !data.length) {
     return {};
   }
-  return data.reduce((accumulator, element) => {
-    accumulator[element] = value;
-    return accumulator;
-  }, {});
+  return data.reduce<Record<string, T | undefined>>(
+    (accumulator, element) => {
+      accumulator[String(element)] = value;
+      return accumulator;
+    },
+    {}
+  );
 };
+
+interface FoldEntry<T> {
+  key: string;
+  value: T;
+}
 
 /**
  *  Transform an object into an array of objects, with the original key in the property `key`,
  *  and the original value in the property `value`, sorting the resulting array with `comparator`.
- *
- * @param {object} data The object to transform.
- * @param {function} comparator The comparator to use for sorting.
- * @returns {array}
  */
-const foldToArray = (data, comparator) => {
+const foldToArray = <T,>(
+  data: Record<string, T> | undefined | null,
+  comparator?: (a: FoldEntry<T>, b: FoldEntry<T>) => number
+): FoldEntry<T>[] => {
   if (!data || !Object.keys(data).length) {
     return [];
   }
   return Object.keys(data)
-    .map((key) => {
-      return {
-        key: key,
-        value: data[key],
-      };
-    })
+    .map((key) => ({ key, value: data[key] }))
     .sort(comparator);
 };
 
@@ -164,23 +161,25 @@ const foldToArray = (data, comparator) => {
  * Produces an object with the values of the array as keys, and their respective sorted, 1-based rank as the value.
  *
  * In case of duplicate values, the lowest rank for the values will be chosen, producing a gap in the ranks.
- *
- * @param {array} data The array whose values to rank.
- * @param {function} valueMapper A function that extracts the value to rank by.
- * @param {function} comparator A comparator function for ranking the values
  */
-const calculateRanks = (data, valueMapper, comparator = (a, b) => b - a) => {
+const calculateRanks = <T,>(
+  data: T[] | undefined | null,
+  valueMapper: (item: T) => number | string,
+  comparator: (a: number | string, b: number | string) => number = (a, b) =>
+    Number(b) - Number(a)
+): Record<string, number> => {
   if (!data || !data.length) {
     return {};
   }
   return data
     .map(valueMapper)
     .sort(comparator)
-    .reduce((acc, value, index) => {
-      if (value in acc) {
-        acc[value] = Math.min(index, acc[value]);
+    .reduce<Record<string, number>>((acc, value, index) => {
+      const key = String(value);
+      if (key in acc) {
+        acc[key] = Math.min(index, acc[key]);
       } else {
-        acc[value] = index;
+        acc[key] = index;
       }
       return acc;
     }, {});
@@ -190,75 +189,96 @@ const calculateRanks = (data, valueMapper, comparator = (a, b) => b - a) => {
  * Truncate the given array `data` to at most `maxEntries` elements. The rest of the elements
  * will be summarized into a new element at the end using `summarizer`. The truncated array
  * with the summarized data is passed to `processor`
- *
- * @param {array} data The array to truncate and process.
- * @param {number} maxEntries Maximum number of entries to allow, or zero to not truncate.
- * @param {function} processor The function to send the truncated and summarized data.
- * @param {function} summarizer The function to summarize the truncated elements.
  */
-const truncateAndProcess = (data, maxEntries, processor, summarizer) => {
+const truncateAndProcess = <T, R>(
+  data: T[] | undefined | null,
+  maxEntries: number,
+  processor: (items: T[]) => R,
+  summarizer: (items: T[]) => T
+): R => {
   if (maxEntries > 0 && data && data.length > maxEntries) {
     return processor([
       ...data.slice(0, maxEntries - 1),
       summarizer(data.slice(maxEntries - 1)),
     ]);
   }
-  return processor(data);
+  return processor(data ?? []);
 };
 
-const mergeObjects = (merger) => (a, b) => {
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  return Object.fromEntries(
-    [...keys].map((key) => {
-      if (!(key in b)) {
-        return [key, a[key]];
-      }
-      if (!(key in a)) {
-        return [key, b[key]];
-      }
-      if (a[key] instanceof Set && b[key] instanceof Set) {
-        return [key, merger(a[key], b[key])];
-      }
-      return [key, mergeObjects(merger)(a[key], b[key])];
-    })
-  );
-};
+type Merger<T> = (a: Set<T>, b: Set<T>) => Set<T>;
+
+const mergeObjects =
+  <T,>(merger: Merger<T>) =>
+  (
+    a: Record<string, unknown>,
+    b: Record<string, unknown>
+  ): Record<string, unknown> => {
+    const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+    return Object.fromEntries(
+      [...keys].map((key) => {
+        if (!(key in b)) {
+          return [key, a[key]];
+        }
+        if (!(key in a)) {
+          return [key, b[key]];
+        }
+        if (a[key] instanceof Set && b[key] instanceof Set) {
+          return [key, merger(a[key] as Set<T>, b[key] as Set<T>)];
+        }
+        return [
+          key,
+          mergeObjects(merger)(
+            a[key] as Record<string, unknown>,
+            b[key] as Record<string, unknown>
+          ),
+        ];
+      })
+    );
+  };
+
+type WithField<K extends string> = Record<K, unknown>;
 
 /**
  * Sort the object-containing array by the property `key` in numeric ascending order.
  *
  * Any non-numeric fields will be placed at the end, in non-deterministic order.
- *
- * @param {string} key The property to sort by.
  */
-const numSortByFieldAsc = (key) => (a, b) =>
-  compareWithNaN(a[key], b[key], () => a[key] - b[key]);
+const numSortByFieldAsc =
+  <K extends string>(key: K) =>
+  (a: WithField<K>, b: WithField<K>): number =>
+    compareWithNaN(
+      Number(a[key]),
+      Number(b[key]),
+      () => Number(a[key]) - Number(b[key])
+    );
 
 /**
  * Sort the object-containing array by the property `key` in numeric descending order.
- *
- * Any non-numeric fields will be placed at the end, in non-deterministic order.
- *
- * @param {string} key The property to sort by.
  */
-const numSortByFieldDesc = (key) => (a, b) =>
-  compareWithNaN(a[key], b[key], () => b[key] - a[key]);
+const numSortByFieldDesc =
+  <K extends string>(key: K) =>
+  (a: WithField<K>, b: WithField<K>): number =>
+    compareWithNaN(
+      Number(a[key]),
+      Number(b[key]),
+      () => Number(b[key]) - Number(a[key])
+    );
 
 /**
  * Sort the object-containing array by the property `key` in string ascending order.
- *
- * @param {string} key The property to sort by.
  */
-const strSortByFieldAsc = (key) => (a, b) =>
-  String(a[key]).localeCompare(String(b[key]));
+const strSortByFieldAsc =
+  <K extends string>(key: K) =>
+  (a: WithField<K>, b: WithField<K>): number =>
+    String(a[key]).localeCompare(String(b[key]));
 
 /**
  * Sort the object-containing array by the property `key` in string descending order.
- *
- * @param {string} key The property to sort by.
  */
-const strSortByFieldDesc = (key) => (a, b) =>
-  String(b[key]).localeCompare(String(a[key]));
+const strSortByFieldDesc =
+  <K extends string>(key: K) =>
+  (a: WithField<K>, b: WithField<K>): number =>
+    String(b[key]).localeCompare(String(a[key]));
 
 export default {
   joinTruthyKeys,

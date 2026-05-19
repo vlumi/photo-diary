@@ -1,9 +1,15 @@
 import format from "./format";
 
-const isValidChannel = (channel) =>
+interface Rgb {
+  r: number;
+  g: number;
+  b: number;
+}
+
+const isValidChannel = (channel: number): boolean =>
   Number.isInteger(channel) && channel >= 0 && channel <= 255;
 
-const toHexRgb = ({ r, g, b }) => {
+const toHexRgb = ({ r, g, b }: Rgb): string => {
   if (!isValidChannel(r) || !isValidChannel(g) || !isValidChannel(b)) {
     return "#000000";
   }
@@ -15,11 +21,11 @@ const toHexRgb = ({ r, g, b }) => {
   );
 };
 
-const fromHexRgb = (hex) => {
+const fromHexRgb = (hex: string): [number, number, number] => {
   if (!hex || !hex.startsWith("#")) {
     return [0, 0, 0];
   }
-  const rawValue = parseInt(hex.substr(1), 16);
+  const rawValue = parseInt(hex.substring(1), 16);
   switch (hex.length) {
     case 4:
       return [
@@ -34,7 +40,11 @@ const fromHexRgb = (hex) => {
   }
 };
 
-const colorGradient = (start, end, steps) => {
+const colorGradient = (
+  start: string,
+  end: string,
+  steps: number
+): string[] => {
   if (steps < 1 || !start || !end) return [];
   if (steps < 2) return [start];
   if (steps < 3) return [start, end];
@@ -42,7 +52,12 @@ const colorGradient = (start, end, steps) => {
   const [r1, g1, b1] = fromHexRgb(start);
   const [r2, g2, b2] = fromHexRgb(end);
 
-  const linearStep = (start, end, step, lastStep) =>
+  const linearStep = (
+    start: number,
+    end: number,
+    step: number,
+    lastStep: number
+  ): number =>
     end > start
       ? Math.round(start + ((end - start) * step) / lastStep)
       : Math.round(start - ((start - end) * step) / lastStep);

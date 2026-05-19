@@ -1,6 +1,12 @@
-const topics = () => ["general", "time", "gear", "exposure"];
+interface Matchable {
+  matches: (category: string, key: string | undefined) => boolean;
+}
+type FilterFn = (photo: Matchable) => boolean;
+export type Filters = Record<string, Record<string, Record<string, FilterFn>>>;
 
-const categories = (category) => {
+const topics = (): string[] => ["general", "time", "gear", "exposure"];
+
+const categories = (category: string): string[] => {
   switch (category) {
     case "general":
       return ["author", "country"];
@@ -26,31 +32,40 @@ const categories = (category) => {
   }
 };
 
-const normalizeKeyValue = (key, unknownLabel) => {
+const normalizeKeyValue = (
+  key: string,
+  unknownLabel: string
+): string | undefined => {
   try {
     return JSON.stringify(
-      JSON.parse(key).map((part) => (part === unknownLabel ? undefined : part))
+      (JSON.parse(key) as unknown[]).map((part) =>
+        part === unknownLabel ? undefined : part
+      )
     );
-  } catch (e) {
+  } catch (_e) {
     return key === unknownLabel ? undefined : key;
   }
 };
 
-const newEmptyTopic = (filters, topic) => {
-  const newFilters = { ...filters };
+const newEmptyTopic = (filters: Filters, topic: string): Filters => {
+  const newFilters: Filters = { ...filters };
   if (!(topic in newFilters)) {
     newFilters[topic] = {};
   }
   return newFilters;
 };
-const removeTopic = (filters, topic) => {
-  const newFilters = { ...filters };
+const removeTopic = (filters: Filters, topic: string): Filters => {
+  const newFilters: Filters = { ...filters };
   delete newFilters[topic];
   return newFilters;
 };
 
-const newEmptyCategory = (filters, topic, category) => {
-  const newFilters = { ...filters };
+const newEmptyCategory = (
+  filters: Filters,
+  topic: string,
+  category: string
+): Filters => {
+  const newFilters: Filters = { ...filters };
   if (!(topic in newFilters)) {
     newFilters[topic] = {};
   }
@@ -59,8 +74,12 @@ const newEmptyCategory = (filters, topic, category) => {
   }
   return newFilters;
 };
-const removeCategory = (filters, topic, category) => {
-  const newFilters = { ...filters };
+const removeCategory = (
+  filters: Filters,
+  topic: string,
+  category: string
+): Filters => {
+  const newFilters: Filters = { ...filters };
   if (topic in newFilters) {
     delete newFilters[topic][category];
   }
@@ -70,15 +89,21 @@ const removeCategory = (filters, topic, category) => {
   return newFilters;
 };
 
-const applyNewFilter = (filters, topic, category, key, unknownLabel) => {
+const applyNewFilter = (
+  filters: Filters,
+  topic: string,
+  category: string,
+  key: string,
+  unknownLabel: string
+): Filters => {
   if (!topic || !category) {
     return filters;
   }
 
-  const newFilters = { ...filters };
+  const newFilters: Filters = { ...filters };
 
   const normalizedKey = normalizeKeyValue(key, unknownLabel);
-  const newFilter = (photo) => photo.matches(category, normalizedKey);
+  const newFilter: FilterFn = (photo) => photo.matches(category, normalizedKey);
 
   if (!(topic in newFilters)) {
     newFilters[topic] = { [category]: { [key]: newFilter } };
