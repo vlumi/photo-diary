@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S npx tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import yargs from "yargs";

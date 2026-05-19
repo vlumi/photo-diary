@@ -58,6 +58,18 @@ Certain parameters are passed through environment veriables. These can be either
   - `SECRET=… DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
   - `SECRET=… DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm run prod`
 
+### Management scripts
+
+Scripts under `bin/` add or update users, galleries, and photos in the DB. They are executable and use a `#!/usr/bin/env -S npx tsx` shebang, so from the `server/` directory they can be run directly:
+
+```sh
+./bin/add-user.ts [options]
+./bin/add-gallery.ts [options]
+./bin/add-photo.ts [options] [json-or-jpg-files]
+```
+
+Each script takes `--help` to list its flags. They read the same `.env` as the server, so `SECRET`, `DB_DRIVER`, and `DB_OPTS` need to be set the same way.
+
 ## Public API
 
 ### Access control

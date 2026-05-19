@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S npx tsx
 
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
