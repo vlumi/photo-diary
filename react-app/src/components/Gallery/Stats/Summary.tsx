@@ -2,6 +2,8 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 
+import type { StatsCategory } from "../../../lib/stats";
+
 const Root = styled.div`
   margin: 0;
   width: 100%;
@@ -57,19 +59,19 @@ const Value = styled.span`
 `;
 
 interface Props {
-  category: any;
+  category: StatsCategory;
 }
 
 const Summary = ({ category }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
-  if (!("kpi" in category) || !category.kpi) {
+  if (!category.kpi) {
     return <></>;
   }
   return (
     <Root>
       <List>
-        {category.kpi.map((kpi: { key: string; value: string }) => (
+        {category.kpi.map((kpi) => (
           <Kpi key={`kpi:${kpi.key}`}>
             <Title>{t(`stats-kpi-title-${kpi.key}`)}</Title>
             <Value>

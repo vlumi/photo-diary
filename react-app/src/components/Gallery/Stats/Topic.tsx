@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import Category from "./Category";
 
 import type { Filters as FiltersT } from "../../../lib/filter";
+import type { StatsTopic } from "../../../lib/stats";
 
 type ActiveTheme = { get: (name: string) => string };
 
@@ -33,7 +34,7 @@ const Categories = styled.section`
 `;
 
 interface Props {
-  topic: any;
+  topic: StatsTopic;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
@@ -49,7 +50,7 @@ const Topic = ({
     <Root key={topic.key} data-type="topic" data-key={topic.key}>
       <Title>{topic.title}</Title>
       <Categories>
-        {topic.categories.map((category: any) => (
+        {topic.categories.map((category) => (
           <Category
             key={`${category.key}:${topic.key}`}
             topic={topic}

@@ -10,6 +10,7 @@ import {
 import Topic from "./Topic";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
+import type { UniqueValues } from "../../../lib/stats";
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -51,7 +52,7 @@ const NewCategory = styled.option``;
 interface Props {
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
-  uniqueValues: any;
+  uniqueValues: UniqueValues;
   lang: string;
   countryData: CountryData;
 }

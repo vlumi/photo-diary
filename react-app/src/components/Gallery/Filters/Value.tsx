@@ -36,7 +36,6 @@ interface Props {
   value: string;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
-  uniqueValues?: any;
   lang: string;
   countryData: CountryData;
 }

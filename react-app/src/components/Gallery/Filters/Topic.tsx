@@ -6,7 +6,7 @@ import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 import Category from "./Category";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
-import stats from "../../../lib/stats";
+import stats, { type UniqueValues } from "../../../lib/stats";
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -51,7 +51,7 @@ interface Props {
   topic: string;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
-  uniqueValues: any;
+  uniqueValues: UniqueValues;
   lang: string;
   countryData: CountryData;
 }
@@ -103,11 +103,11 @@ const Topic = ({
   const alreadyFilteredValue = (
     topic: string,
     category: string,
-    value: { key: string }
+    value: { key: string | number }
   ): boolean =>
     topic in filters &&
     category in filters[topic] &&
-    value.key in filters[topic][category];
+    String(value.key) in filters[topic][category];
 
   const renderCategoryAdder = (topic: string) => {
     const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -144,12 +144,7 @@ const Topic = ({
                 data-type="category"
                 data-key={category}
               >
-                {(
-                  uniqueValues[topic][category] as {
-                    key: string;
-                    value: string;
-                  }[]
-                )
+                {uniqueValues[topic][category]
                   .filter(
                     (value) => !alreadyFilteredValue(topic, category, value)
                   )

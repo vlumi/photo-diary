@@ -6,6 +6,7 @@ import Charts from "./Charts";
 import Table from "./Table";
 
 import type { Filters as FiltersT } from "../../../lib/filter";
+import type { StatsTopic, StatsCategory } from "../../../lib/stats";
 
 type ActiveTheme = { get: (name: string) => string };
 
@@ -27,8 +28,8 @@ const Title = styled.h3`
 `;
 
 interface Props {
-  topic: any;
-  category: any;
+  topic: StatsTopic;
+  category: StatsCategory;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
