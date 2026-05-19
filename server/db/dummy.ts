@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 
 import CONST from "../lib/constants.js";
 
@@ -231,47 +231,47 @@ const dbDump = JSON.stringify({
     admin: {
       id: "admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
-      secret: uuidv4(),
+      secret: randomUUID(),
     },
     gallery1Admin: {
       id: "gallery1Admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
-      secret: uuidv4(),
+      secret: randomUUID(),
     },
     gallery2Admin: {
       id: "gallery2Admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
-      secret: uuidv4(),
+      secret: randomUUID(),
     },
     gallery1User: {
       id: "gallery1User",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
-      secret: uuidv4(),
+      secret: randomUUID(),
     },
     gallery12User: {
       id: "gallery12User",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
-      secret: uuidv4(),
+      secret: randomUUID(),
     },
     plainUser: {
       id: "plainUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
-      secret: uuidv4(),
+      secret: randomUUID(),
     },
     publicUser: {
       id: "publicUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
-      secret: uuidv4(),
+      secret: randomUUID(),
     },
     simpleUser: {
       id: "simpleUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
-      secret: uuidv4(),
+      secret: randomUUID(),
     },
     blockedUser: {
       id: "blockedUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
-      secret: uuidv4(),
+      secret: randomUUID(),
     },
   },
   accessControl: {
