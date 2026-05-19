@@ -18,6 +18,13 @@ export const app = express();
 app.use(cors());
 app.use(compression());
 app.use(express.json());
+// Discourage indexing and AI scraping on every response. robots.txt is the
+// authoritative signal; this header covers non-HTML resources (photo files)
+// and reaches scrapers that honor X-Robots-Tag values like `noai`/`noimageai`.
+app.use((_req, res, next) => {
+  res.setHeader("X-Robots-Tag", "noindex, noai, noimageai");
+  next();
+});
 app.use(express.static("build"));
 app.use("/g", express.static("build"));
 app.use("/g/*splat", express.static("build"));
