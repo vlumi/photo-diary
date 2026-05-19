@@ -1474,12 +1474,15 @@ const updateGear = (byGear: any, photo: any) => {
  * @param {object} byTime Target for collecting the time distribution over all photos
  */
 const calculateNumberOfDays = (byTime: any) => {
-  const isLeap = (year: any) =>
+  const isLeap = (year: number) =>
     year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  const MONTH_LENGTH: Record<string, number[]> = {
-    true: [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-    false: [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-  };
+  // 1-indexed: a leading 0 lets month numbers (1–12) be used directly.
+  const LEAP_MONTH_LENGTHS = [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const COMMON_MONTH_LENGTHS = [
+    0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
+  ];
+  const monthLengthsFor = (year: number) =>
+    isLeap(year) ? LEAP_MONTH_LENGTHS : COMMON_MONTH_LENGTHS;
 
   const minYear = byTime.minDate.year;
   const maxYear = byTime.maxDate.year;
@@ -1494,23 +1497,23 @@ const calculateNumberOfDays = (byTime: any) => {
         byTime.maxDate.day - byTime.minDate.day + 1;
     } else if (m === byTime.minDate.month) {
       byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
-        MONTH_LENGTH[String(isLeap(minYear))][m] - byTime.minDate.day + 1;
+        monthLengthsFor(minYear)[m] - byTime.minDate.day + 1;
     } else {
       byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
-        MONTH_LENGTH[String(isLeap(minYear))][m];
+        monthLengthsFor(minYear)[m];
     }
   }
 
   for (let y = minYear + 1; y < maxYear; y++) {
-    const leap = isLeap(y);
+    const months = monthLengthsFor(y);
     byTime.byYear[y] = byTime.byYear[y] || 0;
-    byTime.daysInYear[y] = leap ? 366 : 365;
+    byTime.daysInYear[y] = isLeap(y) ? 366 : 365;
 
     byTime.byYearMonth[y] = byTime.byYearMonth[y] || {};
     byTime.daysInYearMonth[y] = {};
     for (let m = 1; m <= 12; m++) {
       byTime.byYearMonth[y][m] = byTime.byYearMonth[y][m] || 0;
-      byTime.daysInYearMonth[y][m] = MONTH_LENGTH[String(leap)][m];
+      byTime.daysInYearMonth[y][m] = months[m];
     }
   }
 
@@ -1527,7 +1530,7 @@ const calculateNumberOfDays = (byTime: any) => {
         byTime.maxDate.day;
     } else {
       byTime.daysInYear[maxYear] += byTime.daysInYearMonth[maxYear][m] =
-        MONTH_LENGTH[String(isLeap(maxYear))][m];
+        monthLengthsFor(maxYear)[m];
     }
   }
 
