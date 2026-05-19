@@ -1,18 +1,22 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
 import TopMenuButton from "./TopMenuButton";
 
 import token from "../lib/token";
+import type { User } from "../models/UserModel";
 
 const Form = styled.form``;
 
-const Logout = ({ setUser }) => {
+interface Props {
+  setUser: (user: User | undefined) => void;
+}
+
+const Logout = ({ setUser }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
-  const handleLogout = (event) => {
+  const handleLogout = (event: React.FormEvent) => {
     event.preventDefault();
     window.localStorage.clear();
     setUser(undefined);
@@ -24,8 +28,5 @@ const Logout = ({ setUser }) => {
       <TopMenuButton type="submit">{t("logout")}</TopMenuButton>
     </Form>
   );
-};
-Logout.propTypes = {
-  setUser: PropTypes.func.isRequired,
 };
 export default Logout;

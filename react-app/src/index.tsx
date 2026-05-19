@@ -4,7 +4,11 @@ import { HelmetProvider } from "react-helmet-async";
 import "./lib/i18n";
 import App from "./App";
 
-createRoot(document.getElementById("root")).render(
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Missing #root element");
+}
+createRoot(rootElement).render(
   <React.StrictMode>
     <HelmetProvider>
       <App />

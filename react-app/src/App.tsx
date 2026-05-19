@@ -20,13 +20,20 @@ import ScrollToPosition from "./components/ScrollToPosition";
 import TopMenu from "./components/TopMenu";
 import Gallery from "./components/Gallery";
 
-import UserModel from "./models/UserModel";
+import UserModel, { type User } from "./models/UserModel";
 
 import config from "./lib/config";
 import scroll from "./lib/scroll";
 import token from "./lib/token";
 
-const countryLocales = { en: countryEn, fi: countryFi, ja: countryJa };
+// JSON-imported locale data — the per-file TS inference gives each a slightly
+// different shape (some keys like `CN` are arrays in one and strings in others),
+// so type the whole bag as a permissive Record for the registerLocale call.
+const countryLocales: Record<string, Parameters<typeof countryData.registerLocale>[0]> = {
+  en: countryEn as Parameters<typeof countryData.registerLocale>[0],
+  fi: countryFi as Parameters<typeof countryData.registerLocale>[0],
+  ja: countryJa as Parameters<typeof countryData.registerLocale>[0],
+};
 
 const Footer = styled.div`
   width: 100%;
@@ -37,22 +44,22 @@ const Footer = styled.div`
   color: var(--inactive-color);
 `;
 
-const registerCountryData = (lang) => {
+const registerCountryData = (lang: string) => {
   countryData.registerLocale(countryLocales[lang] ?? countryLocales.en);
   return countryData;
 };
 
-const App = () => {
-  const [user, setUser] = React.useState(undefined);
-  const [lang, setLang] = React.useState(config.DEFAULT_LANGUAGE);
-  const [countryData, setCountryData] = React.useState(
+const App = (): React.ReactElement => {
+  const [user, setUser] = React.useState<User | undefined>(undefined);
+  const [lang, setLang] = React.useState<string>(config.DEFAULT_LANGUAGE);
+  const [activeCountryData, setCountryData] = React.useState(
     registerCountryData(lang)
   );
 
   const scrollState = scroll();
 
   const { i18n } = useTranslation();
-  i18n.on("languageChanged", (lang) => {
+  i18n.on("languageChanged", (lang: string) => {
     setLang(lang);
     setCountryData(registerCountryData(lang));
   });
@@ -67,8 +74,10 @@ const App = () => {
     const storedUserJson = window.localStorage.getItem("user");
     if (storedUserJson) {
       const storedUser = UserModel(JSON.parse(storedUserJson));
-      token.setToken(storedUser.token());
-      setUser(storedUser);
+      if (storedUser) {
+        token.setToken(storedUser.token());
+        setUser(storedUser);
+      }
     }
   }
 
@@ -89,7 +98,7 @@ const App = () => {
                 <Gallery
                   user={user}
                   lang={lang}
-                  countryData={countryData}
+                  countryData={activeCountryData}
                   isStats={true}
                   scrollState={scrollState}
                 />
@@ -101,7 +110,7 @@ const App = () => {
                 <Gallery
                   user={user}
                   lang={lang}
-                  countryData={countryData}
+                  countryData={activeCountryData}
                   scrollState={scrollState}
                 />
               }
@@ -112,7 +121,7 @@ const App = () => {
                 <Gallery
                   user={user}
                   lang={lang}
-                  countryData={countryData}
+                  countryData={activeCountryData}
                   scrollState={scrollState}
                 />
               }
@@ -123,7 +132,7 @@ const App = () => {
                 <Gallery
                   user={user}
                   lang={lang}
-                  countryData={countryData}
+                  countryData={activeCountryData}
                   scrollState={scrollState}
                 />
               }

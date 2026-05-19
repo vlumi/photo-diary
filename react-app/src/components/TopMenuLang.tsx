@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
@@ -7,10 +6,12 @@ const Lang = styled.span`
   margin: auto 0;
 `;
 const LangForm = styled.form``;
-const LangLabel = styled.label`
+const LangLabel = styled("label", {
+  shouldForwardProp: (prop) => prop !== "$selected",
+})<{ $selected: boolean }>`
   margin: auto 5px;
   color: ${(props) =>
-    props.selected ? "var(--header-color)" : "var(--inactive-color)"};
+    props.$selected ? "var(--header-color)" : "var(--inactive-color)"};
 `;
 const LangInput = styled.input`
   position: absolute;
@@ -20,10 +21,14 @@ const LangInput = styled.input`
   width: 0;
 `;
 
-const TopMenuLang = ({ lang }) => {
+interface Props {
+  lang: string;
+}
+
+const TopMenuLang = ({ lang }: Props): React.ReactElement => {
   const { i18n } = useTranslation();
 
-  const handleLangChange = (event) => {
+  const handleLangChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const lang = event.target.value;
     i18n.changeLanguage(lang);
     window.localStorage.setItem("lang", lang);
@@ -32,7 +37,7 @@ const TopMenuLang = ({ lang }) => {
   return (
     <Lang>
       <LangForm>
-        <LangLabel selected={lang === "en"}>
+        <LangLabel $selected={lang === "en"}>
           <LangInput
             type="radio"
             value="en"
@@ -42,7 +47,7 @@ const TopMenuLang = ({ lang }) => {
           English
         </LangLabel>
         |
-        <LangLabel selected={lang === "fi"}>
+        <LangLabel $selected={lang === "fi"}>
           <LangInput
             type="radio"
             value="fi"
@@ -52,7 +57,7 @@ const TopMenuLang = ({ lang }) => {
           Suomi
         </LangLabel>
         |
-        <LangLabel selected={lang === "ja"}>
+        <LangLabel $selected={lang === "ja"}>
           <LangInput
             type="radio"
             value="ja"
@@ -64,8 +69,5 @@ const TopMenuLang = ({ lang }) => {
       </LangForm>
     </Lang>
   );
-};
-TopMenuLang.propTypes = {
-  lang: PropTypes.string.isRequired,
 };
 export default TopMenuLang;
