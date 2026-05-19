@@ -40,15 +40,15 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.4",
     "@types/morgan": "^1.9.10",
-    "@types/node": "^25.8.0",
+    "@types/node": "^25.9.0",
     "@types/supertest": "^7.2.0",
     "@types/yargs": "^17.0.35",
     "eslint": "^10.4.0",
     "globals": "^17.6.0",
     "supertest": "^7.2.2",
-    "tsx": "^4.19.2",
+    "tsx": "^4.22.2",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.18.2",
+    "typescript-eslint": "^8.59.4",
     "vitest": "^4.1.6"
   },
   "repository": {
