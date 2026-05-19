@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
-import styled from "styled-components";
+import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill } from "react-icons/bs";
 
