@@ -23,6 +23,7 @@
 - Type SQLite row shapes per table in the db layer; drop the `Record<string, any>` escape hatches
 - Tighten `tsconfig.json`: drop `allowJs`/`checkJs` now that no `.js` source remains
 - Quieten dotenv 17 "tip" output in tests via `DOTENV_CONFIG_QUIET=true`; keep production on side-effect `import "dotenv/config"` so `.env` loads during import resolution
+- Make `bin/add-user.ts`, `bin/add-gallery.ts`, `bin/add-photo.ts` directly runnable via a `#!/usr/bin/env -S npx tsx` shebang (no more `npx tsx bin/…` prefix needed from `server/`)
 
 ### Converter
 
