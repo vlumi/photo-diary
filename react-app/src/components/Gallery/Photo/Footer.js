@@ -207,7 +207,7 @@ const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
     if (!photo.hasCoordinates()) {
       return "";
     }
-    return <MapContainer positions={[photo]} zoom="9" />;
+    return <MapContainer positions={[photo]} />;
   };
 
   const renderContent = () => {

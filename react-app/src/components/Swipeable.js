@@ -7,7 +7,6 @@ const Swipeable = ({ children, ...props }) => {
   return <div {...handlers}>{children}</div>;
 };
 Swipeable.propTypes = {
-  children: PropTypes.object,
-  props: PropTypes.func,
+  children: PropTypes.node,
 };
 export default Swipeable;

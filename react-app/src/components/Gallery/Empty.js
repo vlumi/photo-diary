@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Redirect } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { BsFillHouseFill } from "react-icons/bs";
 
@@ -27,7 +27,7 @@ const Empty = ({ children, gallery }) => {
     }
   }, [redirect]);
   if (redirect) {
-    return <Redirect to={redirect} />;
+    return <Navigate to={redirect} replace />;
   }
   return (
     <>

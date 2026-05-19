@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Redirect } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 
@@ -73,7 +73,7 @@ const Month = ({ children, gallery, year, month, lang, countryData }) => {
     }
   }, [redirect]);
   if (redirect) {
-    return <Redirect to={redirect} />;
+    return <Navigate to={redirect} replace />;
   }
 
   return (
