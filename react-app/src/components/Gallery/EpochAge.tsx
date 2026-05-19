@@ -1,14 +1,24 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
 import calendar from "../../lib/calendar";
 
+import type { Gallery } from "../../models/GalleryModel";
+
 const Root = styled.div``;
 const Part = styled.span`
   display: inline-block;
 `;
+
+interface Props {
+  gallery: Gallery;
+  year: number;
+  month: number;
+  day: number;
+  format?: string;
+  separator?: React.ReactNode;
+}
 
 const EpochAge = ({
   gallery,
@@ -17,26 +27,23 @@ const EpochAge = ({
   day,
   format = "short",
   separator = <br />,
-}) => {
+}: Props): React.ReactElement | string => {
   const { t } = useTranslation();
-  if (!gallery.hasEpoch()) {
+  const epochYmd = gallery.epochYmd();
+  if (!gallery.hasEpoch() || !epochYmd) {
     return "";
   }
-  const epochDiffYmd = calendar.sinceEpochYmd(gallery.epochYmd(), [
-    year,
-    month,
-    day,
-  ]);
+  const epochDiffYmd = calendar.sinceEpochYmd(epochYmd, [year, month, day]);
 
   const partTitles = [`years-${format}`, `months-${format}`, `days-${format}`];
-  const parts = [];
-  for (const i in [...Array(epochDiffYmd.length).keys()]) {
+  const parts: string[] = [];
+  for (let i = 0; i < epochDiffYmd.length; i++) {
     if (epochDiffYmd[i] > 0) {
-      parts.push(`${t(partTitles[i], { count: epochDiffYmd[i] })}`);
+      parts.push(String(t(partTitles[i], { count: epochDiffYmd[i] })));
     }
   }
   if (parts.length === 0) {
-    return "0" + t(`days-${format}`);
+    return "0" + String(t(`days-${format}`));
   }
 
   return (
@@ -49,13 +56,5 @@ const EpochAge = ({
       ))}
     </Root>
   );
-};
-EpochAge.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
-  format: PropTypes.string,
-  separator: PropTypes.any,
 };
 export default EpochAge;

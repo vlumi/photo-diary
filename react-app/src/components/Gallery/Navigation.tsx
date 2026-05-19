@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 const Root = styled.h2`
@@ -37,10 +36,11 @@ const Root = styled.h2`
   }
 `;
 
-const Navigation = ({ children }) => {
+interface Props {
+  children?: React.ReactNode;
+}
+
+const Navigation = ({ children }: Props): React.ReactElement => {
   return <Root>{children}</Root>;
-};
-Navigation.propTypes = {
-  children: PropTypes.any.isRequired,
 };
 export default Navigation;

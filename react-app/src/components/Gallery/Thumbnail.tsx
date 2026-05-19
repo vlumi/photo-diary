@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 import FlagIcon from "../FlagIcon";
@@ -7,6 +6,13 @@ import FlagIcon from "../FlagIcon";
 import Link from "./Link";
 
 import config from "../../lib/config";
+
+import type { Gallery } from "../../models/GalleryModel";
+import type { Photo } from "../../models/PhotoModel";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+}
 
 const Root = styled.div`
   height: 212px;
@@ -33,7 +39,19 @@ const StyledFlagIcon = styled(FlagIcon)`
   display: block;
 `;
 
-const Thumbnail = ({ gallery, photo, lang, countryData }) => {
+interface Props {
+  gallery: Gallery;
+  photo: Photo;
+  lang: string;
+  countryData: CountryData;
+}
+
+const Thumbnail = ({
+  gallery,
+  photo,
+  lang,
+  countryData,
+}: Props): React.ReactElement => {
   const url = `url("${config.PHOTO_ROOT_URL}thumbnail/${photo.id()}")`;
   const dimensions = photo.thumbnailDimensions();
   const style = {
@@ -43,9 +61,10 @@ const Thumbnail = ({ gallery, photo, lang, countryData }) => {
   };
 
   const renderFlag = () => {
-    return photo.hasCountry() ? (
+    const countryCode = photo.countryCode();
+    return photo.hasCountry() && countryCode ? (
       <Flag title={photo.countryName(lang, countryData)}>
-        <StyledFlagIcon code={photo.countryCode()} />
+        <StyledFlagIcon code={countryCode} />
       </Flag>
     ) : (
       ""
@@ -59,11 +78,5 @@ const Thumbnail = ({ gallery, photo, lang, countryData }) => {
       {renderFlag()}
     </Root>
   );
-};
-Thumbnail.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  photo: PropTypes.object.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Thumbnail;

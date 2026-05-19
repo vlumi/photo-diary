@@ -1,11 +1,12 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill } from "react-icons/bs";
 
 import Link from "./Link";
+
+import type { Gallery } from "../../models/GalleryModel";
 
 const Root = styled.div`
   display: flex;
@@ -32,8 +33,24 @@ const ContextSelect = styled(TitleSelect)`
 `;
 const TitleOption = styled.option``;
 
-const Title = ({ galleries, gallery, context, year, month, day }) => {
-  const [redirect, setRedirect] = React.useState(undefined);
+interface Props {
+  galleries: Gallery[];
+  gallery: Gallery;
+  context: string;
+  year?: number;
+  month?: number;
+  day?: number;
+}
+
+const Title = ({
+  galleries,
+  gallery,
+  context,
+  year,
+  month,
+  day,
+}: Props): React.ReactElement => {
+  const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
 
   const { t } = useTranslation();
 
@@ -50,7 +67,7 @@ const Title = ({ galleries, gallery, context, year, month, day }) => {
     return <Navigate to={redirect} replace />;
   }
 
-  const getRedirectPath = (gallery, context) => {
+  const getRedirectPath = (gallery: Gallery, context: string): string => {
     switch (context) {
       default:
       case "gallery":
@@ -61,17 +78,17 @@ const Title = ({ galleries, gallery, context, year, month, day }) => {
   };
 
   const renderTitle = () => {
-    const changeHandler = (event) => {
+    const changeHandler = (event: React.ChangeEvent<HTMLSelectElement>) => {
       const targetGallery = galleries.find(
         (gallery) => gallery.id() === event.target.value
       );
-      if (targetGallery && gallery.id !== targetGallery.id) {
+      if (targetGallery && gallery.id() !== targetGallery.id()) {
         window.history.pushState({}, "");
         setRedirect(getRedirectPath(targetGallery, context));
       }
     };
 
-    if (Object.keys(galleries).length > 1) {
+    if (galleries.length > 1) {
       return (
         <GallerySelect value={gallery.id()} onChange={changeHandler}>
           {galleries.map((gallery) => (
@@ -85,7 +102,7 @@ const Title = ({ galleries, gallery, context, year, month, day }) => {
     return <>{gallery.title()}</>;
   };
   const renderContext = () => {
-    const changeHandler = (event) => {
+    const changeHandler = (event: React.ChangeEvent<HTMLSelectElement>) => {
       const targetContext = event.target.value;
       if (targetContext && context !== targetContext) {
         window.history.pushState({}, "");
@@ -112,13 +129,5 @@ const Title = ({ galleries, gallery, context, year, month, day }) => {
       {renderContext()}
     </Root>
   );
-};
-Title.propTypes = {
-  galleries: PropTypes.array.isRequired,
-  gallery: PropTypes.object.isRequired,
-  context: PropTypes.string.isRequired,
-  year: PropTypes.number,
-  month: PropTypes.number,
-  day: PropTypes.number,
 };
 export default Title;
