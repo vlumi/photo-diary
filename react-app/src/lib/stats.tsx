@@ -1,6 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// This file aggregates photo statistics into chart-ready data and table rows.
+// The internal accumulator shape is highly dynamic (year/month/day/category
+// indexes built up from runtime data), so the internal helpers use `any` for
+// the carrier objects; the public entry points (`generate`, `decodeTableRowKey`,
+// `collectTopics`) are typed properly.
 import React from "react";
 
 import { create, all } from "mathjs";
+import type { TFunction } from "i18next";
 
 import FlagIcon from "../components/FlagIcon";
 
@@ -9,8 +16,8 @@ import FlagIcon from "../components/FlagIcon";
 const MS_PER_DAY = 86400000;
 const MS_PER_YEAR = MS_PER_DAY * 365.25;
 const MS_PER_MONTH = MS_PER_YEAR / 12;
-const dateDiff = (a, b) => {
-  const ms = a - b;
+const dateDiff = (a: Date, b: Date) => {
+  const ms = a.getTime() - b.getTime();
   return {
     years: () => ms / MS_PER_YEAR,
     months: () => ms / MS_PER_MONTH,
@@ -22,16 +29,25 @@ import format from "./format";
 import collection from "./collection";
 import color from "./color";
 import config from "./config";
+import type { Photo } from "../models/PhotoModel";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+  isValid(code: string): boolean;
+}
+interface Theme {
+  get: (name: string) => string;
+}
 
 const math = create(all, {});
 
 const UNKNOWN = "unknown";
 
-const generate = async (photos, uniqueValues) => {
+const generate = async (photos: Photo[], uniqueValues: any) => {
   return collectStatistics(photos, uniqueValues);
 };
 
-const decodeTableRowKey = (key) => {
+const decodeTableRowKey = (key: string | undefined): string | undefined => {
   if (!key) {
     return key;
   }
@@ -40,32 +56,41 @@ const decodeTableRowKey = (key) => {
   return value;
 };
 
-const collectTopics = (data, lang, t, countryData, theme) => {
+const collectTopics = (
+  data: any,
+  lang: string,
+  t: TFunction,
+  countryData: CountryData,
+  theme: Theme
+) => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang, t);
 
-  const localizeUnknownKey = (key, unknownLabel = t("stats-unknown")) => {
+  const localizeUnknownKey = (
+    key: string,
+    unknownLabel: string = String(t("stats-unknown"))
+  ): string => {
     try {
       return JSON.stringify(
-        JSON.parse(key).map((part) => (part === UNKNOWN ? unknownLabel : part))
+        JSON.parse(key).map((part: any) => (part === UNKNOWN ? unknownLabel : part))
       );
     } catch (e) {
       return key === UNKNOWN ? unknownLabel : key;
     }
   };
-  const encodeTableKey = (value) =>
+  const encodeTableKey = (value: any) =>
     JSON.stringify({
       value: value,
       isUnknown: value === UNKNOWN,
     });
-  const encodeLabelKey = (formatter) => (entry) =>
-    collection.transformObjectValue(entry, "key", (entry) => {
+  const encodeLabelKey = (formatter: any) => (entry: any) =>
+    collection.transformObjectValue(entry, "key", (entry: any) => {
       return {
         name: formatter(localizeUnknownKey(entry.key)),
         share: format.share(entry.value, data.count.total),
       };
     });
-  const decodeLabelKey = (key, value) => {
+  const decodeLabelKey = (key: any, value: any) => {
     try {
       const { name, share } = JSON.parse(key);
       if (name !== undefined && share !== undefined) {
@@ -78,7 +103,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     }
     return ` ${key}: ${formatNumber.default(value)}`;
   };
-  const chartOptions = {
+  const chartOptions: any = {
     common: {
       plugins: {
         legend: {
@@ -88,7 +113,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
           mode: "index",
           callbacks: {
             title: () => "",
-            label: (context) => {
+            label: (context: any) => {
               return decodeLabelKey(
                 context.dataset.label || context.label,
                 context.dataset.data[context.dataIndex]
@@ -140,31 +165,31 @@ const collectTopics = (data, lang, t, countryData, theme) => {
   });
 
   const mapToChartData = (
-    foldedData,
-    formatter = format.identity,
+    foldedData: any,
+    formatter: any = format.identity,
     maxEntries = 0,
-    otherLabel = t("stats-other")
-  ) => {
-    const valueRanks = collection.calculateRanks(foldedData, (_) =>
+    otherLabel: any = t("stats-other")
+  ): any => {
+    const valueRanks = collection.calculateRanks(foldedData, (_: any) =>
       Number(_.value)
     );
-    const doMap = (data) => {
+    const doMap = (data: any) => {
       const colorGradients = color.colorGradient(
         theme.get("header-background"),
         theme.get("header-color"),
         data.length
       );
       const colors = data
-        .map((_) => Number(_.value))
-        .map((value) => colorGradients[valueRanks[value]]);
+        .map((_: any) => Number(_.value))
+        .map((value: any) => colorGradients[valueRanks[value]]);
       return [
         {
           labels: data
             .map(encodeLabelKey(formatter))
-            .map((_) => JSON.stringify(_.key)),
+            .map((_: any) => JSON.stringify(_.key)),
           datasets: [
             {
-              data: data.map((_) => _.value),
+              data: data.map((_: any) => _.value),
               backgroundColor: colors,
               borderWidth: 0.5,
               barThickness: "flex",
@@ -181,10 +206,10 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       foldedData,
       maxEntries,
       doMap,
-      (data) => {
+      (data: any) => {
         return {
           key: otherLabel,
-          value: data.map((_) => _.value).reduce((a, b) => a + b, 0),
+          value: data.map((_: any) => _.value).reduce((a: any, b: any) => a + b, 0),
         };
       }
     );
@@ -195,7 +220,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     formatter = format.identity,
     limit = 0,
     otherLabel = t("stats-other"),
-  }) => {
+  }: {
+    original: any;
+    comparator?: any;
+    formatter?: any;
+    limit?: number;
+    otherLabel?: any;
+  }): any => {
     const flat = collection.foldToArray(original, comparator);
     const [data, valueRanks] = mapToChartData(
       flat,
@@ -205,14 +236,14 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     );
     return [flat, data, valueRanks];
   };
-  const calculateStatistics = (values) => {
+  const calculateStatistics = (values: any) => {
     if (values.length === 0) {
       return { mean: 0, stddev: 0 };
     }
     return { mean: math.mean(values), stddev: math.std(values) };
   };
-  const collectSummary = (count) => {
-    const getTimeDiff = (count) => {
+  const collectSummary = (count: any) => {
+    const getTimeDiff = (count: any) => {
       if (count.byTime.days < 1) {
         const now = new Date();
         return dateDiff(now, now);
@@ -244,11 +275,11 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectAuthor = (byAuthor, total) => {
+  const collectAuthor = (byAuthor: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byAuthor,
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "author",
@@ -263,7 +294,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -277,13 +308,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectCountry = (byCountry, total) => {
+  const collectCountry = (byCountry: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byCountry,
-      formatter: (countryCode) =>
+      formatter: (countryCode: any) =>
         format.countryName(lang, countryData)(countryCode),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "country",
@@ -299,7 +330,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -343,8 +374,8 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
 
-  const collectYearMonth = (byYearMonth, daysInYearMonth) => {
-    const mapToChartData = (deep) => {
+  const collectYearMonth = (byYearMonth: any, daysInYearMonth: any) => {
+    const mapToChartData = (deep: any) => {
       if (!deep || !deep.length) {
         return {
           labels: [],
@@ -357,14 +388,14 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         deep.length
       );
       return {
-        labels: [...Array(12).keys()].map((entry) =>
+        labels: [...Array(12).keys()].map((entry: any) =>
           t(`month-long-${entry + 1}`)
         ),
-        datasets: deep.map((entry, i) => {
+        datasets: deep.map((entry: any, i: any) => {
           return {
             label: entry.key,
             backgroundColor: colorGradients[i],
-            data: [...Array(12).keys()].map((month) => entry.value[month + 1]),
+            data: [...Array(12).keys()].map((month: any) => entry.value[month + 1]),
             fill: true,
             lineTension: 0.4,
           };
@@ -372,8 +403,8 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       };
     };
     const deep = Object.keys(byYearMonth)
-      .sort((a, b) => a - b)
-      .map((year) => {
+      .sort((a: any, b: any) => a - b)
+      .map((year: any) => {
         return {
           key: year,
           value: byYearMonth[year],
@@ -381,19 +412,19 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       });
     const data = mapToChartData(deep);
     const flat = deep
-      .sort((a, b) => Number(b.key) - Number(a.key))
-      .flatMap((year) => {
+      .sort((a: any, b: any) => Number(b.key) - Number(a.key))
+      .flatMap((year: any) => {
         return [...Array(12).keys()]
-          .sort((a, b) => b - a)
-          .filter((month) => `${month + 1}` in year.value)
-          .map((month) => {
+          .sort((a: any, b: any) => b - a)
+          .filter((month: any) => `${month + 1}` in year.value)
+          .map((month: any) => {
             return {
               key: [year.key, month + 1],
               value: year.value[month + 1],
             };
           });
       });
-    const average = (value, year, month) => {
+    const average = (value: any, year: any, month: any) => {
       if (
         !(year in daysInYearMonth) ||
         !(month in daysInYearMonth[year]) ||
@@ -403,12 +434,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }
       return value / daysInYearMonth[year][month];
     };
-    const values = flat.map((entry) => {
+    const values = flat.map((entry: any) => {
       const [year, month] = entry.key;
       return average(entry.value, year, month);
     });
     const { mean, stddev } = calculateStatistics(values);
-    const valueRanks = collection.calculateRanks(flat, (_) => Number(_.value));
+    const valueRanks = collection.calculateRanks(flat, (_: any) => Number(_.value));
     return {
       key: "year-month",
       title: t("stats-category-year-month"),
@@ -419,7 +450,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "average", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         const [year, month] = entry.key;
         return {
           key: encodeTableKey(entry.key.join("-")),
@@ -435,12 +466,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectYear = (byYear, daysInYear) => {
+  const collectYear = (byYear: any, daysInYear: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byYear,
       comparator: collection.numSortByFieldDesc("key"),
     });
-    const values = flat.map((entry) => {
+    const values = flat.map((entry: any) => {
       return entry.value / daysInYear[entry.key];
     });
     const { mean, stddev } = calculateStatistics(values);
@@ -457,7 +488,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "average", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -471,14 +502,14 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectMonth = (byMonth, total) => {
+  const collectMonth = (byMonth: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byMonth,
       comparator: collection.numSortByFieldAsc("key"),
-      formatter: (month) => t(`month-long-${month}`),
+      formatter: (month: any) => t(`month-long-${month}`),
       limit: 12,
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "month",
@@ -493,7 +524,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -507,17 +538,17 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectWeekday = (byWeekday, total) => {
+  const collectWeekday = (byWeekday: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
-      original: collection.transformObjectKeys(byWeekday, (dow, value) => {
+      original: collection.transformObjectKeys(byWeekday, (dow: any, value: any) => {
         const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
         return [key, value];
       }),
       comparator: collection.numSortByFieldAsc("key"),
-      formatter: (dow) => t(`weekday-long-${format.dayOfWeek(dow)}`),
+      formatter: (dow: any) => t(`weekday-long-${format.dayOfWeek(dow)}`),
       limit: 24,
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "weekday",
@@ -532,7 +563,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -546,14 +577,14 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectHour = (byHour, total) => {
+  const collectHour = (byHour: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byHour,
       comparator: collection.numSortByFieldAsc("key"),
-      formatter: (hour) => `${format.padNumber(hour, 2)}:00–`,
+      formatter: (hour: any) => `${format.padNumber(hour, 2)}:00–`,
       limit: 24,
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "hour",
@@ -568,7 +599,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -598,12 +629,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
 
-  const collectCameraMake = (byCameraMake, total) => {
+  const collectCameraMake = (byCameraMake: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byCameraMake,
       limit: 20,
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "camera-make",
@@ -618,7 +649,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -632,12 +663,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectCamera = (byCamera, total) => {
+  const collectCamera = (byCamera: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byCamera,
       limit: 20,
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "camera",
@@ -652,7 +683,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -666,12 +697,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectLens = (byLens, total) => {
+  const collectLens = (byLens: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byLens,
       limit: 20,
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "lens",
@@ -686,7 +717,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -700,14 +731,14 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectCameraLens = (byCameraLens, total) => {
+  const collectCameraLens = (byCameraLens: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byCameraLens,
-      formatter: (cameraLens) => JSON.parse(cameraLens).join(" + "),
+      formatter: (cameraLens: any) => JSON.parse(cameraLens).join(" + "),
       limit: 20,
       otherLabel: JSON.stringify([t("stats-other")]),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "camera-lens",
@@ -722,7 +753,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -751,13 +782,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
     };
   };
 
-  const collectFocalLength = (byFocalLength, total) => {
+  const collectFocalLength = (byFocalLength: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byFocalLength,
       formatter: formatExposure.focalLength,
       comparator: collection.numSortByFieldAsc("key"),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "focal-length",
@@ -772,12 +803,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           "focal-length": formatExposure.focalLength(
-            localizeUnknownKey(entry.key)
+            localizeUnknownKey(entry.key) as any
           ),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
@@ -788,13 +819,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectAperture = (byAperture, total) => {
+  const collectAperture = (byAperture: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byAperture,
       formatter: formatExposure.aperture,
       comparator: collection.numSortByFieldAsc("key"),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "aperture",
@@ -809,11 +840,11 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          aperture: formatExposure.aperture(localizeUnknownKey(entry.key)),
+          aperture: formatExposure.aperture(localizeUnknownKey(entry.key) as any),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -823,13 +854,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectExposureTime = (byExposureTime, total) => {
+  const collectExposureTime = (byExposureTime: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byExposureTime,
       formatter: formatExposure.exposureTime,
       comparator: collection.numSortByFieldDesc("key"),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "exposure-time",
@@ -844,12 +875,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
           "exposure-time": formatExposure.exposureTime(
-            localizeUnknownKey(entry.key)
+            localizeUnknownKey(entry.key) as any
           ),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
@@ -860,13 +891,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectIso = (byIso, total) => {
+  const collectIso = (byIso: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byIso,
       formatter: formatExposure.iso,
       comparator: collection.numSortByFieldAsc("key"),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "iso",
@@ -881,11 +912,11 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          iso: formatExposure.iso(localizeUnknownKey(entry.key)),
+          iso: formatExposure.iso(localizeUnknownKey(entry.key) as any),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -895,13 +926,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectExposureValue = (byExposureValue, total) => {
+  const collectExposureValue = (byExposureValue: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byExposureValue,
       formatter: formatExposure.ev,
       comparator: collection.numSortByFieldAsc("key"),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "ev",
@@ -916,11 +947,11 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          ev: formatExposure.ev(localizeUnknownKey(entry.key)),
+          ev: formatExposure.ev(localizeUnknownKey(entry.key) as any),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -930,13 +961,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectLightValue = (byLightValue, total) => {
+  const collectLightValue = (byLightValue: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byLightValue,
       formatter: formatExposure.ev,
       comparator: collection.numSortByFieldAsc("key"),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "lv",
@@ -951,11 +982,11 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          lv: formatExposure.ev(localizeUnknownKey(entry.key)),
+          lv: formatExposure.ev(localizeUnknownKey(entry.key) as any),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -965,13 +996,13 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectResolution = (byResolution, total) => {
+  const collectResolution = (byResolution: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byResolution,
       formatter: formatExposure.resolution,
       comparator: collection.numSortByFieldAsc("key"),
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "resolution",
@@ -986,11 +1017,11 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          resolution: formatExposure.resolution(localizeUnknownKey(entry.key)),
+          resolution: formatExposure.resolution(localizeUnknownKey(entry.key) as any),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
@@ -1000,12 +1031,12 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectOrientation = (byOrientation, total) => {
+  const collectOrientation = (byOrientation: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byOrientation,
       formatter: formatExposure.orientation,
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "orientation",
@@ -1020,7 +1051,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -1034,11 +1065,11 @@ const collectTopics = (data, lang, t, countryData, theme) => {
       }),
     };
   };
-  const collectAspectRatio = (byAspectRatio, total) => {
+  const collectAspectRatio = (byAspectRatio: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byAspectRatio
     });
-    const values = flat.map((entry) => entry.value);
+    const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
     return {
       key: "aspect-ratio",
@@ -1053,7 +1084,7 @@ const collectTopics = (data, lang, t, countryData, theme) => {
         { title: "count", align: "right" },
         { title: "share", align: "right" },
       ],
-      table: flat.map((entry) => {
+      table: flat.map((entry: any) => {
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -1106,21 +1137,21 @@ export default { UNKNOWN, decodeTableRowKey, generate, collectTopics };
  * @param {string} UNKNOWN
  * @return Distribution statistics of the given photos over various parameters and their combinations.
  */
-const collectStatistics = (photos, uniqueValues) => {
+const collectStatistics = (photos: any, uniqueValues: any) => {
   const stats = initializeStats(uniqueValues);
   populateDistributions(photos, stats);
   return stats;
 };
 
-const initializeStats = (uniqueValues) => {
-  const stats = {
+const initializeStats = (uniqueValues: any): any => {
+  const stats: any = {
     count: {
       total: 0,
       byTime: {
         byYear: {},
         byYearMonth: {},
         byMonth: collection.objectFromArray(
-          [...Array(12).keys()].map((month) => month + 1),
+          [...Array(12).keys()].map((month: any) => month + 1),
           0
         ),
         byWeekday: collection.objectFromArray([...Array(7).keys()], 0),
@@ -1134,11 +1165,11 @@ const initializeStats = (uniqueValues) => {
       byCountry: {},
     },
   };
-  const setInitialValues = (source) => {
+  const setInitialValues = (source: any) => {
     if (!Array.isArray(source)) {
       return {};
     }
-    return Object.fromEntries(source.map((_) => [_.key, 0]));
+    return Object.fromEntries(source.map((_: any) => [_.key, 0]));
   };
   if (uniqueValues) {
     if ("general" in uniqueValues) {
@@ -1147,8 +1178,8 @@ const initializeStats = (uniqueValues) => {
     }
     if ("time" in uniqueValues) {
       stats.count.byTime.byYearMonth = uniqueValues.time["year-month"]
-        .map((_) => _.key.split("-"))
-        .reduce((acc, v) => {
+        .map((_: any) => _.key.split("-"))
+        .reduce((acc: any, v: any) => {
           acc[v[0]] = acc[v[0]] || {};
           acc[v[0]][v[1]] = 0;
           return acc;
@@ -1162,7 +1193,7 @@ const initializeStats = (uniqueValues) => {
       stats.count.byGear.byCamera = setInitialValues(uniqueValues.gear.camera);
       stats.count.byGear.byLens = setInitialValues(uniqueValues.gear.lens);
       stats.count.byGear.byCameraLens = setInitialValues(
-        uniqueValues.gear["camera-lens"].map((e) => {
+        uniqueValues.gear["camera-lens"].map((e: any) => {
           const key = JSON.parse(e.key);
           const camera = key[0] || UNKNOWN;
           const lens = key[1] || UNKNOWN;
@@ -1209,8 +1240,8 @@ const initializeStats = (uniqueValues) => {
  * @param {array} photos The photos over which the statistics should be collected.
  * @param {object} stats The target structure for collecting statistics.
  */
-const populateDistributions = (photos, stats) => {
-  photos.forEach((photo) => {
+const populateDistributions = (photos: any, stats: any) => {
+  photos.forEach((photo: any) => {
     stats.count.total++;
 
     const countryCode = photo.countryCode() || UNKNOWN;
@@ -1272,8 +1303,15 @@ const populateDistributions = (photos, stats) => {
  * @param {number} day Photo timestamp day of month.
  * @param {number} hour Photo timestamp hour.
  */
-const updateTimeDistribution = (byTime, year, month, day, weekday, hour) => {
-  const canonDate = (ymd) => ymd.year * 10000 + ymd.month * 100 + ymd.day;
+const updateTimeDistribution = (
+  byTime: any,
+  year: number,
+  month: number,
+  day: number,
+  weekday: number,
+  hour: number | undefined
+) => {
+  const canonDate = (ymd: any) => ymd.year * 10000 + ymd.month * 100 + ymd.day;
 
   const canonYmd = canonDate({ year, month, day });
   const minDate = byTime.minDate || undefined;
@@ -1307,8 +1345,10 @@ const updateTimeDistribution = (byTime, year, month, day, weekday, hour) => {
   byTime.byWeekday[weekday] = byTime.byWeekday[weekday] || 0;
   byTime.byWeekday[weekday]++;
 
-  byTime.byHour[hour] = byTime.byHour[hour] || 0;
-  byTime.byHour[hour]++;
+  if (hour !== undefined) {
+    byTime.byHour[hour] = byTime.byHour[hour] || 0;
+    byTime.byHour[hour]++;
+  }
 
   calculateNumberOfDays(byTime);
 };
@@ -1327,7 +1367,7 @@ const updateTimeDistribution = (byTime, year, month, day, weekday, hour) => {
  * @param {object} byExposure Target for collecting the exposure distribution over all photos.
  * @param {object} photo Exposure values of the current photo.
  */
-const updateExposureDistribution = (byExposure, photo) => {
+const updateExposureDistribution = (byExposure: any, photo: any) => {
   const focalLength = Number(photo.focalLength()) || UNKNOWN;
   byExposure.byFocalLength = byExposure.byFocalLength || {};
   byExposure.byFocalLength[focalLength] =
@@ -1398,7 +1438,7 @@ const updateExposureDistribution = (byExposure, photo) => {
  * @param {object} byGear Target for collecting the gear distribution over all photos.
  * @param {object} photo The current photo.
  */
-const updateGear = (byGear, photo) => {
+const updateGear = (byGear: any, photo: any) => {
   const cameraMake = photo.cameraMake() || UNKNOWN;
   byGear.byCameraMake = byGear.byCameraMake || {};
   byGear.byCameraMake[cameraMake] = byGear.byCameraMake[cameraMake] || 0;
@@ -1433,10 +1473,10 @@ const updateGear = (byGear, photo) => {
  *
  * @param {object} byTime Target for collecting the time distribution over all photos
  */
-const calculateNumberOfDays = (byTime) => {
-  const isLeap = (year) =>
+const calculateNumberOfDays = (byTime: any) => {
+  const isLeap = (year: any) =>
     year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  const MONTH_LENGTH = {
+  const MONTH_LENGTH: Record<string, number[]> = {
     true: [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
     false: [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
   };
@@ -1454,10 +1494,10 @@ const calculateNumberOfDays = (byTime) => {
         byTime.maxDate.day - byTime.minDate.day + 1;
     } else if (m === byTime.minDate.month) {
       byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
-        MONTH_LENGTH[isLeap(minYear)][m] - byTime.minDate.day + 1;
+        MONTH_LENGTH[String(isLeap(minYear))][m] - byTime.minDate.day + 1;
     } else {
       byTime.daysInYear[minYear] += byTime.daysInYearMonth[minYear][m] =
-        MONTH_LENGTH[isLeap(minYear)][m];
+        MONTH_LENGTH[String(isLeap(minYear))][m];
     }
   }
 
@@ -1470,7 +1510,7 @@ const calculateNumberOfDays = (byTime) => {
     byTime.daysInYearMonth[y] = {};
     for (let m = 1; m <= 12; m++) {
       byTime.byYearMonth[y][m] = byTime.byYearMonth[y][m] || 0;
-      byTime.daysInYearMonth[y][m] = MONTH_LENGTH[leap][m];
+      byTime.daysInYearMonth[y][m] = MONTH_LENGTH[String(leap)][m];
     }
   }
 
@@ -1487,7 +1527,7 @@ const calculateNumberOfDays = (byTime) => {
         byTime.maxDate.day;
     } else {
       byTime.daysInYear[maxYear] += byTime.daysInYearMonth[maxYear][m] =
-        MONTH_LENGTH[isLeap(maxYear)][m];
+        MONTH_LENGTH[String(isLeap(maxYear))][m];
     }
   }
 
@@ -1501,5 +1541,5 @@ const calculateNumberOfDays = (byTime) => {
       byTime.minDate.month +
       byTime.maxDate.month;
   }
-  byTime.days = Object.values(byTime.daysInYear).reduce((a, b) => a + b, 0);
+  byTime.days = Object.values(byTime.daysInYear).reduce((a: any, b: any) => a + b, 0);
 };
