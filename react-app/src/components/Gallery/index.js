@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { createGlobalStyle } from "styled-components";
-import { Redirect, useParams, useLocation } from "react-router-dom";
+import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import metaService from "../../services/meta";
@@ -177,21 +177,21 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
   }
   if (!galleryId) {
     if (galleries.length === 1) {
-      return <Redirect to={galleries[0].path()} />;
+      return <Navigate to={galleries[0].path()} replace />;
     }
 
     const galleriesMatchingHostname = galleries.filter((gallery) =>
       gallery.matchesHostname(window.location.hostname)
     );
     if (galleriesMatchingHostname.length === 1) {
-      return <Redirect to={galleriesMatchingHostname[0].path()} />;
+      return <Navigate to={galleriesMatchingHostname[0].path()} replace />;
     }
     if (config.DEFAULT_GALLERY) {
       const targetGallery = galleries.find(
         (gallery) => gallery.id() === config.DEFAULT_GALLERY
       );
       if (targetGallery) {
-        return <Redirect to={targetGallery.path()} />;
+        return <Navigate to={targetGallery.path()} replace />;
       }
     }
 

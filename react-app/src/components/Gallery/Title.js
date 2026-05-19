@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Redirect } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill } from "react-icons/bs";
@@ -47,7 +47,7 @@ const Title = ({ galleries, gallery, context, year, month, day }) => {
     }
   }, [redirect]);
   if (redirect) {
-    return <Redirect to={redirect} />;
+    return <Navigate to={redirect} replace />;
   }
 
   const getRedirectPath = (gallery, context) => {
