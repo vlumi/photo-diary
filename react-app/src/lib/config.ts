@@ -4,7 +4,7 @@
  * This can be overridden with the instance metadata `cdn`.
  */
 const env = import.meta.env;
-var PHOTO_ROOT_URL = env.VITE_PHOTO_ROOT_URL || "/";
+let PHOTO_ROOT_URL = env.VITE_PHOTO_ROOT_URL || "/";
 /**
  * The default language to choose if the user has not selected one.
  */
@@ -28,12 +28,14 @@ const INITIAL_GALLERY_VIEW = env.VITE_INITIAL_GALLERY_VIEW || "month";
  *
  * 1 = Monday, 0 = Sunday
  */
-const FIRST_WEEKDAY = env.VITE_FIRST_WEEKDAY || 1;
+const FIRST_WEEKDAY: number = env.VITE_FIRST_WEEKDAY
+  ? Number(env.VITE_FIRST_WEEKDAY)
+  : 1;
 
 let lang = DEFAULT_LANGUAGE;
 
 export default {
-  PHOTO_ROOT_URL: PHOTO_ROOT_URL,
+  PHOTO_ROOT_URL,
 
   DEFAULT_LANGUAGE,
   DEFAULT_GALLERY,

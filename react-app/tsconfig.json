@@ -13,7 +13,7 @@
     "noEmit": true,
     "isolatedModules": true,
     "allowJs": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals", "vite/client"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx", "vite.config.js"],
   "exclude": ["node_modules", "build", "dist"]

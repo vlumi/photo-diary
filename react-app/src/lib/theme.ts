@@ -1,4 +1,15 @@
-const THEMES = {
+type ThemeName = "blue" | "red" | "grayscale" | "bw" | "alert";
+type ThemeKey =
+  | "primary-color"
+  | "primary-background"
+  | "inactive-color"
+  | "header-color"
+  | "header-sub-color"
+  | "header-background"
+  | "filter";
+type Theme = Record<ThemeKey, string>;
+
+const THEMES: Record<ThemeName, Theme> = {
   blue: {
     "primary-color": "#004",
     "primary-background": "#ddf",
@@ -46,10 +57,14 @@ const THEMES = {
   },
 };
 
-const setTheme = (theme) => {
+const isThemeName = (name: string): name is ThemeName => name in THEMES;
+const isThemeKey = (key: string): key is ThemeKey =>
+  key in THEMES.blue;
+
+const setTheme = (theme: string) => {
   return {
-    get: (name) => {
-      if (!(theme in THEMES) || !(name in THEMES[theme])) {
+    get: (name: string): string => {
+      if (!isThemeName(theme) || !isThemeKey(name)) {
         return "";
       }
       return THEMES[theme][name];
