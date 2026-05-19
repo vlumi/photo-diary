@@ -6,7 +6,6 @@ import {
   Navigate,
 } from "react-router-dom";
 import styled from "@emotion/styled";
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 
 import countryData from "i18n-iso-countries";
@@ -83,11 +82,9 @@ const App = (): React.ReactElement => {
 
   return (
     <>
-      <Helmet>
-        <title>Photo diary</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="robots" content="noindex" />
-      </Helmet>
+      <title>Photo diary</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="robots" content="noindex" />
       <TopMenu user={user} setUser={setUser} lang={lang} />
       <Router>
         <ScrollToPosition scrollState={scrollState}>

@@ -1,6 +1,5 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { BsFillHouseFill } from "react-icons/bs";
 
 import Root from "./Navigation";
@@ -37,9 +36,7 @@ const Empty = ({ children, gallery }: Props): React.ReactElement => {
   }
   return (
     <>
-      <Helmet>
-        <title>{gallery.title()}</title>
-      </Helmet>
+      <title>{gallery.title()}</title>
       <Root>
         <Link>
           <span className="title">
