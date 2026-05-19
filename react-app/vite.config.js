@@ -3,24 +3,7 @@ import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react({
-      // CRA allowed JSX in .js files; preserve that so we don't rename ~80 files.
-      include: "**/*.{js,jsx}",
-    }),
-  ],
-  // Parse JSX in .js files (legacy from the CRA migration) and TS in .ts files.
-  // tsx loader is a superset that handles JS-with-JSX, TS, and TS-with-JSX.
-  esbuild: {
-    loader: "tsx",
-    include: /src\/.*\.[jt]sx?$/,
-    exclude: [],
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: { ".js": "jsx" },
-    },
-  },
+  plugins: [react()],
   server: {
     port: 3000,
     open: true,
@@ -34,7 +17,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: ["./src/setupTests.js"],
+    setupFiles: ["./src/setupTests.ts"],
     css: false,
   },
 });
