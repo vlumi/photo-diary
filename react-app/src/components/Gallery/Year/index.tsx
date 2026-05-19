@@ -1,6 +1,5 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import type { SwipeEventData } from "react-swipeable";
 
@@ -98,11 +97,9 @@ const Year = ({
 
   return (
     <>
-      <Helmet>
-        <title>
-          {gallery.title(year)} — {t("nav-gallery")}
-        </title>
-      </Helmet>
+      <title>
+        {gallery.title(year)} — {t("nav-gallery")}
+      </title>
       <Navigation gallery={gallery} year={year} />
       <Swipeable onSwiped={handleSwipe}>
         <Content gallery={gallery} year={year} theme={theme}>
