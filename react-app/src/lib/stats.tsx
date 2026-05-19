@@ -39,13 +39,66 @@ interface Theme {
   get: (name: string) => string;
 }
 
+// Public types describing the shape `collectTopics` returns and the
+// shape `uniqueValues` flowing through Gallery / Filters / Stats components.
+// The internal aggregation carriers stay `any` (see the file header comment);
+// these are the consumer-facing shapes.
+export interface KpiItem {
+  key: string;
+  value: string;
+}
+export interface ChartSpec {
+  type: "doughnut" | "polar" | "horizontal-bar" | "line";
+  // chart.js data and options stay `any` — chart.js's own types are deep and
+  // we don't gain from authoring them here.
+  data: any;
+  options: any;
+}
+export interface TableColumn {
+  title: string;
+  align: string;
+  header?: boolean;
+}
+export interface TableRow {
+  key: string;
+  standardScore?: number;
+  [columnKey: string]: unknown;
+}
+// A single category bag: summary categories carry `kpi`; data categories
+// (author/country/year/etc.) carry `charts`/`tableColumns`/`table`. The fields
+// are optional because the union flattens through this single shape; consumers
+// guard with `if (category.kpi)` / `if (category.charts)` etc.
+export interface StatsCategory {
+  key: string;
+  title: string;
+  kpi?: KpiItem[];
+  charts?: ChartSpec[];
+  tableColumns?: TableColumn[];
+  table?: TableRow[];
+}
+export interface StatsTopic {
+  key: string;
+  title: string;
+  categories: StatsCategory[];
+}
+export interface UniqueValueEntry {
+  key: string | number;
+  value: string;
+}
+// Indexed by topic → category. The values are nested arrays of {key, value}
+// entries. Concrete topics include general/time/gear/exposure; concrete
+// categories include author/country/year/year-month/month/weekday/hour/
+// camera-make/camera/lens/camera-lens/focal-length/aperture/exposure-time/
+// iso/ev/lv/resolution/orientation/aspect-ratio.
+export type UniqueValues = Record<string, Record<string, UniqueValueEntry[]>>;
+
 const math = create(all, {});
 
 const UNKNOWN = "unknown";
 
 const generate = async (
   photos: (Photo | undefined)[],
-  uniqueValues: any
+  uniqueValues: UniqueValues
 ) => {
   return collectStatistics(photos.filter((p): p is Photo => !!p), uniqueValues);
 };
@@ -65,7 +118,7 @@ const collectTopics = (
   t: TFunction,
   countryData: CountryData,
   theme: Theme
-): any[] => {
+): StatsTopic[] => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang, t);
 
@@ -1127,7 +1180,9 @@ const collectTopics = (
     collectGear(),
     collectExposure(),
   ];
-  return topics;
+  // The internal carrier widens chart.type/table cell types to `string`/`any`;
+  // the public StatsTopic shape narrows them back. Runtime values match.
+  return topics as unknown as StatsTopic[];
 };
 
 export default { UNKNOWN, decodeTableRowKey, generate, collectTopics };

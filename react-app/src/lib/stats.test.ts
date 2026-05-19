@@ -1194,7 +1194,7 @@ describe("collectTopics", () => {
     });
     expect(topics[0].categories[1].key).toBe("author");
     expect(topics[0].categories[1].title).toBe("stats-category-author");
-    expect(topics[0].categories[1].charts.length).toBe(2);
+    expect(topics[0].categories[1].charts!.length).toBe(2);
     expect(topics[0].categories[1].tableColumns).toStrictEqual([
       { title: "rank", align: "right", header: true },
       { title: "author", align: "left" },
@@ -1213,7 +1213,7 @@ describe("collectTopics", () => {
     ]);
     expect(topics[0].categories[2].key).toBe("country");
     expect(topics[0].categories[2].title).toBe("stats-category-country");
-    expect(topics[0].categories[2].charts.length).toBe(2);
+    expect(topics[0].categories[2].charts!.length).toBe(2);
     expect(topics[0].categories[2].tableColumns).toStrictEqual([
       { title: "rank", align: "right", header: true },
       { title: "flag", align: "right", header: true },
@@ -1221,8 +1221,8 @@ describe("collectTopics", () => {
       { title: "count", align: "right" },
       { title: "share", align: "right" },
     ]);
-    delete topics[0].categories[2].table[0].flag;
-    delete topics[0].categories[2].table[0].country;
+    delete topics[0].categories[2].table![0].flag;
+    delete topics[0].categories[2].table![0].country;
     expect(topics[0].categories[2].table).toStrictEqual([
       {
         key: '{"value":"jp","isUnknown":false}',

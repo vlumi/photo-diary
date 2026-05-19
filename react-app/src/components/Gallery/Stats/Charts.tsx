@@ -4,6 +4,8 @@ import styled from "@emotion/styled";
 import "chart.js/auto";
 import { Doughnut, PolarArea, Bar, Line } from "react-chartjs-2";
 
+import type { StatsCategory } from "../../../lib/stats";
+
 const Root = styled.div`
   margin: 5px;
   width: 100%;
@@ -27,17 +29,17 @@ const StyledChartContainer2 = styled.div`
 `;
 
 interface Props {
-  category: any;
+  category: StatsCategory;
 }
 
 const Charts = ({ category }: Props): React.ReactElement => {
-  if (!("charts" in category) || !category.charts) {
+  if (!category.charts) {
     return <></>;
   }
   return (
     <Root>
-      {category.charts.map((chart: any) => {
-        const key = `${category.name}:${chart.type}`;
+      {category.charts.map((chart) => {
+        const key = `${category.key}:${chart.type}`;
         switch (chart.type) {
           case "doughnut":
             return (

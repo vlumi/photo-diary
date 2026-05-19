@@ -24,7 +24,10 @@ import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
 import collection from "../../lib/collection";
 import config from "../../lib/config";
 import format from "../../lib/format";
-import stats from "../../lib/stats";
+import stats, {
+  type UniqueValues,
+  type UniqueValueEntry,
+} from "../../lib/stats";
 import theme from "../../lib/theme";
 
 import type { Filters as FiltersT } from "../../lib/filter";
@@ -78,7 +81,9 @@ const Gallery = ({
   );
   const [gallery, setGallery] = React.useState<GalleryT | undefined>(undefined);
   const [photos, setPhotos] = React.useState<PhotoT[] | undefined>(undefined);
-  const [uniqueValues, setUniqueValues] = React.useState<any>(undefined);
+  const [uniqueValues, setUniqueValues] = React.useState<
+    UniqueValues | undefined
+  >(undefined);
   const [filters, setFilters] = React.useState<FiltersT>({});
   const [error, setError] = React.useState("");
 
@@ -148,36 +153,43 @@ const Gallery = ({
     if (!photos) {
       return;
     }
-    const newUniqueValues: any = photos
+    // The reduce builds up a `{ topic: { category: Set<unknown> } }` shape,
+    // then the forEach normalizes each Set into the consumer-facing
+    // `UniqueValueEntry[]`. The accumulator is typed as the loose
+    // Record-of-Record-of-Set during the build and cast to `UniqueValues`
+    // once the Sets have been flattened.
+    const accumulator: Record<string, Record<string, Set<unknown>>> = photos
       .map((photo) => photo.uniqueValues())
       .reduce(
         collection.mergeObjects<unknown>(
           (a, b) => new Set([...a, ...b]) as Set<unknown>
         ),
         {}
-      );
+      ) as Record<string, Record<string, Set<unknown>>>;
     const categoryValueFormatter = format.categoryValue(lang, t, countryData);
-    Object.keys(newUniqueValues).forEach((topic) => {
-      Object.keys(newUniqueValues[topic]).forEach((category) => {
-        newUniqueValues[topic][category] = [
-          ...(newUniqueValues[topic][category] as Iterable<unknown>),
-        ]
+    const flattened: UniqueValues = {} as UniqueValues;
+    Object.keys(accumulator).forEach((topic) => {
+      const topicBag: Record<string, UniqueValueEntry[]> = {};
+      Object.keys(accumulator[topic]).forEach((category) => {
+        topicBag[category] = [...accumulator[topic][category]]
           .map((value) => {
             if (value === "" || value === undefined || value === null) {
               return {
                 key: stats.UNKNOWN,
-                value: t("stats-unknown"),
+                value: String(t("stats-unknown")),
               };
             }
             return {
-              key: value,
-              value: categoryValueFormatter(category)(value as never),
+              key: value as string | number,
+              value: categoryValueFormatter(category)(value),
             };
           })
-          .sort(format.categorySorter("key", "value")(category) as any);
+          .sort(format.categorySorter("key", "value")(category));
       });
+      (flattened as Record<string, Record<string, UniqueValueEntry[]>>)[topic] =
+        topicBag;
     });
-    setUniqueValues(newUniqueValues);
+    setUniqueValues(flattened);
   }, [photos, lang, t, countryData]);
   React.useEffect(() => {
     if (!selectedGallery || !photos) {

@@ -5,6 +5,12 @@ import styled from "@emotion/styled";
 import color from "../../../lib/color";
 import stats from "../../../lib/stats";
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
+import type {
+  StatsTopic,
+  StatsCategory,
+  TableRow,
+  TableColumn,
+} from "../../../lib/stats";
 
 type ActiveTheme = { get: (name: string) => string };
 
@@ -88,14 +94,9 @@ const getHeatColors = (theme: ActiveTheme): string[] => {
   return cachedHeatColors.values;
 };
 
-interface Column {
-  title: string;
-  align: string;
-  header?: boolean;
-}
 interface Props {
-  topic: any;
-  category: any;
+  topic: StatsTopic;
+  category: StatsCategory;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
@@ -136,24 +137,25 @@ const Table = ({
     setFilters(newFilters);
   };
 
-  if (!("table" in category) || !category.table) {
+  if (!category.table || !category.tableColumns) {
     return <></>;
   }
-  const renderColumns = (values: Record<string, React.ReactNode>, i: number) => {
-    return category.tableColumns.map((column: Column) =>
+  const tableColumns = category.tableColumns;
+  const renderColumns = (values: TableRow, i: number) => {
+    return tableColumns.map((column: TableColumn) =>
       column.header ? (
         <RowHeader
           key={`${topic.key}:${category.key}:${i}${column.title}`}
           $align={column.align}
         >
-          {values[column.title]}
+          {values[column.title] as React.ReactNode}
         </RowHeader>
       ) : (
         <Column
           key={`${topic.key}:${category.key}:${i}${column.title}`}
           $align={column.align}
         >
-          {values[column.title]}
+          {values[column.title] as React.ReactNode}
         </Column>
       )
     );
@@ -174,7 +176,7 @@ const Table = ({
   const renderRows = (
     topic: string,
     category: string,
-    table: Record<string, React.ReactNode>[]
+    table: TableRow[]
   ) => {
     return table.map((value, i) => {
       const valueKey = stats.decodeTableRowKey(value.key as string | undefined);
@@ -221,7 +223,7 @@ const Table = ({
     <Root>
       <Block>
         <HeaderRow>
-          {category.tableColumns.map((column: Column) => (
+          {tableColumns.map((column: TableColumn) => (
             <Header
               key={`${topic.key}:header:${column.title}`}
               $align={column.align}

@@ -5,7 +5,7 @@ import styled from "@emotion/styled";
 import Topic from "./Topic";
 import MapContainer from "../../MapContainer";
 
-import stats from "../../../lib/stats";
+import stats, { type UniqueValues } from "../../../lib/stats";
 
 import type { Photo } from "../../../models/PhotoModel";
 import type { Filters as FiltersT } from "../../../lib/filter";
@@ -26,7 +26,7 @@ const Root = styled.div`
 interface Props {
   children?: React.ReactNode;
   photos: Photo[];
-  uniqueValues: any;
+  uniqueValues: UniqueValues;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   lang: string;
@@ -74,7 +74,7 @@ const Stats = ({
       <Root>
         {stats
           .collectTopics(data, lang, t, countryData, theme)
-          .map((topic: any) => (
+          .map((topic) => (
             <Topic
               key={topic.key}
               topic={topic}
