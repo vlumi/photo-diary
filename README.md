@@ -20,11 +20,14 @@ Photo Diary is split into separate independent modules, each handling its own su
 
 ### Basic Setup
 
-- Create a reposity directory structure, separate from the code
+- Requires Node.js 22 or newer; npm 10+ recommended
+- Create a photo-repository directory structure, separate from the code
   - Must include the sub-directories `inbox`, `original`, `display`, and `thumbnail`
-  - Configure `PHOTO_ROOT_DIR` on [converter](converter) and [react-app](react-app) to point to this directory
-- Setup [server](server) and [converter](converter) to run as a background process, e.g. using [pm2](https://pm2.keymetrics.io/)
-- Build [react-app](react-app) into [server](server), running in the [server](server) directory:
+  - Configure `PHOTO_ROOT_DIR` on [converter](converter) to point to this directory
+  - Configure `VITE_PHOTO_ROOT_URL` on [react-app](react-app) to point to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host)
+- Run `npm install` in [server](server), [converter](converter), and [react-app](react-app)
+- Set up [server](server) and [converter](converter) to run as background processes, e.g. via [pm2](https://pm2.keymetrics.io/) — both use `npm run prod` which invokes `pm2 start --interpreter tsx`
+- Build the [react-app](react-app) into [server](server) for production, running in the [server](server) directory:
   - `npm run build:ui`
 
 ## Features

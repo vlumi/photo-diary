@@ -17,8 +17,21 @@ The root directory is passed using the `PHOTO_ROOT_DIR` environment variable, wi
 
 ## Requirements
 
-- [Node.js](https://nodejs.org) stack
-  - [npm](https://www.npmjs.com/) (tested on 6.14.5)
-  - [Node.js](https://nodejs.org) (tested on 14.5.0)
-- Dependencies
-  - [ImageMagick](https://imagemagick.org) (tested on 7.0.10)
+- [Node.js](https://nodejs.org) 22 or newer; npm 10+ recommended
+- No external CLI dependencies — image resizing is done via [sharp](https://sharp.pixelplumbing.com/) (libvips bindings shipped via npm)
+
+## Running Instructions
+
+The converter is TypeScript and runs via tsx (no build step). Common scripts:
+
+```sh
+npm run dev        # tsx watch index.ts
+npm start          # tsx index.ts
+npm run prod       # pm2 start --interpreter tsx index.ts (NODE_ENV=prod)
+npm test           # tsx --test tests/**/*.test.ts
+npm run typecheck  # tsc --noEmit
+npm run lint       # eslint .
+npm run dumpexif   # tsx bin/dump-exif.ts — utility for inspecting a photo's EXIF
+```
+
+Set `PHOTO_ROOT_DIR` either in a `.env` next to `index.ts` or inline before the command.

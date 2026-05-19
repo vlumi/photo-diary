@@ -1,54 +1,63 @@
 # Photo Diary React App
 
-This is a web application for the Photo Diary, implemented using React.
+The front-end SPA for the Photo Diary, served by the [server](../server) in production and developed against a [Vite](https://vite.dev) dev server. Written in TypeScript with strict mode.
 
 ## Requirements
 
-- Recent [Node.js](https://nodejs.org) stack
-  - [npm](https://www.npmjs.com/) (tested on 8.1.2)
-- Dependencies
-  - Photo Diary server
-  - Check `package.json` for more detailed dependencies
+- [Node.js](https://nodejs.org) 22 or newer; npm 10+ recommended
+- A running Photo Diary [server](../server) — the dev server proxies `/api/*` to `http://localhost:4200`
 
 ## Running Instructions
 
-The front-end server can be started as:
+```sh
+npm install
+npm run dev        # Vite dev server on http://localhost:3000
+npm run build      # Production build into build/ (Rolldown)
+npm run preview    # Serve the production build locally
+npm test           # vitest run
+npm run typecheck  # tsc --noEmit
+npm run lint       # eslint .
+```
 
-```
-node start
-```
-
-The server will by default start on port `3000`. Use the environment variable `PORT` to change the port, e.g.
-
-```
-PORT=3001 node start
-```
+For production the build is copied into [server](../server)/build/ via `npm run build:ui` (from the server directory) and served by the server.
 
 ### Environment Variables
 
-- `REACT_APP_PHOTO_ROOT_URL` \*
-  - The URL to the physical photos, with the following sub-directories
-    - `display` – Display-size, large photos
-    - `thumbnail` – Thumbnail-size, small photos
-- `PORT` (default: 3000)
-- `REACT_APP_THEME`
-  - The built-in color theme to use, configured in `themes.css`, with currently the following available:
-    - `blue` (default)
+Configured in `react-app/.env` (or a per-environment file like `.env.production`). Vite only exposes variables prefixed with `VITE_` to the client.
+
+- `VITE_PHOTO_ROOT_URL` \*
+  - The public URL serving the physical photos, with the following sub-directories:
+    - `display/` – display-size photos
+    - `thumbnail/` – thumbnail-size photos
+  - Can be overridden at runtime by the instance metadata `cdn` value served from the server's `/api/v1/meta` endpoint.
+- `VITE_THEME` (default: `blue`)
+  - Built-in color theme. Defined in `src/lib/theme.ts`. Currently available:
+    - `blue`
     - `red`
     - `grayscale`
-- `REACT_APP_DEFAULT_GALLERY`
-  - If the default gallery is set, accessing the gallery list will instead redirect to the gallery.
-- `REACT_APP_FIRST_WEEKDAY`
-  - The first day of the week, e.g. `1` = Monday, `0` = Sunday
+    - `bw`
+    - `alert`
+- `VITE_DEFAULT_LANGUAGE` (default: `en`)
+  - Initial UI language before a stored selection takes over. Supported: `en`, `fi`, `ja`.
+- `VITE_DEFAULT_GALLERY`
+  - If set, accessing `/g` (or the site root, which redirects to `/g`) redirects to this gallery instead of the gallery list.
+- `VITE_INITIAL_GALLERY_VIEW` (default: `month`)
+  - The view to land on when entering a gallery: `year` / `month` / `day` / `photo`.
+- `VITE_FIRST_WEEKDAY` (default: `1` — Monday)
+  - The first day of the week for the year-view calendar grid. `1` = Monday, `0` = Sunday.
 
-## Features
-
-TBD
+\* Required; everything else falls back to the listed default.
 
 ## Structure
 
-TBD
-
-### Components
-
-TBD
+- `src/index.tsx` — entry, mounts `<App>` inside `HelmetProvider` and `React.StrictMode`
+- `src/App.tsx` — routes (`react-router-dom` 7), top menu, country-locale registration, persisted-user bootstrap
+- `src/components/` — UI components
+  - `Gallery/` — gallery shell + `Year/Month/Day/Photo/Filters/Stats` sub-views
+  - `MapContainer.tsx` — Leaflet map wrapper used by the various Footer components
+  - `TopMenu.tsx`, `Login.tsx`, `Logout.tsx` — auth-aware top bar
+- `src/models/` — `PhotoModel`, `GalleryModel`, `UserModel` (functional constructors returning typed closures)
+- `src/services/` — thin `fetch` wrappers around the server's `/api/v1/*` endpoints
+- `src/lib/` — pure helpers (`calendar`, `collection`, `color`, `config`, `filter`, `format`, `i18n`, `stats`, `theme`, `keypress`, `scroll`, `token`, `api`)
+  - `stats.tsx` is the largest module — aggregates photo statistics into chart-ready data and table rows
+- `src/setupTests.ts` — vitest setup (registers `@testing-library/jest-dom` matchers)
