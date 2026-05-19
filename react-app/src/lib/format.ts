@@ -153,8 +153,8 @@ const exposure = (lang: string, t?: TFunction) => {
 };
 
 const gear = (
-  make: string | undefined,
-  model: string | undefined
+  make?: string,
+  model?: string
 ): string | undefined => {
   if (!make && !model) return undefined;
   if (!make) return model;
@@ -169,7 +169,8 @@ const coordinates = (latitude: number, longitude: number): string => {
   return new GeoCoord(latitude, longitude).roundToSeconds().toString();
 };
 
-type ValueFormatter = (value: never) => string;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ValueFormatter = (value: any) => string;
 const categoryValue =
   (lang: string, t: TFunction, countryData: CountryData) =>
   (category: string): ValueFormatter => {
@@ -236,12 +237,12 @@ const categorySorter =
     valueField: string,
     firstWeekday: number = config.FIRST_WEEKDAY
   ) =>
-  (category: string): Comparator<Record<string, never>> => {
+  (category: string): Comparator<Record<string, any>> => {
     switch (category) {
       case "author":
       case "country":
         return collection.strSortByFieldAsc(valueField) as Comparator<
-          Record<string, never>
+          Record<string, any>
         >;
       case "year-month":
         return ((a: Record<string, string>, b: Record<string, string>) => {
@@ -258,11 +259,11 @@ const categorySorter =
             { [keyField]: monthA },
             { [keyField]: monthB }
           );
-        }) as Comparator<Record<string, never>>;
+        }) as Comparator<Record<string, any>>;
       case "year":
       case "month":
         return collection.numSortByFieldAsc(keyField) as Comparator<
-          Record<string, never>
+          Record<string, any>
         >;
       case "weekday":
         return ((a: Record<string, number>, b: Record<string, number>) => {
@@ -271,17 +272,17 @@ const categorySorter =
           const dowB =
             b[keyField] < firstWeekday ? Number(b[keyField]) + 7 : b[keyField];
           return collection.compareWithNaN(dowA, dowB, () => dowA - dowB);
-        }) as Comparator<Record<string, never>>;
+        }) as Comparator<Record<string, any>>;
       case "hour":
         return collection.numSortByFieldAsc(keyField) as Comparator<
-          Record<string, never>
+          Record<string, any>
         >;
       case "camera-make":
       case "camera":
       case "lens":
       case "camera-lens":
         return collection.strSortByFieldAsc(keyField) as Comparator<
-          Record<string, never>
+          Record<string, any>
         >;
       case "focal-length":
       case "aperture":
@@ -292,10 +293,10 @@ const categorySorter =
       case "resolution":
       case "aspect-ratio":
         return collection.numSortByFieldAsc(keyField) as Comparator<
-          Record<string, never>
+          Record<string, any>
         >;
       default:
-        return (() => 0) as Comparator<Record<string, never>>;
+        return (() => 0) as Comparator<Record<string, any>>;
     }
   };
 

@@ -1,7 +1,7 @@
 import GalleryModel from "./GalleryModel";
 import PhotoModel from "./PhotoModel";
 
-let samples;
+let samples: any;
 beforeAll(() => {
   samples = {
     empty: GalleryModel({
@@ -73,7 +73,7 @@ beforeAll(() => {
   };
 });
 describe("Constructor", () => {
-  let template;
+  let template: any;
   beforeEach(
     () =>
       (template = {
@@ -328,7 +328,7 @@ describe("Without photos", () => {
       expect(samples[":all"].photo(2020, 5, 27, "1.jpg")).toBeUndefined());
   });
   describe("Mappers", () => {
-    let mock;
+    let mock: any;
     beforeEach(() => {
       mock = vi.fn();
     });
@@ -694,8 +694,8 @@ describe("Without photos", () => {
   });
 });
 describe("With photos", () => {
-  let photos;
-  let g;
+  let photos: any;
+  let g: any;
   beforeAll(() => {
     photos = {
       "empty.jpg": PhotoModel({
@@ -960,9 +960,9 @@ describe("With photos", () => {
       expect(g.testing.photo(2020, 5, 27, "empty.jpg")).toBeUndefined());
   });
   describe("Mappers", () => {
-    let mock;
+    let mock: any;
     beforeEach(() => {
-      mock = vi.fn((year) => [year]);
+      mock = vi.fn((year: any) => [year]);
     });
     describe("mapYears", () => {
       test("testing", () => {

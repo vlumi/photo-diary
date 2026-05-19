@@ -49,17 +49,17 @@ describe("newEmptyTopic", () => {
   test("Different topic exists", () =>
     expect(
       filter.newEmptyTopic(
-        { exposure: { aperture: { 2.8: "dummy" } } },
+        { exposure: { aperture: { 2.8: ("dummy" as any) } } },
         "general"
       )
-    ).toStrictEqual({ exposure: { aperture: { 2.8: "dummy" } }, general: {} }));
+    ).toStrictEqual({ exposure: { aperture: { 2.8: ("dummy" as any) } }, general: {} }));
   test("Same topic exists", () =>
     expect(
       filter.newEmptyTopic(
-        { exposure: { aperture: { 2.8: "dummy" } } },
+        { exposure: { aperture: { 2.8: ("dummy" as any) } } },
         "exposure"
       )
-    ).toStrictEqual({ exposure: { aperture: { 2.8: "dummy" } } }));
+    ).toStrictEqual({ exposure: { aperture: { 2.8: ("dummy" as any) } } }));
 });
 
 describe("removeTopic", () => {
@@ -68,27 +68,27 @@ describe("removeTopic", () => {
   test("Exists", () =>
     expect(
       filter.removeTopic(
-        { exposure: { aperture: { 2.8: "dummy" } } },
+        { exposure: { aperture: { 2.8: ("dummy" as any) } } },
         "exposure"
       )
     ).toStrictEqual({}));
   test("Only other exists", () =>
     expect(
       filter.removeTopic(
-        { exposure: { aperture: { 2.8: "dummy" } } },
+        { exposure: { aperture: { 2.8: ("dummy" as any) } } },
         "general"
       )
-    ).toStrictEqual({ exposure: { aperture: { 2.8: "dummy" } } }));
+    ).toStrictEqual({ exposure: { aperture: { 2.8: ("dummy" as any) } } }));
   test("Also other exists", () =>
     expect(
       filter.removeTopic(
         {
-          exposure: { aperture: { 2.8: "dummy" } },
-          general: { country: { fi: "dummy" } },
+          exposure: { aperture: { 2.8: ("dummy" as any) } },
+          general: { country: { fi: ("dummy" as any) } },
         },
         "general"
       )
-    ).toStrictEqual({ exposure: { aperture: { 2.8: "dummy" } } }));
+    ).toStrictEqual({ exposure: { aperture: { 2.8: ("dummy" as any) } } }));
 });
 
 describe("newEmptyCategory", () => {
@@ -99,21 +99,21 @@ describe("newEmptyCategory", () => {
   test("Different category exists", () =>
     expect(
       filter.newEmptyCategory(
-        { exposure: { aperture: { 2.8: "dummy" } } },
+        { exposure: { aperture: { 2.8: ("dummy" as any) } } },
         "exposure",
         "focal-length"
       )
     ).toStrictEqual({
-      exposure: { aperture: { 2.8: "dummy" }, "focal-length": {} },
+      exposure: { aperture: { 2.8: ("dummy" as any) }, "focal-length": {} },
     }));
   test("Same topic exists", () =>
     expect(
       filter.newEmptyCategory(
-        { exposure: { aperture: { 2.8: "dummy" } } },
+        { exposure: { aperture: { 2.8: ("dummy" as any) } } },
         "exposure",
         "aperture"
       )
-    ).toStrictEqual({ exposure: { aperture: { 2.8: "dummy" } } }));
+    ).toStrictEqual({ exposure: { aperture: { 2.8: ("dummy" as any) } } }));
 });
 
 describe("removeCategory", () => {
@@ -128,7 +128,7 @@ describe("removeCategory", () => {
   test("Exists", () =>
     expect(
       filter.removeCategory(
-        { exposure: { aperture: { 2.8: "dummy" } } },
+        { exposure: { aperture: { 2.8: ("dummy" as any) } } },
         "exposure",
         "aperture"
       )
@@ -136,34 +136,34 @@ describe("removeCategory", () => {
   test("Only other exists", () =>
     expect(
       filter.removeCategory(
-        { exposure: { aperture: { 2.8: "dummy" } } },
+        { exposure: { aperture: { 2.8: ("dummy" as any) } } },
         "exposure",
         "focal-length"
       )
-    ).toStrictEqual({ exposure: { aperture: { 2.8: "dummy" } } }));
+    ).toStrictEqual({ exposure: { aperture: { 2.8: ("dummy" as any) } } }));
   test("Also other exists", () =>
     expect(
       filter.removeCategory(
         {
           exposure: {
-            aperture: { 2.8: "dummy" },
-            "focal-length": { 100: "dummy" },
+            aperture: { 2.8: ("dummy" as any) },
+            "focal-length": { 100: ("dummy" as any) },
           },
         },
         "exposure",
         "focal-length"
       )
-    ).toStrictEqual({ exposure: { aperture: { 2.8: "dummy" } } }));
+    ).toStrictEqual({ exposure: { aperture: { 2.8: ("dummy" as any) } } }));
 });
 
 describe("applyNewFilter", () => {
-  let mockPhoto;
+  let mockPhoto: any;
   beforeEach(() => {
     mockPhoto = { matches: vi.fn() };
   });
   describe("No previous filters", () => {
     test("Empty category", () => {
-      const result = filter.applyNewFilter({}, "", "", "unknown");
+      const result = filter.applyNewFilter({}, "", "", "unknown", "unknown");
       expect(result).toEqual({});
     });
     test("Category author", () => {
@@ -252,9 +252,9 @@ describe("applyNewFilter", () => {
     });
   });
   describe("With one previous filter", () => {
-    let filters;
+    let filters: any;
     beforeEach(() => {
-      filters = { gear: { "focal-length": { 50: "dummy" } } };
+      filters = { gear: { "focal-length": { 50: ("dummy" as any) } } };
     });
     test("Empty topic, category", () => {
       const result = filter.applyNewFilter(filters, "", "", "", "unknown");
@@ -279,7 +279,7 @@ describe("applyNewFilter", () => {
       expect(mockPhoto.matches.mock.calls[0][1]).toBe("x");
       delete result.general.author.x;
       expect(result).toEqual({
-        gear: { "focal-length": { 50: "dummy" } },
+        gear: { "focal-length": { 50: ("dummy" as any) } },
         general: { author: {} },
       });
     });
@@ -298,7 +298,7 @@ describe("applyNewFilter", () => {
       expect(mockPhoto.matches.mock.calls[0][1]).toBe("x");
       delete result.gear.camera.x;
       expect(result).toEqual({
-        gear: { "focal-length": { 50: "dummy" }, camera: {} },
+        gear: { "focal-length": { 50: ("dummy" as any) }, camera: {} },
       });
     });
     test("Category focal-length", () => {
@@ -315,7 +315,7 @@ describe("applyNewFilter", () => {
       expect(mockPhoto.matches.mock.calls[0][0]).toBe("focal-length");
       expect(mockPhoto.matches.mock.calls[0][1]).toBe("x");
       delete result.gear["focal-length"].x;
-      expect(result).toEqual({ gear: { "focal-length": { 50: "dummy" } } });
+      expect(result).toEqual({ gear: { "focal-length": { 50: ("dummy" as any) } } });
     });
     test("Category focal-length, remove previous", () => {
       const result = filter.applyNewFilter(
@@ -329,12 +329,12 @@ describe("applyNewFilter", () => {
     });
   });
   describe("With previous filters", () => {
-    let filters;
+    let filters: any;
     beforeEach(() => {
       filters = {
         exposure: {
-          "focal-length": { 50: "dummy", 28: "dummy" },
-          aperture: { 2.8: "dummy" },
+          "focal-length": { 50: ("dummy" as any), 28: ("dummy" as any) },
+          aperture: { 2.8: ("dummy" as any) },
         },
       };
     });
@@ -358,8 +358,8 @@ describe("applyNewFilter", () => {
       delete result.general.author.x;
       expect(result).toEqual({
         exposure: {
-          "focal-length": { 50: "dummy", 28: "dummy" },
-          aperture: { 2.8: "dummy" },
+          "focal-length": { 50: ("dummy" as any), 28: ("dummy" as any) },
+          aperture: { 2.8: ("dummy" as any) },
         },
         general: { author: {} },
       });
@@ -380,8 +380,8 @@ describe("applyNewFilter", () => {
       delete result.gear.camera.x;
       expect(result).toEqual({
         exposure: {
-          "focal-length": { 50: "dummy", 28: "dummy" },
-          aperture: { 2.8: "dummy" },
+          "focal-length": { 50: ("dummy" as any), 28: ("dummy" as any) },
+          aperture: { 2.8: ("dummy" as any) },
         },
         gear: { camera: {} },
       });
@@ -402,8 +402,8 @@ describe("applyNewFilter", () => {
       delete result.exposure["focal-length"].x;
       expect(result).toEqual({
         exposure: {
-          "focal-length": { 50: "dummy", 28: "dummy" },
-          aperture: { 2.8: "dummy" },
+          "focal-length": { 50: ("dummy" as any), 28: ("dummy" as any) },
+          aperture: { 2.8: ("dummy" as any) },
         },
       });
     });
@@ -417,8 +417,8 @@ describe("applyNewFilter", () => {
       );
       expect(result).toEqual({
         exposure: {
-          "focal-length": { 28: "dummy" },
-          aperture: { 2.8: "dummy" },
+          "focal-length": { 28: ("dummy" as any) },
+          aperture: { 2.8: ("dummy" as any) },
         },
       });
     });
@@ -431,7 +431,7 @@ describe("applyNewFilter", () => {
         "unknown"
       );
       expect(result).toEqual({
-        exposure: { "focal-length": { 50: "dummy", 28: "dummy" } },
+        exposure: { "focal-length": { 50: ("dummy" as any), 28: ("dummy" as any) } },
       });
     });
   });

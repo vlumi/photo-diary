@@ -844,9 +844,9 @@ describe("generate", () => {
     }));
 });
 describe("collectTopics", () => {
-  const mockT = (x) => x;
+  const mockT = ((x: any) => x) as any;
   const mockCountryData = {
-    isValid: (country) => country === "jp",
+    isValid: (country: any) => country === "jp",
     getName: () => "Japan",
   };
   const mockTheme = {

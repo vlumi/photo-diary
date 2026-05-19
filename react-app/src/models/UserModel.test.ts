@@ -2,8 +2,9 @@ import UserModel from "./UserModel";
 
 describe("Construction", () => {
   test("undefined", () => expect(() => UserModel(undefined)).toThrow());
-  test("empty", () => expect(() => UserModel({})).toThrow());
-  test("no ID", () => expect(() => UserModel({ token: "123" })).toThrow());
+  test("empty", () => expect(() => UserModel({} as any)).toThrow());
+  test("no ID", () =>
+    expect(() => UserModel({ token: "123" } as any)).toThrow());
   test("ID only", () => {
     const user = UserModel({ id: 42 });
     expect(user.id()).toBe(42);

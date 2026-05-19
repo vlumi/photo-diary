@@ -2,7 +2,7 @@ import { vi, beforeEach, test, expect } from "vitest";
 
 import tokens from "./tokens";
 
-const mockFetch = (body = "") =>
+const mockFetch = (body: unknown = "") =>
   vi.fn().mockResolvedValue({
     ok: true,
     text: async () => (body === "" ? "" : JSON.stringify(body)),
@@ -13,11 +13,11 @@ beforeEach(() => {
 });
 
 test("login()", async () => {
-  global.fetch = mockFetch({});
+  globalThis.fetch = mockFetch({}) as unknown as typeof fetch;
 
   await tokens.login("user", "password");
-  expect(global.fetch.mock.calls[0][0]).toBe("/api/v1/tokens");
-  const init = global.fetch.mock.calls[0][1];
+  expect((globalThis.fetch as any).mock.calls[0][0]).toBe("/api/v1/tokens");
+  const init = (globalThis.fetch as any).mock.calls[0][1];
   expect(init.method).toBe("POST");
   expect(JSON.parse(init.body)).toStrictEqual({
     id: "user",
@@ -26,9 +26,9 @@ test("login()", async () => {
 });
 
 test("logout()", async () => {
-  global.fetch = mockFetch();
+  globalThis.fetch = mockFetch() as unknown as typeof fetch;
 
   await expect(tokens.logout()).resolves.toStrictEqual({});
-  expect(global.fetch.mock.calls[0][0]).toBe("/api/v1/tokens");
-  expect(global.fetch.mock.calls[0][1].method).toBe("DELETE");
+  expect((globalThis.fetch as any).mock.calls[0][0]).toBe("/api/v1/tokens");
+  expect((globalThis.fetch as any).mock.calls[0][1].method).toBe("DELETE");
 });
