@@ -1,10 +1,13 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 import Summary from "./Summary";
 import Charts from "./Charts";
 import Table from "./Table";
+
+import type { Filters as FiltersT } from "../../../lib/filter";
+
+type ActiveTheme = { get: (name: string) => string };
 
 const Root = styled.div`
   width: 330px;
@@ -22,7 +25,22 @@ const Title = styled.h3`
   border-color: var(--header-background);
   border-radius: 5px;
 `;
-const Category = ({ topic, category, filters, setFilters, theme }) => {
+
+interface Props {
+  topic: any;
+  category: any;
+  filters: FiltersT;
+  setFilters: (filters: FiltersT) => void;
+  theme: ActiveTheme;
+}
+
+const Category = ({
+  topic,
+  category,
+  filters,
+  setFilters,
+  theme,
+}: Props): React.ReactElement => {
   return (
     <Root
       key={`${topic.key}:${category.key}`}
@@ -41,12 +59,5 @@ const Category = ({ topic, category, filters, setFilters, theme }) => {
       />
     </Root>
   );
-};
-Category.propTypes = {
-  topic: PropTypes.object,
-  category: PropTypes.object,
-  filters: PropTypes.object.isRequired,
-  setFilters: PropTypes.func.isRequired,
-  theme: PropTypes.object.isRequired,
 };
 export default Category;

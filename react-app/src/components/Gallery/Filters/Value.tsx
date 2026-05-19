@@ -1,13 +1,17 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill } from "react-icons/bs";
 import FlagIcon from "../../FlagIcon";
 
-import filter from "../../../lib/filter";
+import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import format from "../../../lib/format";
 import stats from "../../../lib/stats";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+  isValid(code: string): boolean;
+}
 
 const Box = styled.div`
   display: flex;
@@ -26,6 +30,17 @@ const Title = styled.div`
   padding: 0 5px;
 `;
 
+interface Props {
+  topic: string;
+  category: string;
+  value: string;
+  filters: FiltersT;
+  setFilters: (filters: FiltersT) => void;
+  uniqueValues?: any;
+  lang: string;
+  countryData: CountryData;
+}
+
 const Value = ({
   topic,
   category,
@@ -34,19 +49,20 @@ const Value = ({
   setFilters,
   lang,
   countryData,
-}) => {
+}: Props): React.ReactElement => {
   const { t } = useTranslation();
 
   const formatCategoryValue = format.categoryValue(lang, t, countryData);
 
-  const handleRemoveValueClick = (event) => {
-    const topicElement = event.target.closest("[data-type=topic]");
-    const categoryElement = event.target.closest("[data-type=category]");
-    const valueElement = event.target.closest("[data-type=value");
+  const handleRemoveValueClick = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    const topicElement = target.closest("[data-type=topic]");
+    const categoryElement = target.closest("[data-type=category]");
+    const valueElement = target.closest("[data-type=value");
     if (!categoryElement || !valueElement) {
       return;
     }
-    const topic = topicElement.getAttribute("data-key");
+    const topic = topicElement?.getAttribute("data-key");
     const category = categoryElement.getAttribute("data-key");
     const value = valueElement.getAttribute("data-key");
     if (!topic || !category || !value) {
@@ -62,18 +78,19 @@ const Value = ({
     setFilters(newFilters);
   };
 
-  const renderValue = (category, value) => {
+  const renderValue = (category: string, value: string): React.ReactNode => {
     if (value === stats.UNKNOWN) {
       return t("stats-unknown");
     }
     if (category === "country" && countryData.isValid(value)) {
       return (
         <Title>
-          <FlagIcon code={value} /> {formatCategoryValue(category)(value)}
+          <FlagIcon code={value} />{" "}
+          {formatCategoryValue(category)(value as never)}
         </Title>
       );
     }
-    return <Title>{formatCategoryValue(category)(value)}</Title>;
+    return <Title>{formatCategoryValue(category)(value as never)}</Title>;
   };
 
   return (
@@ -87,14 +104,5 @@ const Value = ({
       <BsFillXCircleFill />
     </ValueBox>
   );
-};
-Value.propTypes = {
-  topic: PropTypes.string.isRequired,
-  category: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
-  filters: PropTypes.object.isRequired,
-  setFilters: PropTypes.func.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Value;

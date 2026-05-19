@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,7 +9,12 @@ import {
 
 import Topic from "./Topic";
 
-import filter from "../../../lib/filter";
+import filter, { type Filters as FiltersT } from "../../../lib/filter";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+  isValid(code: string): boolean;
+}
 
 const Root = styled.div`
   color: var(--header-color);
@@ -44,22 +48,36 @@ const NewTopic = styled.option``;
 const NewTopicGroup = styled.optgroup``;
 const NewCategory = styled.option``;
 
-const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
+interface Props {
+  filters: FiltersT;
+  setFilters: (filters: FiltersT) => void;
+  uniqueValues: any;
+  lang: string;
+  countryData: CountryData;
+}
+
+const Filters = ({
+  filters,
+  setFilters,
+  uniqueValues,
+  lang,
+  countryData,
+}: Props): React.ReactElement => {
   const [topicSelector, setTopicSelector] = React.useState(false);
 
   const { t } = useTranslation();
 
-  const alreadyFilteredCategory = (topic, category) =>
+  const alreadyFilteredCategory = (topic: string, category: string): boolean =>
     topic in filters && category in filters[topic];
 
   const handleToggleAddTopicClick = () => {
     setTopicSelector(!topicSelector);
   };
   const renderTopicAdder = () => {
-    const handleSelect = (event) => {
-      const topicElement = event.target
-        .querySelector("option:checked")
-        .closest("[data-type=topic]");
+    const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const topicElement = (
+        event.target.querySelector("option:checked") as HTMLElement | null
+      )?.closest("[data-type=topic]");
       if (!topicElement) {
         return;
       }
@@ -129,12 +147,5 @@ const Filters = ({ filters, setFilters, uniqueValues, lang, countryData }) => {
       </FilterContainer>
     </Root>
   );
-};
-Filters.propTypes = {
-  filters: PropTypes.object.isRequired,
-  setFilters: PropTypes.func.isRequired,
-  uniqueValues: PropTypes.object.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Filters;

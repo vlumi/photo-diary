@@ -1,14 +1,29 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 import Thumbnails from "../Thumbnails";
+
+import type { Gallery } from "../../../models/GalleryModel";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+}
 
 const Root = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
 `;
+
+interface Props {
+  children?: React.ReactNode;
+  gallery: Gallery;
+  year: number;
+  month: number;
+  day: number;
+  lang: string;
+  countryData: CountryData;
+}
 
 const Content = ({
   children,
@@ -18,7 +33,7 @@ const Content = ({
   day,
   lang,
   countryData,
-}) => {
+}: Props): React.ReactElement => {
   if (!gallery.includesDay(year, month, day)) {
     return <i>Empty</i>;
   }
@@ -41,14 +56,5 @@ const Content = ({
       <Root>{renderContent()}</Root>
     </>
   );
-};
-Content.propTypes = {
-  children: PropTypes.any,
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Content;

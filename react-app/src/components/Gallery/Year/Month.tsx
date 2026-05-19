@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
@@ -8,6 +7,10 @@ import DayCell from "./DayCell";
 import Link from "../Link";
 
 import calendar from "../../../lib/calendar";
+
+import type { Gallery } from "../../../models/GalleryModel";
+
+type ActiveTheme = { get: (name: string) => string };
 
 const Root = styled.div`
   width: 214px;
@@ -24,8 +27,6 @@ const MonthTitle = styled.h3`
   background: var(--header-background);
   font-size: 18pt;
   text-align: center;
-  margin: 1px;
-  padding: 5px 3px;
   border-style: solid;
   border-width: 1px;
   border-color: var(--header-background);
@@ -66,10 +67,24 @@ const WeekDay = styled(DayCell)`
   color: var(--inactive-color);
 `;
 
-const Month = ({ gallery, year, month, maxCount,theme }) => {
+interface Props {
+  gallery: Gallery;
+  year: number;
+  month: number;
+  maxCount: number;
+  theme: ActiveTheme;
+}
+
+const Month = ({
+  gallery,
+  year,
+  month,
+  maxCount,
+  theme,
+}: Props): React.ReactElement => {
   const { t } = useTranslation();
 
-  const renderTitle = (gallery, year, month) => {
+  const renderTitle = (gallery: Gallery, year: number, month: number) => {
     if (gallery.includesMonth(year, month)) {
       return (
         <Link gallery={gallery} year={year} month={month}>
@@ -113,12 +128,5 @@ const Month = ({ gallery, year, month, maxCount,theme }) => {
       </MonthContainer>
     </Root>
   );
-};
-Month.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  maxCount: PropTypes.number.isRequired,
-  theme: PropTypes.object.isRequired,
 };
 export default Month;

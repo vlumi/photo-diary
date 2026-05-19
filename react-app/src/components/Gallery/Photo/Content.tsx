@@ -1,8 +1,10 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 import config from "../../../lib/config";
+
+import type { Gallery } from "../../../models/GalleryModel";
+import type { Photo } from "../../../models/PhotoModel";
 
 const Root = styled.div`
   flex-grow: 1;
@@ -14,27 +16,39 @@ const Root = styled.div`
   overflow: hidden;
   margin: 5px 0;
 `;
-const Frame = styled.span`
+const Frame = styled("span", {
+  shouldForwardProp: (prop) => prop !== "$width" && prop !== "$height",
+})<{ $width: number; $height: number }>`
   border: solid #004 1px;
   padding: 10px;
   background-color: #bbb;
   flex-grow: 0;
   flex-shrink: 0;
-  width: ${(props) => props.width};
-  height: ${(props) => props.height};
+  width: ${(props) => props.$width}px;
+  height: ${(props) => props.$height}px;
 `;
 const Image = styled.img`
   width: ${(props) => props.width};
   height: ${(props) => props.height};
 `;
 
-const calculateWidth = (photoRatio, maxWidth, maxHeight, maxRatio) => {
+const calculateWidth = (
+  photoRatio: number,
+  maxWidth: number,
+  maxHeight: number,
+  maxRatio: number
+): number => {
   if (maxRatio > photoRatio) {
     return Math.floor(maxHeight * photoRatio);
   }
   return maxWidth;
 };
-const calculateHeight = (photoRatio, maxHeight, maxWidth, maxRatio) => {
+const calculateHeight = (
+  photoRatio: number,
+  maxHeight: number,
+  maxWidth: number,
+  maxRatio: number
+): number => {
   if (maxRatio > photoRatio) {
     return maxHeight;
   }
@@ -43,7 +57,7 @@ const calculateHeight = (photoRatio, maxHeight, maxWidth, maxRatio) => {
 
 const toggleFullScreen = () => {
   if (!document.fullscreenElement) {
-    document.getElementById("root").requestFullscreen();
+    document.getElementById("root")?.requestFullscreen();
   } else {
     if (document.exitFullscreen) {
       document.exitFullscreen();
@@ -51,7 +65,21 @@ const toggleFullScreen = () => {
   }
 };
 
-const Content = ({ gallery, year, month, day, photo }) => {
+interface Props {
+  gallery: Gallery;
+  year: number;
+  month: number;
+  day: number;
+  photo: Photo;
+}
+
+const Content = ({
+  gallery,
+  year,
+  month,
+  day,
+  photo,
+}: Props): React.ReactElement => {
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -68,7 +96,7 @@ const Content = ({ gallery, year, month, day, photo }) => {
     return <i>Empty</i>;
   }
 
-  const getScale = () => {
+  const getScale = (): number => {
     if (window.visualViewport) {
       return window.visualViewport.scale;
     }
@@ -87,7 +115,7 @@ const Content = ({ gallery, year, month, day, photo }) => {
 
   return (
     <Root>
-      <Frame width={width} height={height}>
+      <Frame $width={width} $height={height}>
         <Image
           src={path}
           alt={photo.id()}
@@ -98,12 +126,5 @@ const Content = ({ gallery, year, month, day, photo }) => {
       </Frame>
     </Root>
   );
-};
-Content.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
-  photo: PropTypes.object.isRequired,
 };
 export default Content;

@@ -407,6 +407,9 @@ const Gallery = ({
       );
     }
     const photo = gallery.photo(year, month, day, photoId);
+    if (!photo) {
+      return <div>{t("loading")}</div>;
+    }
     return (
       <Photo
         gallery={gallery}

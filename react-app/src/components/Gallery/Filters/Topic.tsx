@@ -1,13 +1,17 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 
 import Category from "./Category";
 
-import filter from "../../../lib/filter";
+import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import stats from "../../../lib/stats";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+  isValid(code: string): boolean;
+}
 
 const Root = styled.div`
   color: var(--primary-color);
@@ -43,6 +47,15 @@ const NewCategoryGroup = styled.optgroup``;
 const NewCategory = styled.option``;
 const NewValue = styled.option``;
 
+interface Props {
+  topic: string;
+  filters: FiltersT;
+  setFilters: (filters: FiltersT) => void;
+  uniqueValues: any;
+  lang: string;
+  countryData: CountryData;
+}
+
 const Topic = ({
   topic,
   filters,
@@ -50,13 +63,17 @@ const Topic = ({
   uniqueValues,
   lang,
   countryData,
-}) => {
-  const [categorySelector, setCategorySelector] = React.useState({});
+}: Props): React.ReactElement => {
+  const [categorySelector, setCategorySelector] = React.useState<
+    Record<string, boolean>
+  >({});
 
   const { t } = useTranslation();
 
-  const handleRemoveTopicClick = (event) => {
-    const topicElement = event.target.closest("[data-type=topic]");
+  const handleRemoveTopicClick = (event: React.MouseEvent) => {
+    const topicElement = (event.target as HTMLElement).closest(
+      "[data-type=topic]"
+    );
     if (!topicElement) {
       return;
     }
@@ -68,8 +85,10 @@ const Topic = ({
     setFilters(newFilters);
   };
 
-  const handleToggleAddCategoryClick = (event) => {
-    const topicElement = event.target.closest("[data-type=topic]");
+  const handleToggleAddCategoryClick = (event: React.MouseEvent) => {
+    const topicElement = (event.target as HTMLElement).closest(
+      "[data-type=topic]"
+    );
     if (!topicElement) {
       return;
     }
@@ -81,16 +100,20 @@ const Topic = ({
     setCategorySelector({ [topic]: state });
   };
 
-  const alreadyFilteredValue = (topic, category, value) =>
+  const alreadyFilteredValue = (
+    topic: string,
+    category: string,
+    value: { key: string }
+  ): boolean =>
     topic in filters &&
     category in filters[topic] &&
     value.key in filters[topic][category];
 
-  const renderCategoryAdder = (topic) => {
-    const handleSelect = (event) => {
-      const categoryElement = event.target
-        .querySelector("option:checked")
-        .closest("[data-type=category]");
+  const renderCategoryAdder = (topic: string) => {
+    const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const categoryElement = (
+        event.target.querySelector("option:checked") as HTMLElement | null
+      )?.closest("[data-type=category]");
       if (!categoryElement) {
         return;
       }
@@ -121,7 +144,12 @@ const Topic = ({
                 data-type="category"
                 data-key={category}
               >
-                {uniqueValues[topic][category]
+                {(
+                  uniqueValues[topic][category] as {
+                    key: string;
+                    value: string;
+                  }[]
+                )
                   .filter(
                     (value) => !alreadyFilteredValue(topic, category, value)
                   )
@@ -167,13 +195,5 @@ const Topic = ({
       {renderCategoryAdder(topic)}
     </Root>
   );
-};
-Topic.propTypes = {
-  topic: PropTypes.string.isRequired,
-  filters: PropTypes.object.isRequired,
-  setFilters: PropTypes.func.isRequired,
-  uniqueValues: PropTypes.object.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Topic;
