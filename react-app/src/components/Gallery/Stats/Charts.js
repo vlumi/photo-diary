@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 
+import "chart.js/auto";
 import { Doughnut, PolarArea, Bar, Line } from "react-chartjs-2";
 
 const Root = styled.div`
