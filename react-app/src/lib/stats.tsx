@@ -6,7 +6,17 @@
 // `collectTopics`) are typed properly.
 import React from "react";
 
-import { create, all } from "mathjs";
+const mean = (values: number[]): number =>
+  values.reduce((sum, v) => sum + v, 0) / values.length;
+
+// Sample stddev with Bessel's correction (divide by n - 1) — matches the previous
+// mathjs default. Returns NaN for n < 2, same as mathjs.std.
+const stddev = (values: number[]): number => {
+  const m = mean(values);
+  const variance =
+    values.reduce((sum, v) => sum + (v - m) ** 2, 0) / (values.length - 1);
+  return Math.sqrt(variance);
+};
 import type { TFunction } from "i18next";
 
 import FlagIcon from "../components/FlagIcon";
@@ -91,8 +101,6 @@ export interface UniqueValueEntry {
 // camera-make/camera/lens/camera-lens/focal-length/aperture/exposure-time/
 // iso/ev/lv/resolution/orientation/aspect-ratio.
 export type UniqueValues = Record<string, Record<string, UniqueValueEntry[]>>;
-
-const math = create(all, {});
 
 const UNKNOWN = "unknown";
 
@@ -296,7 +304,7 @@ const collectTopics = (
     if (values.length === 0) {
       return { mean: 0, stddev: 0 };
     }
-    return { mean: math.mean(values), stddev: math.std(values) };
+    return { mean: mean(values), stddev: stddev(values) };
   };
   const collectSummary = (count: any) => {
     const getTimeDiff = (count: any) => {
