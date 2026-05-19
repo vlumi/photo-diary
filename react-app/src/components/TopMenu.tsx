@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
@@ -7,6 +6,8 @@ import TopMenuLang from "./TopMenuLang";
 import TopMenuButton from "./TopMenuButton";
 import Login from "./Login";
 import Logout from "./Logout";
+
+import type { User } from "../models/UserModel";
 
 const Root = styled.div`
   height: 25px;
@@ -30,8 +31,10 @@ const User = styled.span`
   flex-grow: 1;
   text-align: left;
 `;
-const ToggleBlock = styled.span`
-  display: ${(props) => (props.visible ? "" : "none")};
+const ToggleBlock = styled("span", {
+  shouldForwardProp: (prop) => prop !== "$visible",
+})<{ $visible: boolean }>`
+  display: ${(props) => (props.$visible ? "" : "none")};
 `;
 const HideButton = styled(TopMenuButton)`
   color: var(--header-color);
@@ -40,7 +43,13 @@ const HideButton = styled(TopMenuButton)`
   width: 23px;
 `;
 
-const TopMenu = ({ user, setUser, lang }) => {
+interface Props {
+  user: User | undefined;
+  setUser: (user: User | undefined) => void;
+  lang: string;
+}
+
+const TopMenu = ({ user, setUser, lang }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const [showLogin, setShowLogin] = React.useState(false);
 
@@ -62,7 +71,7 @@ const TopMenu = ({ user, setUser, lang }) => {
     }
     return (
       <>
-        <ToggleBlock visible={!showLogin}>
+        <ToggleBlock $visible={!showLogin}>
           <Container>
             <TopMenuLang lang={lang} />
             <TopMenuButton onClick={toggleShowLogin}>
@@ -70,7 +79,7 @@ const TopMenu = ({ user, setUser, lang }) => {
             </TopMenuButton>
           </Container>
         </ToggleBlock>
-        <ToggleBlock visible={showLogin}>
+        <ToggleBlock $visible={showLogin}>
           <Container>
             <Login setUser={setUser} />
             <HideButton onClick={toggleShowLogin}>╳</HideButton>
@@ -80,10 +89,5 @@ const TopMenu = ({ user, setUser, lang }) => {
     );
   };
   return <Root>{renderContent()}</Root>;
-};
-TopMenu.propTypes = {
-  user: PropTypes.object,
-  setUser: PropTypes.func,
-  lang: PropTypes.string.isRequired,
 };
 export default TopMenu;

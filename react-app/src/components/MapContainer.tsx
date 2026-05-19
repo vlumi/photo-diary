@@ -1,7 +1,6 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
-import Leaflet from "leaflet";
+import Leaflet, { type LatLngExpression } from "leaflet";
 import {
   MapContainer as Map,
   TileLayer,
@@ -19,8 +18,11 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
 
 import config from "../lib/config";
+import type { Photo } from "../models/PhotoModel";
 
-const Root = styled("div", { shouldForwardProp: (prop) => prop !== "$height" })`
+const Root = styled("div", { shouldForwardProp: (prop) => prop !== "$height" })<{
+  $height?: number;
+}>`
   width: 100%;
   height: ${(props) => (props.$height ? props.$height : 400)}px;
   padding: 0;
@@ -30,7 +32,7 @@ const PopupContent = styled.span`
   text-align: center;
 `;
 
-let DefaultIcon = Leaflet.icon({
+const DefaultIcon = Leaflet.icon({
   ...Leaflet.Icon.Default.prototype.options,
   iconUrl: icon,
   iconRetinaUrl: iconRetina,
@@ -38,16 +40,30 @@ let DefaultIcon = Leaflet.icon({
 });
 Leaflet.Marker.prototype.options.icon = DefaultIcon;
 
-const getPolyline = (positions) => {
+const getPolyline = (positions: LatLngExpression[]) => {
   return <Polyline positions={positions} />;
 };
 
-const MapContainer = ({ positions: photos, height, maxZoom, drawLine }) => {
+interface Props {
+  positions: Photo[];
+  height?: number;
+  maxZoom?: number;
+  drawLine?: boolean;
+}
+
+const MapContainer = ({
+  positions: photos,
+  height,
+  maxZoom,
+  drawLine,
+}: Props): React.ReactElement => {
   if (photos.length === 0) {
     return <></>;
   }
   // TODO: group positions very close to each other; show as navigable list on popup
-  const positions = photos.map((photo) => photo.coordinates());
+  const positions = photos.map(
+    (photo) => photo.coordinates() as LatLngExpression
+  );
   const bounds = Leaflet.latLngBounds(positions);
   return (
     <Root $height={height}>
@@ -60,18 +76,21 @@ const MapContainer = ({ positions: photos, height, maxZoom, drawLine }) => {
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <MarkerClusterGroup maxClusterRadius="40">
+        <MarkerClusterGroup maxClusterRadius={40}>
           {photos.map((photo, index) => {
             const thumbnailUrl = `${
               config.PHOTO_ROOT_URL
             }thumbnail/${photo.id()}`;
             const dimensions = photo.thumbnailDimensions();
             return (
-              <Marker key={index} position={photo.coordinates()}>
+              <Marker
+                key={index}
+                position={photo.coordinates() as LatLngExpression}
+              >
                 <Popup>
                   <PopupContent>
                     <img
-                      alt={photo.id}
+                      alt={photo.id()}
                       src={thumbnailUrl}
                       width={dimensions.width / 2}
                       height={dimensions.height / 2}
@@ -88,11 +107,5 @@ const MapContainer = ({ positions: photos, height, maxZoom, drawLine }) => {
       </Map>
     </Root>
   );
-};
-MapContainer.propTypes = {
-  positions: PropTypes.array.isRequired,
-  height: PropTypes.number,
-  maxZoom: PropTypes.number,
-  drawLine: PropTypes.bool,
 };
 export default MapContainer;

@@ -1,12 +1,11 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import * as jose from "jose";
 import { useTranslation } from "react-i18next";
 
 import TopMenuButton from "./TopMenuButton";
 
-import UserModel from "../models/UserModel";
+import UserModel, { type User } from "../models/UserModel";
 
 import tokenService from "../services/tokens";
 
@@ -24,24 +23,32 @@ const Input = styled.input`
   background-color: var(--header-sub-color);
 `;
 
-const Login = ({ setUser }) => {
+interface Props {
+  setUser: (user: User | undefined) => void;
+}
+
+const Login = ({ setUser }: Props): React.ReactElement => {
   const [userId, setUserId] = React.useState("");
   const [password, setPassword] = React.useState("");
 
   const { t } = useTranslation();
 
-  const login = async (userId, password) => {
+  const login = async (userId: string, password: string) => {
     try {
-      const data = await tokenService.login(userId, password);
+      const data = (await tokenService.login(userId, password)) as {
+        token: string;
+      };
       const rawToken = data.token;
       // TODO: sign/verify
-      const userData = JSON.parse(new TextDecoder().decode(jose.base64url.decode(rawToken.split(".")[1])));
+      const userData = JSON.parse(
+        new TextDecoder().decode(jose.base64url.decode(rawToken.split(".")[1]))
+      );
       const user = UserModel(userData, rawToken);
 
       token.setToken(rawToken);
       window.localStorage.setItem("user", user.toJson());
       setUser(user);
-    } catch (error) {
+    } catch (_error) {
       token.clearToken();
       window.localStorage.clear();
       setUser(undefined);
@@ -49,7 +56,7 @@ const Login = ({ setUser }) => {
     }
   };
 
-  const handleLogin = (event) => {
+  const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
     login(userId, password);
     setPassword("");
@@ -74,8 +81,5 @@ const Login = ({ setUser }) => {
       <TopMenuButton type="submit">{t("login")}</TopMenuButton>
     </Form>
   );
-};
-Login.propTypes = {
-  setUser: PropTypes.func.isRequired,
 };
 export default Login;
