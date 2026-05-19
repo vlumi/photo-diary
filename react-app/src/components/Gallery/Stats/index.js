@@ -45,7 +45,7 @@ const Stats = ({
     if (!positions) {
       return "";
     }
-    return <MapContainer positions={positions} height="800" zoom="9" maxZoom="18" />;
+    return <MapContainer positions={positions} height={800} maxZoom={18} />;
   };
   const mapPhotos = photos.filter((photo) => photo.hasCoordinates());
 
