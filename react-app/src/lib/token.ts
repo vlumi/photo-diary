@@ -1,6 +1,6 @@
 let token: string | undefined = undefined;
 
-const setToken = (newToken: string | undefined): void => {
+const setToken = (newToken?: string): void => {
   if (newToken) {
     token = `bearer ${newToken}`;
   } else {

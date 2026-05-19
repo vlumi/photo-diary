@@ -6,9 +6,9 @@ describe("toHexRgb", () => {
   test("channel overflow", () =>
     expect(color.toHexRgb({ r: 256, g: 0, b: 0 })).toBe("#000000"));
   test("string channel", () =>
-    expect(color.toHexRgb({ r: "f", g: "0", b: "0" })).toBe("#000000"));
+    expect(color.toHexRgb({ r: "f", g: "0", b: "0" } as any)).toBe("#000000"));
   test("black strings", () =>
-    expect(color.toHexRgb({ r: "0", g: "0", b: "0" })).toBe("#000000"));
+    expect(color.toHexRgb({ r: "0", g: "0", b: "0" } as any)).toBe("#000000"));
   test("black", () =>
     expect(color.toHexRgb({ r: 0, g: 0, b: 0 })).toBe("#000000"));
   test("dark red", () =>
@@ -28,7 +28,7 @@ describe("toHexRgb", () => {
 });
 describe("fromHexRgb", () => {
   test("undefined", () =>
-    expect(color.fromHexRgb(undefined)).toStrictEqual([0, 0, 0]));
+    expect(color.fromHexRgb(undefined as any)).toStrictEqual([0, 0, 0]));
   test("empty", () => expect(color.fromHexRgb("")).toStrictEqual([0, 0, 0]));
   test("no hash", () =>
     expect(color.fromHexRgb("010101")).toStrictEqual([0, 0, 0]));
@@ -58,7 +58,8 @@ describe("fromHexRgb", () => {
     expect(color.fromHexRgb("#007f00")).toStrictEqual([0, 127, 0]));
 });
 describe("colorGradient", () => {
-  test("undefined", () => expect(color.colorGradient()).toStrictEqual([]));
+  test("undefined", () =>
+    expect((color.colorGradient as any)()).toStrictEqual([]));
   test("grayscale 1", () =>
     expect(color.colorGradient("#000000", "#ffffff", 1)).toStrictEqual([
       "#000000",

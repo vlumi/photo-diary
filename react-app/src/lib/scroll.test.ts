@@ -1,6 +1,6 @@
 import scroll from "./scroll";
 
-let s;
+let s: any;
 describe("With history size 2", () => {
   beforeEach(() => {
     s = scroll(2);

@@ -1,7 +1,7 @@
 import PhotoModel from "./PhotoModel";
 
 describe("Constructor", () => {
-  let template;
+  let template: any;
   beforeEach(
     () =>
       (template = {
@@ -100,7 +100,7 @@ describe("Constructor", () => {
   });
 });
 describe("With samples", () => {
-  let samples;
+  let samples: any;
   beforeAll(() => {
     samples = {
       "empty.jpg": PhotoModel({
@@ -454,7 +454,7 @@ describe("With samples", () => {
     test("empty.jpg", () =>
       expect(
         samples["empty.jpg"].countryName("en", {
-          getName: (code) => {
+          getName: (code: any) => {
             if (code === "jp") return "Japan";
             return "???";
           },
@@ -463,7 +463,7 @@ describe("With samples", () => {
     test("1.jpg", () =>
       expect(
         samples["1.jpg"].countryName("en", {
-          getName: (code) => {
+          getName: (code: any) => {
             if (code === "jp") return "Japan";
             return "???";
           },

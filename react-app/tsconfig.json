@@ -12,9 +12,8 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "isolatedModules": true,
-    "allowJs": true,
     "types": ["vitest/globals", "vite/client"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx", "src/**/*.d.ts", "vite.config.js"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "vite.config.js"],
   "exclude": ["node_modules", "build", "dist"]
 }

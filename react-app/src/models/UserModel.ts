@@ -1,11 +1,14 @@
 interface UserData {
-  id: string;
+  id: string | number;
   token?: string;
   isAdmin?: boolean;
 }
 
-const UserModel = (userData: UserData, token?: string) => {
-  const importUserData = (userData: UserData, token?: string): UserData => {
+const UserModel = (userData: UserData | undefined, token?: string) => {
+  const importUserData = (
+    userData: UserData | undefined,
+    token?: string
+  ): UserData => {
     if (!userData || !("id" in userData) || !userData.id) {
       throw new Error("Invalid user");
     }

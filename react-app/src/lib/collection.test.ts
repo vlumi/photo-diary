@@ -47,7 +47,7 @@ describe("compareArrays()", () => {
     expect(collection.compareArrays([undefined], [undefined])).toBe(0));
 });
 describe("transformObjectKeys()", () => {
-  const transformer = (key, value) => {
+  const transformer = (key: string, value: any): [string, any] => {
     return [`${key}_`, value];
   };
   test("Undefined", () =>
@@ -66,7 +66,7 @@ describe("transformObjectKeys()", () => {
     ).toStrictEqual({ key_: 1, other_: 2 }));
 });
 describe("transformObjectValue()", () => {
-  const transformer = (_) => _.key + 1;
+  const transformer = (_: any) => _.key + 1;
   test("Undefined", () =>
     expect(
       collection.transformObjectValue(undefined, "key", transformer)
@@ -139,26 +139,26 @@ describe("foldToArray()", () => {
     expect(collection.foldToArray(undefined)).toStrictEqual([]));
   test("Empty", () => expect(collection.foldToArray({})).toStrictEqual([]));
   test("One property", () =>
-    expect(collection.foldToArray({ key: 1 }, (a, b) => b - a)).toStrictEqual([
+    expect(collection.foldToArray({ key: 1 }, (a: any, b: any) => b - a)).toStrictEqual([
       { key: "key", value: 1 },
     ]));
   test("Two properties", () =>
     expect(
-      collection.foldToArray({ key: 1, key2: 2 }, (a, b) => a.value - b.value)
+      collection.foldToArray({ key: 1, key2: 2 }, (a: any, b: any) => a.value - b.value)
     ).toStrictEqual([
       { key: "key", value: 1 },
       { key: "key2", value: 2 },
     ]));
   test("Two properties in reverse order", () =>
     expect(
-      collection.foldToArray({ key: 2, key2: 1 }, (a, b) => a.value - b.value)
+      collection.foldToArray({ key: 2, key2: 1 }, (a: any, b: any) => a.value - b.value)
     ).toStrictEqual([
       { key: "key2", value: 1 },
       { key: "key", value: 2 },
     ]));
 });
 describe("calculateRanks()", () => {
-  const valueMapper = (_) => _.value;
+  const valueMapper = (_: any) => _.value;
   test("Undefined", () =>
     expect(collection.calculateRanks(undefined, valueMapper)).toStrictEqual(
       {}
@@ -193,19 +193,19 @@ describe("calculateRanks()", () => {
     ).toStrictEqual({ 1: 2, 2: 0 }));
 });
 describe("truncateAndProcess()", () => {
-  let mockProcessor;
-  let summarizer;
+  let mockProcessor: any;
+  let summarizer: any;
   beforeEach(() => {
-    mockProcessor = vi.fn((x) => {
+    mockProcessor = vi.fn((x: any) => {
       if (!x) {
         return 0;
       }
       return x.length;
     });
-    summarizer = vi.fn((data) => {
+    summarizer = vi.fn((data: any) => {
       return {
         key: "other",
-        value: data.map((_) => _.value).reduce((a, b) => a + b, 0),
+        value: data.map((_: any) => _.value).reduce((a: any, b: any) => a + b, 0),
       };
     });
   });
@@ -346,7 +346,7 @@ describe("truncateAndProcess()", () => {
   });
 });
 describe("mergeObjects()", () => {
-  const merger = (a, b) => new Set([...a, ...b]);
+  const merger = (a: any, b: any) => new Set([...a, ...b]);
   test("Empty", () =>
     expect(collection.mergeObjects(merger)({}, {})).toStrictEqual({}));
   test("Right is empty", () =>

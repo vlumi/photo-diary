@@ -43,8 +43,11 @@ const math = create(all, {});
 
 const UNKNOWN = "unknown";
 
-const generate = async (photos: Photo[], uniqueValues: any) => {
-  return collectStatistics(photos, uniqueValues);
+const generate = async (
+  photos: (Photo | undefined)[],
+  uniqueValues: any
+) => {
+  return collectStatistics(photos.filter((p): p is Photo => !!p), uniqueValues);
 };
 
 const decodeTableRowKey = (key: string | undefined): string | undefined => {
@@ -62,7 +65,7 @@ const collectTopics = (
   t: TFunction,
   countryData: CountryData,
   theme: Theme
-) => {
+): any[] => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang, t);
 

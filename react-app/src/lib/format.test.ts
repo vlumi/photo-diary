@@ -35,11 +35,11 @@ describe("number", () => {
   });
 });
 describe("padNumber()", () => {
-  test("empty", () => expect(format.padNumber("", 5, " ")).toBe("00000"));
-  test("negative", () => expect(format.padNumber(-1, 5, " ")).toBe("-00001"));
-  test("partial", () => expect(format.padNumber("123", 5, "0")).toBe("00123"));
+  test("empty", () => expect(format.padNumber("", 5)).toBe("00000"));
+  test("negative", () => expect(format.padNumber(-1, 5)).toBe("-00001"));
+  test("partial", () => expect(format.padNumber("123", 5)).toBe("00123"));
   test("no padding", () =>
-    expect(format.padNumber("12345", 5, "0")).toBe("12345"));
+    expect(format.padNumber("12345", 5)).toBe("12345"));
 });
 describe("share()", () => {
   test("2/1", () => expect(format.share(2, 1)).toBe(200));
@@ -99,7 +99,7 @@ describe("dayOfWeek()", () => {
 });
 describe("countryName()", () => {
   const countryData = {
-    getName(code) {
+    getName(code: string) {
       if (code === "fi") return "Finland";
       return undefined;
     },
@@ -110,7 +110,10 @@ describe("countryName()", () => {
     expect(format.countryName("en", countryData)("en")).toBe("en"));
 });
 describe("exposure", () => {
-  const formatExposure = format.exposure("en", (key) => { return key; });
+  // Cast the test-only formatter object to `any` so we can drive both
+  // numeric inputs and the string "N/A" placeholder through the runtime
+  // isNaN fallback. The runtime accepts both; the typed signature is number.
+  const formatExposure = format.exposure("en", ((key: string) => key) as any) as any;
   describe("focalLength()", () => {
     test("N/A", () => expect(formatExposure.focalLength("N/A")).toBe("N/A"));
     test("50", () => expect(formatExposure.focalLength(50)).toBe("50"));
@@ -169,12 +172,12 @@ describe("coordinates()", () => {
 });
 
 describe("categoryValue()", () => {
-  let mockT;
+  let mockT: any;
   beforeEach(() => {
     mockT = vi.fn(() => "Mocked");
   });
   const countryData = {
-    getName: (code) => {
+    getName: (code: any) => {
       if (code === "fi") return "Finland";
       return undefined;
     },
@@ -329,7 +332,7 @@ describe("categoryValue()", () => {
 });
 
 describe("categorySorter", () => {
-  let data;
+  let data: any;
   beforeEach(() => {
     data = [
       { key: "3", value: "10" },
@@ -386,7 +389,7 @@ describe("categorySorter", () => {
       sortedByNumKeyAsc
     ));
   describe("weekday", () => {
-    let wdData;
+    let wdData: any;
     beforeEach(() => {
       wdData = [
         { key: "3", value: "10" },
