@@ -5,11 +5,13 @@
 ### Server
 
 - Replace the `uuid` dep with the built-in `crypto.randomUUID()`
+- Send `X-Robots-Tag: noindex, noai, noimageai` on every response, including served photo files
 
 ### Frontend
 
 - Replace `mathjs` with inline native `mean`/`stddev` helpers in `stats.tsx`; production bundle drops ~40% (1.5 MB → 876 kB raw, 460 kB → 282 kB gzipped)
 - Drop `react-helmet-async` in favor of React 19's native `<title>`/`<meta>` hoisting (6 call sites)
+- Enumerate AI-training bots explicitly in `robots.txt` (GPTBot, Google-Extended, ClaudeBot, PerplexityBot, CCBot, etc.) for crawlers that ignore the `User-agent: *` wildcard
 
 ## [0.6.0] - 2026-05-19
 
