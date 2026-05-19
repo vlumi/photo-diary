@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { BsFillHouseFill } from "react-icons/bs";
@@ -9,8 +8,15 @@ import Link from "./Link";
 
 import useKeyPress from "../../lib/keypress";
 
-const Empty = ({ children, gallery }) => {
-  const [redirect, setRedirect] = React.useState(undefined);
+import type { Gallery } from "../../models/GalleryModel";
+
+interface Props {
+  children?: React.ReactNode;
+  gallery: Gallery;
+}
+
+const Empty = ({ children, gallery }: Props): React.ReactElement => {
+  const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
 
   useKeyPress("Escape", () => {
     window.history.pushState({}, "");
@@ -46,9 +52,5 @@ const Empty = ({ children, gallery }) => {
       <i>Empty</i>
     </>
   );
-};
-Empty.propTypes = {
-  children: PropTypes.any,
-  gallery: PropTypes.object.isRequired,
 };
 export default Empty;

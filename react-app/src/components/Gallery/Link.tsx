@@ -1,6 +1,19 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Link as ReactLink } from "react-router-dom";
+
+import type { Gallery } from "../../models/GalleryModel";
+import type { Photo } from "../../models/PhotoModel";
+
+interface Props {
+  children: React.ReactNode;
+  className?: string;
+  gallery?: Gallery;
+  year?: number;
+  month?: number;
+  day?: number;
+  photo?: Photo;
+  context?: string;
+}
 
 const Link = ({
   children,
@@ -11,7 +24,7 @@ const Link = ({
   photo,
   day,
   context,
-}) => {
+}: Props): React.ReactElement => {
   if (gallery && context === "stats") {
     return (
       <ReactLink className={className} to={gallery.statsPath()}>
@@ -19,7 +32,7 @@ const Link = ({
       </ReactLink>
     );
   }
-  if (photo) {
+  if (photo && gallery) {
     return (
       <ReactLink className={className} to={photo.path(gallery)}>
         {children}
@@ -41,14 +54,4 @@ const Link = ({
   );
 };
 
-Link.propTypes = {
-  children: PropTypes.any.isRequired,
-  className: PropTypes.string,
-  gallery: PropTypes.object,
-  year: PropTypes.number,
-  month: PropTypes.number,
-  day: PropTypes.number,
-  photo: PropTypes.object,
-  context: PropTypes.string,
-};
 export default Link;

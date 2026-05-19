@@ -1,8 +1,14 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 import Thumbnail from "./Thumbnail";
+
+import type { Gallery } from "../../models/GalleryModel";
+import type { Photo } from "../../models/PhotoModel";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+}
 
 const Root = styled.div`
   vertical-align: top;
@@ -10,7 +16,21 @@ const Root = styled.div`
   flex-wrap: nowrap;
 `;
 
-const Thumbnails = ({ children, gallery, photos, lang, countryData }) => {
+interface Props {
+  children?: React.ReactNode;
+  gallery: Gallery;
+  photos: Photo[];
+  lang: string;
+  countryData: CountryData;
+}
+
+const Thumbnails = ({
+  children,
+  gallery,
+  photos,
+  lang,
+  countryData,
+}: Props): React.ReactElement => {
   return (
     <>
       {photos.map((photo, index) => {
@@ -28,12 +48,5 @@ const Thumbnails = ({ children, gallery, photos, lang, countryData }) => {
       })}
     </>
   );
-};
-Thumbnails.propTypes = {
-  children: PropTypes.any,
-  gallery: PropTypes.object.isRequired,
-  photos: PropTypes.array.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Thumbnails;

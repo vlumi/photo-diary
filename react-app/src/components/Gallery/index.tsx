@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Global, css } from "@emotion/react";
 import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -19,8 +18,8 @@ import Month from "./Month";
 import Day from "./Day";
 import Photo from "./Photo";
 
-import GalleryModel from "../../models/GalleryModel";
-import PhotoModel from "../../models/PhotoModel";
+import GalleryModel, { type Gallery as GalleryT } from "../../models/GalleryModel";
+import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
 
 import collection from "../../lib/collection";
 import config from "../../lib/config";
@@ -28,7 +27,25 @@ import format from "../../lib/format";
 import stats from "../../lib/stats";
 import theme from "../../lib/theme";
 
-const globalStyles = (theme) => css`
+import type { Filters as FiltersT } from "../../lib/filter";
+import type { User } from "../../models/UserModel";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+  isValid(code: string): boolean;
+}
+interface ScrollState {
+  get: (path: string) => number;
+  set: (path: string, position: number) => void;
+}
+interface Meta {
+  cdn?: string;
+  name?: string;
+  description?: string;
+}
+type ActiveTheme = ReturnType<typeof theme.setTheme>;
+
+const globalStyles = (theme: ActiveTheme) => css`
   html {
     --primary-color: ${theme.get("primary-color")};
     --primary-background: ${theme.get("primary-background")};
@@ -40,13 +57,29 @@ const globalStyles = (theme) => css`
   }
 `;
 
-const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
-  const [meta, setMeta] = React.useState(undefined);
-  const [galleries, setGalleries] = React.useState(undefined);
-  const [gallery, setGallery] = React.useState(undefined);
-  const [photos, setPhotos] = React.useState(undefined);
-  const [uniqueValues, setUniqueValues] = React.useState(undefined);
-  const [filters, setFilters] = React.useState({});
+interface Props {
+  user?: User;
+  lang: string;
+  countryData: CountryData;
+  isStats?: boolean;
+  scrollState: ScrollState;
+}
+
+const Gallery = ({
+  user,
+  lang,
+  countryData,
+  isStats = false,
+  scrollState,
+}: Props): React.ReactElement => {
+  const [meta, setMeta] = React.useState<Meta | undefined>(undefined);
+  const [galleries, setGalleries] = React.useState<GalleryT[] | undefined>(
+    undefined
+  );
+  const [gallery, setGallery] = React.useState<GalleryT | undefined>(undefined);
+  const [photos, setPhotos] = React.useState<PhotoT[] | undefined>(undefined);
+  const [uniqueValues, setUniqueValues] = React.useState<any>(undefined);
+  const [filters, setFilters] = React.useState<FiltersT>({});
   const [error, setError] = React.useState("");
 
   const { t } = useTranslation();
@@ -80,19 +113,22 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     metaService
       .getAll()
       .then((returnedMeta) => {
-        setMeta(returnedMeta);
-        config.PHOTO_ROOT_URL = returnedMeta.cdn || config.PHOTO_ROOT_URL;
+        const m = returnedMeta as Meta;
+        setMeta(m);
+        config.PHOTO_ROOT_URL = m.cdn || config.PHOTO_ROOT_URL;
       })
-      .catch((error) => setError(error.message));
+      .catch((error: Error) => setError(error.message));
   }, []);
   React.useEffect(() => {
     galleryService
       .getAll()
       .then((returnedGalleries) => {
-        const gals = returnedGalleries.map((gallery) => GalleryModel(gallery));
+        const gals = (returnedGalleries as unknown[])
+          .map((gallery) => GalleryModel(gallery))
+          .filter((g): g is GalleryT => !!g);
         setGalleries(gals);
       })
-      .catch((error) => setError(error.message));
+      .catch((error: Error) => setError(error.message));
   }, [user]);
   React.useEffect(() => {
     if (!galleryId) {
@@ -101,27 +137,31 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     galleryPhotosService
       .get(galleryId)
       .then((photos) => {
-        const mappedPhotos = photos
+        const mappedPhotos = (photos as unknown[])
           .map((photo) => PhotoModel(photo))
-          .filter((photo) => !!photo);
+          .filter((photo): photo is PhotoT => !!photo);
         setPhotos(mappedPhotos);
       })
-      .catch((error) => setError(error.message));
+      .catch((error: Error) => setError(error.message));
   }, [galleryId, user]);
   React.useEffect(() => {
     if (!photos) {
       return;
     }
-    const newUniqueValues = photos
+    const newUniqueValues: any = photos
       .map((photo) => photo.uniqueValues())
       .reduce(
-        collection.mergeObjects((a, b) => new Set([...a, ...b])),
+        collection.mergeObjects<unknown>(
+          (a, b) => new Set([...a, ...b]) as Set<unknown>
+        ),
         {}
       );
     const categoryValueFormatter = format.categoryValue(lang, t, countryData);
     Object.keys(newUniqueValues).forEach((topic) => {
       Object.keys(newUniqueValues[topic]).forEach((category) => {
-        newUniqueValues[topic][category] = [...newUniqueValues[topic][category]]
+        newUniqueValues[topic][category] = [
+          ...(newUniqueValues[topic][category] as Iterable<unknown>),
+        ]
           .map((value) => {
             if (value === "" || value === undefined || value === null) {
               return {
@@ -131,10 +171,10 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
             }
             return {
               key: value,
-              value: categoryValueFormatter(category)(value),
+              value: categoryValueFormatter(category)(value as never),
             };
           })
-          .sort(format.categorySorter("key", "value")(category));
+          .sort(format.categorySorter("key", "value")(category) as any);
       });
     });
     setUniqueValues(newUniqueValues);
@@ -163,9 +203,10 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     setUniqueValues(undefined);
   }
 
+  const selectedThemeName = selectedGallery?.theme();
   const activeTheme =
-    selectedGallery && selectedGallery.hasTheme()
-      ? theme.setTheme(selectedGallery.theme())
+    selectedGallery && selectedGallery.hasTheme() && selectedThemeName
+      ? theme.setTheme(selectedThemeName)
       : theme.setTheme(config.DEFAULT_THEME);
 
   if (error) {
@@ -199,17 +240,17 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
       return <i>{t("empty")}</i>;
     }
 
-    const escapeHTML = (str) =>
+    const escapeHTML = (str: string): string =>
       str.replace(
         /[&<>'"]/g,
         (tag) =>
-          ({
+          (({
             "&": "&amp;",
             "<": "&lt;",
             ">": "&gt;",
             "'": "&#39;",
             '"': "&quot;",
-          }[tag])
+          }) as Record<string, string>)[tag]
       );
 
     const title = meta.name ? (
@@ -294,13 +335,7 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
     }
     if (!month) {
       return (
-        <Year
-          gallery={gallery}
-          year={year}
-          lang={lang}
-          countryData={countryData}
-          theme={activeTheme}
-        >
+        <Year gallery={gallery} year={year} theme={activeTheme}>
           <Title
             galleries={galleries}
             gallery={gallery}
@@ -407,12 +442,5 @@ const Gallery = ({ user, lang, countryData, isStats = false, scrollState }) => {
       {renderContent()}
     </>
   );
-};
-Gallery.propTypes = {
-  user: PropTypes.object,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
-  isStats: PropTypes.bool,
-  scrollState: PropTypes.object.isRequired,
 };
 export default Gallery;

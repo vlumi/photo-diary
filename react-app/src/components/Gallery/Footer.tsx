@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 const Root = styled.div`
@@ -12,10 +11,11 @@ const Root = styled.div`
   overflow: hidden;
 `;
 
-const Footer = ({ children }) => {
+interface Props {
+  children?: React.ReactNode;
+}
+
+const Footer = ({ children }: Props): React.ReactElement => {
   return <Root>{children}</Root>;
-};
-Footer.propTypes = {
-  children: PropTypes.any.isRequired,
 };
 export default Footer;

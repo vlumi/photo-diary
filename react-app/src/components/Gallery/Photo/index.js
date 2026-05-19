@@ -12,7 +12,16 @@ import Footer from "./Footer";
 
 import useKeyPress from "../../../lib/keypress";
 
-const Photo = ({ gallery, year, month, day, photo, lang, countryData }) => {
+const Photo = ({
+  children: _children,
+  gallery,
+  year,
+  month,
+  day,
+  photo,
+  lang,
+  countryData,
+}) => {
   const [redirect, setRedirect] = React.useState(undefined);
 
   const { t } = useTranslation();

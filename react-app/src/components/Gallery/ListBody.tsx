@@ -1,11 +1,12 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 import Link from "./Link";
 
 import config from "../../lib/config";
 import theme from "../../lib/theme";
+
+import type { Gallery as GalleryT } from "../../models/GalleryModel";
 
 const Root = styled.div`
   display: flex;
@@ -21,9 +22,11 @@ const Gallery = styled.div`
   border-width: 1px;
   background-color: var(--header-color);
 `;
-const GalleryTitle = styled.h3`
-  color: ${(props) => props.color};
-  background: ${(props) => props.background};
+const GalleryTitle = styled("h3", {
+  shouldForwardProp: (prop) => prop !== "$color" && prop !== "$background",
+})<{ $color: string; $background: string }>`
+  color: ${(props) => props.$color};
+  background: ${(props) => props.$background};
   font-size: 18pt;
   text-align: center;
   margin: 0;
@@ -39,8 +42,12 @@ const Description = styled.div`
   text-align: left;
 `;
 
-const ListBody = ({ galleries }) => {
-  const renderIcon = (gallery) => {
+interface Props {
+  galleries: GalleryT[];
+}
+
+const ListBody = ({ galleries }: Props): React.ReactElement => {
+  const renderIcon = (gallery: GalleryT) => {
     if (!gallery.hasIcon()) {
       return "";
     }
@@ -51,16 +58,18 @@ const ListBody = ({ galleries }) => {
       </IconContainer>
     );
   };
-  const renderGallery = (gallery) => {
-    const activeTheme = gallery.hasTheme()
-      ? theme.setTheme(gallery.theme())
-      : theme.setTheme(config.DEFAULT_THEME);
+  const renderGallery = (gallery: GalleryT) => {
+    const themeName = gallery.theme();
+    const activeTheme =
+      gallery.hasTheme() && themeName
+        ? theme.setTheme(themeName)
+        : theme.setTheme(config.DEFAULT_THEME);
     return (
       <Link key={gallery.id()} gallery={gallery}>
         <Gallery>
           <GalleryTitle
-            color={activeTheme.get("header-color")}
-            background={activeTheme.get("header-background")}
+            $color={activeTheme.get("header-color")}
+            $background={activeTheme.get("header-background")}
           >
             {gallery.title()}
           </GalleryTitle>
@@ -71,8 +80,5 @@ const ListBody = ({ galleries }) => {
     );
   };
   return <Root>{galleries.map((gallery) => renderGallery(gallery))}</Root>;
-};
-ListBody.propTypes = {
-  galleries: PropTypes.array.isRequired,
 };
 export default ListBody;
