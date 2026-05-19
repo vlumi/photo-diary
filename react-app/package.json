@@ -47,13 +47,13 @@
     "@types/leaflet": "^1.9.21",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^5.2.0",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^17.6.0",
     "jsdom": "^27.0.1",
     "typescript": "^6.0.3",
-    "vite": "^6.0.7",
+    "vite": "^8.0.13",
     "vitest": "^3.2.4"
   },
   "repository": {
