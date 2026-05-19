@@ -1,10 +1,10 @@
 const MAX_HISTORY_SIZE = 10;
-const state = {};
-const queue = [];
+const state: Record<string, number> = {};
+const queue: string[] = [];
 
-export default (historySize = MAX_HISTORY_SIZE) => {
+export default (historySize: number = MAX_HISTORY_SIZE) => {
   const self = {
-    set: (page, position) => {
+    set: (page: string, position: number): void => {
       if (page in state) {
         if (queue[queue.length - 1] === page) {
           queue.pop();
@@ -17,10 +17,12 @@ export default (historySize = MAX_HISTORY_SIZE) => {
       state[page] = position;
       if (historySize && queue.length > historySize) {
         const removed = queue.shift();
-        delete state[removed];
+        if (removed !== undefined) {
+          delete state[removed];
+        }
       }
     },
-    get: (page) => {
+    get: (page: string): number => {
       if (!(page in state)) {
         return 0;
       }

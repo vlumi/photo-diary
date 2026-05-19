@@ -1,7 +1,10 @@
 import React from "react";
 
-export default (targetKey, handler) => {
-  const downHandler = (event) => {
+export default (
+  targetKey: string,
+  handler: (event: KeyboardEvent) => void
+): void => {
+  const downHandler = (event: KeyboardEvent) => {
     if (event.key === targetKey) {
       event.preventDefault();
       if (typeof handler === "function") {

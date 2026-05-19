@@ -9,10 +9,11 @@ export default defineConfig({
       include: "**/*.{js,jsx}",
     }),
   ],
-  // Tell Vite (esbuild) to also parse JSX in .js files.
+  // Parse JSX in .js files (legacy from the CRA migration) and TS in .ts files.
+  // tsx loader is a superset that handles JS-with-JSX, TS, and TS-with-JSX.
   esbuild: {
-    loader: "jsx",
-    include: /src\/.*\.jsx?$/,
+    loader: "tsx",
+    include: /src\/.*\.[jt]sx?$/,
     exclude: [],
   },
   optimizeDeps: {
