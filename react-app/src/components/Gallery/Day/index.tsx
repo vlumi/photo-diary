@@ -1,8 +1,8 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
+import type { SwipeEventData } from "react-swipeable";
 
 import Swipeable from "../../Swipeable";
 
@@ -12,8 +12,32 @@ import Footer from "./Footer";
 
 import useKeyPress from "../../../lib/keypress";
 
-const Day = ({ children, gallery, year, month, day, lang, countryData }) => {
-  const [redirect, setRedirect] = React.useState(undefined);
+import type { Gallery } from "../../../models/GalleryModel";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+}
+
+interface Props {
+  children?: React.ReactNode;
+  gallery: Gallery;
+  year: number;
+  month: number;
+  day: number;
+  lang: string;
+  countryData: CountryData;
+}
+
+const Day = ({
+  children,
+  gallery,
+  year,
+  month,
+  day,
+  lang,
+  countryData,
+}: Props): React.ReactElement => {
+  const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
 
   const { t } = useTranslation();
 
@@ -50,7 +74,7 @@ const Day = ({ children, gallery, year, month, day, lang, countryData }) => {
   useKeyPress("ArrowLeft", handlMoveToPrevious);
   useKeyPress("ArrowRight", handlMoveToNext);
   useKeyPress("End", handlMoveToLast);
-  const handleSwipe = (event) => {
+  const handleSwipe = (event: SwipeEventData) => {
     switch (event.dir) {
       case "Left":
         handlMoveToNext();
@@ -99,14 +123,5 @@ const Day = ({ children, gallery, year, month, day, lang, countryData }) => {
       <Footer gallery={gallery} year={year} month={month} day={day} />
     </>
   );
-};
-Day.propTypes = {
-  children: PropTypes.any,
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Day;

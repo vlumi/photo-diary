@@ -1,11 +1,12 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 
 import color from "../../../lib/color";
 import stats from "../../../lib/stats";
-import filter from "../../../lib/filter";
+import filter, { type Filters as FiltersT } from "../../../lib/filter";
+
+type ActiveTheme = { get: (name: string) => string };
 
 const Root = styled.table`
   width: 100%;
@@ -29,36 +30,50 @@ const RowSelected = styled(Row)`
   color: var(--header-color);
   background-color: var(--header-background);
 `;
-const RowHeat = styled(Row)`
-  background-color: ${(props) => props.color};
+const RowHeat = styled(Row, {
+  shouldForwardProp: (prop) => prop !== "$heat",
+})<{ $heat: string }>`
+  background-color: ${(props) => props.$heat};
 `;
-const RowNone = styled(Row)`
+const RowNone = styled(Row, {
+  shouldForwardProp: (prop) => prop !== "$heat",
+})<{ $heat: string }>`
   color: var(--inactive-color);
+  background-color: ${(props) => props.$heat};
 `;
-const Header = styled.th`
+const Header = styled("th", {
+  shouldForwardProp: (prop) => prop !== "$align",
+})<{ $align: string }>`
   font-weight: bold;
   padding: 0 2px;
   vertical-align: top;
-  text-align: ${(props) => props.align};
+  text-align: ${(props) => props.$align};
   overflow: hidden;
 `;
 const RowHeader = styled(Header)`
   text-align: right;
   width: 1em;
 `;
-const Column = styled.td`
+const Column = styled("td", {
+  shouldForwardProp: (prop) => prop !== "$align",
+})<{ $align: string }>`
   padding: 0 2px;
   vertical-align: top;
-  text-align: ${(props) => props.align};
+  text-align: ${(props) => props.$align};
   overflow: hidden;
 `;
 
-const cachedHeatColors = {
+interface HeatColorCache {
+  from: string | undefined;
+  to: string | undefined;
+  values: string[];
+}
+const cachedHeatColors: HeatColorCache = {
   from: undefined,
   to: undefined,
   values: [],
 };
-const getHeatColors = (theme) => {
+const getHeatColors = (theme: ActiveTheme): string[] => {
   const gradientFrom = theme.get("primary-background");
   const gradientTo = theme.get("inactive-color");
   if (
@@ -73,22 +88,42 @@ const getHeatColors = (theme) => {
   return cachedHeatColors.values;
 };
 
-const Table = ({ topic, category, filters, setFilters, theme }) => {
+interface Column {
+  title: string;
+  align: string;
+  header?: boolean;
+}
+interface Props {
+  topic: any;
+  category: any;
+  filters: FiltersT;
+  setFilters: (filters: FiltersT) => void;
+  theme: ActiveTheme;
+}
+
+const Table = ({
+  topic,
+  category,
+  filters,
+  setFilters,
+  theme,
+}: Props): React.ReactElement => {
   const { t } = useTranslation();
 
-  const handleClick = (event) => {
-    const topicElement = event.target.closest("[data-type=topic]");
-    const categoryElement = event.target.closest("[data-type=category]");
-    const keyElement = event.target.closest("tr");
+  const handleClick = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    const topicElement = target.closest("[data-type=topic]");
+    const categoryElement = target.closest("[data-type=category]");
+    const keyElement = target.closest("tr");
 
     if (!keyElement || !categoryElement) {
       return;
     }
-    const topic = topicElement.getAttribute("data-key");
+    const topic = topicElement?.getAttribute("data-key");
     const category = categoryElement.getAttribute("data-key");
     const key = keyElement.getAttribute("data-key");
 
-    if (!category || !key) {
+    if (!topic || !category || !key) {
       return;
     }
     const newFilters = filter.applyNewFilter(
@@ -104,26 +139,26 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
   if (!("table" in category) || !category.table) {
     return <></>;
   }
-  const renderColumns = (values, i) => {
-    return category.tableColumns.map((column) =>
+  const renderColumns = (values: Record<string, React.ReactNode>, i: number) => {
+    return category.tableColumns.map((column: Column) =>
       column.header ? (
         <RowHeader
           key={`${topic.key}:${category.key}:${i}${column.title}`}
-          align={column.align}
+          $align={column.align}
         >
           {values[column.title]}
         </RowHeader>
       ) : (
         <Column
           key={`${topic.key}:${category.key}:${i}${column.title}`}
-          align={column.align}
+          $align={column.align}
         >
           {values[column.title]}
         </Column>
       )
     );
   };
-  const getScoreColor = (score) => {
+  const getScoreColor = (score: number): string => {
     const heatColors = getHeatColors(theme);
     if (score < -1) return heatColors[0];
     if (score < -0.75) return heatColors[1];
@@ -136,11 +171,16 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
     if (score < 0.75) return heatColors[8];
     return heatColors[9];
   };
-  const renderRows = (topic, category, table) => {
+  const renderRows = (
+    topic: string,
+    category: string,
+    table: Record<string, React.ReactNode>[]
+  ) => {
     return table.map((value, i) => {
-      const valueKey = stats.decodeTableRowKey(value.key);
-      const key = `${topic.key}:${category.key}:${valueKey}`;
+      const valueKey = stats.decodeTableRowKey(value.key as string | undefined);
+      const key = `${topic}:${category}:${valueKey}`;
       if (
+        valueKey !== undefined &&
         topic in filters &&
         category in filters[topic] &&
         valueKey in filters[topic][category]
@@ -158,7 +198,7 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
             key={key}
             onClick={handleClick}
             data-key={valueKey}
-            color={getScoreColor(value.standardScore)}
+            $heat={getScoreColor(Number(value.standardScore))}
           >
             {renderColumns(value, i)}
           </RowNone>
@@ -169,7 +209,7 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
           key={key}
           onClick={handleClick}
           data-key={valueKey}
-          color={getScoreColor(value.standardScore)}
+          $heat={getScoreColor(Number(value.standardScore))}
         >
           {renderColumns(value, i)}
         </RowHeat>
@@ -181,10 +221,10 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
     <Root>
       <Block>
         <HeaderRow>
-          {category.tableColumns.map((column) => (
+          {category.tableColumns.map((column: Column) => (
             <Header
               key={`${topic.key}:header:${column.title}`}
-              align={column.align}
+              $align={column.align}
             >
               {t(`stats-col-${column.title}`)}
             </Header>
@@ -194,12 +234,5 @@ const Table = ({ topic, category, filters, setFilters, theme }) => {
       </Block>
     </Root>
   );
-};
-Table.propTypes = {
-  topic: PropTypes.object,
-  category: PropTypes.object,
-  filters: PropTypes.object.isRequired,
-  setFilters: PropTypes.func.isRequired,
-  theme: PropTypes.object.isRequired,
 };
 export default Table;

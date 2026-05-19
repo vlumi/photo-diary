@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import {
   BsSkipBackwardFill,
@@ -14,8 +13,12 @@ import FormatDate from "../../FormatDate";
 import Root from "../Navigation";
 import Link from "../Link";
 
-const NavLink = styled(Link)`
-  visibility: ${(props) => props.visibility};
+import type { Gallery } from "../../../models/GalleryModel";
+
+const NavLink = styled(Link, {
+  shouldForwardProp: (prop) => prop !== "$visibility",
+})<{ $visibility: string }>`
+  visibility: ${(props) => props.$visibility};
 `;
 const TitleContainer = styled.div`
   display: flex;
@@ -26,7 +29,12 @@ const Title = styled.span`
   margin: 0 5px;
 `;
 
-const Navigation = ({ gallery, year }) => {
+interface Props {
+  gallery: Gallery;
+  year: number;
+}
+
+const Navigation = ({ gallery, year }: Props): React.ReactElement => {
   const prevVisibility = gallery.isFirstYear(year) ? "hidden" : "";
   const nextVisibility = gallery.isLastYear(year) ? "hidden" : "";
 
@@ -36,13 +44,13 @@ const Navigation = ({ gallery, year }) => {
   const lastYear = gallery.lastYear();
   return (
     <Root>
-      <NavLink gallery={gallery} year={firstYear} visibility={prevVisibility}>
+      <NavLink gallery={gallery} year={firstYear} $visibility={prevVisibility}>
         <BsSkipBackwardFill />
       </NavLink>
       <NavLink
         gallery={gallery}
         year={previousYear}
-        visibility={prevVisibility}
+        $visibility={prevVisibility}
       >
         <BsCaretLeftFill />
       </NavLink>
@@ -54,17 +62,13 @@ const Navigation = ({ gallery, year }) => {
           </Title>
         </TitleContainer>
       </Link>
-      <NavLink gallery={gallery} year={nextYear} visibility={nextVisibility}>
+      <NavLink gallery={gallery} year={nextYear} $visibility={nextVisibility}>
         <BsCaretRightFill />
       </NavLink>
-      <NavLink gallery={gallery} year={lastYear} visibility={nextVisibility}>
+      <NavLink gallery={gallery} year={lastYear} $visibility={nextVisibility}>
         <BsSkipForwardFill />
       </NavLink>
     </Root>
   );
-};
-Navigation.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
 };
 export default Navigation;

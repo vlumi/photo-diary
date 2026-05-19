@@ -1,13 +1,17 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 
 import Value from "./Value";
 
-import filter from "../../../lib/filter";
+import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import stats from "../../../lib/stats";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+  isValid(code: string): boolean;
+}
 
 const Box = styled.div`
   display: flex;
@@ -38,6 +42,21 @@ const NewValues = styled.select`
 `;
 const NewValue = styled.option``;
 
+interface Props {
+  topic: string;
+  category: string;
+  filters: FiltersT;
+  setFilters: (filters: FiltersT) => void;
+  uniqueValues: any;
+  lang: string;
+  countryData: CountryData;
+}
+
+interface ValueOption {
+  key: string;
+  value: string;
+}
+
 const Category = ({
   topic,
   category,
@@ -46,14 +65,17 @@ const Category = ({
   uniqueValues,
   lang,
   countryData,
-}) => {
-  const [valueSelector, setValueSelector] = React.useState({});
+}: Props): React.ReactElement => {
+  const [valueSelector, setValueSelector] = React.useState<
+    Record<string, Record<string, boolean>>
+  >({});
 
   const { t } = useTranslation();
 
-  const handleRemoveCategoryClick = (event) => {
-    const topicElement = event.target.closest("[data-type=topic]");
-    const categoryElement = event.target.closest("[data-type=category]");
+  const handleRemoveCategoryClick = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    const topicElement = target.closest("[data-type=topic]");
+    const categoryElement = target.closest("[data-type=category]");
     if (!topicElement || !categoryElement) {
       return;
     }
@@ -66,9 +88,10 @@ const Category = ({
     setFilters(newFilters);
   };
 
-  const handleToggleAddValueClick = (event) => {
-    const topicElement = event.target.closest("[data-type=topic]");
-    const categoryElement = event.target.closest("[data-type=category]");
+  const handleToggleAddValueClick = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    const topicElement = target.closest("[data-type=topic]");
+    const categoryElement = target.closest("[data-type=category]");
     if (!topicElement || !categoryElement) {
       return;
     }
@@ -84,15 +107,20 @@ const Category = ({
     setValueSelector({ [topic]: { [category]: state } });
   };
 
-  const alreadyFilteredValue = (topic, category, value) =>
+  const alreadyFilteredValue = (
+    topic: string,
+    category: string,
+    value: ValueOption
+  ): boolean =>
     topic in filters &&
     category in filters[topic] &&
     value.key in filters[topic][category];
 
-  const renderValueAdder = (topic, category) => {
-    const handleSelect = (event) => {
-      const topicElement = event.target.closest("[data-type=topic]");
-      const categoryElement = event.target.closest("[data-type=category]");
+  const renderValueAdder = (topic: string, category: string) => {
+    const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const target = event.target as HTMLElement;
+      const topicElement = target.closest("[data-type=topic]");
+      const categoryElement = target.closest("[data-type=category]");
       if (!topicElement || !categoryElement) {
         return;
       }
@@ -119,7 +147,7 @@ const Category = ({
         category in valueSelector[topic] &&
         valueSelector[topic][category])
     ) {
-      const valuesLeft = uniqueValues[topic][category].filter(
+      const valuesLeft = (uniqueValues[topic][category] as ValueOption[]).filter(
         (value) => !alreadyFilteredValue(topic, category, value)
       );
       if (!valuesLeft.length) {
@@ -179,14 +207,5 @@ const Category = ({
       {renderValueAdder(topic, category)}
     </Root>
   );
-};
-Category.propTypes = {
-  topic: PropTypes.string.isRequired,
-  category: PropTypes.string.isRequired,
-  filters: PropTypes.object.isRequired,
-  setFilters: PropTypes.func.isRequired,
-  uniqueValues: PropTypes.object.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Category;

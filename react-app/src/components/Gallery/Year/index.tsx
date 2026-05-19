@@ -1,8 +1,8 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
+import type { SwipeEventData } from "react-swipeable";
 
 import Swipeable from "../../Swipeable";
 
@@ -12,54 +12,65 @@ import Footer from "./Footer";
 
 import useKeyPress from "../../../lib/keypress";
 
-const Photo = ({
-  children: _children,
+import type { Gallery } from "../../../models/GalleryModel";
+
+type ActiveTheme = { get: (name: string) => string };
+
+interface Props {
+  children?: React.ReactNode;
+  gallery: Gallery;
+  year: number;
+  theme: ActiveTheme;
+}
+
+const Year = ({
+  children,
   gallery,
   year,
-  month,
-  day,
-  photo,
-  lang,
-  countryData,
-}) => {
-  const [redirect, setRedirect] = React.useState(undefined);
+  theme,
+}: Props): React.ReactElement => {
+  const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
 
   const { t } = useTranslation();
 
   const handlMoveToFirst = () => {
-    if (!gallery.isFirstPhoto(photo)) {
+    const firstYear = gallery.firstYear();
+    if (!gallery.isFirstYear(year) && firstYear) {
       window.history.pushState({}, "");
-      setRedirect(gallery.firstPhoto().path(gallery));
+      setRedirect(gallery.path(firstYear));
     }
   };
   const handlMoveToPrevious = () => {
-    if (!gallery.isFirstPhoto(photo)) {
+    const previousYear = gallery.previousYear(year);
+    if (!gallery.isFirstYear(year) && previousYear) {
       window.history.pushState({}, "");
-      setRedirect(gallery.previousPhoto(year, month, day, photo).path(gallery));
+      setRedirect(gallery.path(previousYear));
     }
   };
   const handlMoveToNext = () => {
-    if (!gallery.isLastPhoto(photo)) {
+    const nextYear = gallery.nextYear(year);
+    if (!gallery.isLastYear(year) && nextYear) {
       window.history.pushState({}, "");
-      setRedirect(gallery.nextPhoto(year, month, day, photo).path(gallery));
+      setRedirect(gallery.path(nextYear));
     }
   };
   const handlMoveToLast = () => {
-    if (!gallery.isLastPhoto(photo)) {
+    const lastYear = gallery.lastYear();
+    if (!gallery.isLastYear(year) && lastYear) {
       window.history.pushState({}, "");
-      setRedirect(gallery.lastPhoto().path(gallery));
+      setRedirect(gallery.path(lastYear));
     }
   };
 
   useKeyPress("Escape", () => {
     window.history.pushState({}, "");
-    setRedirect(gallery.path(year, month));
+    setRedirect("/g");
   });
   useKeyPress("Home", handlMoveToFirst);
   useKeyPress("ArrowLeft", handlMoveToPrevious);
   useKeyPress("ArrowRight", handlMoveToNext);
   useKeyPress("End", handlMoveToLast);
-  const handleSwipe = (event) => {
+  const handleSwipe = (event: SwipeEventData) => {
     switch (event.dir) {
       case "Left":
         handlMoveToNext();
@@ -89,46 +100,17 @@ const Photo = ({
     <>
       <Helmet>
         <title>
-          {gallery.title(year, month, day, photo)} — {t("nav-gallery")}
+          {gallery.title(year)} — {t("nav-gallery")}
         </title>
       </Helmet>
-      <Navigation
-        gallery={gallery}
-        year={year}
-        month={month}
-        day={day}
-        photo={photo}
-        lang={lang}
-      />
+      <Navigation gallery={gallery} year={year} />
       <Swipeable onSwiped={handleSwipe}>
-        <Content
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
-          photo={photo}
-        />
-        <Footer
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
-          photo={photo}
-          lang={lang}
-          countryData={countryData}
-        />
+        <Content gallery={gallery} year={year} theme={theme}>
+          {children}
+        </Content>
       </Swipeable>
+      <Footer gallery={gallery} year={year} />
     </>
   );
 };
-Photo.propTypes = {
-  children: PropTypes.any,
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
-  photo: PropTypes.object.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
-};
-export default Photo;
+export default Year;

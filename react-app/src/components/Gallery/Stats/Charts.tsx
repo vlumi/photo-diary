@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 import "chart.js/auto";
@@ -27,13 +26,17 @@ const StyledChartContainer2 = styled.div`
   margin: 0 2px;
 `;
 
-const Charts = ({ category }) => {
+interface Props {
+  category: any;
+}
+
+const Charts = ({ category }: Props): React.ReactElement => {
   if (!("charts" in category) || !category.charts) {
     return <></>;
   }
   return (
     <Root>
-      {category.charts.map((chart) => {
+      {category.charts.map((chart: any) => {
         const key = `${category.name}:${chart.type}`;
         switch (chart.type) {
           case "doughnut":
@@ -66,8 +69,5 @@ const Charts = ({ category }) => {
       })}
     </Root>
   );
-};
-Charts.propTypes = {
-  category: PropTypes.object,
 };
 export default Charts;

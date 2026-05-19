@@ -1,10 +1,13 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 import Month from "./Month";
 
 import calendar from "../../../lib/calendar";
+
+import type { Gallery } from "../../../models/GalleryModel";
+
+type ActiveTheme = { get: (name: string) => string };
 
 const Root = styled.div`
   display: flex;
@@ -20,7 +23,19 @@ const Calendar = styled.div`
   max-width: 904px;
 `;
 
-const Content = ({ children, gallery, year, theme }) => {
+interface Props {
+  children?: React.ReactNode;
+  gallery: Gallery;
+  year: number;
+  theme: ActiveTheme;
+}
+
+const Content = ({
+  children,
+  gallery,
+  year,
+  theme,
+}: Props): React.ReactElement => {
   const maxCount = gallery.maxDayCount(year);
   return (
     <>
@@ -43,11 +58,5 @@ const Content = ({ children, gallery, year, theme }) => {
       </Root>
     </>
   );
-};
-Content.propTypes = {
-  children: PropTypes.any,
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  theme: PropTypes.object.isRequired,
 };
 export default Content;

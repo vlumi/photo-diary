@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
@@ -9,17 +8,26 @@ import Link from "../Link";
 import color from "../../../lib/color";
 import format from "../../../lib/format";
 
+import type { Gallery } from "../../../models/GalleryModel";
+
+type ActiveTheme = { get: (name: string) => string };
+
 const Some = styled(DayCell)``;
 const None = styled(DayCell)`
   color: var(--inactive-color);
 `;
 
-const cachedHeatColors = {
+interface HeatColorCache {
+  from: string | undefined;
+  to: string | undefined;
+  values: string[];
+}
+const cachedHeatColors: HeatColorCache = {
   from: undefined,
   to: undefined,
   values: [],
 };
-const getHeatColors = (theme) => {
+const getHeatColors = (theme: ActiveTheme): string[] => {
   const gradientFrom = theme.get("primary-background");
   const gradientTo = theme.get("inactive-color");
   if (
@@ -34,12 +42,34 @@ const getHeatColors = (theme) => {
   return cachedHeatColors.values;
 };
 
-const Day = ({ gallery, year, month, day, maxCount, theme }) => {
+interface Props {
+  gallery: Gallery;
+  year: number;
+  month: number;
+  day: number;
+  maxCount: number;
+  theme: ActiveTheme;
+}
+
+const Day = ({
+  gallery,
+  year,
+  month,
+  day,
+  maxCount,
+  theme,
+}: Props): React.ReactElement => {
   const heatColors = getHeatColors(theme);
 
   const { t } = useTranslation();
 
-  const renderDayValue = (gallery, year, month, day, photoCount) => {
+  const renderDayValue = (
+    gallery: Gallery,
+    year: number,
+    month: number,
+    day: number,
+    photoCount: number
+  ): React.ReactNode => {
     if (day === 0) {
       return <></>;
     }
@@ -77,13 +107,5 @@ const Day = ({ gallery, year, month, day, maxCount, theme }) => {
       {renderDayValue(gallery, year, month, day, photoCount)}
     </Some>
   );
-};
-Day.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
-  maxCount: PropTypes.number.isRequired,
-  theme: PropTypes.object.isRequired,
 };
 export default Day;

@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import {
   BsSkipBackwardFill,
@@ -14,8 +13,12 @@ import FormatDate from "../../FormatDate";
 import Root from "../Navigation";
 import Link from "../Link";
 
-const NavLink = styled(Link)`
-  visibility: ${(props) => props.visibility};
+import type { Gallery } from "../../../models/GalleryModel";
+
+const NavLink = styled(Link, {
+  shouldForwardProp: (prop) => prop !== "$visibility",
+})<{ $visibility: string }>`
+  visibility: ${(props) => props.$visibility};
 `;
 const TitleContainer = styled.div`
   display: flex;
@@ -26,21 +29,38 @@ const Title = styled.span`
   margin: 0 5px;
 `;
 
-const Navigation = ({ gallery, year, month }) => {
-  const prevVisibility = gallery.isFirstMonth(year, month) ? "hidden" : "";
-  const nextVisibility = gallery.isLastMonth(year, month) ? "hidden" : "";
+interface Props {
+  gallery: Gallery;
+  year: number;
+  month: number;
+  day: number;
+}
 
-  const [firstYear, firstMonth] = gallery.firstMonth();
-  const [previousYear, previousMonth] = gallery.previousMonth(year, month);
-  const [nextYear, nextMonth] = gallery.nextMonth(year, month);
-  const [lastYear, lastMonth] = gallery.lastMonth();
+const Navigation = ({
+  gallery,
+  year,
+  month,
+  day,
+}: Props): React.ReactElement => {
+  const prevVisibility = gallery.isFirstDay(year, month, day) ? "hidden" : "";
+  const nextVisibility = gallery.isLastDay(year, month, day) ? "hidden" : "";
+
+  const [firstYear, firstMonth, firstDay] = gallery.firstDay();
+  const [previousYear, previousMonth, previousDay] = gallery.previousDay(
+    year,
+    month,
+    day
+  );
+  const [nextYear, nextMonth, nextDay] = gallery.nextDay(year, month, day);
+  const [lastYear, lastMonth, lastDay] = gallery.lastDay();
   return (
     <Root>
       <NavLink
         gallery={gallery}
         year={firstYear}
         month={firstMonth}
-        visibility={prevVisibility}
+        day={firstDay}
+        $visibility={prevVisibility}
       >
         <BsSkipBackwardFill />
       </NavLink>
@@ -48,15 +68,16 @@ const Navigation = ({ gallery, year, month }) => {
         gallery={gallery}
         year={previousYear}
         month={previousMonth}
-        visibility={prevVisibility}
+        day={previousDay}
+        $visibility={prevVisibility}
       >
         <BsCaretLeftFill />
       </NavLink>
-      <Link gallery={gallery} year={year}>
+      <Link gallery={gallery} year={year} month={month}>
         <TitleContainer>
           <BsFillCalendarFill />
           <Title>
-            <FormatDate year={year} month={month} />
+            <FormatDate year={year} month={month} day={day} />
           </Title>
         </TitleContainer>
       </Link>
@@ -64,7 +85,8 @@ const Navigation = ({ gallery, year, month }) => {
         gallery={gallery}
         year={nextYear}
         month={nextMonth}
-        visibility={nextVisibility}
+        day={nextDay}
+        $visibility={nextVisibility}
       >
         <BsCaretRightFill />
       </NavLink>
@@ -72,16 +94,12 @@ const Navigation = ({ gallery, year, month }) => {
         gallery={gallery}
         year={lastYear}
         month={lastMonth}
-        visibility={nextVisibility}
+        day={lastDay}
+        $visibility={nextVisibility}
       >
         <BsSkipForwardFill />
       </NavLink>
     </Root>
   );
-};
-Navigation.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
 };
 export default Navigation;

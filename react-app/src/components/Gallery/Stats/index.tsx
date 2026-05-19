@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 
@@ -8,12 +7,32 @@ import MapContainer from "../../MapContainer";
 
 import stats from "../../../lib/stats";
 
+import type { Photo } from "../../../models/PhotoModel";
+import type { Filters as FiltersT } from "../../../lib/filter";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+  isValid(code: string): boolean;
+}
+type ActiveTheme = { get: (name: string) => string };
+
 const Root = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
   align-items: flex-start;
 `;
+
+interface Props {
+  children?: React.ReactNode;
+  photos: Photo[];
+  uniqueValues: any;
+  filters: FiltersT;
+  setFilters: (filters: FiltersT) => void;
+  lang: string;
+  countryData: CountryData;
+  theme: ActiveTheme;
+}
 
 const Stats = ({
   children,
@@ -24,8 +43,8 @@ const Stats = ({
   lang,
   countryData,
   theme,
-}) => {
-  const [data, setData] = React.useState(undefined);
+}: Props): React.ReactElement => {
+  const [data, setData] = React.useState<any>(undefined);
 
   const { t } = useTranslation();
 
@@ -41,7 +60,7 @@ const Stats = ({
     );
   }
 
-  const renderMap = (positions) => {
+  const renderMap = (positions: Photo[]) => {
     if (!positions) {
       return "";
     }
@@ -53,28 +72,20 @@ const Stats = ({
     <>
       {children}
       <Root>
-        {stats.collectTopics(data, lang, t, countryData, theme).map((topic) => (
-          <Topic
-            key={topic.key}
-            topic={topic}
-            filters={filters}
-            setFilters={setFilters}
-            theme={theme}
-          />
-        ))}
+        {stats
+          .collectTopics(data, lang, t, countryData, theme)
+          .map((topic: any) => (
+            <Topic
+              key={topic.key}
+              topic={topic}
+              filters={filters}
+              setFilters={setFilters}
+              theme={theme}
+            />
+          ))}
         {renderMap(mapPhotos)}
       </Root>
     </>
   );
-};
-Stats.propTypes = {
-  children: PropTypes.any,
-  photos: PropTypes.array.isRequired,
-  uniqueValues: PropTypes.object.isRequired,
-  filters: PropTypes.object.isRequired,
-  setFilters: PropTypes.func.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
-  theme: PropTypes.object.isRequired,
 };
 export default Stats;

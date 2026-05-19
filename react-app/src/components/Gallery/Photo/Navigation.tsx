@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 import {
   BsSkipBackwardFill,
@@ -12,8 +11,13 @@ import {
 import Root from "../Navigation";
 import Link from "../Link";
 
-const NavLink = styled(Link)`
-  visibility: ${(props) => props.visibility};
+import type { Gallery } from "../../../models/GalleryModel";
+import type { Photo } from "../../../models/PhotoModel";
+
+const NavLink = styled(Link, {
+  shouldForwardProp: (prop) => prop !== "$visibility",
+})<{ $visibility: string }>`
+  visibility: ${(props) => props.$visibility};
 `;
 const TitleContainer = styled.div`
   display: flex;
@@ -24,11 +28,30 @@ const Title = styled.span`
   margin: 0 5px;
 `;
 
-const Navigation = ({ gallery, year, month, day, photo, lang }) => {
+interface Props {
+  gallery: Gallery;
+  year: number;
+  month: number;
+  day: number;
+  photo: Photo;
+  lang: string;
+}
+
+const Navigation = ({
+  gallery,
+  year,
+  month,
+  day,
+  photo,
+  lang,
+}: Props): React.ReactElement => {
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
 
-  const firstDayPhotos = gallery.photos(firstYear, firstMonth, firstDay);
+  const firstDayPhotos =
+    firstYear !== undefined && firstMonth !== undefined && firstDay !== undefined
+      ? gallery.photos(firstYear, firstMonth, firstDay)
+      : [];
   const firstPhoto = firstDayPhotos[0];
 
   const previousPhoto = gallery.previousPhoto(year, month, day, photo);
@@ -38,17 +61,20 @@ const Navigation = ({ gallery, year, month, day, photo, lang }) => {
     previousPhoto && previousPhoto === photo ? "hidden" : "";
   const nextVisibility = nextPhoto && nextPhoto === photo ? "hidden" : "";
 
-  const lastDayPhotos = gallery.photos(lastYear, lastMonth, lastDay);
+  const lastDayPhotos =
+    lastYear !== undefined && lastMonth !== undefined && lastDay !== undefined
+      ? gallery.photos(lastYear, lastMonth, lastDay)
+      : [];
   const lastPhoto = lastDayPhotos[lastDayPhotos.length - 1];
   return (
     <Root>
-      <NavLink gallery={gallery} photo={firstPhoto} visibility={prevVisibility}>
+      <NavLink gallery={gallery} photo={firstPhoto} $visibility={prevVisibility}>
         <BsSkipBackwardFill />
       </NavLink>
       <NavLink
         gallery={gallery}
         photo={previousPhoto}
-        visibility={prevVisibility}
+        $visibility={prevVisibility}
       >
         <BsCaretLeftFill />
       </NavLink>
@@ -61,21 +87,13 @@ const Navigation = ({ gallery, year, month, day, photo, lang }) => {
           </Title>
         </TitleContainer>
       </Link>
-      <NavLink gallery={gallery} photo={nextPhoto} visibility={nextVisibility}>
+      <NavLink gallery={gallery} photo={nextPhoto} $visibility={nextVisibility}>
         <BsCaretRightFill />
       </NavLink>
-      <NavLink gallery={gallery} photo={lastPhoto} visibility={nextVisibility}>
+      <NavLink gallery={gallery} photo={lastPhoto} $visibility={nextVisibility}>
         <BsSkipForwardFill />
       </NavLink>
     </Root>
   );
-};
-Navigation.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
-  photo: PropTypes.object.isRequired,
-  lang: PropTypes.string.isRequired,
 };
 export default Navigation;

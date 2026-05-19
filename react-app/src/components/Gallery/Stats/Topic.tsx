@@ -1,8 +1,11 @@
 import React from "react";
-import PropTypes from "prop-types";
 import styled from "@emotion/styled";
 
 import Category from "./Category";
+
+import type { Filters as FiltersT } from "../../../lib/filter";
+
+type ActiveTheme = { get: (name: string) => string };
 
 const Root = styled.section`
   width: 100%;
@@ -28,12 +31,25 @@ const Categories = styled.section`
   flex-wrap: wrap;
   justify-content: flex-start;
 `;
-const Topic = ({ topic, filters, setFilters, theme }) => {
+
+interface Props {
+  topic: any;
+  filters: FiltersT;
+  setFilters: (filters: FiltersT) => void;
+  theme: ActiveTheme;
+}
+
+const Topic = ({
+  topic,
+  filters,
+  setFilters,
+  theme,
+}: Props): React.ReactElement => {
   return (
     <Root key={topic.key} data-type="topic" data-key={topic.key}>
       <Title>{topic.title}</Title>
       <Categories>
-        {topic.categories.map((category) => (
+        {topic.categories.map((category: any) => (
           <Category
             key={`${category.key}:${topic.key}`}
             topic={topic}
@@ -46,11 +62,5 @@ const Topic = ({ topic, filters, setFilters, theme }) => {
       </Categories>
     </Root>
   );
-};
-Topic.propTypes = {
-  topic: PropTypes.object,
-  filters: PropTypes.object.isRequired,
-  setFilters: PropTypes.func.isRequired,
-  theme: PropTypes.object.isRequired,
 };
 export default Topic;

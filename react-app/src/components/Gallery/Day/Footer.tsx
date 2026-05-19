@@ -1,12 +1,26 @@
 import React from "react";
-import PropTypes from "prop-types";
 
 import MapContainer from "../../MapContainer";
 
 import Root from "../Footer";
 
-const Footer = ({ gallery, year, month, day }) => {
-  const renderMap = (positions) => {
+import type { Gallery } from "../../../models/GalleryModel";
+import type { Photo } from "../../../models/PhotoModel";
+
+interface Props {
+  gallery: Gallery;
+  year: number;
+  month: number;
+  day: number;
+}
+
+const Footer = ({
+  gallery,
+  year,
+  month,
+  day,
+}: Props): React.ReactElement => {
+  const renderMap = (positions: Photo[]) => {
     if (!positions) {
       return "";
     }
@@ -19,11 +33,5 @@ const Footer = ({ gallery, year, month, day }) => {
     .filter((photo) => photo.hasCoordinates());
 
   return <Root>{renderMap(photos)}</Root>;
-};
-Footer.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
 };
 export default Footer;

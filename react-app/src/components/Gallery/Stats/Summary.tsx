@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 
@@ -57,7 +56,11 @@ const Value = styled.span`
   vertical-align: middle;
 `;
 
-const Summary = ({ category }) => {
+interface Props {
+  category: any;
+}
+
+const Summary = ({ category }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
   if (!("kpi" in category) || !category.kpi) {
@@ -66,14 +69,16 @@ const Summary = ({ category }) => {
   return (
     <Root>
       <List>
-        {category.kpi.map((kpi) => (
+        {category.kpi.map((kpi: { key: string; value: string }) => (
           <Kpi key={`kpi:${kpi.key}`}>
             <Title>{t(`stats-kpi-title-${kpi.key}`)}</Title>
             <Value>
               <Box>
-                {t(`stats-kpi-${kpi.key}`, {
-                  count: kpi.value,
-                })}
+                {String(
+                  t(`stats-kpi-${kpi.key}`, {
+                    count: kpi.value,
+                  } as never)
+                )}
               </Box>
             </Value>
           </Kpi>
@@ -81,8 +86,5 @@ const Summary = ({ category }) => {
       </List>
     </Root>
   );
-};
-Summary.propTypes = {
-  category: PropTypes.object,
 };
 export default Summary;

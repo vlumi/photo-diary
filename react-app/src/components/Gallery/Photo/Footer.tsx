@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 
@@ -12,6 +11,13 @@ import Root from "../Footer";
 
 import config from "../../../lib/config";
 import format from "../../../lib/format";
+
+import type { Gallery } from "../../../models/GalleryModel";
+import type { Photo } from "../../../models/PhotoModel";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+}
 
 const ThumbnailContainer = styled.span`
   width: 70px;
@@ -49,14 +55,32 @@ const Copyright = styled.div`
   font-size: x-small;
 `;
 
-const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
+interface Props {
+  gallery: Gallery;
+  year: number;
+  month: number;
+  day: number;
+  photo: Photo;
+  lang: string;
+  countryData: CountryData;
+}
+
+const Footer = ({
+  gallery,
+  year,
+  month,
+  day,
+  photo,
+  lang,
+  countryData,
+}: Props): React.ReactElement => {
   const { t } = useTranslation();
 
   const previousPhoto = gallery.previousPhoto(year, month, day, photo);
   const nextPhoto = gallery.nextPhoto(year, month, day, photo);
   const formatExposure = format.exposure(lang, t);
 
-  const renderAdjacentPhoto = (adjacentPhoto) => {
+  const renderAdjacentPhoto = (adjacentPhoto: Photo) => {
     if (adjacentPhoto === photo) {
       return <></>;
     }
@@ -83,13 +107,13 @@ const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
     return <Part>{photo.place()}</Part>;
   };
   const renderCountry = () => {
-    if (!photo.hasCountry()) {
+    const countryCode = photo.countryCode();
+    if (!photo.hasCountry() || !countryCode) {
       return "";
     }
     return (
       <Part>
-        {photo.countryName(lang, countryData)}{" "}
-        <FlagIcon code={photo.countryCode()} />
+        {photo.countryName(lang, countryData)} <FlagIcon code={countryCode} />
       </Part>
     );
   };
@@ -111,28 +135,27 @@ const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
     return <Details>{photo.formatCoordinates()}</Details>;
   };
   const renderExposure = () => {
+    const focalLength = photo.focalLength();
+    const aperture = photo.aperture();
+    const exposureTime = photo.exposureTime();
+    const iso = photo.iso();
+    const resolution = photo.resolution();
+    const orientation = photo.orientation();
+    const aspectRatio = photo.aspectRatio();
+    const exposureValue = photo.exposureValue();
+    const lightValue = photo.lightValue();
     return [
-      photo.focalLength()
-        ? `ƒ=${formatExposure.focalLength(photo.focalLength())}㎜`
+      focalLength ? `ƒ=${formatExposure.focalLength(focalLength)}㎜` : "",
+      aperture ? formatExposure.aperture(aperture) : "",
+      exposureTime ? `${formatExposure.exposureTime(exposureTime)}s` : "",
+      iso ? `ISO${formatExposure.iso(iso)}` : "",
+      resolution ? `${formatExposure.resolution(resolution)}MP` : "",
+      orientation ? `${formatExposure.orientation(orientation)}` : "",
+      aspectRatio
+        ? `${formatExposure.aspectRatio(Number(aspectRatio))}`
         : "",
-      photo.aperture() ? formatExposure.aperture(photo.aperture()) : "",
-      photo.exposureTime()
-        ? `${formatExposure.exposureTime(photo.exposureTime())}s`
-        : "",
-      photo.iso() ? `ISO${formatExposure.iso(photo.iso())}` : "",
-      photo.resolution()
-        ? `${formatExposure.resolution(photo.resolution())}MP`
-        : "",
-      photo.orientation()
-        ? `${formatExposure.orientation(photo.orientation())}`
-        : "",
-      photo.aspectRatio()
-        ? `${formatExposure.aspectRatio(photo.aspectRatio())}`
-        : "",
-      photo.exposureValue()
-        ? `EV${formatExposure.ev(photo.exposureValue())}`
-        : "",
-      photo.lightValue() ? `LV${formatExposure.ev(photo.lightValue())}` : "",
+      exposureValue ? `EV${formatExposure.ev(exposureValue)}` : "",
+      lightValue ? `LV${formatExposure.ev(lightValue)}` : "",
     ].join(" ");
   };
   const renderGear = () => {
@@ -243,14 +266,5 @@ const Footer = ({ gallery, year, month, day, photo, lang, countryData }) => {
   };
 
   return renderContent();
-};
-Footer.propTypes = {
-  gallery: PropTypes.object.isRequired,
-  year: PropTypes.number.isRequired,
-  month: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
-  photo: PropTypes.object.isRequired,
-  lang: PropTypes.string.isRequired,
-  countryData: PropTypes.object.isRequired,
 };
 export default Footer;
