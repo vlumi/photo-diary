@@ -10,9 +10,6 @@ jobs:
   server:
     name: Server (lint + typecheck + test)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
     env:
       # Required by lib/config/index.ts at module load. Value doesn't
       # matter for tests (DB_DRIVER=dummy), it just has to exist.
@@ -23,44 +20,38 @@ jobs:
         with:
           node-version: "26"
           cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
+      - run: npm run lint --workspace=server
+      - run: npm run typecheck --workspace=server
+      - run: npm test --workspace=server
 
   converter:
     name: Converter (lint + typecheck + test)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: converter
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "26"
           cache: npm
-          cache-dependency-path: converter/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
+      - run: npm run lint --workspace=converter
+      - run: npm run typecheck --workspace=converter
+      - run: npm test --workspace=converter
 
   react-app:
     name: React app (lint + build + test)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: react-app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "26"
           cache: npm
-          cache-dependency-path: react-app/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run lint
-      - run: npm run build
-      - run: npm test
+      - run: npm run lint --workspace=react-app
+      - run: npm run build --workspace=react-app
+      - run: npm test --workspace=react-app

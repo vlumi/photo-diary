@@ -10,16 +10,16 @@ The front-end SPA for the Photo Diary, served by the [server](../server) in prod
 ## Running Instructions
 
 ```sh
-npm install
-npm run dev        # Vite dev server on http://localhost:3000
-npm run build      # Production build into build/ (Rolldown)
-npm run preview    # Serve the production build locally
-npm test           # vitest run
+npm install        # from the repo root (npm workspaces; installs every package)
+npm run dev        # Vite dev server on http://localhost:3000 — from react-app/
+npm run build      # Production build into build/ (Rolldown) — from react-app/
+npm run preview    # Serve the production build locally — from react-app/
+npm test           # vitest run — from react-app/
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint .
 ```
 
-For production the build is copied into [server](../server)/build/ via `npm run build:ui` (from the server directory) and served by the server.
+For production, run `npm run build` from the **repo root**: it builds the react-app workspace and copies `build/` into [server](../server)/`build/` so the server can serve it.
 
 ### Configuration
 

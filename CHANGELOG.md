@@ -2,11 +2,20 @@
 
 ## [Unreleased]
 
+### Cross-package
+
+- Switch to npm workspaces. New top-level `package.json` lists `server`, `converter`, and `react-app` as workspaces and exposes `npm run setup` (install + build) and `npm run build` (build react-app and copy into `server/build/`) at the repo root. Replaces the previous per-package install ritual and the `server/build:ui` script. Single root `package-lock.json` replaces the three per-package lockfiles. CI workflow updated to install once at the root and run lint/typecheck/test per workspace.
+- Add `server/bin/init-instance.ts` for bootstrapping and upgrading multi-instance deploys: creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink in the instance dir pointing at the running version's code root. Re-runs are idempotent — same code root acts as a doctor and reports missing `.env` keys (`--fix` appends defaults), different code root acts as an upgrade and backs up the DB to `db.sqlite3.pre-<new-version>` before flipping the symlink. Same script handles every lifecycle event for an instance.
+- **Breaking (deployment):** drop the `PHOTO_ROOT_DIR` and `DB_OPTS` env vars. The photo repository now lives at the fixed path `<instance-dir>/photos/` and the SQLite DB at `<instance-dir>/db.sqlite3` — both relative to the server's / converter's working directory (the instance directory when launched via `start-prod.sh`). Existing deploys: rename `<instance>.sqlite3` → `db.sqlite3` in each instance dir; symlink `<instance>/photos` (or the whole instance dir) if the photos live elsewhere, e.g. `ln -s /mnt/data/dailybw /var/photo-diary/dailybw/photos`. Remove the two now-inert lines from each instance's `.env`.
+- Add `server/bin/start-prod.sh` and `converter/bin/start-prod.sh` wrappers: each sources `.env` from the current working directory and derives the pm2 process name from `INSTANCE_NAME` (`<name>` and `<name>-converter`). Symlink-resilient — invoke via the instance dir's `code/server/bin/start-prod.sh` and they still locate their own code root correctly. The `prod` npm script in both packages now invokes the wrapper. Single-instance use stays the same — without an `INSTANCE_NAME`, the pm2 names fall back to `photo-diary-server` / `photo-diary-converter`.
+- Document the multi-instance deploy pattern in the top-level README: versioned code under `/opt/photo-diary/<version>/`, host prep via `tar --strip-components=1` from the GitHub source tarball, per-instance directories under `/var/photo-diary/<name>/` with their own `.env`, `code` symlink, photos, and SQLite DB, nginx vhost per instance, atomic upgrade via the `init-instance` script.
+
 ### Server
 
 - Replace the `uuid` dep with the built-in `crypto.randomUUID()`
 - Send `X-Robots-Tag: noindex, noai, noimageai` on every response, including served photo files
 - Add a DB migration runner that uses `meta.schema_version` as the cursor; runs at server startup against the better-sqlite3 driver. Bootstraps fresh DBs from `db/sqlite3/migrations/001_baseline.sql`, then advances to v2 via `002_fix_gallery_photo_fk.sql` which rebuilds `gallery_photo` with the correct singular FK references (the long-standing `photos`/`galleries` typo). Drops the obsolete `schema/sqlite3.ddl`, `schema/migrate/sqlite3_from_0.ddl`, and `migrate_legacy_to_sqlite3.sh`.
+- Resolve the bundled-frontend static directory from `import.meta.dirname` (with `STATIC_DIR` override) so the server can be started from any working directory — needed for the multi-instance deploy where the code lives at a shared path and each instance has its own CWD.
 
 ### Frontend
 
@@ -15,8 +24,6 @@
 - Enumerate AI-training bots explicitly in `robots.txt` (GPTBot, Google-Extended, ClaudeBot, PerplexityBot, CCBot, etc.) for crawlers that ignore the `User-agent: *` wildcard
 - Drop the six `VITE_*` build-time env vars; defaults live in `lib/config.ts` and `Gallery/index.tsx` applies runtime overrides from `/api/v1/meta` (`defaultGallery`, `defaultTheme`, `initialGalleryView`, `firstWeekday`) on top of the existing `cdn` → `PHOTO_ROOT_URL` path, so one frontend build serves any instance
   - **Breaking (deployment):** per-instance overrides move from `react-app/.env` to the **server's** `.env`. Rename `VITE_DEFAULT_GALLERY` → `DEFAULT_GALLERY`, `VITE_THEME` → `DEFAULT_THEME`, `VITE_INITIAL_GALLERY_VIEW` → `INITIAL_GALLERY_VIEW`, `VITE_FIRST_WEEKDAY` → `FIRST_WEEKDAY` in each deployed instance's `server/.env`. `VITE_PHOTO_ROOT_URL` should already be using the `instance_cdn` meta row. `VITE_DEFAULT_LANGUAGE` doesn't map — change the literal in `lib/config.ts` if you need a different fallback; i18next initializes before meta loads.
-- Drop the six `VITE_*` build-time env vars; defaults are now plain values in `lib/config.ts` and the API meta endpoint's `cdn` continues to override `PHOTO_ROOT_URL` at runtime, so one frontend build serves any instance
-  - **Breaking (deployment):** the per-environment `.env` files no longer need any `VITE_*` entries; they'll be silently ignored. Per-instance branding now flows entirely through the API (`meta.cdn` for the photo root URL; per-`gallery` rows for `theme`, `initial_view`, `hostname`).
 
 ## [0.6.0] - 2026-05-19
 

@@ -12,16 +12,15 @@ import * as logger from "./logger.js";
 
 export const getDirectory = (): string => {
   const directory = PHOTO_ROOT_DIR;
-  if (!directory) {
-    throw "The PHOTO_ROOT_DIR of the directory structure must be defined.";
-  }
 
   const checkDirectory = (subDir: string): boolean => {
     if (!fs.existsSync(subDir)) {
       logger.error(`Missing directory: ${subDir}`);
       return false;
     }
-    if (!fs.lstatSync(subDir).isDirectory()) {
+    // statSync follows symlinks — lstat would report the symlink itself,
+    // which doesn't have isDirectory() true even when it points at a dir.
+    if (!fs.statSync(subDir).isDirectory()) {
       logger.error(`Not a directory: ${subDir}`);
       return false;
     }
@@ -39,7 +38,7 @@ export const getDirectory = (): string => {
       (subDirectory) => !checkDirectory(path.join(directory, subDirectory))
     ).length > 0;
   if (missing) {
-    throw `Invalid directory structure in PHOTO_ROOT_DIR (${directory}).`;
+    throw `Invalid photo-repository directory structure at ${directory}.`;
   }
   return directory;
 };

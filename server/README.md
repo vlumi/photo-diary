@@ -22,8 +22,9 @@ npm run prod       # pm2 start --interpreter tsx index.ts (NODE_ENV=prod)
 npm test           # vitest run
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint .
-npm run build:ui   # builds the react-app and copies it into server/build/ for prod
 ```
+
+To produce the bundled frontend (`server/build/`) for production, run `npm run build` from the **repo root** — it builds the react-app workspace and copies the output into `server/build/`. Or `npm run setup` from the repo root to install all workspaces *and* build in one step.
 
 ### Environment Variables
 
@@ -35,18 +36,17 @@ Certain parameters are passed through environment veriables. These can be either
   - Currently implemented:
     - `sqlite3` – Default driver, backed by better-sqlite3 (synchronous API)
     - `dummy` – data hard-coded into the driver, for testing purposes only
-- `DB_OPTS` (\* depends on `DB_DRIVER`)
-  - This parameter will be passed to the `DB_DRIVER` during connection.
-    - `sqlite3` – Path to the DB file. If the file doesn't exist yet, better-sqlite3 creates it on first open and the migration runner bootstraps the schema from `db/sqlite3/migrations/001_baseline.sql`. Subsequent starts apply any pending migrations from the same directory in version order, using the `meta.schema_version` row as the cursor. New migrations: drop `NNN_<description>.sql` (with a higher number than the last one) and end the file with `UPDATE meta SET value='NNN' WHERE key='schema_version';`.
-    - `dummy` – Not used
 - `SECRET` \*
   - HMAC secret used to sign JWT tokens issued at login. Required — the server refuses to start without it.
-- `PHOTO_ROOT_DIR` \*
-  - The path to the physical photos, with the following sub-directories
-    - `inbox` – New photos to be added, or their extracted JSON files
-    - `display` – Display-size, large photos
-    - `thumbnail` – Thumbnail-size, small photos
-    - `original` – The already-processed photos and JSON files
+
+### Fixed-by-convention paths
+
+The SQLite DB file and the photo repository are no longer configurable via env vars — they live at fixed locations relative to the server's working directory (which is the **instance directory** when launched via `start-prod.sh`):
+
+- **`<cwd>/db.sqlite3`** – the SQLite DB. If absent at first start, better-sqlite3 creates the file and the migration runner bootstraps the schema from `db/sqlite3/migrations/001_baseline.sql`. Subsequent starts apply any pending migrations from the same directory in version order, using the `meta.schema_version` row as the cursor. New migrations: drop `NNN_<description>.sql` (with a higher number than the last one) and end the file with `UPDATE meta SET value='NNN' WHERE key='schema_version';`.
+- **`<cwd>/photos/`** – the photo repository. Must contain the sub-directories `inbox`, `original`, `display`, `thumbnail`. Created automatically by `init-instance.ts`.
+
+If you need the DB or photo dir on a separate disk, symlink the file (`db.sqlite3`), the subdirectory (`photos/`), or the whole instance dir.
 
 ### Examples
 
@@ -55,8 +55,8 @@ Certain parameters are passed through environment veriables. These can be either
   - `npm run prod`
 - With the variables inlined:
   - `SECRET=test DB_DRIVER=dummy npm run dev`
-  - `SECRET=… DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm start`
-  - `SECRET=… DB_DRIVER=sqlite3 DB_OPTS=/path/to/gallery.sqlite3 npm run prod`
+  - `SECRET=… DB_DRIVER=sqlite3 npm start` (creates `./db.sqlite3` in CWD)
+  - `SECRET=… DB_DRIVER=sqlite3 npm run prod`
 
 ### Management scripts
 
@@ -68,7 +68,7 @@ Scripts under `bin/` add or update users, galleries, and photos in the DB. They 
 ./bin/add-photo.ts [options] [json-or-jpg-files]
 ```
 
-Each script takes `--help` to list its flags. They read the same `.env` as the server, so `SECRET`, `DB_DRIVER`, and `DB_OPTS` need to be set the same way.
+Each script takes `--help` to list its flags. They read the same `.env` as the server, so `SECRET` and `DB_DRIVER` need to be set the same way. They also resolve the DB file from the current working directory (`db.sqlite3`), so run them from the instance directory.
 
 ## Public API
 

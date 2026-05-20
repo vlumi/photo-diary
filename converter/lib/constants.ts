@@ -1,6 +1,12 @@
+import path from "node:path";
+
 export const DEBUG = Boolean(process.env.DEBUG);
 
-export const PHOTO_ROOT_DIR = process.env.PHOTO_ROOT_DIR;
+// Fixed by convention: photos live in a `photos/` subdirectory of the
+// instance directory (the converter's CWD when launched via start-prod.sh).
+// If you need photos on a different disk, symlink either the photos
+// subdirectory or the whole instance dir.
+export const PHOTO_ROOT_DIR = path.join(process.cwd(), "photos");
 
 export const DIR_INBOX = "inbox";
 export const DIR_ORIGINAL = "original";
