@@ -30,6 +30,27 @@ Photo Diary is split into separate independent modules, each handling its own su
 - Seed the first admin user and at least one gallery with the management scripts in [server/bin/](server/bin/), e.g. `./bin/add-user.ts --admin -u alice -p ...` and `./bin/add-gallery.ts -i dailybw -t "Daily B&W"`
 - Set the instance's `cdn` value (via `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'` or the `/api/v1/meta` API) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config
 
+### Dev Mode
+
+Mirror the prod layout with a dev "instance" inside the repo. The init script wires it up the same way as a real deploy, but with the `code` symlink pointing at the live source:
+
+```sh
+./server/bin/init-instance.ts dev --base .
+echo "dev/" >> .gitignore   # one-time, if not already ignored
+```
+
+That gives you `<repo>/dev/` with `.env`, `photos/{inbox,…,thumbnail}/`, `code → <repo>`. Run server and converter in foreground (tsx watch, no pm2):
+
+```sh
+cd dev
+./code/server/bin/start-dev.sh        # one terminal
+./code/converter/bin/start-dev.sh     # another
+```
+
+The vite dev server for the frontend stays the same: `npm run dev --workspace=react-app` from the repo root (or `cd react-app && npm run dev`). It proxies `/api/*` to `http://localhost:4200`.
+
+If you don't need photos in dev, you can also just `cd server && npm run dev` — the DB will land at `server/db.sqlite3` and you skip the instance-dir ceremony entirely.
+
 ### Multi-Instance Deployment
 
 One VM can host several Photo Diary instances under a single nginx, each pointing at its own code-clone via a `code` symlink in the instance directory. The frontend has no build-time per-instance config, so a single `npm run setup` per code checkout (run once when the checkout is created) covers every instance using that checkout.
