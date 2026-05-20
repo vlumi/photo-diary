@@ -37,7 +37,7 @@ Certain parameters are passed through environment veriables. These can be either
     - `dummy` – data hard-coded into the driver, for testing purposes only
 - `DB_OPTS` (\* depends on `DB_DRIVER`)
   - This parameter will be passed to the `DB_DRIVER` during connection.
-    - `sqlite3` – Path to the DB file
+    - `sqlite3` – Path to the DB file. If the file doesn't exist yet, better-sqlite3 creates it on first open and the migration runner bootstraps the schema from `db/sqlite3/migrations/001_baseline.sql`. Subsequent starts apply any pending migrations from the same directory in version order, using the `meta.schema_version` row as the cursor. New migrations: drop `NNN_<description>.sql` (with a higher number than the last one) and end the file with `UPDATE meta SET value='NNN' WHERE key='schema_version';`.
     - `dummy` – Not used
 - `SECRET` \*
   - HMAC secret used to sign JWT tokens issued at login. Required — the server refuses to start without it.

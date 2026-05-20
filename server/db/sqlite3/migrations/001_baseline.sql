@@ -1,3 +1,9 @@
+-- Baseline schema. Faithful snapshot of what exists in production v1 DBs as
+-- of v0.6.x (the `gallery_photo` FK references-to-plural-names typo and all).
+-- Subsequent migrations evolve this; the FK typo is fixed in 002.
+--
+-- The migration runner skips this when meta.schema_version is already >= 1.
+
 CREATE TABLE meta (
   key TEXT PRIMARY KEY,
   value TEXT
