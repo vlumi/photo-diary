@@ -3,6 +3,7 @@ import Database from "better-sqlite3";
 import CONST from "../../lib/constants.js";
 import config from "../../lib/config/index.js";
 import logger from "../../lib/logger.js";
+import { migrate } from "./migrate.js";
 
 import schemaFactory, {
   type AclRow,
@@ -61,6 +62,7 @@ if (!config.DB_OPTS) {
 }
 const db = new Database(config.DB_OPTS);
 logger.debug("Connected to DB");
+migrate(db);
 
 const deleteById = (
   schema: { buildDeleteByIdQuery: () => string },

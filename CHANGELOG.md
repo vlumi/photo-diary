@@ -6,6 +6,7 @@
 
 - Replace the `uuid` dep with the built-in `crypto.randomUUID()`
 - Send `X-Robots-Tag: noindex, noai, noimageai` on every response, including served photo files
+- Add a DB migration runner that uses `meta.schema_version` as the cursor; runs at server startup against the better-sqlite3 driver. Bootstraps fresh DBs from `db/sqlite3/migrations/001_baseline.sql`, then advances to v2 via `002_fix_gallery_photo_fk.sql` which rebuilds `gallery_photo` with the correct singular FK references (the long-standing `photos`/`galleries` typo). Drops the obsolete `schema/sqlite3.ddl`, `schema/migrate/sqlite3_from_0.ddl`, and `migrate_legacy_to_sqlite3.sh`.
 
 ### Frontend
 
