@@ -26,6 +26,10 @@ if [ -f .env ]; then
 fi
 
 script_dir="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+# `tsx` is hoisted to the workspace root's node_modules/.bin/ under npm
+# workspaces. Add both the root and the converter's local node_modules/.bin
+# so pm2 finds tsx regardless of hoisting.
+export PATH="$script_dir/../node_modules/.bin:$script_dir/node_modules/.bin:$PATH"
 instance_name="${INSTANCE_NAME:-photo-diary}"
 
 NODE_ENV=prod pm2 start "$script_dir/index.ts" \
