@@ -59,13 +59,15 @@ Directory layout:
 
 Single-version setups can drop the version subdirectory (`/opt/photo-diary/` for the code, `code -> /opt/photo-diary` per instance).
 
-#### Getting the code onto the host
+#### One-time host prep
 
-One-time host prep — make the parent dir owned by the deploy user so subsequent steps don't need `sudo`:
+Create the two parent directories (code at `/opt`, per-instance state at `/var`) owned by the deploy user, so subsequent steps don't need `sudo`:
 
 ```sh
-sudo install -d -o "$USER" /opt/photo-diary
+sudo install -d -o "$USER" /opt/photo-diary /var/photo-diary
 ```
+
+#### Getting the code onto the host
 
 GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` (no rename step), then run `npm run setup` to install everything and build the bundled frontend:
 
@@ -78,7 +80,7 @@ cd "/opt/photo-diary/$V"
 npm run setup
 ```
 
-Repeat the second block for each new version you want to land on this host.
+Repeat this block for each new version you want to land on this host.
 
 #### Bootstrapping a new instance
 
