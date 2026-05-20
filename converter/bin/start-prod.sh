@@ -28,7 +28,7 @@ if [ -f .env ]; then
   set +a
 fi
 
-script_dir="$(cd "$(dirname "$0")/.." && pwd)"
+script_dir="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 instance_name="${INSTANCE_NAME:-photo-diary}"
 
 NODE_ENV=prod pm2 start "$script_dir/index.ts" \

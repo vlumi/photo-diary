@@ -34,50 +34,70 @@ Photo Diary is split into separate independent modules, each handling its own su
 
 ### Multi-Instance Deployment
 
-One VM running several Photo Diary instances under a single nginx, sharing one code clone. The frontend has no build-time per-instance config, so a single `npm run build:ui` covers every instance.
+One VM can host several Photo Diary instances under a single nginx, each pointing at its own code-clone via a `code` symlink in the instance directory. The frontend has no build-time per-instance config, so a single `npm run build:ui` per code checkout covers every instance using that checkout.
 
 Directory layout:
 
 ```text
-/opt/photo-diary/                       # one shared code checkout — `git pull` updates all instances
-  server/         converter/         react-app/
+/opt/photo-diary-0.6.0/                 # code checkouts can be versioned …
+/opt/photo-diary-0.7.0/                 #   … so different instances can run different
+                                        #   versions, and upgrades are atomic (flip a symlink)
+
 /var/photo-diary/
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
+    code -> /opt/photo-diary-0.7.0      # symlink to the code version this instance runs
     dailybw.sqlite3                     # auto-created on first server start
     photos/
       inbox/  original/  display/  thumbnail/
   travel/
     .env
+    code -> /opt/photo-diary-0.6.0      # different instance, possibly on a different version
     travel.sqlite3
     photos/
       …
 ```
 
-Per-instance `.env` (lives in the instance directory, **not** in the code checkout):
+Single-version setups can drop the version suffix (`/opt/photo-diary/` for the code, `code -> /opt/photo-diary` per instance).
+
+#### Bootstrapping a new instance
+
+The `init-instance` script handles directory creation, `.env` generation (with a fresh random `SECRET`), and the `code` symlink in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-INSTANCE_NAME=dailybw                    # pm2 process name; converter gets `<name>-converter`
-PORT=4201                                # one per instance, nginx-proxied
-SECRET=…                                 # unique per instance
-DB_DRIVER=sqlite3
-DB_OPTS=/var/photo-diary/dailybw/dailybw.sqlite3
-PHOTO_ROOT_DIR=/var/photo-diary/dailybw/photos
+/opt/photo-diary-0.7.0/server/bin/init-instance.ts dailybw
+```
 
-# Optional per-instance frontend defaults — these go through /api/v1/meta:
+That creates `/var/photo-diary/dailybw/` with everything wired up. Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
+
+The generated `.env` covers the required keys. Optional per-instance frontend defaults can be added — these flow through `/api/v1/meta` to the frontend on boot:
+
+```sh
 DEFAULT_GALLERY=dailybw
 DEFAULT_THEME=grayscale
 ```
 
-Starting an instance (server + converter):
+#### Starting an instance
 
 ```sh
 cd /var/photo-diary/dailybw
-npm --prefix /opt/photo-diary/server run prod
-npm --prefix /opt/photo-diary/converter run prod
+./code/server/bin/start-prod.sh
+./code/converter/bin/start-prod.sh
 ```
 
-The `prod` script reads the instance directory's `.env`, names the pm2 process after `INSTANCE_NAME` (server) and `${INSTANCE_NAME}-converter` (converter), and starts both pointing at the right paths. `pm2 save` after a successful start so they come back on reboot.
+Both `start-prod.sh` scripts source `.env` from the current working directory, then start pm2 with names derived from `INSTANCE_NAME` (`<name>` and `<name>-converter`). `pm2 save` after a successful start so they come back on reboot.
+
+#### Upgrading an instance
+
+Re-run `init-instance.ts` from the new version of the code:
+
+```sh
+pm2 stop dailybw dailybw-converter
+/opt/photo-diary-0.7.0/server/bin/init-instance.ts dailybw   # backs up the DB, flips the symlink
+pm2 restart dailybw dailybw-converter                         # migration runner applies any schema bumps
+```
+
+The DB backup is named `<dbname>.sqlite3.pre-<new-version>` — a plain file copy that assumes the instance is stopped (started instances may have an inconsistent backup). Rollback is manual: `cp <dbname>.sqlite3.pre-<version> <dbname>.sqlite3`, point `code` back at the older version, restart pm2.
 
 nginx (one server block per instance, proxying to its `PORT`; the `cdn` URL serves `display/` and `thumbnail/` directly):
 
