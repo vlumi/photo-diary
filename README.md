@@ -21,14 +21,16 @@ Photo Diary is split into separate independent modules, each handling its own su
 ### Basic Setup
 
 - Requires Node.js 22 or newer; npm 10+ recommended
+- Run `npm install` in [server](server), [converter](converter), and [react-app](react-app)
 - Create a photo-repository directory structure, separate from the code
   - Must include the sub-directories `inbox`, `original`, `display`, and `thumbnail`
-  - Configure `PHOTO_ROOT_DIR` on [converter](converter) to point to this directory
-  - Configure the instance's `cdn` value (via the `/api/v1/meta` table) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config.
-- Run `npm install` in [server](server), [converter](converter), and [react-app](react-app)
-- Set up [server](server) and [converter](converter) to run as background processes, e.g. via [pm2](https://pm2.keymetrics.io/) — both use `npm run prod` which invokes `pm2 start --interpreter tsx`
+  - Set `PHOTO_ROOT_DIR` in [server](server)/`.env` and [converter](converter)/`.env` to point to this directory
+- Set `DB_DRIVER=sqlite3` and `DB_OPTS=/path/to/dailybw.sqlite3` (or any other filename) in [server](server)/`.env`. The schema is bootstrapped automatically on first server start; subsequent starts apply any pending migrations
 - Build the [react-app](react-app) into [server](server) for production, running in the [server](server) directory:
   - `npm run build:ui`
+- Start [server](server) and [converter](converter) as background processes, e.g. via [pm2](https://pm2.keymetrics.io/) — both use `npm run prod` which invokes `pm2 start --interpreter tsx`
+- Seed the first admin user and at least one gallery with the management scripts in [server/bin/](server/bin/), e.g. `./bin/add-user.ts --admin -u alice -p ...` and `./bin/add-gallery.ts -i dailybw -t "Daily B&W"`
+- Set the instance's `cdn` value (via `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'` or the `/api/v1/meta` API) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config
 
 ## Features
 
