@@ -13,7 +13,7 @@ interface Props {
 
 const Footer = ({ gallery, year }: Props): React.ReactElement => {
   const renderMap = (positions: Photo[]) => {
-    if (!positions || !positions.length) {
+    if (!positions || !positions.length || gallery.hideMap()) {
       return "";
     }
     return <MapContainer positions={positions} drawLine />;

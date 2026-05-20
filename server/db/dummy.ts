@@ -27,6 +27,7 @@ export default () => {
     deleteUser: notImplemented,
 
     loadUserAccessControl,
+    resolveHideMap,
 
     loadGalleries,
     createGallery,
@@ -88,6 +89,13 @@ const updateUser = async () => {
 
 const loadUserAccessControl = async (id: string) => {
   return { ...db.accessControl[":guest"], ...db.accessControl[id] };
+};
+const resolveHideMap = async (
+  _userId: string,
+  _galleryId: string
+): Promise<number | undefined> => {
+  // Dummy ACL data carries only access levels, no privacy overrides.
+  return undefined;
 };
 
 const loadGalleries = async () => {

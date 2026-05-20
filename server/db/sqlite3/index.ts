@@ -35,6 +35,7 @@ export default () => {
     deleteUser,
 
     loadUserAccessControl,
+    resolveHideMap,
 
     loadGalleries,
     createGallery,
@@ -125,6 +126,32 @@ const loadUserAccessControl = async (
     ...Object.fromEntries(guestRows.map(schema.mapRow)),
     ...Object.fromEntries(userRows.map(schema.mapRow)),
   };
+};
+// Resolve the privacy cascade for (userId, galleryId) in one query.
+// Returns the most specific ACL row's `hide_map` (1, 0, or null) considering
+// the four-cell hierarchy: (user, gallery) > (':guest', gallery) >
+// (user, ':all') > (':guest', ':all'). Rows with null `hide_map` are skipped
+// so a less-specific row's non-null value can win. Returns undefined when
+// no row at any level has a non-null `hide_map`.
+const resolveHideMap = async (
+  userId: string,
+  galleryId: string
+): Promise<number | undefined> => {
+  const row = db
+    .prepare(
+      `SELECT hide_map FROM acl
+       WHERE (user_id = ? OR user_id = ':guest')
+         AND (gallery_id = ? OR gallery_id = ':all')
+         AND hide_map IS NOT NULL
+       ORDER BY
+         CASE WHEN user_id = ? THEN 0 ELSE 1 END,
+         CASE WHEN gallery_id = ? THEN 0 ELSE 1 END
+       LIMIT 1`
+    )
+    .get(userId, galleryId, userId, galleryId) as
+    | { hide_map: number }
+    | undefined;
+  return row?.hide_map;
 };
 
 const loadGalleries = async () => {

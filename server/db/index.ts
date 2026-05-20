@@ -71,6 +71,16 @@ export default {
   ): Promise<Record<string, number>> => {
     return await db.loadUserAccessControl(userId);
   },
+  // Resolve the privacy cascade for (userId, galleryId): looks at the
+  // four ACL rows ((user, gallery), (:guest, gallery), (user, :all),
+  // (:guest, :all)) in most-specific-first order, returning the first
+  // non-null `hide_map`. Undefined when no level has an opinion.
+  resolveHideMap: async (
+    userId: string,
+    galleryId: string
+  ): Promise<number | undefined> => {
+    return await db.resolveHideMap(userId, galleryId);
+  },
 
   loadGalleries: async () => {
     return await db.loadGalleries();

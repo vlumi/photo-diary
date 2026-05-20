@@ -316,6 +316,7 @@ const Gallery = ({
           lang={lang}
           countryData={countryData}
           theme={activeTheme}
+          hideMap={gallery.hideMap()}
         >
           <Title galleries={galleries} gallery={gallery} context={context} />
           <Filters

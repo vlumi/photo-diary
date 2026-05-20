@@ -1,6 +1,7 @@
 import express from "express";
 
 import authorizerFactory from "../lib/authorizer.js";
+import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/gallery-photo.js";
 
 const authorizer = authorizerFactory();
@@ -21,8 +22,11 @@ router.get("/:galleryId/", async (request, response) => {
     request.user.id,
     request.params.galleryId
   );
-  const photo = await model.getGalleryPhotos(request.params.galleryId);
-  response.json(photo);
+  const photos = await model.getGalleryPhotos(request.params.galleryId);
+  if (await shouldHideMap(request.user.id, request.params.galleryId)) {
+    maskCoordinates(photos as Parameters<typeof maskCoordinates>[0]);
+  }
+  response.json(photos);
 });
 /**
  * Get the properties of a photo in gallery context.
@@ -36,6 +40,9 @@ router.get("/:galleryId/:photoId", async (request, response) => {
     request.params.galleryId,
     request.params.photoId
   );
+  if (await shouldHideMap(request.user.id, request.params.galleryId)) {
+    maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
+  }
   response.json(photo);
 });
 /**

@@ -71,10 +71,10 @@ describe("User", () => {
 });
 
 describe("ACL", () => {
-  const cols = ["user_id", "gallery_id", "level"].join(",");
+  const cols = ["user_id", "gallery_id", "level", "hide_map"].join(",");
   test("Build create query", () =>
     expect(schema.acl.buildCreateQuery()).toBe(
-      `INSERT INTO acl (${cols}) VALUES (?,?,?)`
+      `INSERT INTO acl (${cols}) VALUES (?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.acl.buildSelectByIdQuery()).toBe(

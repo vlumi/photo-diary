@@ -15,6 +15,7 @@ interface GalleryData {
   theme?: string;
   hostname?: RegExp | string;
   initialView?: string;
+  hideMap?: boolean;
   photos?: Photo[];
 }
 
@@ -110,6 +111,7 @@ const GalleryModel = (galleryData: unknown) => {
     epochType: (): string | undefined => gallery.epochType,
     hasTheme: (): boolean => !!gallery.theme,
     theme: (): string | undefined => gallery.theme,
+    hideMap: (): boolean => !!gallery.hideMap,
     matchesHostname: (hostname: string): boolean => {
       const regex = hostnameRegex();
       if (!regex) {

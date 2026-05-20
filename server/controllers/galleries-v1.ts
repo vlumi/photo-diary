@@ -1,6 +1,7 @@
 import express from "express";
 
 import authorizerFactory from "../lib/authorizer.js";
+import { shouldHideMap } from "../lib/privacy.js";
 import modelFactory from "../models/gallery.js";
 
 const authorizer = authorizerFactory();
@@ -16,12 +17,23 @@ export default { init, router };
 /**
  * Get all galleries.
  */
+const annotateWithHideMap = async (
+  userId: string,
+  galleries: Array<{ id: string }>
+): Promise<Array<{ id: string; hideMap: boolean }>> =>
+  Promise.all(
+    galleries.map(async (gallery) => ({
+      ...gallery,
+      hideMap: await shouldHideMap(userId, gallery.id),
+    }))
+  );
+
 router.get("/", async (request, response) => {
   const galleries = (await model.getGalleries()) as Array<{ id: string }>;
 
   try {
     await authorizer.authorizeAdmin(request.user.id);
-    response.json(galleries);
+    response.json(await annotateWithHideMap(request.user.id, galleries));
   } catch {
     const galleryIds = galleries.map((gallery: { id: string }) => gallery.id);
 
@@ -37,7 +49,9 @@ router.get("/", async (request, response) => {
     const authorizedGalleries = galleries.filter((gallery: { id: string }) =>
       authorizedGalleryIds.includes(gallery.id)
     );
-    response.json(authorizedGalleries);
+    response.json(
+      await annotateWithHideMap(request.user.id, authorizedGalleries)
+    );
   }
 });
 /**
@@ -59,7 +73,11 @@ router.get("/:galleryId", async (request, response) => {
     request.params.galleryId
   );
   const gallery = await model.getGallery(request.params.galleryId);
-  response.json(gallery);
+  const hideMap = await shouldHideMap(
+    request.user.id,
+    request.params.galleryId
+  );
+  response.json({ ...(gallery as Record<string, unknown>), hideMap });
 });
 /**
  * Update gallery properties

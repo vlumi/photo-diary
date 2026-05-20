@@ -227,7 +227,7 @@ const Footer = ({
     }
   };
   const renderMap = () => {
-    if (!photo.hasCoordinates()) {
+    if (!photo.hasCoordinates() || gallery.hideMap()) {
       return "";
     }
     return <MapContainer positions={[photo]} />;
