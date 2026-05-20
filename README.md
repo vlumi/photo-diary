@@ -61,22 +61,24 @@ Single-version setups can drop the version subdirectory (`/opt/photo-diary/` for
 
 #### Getting the code onto the host
 
-GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` so there's no rename step:
+One-time host prep — make the parent dir owned by the deploy user so subsequent steps don't need `sudo`:
 
 ```sh
-# One-time host prep: make the parent dir, owned by the deploy user
 sudo install -d -o "$USER" /opt/photo-diary
+```
 
-# Per-version unpack
+GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` (no rename step), then run `npm run setup` to install everything and build the bundled frontend:
+
+```sh
 V=0.7.0
 mkdir -p "/opt/photo-diary/$V"
 curl -L "https://github.com/vlumi/photo-diary/archive/refs/tags/v$V.tar.gz" \
   | tar xz -C "/opt/photo-diary/$V" --strip-components=1
-
-# Install everything + build the bundled frontend
 cd "/opt/photo-diary/$V"
 npm run setup
 ```
+
+Repeat the second block for each new version you want to land on this host.
 
 #### Bootstrapping a new instance
 
