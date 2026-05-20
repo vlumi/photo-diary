@@ -11,7 +11,6 @@
     "test": "DB_DRIVER=dummy NODE_ENV=test DOTENV_CONFIG_QUIET=true vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "build:ui": "cd ../react-app && npm run build --prod && rm -rf ../server/build && cp -r build ../server/",
     "postinstall": "npm rebuild better-sqlite3"
   },
   "author": "Ville Misaki",

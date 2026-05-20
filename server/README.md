@@ -22,8 +22,9 @@ npm run prod       # pm2 start --interpreter tsx index.ts (NODE_ENV=prod)
 npm test           # vitest run
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint .
-npm run build:ui   # builds the react-app and copies it into server/build/ for prod
 ```
+
+To produce the bundled frontend (`server/build/`) for production, run `npm run build` from the **repo root** — it builds the react-app workspace and copies the output into `server/build/`. Or `npm run setup` from the repo root to install all workspaces *and* build in one step.
 
 ### Environment Variables
 
