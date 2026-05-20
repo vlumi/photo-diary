@@ -86,7 +86,7 @@ The `init-instance` script handles directory creation, `.env` generation (with a
 /opt/photo-diary/0.7.0/server/bin/init-instance.ts dailybw
 ```
 
-That creates `/var/photo-diary/dailybw/` with everything wired up. Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
+That creates `/var/photo-diary/dailybw/` with everything wired up. The script can be invoked from any working directory — the instance dir is derived from the name (and the `--base <dir>` flag, default `/var/photo-diary`, if you want instances under a different parent). Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
 
 The generated `.env` covers the required keys. Optional per-instance frontend defaults can be added — these flow through `/api/v1/meta` to the frontend on boot:
 
