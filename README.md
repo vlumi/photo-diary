@@ -24,7 +24,7 @@ Photo Diary is split into separate independent modules, each handling its own su
 - Create a photo-repository directory structure, separate from the code
   - Must include the sub-directories `inbox`, `original`, `display`, and `thumbnail`
   - Configure `PHOTO_ROOT_DIR` on [converter](converter) to point to this directory
-  - Configure `VITE_PHOTO_ROOT_URL` on [react-app](react-app) to point to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host)
+  - Configure the instance's `cdn` value (via the `/api/v1/meta` table) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config.
 - Run `npm install` in [server](server), [converter](converter), and [react-app](react-app)
 - Set up [server](server) and [converter](converter) to run as background processes, e.g. via [pm2](https://pm2.keymetrics.io/) — both use `npm run prod` which invokes `pm2 start --interpreter tsx`
 - Build the [react-app](react-app) into [server](server) for production, running in the [server](server) directory:

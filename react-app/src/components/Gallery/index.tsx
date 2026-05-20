@@ -45,6 +45,11 @@ interface Meta {
   cdn?: string;
   name?: string;
   description?: string;
+  // Optional per-instance overrides served from the server's `process.env`.
+  defaultGallery?: string;
+  defaultTheme?: string;
+  initialGalleryView?: string;
+  firstWeekday?: string | number;
 }
 type ActiveTheme = ReturnType<typeof theme.setTheme>;
 
@@ -121,6 +126,12 @@ const Gallery = ({
         const m = returnedMeta as Meta;
         setMeta(m);
         config.PHOTO_ROOT_URL = m.cdn || config.PHOTO_ROOT_URL;
+        if (m.defaultGallery) config.DEFAULT_GALLERY = m.defaultGallery;
+        if (m.defaultTheme) config.DEFAULT_THEME = m.defaultTheme;
+        if (m.initialGalleryView)
+          config.INITIAL_GALLERY_VIEW = m.initialGalleryView;
+        if (m.firstWeekday !== undefined)
+          config.FIRST_WEEKDAY = Number(m.firstWeekday);
       })
       .catch((error: Error) => setError(error.message));
   }, []);

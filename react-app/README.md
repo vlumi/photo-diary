@@ -21,36 +21,28 @@ npm run lint       # eslint .
 
 For production the build is copied into [server](../server)/build/ via `npm run build:ui` (from the server directory) and served by the server.
 
-### Environment Variables
+### Configuration
 
-Configured in `react-app/.env` (or a per-environment file like `.env.production`). Vite only exposes variables prefixed with `VITE_` to the client.
+The frontend has no build-time environment variables — one build serves every instance. Defaults live as plain values in [`src/lib/config.ts`](src/lib/config.ts) and per-instance behavior comes from the API at boot.
 
-- `VITE_PHOTO_ROOT_URL` \*
-  - The public URL serving the physical photos, with the following sub-directories:
-    - `display/` – display-size photos
-    - `thumbnail/` – thumbnail-size photos
-  - Can be overridden at runtime by the instance metadata `cdn` value served from the server's `/api/v1/meta` endpoint.
-- `VITE_THEME` (default: `blue`)
-  - Built-in color theme. Defined in `src/lib/theme.ts`. Currently available:
-    - `blue`
-    - `red`
-    - `grayscale`
-    - `bw`
-    - `alert`
-- `VITE_DEFAULT_LANGUAGE` (default: `en`)
-  - Initial UI language before a stored selection takes over. Supported: `en`, `fi`, `ja`.
-- `VITE_DEFAULT_GALLERY`
-  - If set, accessing `/g` (or the site root, which redirects to `/g`) redirects to this gallery instead of the gallery list.
-- `VITE_INITIAL_GALLERY_VIEW` (default: `month`)
-  - The view to land on when entering a gallery: `year` / `month` / `day` / `photo`.
-- `VITE_FIRST_WEEKDAY` (default: `1` — Monday)
-  - The first day of the week for the year-view calendar grid. `1` = Monday, `0` = Sunday.
+Set these on the **server's** `.env` (per instance) to override the defaults; the server returns them through `/api/v1/meta` and the frontend applies them when the meta loads:
 
-\* Required; everything else falls back to the listed default.
+- `DEFAULT_GALLERY` — gallery to redirect to from `/g` when no other heuristic (single-gallery, hostname match) picks one
+- `DEFAULT_THEME` — fallback theme when a gallery row has no `theme` set
+- `INITIAL_GALLERY_VIEW` — `year` / `month` / `day` / `photo` fallback when a gallery row has no `initial_view` set
+- `FIRST_WEEKDAY` — `0` (Sunday) or `1` (Monday); affects the year-view calendar grid
+
+Per-gallery values (`theme`, `initial_view`, `hostname`) on each gallery row in the DB take precedence over the instance-level defaults above.
+
+`PHOTO_ROOT_URL` is overridden the same way via the `instance_cdn` meta row (set with `bin/` tools or directly in the DB).
+
+`DEFAULT_LANGUAGE` is the one value that **can't** be overridden at runtime — i18next initializes at module load, before the meta fetch. Edit the literal in `config.ts` if you need a different fallback language for new visitors. Users' own selections are persisted via the `lang` localStorage key.
+
+Available themes: `blue`, `red`, `grayscale`, `bw`, `alert` (defined in `src/lib/theme.ts`). Supported languages: `en`, `fi`, `ja`.
 
 ## Structure
 
-- `src/index.tsx` — entry, mounts `<App>` inside `HelmetProvider` and `React.StrictMode`
+- `src/index.tsx` — entry, mounts `<App>` inside `React.StrictMode`
 - `src/App.tsx` — routes (`react-router-dom` 7), top menu, country-locale registration, persisted-user bootstrap
 - `src/components/` — UI components
   - `Gallery/` — gallery shell + `Year/Month/Day/Photo/Filters/Stats` sub-views
