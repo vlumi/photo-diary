@@ -32,6 +32,66 @@ Photo Diary is split into separate independent modules, each handling its own su
 - Seed the first admin user and at least one gallery with the management scripts in [server/bin/](server/bin/), e.g. `./bin/add-user.ts --admin -u alice -p ...` and `./bin/add-gallery.ts -i dailybw -t "Daily B&W"`
 - Set the instance's `cdn` value (via `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'` or the `/api/v1/meta` API) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config
 
+### Multi-Instance Deployment
+
+One VM running several Photo Diary instances under a single nginx, sharing one code clone. The frontend has no build-time per-instance config, so a single `npm run build:ui` covers every instance.
+
+Directory layout:
+
+```text
+/opt/photo-diary/                       # one shared code checkout — `git pull` updates all instances
+  server/         converter/         react-app/
+/var/photo-diary/
+  dailybw/                              # one directory per instance
+    .env                                # per-instance config (see below)
+    dailybw.sqlite3                     # auto-created on first server start
+    photos/
+      inbox/  original/  display/  thumbnail/
+  travel/
+    .env
+    travel.sqlite3
+    photos/
+      …
+```
+
+Per-instance `.env` (lives in the instance directory, **not** in the code checkout):
+
+```sh
+INSTANCE_NAME=dailybw                    # pm2 process name; converter gets `<name>-converter`
+PORT=4201                                # one per instance, nginx-proxied
+SECRET=…                                 # unique per instance
+DB_DRIVER=sqlite3
+DB_OPTS=/var/photo-diary/dailybw/dailybw.sqlite3
+PHOTO_ROOT_DIR=/var/photo-diary/dailybw/photos
+
+# Optional per-instance frontend defaults — these go through /api/v1/meta:
+DEFAULT_GALLERY=dailybw
+DEFAULT_THEME=grayscale
+```
+
+Starting an instance (server + converter):
+
+```sh
+cd /var/photo-diary/dailybw
+npm --prefix /opt/photo-diary/server run prod
+npm --prefix /opt/photo-diary/converter run prod
+```
+
+The `prod` script reads the instance directory's `.env`, names the pm2 process after `INSTANCE_NAME` (server) and `${INSTANCE_NAME}-converter` (converter), and starts both pointing at the right paths. `pm2 save` after a successful start so they come back on reboot.
+
+nginx (one server block per instance, proxying to its `PORT`; the `cdn` URL serves `display/` and `thumbnail/` directly):
+
+```nginx
+server {
+  server_name dailybw.example.com;
+  location / { proxy_pass http://127.0.0.1:4201; }
+  location /display/   { alias /var/photo-diary/dailybw/photos/display/; }
+  location /thumbnail/ { alias /var/photo-diary/dailybw/photos/thumbnail/; }
+}
+```
+
+Optional: a single instance can serve multiple vhosts that resolve to different galleries via the existing `gallery.hostname` regex column — set `hostname` to `^travel\.` on the travel gallery and add a corresponding server block proxying to the same instance.
+
 ## Features
 
 - Photos are segmented into galleries

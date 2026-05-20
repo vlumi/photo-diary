@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import express from "express";
 import cors from "cors";
 import compression from "compression";
@@ -25,9 +27,15 @@ app.use((_req, res, next) => {
   res.setHeader("X-Robots-Tag", "noindex, noai, noimageai");
   next();
 });
-app.use(express.static("build"));
-app.use("/g", express.static("build"));
-app.use("/g/*splat", express.static("build"));
+// Multi-instance deploys may invoke the server from a different CWD (the
+// per-instance directory), so resolve the bundled frontend relative to this
+// source file by default. `STATIC_DIR` overrides if you need a different
+// build location.
+const STATIC_DIR =
+  process.env.STATIC_DIR ?? path.join(import.meta.dirname, "build");
+app.use(express.static(STATIC_DIR));
+app.use("/g", express.static(STATIC_DIR));
+app.use("/g/*splat", express.static(STATIC_DIR));
 
 const registerPreProcessors = () => {
   app.use(middleware.tokenFilter);
