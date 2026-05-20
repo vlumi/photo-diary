@@ -14,9 +14,9 @@
  *   missing required keys with `✓`/`✗` markers. With `--fix`, append any
  *   missing required keys with default values.
  * - **Upgrade**: instance exists, but `code` points at a different version
- *   than this script's root. Back up the DB file to `<dbname>.sqlite3.pre-
- *   <new-version>` (best-effort: assumes the instance is stopped), update
- *   the `code` symlink, then run doctor.
+ *   than this script's root. Back up the DB file to `db.sqlite3.pre-<new-
+ *   version>` (best-effort: assumes the instance is stopped), update the
+ *   `code` symlink, then run doctor.
  *
  * Usage:
  *   ./code/server/bin/init-instance.ts <name> [--base <dir>] [--fix]
@@ -54,6 +54,11 @@ const REQUIRED_DIRS = [
   "photos/thumbnail",
 ];
 
+// Required .env keys for a working instance. The DB file (`db.sqlite3`) and
+// photo root (`photos/`) are no longer configurable — they're fixed relative
+// to the instance directory (the CWD when the server/converter run via
+// start-prod.sh). Symlink the instance dir, the `photos/` subdirectory, or
+// the `db.sqlite3` file if you need them on a different disk.
 const REQUIRED_KEYS: RequiredKey[] = [
   {
     key: "INSTANCE_NAME",
@@ -74,17 +79,6 @@ const REQUIRED_KEYS: RequiredKey[] = [
     key: "DB_DRIVER",
     description: "DB driver",
     default: () => "sqlite3",
-  },
-  {
-    key: "DB_OPTS",
-    description: "Path to the SQLite DB file (created on first server start)",
-    default: ({ instanceDir, name }) =>
-      path.join(instanceDir, `${name}.sqlite3`),
-  },
-  {
-    key: "PHOTO_ROOT_DIR",
-    description: "Photo repository root (must contain inbox/original/display/thumbnail subdirs)",
-    default: ({ instanceDir }) => path.join(instanceDir, "photos"),
   },
 ];
 
@@ -220,9 +214,9 @@ if (mode === "upgrade" && previousCodeTarget) {
     `Upgrading from v${oldVersion} (${previousCodeTarget}) to v${newVersion} (${CODE_ROOT})`
   );
 
-  const envValues = parseEnv(fs.readFileSync(envPath, "utf8"));
-  const dbPath = envValues.DB_OPTS;
-  if (dbPath && fs.existsSync(dbPath)) {
+  // DB file is fixed by convention at `<instance-dir>/db.sqlite3`.
+  const dbPath = path.join(instanceDir, "db.sqlite3");
+  if (fs.existsSync(dbPath)) {
     const backupPath = `${dbPath}.pre-${newVersion}`;
     let counter = 1;
     let finalBackup = backupPath;
@@ -234,8 +228,8 @@ if (mode === "upgrade" && previousCodeTarget) {
     console.log(
       "  (Stop the instance before upgrading — the backup may be inconsistent if pm2 is still running.)"
     );
-  } else if (dbPath) {
-    console.log(`  DB file ${dbPath} doesn't exist yet — skipping backup`);
+  } else {
+    console.log(`  ${dbPath} doesn't exist yet — skipping backup`);
   }
 }
 
@@ -278,7 +272,7 @@ if (mode === "new") {
   console.log();
   console.log("Rollback (manual, only if needed):");
   console.log(`  pm2 stop ${name} ${name}-converter`);
-  console.log("  cp <dbname>.sqlite3.pre-<version> <dbname>.sqlite3");
+  console.log("  cp db.sqlite3.pre-<version> db.sqlite3");
   console.log(`  ln -snf <old-code-root> ${codeLinkPath}`);
   console.log(`  pm2 restart ${name} ${name}-converter`);
 } else {

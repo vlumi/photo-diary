@@ -24,8 +24,8 @@ Photo Diary is split into separate independent modules, each handling its own su
 - From the repo root, run `npm run setup` — installs every workspace ([server](server), [converter](converter), [react-app](react-app)) and builds the frontend into [server](server)/`build/` for production
 - Create a photo-repository directory structure, separate from the code
   - Must include the sub-directories `inbox`, `original`, `display`, and `thumbnail`
-  - Set `PHOTO_ROOT_DIR` in [server](server)/`.env` and [converter](converter)/`.env` to point to this directory
-- Set `DB_DRIVER=sqlite3` and `DB_OPTS=/path/to/dailybw.sqlite3` (or any other filename) in [server](server)/`.env`. The schema is bootstrapped automatically on first server start; subsequent starts apply any pending migrations
+  - The directory layout is fixed: the `photos/` subdirectory of the instance dir holds the photo repository, and the SQLite DB file lives at `<instance>/db.sqlite3`. Symlink the subdirectories (or the whole instance dir) if you need them on a different disk.
+- Set `DB_DRIVER=sqlite3` in [server](server)/`.env`. The DB file is created at `<instance>/db.sqlite3` on first server start; the migration runner bootstraps the schema and applies any pending migrations on every start
 - Start [server](server) and [converter](converter) as background processes, e.g. via [pm2](https://pm2.keymetrics.io/) — both use `npm run prod` which invokes `pm2 start --interpreter tsx`
 - Seed the first admin user and at least one gallery with the management scripts in [server/bin/](server/bin/), e.g. `./bin/add-user.ts --admin -u alice -p ...` and `./bin/add-gallery.ts -i dailybw -t "Daily B&W"`
 - Set the instance's `cdn` value (via `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'` or the `/api/v1/meta` API) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config
@@ -46,13 +46,13 @@ Directory layout:
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
     code -> /opt/photo-diary/0.8.0      # symlink to the code version this instance runs
-    dailybw.sqlite3                     # auto-created on first server start
+    db.sqlite3                          # auto-created on first server start
     photos/
       inbox/  original/  display/  thumbnail/
   travel/
     .env
     code -> /opt/photo-diary/0.7.0      # different instance, possibly on a different version
-    travel.sqlite3
+    db.sqlite3
     photos/
       …
 ```

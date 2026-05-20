@@ -5,8 +5,8 @@
 # path (e.g. /opt/photo-diary/<version>/) and each instance has its own
 # directory containing `.env` and the photo-repository tree. Sourced from
 # the CWD's `.env`, so the pm2 process name derives from `INSTANCE_NAME`
-# (suffixed with `-converter`) and the converter's own `process.env`
-# (`PHOTO_ROOT_DIR` in particular) reflects this instance.
+# (suffixed with `-converter`) and the converter watches the
+# `photos/` subdirectory of CWD for new files in `photos/inbox/`.
 #
 # Usage (invoked via the instance's `code` symlink so it picks up the right
 # version):

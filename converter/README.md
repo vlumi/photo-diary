@@ -7,13 +7,15 @@ The converter is a tool to convert images for the Photo Diary, preparing the dat
   - Put them into the `display` and `thumbnail` directories respectively
 - Move each original photo to `original` directory after completing
 
-The root directory is passed using the `PHOTO_ROOT_DIR` environment variable, with the contained directory structure expected to be as follows:
+The photo repository lives at a fixed path: `<cwd>/photos/`, where `<cwd>` is the converter's working directory (the instance directory when launched via `bin/start-prod.sh`). The directory structure is:
 
-- `root` – Common root directory to keep everything together.
-  - `inbox` – The converter is monitoring this directory for new photos, also producing the JSON files here.
-  - `original` – Original photos will be moved here after they have been processed.
-  - `display` – Standard display-sized photos are generated here.
-  - `thumbnail` – Thumbnail-sized photos are generated here.
+- `photos/`
+  - `inbox/` – The converter monitors this directory for new photos, also producing the JSON files here.
+  - `original/` – Original photos are moved here after processing.
+  - `display/` – Standard display-sized photos are generated here.
+  - `thumbnail/` – Thumbnail-sized photos are generated here.
+
+If the photo repository lives on a different disk, symlink the `photos/` subdirectory (or the whole instance dir).
 
 ## Requirements
 
@@ -34,4 +36,4 @@ npm run lint       # eslint .
 npm run dumpexif   # tsx bin/dump-exif.ts — utility for inspecting a photo's EXIF
 ```
 
-Set `PHOTO_ROOT_DIR` either in a `.env` next to `index.ts` or inline before the command.
+Run from the instance directory (which must contain a `photos/` subdirectory with the structure above). In a single-instance setup that's the converter directory itself; in a multi-instance deploy, that's `/var/photo-diary/<name>/` and `bin/start-prod.sh` is invoked via the instance's `code` symlink (see the top-level README's Multi-Instance Deployment section).

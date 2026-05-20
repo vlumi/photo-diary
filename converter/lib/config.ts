@@ -12,9 +12,6 @@ import * as logger from "./logger.js";
 
 export const getDirectory = (): string => {
   const directory = PHOTO_ROOT_DIR;
-  if (!directory) {
-    throw "The PHOTO_ROOT_DIR of the directory structure must be defined.";
-  }
 
   const checkDirectory = (subDir: string): boolean => {
     if (!fs.existsSync(subDir)) {
@@ -39,7 +36,7 @@ export const getDirectory = (): string => {
       (subDirectory) => !checkDirectory(path.join(directory, subDirectory))
     ).length > 0;
   if (missing) {
-    throw `Invalid directory structure in PHOTO_ROOT_DIR (${directory}).`;
+    throw `Invalid photo-repository directory structure at ${directory}.`;
   }
   return directory;
 };
