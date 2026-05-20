@@ -38,15 +38,14 @@ Mirror the prod layout with a dev "instance" inside the repo. The init script wi
 ./server/bin/init-instance.ts dev --base .
 ```
 
-That gives you `<repo>/dev/` with `.env`, `photos/{inbox,…,thumbnail}/`, `code → <repo>`. Run server and converter in foreground (tsx watch, no pm2):
+That gives you `<repo>/dev/` with `.env`, `photos/{inbox,…,thumbnail}/`, `code → <repo>`. Each of server, converter, and react-app has a `bin/start-dev.sh` wrapper — run them in the foreground (tsx watch / vite, no pm2):
 
 ```sh
 cd dev
-./code/server/bin/start-dev.sh        # one terminal
-./code/converter/bin/start-dev.sh     # another
+./code/server/bin/start-dev.sh        # terminal 1
+./code/converter/bin/start-dev.sh     # terminal 2
+./code/react-app/bin/start-dev.sh     # terminal 3 (vite dev server, proxies /api/* to localhost:4200)
 ```
-
-The vite dev server for the frontend stays the same: `npm run dev --workspace=react-app` from the repo root (or `cd react-app && npm run dev`). It proxies `/api/*` to `http://localhost:4200`.
 
 If you don't need photos in dev, you can also just `cd server && npm run dev` — the DB will land at `server/db.sqlite3` and you skip the instance-dir ceremony entirely.
 
