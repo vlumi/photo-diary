@@ -38,20 +38,20 @@ Directory layout:
 
 ```text
 /opt/photo-diary/                       # parent dir, owned by the deploy user (see below)
-  0.6.0/                                #   each version unpacked into its own subdir
-  0.7.0/                                #   so different instances can run different versions
+  0.7.0/                                #   each version unpacked into its own subdir
+  0.8.0/                                #   so different instances can run different versions
                                         #   and upgrades are atomic (flip a symlink)
 
 /var/photo-diary/
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
-    code -> /opt/photo-diary/0.7.0      # symlink to the code version this instance runs
+    code -> /opt/photo-diary/0.8.0      # symlink to the code version this instance runs
     dailybw.sqlite3                     # auto-created on first server start
     photos/
       inbox/  original/  display/  thumbnail/
   travel/
     .env
-    code -> /opt/photo-diary/0.6.0      # different instance, possibly on a different version
+    code -> /opt/photo-diary/0.7.0      # different instance, possibly on a different version
     travel.sqlite3
     photos/
       …
@@ -111,7 +111,7 @@ Re-run `init-instance.ts` from the new version of the code:
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.7.0/server/bin/init-instance.ts dailybw   # backs up the DB, flips the symlink
+/opt/photo-diary/0.8.0/server/bin/init-instance.ts dailybw   # backs up the DB, flips the symlink
 pm2 restart dailybw dailybw-converter                         # migration runner applies any schema bumps
 ```
 
