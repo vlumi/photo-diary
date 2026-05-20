@@ -18,7 +18,9 @@ export const getDirectory = (): string => {
       logger.error(`Missing directory: ${subDir}`);
       return false;
     }
-    if (!fs.lstatSync(subDir).isDirectory()) {
+    // statSync follows symlinks — lstat would report the symlink itself,
+    // which doesn't have isDirectory() true even when it points at a dir.
+    if (!fs.statSync(subDir).isDirectory()) {
       logger.error(`Not a directory: ${subDir}`);
       return false;
     }
