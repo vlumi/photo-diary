@@ -4,3 +4,6 @@ node_modules/
 build/
 coverage/
 .DS_Store
+
+# Local dev instance bootstrapped by `server/bin/init-instance.ts dev --base .`
+dev/

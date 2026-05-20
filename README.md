@@ -36,7 +36,6 @@ Mirror the prod layout with a dev "instance" inside the repo. The init script wi
 
 ```sh
 ./server/bin/init-instance.ts dev --base .
-echo "dev/" >> .gitignore   # one-time, if not already ignored
 ```
 
 That gives you `<repo>/dev/` with `.env`, `photos/{inbox,…,thumbnail}/`, `code → <repo>`. Run server and converter in foreground (tsx watch, no pm2):
