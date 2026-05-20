@@ -24,14 +24,28 @@ const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
     }, {});
 };
 
+// Per-instance frontend defaults pulled from the server's `process.env`.
+// Each one is optional — the frontend falls back to its hardcoded default in
+// `lib/config.ts` when the key is absent. Edit the per-instance `.env` file
+// to set these (e.g. `DEFAULT_GALLERY=dailybw`).
+const envDefaults = (): Record<string, string> => {
+  const out: Record<string, string> = {};
+  const { DEFAULT_GALLERY, DEFAULT_THEME, INITIAL_GALLERY_VIEW, FIRST_WEEKDAY } =
+    process.env;
+  if (DEFAULT_GALLERY) out.defaultGallery = DEFAULT_GALLERY;
+  if (DEFAULT_THEME) out.defaultTheme = DEFAULT_THEME;
+  if (INITIAL_GALLERY_VIEW) out.initialGalleryView = INITIAL_GALLERY_VIEW;
+  if (FIRST_WEEKDAY) out.firstWeekday = FIRST_WEEKDAY;
+  return out;
+};
+
 /**
  * Get all meta.
  */
 router.get("/", async (request, response) => {
   // Public, no authorization needed
   const meta = await model.getMetas();
-  response.json(cleanMeta(meta));
-//   response.json(meta.map(cleanMeta));
+  response.json({ ...cleanMeta(meta), ...envDefaults() });
 });
 /**
  * Create a meta.
