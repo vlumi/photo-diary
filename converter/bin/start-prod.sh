@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
 # Start the converter under pm2 from the current working directory.
 #
-# Designed for the multi-instance deploy where the code lives once at a
-# shared path (e.g. /opt/photo-diary) and each instance has its own
+# Designed for the multi-instance deploy where the code lives at a shared
+# path (e.g. /opt/photo-diary/<version>/) and each instance has its own
 # directory containing `.env` and the photo-repository tree. Sourced from
 # the CWD's `.env`, so the pm2 process name derives from `INSTANCE_NAME`
 # (suffixed with `-converter`) and the converter's own `process.env`
 # (`PHOTO_ROOT_DIR` in particular) reflects this instance.
 #
-# Usage:
+# Usage (invoked via the instance's `code` symlink so it picks up the right
+# version):
 #   cd /var/photo-diary/<instance>
-#   /opt/photo-diary/converter/bin/start-prod.sh
-#
-# Or via npm:
-#   cd /var/photo-diary/<instance>
-#   npm --prefix /opt/photo-diary/converter run prod
+#   ./code/converter/bin/start-prod.sh
 #
 # In a single-instance setup with no `.env` or `INSTANCE_NAME`, the pm2
 # process is named `photo-diary-converter`.

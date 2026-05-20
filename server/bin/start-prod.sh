@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
 # Start the server under pm2 from the current working directory.
 #
-# Designed for the multi-instance deploy where the code lives once at a
-# shared path (e.g. /opt/photo-diary) and each instance has its own
+# Designed for the multi-instance deploy where the code lives at a shared
+# path (e.g. /opt/photo-diary/<version>/) and each instance has its own
 # directory containing `.env`, photos, and the SQLite DB. Sourced from the
 # CWD's `.env`, so the pm2 process name derives from `INSTANCE_NAME` and
 # the server's own `process.env` reflects this instance.
 #
-# Usage:
+# Usage (invoked via the instance's `code` symlink so it picks up the right
+# version):
 #   cd /var/photo-diary/<instance>
-#   /opt/photo-diary/server/bin/start-prod.sh
-#
-# Or via npm:
-#   cd /var/photo-diary/<instance>
-#   npm --prefix /opt/photo-diary/server run prod
+#   ./code/server/bin/start-prod.sh
 #
 # In a single-instance setup, run from the server directory itself; if
 # there's no `.env` or `INSTANCE_NAME` set, the pm2 process is named

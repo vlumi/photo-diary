@@ -37,33 +37,53 @@ One VM can host several Photo Diary instances under a single nginx, each pointin
 Directory layout:
 
 ```text
-/opt/photo-diary-0.6.0/                 # code checkouts can be versioned …
-/opt/photo-diary-0.7.0/                 #   … so different instances can run different
-                                        #   versions, and upgrades are atomic (flip a symlink)
+/opt/photo-diary/                       # parent dir, owned by the deploy user (see below)
+  0.6.0/                                #   each version unpacked into its own subdir
+  0.7.0/                                #   so different instances can run different versions
+                                        #   and upgrades are atomic (flip a symlink)
 
 /var/photo-diary/
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
-    code -> /opt/photo-diary-0.7.0      # symlink to the code version this instance runs
+    code -> /opt/photo-diary/0.7.0      # symlink to the code version this instance runs
     dailybw.sqlite3                     # auto-created on first server start
     photos/
       inbox/  original/  display/  thumbnail/
   travel/
     .env
-    code -> /opt/photo-diary-0.6.0      # different instance, possibly on a different version
+    code -> /opt/photo-diary/0.6.0      # different instance, possibly on a different version
     travel.sqlite3
     photos/
       …
 ```
 
-Single-version setups can drop the version suffix (`/opt/photo-diary/` for the code, `code -> /opt/photo-diary` per instance).
+Single-version setups can drop the version subdirectory (`/opt/photo-diary/` for the code, `code -> /opt/photo-diary` per instance).
+
+#### Getting the code onto the host
+
+GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` so there's no rename step:
+
+```sh
+# One-time host prep: make the parent dir, owned by the deploy user
+sudo install -d -o "$USER" /opt/photo-diary
+
+# Per-version unpack
+V=0.7.0
+mkdir -p "/opt/photo-diary/$V"
+curl -L "https://github.com/vlumi/photo-diary/archive/refs/tags/v$V.tar.gz" \
+  | tar xz -C "/opt/photo-diary/$V" --strip-components=1
+
+# Install everything + build the bundled frontend
+cd "/opt/photo-diary/$V"
+npm run setup
+```
 
 #### Bootstrapping a new instance
 
 The `init-instance` script handles directory creation, `.env` generation (with a fresh random `SECRET`), and the `code` symlink in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary-0.7.0/server/bin/init-instance.ts dailybw
+/opt/photo-diary/0.7.0/server/bin/init-instance.ts dailybw
 ```
 
 That creates `/var/photo-diary/dailybw/` with everything wired up. Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
@@ -91,7 +111,7 @@ Re-run `init-instance.ts` from the new version of the code:
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary-0.7.0/server/bin/init-instance.ts dailybw   # backs up the DB, flips the symlink
+/opt/photo-diary/0.7.0/server/bin/init-instance.ts dailybw   # backs up the DB, flips the symlink
 pm2 restart dailybw dailybw-converter                         # migration runner applies any schema bumps
 ```
 
