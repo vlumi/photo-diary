@@ -14,6 +14,9 @@ export interface AclRow {
   user_id: string;
   gallery_id: string;
   level: number;
+  // Privacy toggle: 1 = hide map/coordinates, 0 = show; NULL inherits the
+  // next outer level (gallery override → instance default).
+  hide_map: number | null;
 }
 export interface GalleryRow {
   id: string;
@@ -480,7 +483,7 @@ const SCHEMA = {
   },
   acl: {
     table: "acl",
-    columns: ["user_id", "gallery_id", "level"],
+    columns: ["user_id", "gallery_id", "level", "hide_map"],
     primaryKey: ["user_id", "gallery_id"],
     order: ["user_id ASC", "gallery_id ASC"],
     mapToRow: aclMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,

@@ -32,6 +32,7 @@ interface Props {
   lang: string;
   countryData: CountryData;
   theme: ActiveTheme;
+  hideMap: boolean;
 }
 
 const Stats = ({
@@ -43,6 +44,7 @@ const Stats = ({
   lang,
   countryData,
   theme,
+  hideMap,
 }: Props): React.ReactElement => {
   const [data, setData] = React.useState<any>(undefined);
 
@@ -61,7 +63,7 @@ const Stats = ({
   }
 
   const renderMap = (positions: Photo[]) => {
-    if (!positions) {
+    if (!positions || hideMap) {
       return "";
     }
     return <MapContainer positions={positions} height={800} maxZoom={18} />;

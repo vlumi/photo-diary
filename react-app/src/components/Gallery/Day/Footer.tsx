@@ -21,7 +21,7 @@ const Footer = ({
   day,
 }: Props): React.ReactElement => {
   const renderMap = (positions: Photo[]) => {
-    if (!positions) {
+    if (!positions || gallery.hideMap()) {
       return "";
     }
     return <MapContainer positions={positions} drawLine />;
