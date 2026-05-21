@@ -27,7 +27,7 @@ Photo Diary is split into separate independent modules, each handling its own su
   - The directory layout is fixed: the `photos/` subdirectory of the instance dir holds the photo repository, and the SQLite DB file lives at `<instance>/db.sqlite3`. Symlink the subdirectories (or the whole instance dir) if you need them on a different disk.
 - Set `DB_DRIVER=sqlite3` in [server](server)/`.env`. The DB file is created at `<instance>/db.sqlite3` on first server start; the migration runner bootstraps the schema and applies any pending migrations on every start
 - Start [server](server) and [converter](converter) as background processes, e.g. via [pm2](https://pm2.keymetrics.io/) — both use `npm run prod` which invokes `pm2 start --interpreter tsx`
-- Seed the first admin user and at least one gallery with the management scripts in [server/bin/](server/bin/), e.g. `./bin/add-user.ts --admin -u alice -p ...` and `./bin/add-gallery.ts -i dailybw -t "Daily B&W"`
+- Seed the first user and at least one gallery with the management scripts in [server/bin/](server/bin/), e.g. `./bin/add-user.ts -u alice -p ...` and `./bin/add-gallery.ts --id dailybw --title "Daily B&W"`. To give the user admin access, insert an ACL row directly: `INSERT INTO acl (user_id, gallery_id, level) VALUES ('alice', ':all', 2)` (level 2 = admin, level 1 = view). See [server/README.md](server/README.md) for the management scripts and the access-control model in detail.
 - Set the instance's `cdn` value (via `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'` or the `/api/v1/meta` API) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config
 
 ### Dev Mode
@@ -153,6 +153,40 @@ server {
 
 Optional: a single instance can serve multiple vhosts that resolve to different galleries via the existing `gallery.hostname` regex column — set `hostname` to `^travel\.` on the travel gallery and add a corresponding server block proxying to the same instance.
 
+#### Operating an instance
+
+Common day-to-day operations after an instance is running:
+
+```sh
+pm2 list                                  # see all running processes, status, restarts, mem/cpu
+pm2 logs dailybw                          # tail server logs for this instance
+pm2 logs dailybw-converter --lines 1000   # tail converter logs, more history
+pm2 restart dailybw dailybw-converter     # restart both halves after a config edit
+pm2 stop dailybw dailybw-converter        # stop both
+pm2 delete dailybw dailybw-converter      # stop and remove from the process list
+pm2 save                                  # persist the current process list (resume on reboot)
+pm2 startup                               # one-time: generate the boot script
+```
+
+Log files live at `~/.pm2/logs/<name>-out.log` and `~/.pm2/logs/<name>-error.log` (separately for the server and converter halves). They rotate automatically only if you install [pm2-logrotate](https://github.com/keymetrics/pm2-logrotate): `pm2 install pm2-logrotate`.
+
+**Backup.** Two pieces matter:
+
+- `<instance>/db.sqlite3` — the source of truth for users, galleries, ACL, and photo metadata. Plain `cp` works if pm2 is stopped; for live backups use the SQLite online-backup API: `sqlite3 db.sqlite3 ".backup '/backups/$(date +%F)-db.sqlite3'"`.
+- `<instance>/photos/{original,display,thumbnail}/` — the bytes themselves. `inbox/` is transient (the converter empties it), no need to back it up.
+
+The `init-instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` snapshots before flipping the `code` symlink — those are good restore points for a downgrade, but they're not a substitute for off-host backups.
+
+**Common symptoms and where to look:**
+
+| Symptom | First thing to check |
+| --- | --- |
+| Server won't start | `pm2 logs <name>` — most common: missing `SECRET` in `.env`, port already in use, or the migration runner threw on a DB inconsistency. |
+| Converter logs "Invalid photo-repository directory structure" | The `photos/{inbox,original,display,thumbnail}/` subdirs aren't all present — re-run `init-instance.ts <name>` to recreate any missing ones (idempotent). |
+| `no such table: …` after upgrade | A migration didn't apply. Check `sqlite3 db.sqlite3 "SELECT value FROM meta WHERE key='schema_version'"` and the server log on startup for "Applying N DB migration(s)". |
+| Frontend loads but `/api/v1/galleries` 401s | The user's token expired or the `SECRET` changed across restarts — login again. |
+| Map widget missing where you expected it | The `hide_map` ACL cascade is hiding it; check `SELECT * FROM acl WHERE hide_map IS NOT NULL` and the privacy doc in the server README. |
+
 ## Features
 
 - Photos are segmented into galleries
@@ -223,6 +257,19 @@ Optional: a single instance can serve multiple vhosts that resolve to different 
   - Default access level
     - Through guest user (:guest), inherited by all users
     - Inheritance may be overridden by broadening or narrowing access
+
+## Photo Pipeline
+
+End-to-end flow from a new JPG arriving on the host to it being browsable in the gallery:
+
+1. **Drop into `inbox/`.** Copy/move a JPG (or other supported format) into the instance's `photos/inbox/` directory. The converter watches this path (via chokidar) and picks the file up immediately.
+2. **Converter processes the file.** [converter](converter) reads the EXIF, generates display- and thumbnail-sized renditions (via sharp), and writes them to `photos/display/<name>.jpg` and `photos/thumbnail/<name>.jpg`. The extracted EXIF lands as a sibling JSON in `photos/inbox/<name>.json`. The original JPG is moved to `photos/original/<name>.jpg`. Result: the photo is on disk in three sizes, plus a JSON metadata file ready for ingestion.
+3. **Register in the DB.** Run `./code/server/bin/add-photo.ts photos/inbox/*.json --gallery <id>` from the instance dir. This reads each JSON, inserts a `photo` row with all the extracted EXIF (timestamp, camera, lens, geo, dimensions), and links the photo to the named gallery(ies) via `gallery_photo`. After this step the photo appears in the gallery on next page load.
+4. **(Optional) clean up.** The `inbox/*.json` files have served their purpose once ingested. They're harmless to leave but you can move/delete them to keep the inbox tidy.
+
+The pipeline is intentionally split: the converter doesn't touch the DB at all, and the server doesn't read from the inbox. That lets you bulk-process a backlog of photos with the converter, eyeball the JSON sidecars, and then register them in batches via `add-photo.ts` with overrides applied if needed (e.g. `--country jp --place "Yokohama, Kanagawa"` for a whole trip).
+
+`add-photo.ts` also accepts JPG paths directly instead of JSON: in that mode it registers a bare `photo` row with no EXIF data (just the filename as the ID), useful when the metadata isn't worth recovering.
 
 ## Roadmap
 
