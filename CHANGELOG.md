@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-05-21
+
+### Fixed
+
+- Restore the per-workspace `version` field that 0.7.0 had removed (pm2 reads version from the script's own package.json, not the monorepo root, so `pm2 list` showed no version after the 0.7.0 upgrade); root stays canonical, with a new `npm run version:sync` script propagating it to the workspaces.
+
 ## [0.7.0] - 2026-05-21
 
 ### Features
@@ -208,7 +214,8 @@
 
 ## Initial commit - 2020-07-04
 
-[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/vlumi/photo-diary/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/vlumi/photo-diary/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/vlumi/photo-diary/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/vlumi/photo-diary/compare/v0.5.0...v0.5.1
