@@ -35,6 +35,9 @@ export default () => {
     deleteUser,
 
     loadUserAccessControl,
+    loadUserGalleryRows,
+    upsertUserGallery,
+    deleteUserGallery,
     resolveHideMap,
 
     loadGalleries,
@@ -120,12 +123,71 @@ const loadUserAccessControl = async (
   const schema = SCHEMA.userGallery;
   // TODO: cache in memory
   const stmt = db.prepare(schema.buildSelectQuery(["user_id IN (?)"]));
-  const userRows = stmt.all([userId]) as UserGalleryRow[];
-  const guestRows = stmt.all([":guest"]) as UserGalleryRow[];
+  // Rows with a NULL `access_level` are privacy-only rows (e.g. setting
+  // `hide_map` for a (user, gallery) pair without granting extra access).
+  // They must not appear in the access map, or the authorizer would see the
+  // gallery as "explicitly set" and skip the fall-through to `:all`.
+  const hasLevel = (row: UserGalleryRow) => row.access_level !== null;
+  const userRows = (stmt.all([userId]) as UserGalleryRow[]).filter(hasLevel);
+  const guestRows = (stmt.all([":guest"]) as UserGalleryRow[]).filter(hasLevel);
   return {
     ...Object.fromEntries(guestRows.map(schema.mapRow)),
     ...Object.fromEntries(userRows.map(schema.mapRow)),
   };
+};
+
+const loadUserGalleryRows = async (
+  filter: { userId?: string; galleryId?: string } = {}
+): Promise<UserGalleryRow[]> => {
+  const conditions: string[] = [];
+  const values: string[] = [];
+  if (filter.userId) {
+    conditions.push("user_id = ?");
+    values.push(filter.userId);
+  }
+  if (filter.galleryId) {
+    conditions.push("gallery_id = ?");
+    values.push(filter.galleryId);
+  }
+  return db
+    .prepare(SCHEMA.userGallery.buildSelectQuery(conditions))
+    .all(...values) as UserGalleryRow[];
+};
+
+const upsertUserGallery = async (
+  row: {
+    user_id: string;
+    gallery_id: string;
+    access_level?: number | null;
+    hide_map?: number | null;
+  }
+): Promise<void> => {
+  // Only touch the columns the caller passed (everything else is preserved on
+  // conflict). Done with SQLite's INSERT ON CONFLICT DO UPDATE so a single
+  // statement handles both the create and the partial-update path.
+  const sets: string[] = [];
+  if ("access_level" in row) sets.push("access_level = excluded.access_level");
+  if ("hide_map" in row) sets.push("hide_map = excluded.hide_map");
+  const query =
+    "INSERT INTO user_gallery (user_id, gallery_id, access_level, hide_map) " +
+    "VALUES (?, ?, ?, ?) " +
+    `ON CONFLICT(user_id, gallery_id) DO UPDATE SET ${sets.join(", ")}`;
+  db.prepare(query).run(
+    row.user_id,
+    row.gallery_id,
+    row.access_level ?? null,
+    row.hide_map ?? null
+  );
+};
+
+const deleteUserGallery = async (
+  userId: string,
+  galleryId: string
+): Promise<void> => {
+  db.prepare(SCHEMA.userGallery.buildDeleteByIdQuery()).run([
+    userId,
+    galleryId,
+  ]);
 };
 // Resolve the privacy cascade for (userId, galleryId) in one query. Returns
 // the most specific `user_gallery` row's `hide_map` (1, 0, or null) considering

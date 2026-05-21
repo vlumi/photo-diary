@@ -89,13 +89,34 @@ Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. D
 | `-u <id>`, `--user <id>` | User ID to create or update. |
 | `-p <pw>`, `--password <pw>` | Password (will be bcrypt-hashed before storage). |
 
-Either `--list` or both `--user` and `--password` are required. Running with `-u`/`-p` updates the user if it exists, creates it otherwise. Setting an admin level is a separate step — the script doesn't touch the `user_gallery` table. Grant access manually:
+Either `--list` or both `--user` and `--password` are required. Running with `-u`/`-p` updates the user if it exists, creates it otherwise. Access levels are managed separately by `access.ts` — see below.
+
+#### `access.ts <subcommand> …`
+
+Manages rows in the `user_gallery` table — access level (view / admin) and the `hide_map` privacy toggle. Replaces the previous "edit the DB directly with sqlite3" recipes. `:guest` (the sentinel user) and `:all` (the sentinel gallery) are accepted directly as positional arguments.
+
+| Subcommand | Purpose |
+| --- | --- |
+| `list [--user <id>] [--gallery <id>]` | Print existing rows as a table. Optional filters narrow to one user, one gallery, or both. |
+| `level <user> <gallery> <none\|view\|admin>` | Set the access level on a row (upserts). `none` is the row-level deny — the cascade stops here. Preserves any existing `hide_map` value on the same pair. |
+| `unset <user> <gallery> [--yes]` | Delete the row entirely so the cascade falls through to less-specific rows. Asks for confirmation unless `--yes` is given. |
+| `hide-map <user> <gallery> <hide\|show\|default>` | Set or clear the privacy toggle. `default` clears the override so the cascade falls through to a less-specific row. |
+
+`level … none` and `unset` are not the same: `level … none` writes a row with `access_level=0` and stops the cascade at that row (explicit deny at this level); `unset` deletes the row entirely and lets the cascade fall through to less-specific rows.
+
+Examples:
 
 ```sh
-sqlite3 db.sqlite3 \
-  "INSERT INTO user_gallery (user_id, gallery_id, access_level) VALUES ('alice', ':all', 2)"
-# access_level: 0 = none, 1 = view, 2 = admin
+./bin/access.ts level alice :all admin            # alice gets admin everywhere
+./bin/access.ts level :guest :all view            # public visitors can view everything
+./bin/access.ts level alice secret none           # block alice from "secret" even if :all grants view
+./bin/access.ts hide-map :guest dailybw hide      # hide map for guests on one gallery
+./bin/access.ts hide-map alice dailybw default    # clear alice's override on that gallery
+./bin/access.ts list --user alice                 # show alice's rows
+./bin/access.ts unset alice travel                # delete the row (with confirmation)
 ```
+
+The cascade resolution lives in [server/lib/privacy.ts](lib/privacy.ts) and `loadUserAccessControl` in [server/db/sqlite3/index.ts](db/sqlite3/index.ts) — privacy-only rows (those with `access_level=NULL`) are filtered out of the access map so they don't break access fall-through to `:all`.
 
 #### `gallery.ts [options]`
 
