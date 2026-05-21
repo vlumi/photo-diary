@@ -302,8 +302,8 @@ if (mode === "new") {
   console.log(`  cd ${instanceDir}`);
   console.log("  ./code/server/bin/start-prod.sh");
   console.log("  ./code/converter/bin/start-prod.sh");
-  console.log("  ./bin/user.ts -u <username> -p <password>");
-  console.log(`  ./bin/gallery.ts --id ${name} --title "${name}"`);
+  console.log("  ./bin/user.ts passwd <username> <password>");
+  console.log(`  ./bin/gallery.ts ${name} --title "${name}"`);
   console.log("  ./bin/access.ts level <username> :all admin");
 } else if (mode === "upgrade") {
   console.log("Upgrade prepared. Restart pm2 to activate:");

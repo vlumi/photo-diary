@@ -81,17 +81,15 @@ Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. D
 - **Doctor** — instance exists, `code` already points at this script's root. Reports missing `.env` keys with `✓`/`✗` markers. Refreshes any missing `bin/` shortcuts. Add `--fix` to append defaults to `.env`.
 - **Upgrade** — `code` points at a different version. Backs up the DB to `db.sqlite3.pre-<new-version>` and flips the symlink. Refreshes `bin/` shortcuts.
 
-#### `user.ts [options]`
+#### `user.ts <subcommand> …`
 
-Three mutually-exclusive modes, picked by which flags you pass:
-
-| Flag | Purpose |
+| Subcommand | Purpose |
 | --- | --- |
-| `-l`, `--list` | Print every user as a table with their admin flag (derived from a `(user, ':all', admin)` row in `user_gallery`). |
-| `-u <id>`, `--user <id>` plus `-p <pw>`, `--password <pw>` | Upsert: creates if missing, updates the password if present. Pair with `--keep-secret` to preserve existing JWT sessions; the default rotates the secret, killing every active session (correct for "password lost / leaked"). |
-| `-d <id>`, `--delete <id>` | Delete the user and cascade their `user_gallery` rows (access + hide_map). Asks for confirmation unless `-y`/`--yes` is given. |
+| `list` | Print every user as a table with their admin flag (derived from a `(user, ':all', admin)` row in `user_gallery`). |
+| `passwd <id> <password> [--keep-secret]` | Upsert: creates the user if missing, updates the password if present. Default rotates the user's `secret` (kills active JWT sessions, correct for "password lost / leaked"); `--keep-secret` opts out and keeps sessions alive. |
+| `delete <id> [--yes]` | Delete the user and cascade their `user_gallery` rows (access + hide_map). Asks for confirmation unless `--yes` is given. |
 
-Access level changes are handled by [`access.ts`](#accessts-subcommand-) — `user.ts` doesn't touch the `user_gallery` table except to cascade-delete on `--delete`.
+Access level changes are handled by [`access.ts`](#accessts-subcommand-) — `user.ts` doesn't touch the `user_gallery` table except to cascade-delete on `delete`.
 
 #### `access.ts <subcommand> …`
 
@@ -120,13 +118,13 @@ Examples:
 
 The cascade resolution lives in [server/lib/privacy.ts](lib/privacy.ts) and `loadUserAccessControl` in [server/db/sqlite3/index.ts](db/sqlite3/index.ts) — privacy-only rows (those with `access_level=NULL`) are filtered out of the access map so they don't break access fall-through to `:all`.
 
-#### `gallery.ts [options]`
+#### `gallery.ts <id> [options]`
 
-Creates or updates a single gallery row. Always requires `--id`.
+Creates or updates a single gallery row. The ID is positional and required; everything else is an optional override that re-invoking partially updates.
 
-| Flag | Purpose |
+| Argument | Purpose |
 | --- | --- |
-| `--id <id>` | Gallery ID (required; used in URLs and ACL references). |
+| `<id>` | Gallery ID (positional, required; used in URLs and ACL references). |
 | `--title <s>` | Display title. |
 | `--description <s>` | Long description shown on the gallery list page. |
 | `--epoch <YYYY-MM-DD>` | Anchor date for the gallery (e.g. a birthday for a "day in the life" project). |

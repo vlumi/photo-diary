@@ -2,23 +2,24 @@
 /* eslint-disable no-console -- interactive CLI tool; console output is the UI */
 
 /**
- * Manage local user accounts. Three modes (mutually exclusive):
+ * Manage local user accounts.
  *
- *   user.ts --list
- *   user.ts -u <id> -p <password> [--keep-secret]
- *   user.ts -d <id> [--yes]
+ * Subcommands:
  *
- * Setting `-u`/`-p` upserts the user — creates if missing, updates the
- * password if present. By default the user's `secret` is rotated too, which
- * invalidates every existing JWT for them (correct behavior for "password
- * lost / leaked" cases). Pass `--keep-secret` to opt out and keep sessions
- * alive across the password change.
+ *   user.ts list
+ *   user.ts passwd <id> <password> [--keep-secret]
+ *   user.ts delete <id> [--yes]
  *
- * Delete cascades to the user's `user_gallery` rows (access + hide_map).
+ * `passwd` upserts the user — creates if missing, updates the password if
+ * present. By default the user's `secret` is rotated too, which invalidates
+ * every existing JWT for them (correct for "password lost / leaked" cases).
+ * Pass `--keep-secret` to opt out and keep sessions alive across the change.
+ *
+ * `delete` cascades to the user's `user_gallery` rows (access + hide_map).
  * Confirmation prompt unless `--yes` is given.
  *
  * Access level changes are managed via `bin/access.ts level …`; this script
- * doesn't touch `user_gallery` access at all.
+ * doesn't touch `user_gallery` access at all (except to cascade-delete).
  */
 
 import { randomUUID } from "node:crypto";
@@ -54,125 +55,105 @@ const formatTable = (rows: string[][]): string => {
     .join("\n");
 };
 
-const listUsers = async (): Promise<void> => {
-  const users = (await db.loadUsers()) as Array<{ id: string }>;
-  const rows: string[][] = [["user", "admin"]];
-  for (const user of users) {
-    if (!user.id) continue;
-    const accessRows = await db.loadUserGalleryRows({
-      userId: user.id,
-      galleryId: CONST.SPECIAL_GALLERY_ALL,
-    });
-    const isAdmin = accessRows.some((r) => r.access_level === CONST.ACCESS_ADMIN);
-    rows.push([user.id, isAdmin ? "yes" : "no"]);
-  }
-  console.log(rows.length === 1 ? "(no users)" : formatTable(rows));
-};
-
-const setPassword = async (
-  userId: string,
-  password: string,
-  keepSecret: boolean
-): Promise<void> => {
-  const hash = await bcrypt.hash(password, SALT_ROUNDS);
-  const existing = await db
-    .loadUser(userId)
-    .then((u) => u as { id: string })
-    .catch(() => null);
-
-  if (existing) {
-    const updates: { password: string; secret?: string } = { password: hash };
-    if (!keepSecret) updates.secret = randomUUID();
-    await db.updateUser(existing.id, updates);
-    console.log(
-      keepSecret
-        ? `✓ Updated password for "${userId}"; existing sessions preserved.`
-        : `✓ Updated password for "${userId}"; existing sessions invalidated (secret rotated).`
-    );
-  } else {
-    await db.createUser({ id: userId, password: hash, secret: randomUUID() });
-    console.log(`✓ Created user "${userId}".`);
-  }
-};
-
-const deleteUser = async (userId: string, skipConfirm: boolean): Promise<void> => {
-  const exists = await db
-    .loadUser(userId)
-    .then(() => true)
-    .catch(() => false);
-  if (!exists) {
-    console.error(`User "${userId}" not found.`);
-    process.exit(1);
-  }
-  const accessRows = await db.loadUserGalleryRows({ userId });
-
-  if (!skipConfirm) {
-    const summary = `user "${userId}"${accessRows.length > 0 ? ` and ${accessRows.length} user_gallery row(s)` : ""}`;
-    const ok = await confirm(`Delete ${summary}?`);
-    if (!ok) {
-      console.log("Aborted.");
-      return;
+await yargs(hideBin(process.argv))
+  .scriptName("user.ts")
+  .strict()
+  .demandCommand(1, "Specify a subcommand: list, passwd, or delete")
+  .command(
+    "list",
+    "Print every user as a table with their admin flag",
+    (y) => y,
+    async () => {
+      const users = (await db.loadUsers()) as Array<{ id: string }>;
+      const rows: string[][] = [["user", "admin"]];
+      for (const user of users) {
+        if (!user.id) continue;
+        const accessRows = await db.loadUserGalleryRows({
+          userId: user.id,
+          galleryId: CONST.SPECIAL_GALLERY_ALL,
+        });
+        const isAdmin = accessRows.some((r) => r.access_level === CONST.ACCESS_ADMIN);
+        rows.push([user.id, isAdmin ? "yes" : "no"]);
+      }
+      console.log(rows.length === 1 ? "(no users)" : formatTable(rows));
     }
-  }
-
-  for (const row of accessRows) {
-    await db.deleteUserGallery(row.user_id, row.gallery_id);
-  }
-  await db.deleteUser(userId);
-  console.log(
-    `✓ Deleted user "${userId}"${accessRows.length > 0 ? ` (${accessRows.length} user_gallery row(s) cascaded)` : ""}.`
-  );
-};
-
-const argv = yargs(hideBin(process.argv))
-  .alias("l", "list")
-  .describe("l", "List users (with admin flag)")
-  .boolean("l")
-  .alias("u", "user")
-  .nargs("u", 1)
-  .describe("u", "User ID (with --password: upsert; pair with --keep-secret to preserve sessions)")
-  .string("u")
-  .alias("p", "password")
-  .nargs("p", 1)
-  .describe("p", "Password (bcrypt-hashed before storage)")
-  .string("p")
-  .describe(
-    "keep-secret",
-    "Don't rotate the user's secret on password change (keeps existing JWT sessions valid)"
   )
-  .boolean("keep-secret")
-  .alias("d", "delete")
-  .nargs("d", 1)
-  .describe("d", "Delete the user and cascade their user_gallery rows")
-  .string("d")
-  .alias("y", "yes")
-  .describe("y", "Skip the confirmation prompt for --delete")
-  .boolean("y")
-  .check((parsed) => {
-    const modes = [
-      parsed.list ? 1 : 0,
-      parsed.delete ? 1 : 0,
-      parsed.user && parsed.password ? 1 : 0,
-    ].reduce<number>((a, b) => a + b, 0);
-    if (modes !== 1) {
-      throw new Error(
-        "Exactly one of: --list; --delete <id>; --user <id> --password <pw> is required."
+  .command(
+    "passwd <id> <password>",
+    "Set a user's password (creates the user if missing; rotates secret by default)",
+    (y) =>
+      y
+        .positional("id", { describe: "User ID", type: "string", demandOption: true })
+        .positional("password", {
+          describe: "Password (bcrypt-hashed before storage)",
+          type: "string",
+          demandOption: true,
+        })
+        .option("keep-secret", {
+          describe: "Don't rotate the user's secret (keeps existing JWT sessions valid)",
+          type: "boolean",
+          default: false,
+        }),
+    async (argv) => {
+      const hash = await bcrypt.hash(argv.password, SALT_ROUNDS);
+      const existing = await db
+        .loadUser(argv.id)
+        .then((u) => u as { id: string })
+        .catch(() => null);
+
+      if (existing) {
+        const updates: { password: string; secret?: string } = { password: hash };
+        if (!argv["keep-secret"]) updates.secret = randomUUID();
+        await db.updateUser(existing.id, updates);
+        console.log(
+          argv["keep-secret"]
+            ? `✓ Updated password for "${argv.id}"; existing sessions preserved.`
+            : `✓ Updated password for "${argv.id}"; existing sessions invalidated (secret rotated).`
+        );
+      } else {
+        await db.createUser({ id: argv.id, password: hash, secret: randomUUID() });
+        console.log(`✓ Created user "${argv.id}".`);
+      }
+    }
+  )
+  .command(
+    "delete <id>",
+    "Delete the user and cascade their user_gallery rows",
+    (y) =>
+      y
+        .positional("id", { describe: "User ID", type: "string", demandOption: true })
+        .option("yes", {
+          describe: "Skip the confirmation prompt",
+          type: "boolean",
+          default: false,
+        }),
+    async (argv) => {
+      const exists = await db
+        .loadUser(argv.id)
+        .then(() => true)
+        .catch(() => false);
+      if (!exists) {
+        console.error(`User "${argv.id}" not found.`);
+        process.exit(1);
+      }
+      const accessRows = await db.loadUserGalleryRows({ userId: argv.id });
+
+      if (!argv.yes) {
+        const summary = `user "${argv.id}"${accessRows.length > 0 ? ` and ${accessRows.length} user_gallery row(s)` : ""}`;
+        const ok = await confirm(`Delete ${summary}?`);
+        if (!ok) {
+          console.log("Aborted.");
+          return;
+        }
+      }
+
+      for (const row of accessRows) {
+        await db.deleteUserGallery(row.user_id, row.gallery_id);
+      }
+      await db.deleteUser(argv.id);
+      console.log(
+        `✓ Deleted user "${argv.id}"${accessRows.length > 0 ? ` (${accessRows.length} user_gallery row(s) cascaded)` : ""}.`
       );
     }
-    return true;
-  })
-  .strict()
-  .usage("Usage: $0 [options]")
-  .parseSync();
-
-if (argv.list) {
-  await listUsers();
-} else if (argv.delete) {
-  await deleteUser(argv.delete as string, argv.yes as boolean);
-} else if (argv.user && argv.password) {
-  await setPassword(
-    argv.user as string,
-    argv.password as string,
-    Boolean(argv["keep-secret"])
-  );
-}
+  )
+  .parseAsync();
