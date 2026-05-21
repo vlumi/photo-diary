@@ -83,13 +83,15 @@ Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. D
 
 #### `user.ts [options]`
 
+Three mutually-exclusive modes, picked by which flags you pass:
+
 | Flag | Purpose |
 | --- | --- |
-| `-l`, `--list` | Print every user ID, one per line. |
-| `-u <id>`, `--user <id>` | User ID to create or update. |
-| `-p <pw>`, `--password <pw>` | Password (will be bcrypt-hashed before storage). |
+| `-l`, `--list` | Print every user as a table with their admin flag (derived from a `(user, ':all', admin)` row in `user_gallery`). |
+| `-u <id>`, `--user <id>` plus `-p <pw>`, `--password <pw>` | Upsert: creates if missing, updates the password if present. Pair with `--keep-secret` to preserve existing JWT sessions; the default rotates the secret, killing every active session (correct for "password lost / leaked"). |
+| `-d <id>`, `--delete <id>` | Delete the user and cascade their `user_gallery` rows (access + hide_map). Asks for confirmation unless `-y`/`--yes` is given. |
 
-Either `--list` or both `--user` and `--password` are required. Running with `-u`/`-p` updates the user if it exists, creates it otherwise. Access levels are managed separately by `access.ts` — see below.
+Access level changes are handled by [`access.ts`](#accessts-subcommand-) — `user.ts` doesn't touch the `user_gallery` table except to cascade-delete on `--delete`.
 
 #### `access.ts <subcommand> …`
 

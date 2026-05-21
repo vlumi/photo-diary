@@ -24,6 +24,7 @@
 - Rename the `acl` table to `user_gallery` and its `level` column to `access_level` (migration 004) — the original names became misleading once the table grew non-access columns like `hide_map`. (closes #185)
 - Add `server/bin/access.ts` (`list` / `level` / `unset` / `hide-map` subcommands) for managing `user_gallery` rows without direct SQL; also fixes `loadUserAccessControl` to filter out `access_level=NULL` rows so privacy-only rows don't break access fall-through to `:all`. (closes #186)
 - Align the `hide_map` cascade with the access cascade — both now walk gallery-first (`requested → :public → :all` for non-special galleries, `requested → :all` for special ones) with user-beats-guest at each level, replacing the previous user-first ordering. (closes #189)
+- Add `-d`/`--delete <id>` and `--keep-secret` flags to `bin/user.ts`, and turn `--list` into a table with an admin flag; delete cascades the user's `user_gallery` rows. (closes #161)
 
 ### Frontend
 
