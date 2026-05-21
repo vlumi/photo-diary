@@ -19,7 +19,7 @@
  *   `code` symlink, then run doctor.
  *
  * Usage:
- *   ./code/server/bin/init-instance.ts <name> [--base <dir>] [--fix]
+ *   ./code/bin/instance <name> [--base <dir>] [--fix]
  *
  * Where `<name>` is the instance directory name under `<base>` (default
  * `/var/photo-diary`). The script always treats its own code root as the
@@ -138,7 +138,7 @@ const appendMissingKeys = (
   const additions = missing
     .map(({ key, description, default: d }) => `# ${description}\n${key}=${d(ctx)}\n`)
     .join("\n");
-  fs.appendFileSync(filePath, `\n# Added by init-instance\n${additions}`);
+  fs.appendFileSync(filePath, `\n# Added by bin/instance\n${additions}`);
   return missing.map((m) => m.key);
 };
 
@@ -152,7 +152,7 @@ const fix = args.includes("--fix");
 
 if (!name || name.startsWith("--")) {
   console.error(
-    "Usage: init-instance.ts <name> [--base <dir>] [--fix]\n" +
+    "Usage: bin/instance <name> [--base <dir>] [--fix]\n" +
       "  <name>     directory name under --base (default /var/photo-diary)\n" +
       "  --fix      append missing required keys to an existing .env (doesn't touch existing values)"
   );
@@ -162,6 +162,13 @@ if (!name || name.startsWith("--")) {
 const instanceDir = path.resolve(base, name);
 const envPath = path.join(instanceDir, ".env");
 const codeLinkPath = path.join(instanceDir, "code");
+const instanceBinDir = path.join(instanceDir, "bin");
+
+// Operator scripts surfaced as `<instance>/bin/<name>` symlinks pointing at
+// `<instance>/code/bin/<name>`, which is itself a symlink to the real file
+// in `<code-root>/server/bin/<name>.ts`. Lets the operator run e.g.
+// `./bin/photo …` instead of `./code/server/bin/photo.ts …`.
+const OPERATOR_SCRIPTS = ["instance", "photo", "gallery", "user"];
 
 // ---- run -----------------------------------------------------------------
 
@@ -244,6 +251,33 @@ if (previousCodeTarget !== CODE_ROOT) {
   );
 }
 
+// 5b. Operator-script shortcuts in <instance>/bin/
+fs.mkdirSync(instanceBinDir, { recursive: true });
+const createdShortcuts: string[] = [];
+for (const script of OPERATOR_SCRIPTS) {
+  const linkPath = path.join(instanceBinDir, script);
+  const targetRelative = path.join("..", "code", "bin", script);
+  const current = (() => {
+    try {
+      return fs.readlinkSync(linkPath);
+    } catch {
+      return null;
+    }
+  })();
+  if (current === targetRelative) continue;
+  if (current !== null || fs.existsSync(linkPath)) {
+    fs.unlinkSync(linkPath);
+  }
+  fs.symlinkSync(targetRelative, linkPath);
+  createdShortcuts.push(script);
+}
+if (createdShortcuts.length > 0) {
+  console.log(
+    `✓ ${createdShortcuts.length === OPERATOR_SCRIPTS.length ? "Created" : "Refreshed"} ` +
+      `bin/ shortcuts: ${createdShortcuts.join(", ")}`
+  );
+}
+
 // 6. Directories report (doctor)
 console.log();
 console.log("Directories:");
@@ -260,8 +294,12 @@ if (mode === "new") {
   console.log(`  cd ${instanceDir}`);
   console.log("  ./code/server/bin/start-prod.sh");
   console.log("  ./code/converter/bin/start-prod.sh");
-  console.log("  ./code/server/bin/add-user.ts --admin -u <username> -p <password>");
-  console.log(`  ./code/server/bin/add-gallery.ts -i ${name} -t "${name}"`);
+  console.log("  ./bin/user -u <username> -p <password>");
+  console.log(`  ./bin/gallery --id ${name} --title "${name}"`);
+  console.log("  # Grant admin access via SQL (no flag for it on user yet):");
+  console.log(
+    "  #   sqlite3 db.sqlite3 \"INSERT INTO acl (user_id, gallery_id, level) VALUES ('<username>', ':all', 2)\""
+  );
 } else if (mode === "upgrade") {
   console.log("Upgrade prepared. Restart pm2 to activate:");
   console.log(`  pm2 restart ${name} ${name}-converter`);
