@@ -1,6 +1,6 @@
 {
   "name": "photo-diary",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "Photo Diary — personal photo gallery (monorepo root)",
   "license": "MIT",
@@ -15,7 +15,8 @@
   ],
   "scripts": {
     "setup": "npm install && npm run build",
-    "build": "npm run build --workspace=react-app && rm -rf server/build && cp -r react-app/build server/build"
+    "build": "npm run build --workspace=react-app && rm -rf server/build && cp -r react-app/build server/build",
+    "version:sync": "node bin/sync-versions.mjs && npm install --package-lock-only"
   },
   "repository": {
     "type": "git",

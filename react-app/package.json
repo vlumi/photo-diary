@@ -56,5 +56,6 @@
   "repository": {
     "type": "git",
     "url": "github:vlumi/photo-diary"
-  }
+  },
+  "version": "0.7.1"
 }
