@@ -28,16 +28,20 @@ To produce the bundled frontend (`server/build/`) for production, run `npm run b
 
 ### Environment Variables
 
-Certain parameters are passed through environment veriables. These can be either exported before running, adding inline- to the command when starting, or added to the file `env`, from which they will be picked up by [dotenv](https://www.npmjs.com/package/dotenv).
+Read at startup from a `.env` file in the **current working directory** (which is the instance directory in a multi-instance deploy, or the server directory in a single-package dev run), via [dotenv](https://www.npmjs.com/package/dotenv). Inline `KEY=value npm run …` overrides also work.
 
-- `PORT` (default: 4200)
-- `DB_DRIVER` \*
-  - The driver to use for the backend DB connection.
-  - Currently implemented:
-    - `sqlite3` – Default driver, backed by better-sqlite3 (synchronous API)
-    - `dummy` – data hard-coded into the driver, for testing purposes only
-- `SECRET` \*
-  - HMAC secret used to sign JWT tokens issued at login. Required — the server refuses to start without it.
+| Variable | Required | Default | Purpose |
+| --- | --- | --- | --- |
+| `SECRET` | ✓ | — | HMAC secret used to sign JWT tokens. The server refuses to start without it. Keep stable per instance; rotating invalidates every existing session. |
+| `DB_DRIVER` | ✓ | — | `sqlite3` (production) or `dummy` (test fixture). |
+| `PORT` | | `4200` | HTTP port nginx proxies to. One per instance. |
+| `INSTANCE_NAME` | | `photo-diary-server` | pm2 process name when launched via `bin/start-prod.sh`. The converter half is automatically suffixed `-converter`. |
+| `NODE_ENV` | | `prod` | `dev` / `prod` / `test`. Set by the npm scripts; don't override unless you know why. |
+| `DEBUG` | | `false` | When truthy, enables verbose logger output. |
+| `STATIC_DIR` | | `<source>/build` | Path to the bundled frontend. Resolved relative to the server's source file by default; override if you build into a non-standard location. |
+| `DEFAULT_GALLERY`, `DEFAULT_THEME`, `INITIAL_GALLERY_VIEW`, `FIRST_WEEKDAY` | | — | Per-instance frontend defaults, surfaced through `/api/v1/meta` to the frontend on boot. See the top-level README's Multi-Instance section. |
+
+The SQLite DB file and the photo repository are **not** configured via env vars — they're fixed-by-convention at `<cwd>/db.sqlite3` and `<cwd>/photos/` respectively. See the next subsection.
 
 ### Fixed-by-convention paths
 
@@ -60,15 +64,84 @@ If you need the DB or photo dir on a separate disk, symlink the file (`db.sqlite
 
 ### Management scripts
 
-Scripts under `bin/` add or update users, galleries, and photos in the DB. They are executable and use a `#!/usr/bin/env -S npx tsx` shebang, so from the `server/` directory they can be run directly:
+Scripts under `bin/` are executable TypeScript (`#!/usr/bin/env -S npx tsx`). They read `.env` and resolve `db.sqlite3` from the **current working directory**, so run them from the instance directory (or via the instance's `code` symlink: `./code/server/bin/<script>.ts`). In a multi-instance deploy:
 
 ```sh
-./bin/add-user.ts [options]
-./bin/add-gallery.ts [options]
-./bin/add-photo.ts [options] [json-or-jpg-files]
+cd /var/photo-diary/dailybw
+./code/server/bin/<script>.ts [options]
 ```
 
-Each script takes `--help` to list its flags. They read the same `.env` as the server, so `SECRET` and `DB_DRIVER` need to be set the same way. They also resolve the DB file from the current working directory (`db.sqlite3`), so run them from the instance directory.
+#### `init-instance.ts <name> [--base <dir>] [--fix]`
+
+Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. Default base is `/var/photo-diary`. Mode is auto-detected from existing state:
+
+- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root.
+- **Doctor** — instance exists, `code` already points at this script's root. Reports missing `.env` keys with `✓`/`✗` markers. Add `--fix` to append defaults.
+- **Upgrade** — `code` points at a different version. Backs up the DB to `db.sqlite3.pre-<new-version>` and flips the symlink.
+
+#### `add-user.ts [options]`
+
+| Flag | Purpose |
+| --- | --- |
+| `-l`, `--list` | Print every user ID, one per line. |
+| `-u <id>`, `--user <id>` | User ID to create or update. |
+| `-p <pw>`, `--password <pw>` | Password (will be bcrypt-hashed before storage). |
+
+Either `--list` or both `--user` and `--password` are required. Running with `-u`/`-p` updates the user if it exists, creates it otherwise. Setting an admin level is a separate step — the script doesn't touch the ACL. Grant access manually:
+
+```sh
+sqlite3 db.sqlite3 \
+  "INSERT INTO acl (user_id, gallery_id, level) VALUES ('alice', ':all', 2)"
+# level: 0 = none, 1 = view, 2 = admin
+```
+
+#### `add-gallery.ts [options]`
+
+Creates or updates a single gallery row. Always requires `--id`.
+
+| Flag | Purpose |
+| --- | --- |
+| `--id <id>` | Gallery ID (required; used in URLs and ACL references). |
+| `--title <s>` | Display title. |
+| `--description <s>` | Long description shown on the gallery list page. |
+| `--epoch <YYYY-MM-DD>` | Anchor date for the gallery (e.g. a birthday for a "day in the life" project). |
+| `--epoch_type <type>` | One of the supported epoch types — see [models/GalleryModel.ts](../react-app/src/models/GalleryModel.ts). |
+| `--theme <name>` | One of `blue`, `red`, `grayscale`, `bw`, `alert` (see [themes.css](../react-app/src/lib/theme.ts)). |
+| `--initial_view <view>` | One of `year`, `month`, `day`, `photo` — where the gallery lands when entered. |
+| `--hostname <regex>` | Hostname regex (e.g. `^travel\.` ) that this gallery should be the default for. Lets a single instance serve multiple vhosts (see the nginx section in the top-level README). |
+
+#### `add-photo.ts [options] [json-or-jpg-files…]`
+
+Registers photos in the DB and (optionally) links them to one or more galleries. Accepts either JSON sidecars produced by the converter or bare JPG paths (the bare-JPG mode stores just the filename as the photo ID, no EXIF).
+
+| Flag | Purpose |
+| --- | --- |
+| `--gallery <id>` | Gallery to link the photo(s) to. Repeat for multiple. |
+| `--title <s>` | Override the photo's title. |
+| `--description <s>` | Override the description. |
+| `--country <cc>` | Override the country (ISO 3166-1 alpha-2). |
+| `--place <s>` | Override the free-form place description. |
+| `--author <s>` | Override the author. |
+| `--camera-make`, `--camera-model`, `--lens-make`, `--lens-model` | Override gear strings (useful when EXIF is missing or wrong). |
+| `--focal <mm>` | Override focal length. |
+| `--aperture <f>` | Override aperture (f-number). |
+
+Overrides apply to every photo in the invocation, so this is the natural way to tag a whole trip:
+
+```sh
+./code/server/bin/add-photo.ts photos/inbox/*.json \
+  --gallery dailybw \
+  --country jp \
+  --place "Yokohama, Kanagawa"
+```
+
+#### `dump-exif.ts` (converter)
+
+Sibling utility in [converter/bin/](../converter/bin/). Prints the raw EXIF for one or more files — useful when debugging "why didn't this photo get processed" or "what tag is the converter looking at." Run via `npm run dumpexif -- <files>` from the converter directory.
+
+#### `start-prod.sh` / `start-dev.sh`
+
+Wrapper scripts that source `.env` from the current working directory, prepend the workspace's `node_modules/.bin` to `PATH`, and start the process under pm2 (prod) or in the foreground (dev). One pair per package — server, converter, and react-app. See the top-level README's Multi-Instance and Dev Mode sections for the invocation patterns.
 
 ## Public API
 
