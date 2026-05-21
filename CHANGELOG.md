@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-05-21
+
 ### Features
 
 - Privacy toggle for the map and photo coordinates. Set via the `user_gallery` table's new `hide_map` column — the four-cell cascade picks the most specific row with a non-null value: `(user, gallery)` > `(user, ':all')` > `(':guest', gallery)` > `(':guest', ':all')`. Both layers fire: the server strips `coord_lat`/`coord_lon`/`coord_alt` from the photo payload when hidden (so there's no data to leak), and the gallery payload gains a `hideMap` boolean that the frontend uses to skip rendering the map widget. Schema migration 003 adds the column; existing deploys pick it up automatically on next server start. To hide for unauthenticated visitors only: `UPDATE user_gallery SET hide_map = 1 WHERE user_id = ':guest' AND gallery_id = ':all'`. (closes #159)
@@ -206,7 +208,8 @@
 
 ## Initial commit - 2020-07-04
 
-[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/vlumi/photo-diary/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/vlumi/photo-diary/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/vlumi/photo-diary/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/vlumi/photo-diary/compare/v0.4.2...v0.5.0

@@ -1,6 +1,5 @@
 {
   "name": "photo-diary-converter",
-  "version": "0.6.0",
   "description": "",
   "type": "module",
   "main": "index.ts",

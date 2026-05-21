@@ -104,7 +104,7 @@ const parseEnv = (content: string): Record<string, string> => {
 const readVersion = (codeRoot: string): string => {
   try {
     const pkg = JSON.parse(
-      fs.readFileSync(path.join(codeRoot, "server", "package.json"), "utf8")
+      fs.readFileSync(path.join(codeRoot, "package.json"), "utf8")
     ) as { version?: string };
     return pkg.version ?? "unknown";
   } catch {

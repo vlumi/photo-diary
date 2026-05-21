@@ -1,7 +1,8 @@
 {
   "name": "photo-diary",
+  "version": "0.7.0",
   "private": true,
-  "description": "Personal photo gallery — monorepo root",
+  "description": "Photo Diary — personal photo gallery (monorepo root)",
   "license": "MIT",
   "type": "module",
   "engines": {
