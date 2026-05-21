@@ -10,10 +10,10 @@ export interface UserRow {
   password: string;
   secret: string;
 }
-export interface AclRow {
+export interface UserGalleryRow {
   user_id: string;
   gallery_id: string;
-  level: number;
+  access_level: number;
   // Privacy toggle: 1 = hide map/coordinates, 0 = show; NULL inherits the
   // next outer level (gallery override → instance default).
   hide_map: number | null;
@@ -65,7 +65,7 @@ export interface PhotoRow {
 // App-side shapes (what mapRow returns / mapInsert and mapToRow take).
 export type Meta = Record<string, string>;
 export type User = UserRow;
-export type Acl = [galleryId: string, level: number];
+export type UserGalleryAccess = [galleryId: string, accessLevel: number];
 export interface Gallery {
   id: string;
   title: string;
@@ -185,21 +185,24 @@ export default () => {
       buildDeleteQuery: (conditions?: Conditions) =>
         buildDeleteQuery(SCHEMA.user, conditions),
     },
-    acl: {
-      mapRow: (row: AclRow): Acl => [row.gallery_id, row.level],
+    userGallery: {
+      mapRow: (row: UserGalleryRow): UserGalleryAccess => [
+        row.gallery_id,
+        row.access_level,
+      ],
       mapInsert: (): unknown[] => {
         throw CONST.ERROR_NOT_IMPLEMENTED;
       },
-      buildCreateQuery: () => buildCreateQuery(SCHEMA.acl),
-      buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.acl),
-      buildUpdateByIdQuery: (data: Partial<AclRow>) =>
-        buildUpdateByIdQuery(SCHEMA.acl, data),
-      buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.acl),
+      buildCreateQuery: () => buildCreateQuery(SCHEMA.userGallery),
+      buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.userGallery),
+      buildUpdateByIdQuery: (data: Partial<UserGalleryRow>) =>
+        buildUpdateByIdQuery(SCHEMA.userGallery, data),
+      buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.userGallery),
 
       buildSelectQuery: (conditions?: Conditions) =>
-        buildSelectQuery(SCHEMA.acl, conditions),
+        buildSelectQuery(SCHEMA.userGallery, conditions),
       buildDeleteQuery: (conditions?: Conditions) =>
-        buildDeleteQuery(SCHEMA.acl, conditions),
+        buildDeleteQuery(SCHEMA.userGallery, conditions),
     },
     gallery: {
       mapRow: (row: GalleryRow): Gallery => ({
@@ -383,9 +386,11 @@ const userMapToRow = (user: Partial<User>): Record<string, unknown> => {
   if ("secret" in user) result.secret = user.secret;
   return result;
 };
-const aclMapToRow = (acl: Partial<AclRow>): Record<string, unknown> => {
+const userGalleryMapToRow = (
+  userGallery: Partial<UserGalleryRow>
+): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
-  if ("level" in acl) result.level = acl.level;
+  if ("access_level" in userGallery) result.access_level = userGallery.access_level;
   return result;
 };
 const galleryMapToRow = (
@@ -481,12 +486,12 @@ const SCHEMA = {
     order: ["id ASC"],
     mapToRow: userMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
-  acl: {
-    table: "acl",
-    columns: ["user_id", "gallery_id", "level", "hide_map"],
+  userGallery: {
+    table: "user_gallery",
+    columns: ["user_id", "gallery_id", "access_level", "hide_map"],
     primaryKey: ["user_id", "gallery_id"],
     order: ["user_id ASC", "gallery_id ASC"],
-    mapToRow: aclMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
+    mapToRow: userGalleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
   gallery: {
     table: "gallery",

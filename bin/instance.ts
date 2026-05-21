@@ -306,7 +306,7 @@ if (mode === "new") {
   console.log(`  ./bin/gallery.ts --id ${name} --title "${name}"`);
   console.log("  # Grant admin access via SQL (no flag for it on user yet):");
   console.log(
-    "  #   sqlite3 db.sqlite3 \"INSERT INTO acl (user_id, gallery_id, level) VALUES ('<username>', ':all', 2)\""
+    "  #   sqlite3 db.sqlite3 \"INSERT INTO user_gallery (user_id, gallery_id, access_level) VALUES ('<username>', ':all', 2)\""
   );
 } else if (mode === "upgrade") {
   console.log("Upgrade prepared. Restart pm2 to activate:");

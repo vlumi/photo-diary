@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 
 // Tests the 4-cell ACL cascade resolution against a fresh in-memory SQLite,
-// bypassing the dummy driver (which doesn't model ACL rows).
+// bypassing the dummy driver (which doesn't model user_gallery rows).
 //
 // Cascade priority (most specific wins):
 //   1. (user_id, gallery_id)
@@ -12,16 +12,16 @@ import Database from "better-sqlite3";
 const setupDb = (rows: Array<[string, string, number | null]>) => {
   const db = new Database(":memory:");
   db.exec(`
-    CREATE TABLE acl (
+    CREATE TABLE user_gallery (
       user_id TEXT,
       gallery_id TEXT,
-      level INTEGER,
+      access_level INTEGER,
       hide_map INTEGER,
       PRIMARY KEY(user_id, gallery_id)
     );
   `);
   const insert = db.prepare(
-    "INSERT INTO acl (user_id, gallery_id, level, hide_map) VALUES (?, ?, 1, ?)"
+    "INSERT INTO user_gallery (user_id, gallery_id, access_level, hide_map) VALUES (?, ?, 1, ?)"
   );
   for (const [user_id, gallery_id, hide_map] of rows) {
     insert.run(user_id, gallery_id, hide_map);
@@ -36,7 +36,7 @@ const resolve = (
 ): number | undefined => {
   const row = db
     .prepare(
-      `SELECT hide_map FROM acl
+      `SELECT hide_map FROM user_gallery
        WHERE (user_id = ? OR user_id = ':guest')
          AND (gallery_id = ? OR gallery_id = ':all')
          AND hide_map IS NOT NULL
