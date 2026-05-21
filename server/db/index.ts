@@ -88,10 +88,11 @@ export default {
   deleteUserGallery: async (userId: string, galleryId: string): Promise<void> => {
     await db.deleteUserGallery(userId, galleryId);
   },
-  // Resolve the privacy cascade for (userId, galleryId): looks at the
-  // four `user_gallery` rows ((user, gallery), (:guest, gallery),
-  // (user, :all), (:guest, :all)) in most-specific-first order, returning
-  // the first non-null `hide_map`. Undefined when no level has an opinion.
+  // Resolve the privacy cascade for (userId, galleryId): gallery-first
+  // walk matching the access cascade — `requested → :public → :all` for
+  // non-special galleries (skipping :public for :public/:private/:all
+  // requests), with user-beats-guest at each gallery level. Returns the
+  // first non-null `hide_map` encountered; undefined when nothing matches.
   resolveHideMap: async (
     userId: string,
     galleryId: string
