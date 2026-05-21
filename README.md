@@ -140,18 +140,105 @@ pm2 restart dailybw dailybw-converter         # migration runner applies any sch
 
 The DB backup is named `db.sqlite3.pre-<new-version>` — a plain file copy that assumes the instance is stopped (started instances may have an inconsistent backup). Rollback is manual: `cp db.sqlite3.pre-<version> db.sqlite3`, point `code` back at the older version, restart pm2.
 
-nginx (one server block per instance, proxying to its `PORT`; the `cdn` URL serves `display/` and `thumbnail/` directly):
+#### nginx
+
+One server block per instance, proxying to its `PORT` (set in the instance's `.env`). nginx also serves `display/` and `thumbnail/` directly from disk — the server never streams photos, only their metadata. The `cdn` meta row (set via the [API](server/README.md) or `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'`) tells the frontend which URL to load images from; typically the same host the API is on.
+
+A realistic per-instance vhost with TLS, certbot-managed certs, proxy headers, and aggressive caching on the photo locations:
 
 ```nginx
 server {
+  listen 80;
   server_name dailybw.example.com;
-  location / { proxy_pass http://127.0.0.1:4201; }
-  location /display/   { alias /var/photo-diary/dailybw/photos/display/; }
-  location /thumbnail/ { alias /var/photo-diary/dailybw/photos/thumbnail/; }
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl http2;
+  server_name dailybw.example.com;
+
+  ssl_certificate     /etc/letsencrypt/live/dailybw.example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/dailybw.example.com/privkey.pem;
+  ssl_protocols       TLSv1.2 TLSv1.3;
+  ssl_ciphers         HIGH:!aNULL:!MD5;
+
+  # API + bundle — proxied to the per-instance pm2 process.
+  location / {
+    proxy_pass         http://127.0.0.1:4201;
+    proxy_http_version 1.1;
+    proxy_set_header   Host              $host;
+    proxy_set_header   X-Real-IP         $remote_addr;
+    proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Proto $scheme;
+  }
+
+  # Photo bytes — served directly from disk. The IDs are content-stable (the
+  # converter writes by EXIF-derived ID), so we can mark these immutable.
+  location /display/ {
+    alias /var/photo-diary/dailybw/photos/display/;
+    expires 30d;
+    add_header Cache-Control "public, immutable";
+    access_log off;
+  }
+  location /thumbnail/ {
+    alias /var/photo-diary/dailybw/photos/thumbnail/;
+    expires 30d;
+    add_header Cache-Control "public, immutable";
+    access_log off;
+  }
+
+  # If you push photos via the admin API (POST /api/v1/photos), bump this —
+  # the default 1 MB rejects most camera files. Skip if you only use the
+  # converter-inbox flow (which doesn't go through nginx).
+  client_max_body_size 50m;
 }
 ```
 
-Optional: a single instance can serve multiple vhosts that resolve to different galleries via the existing `gallery.hostname` regex column — set `hostname` to `^travel\.` on the travel gallery and add a corresponding server block proxying to the same instance.
+Get the cert via `certbot --nginx -d dailybw.example.com` (it'll insert the `ssl_*` lines and the http-to-https redirect for you on a clean vhost; the block above is what you'll end up with).
+
+Use a different `PORT` per instance (set in each instance's `.env`) — pm2 ensures the right server gets the right port.
+
+#### Per-gallery vhost mapping
+
+A single instance can serve multiple hostnames, each landing the visitor on a different gallery, without spinning up a separate instance. The mechanism is the `hostname` regex column on the `gallery` row — when the frontend boots on a host that exactly one gallery's regex matches, it redirects to that gallery instead of the gallery-list page.
+
+Worked example. One instance (`/var/photo-diary/multi/`) serves two domains, each landing on its own gallery:
+
+1. Create the galleries with hostname regexes:
+
+   ```sh
+   cd /var/photo-diary/multi
+   ./bin/gallery.ts dailybw --title "Daily B&W" --hostname '^dailybw\.example\.com$'
+   ./bin/gallery.ts travel  --title "Travel"    --hostname '^travel\.example\.com$'
+   ```
+
+   The regex is matched with JavaScript's `RegExp.prototype.test` against `window.location.hostname` — anchors and escapes follow standard JS regex syntax.
+
+2. One nginx vhost per hostname, both proxying to the **same** backend port (the single instance):
+
+   ```nginx
+   server {
+     listen 443 ssl http2;
+     server_name dailybw.example.com;
+     # ... ssl_certificate, proxy headers, /display/, /thumbnail/ as above ...
+     location / { proxy_pass http://127.0.0.1:4201; ... }
+   }
+
+   server {
+     listen 443 ssl http2;
+     server_name travel.example.com;
+     # ... same ssl_certificate (or a separate cert), same proxy headers ...
+     location / { proxy_pass http://127.0.0.1:4201; ... }
+   }
+   ```
+
+3. The frontend selects which gallery to land on based on the hostname the visitor used. The fallback order is: single-gallery instance → matching `hostname` regex → `DEFAULT_GALLERY` env var → the gallery-list page.
+
+Gotchas:
+
+- If two galleries' regexes both match the visitor's hostname, the frontend falls through to the next step (no redirect) since the match isn't unambiguous. Anchor your regexes with `^` and `$` to avoid accidental overlap.
+- The `/display/` and `/thumbnail/` aliases point at the **same** photo directory (the instance's `photos/`), so the bytes are shared across the per-gallery vhosts. That's intentional — galleries in the same instance are just different curations of the same photo pool.
+- `cdn` is a single meta value per instance, not per gallery. All the vhosts on one instance share it; usually that means setting `cdn` to one of the hostnames (say the primary one) and letting the others load images cross-origin from it.
 
 #### Operating an instance
 
