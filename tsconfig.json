@@ -1,0 +1,11 @@
+// Root-level tsconfig so the standalone `bin/instance.ts` (no workspace, no
+// project deps beyond `node:*`) gets the same compilerOptions as the rest of
+// the codebase when opened in an editor. Without this, the TS server falls
+// back to inferred-project defaults and `node:fs`, `process`, etc. show up
+// as undefined names. `npm run typecheck --workspace=<pkg>` still runs the
+// authoritative checks via each workspace's own tsconfig — this one only
+// covers the repo-root bin/.
+{
+  "extends": "./server/tsconfig.json",
+  "include": ["bin/*.ts"]
+}
