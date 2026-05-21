@@ -67,10 +67,13 @@ export default {
     await db.deleteUser(userId);
   },
 
-  loadUserAccessControl: async (
-    userId: string
-  ): Promise<Record<string, number>> => {
-    return await db.loadUserAccessControl(userId);
+  // Resolve the effective access_level for (userId, galleryId) under the
+  // user-first cascade. Returns undefined when no row applies.
+  resolveAccessLevel: async (
+    userId: string,
+    galleryId: string
+  ): Promise<number | undefined> => {
+    return await db.resolveAccessLevel(userId, galleryId);
   },
   loadUserGalleryRows: async (
     filter: { userId?: string; galleryId?: string } = {}
