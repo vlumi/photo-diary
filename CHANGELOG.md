@@ -22,6 +22,7 @@
 - Add a DB migration runner that uses `meta.schema_version` as the cursor; runs at server startup against the better-sqlite3 driver. Bootstraps fresh DBs from `db/sqlite3/migrations/001_baseline.sql`, then advances to v2 via `002_fix_gallery_photo_fk.sql` which rebuilds `gallery_photo` with the correct singular FK references (the long-standing `photos`/`galleries` typo). Drops the obsolete `schema/sqlite3.ddl`, `schema/migrate/sqlite3_from_0.ddl`, and `migrate_legacy_to_sqlite3.sh`.
 - Resolve the bundled-frontend static directory from `import.meta.dirname` (with `STATIC_DIR` override) so the server can be started from any working directory — needed for the multi-instance deploy where the code lives at a shared path and each instance has its own CWD.
 - Rename the `acl` table to `user_gallery` and its `level` column to `access_level` (migration 004) — the original names became misleading once the table grew non-access columns like `hide_map`. (closes #185)
+- Add `server/bin/access.ts` (`list` / `grant` / `revoke` / `hide-map` subcommands) for managing `user_gallery` rows without direct SQL; also fixes `loadUserAccessControl` to filter out `access_level=NULL` rows so privacy-only rows don't break access fall-through to `:all`. (closes #186)
 
 ### Frontend
 

@@ -27,7 +27,7 @@ Photo Diary is split into separate independent modules, each handling its own su
   - The directory layout is fixed: the `photos/` subdirectory of the instance dir holds the photo repository, and the SQLite DB file lives at `<instance>/db.sqlite3`. Symlink the subdirectories (or the whole instance dir) if you need them on a different disk.
 - Set `DB_DRIVER=sqlite3` in [server](server)/`.env`. The DB file is created at `<instance>/db.sqlite3` on first server start; the migration runner bootstraps the schema and applies any pending migrations on every start
 - Start [server](server) and [converter](converter) as background processes, e.g. via [pm2](https://pm2.keymetrics.io/) — both use `npm run prod` which invokes `pm2 start --interpreter tsx`
-- Seed the first user and at least one gallery via the operator scripts surfaced as `<instance>/bin/<name>.ts` symlinks (created by `bin/instance.ts`). E.g. `./bin/user.ts -u alice -p ...` and `./bin/gallery.ts --id dailybw --title "Daily B&W"`. To give the user admin access, insert a `user_gallery` row directly: `INSERT INTO user_gallery (user_id, gallery_id, access_level) VALUES ('alice', ':all', 2)` (access level 2 = admin, 1 = view). See [server/README.md](server/README.md) for the management scripts and the access-control model in detail.
+- Seed the first user and at least one gallery via the operator scripts surfaced as `<instance>/bin/<name>.ts` symlinks (created by `bin/instance.ts`). E.g. `./bin/user.ts -u alice -p ...` and `./bin/gallery.ts --id dailybw --title "Daily B&W"`. Grant the user admin access with `./bin/access.ts grant alice :all --level admin`. See [server/README.md](server/README.md) for the management scripts and the access-control model in detail.
 - Set the instance's `cdn` value (via `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'` or the `/api/v1/meta` API) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config
 
 ### Dev Mode
@@ -185,7 +185,7 @@ The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` sn
 | Converter logs "Invalid photo-repository directory structure" | The `photos/{inbox,original,display,thumbnail}/` subdirs aren't all present — re-run `./bin/instance.ts <name>` (or `bin/instance.ts <name>` from the code root) to recreate any missing ones (idempotent). |
 | `no such table: …` after upgrade | A migration didn't apply. Check `sqlite3 db.sqlite3 "SELECT value FROM meta WHERE key='schema_version'"` and the server log on startup for "Applying N DB migration(s)". |
 | Frontend loads but `/api/v1/galleries` 401s | The user's token expired or the `SECRET` changed across restarts — login again. |
-| Map widget missing where you expected it | The `hide_map` cascade is hiding it; check `SELECT * FROM user_gallery WHERE hide_map IS NOT NULL` and the privacy doc in the server README. |
+| Map widget missing where you expected it | The `hide_map` cascade is hiding it; check with `./bin/access.ts list` (filter to `--user <id>` or `--gallery <id>` if needed) and the privacy doc in the server README. |
 
 ## Features
 

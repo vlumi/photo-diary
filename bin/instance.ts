@@ -171,7 +171,7 @@ const instanceBinDir = path.join(instanceDir, "bin");
 // bootstrap and upgrade, and `./code/bin/instance.ts` for the rare doctor
 // re-run; a per-instance shortcut would be ambiguous about which code
 // version it points at.
-const OPERATOR_SCRIPTS = ["photo", "gallery", "user"];
+const OPERATOR_SCRIPTS = ["photo", "gallery", "user", "access"];
 
 // ---- run -----------------------------------------------------------------
 
@@ -304,10 +304,7 @@ if (mode === "new") {
   console.log("  ./code/converter/bin/start-prod.sh");
   console.log("  ./bin/user.ts -u <username> -p <password>");
   console.log(`  ./bin/gallery.ts --id ${name} --title "${name}"`);
-  console.log("  # Grant admin access via SQL (no flag for it on user yet):");
-  console.log(
-    "  #   sqlite3 db.sqlite3 \"INSERT INTO user_gallery (user_id, gallery_id, access_level) VALUES ('<username>', ':all', 2)\""
-  );
+  console.log("  ./bin/access.ts grant <username> :all --level admin");
 } else if (mode === "upgrade") {
   console.log("Upgrade prepared. Restart pm2 to activate:");
   console.log(`  pm2 restart ${name} ${name}-converter`);

@@ -27,6 +27,9 @@ export default () => {
     deleteUser: notImplemented,
 
     loadUserAccessControl,
+    loadUserGalleryRows: notImplemented,
+    upsertUserGallery: notImplemented,
+    deleteUserGallery: notImplemented,
     resolveHideMap,
 
     loadGalleries,

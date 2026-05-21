@@ -6,6 +6,7 @@ import type {
   Photo,
   PhotoInput,
   User,
+  UserGalleryRow,
 } from "./sqlite3/schema.js";
 
 const drivers = {
@@ -71,6 +72,22 @@ export default {
   ): Promise<Record<string, number>> => {
     return await db.loadUserAccessControl(userId);
   },
+  loadUserGalleryRows: async (
+    filter: { userId?: string; galleryId?: string } = {}
+  ): Promise<UserGalleryRow[]> => {
+    return await db.loadUserGalleryRows(filter);
+  },
+  upsertUserGallery: async (row: {
+    user_id: string;
+    gallery_id: string;
+    access_level?: number | null;
+    hide_map?: number | null;
+  }): Promise<void> => {
+    await db.upsertUserGallery(row);
+  },
+  deleteUserGallery: async (userId: string, galleryId: string): Promise<void> => {
+    await db.deleteUserGallery(userId, galleryId);
+  },
   // Resolve the privacy cascade for (userId, galleryId): looks at the
   // four `user_gallery` rows ((user, gallery), (:guest, gallery),
   // (user, :all), (:guest, :all)) in most-specific-first order, returning
@@ -135,4 +152,4 @@ export default {
 };
 
 // Re-export shared types so models can use them without reaching into the driver.
-export type { Gallery, GalleryInput, MetaRow, Photo, PhotoInput, User };
+export type { Gallery, GalleryInput, MetaRow, Photo, PhotoInput, User, UserGalleryRow };
