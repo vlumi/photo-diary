@@ -48,7 +48,7 @@ The SQLite DB file and the photo repository are **not** configured via env vars 
 The SQLite DB file and the photo repository are no longer configurable via env vars — they live at fixed locations relative to the server's working directory (which is the **instance directory** when launched via `start-prod.sh`):
 
 - **`<cwd>/db.sqlite3`** – the SQLite DB. If absent at first start, better-sqlite3 creates the file and the migration runner bootstraps the schema from `db/sqlite3/migrations/001_baseline.sql`. Subsequent starts apply any pending migrations from the same directory in version order, using the `meta.schema_version` row as the cursor. New migrations: drop `NNN_<description>.sql` (with a higher number than the last one) and end the file with `UPDATE meta SET value='NNN' WHERE key='schema_version';`.
-- **`<cwd>/photos/`** – the photo repository. Must contain the sub-directories `inbox`, `original`, `display`, `thumbnail`. Created automatically by `init-instance.ts`.
+- **`<cwd>/photos/`** – the photo repository. Must contain the sub-directories `inbox`, `original`, `display`, `thumbnail`. Created automatically by `<repo-root>/bin/instance.ts`.
 
 If you need the DB or photo dir on a separate disk, symlink the file (`db.sqlite3`), the subdirectory (`photos/`), or the whole instance dir.
 
@@ -64,22 +64,24 @@ If you need the DB or photo dir on a separate disk, symlink the file (`db.sqlite
 
 ### Management scripts
 
-Scripts under `bin/` are executable TypeScript (`#!/usr/bin/env -S npx tsx`). They read `.env` and resolve `db.sqlite3` from the **current working directory**, so run them from the instance directory (or via the instance's `code` symlink: `./code/server/bin/<script>.ts`). In a multi-instance deploy:
+`instance.ts` lives at `<repo-root>/bin/instance.ts` (it has no project deps — pure Node, so it can sit outside the workspace and be invoked directly when bootstrapping a new instance). The rest — `photo.ts`, `gallery.ts`, `user.ts` — live in `server/bin/` because they import the server's DB/logger/etc. All four are executable (`#!/usr/bin/env -S npx tsx`) and read `.env` from the **current working directory**, so run them from the instance directory:
 
 ```sh
 cd /var/photo-diary/dailybw
-./code/server/bin/<script>.ts [options]
+./bin/<name>.ts [options]   # via the per-instance bin/ symlinks created by instance.ts
 ```
 
-#### `init-instance.ts <name> [--base <dir>] [--fix]`
+The per-instance `bin/` directory (`<instance>/bin/{photo,gallery,user}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognise them as TS source and apply the server's tsconfig via realpath.
+
+#### `instance.ts <name> [--base <dir>] [--fix]`
 
 Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. Default base is `/var/photo-diary`. Mode is auto-detected from existing state:
 
-- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root.
-- **Doctor** — instance exists, `code` already points at this script's root. Reports missing `.env` keys with `✓`/`✗` markers. Add `--fix` to append defaults.
-- **Upgrade** — `code` points at a different version. Backs up the DB to `db.sqlite3.pre-<new-version>` and flips the symlink.
+- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root, and creates the per-instance `bin/{photo,gallery,user}.ts` shortcuts.
+- **Doctor** — instance exists, `code` already points at this script's root. Reports missing `.env` keys with `✓`/`✗` markers. Refreshes any missing `bin/` shortcuts. Add `--fix` to append defaults to `.env`.
+- **Upgrade** — `code` points at a different version. Backs up the DB to `db.sqlite3.pre-<new-version>` and flips the symlink. Refreshes `bin/` shortcuts.
 
-#### `add-user.ts [options]`
+#### `user.ts [options]`
 
 | Flag | Purpose |
 | --- | --- |
@@ -95,7 +97,7 @@ sqlite3 db.sqlite3 \
 # level: 0 = none, 1 = view, 2 = admin
 ```
 
-#### `add-gallery.ts [options]`
+#### `gallery.ts [options]`
 
 Creates or updates a single gallery row. Always requires `--id`.
 
@@ -110,7 +112,7 @@ Creates or updates a single gallery row. Always requires `--id`.
 | `--initial_view <view>` | One of `year`, `month`, `day`, `photo` — where the gallery lands when entered. |
 | `--hostname <regex>` | Hostname regex (e.g. `^travel\.` ) that this gallery should be the default for. Lets a single instance serve multiple vhosts (see the nginx section in the top-level README). |
 
-#### `add-photo.ts [options] [json-or-jpg-files…]`
+#### `photo.ts [options] [json-or-jpg-files…]`
 
 Registers photos in the DB and (optionally) links them to one or more galleries. Accepts either JSON sidecars produced by the converter or bare JPG paths (the bare-JPG mode stores just the filename as the photo ID, no EXIF).
 
@@ -129,7 +131,7 @@ Registers photos in the DB and (optionally) links them to one or more galleries.
 Overrides apply to every photo in the invocation, so this is the natural way to tag a whole trip:
 
 ```sh
-./code/server/bin/add-photo.ts photos/inbox/*.json \
+./bin/photo.ts photos/inbox/*.json \
   --gallery dailybw \
   --country jp \
   --place "Yokohama, Kanagawa"

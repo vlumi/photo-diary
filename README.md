@@ -27,7 +27,7 @@ Photo Diary is split into separate independent modules, each handling its own su
   - The directory layout is fixed: the `photos/` subdirectory of the instance dir holds the photo repository, and the SQLite DB file lives at `<instance>/db.sqlite3`. Symlink the subdirectories (or the whole instance dir) if you need them on a different disk.
 - Set `DB_DRIVER=sqlite3` in [server](server)/`.env`. The DB file is created at `<instance>/db.sqlite3` on first server start; the migration runner bootstraps the schema and applies any pending migrations on every start
 - Start [server](server) and [converter](converter) as background processes, e.g. via [pm2](https://pm2.keymetrics.io/) — both use `npm run prod` which invokes `pm2 start --interpreter tsx`
-- Seed the first user and at least one gallery with the management scripts in [server/bin/](server/bin/), e.g. `./bin/add-user.ts -u alice -p ...` and `./bin/add-gallery.ts --id dailybw --title "Daily B&W"`. To give the user admin access, insert an ACL row directly: `INSERT INTO acl (user_id, gallery_id, level) VALUES ('alice', ':all', 2)` (level 2 = admin, level 1 = view). See [server/README.md](server/README.md) for the management scripts and the access-control model in detail.
+- Seed the first user and at least one gallery via the operator scripts surfaced as `<instance>/bin/<name>.ts` symlinks (created by `bin/instance.ts`). E.g. `./bin/user.ts -u alice -p ...` and `./bin/gallery.ts --id dailybw --title "Daily B&W"`. To give the user admin access, insert an ACL row directly: `INSERT INTO acl (user_id, gallery_id, level) VALUES ('alice', ':all', 2)` (level 2 = admin, level 1 = view). See [server/README.md](server/README.md) for the management scripts and the access-control model in detail.
 - Set the instance's `cdn` value (via `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'` or the `/api/v1/meta` API) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config
 
 ### Dev Mode
@@ -35,7 +35,7 @@ Photo Diary is split into separate independent modules, each handling its own su
 Mirror the prod layout with a dev "instance" inside the repo. The init script wires it up the same way as a real deploy, but with the `code` symlink pointing at the live source:
 
 ```sh
-./server/bin/init-instance.ts dev --base .
+./bin/instance.ts dev --base .
 ```
 
 That gives you `<repo>/dev/` with `.env`, `photos/{inbox,…,thumbnail}/`, `code → <repo>`. Each of server, converter, and react-app has a `bin/start-dev.sh` wrapper — run them in the foreground (tsx watch / vite, no pm2):
@@ -103,13 +103,13 @@ Repeat this block for each new version you want to land on this host.
 
 #### Bootstrapping a new instance
 
-The `init-instance` script handles directory creation, `.env` generation (with a fresh random `SECRET`), and the `code` symlink in one shot. Invoke it from the version of the code you want the instance to run:
+The `bin/instance.ts` script handles directory creation, `.env` generation (with a fresh random `SECRET`), the `code` symlink, and the per-instance `bin/` shortcuts in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary/0.7.0/server/bin/init-instance.ts dailybw
+/opt/photo-diary/0.7.0/bin/instance.ts dailybw
 ```
 
-That creates `/var/photo-diary/dailybw/` with everything wired up. The script can be invoked from any working directory — the instance dir is derived from the name (and the `--base <dir>` flag, default `/var/photo-diary`, if you want instances under a different parent). Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
+That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The script can be invoked from any working directory; the instance dir is derived from the name (and the `--base <dir>` flag, default `/var/photo-diary`, if you want instances under a different parent). Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
 
 The generated `.env` covers the required keys. Optional per-instance frontend defaults can be added — these flow through `/api/v1/meta` to the frontend on boot:
 
@@ -130,15 +130,15 @@ Both `start-prod.sh` scripts source `.env` from the current working directory, t
 
 #### Upgrading an instance
 
-Re-run `init-instance.ts` from the new version of the code:
+Re-run `bin/instance.ts` from the new version of the code:
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.8.0/server/bin/init-instance.ts dailybw   # backs up the DB, flips the symlink
-pm2 restart dailybw dailybw-converter                         # migration runner applies any schema bumps
+/opt/photo-diary/0.8.0/bin/instance.ts dailybw   # backs up the DB, flips the symlink
+pm2 restart dailybw dailybw-converter         # migration runner applies any schema bumps
 ```
 
-The DB backup is named `<dbname>.sqlite3.pre-<new-version>` — a plain file copy that assumes the instance is stopped (started instances may have an inconsistent backup). Rollback is manual: `cp <dbname>.sqlite3.pre-<version> <dbname>.sqlite3`, point `code` back at the older version, restart pm2.
+The DB backup is named `db.sqlite3.pre-<new-version>` — a plain file copy that assumes the instance is stopped (started instances may have an inconsistent backup). Rollback is manual: `cp db.sqlite3.pre-<version> db.sqlite3`, point `code` back at the older version, restart pm2.
 
 nginx (one server block per instance, proxying to its `PORT`; the `cdn` URL serves `display/` and `thumbnail/` directly):
 
@@ -175,14 +175,14 @@ Log files live at `~/.pm2/logs/<name>-out.log` and `~/.pm2/logs/<name>-error.log
 - `<instance>/db.sqlite3` — the source of truth for users, galleries, ACL, and photo metadata. Plain `cp` works if pm2 is stopped; for live backups use the SQLite online-backup API: `sqlite3 db.sqlite3 ".backup '/backups/$(date +%F)-db.sqlite3'"`.
 - `<instance>/photos/{original,display,thumbnail}/` — the bytes themselves. `inbox/` is transient (the converter empties it), no need to back it up.
 
-The `init-instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` snapshots before flipping the `code` symlink — those are good restore points for a downgrade, but they're not a substitute for off-host backups.
+The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` snapshots before flipping the `code` symlink — those are good restore points for a downgrade, but they're not a substitute for off-host backups.
 
 **Common symptoms and where to look:**
 
 | Symptom | First thing to check |
 | --- | --- |
 | Server won't start | `pm2 logs <name>` — most common: missing `SECRET` in `.env`, port already in use, or the migration runner threw on a DB inconsistency. |
-| Converter logs "Invalid photo-repository directory structure" | The `photos/{inbox,original,display,thumbnail}/` subdirs aren't all present — re-run `init-instance.ts <name>` to recreate any missing ones (idempotent). |
+| Converter logs "Invalid photo-repository directory structure" | The `photos/{inbox,original,display,thumbnail}/` subdirs aren't all present — re-run `./bin/instance.ts <name>` (or `bin/instance.ts <name>` from the code root) to recreate any missing ones (idempotent). |
 | `no such table: …` after upgrade | A migration didn't apply. Check `sqlite3 db.sqlite3 "SELECT value FROM meta WHERE key='schema_version'"` and the server log on startup for "Applying N DB migration(s)". |
 | Frontend loads but `/api/v1/galleries` 401s | The user's token expired or the `SECRET` changed across restarts — login again. |
 | Map widget missing where you expected it | The `hide_map` ACL cascade is hiding it; check `SELECT * FROM acl WHERE hide_map IS NOT NULL` and the privacy doc in the server README. |
@@ -264,12 +264,12 @@ End-to-end flow from a new JPG arriving on the host to it being browsable in the
 
 1. **Drop into `inbox/`.** Copy/move a JPG (or other supported format) into the instance's `photos/inbox/` directory. The converter watches this path (via chokidar) and picks the file up immediately.
 2. **Converter processes the file.** [converter](converter) reads the EXIF, generates display- and thumbnail-sized renditions (via sharp), and writes them to `photos/display/<name>.jpg` and `photos/thumbnail/<name>.jpg`. The extracted EXIF lands as a sibling JSON in `photos/inbox/<name>.json`. The original JPG is moved to `photos/original/<name>.jpg`. Result: the photo is on disk in three sizes, plus a JSON metadata file ready for ingestion.
-3. **Register in the DB.** Run `./code/server/bin/add-photo.ts photos/inbox/*.json --gallery <id>` from the instance dir. This reads each JSON, inserts a `photo` row with all the extracted EXIF (timestamp, camera, lens, geo, dimensions), and links the photo to the named gallery(ies) via `gallery_photo`. After this step the photo appears in the gallery on next page load.
+3. **Register in the DB.** Run `./bin/photo.ts photos/inbox/*.json --gallery <id>` from the instance dir. This reads each JSON, inserts a `photo` row with all the extracted EXIF (timestamp, camera, lens, geo, dimensions), and links the photo to the named gallery(ies) via `gallery_photo`. After this step the photo appears in the gallery on next page load.
 4. **(Optional) clean up.** The `inbox/*.json` files have served their purpose once ingested. They're harmless to leave but you can move/delete them to keep the inbox tidy.
 
-The pipeline is intentionally split: the converter doesn't touch the DB at all, and the server doesn't read from the inbox. That lets you bulk-process a backlog of photos with the converter, eyeball the JSON sidecars, and then register them in batches via `add-photo.ts` with overrides applied if needed (e.g. `--country jp --place "Yokohama, Kanagawa"` for a whole trip).
+The pipeline is intentionally split: the converter doesn't touch the DB at all, and the server doesn't read from the inbox. That lets you bulk-process a backlog of photos with the converter, eyeball the JSON sidecars, and then register them in batches via `./bin/photo.ts` with overrides applied if needed (e.g. `--country jp --place "Yokohama, Kanagawa"` for a whole trip).
 
-`add-photo.ts` also accepts JPG paths directly instead of JSON: in that mode it registers a bare `photo` row with no EXIF data (just the filename as the ID), useful when the metadata isn't worth recovering.
+`./bin/photo.ts` also accepts JPG paths directly instead of JSON: in that mode it registers a bare `photo` row with no EXIF data (just the filename as the ID), useful when the metadata isn't worth recovering.
 
 ## Roadmap
 

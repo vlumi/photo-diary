@@ -19,7 +19,7 @@
  *   `code` symlink, then run doctor.
  *
  * Usage:
- *   ./code/server/bin/init-instance.ts <name> [--base <dir>] [--fix]
+ *   ./code/bin/instance.ts <name> [--base <dir>] [--fix]
  *
  * Where `<name>` is the instance directory name under `<base>` (default
  * `/var/photo-diary`). The script always treats its own code root as the
@@ -43,8 +43,8 @@ interface RequiredKey {
 // ---- constants -----------------------------------------------------------
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-// server/bin/ → server/ → repo root
-const CODE_ROOT = path.resolve(SCRIPT_DIR, "..", "..");
+// bin/ → repo root
+const CODE_ROOT = path.resolve(SCRIPT_DIR, "..");
 
 const REQUIRED_DIRS = [
   "photos",
@@ -138,7 +138,7 @@ const appendMissingKeys = (
   const additions = missing
     .map(({ key, description, default: d }) => `# ${description}\n${key}=${d(ctx)}\n`)
     .join("\n");
-  fs.appendFileSync(filePath, `\n# Added by init-instance\n${additions}`);
+  fs.appendFileSync(filePath, `\n# Added by bin/instance\n${additions}`);
   return missing.map((m) => m.key);
 };
 
@@ -152,7 +152,7 @@ const fix = args.includes("--fix");
 
 if (!name || name.startsWith("--")) {
   console.error(
-    "Usage: init-instance.ts <name> [--base <dir>] [--fix]\n" +
+    "Usage: bin/instance.ts <name> [--base <dir>] [--fix]\n" +
       "  <name>     directory name under --base (default /var/photo-diary)\n" +
       "  --fix      append missing required keys to an existing .env (doesn't touch existing values)"
   );
@@ -162,6 +162,16 @@ if (!name || name.startsWith("--")) {
 const instanceDir = path.resolve(base, name);
 const envPath = path.join(instanceDir, ".env");
 const codeLinkPath = path.join(instanceDir, "code");
+const instanceBinDir = path.join(instanceDir, "bin");
+
+// Routine operator scripts surfaced as `<instance>/bin/<name>.ts` symlinks
+// pointing at `<instance>/code/server/bin/<name>.ts`. `instance` itself is
+// deliberately not in this list — it's invoked via the absolute path of the
+// version you want (`/opt/photo-diary/<version>/bin/instance.ts <name>`) for
+// bootstrap and upgrade, and `./code/bin/instance.ts` for the rare doctor
+// re-run; a per-instance shortcut would be ambiguous about which code
+// version it points at.
+const OPERATOR_SCRIPTS = ["photo", "gallery", "user"];
 
 // ---- run -----------------------------------------------------------------
 
@@ -244,6 +254,38 @@ if (previousCodeTarget !== CODE_ROOT) {
   );
 }
 
+// 5b. Operator-script shortcuts in <instance>/bin/. The `.ts` extension is
+// kept (rather than bare names) so the symlinks resolve through the
+// `<code>/server/tsconfig.json` project when opened in an editor — opening
+// a bare-name file would fall back to inferred-project defaults and show
+// spurious "Cannot find module" errors on every import.
+fs.mkdirSync(instanceBinDir, { recursive: true });
+const createdShortcuts: string[] = [];
+for (const script of OPERATOR_SCRIPTS) {
+  const filename = `${script}.ts`;
+  const linkPath = path.join(instanceBinDir, filename);
+  const targetRelative = path.join("..", "code", "server", "bin", filename);
+  const current = (() => {
+    try {
+      return fs.readlinkSync(linkPath);
+    } catch {
+      return null;
+    }
+  })();
+  if (current === targetRelative) continue;
+  if (current !== null || fs.existsSync(linkPath)) {
+    fs.unlinkSync(linkPath);
+  }
+  fs.symlinkSync(targetRelative, linkPath);
+  createdShortcuts.push(filename);
+}
+if (createdShortcuts.length > 0) {
+  console.log(
+    `✓ ${createdShortcuts.length === OPERATOR_SCRIPTS.length ? "Created" : "Refreshed"} ` +
+      `bin/ shortcuts: ${createdShortcuts.join(", ")}`
+  );
+}
+
 // 6. Directories report (doctor)
 console.log();
 console.log("Directories:");
@@ -260,8 +302,12 @@ if (mode === "new") {
   console.log(`  cd ${instanceDir}`);
   console.log("  ./code/server/bin/start-prod.sh");
   console.log("  ./code/converter/bin/start-prod.sh");
-  console.log("  ./code/server/bin/add-user.ts --admin -u <username> -p <password>");
-  console.log(`  ./code/server/bin/add-gallery.ts -i ${name} -t "${name}"`);
+  console.log("  ./bin/user.ts -u <username> -p <password>");
+  console.log(`  ./bin/gallery.ts --id ${name} --title "${name}"`);
+  console.log("  # Grant admin access via SQL (no flag for it on user yet):");
+  console.log(
+    "  #   sqlite3 db.sqlite3 \"INSERT INTO acl (user_id, gallery_id, level) VALUES ('<username>', ':all', 2)\""
+  );
 } else if (mode === "upgrade") {
   console.log("Upgrade prepared. Restart pm2 to activate:");
   console.log(`  pm2 restart ${name} ${name}-converter`);
