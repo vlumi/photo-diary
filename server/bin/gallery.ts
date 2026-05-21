@@ -56,6 +56,7 @@ if (existing) {
   if ("epoch_type" in argv) updates.epoch_type = argv.epoch_type as string;
   if ("theme" in argv) updates.theme = argv.theme as string;
   if ("initial_view" in argv) updates.initial_view = argv.initial_view as string;
+  if ("hostname" in argv) updates.hostname = argv.hostname as string;
   await db.updateGallery(existing.id, updates);
   console.log(`✓ Updated gallery "${galleryId}".`);
 } else {
@@ -67,6 +68,7 @@ if (existing) {
     epochType: argv.epoch_type as string | undefined,
     theme: argv.theme as string | undefined,
     initialView: argv.initial_view as string | undefined,
+    hostname: argv.hostname as string | undefined,
   });
   console.log(`✓ Created gallery "${galleryId}".`);
 }
