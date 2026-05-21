@@ -70,70 +70,81 @@ describe("User", () => {
     ));
 });
 
-describe("ACL", () => {
-  const cols = ["user_id", "gallery_id", "level", "hide_map"].join(",");
+describe("UserGallery", () => {
+  const cols = ["user_id", "gallery_id", "access_level", "hide_map"].join(",");
   test("Build create query", () =>
-    expect(schema.acl.buildCreateQuery()).toBe(
-      `INSERT INTO acl (${cols}) VALUES (?,?,?,?)`
+    expect(schema.userGallery.buildCreateQuery()).toBe(
+      `INSERT INTO user_gallery (${cols}) VALUES (?,?,?,?)`
     ));
   test("Build select by id query", () =>
-    expect(schema.acl.buildSelectByIdQuery()).toBe(
-      `SELECT ${cols} FROM acl WHERE user_id = ? AND gallery_id = ? ORDER BY user_id ASC,gallery_id ASC`
+    expect(schema.userGallery.buildSelectByIdQuery()).toBe(
+      `SELECT ${cols} FROM user_gallery WHERE user_id = ? AND gallery_id = ? ORDER BY user_id ASC,gallery_id ASC`
     ));
   test("Build update by id query: nothing", () =>
-    expect(schema.acl.buildUpdateByIdQuery({})).toStrictEqual({
+    expect(schema.userGallery.buildUpdateByIdQuery({})).toStrictEqual({
       query: undefined,
       values: undefined,
     }));
   test("Build update by id query: user_id", () =>
-    expect(schema.acl.buildUpdateByIdQuery({ user_id: "foo" })).toStrictEqual({
+    expect(
+      schema.userGallery.buildUpdateByIdQuery({ user_id: "foo" })
+    ).toStrictEqual({
       query: undefined,
       values: undefined,
     }));
   test("Build update by id query: gallery_id", () =>
     expect(
-      schema.acl.buildUpdateByIdQuery({ gallery_id: "foo" })
+      schema.userGallery.buildUpdateByIdQuery({ gallery_id: "foo" })
     ).toStrictEqual({
       query: undefined,
       values: undefined,
     }));
   test("Build update by id query: user_id, gallery_id", () =>
     expect(
-      schema.acl.buildUpdateByIdQuery({ user_id: "foo", gallery_id: "bar" })
+      schema.userGallery.buildUpdateByIdQuery({
+        user_id: "foo",
+        gallery_id: "bar",
+      })
     ).toStrictEqual({ query: undefined, values: undefined }));
-  test("Build update by id query: level", () =>
-    expect(schema.acl.buildUpdateByIdQuery({ level: 2 })).toStrictEqual({
-      query: "UPDATE acl SET level=? WHERE user_id = ? AND gallery_id = ?",
+  test("Build update by id query: access_level", () =>
+    expect(
+      schema.userGallery.buildUpdateByIdQuery({ access_level: 2 })
+    ).toStrictEqual({
+      query:
+        "UPDATE user_gallery SET access_level=? WHERE user_id = ? AND gallery_id = ?",
       values: [2],
     }));
   test("Build update by id query: all", () =>
     expect(
-      schema.acl.buildUpdateByIdQuery({
+      schema.userGallery.buildUpdateByIdQuery({
         user_id: "foo",
         gallery_id: "bar",
-        level: 2,
+        access_level: 2,
       })
     ).toStrictEqual({
-      query: "UPDATE acl SET level=? WHERE user_id = ? AND gallery_id = ?",
+      query:
+        "UPDATE user_gallery SET access_level=? WHERE user_id = ? AND gallery_id = ?",
       values: [2],
     }));
   test("Build delete by id query", () =>
-    expect(schema.acl.buildDeleteByIdQuery()).toBe(
-      "DELETE FROM acl WHERE user_id = ? AND gallery_id = ?"
+    expect(schema.userGallery.buildDeleteByIdQuery()).toBe(
+      "DELETE FROM user_gallery WHERE user_id = ? AND gallery_id = ?"
     ));
   test("Build select all query", () =>
-    expect(schema.acl.buildSelectQuery()).toBe(
-      `SELECT ${cols} FROM acl ORDER BY user_id ASC,gallery_id ASC`
+    expect(schema.userGallery.buildSelectQuery()).toBe(
+      `SELECT ${cols} FROM user_gallery ORDER BY user_id ASC,gallery_id ASC`
     ));
   test("Build select by condition query", () =>
-    expect(schema.acl.buildSelectQuery(["id = ?"])).toBe(
-      `SELECT ${cols} FROM acl WHERE id = ? ORDER BY user_id ASC,gallery_id ASC`
+    expect(schema.userGallery.buildSelectQuery(["id = ?"])).toBe(
+      `SELECT ${cols} FROM user_gallery WHERE id = ? ORDER BY user_id ASC,gallery_id ASC`
     ));
   test("Build delete all query", () =>
-    expect(schema.acl.buildDeleteQuery()).toBe("DELETE FROM acl"));
+    expect(schema.userGallery.buildDeleteQuery()).toBe(
+      "DELETE FROM user_gallery"
+    ));
   test("Build delete by condition query", () =>
-    expect(schema.acl.buildDeleteQuery(["id = ?"])).toBe(
-      "DELETE FROM acl WHERE id = ?"
+    expect(schema.userGallery.buildDeleteQuery(["id = ?"])).toBe(
+      "DELETE FROM user_gallery WHERE id = ?"
     ));
 });
 

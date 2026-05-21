@@ -72,9 +72,9 @@ export default {
     return await db.loadUserAccessControl(userId);
   },
   // Resolve the privacy cascade for (userId, galleryId): looks at the
-  // four ACL rows ((user, gallery), (:guest, gallery), (user, :all),
-  // (:guest, :all)) in most-specific-first order, returning the first
-  // non-null `hide_map`. Undefined when no level has an opinion.
+  // four `user_gallery` rows ((user, gallery), (:guest, gallery),
+  // (user, :all), (:guest, :all)) in most-specific-first order, returning
+  // the first non-null `hide_map`. Undefined when no level has an opinion.
   resolveHideMap: async (
     userId: string,
     galleryId: string

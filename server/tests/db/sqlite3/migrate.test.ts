@@ -33,24 +33,26 @@ describe("migrate", () => {
   test("fresh DB runs every migration and lands at the highest version", () => {
     const db = open();
     migrate(db);
-    expect(schemaVersion(db)).toBe(3);
+    expect(schemaVersion(db)).toBe(4);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
-        "acl",
         "gallery",
         "gallery_photo",
         "meta",
         "photo",
         "user",
+        "user_gallery",
       ])
     );
     // 002 rebuilt gallery_photo with singular FK refs.
     expect(gallerPhotoFkRefs(db).sort()).toEqual(["gallery", "photo"]);
-    // 003 added hide_map to acl.
-    const aclCols = (db.pragma("table_info(acl)") as { name: string }[]).map(
-      (r) => r.name
-    );
-    expect(aclCols).toContain("hide_map");
+    // 003 added hide_map; 004 renamed acl → user_gallery and level → access_level.
+    const userGalleryCols = (
+      db.pragma("table_info(user_gallery)") as { name: string }[]
+    ).map((r) => r.name);
+    expect(userGalleryCols).toContain("hide_map");
+    expect(userGalleryCols).toContain("access_level");
+    expect(userGalleryCols).not.toContain("level");
   });
 
   test("re-running on an up-to-date DB is a no-op", () => {
@@ -97,7 +99,7 @@ describe("migrate", () => {
 
     migrate(db);
 
-    expect(schemaVersion(db)).toBe(3);
+    expect(schemaVersion(db)).toBe(4);
     expect(gallerPhotoFkRefs(db).sort()).toEqual(["gallery", "photo"]);
     const rows = db.prepare("SELECT * FROM gallery_photo").all();
     expect(rows).toEqual([{ gallery_id: "g1", photo_id: "p1" }]);

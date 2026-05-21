@@ -3,9 +3,9 @@ import db from "../db/index.js";
 /**
  * Resolves the privacy cascade for the map / photo coordinates.
  *
- * The cascade lives entirely in the `acl` table, leveraging the existing
- * `:guest` user and `:all` gallery sentinels. The most specific ACL row
- * with a non-null `hide_map` wins:
+ * The cascade lives entirely in the `user_gallery` table, leveraging the
+ * existing `:guest` user and `:all` gallery sentinels. The most specific
+ * row with a non-null `hide_map` wins:
  *
  *   1. (userId,  galleryId) — per-user, per-gallery
  *   2. (:guest,  galleryId) — per-gallery default

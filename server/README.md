@@ -89,12 +89,12 @@ Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. D
 | `-u <id>`, `--user <id>` | User ID to create or update. |
 | `-p <pw>`, `--password <pw>` | Password (will be bcrypt-hashed before storage). |
 
-Either `--list` or both `--user` and `--password` are required. Running with `-u`/`-p` updates the user if it exists, creates it otherwise. Setting an admin level is a separate step — the script doesn't touch the ACL. Grant access manually:
+Either `--list` or both `--user` and `--password` are required. Running with `-u`/`-p` updates the user if it exists, creates it otherwise. Setting an admin level is a separate step — the script doesn't touch the `user_gallery` table. Grant access manually:
 
 ```sh
 sqlite3 db.sqlite3 \
-  "INSERT INTO acl (user_id, gallery_id, level) VALUES ('alice', ':all', 2)"
-# level: 0 = none, 1 = view, 2 = admin
+  "INSERT INTO user_gallery (user_id, gallery_id, access_level) VALUES ('alice', ':all', 2)"
+# access_level: 0 = none, 1 = view, 2 = admin
 ```
 
 #### `gallery.ts [options]`

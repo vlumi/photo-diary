@@ -6,7 +6,6 @@ import logger from "../../lib/logger.js";
 import { migrate } from "./migrate.js";
 
 import schemaFactory, {
-  type AclRow,
   type Gallery,
   type GalleryInput,
   type GalleryPhoto,
@@ -15,6 +14,7 @@ import schemaFactory, {
   type PhotoInput,
   type PhotoRow,
   type User,
+  type UserGalleryRow,
   type UserRow,
 } from "./schema.js";
 
@@ -117,18 +117,18 @@ const deleteUser = async (userId: string) => deleteById(SCHEMA.user, userId);
 const loadUserAccessControl = async (
   userId: string
 ): Promise<Record<string, number>> => {
-  const schema = SCHEMA.acl;
+  const schema = SCHEMA.userGallery;
   // TODO: cache in memory
   const stmt = db.prepare(schema.buildSelectQuery(["user_id IN (?)"]));
-  const userRows = stmt.all([userId]) as AclRow[];
-  const guestRows = stmt.all([":guest"]) as AclRow[];
+  const userRows = stmt.all([userId]) as UserGalleryRow[];
+  const guestRows = stmt.all([":guest"]) as UserGalleryRow[];
   return {
     ...Object.fromEntries(guestRows.map(schema.mapRow)),
     ...Object.fromEntries(userRows.map(schema.mapRow)),
   };
 };
-// Resolve the privacy cascade for (userId, galleryId) in one query.
-// Returns the most specific ACL row's `hide_map` (1, 0, or null) considering
+// Resolve the privacy cascade for (userId, galleryId) in one query. Returns
+// the most specific `user_gallery` row's `hide_map` (1, 0, or null) considering
 // the four-cell hierarchy: (user, gallery) > (':guest', gallery) >
 // (user, ':all') > (':guest', ':all'). Rows with null `hide_map` are skipped
 // so a less-specific row's non-null value can win. Returns undefined when
@@ -139,7 +139,7 @@ const resolveHideMap = async (
 ): Promise<number | undefined> => {
   const row = db
     .prepare(
-      `SELECT hide_map FROM acl
+      `SELECT hide_map FROM user_gallery
        WHERE (user_id = ? OR user_id = ':guest')
          AND (gallery_id = ? OR gallery_id = ':all')
          AND hide_map IS NOT NULL
