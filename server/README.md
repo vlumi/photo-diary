@@ -98,19 +98,19 @@ Manages rows in the `user_gallery` table — access level (view / admin) and the
 | Subcommand | Purpose |
 | --- | --- |
 | `list [--user <id>] [--gallery <id>]` | Print existing rows as a table. Optional filters narrow to one user, one gallery, or both. |
-| `grant <user> <gallery> --level <view\|admin>` | Upsert an access row. Preserves any existing `hide_map` value on the same pair. |
+| `grant <user> <gallery> <view\|admin>` | Upsert an access row. Preserves any existing `hide_map` value on the same pair. |
 | `revoke <user> <gallery> [--yes]` | Delete the row entirely (clears both access and `hide_map`). Asks for confirmation unless `--yes` is given. |
-| `hide-map <user> <gallery> --on\|--off\|--default` | Set or clear the privacy toggle. `--default` clears the override so the cascade falls through to a less-specific row. |
+| `hide-map <user> <gallery> <hide\|show\|default>` | Set or clear the privacy toggle. `default` clears the override so the cascade falls through to a less-specific row. |
 
 Examples:
 
 ```sh
-./bin/access.ts grant alice :all --level admin     # alice gets admin everywhere
-./bin/access.ts grant :guest :all --level view     # public visitors can view everything
-./bin/access.ts hide-map :guest dailybw --on       # hide map for guests on one gallery
-./bin/access.ts hide-map alice dailybw --default   # clear alice's override on that gallery
-./bin/access.ts list --user alice                  # show alice's rows
-./bin/access.ts revoke alice travel                # delete the row (with confirmation)
+./bin/access.ts grant alice :all admin            # alice gets admin everywhere
+./bin/access.ts grant :guest :all view            # public visitors can view everything
+./bin/access.ts hide-map :guest dailybw hide      # hide map for guests on one gallery
+./bin/access.ts hide-map alice dailybw default    # clear alice's override on that gallery
+./bin/access.ts list --user alice                 # show alice's rows
+./bin/access.ts revoke alice travel               # delete the row (with confirmation)
 ```
 
 The cascade resolution lives in [server/lib/privacy.ts](lib/privacy.ts) and `loadUserAccessControl` in [server/db/sqlite3/index.ts](db/sqlite3/index.ts) — privacy-only rows (those with `access_level=NULL`) are filtered out of the access map so they don't break access fall-through to `:all`.

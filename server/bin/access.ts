@@ -9,9 +9,9 @@
  * Subcommands:
  *
  *   access.ts list [--user <id>] [--gallery <id>]
- *   access.ts grant <user> <gallery> --level <view|admin>
+ *   access.ts grant <user> <gallery> <view|admin>
  *   access.ts revoke <user> <gallery> [--yes]
- *   access.ts hide-map <user> <gallery> --on | --off | --default
+ *   access.ts hide-map <user> <gallery> <hide|show|default>
  *
  * `:guest` (the sentinel user) and `:all` (the sentinel gallery) are accepted
  * directly as the positional arguments — the operator doesn't have to quote
@@ -87,13 +87,13 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
-    "grant <user> <gallery>",
-    "Grant access (view or admin) for a user × gallery pair",
+    "grant <user> <gallery> <level>",
+    "Grant access for a user × gallery pair",
     (y) =>
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
         .positional("gallery", { describe: "Gallery ID (or :all)", type: "string", demandOption: true })
-        .option("level", {
+        .positional("level", {
           describe: "Access level",
           choices: ["view", "admin"] as const,
           demandOption: true,
@@ -129,28 +129,20 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
-    "hide-map <user> <gallery>",
-    "Set or clear the hide_map privacy toggle for a user × gallery pair",
+    "hide-map <user> <gallery> <state>",
+    "Set the map privacy toggle for a user × gallery pair",
     (y) =>
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
         .positional("gallery", { describe: "Gallery ID (or :all)", type: "string", demandOption: true })
-        .option("on", { describe: "Hide the map for this pair", type: "boolean", default: false })
-        .option("off", { describe: "Show the map for this pair", type: "boolean", default: false })
-        .option("default", {
-          describe: "Clear the override (inherit from less-specific row)",
-          type: "boolean",
-          default: false,
-        })
-        .check((argv) => {
-          const set = [argv.on, argv.off, argv.default].filter(Boolean).length;
-          if (set !== 1) {
-            throw new Error("Exactly one of --on, --off, --default is required");
-          }
-          return true;
+        .positional("state", {
+          describe:
+            "hide = hide the map; show = show the map; default = clear override (inherit from less-specific row)",
+          choices: ["hide", "show", "default"] as const,
+          demandOption: true,
         }),
     async (argv) => {
-      const value = argv.on ? 1 : argv.off ? 0 : null;
+      const value = argv.state === "hide" ? 1 : argv.state === "show" ? 0 : null;
       await db.upsertUserGallery({
         user_id: argv.user,
         gallery_id: argv.gallery,
