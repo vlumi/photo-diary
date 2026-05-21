@@ -198,6 +198,8 @@ Get the cert via `certbot --nginx -d dailybw.example.com` (it'll insert the `ssl
 
 Use a different `PORT` per instance (set in each instance's `.env`) — pm2 ensures the right server gets the right port.
 
+**Don't expose `inbox/` or `original/`.** Only `display/` and `thumbnail/` are meant to be public. `inbox/` is the converter's working directory — it holds the raw camera files (full EXIF, original resolution) until the converter processes them and moves the sanitized output into `display`/`thumbnail`. `original/` holds the archived originals long-term. If you write a catch-all `location ~ /(display|thumbnail|inbox|original|…)` regex against the photo root, you're publishing both. Stick to per-directory `alias` blocks or anchor the regex to just the public dirs (e.g. `^/(display|thumbnail)/`).
+
 #### Per-gallery vhost mapping
 
 A single instance can serve multiple hostnames, each landing the visitor on a different gallery, without spinning up a separate instance. The mechanism is the `hostname` regex column on the `gallery` row — when the frontend boots on a host that exactly one gallery's regex matches, it redirects to that gallery instead of the gallery-list page.
