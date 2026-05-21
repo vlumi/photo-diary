@@ -26,7 +26,7 @@ export default () => {
     updateUser,
     deleteUser: notImplemented,
 
-    loadUserAccessControl,
+    resolveAccessLevel,
     loadUserGalleryRows: notImplemented,
     upsertUserGallery: notImplemented,
     deleteUserGallery: notImplemented,
@@ -90,8 +90,17 @@ const updateUser = async () => {
   throw CONST.ERROR_NOT_IMPLEMENTED;
 };
 
-const loadUserAccessControl = async (id: string) => {
-  return { ...db.accessControl[":guest"], ...db.accessControl[id] };
+const resolveAccessLevel = async (
+  userId: string,
+  galleryId: string
+): Promise<number | undefined> => {
+  const isSpecial = galleryId.startsWith(":");
+  const galleries = isSpecial ? [galleryId, ":all"] : [galleryId, ":public", ":all"];
+  const userRows = (db.accessControl[userId] ?? {}) as Record<string, number>;
+  for (const g of galleries) if (g in userRows) return userRows[g];
+  const guestRows = (db.accessControl[":guest"] ?? {}) as Record<string, number>;
+  for (const g of galleries) if (g in guestRows) return guestRows[g];
+  return undefined;
 };
 const resolveHideMap = async (
   _userId: string,

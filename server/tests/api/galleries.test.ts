@@ -123,8 +123,11 @@ describe("As blocked user", () => {
   });
 
   test("List galleries", async () => {
+    // blockedUser has `:all=NONE`, which under the user-first cascade shadows
+    // every :guest grant (including `:guest, gallery3, VIEW`). Logged in as
+    // blockedUser, the visible list is empty.
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(1);
+    expect(result.body.length).toBe(0);
   });
   test("Get gallery1", async () => {
     await getGallery(token, "gallery1", 403);
@@ -132,7 +135,8 @@ describe("As blocked user", () => {
   test("Get gallery2", async () => {
     await getGallery(token, "gallery2", 403);
   });
-  test("Get gallery3", async () => {
+  test("Get gallery3 (anonymous, not as blockedUser)", async () => {
+    // Anonymous request — :guest has gallery3=VIEW, so this still works.
     const result = await api.get("/api/v1/galleries/gallery3").expect(200);
     expectGallery3(result);
   });

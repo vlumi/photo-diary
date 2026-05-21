@@ -34,7 +34,7 @@ export default () => {
     updateUser,
     deleteUser,
 
-    loadUserAccessControl,
+    resolveAccessLevel,
     loadUserGalleryRows,
     upsertUserGallery,
     deleteUserGallery,
@@ -117,23 +117,39 @@ const updateUser = async (userId: string, user: Partial<User>) => {
 };
 const deleteUser = async (userId: string) => deleteById(SCHEMA.user, userId);
 
-const loadUserAccessControl = async (
-  userId: string
-): Promise<Record<string, number>> => {
-  const schema = SCHEMA.userGallery;
-  // TODO: cache in memory
-  const stmt = db.prepare(schema.buildSelectQuery(["user_id IN (?)"]));
-  // Rows with a NULL `access_level` are privacy-only rows (e.g. setting
-  // `hide_map` for a (user, gallery) pair without granting extra access).
-  // They must not appear in the access map, or the authorizer would see the
-  // gallery as "explicitly set" and skip the fall-through to `:all`.
-  const hasLevel = (row: UserGalleryRow) => row.access_level !== null;
-  const userRows = (stmt.all([userId]) as UserGalleryRow[]).filter(hasLevel);
-  const guestRows = (stmt.all([":guest"]) as UserGalleryRow[]).filter(hasLevel);
-  return {
-    ...Object.fromEntries(guestRows.map(schema.mapRow)),
-    ...Object.fromEntries(userRows.map(schema.mapRow)),
-  };
+// Resolve the access level for (userId, galleryId) under the user-first
+// cascade: user's rows are consulted in gallery-specificity order first, then
+// :guest's rows. For a non-special gallery request the gallery steps are
+// `gallery → :public → :all`; for `:public`/`:private`/`:all` requests the
+// :public step is dropped. NULL `access_level` rows are filtered out so
+// privacy-only rows (`hide_map` set without an access grant) don't poison
+// the resolution and force a deny.
+const resolveAccessLevel = async (
+  userId: string,
+  galleryId: string
+): Promise<number | undefined> => {
+  const isSpecial = galleryId.startsWith(":");
+  const galleryWhere = isSpecial
+    ? "gallery_id IN (?, ':all')"
+    : "gallery_id IN (?, ':public', ':all')";
+  const galleryOrder = isSpecial
+    ? "CASE WHEN gallery_id = ? THEN 0 ELSE 1 END"
+    : "CASE WHEN gallery_id = ? THEN 0 WHEN gallery_id = ':public' THEN 1 ELSE 2 END";
+  const row = db
+    .prepare(
+      `SELECT access_level FROM user_gallery
+       WHERE (user_id = ? OR user_id = ':guest')
+         AND ${galleryWhere}
+         AND access_level IS NOT NULL
+       ORDER BY
+         CASE WHEN user_id = ? THEN 0 ELSE 1 END,
+         ${galleryOrder}
+       LIMIT 1`
+    )
+    .get(userId, galleryId, userId, galleryId) as
+    | { access_level: number }
+    | undefined;
+  return row?.access_level;
 };
 
 const loadUserGalleryRows = async (
@@ -189,18 +205,15 @@ const deleteUserGallery = async (
     galleryId,
   ]);
 };
-// Resolve the privacy cascade for (userId, galleryId) in one query. Matches
-// the gallery-first ordering of the access cascade (see authorizer.ts):
+// Resolve the privacy cascade for (userId, galleryId). Same user-first
+// ordering as the access cascade: user's rows first in gallery-specificity
+// order, then :guest's. For a non-special gallery the gallery steps are
+// `gallery → :public → :all`; for `:public`/`:private`/`:all` the :public
+// step is dropped (those aren't subsets of :public).
 //
-//   For a non-special gallery request, priority is
-//     (user, gallery) > (:guest, gallery)
-//   > (user, :public) > (:guest, :public)
-//   > (user, :all)    > (:guest, :all)
-//
-//   For a special-gallery request (:public, :private, :all), the :public
-//   step is dropped — :private isn't a subset of :public, and :public/:all
-//   shouldn't fall through themselves:
-//     (user, gallery) > (:guest, gallery) > (user, :all) > (:guest, :all)
+// Priority for a non-special gallery request:
+//   (user, gallery) > (user, :public) > (user, :all)
+//                   > (:guest, gallery) > (:guest, :public) > (:guest, :all)
 //
 // Rows with null `hide_map` are skipped so a less-specific row's non-null
 // value can win. Returns undefined when no row at any level has a non-null
@@ -223,11 +236,11 @@ const resolveHideMap = async (
          AND ${galleryWhere}
          AND hide_map IS NOT NULL
        ORDER BY
-         ${galleryOrder},
-         CASE WHEN user_id = ? THEN 0 ELSE 1 END
+         CASE WHEN user_id = ? THEN 0 ELSE 1 END,
+         ${galleryOrder}
        LIMIT 1`
     )
-    .get(userId, galleryId, galleryId, userId) as
+    .get(userId, galleryId, userId, galleryId) as
     | { hide_map: number }
     | undefined;
   return row?.hide_map;

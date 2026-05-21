@@ -2,14 +2,14 @@ import Database from "better-sqlite3";
 
 // Tests the hide_map cascade resolution against a fresh in-memory SQLite,
 // bypassing the dummy driver (which doesn't model user_gallery rows). Mirrors
-// the access cascade's gallery-first ordering (see authorizer.ts).
+// the access cascade's user-first ordering (see resolveAccessLevel).
 //
 // Cascade priority for a non-special gallery request:
 //   1. (user_id,   gallery_id)
-//   2. (':guest',  gallery_id)
-//   3. (user_id,   ':public')
-//   4. (':guest',  ':public')
-//   5. (user_id,   ':all')
+//   2. (user_id,   ':public')
+//   3. (user_id,   ':all')
+//   4. (':guest',  gallery_id)
+//   5. (':guest',  ':public')
 //   6. (':guest',  ':all')
 //
 // For a :public, :private, or :all request, the :public fall-through is
@@ -54,11 +54,11 @@ const resolve = (
          AND ${galleryWhere}
          AND hide_map IS NOT NULL
        ORDER BY
-         ${galleryOrder},
-         CASE WHEN user_id = ? THEN 0 ELSE 1 END
+         CASE WHEN user_id = ? THEN 0 ELSE 1 END,
+         ${galleryOrder}
        LIMIT 1`
     )
-    .get(userId, galleryId, galleryId, userId) as
+    .get(userId, galleryId, userId, galleryId) as
     | { hide_map: number }
     | undefined;
   return row?.hide_map;
@@ -85,27 +85,29 @@ describe("hide_map ACL cascade", () => {
     expect(resolve(db, "alice", "travel")).toBe(1);
   });
 
-  test("(:guest, gallery) > (user, :all) — gallery-match beats :all-match across users", () => {
+  test("(user, :all) > (:guest, gallery) — user-first: any user row beats any :guest row", () => {
     const db = setupDb([
       [":guest", "dailybw", 1],
       ["alice", ":all", 0],
     ]);
-    // Gallery-first: (:guest, dailybw) is more specific by gallery than
-    // (alice, :all), so guest's per-gallery setting wins even for alice.
-    expect(resolve(db, "alice", "dailybw")).toBe(1);
-    // bob has no rows, falls through to (:guest, dailybw)
+    // User-first: (alice, :all) wins for alice on any gallery, even when
+    // (:guest, dailybw) is more gallery-specific. A user's explicit preference
+    // shouldn't be overridden by a :guest default at a more-specific gallery.
+    expect(resolve(db, "alice", "dailybw")).toBe(0);
+    // bob has no rows, falls back to (:guest, dailybw)
     expect(resolve(db, "bob", "dailybw")).toBe(1);
-    // For "travel" (no gallery-specific row), alice falls through to (alice, :all)
+    // alice's :all also applies to travel (no gallery-specific row anywhere)
     expect(resolve(db, "alice", "travel")).toBe(0);
   });
 
-  test("(user, gallery) > (:guest, gallery) — user beats guest at the same gallery level", () => {
+  test("(user, gallery) > (user, :all) — within user, gallery-specific wins", () => {
     const db = setupDb([
-      [":guest", "dailybw", 1],
-      ["alice", "dailybw", 0],
+      ["alice", ":all", 0],
+      ["alice", "dailybw", 1],
     ]);
-    expect(resolve(db, "alice", "dailybw")).toBe(0);
-    expect(resolve(db, "bob", "dailybw")).toBe(1);
+    // alice has a per-gallery hide and a global show; the per-gallery one wins
+    expect(resolve(db, "alice", "dailybw")).toBe(1);
+    expect(resolve(db, "alice", "travel")).toBe(0);
   });
 
   test("(user, gallery) > (user, :all) — most specific dominates", () => {
@@ -184,5 +186,18 @@ describe("hide_map ACL cascade", () => {
     ]);
     expect(resolve(db, "alice", "dailybw")).toBe(0);
     expect(resolve(db, "bob", "dailybw")).toBe(1);
+  });
+
+  test("(user, :all) beats (:guest, :public) — the motivating user-first case", () => {
+    // The scenario that motivated the user-first switch: an admin with a
+    // global show preference shouldn't see hidden maps just because :guest
+    // has hide set at a more-gallery-specific :public level.
+    const db = setupDb([
+      [":guest", ":public", 1],
+      ["admin", ":all", 0],
+    ]);
+    expect(resolve(db, "admin", "dailybw")).toBe(0);
+    expect(resolve(db, "admin", "travel")).toBe(0);
+    expect(resolve(db, ":guest", "dailybw")).toBe(1);
   });
 });
