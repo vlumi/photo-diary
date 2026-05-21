@@ -198,7 +198,7 @@ Get the cert via `certbot --nginx -d dailybw.example.com` (it'll insert the `ssl
 
 Use a different `PORT` per instance (set in each instance's `.env`) — pm2 ensures the right server gets the right port.
 
-**Don't expose `inbox/` or `original/`.** Only `display/` and `thumbnail/` are meant to be public. `inbox/` is the converter's working directory — it holds the raw camera files (full EXIF, original resolution) until the converter processes them and moves the sanitized output into `display`/`thumbnail`. `original/` holds the archived originals long-term. If you write a catch-all `location ~ /(display|thumbnail|inbox|original|…)` regex against the photo root, you're publishing both. Stick to per-directory `alias` blocks or anchor the regex to just the public dirs (e.g. `^/(display|thumbnail)/`).
+**Don't expose `inbox/` or `original/`.** Only `display/` and `thumbnail/` are meant to be public. After processing, the converter moves the raw image into `original/` (archived camera files — full EXIF, full resolution) and leaves the JSON sidecar in `inbox/`. The sidecars carry the full extracted EXIF including raw coordinates, which bypasses the `hide_map` privacy cascade if served directly. If you write a catch-all `location ~ /(display|thumbnail|inbox|original|…)` regex against the photo root, you're publishing both. Stick to per-directory `alias` blocks or anchor the regex to just the public dirs (e.g. `^/(display|thumbnail)/`).
 
 #### Per-gallery vhost mapping
 
