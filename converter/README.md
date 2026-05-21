@@ -29,11 +29,13 @@ The converter is TypeScript and runs via tsx (no build step). Common scripts:
 ```sh
 npm run dev        # tsx watch index.ts
 npm start          # tsx index.ts
-npm run prod       # pm2 start --interpreter tsx index.ts (NODE_ENV=prod)
+npm run prod       # invokes bin/start-prod.sh (pm2 + .env + INSTANCE_NAME-derived name)
 npm test           # tsx --test tests/**/*.test.ts
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint .
 npm run dumpexif   # tsx bin/dump-exif.ts — utility for inspecting a photo's EXIF
 ```
+
+The `bin/start-dev.sh` and `bin/start-prod.sh` wrappers source `.env` from the current working directory (the instance dir) and PATH-prepend the workspace's hoisted `node_modules/.bin` so `tsx` resolves under npm workspaces.
 
 Run from the instance directory (which must contain a `photos/` subdirectory with the structure above). In a single-instance setup that's the converter directory itself; in a multi-instance deploy, that's `/var/photo-diary/<name>/` and `bin/start-prod.sh` is invoked via the instance's `code` symlink (see the top-level README's Multi-Instance Deployment section).
