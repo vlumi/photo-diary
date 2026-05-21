@@ -2,20 +2,24 @@
 /* eslint-disable no-console -- interactive CLI tool; console output is the UI */
 
 /**
- * Manage `user_gallery` rows — access level (grant / revoke) and the privacy
- * cascade's `hide_map` toggle (hide-map subcommand). Avoids the previous
- * "edit the DB directly with sqlite3" recipe.
+ * Manage `user_gallery` rows — access level (level / unset subcommands) and
+ * the privacy cascade's `hide_map` toggle (hide-map subcommand). Avoids the
+ * previous "edit the DB directly with sqlite3" recipe.
  *
  * Subcommands:
  *
  *   access.ts list [--user <id>] [--gallery <id>]
- *   access.ts grant <user> <gallery> <view|admin>
- *   access.ts revoke <user> <gallery> [--yes]
+ *   access.ts level <user> <gallery> <none|view|admin>
+ *   access.ts unset <user> <gallery> [--yes]
  *   access.ts hide-map <user> <gallery> <hide|show|default>
  *
  * `:guest` (the sentinel user) and `:all` (the sentinel gallery) are accepted
  * directly as the positional arguments — the operator doesn't have to quote
  * anything.
+ *
+ * `level … none` and `unset` differ: `level … none` writes a row with
+ * access_level=0 and stops the cascade at that row; `unset` deletes the row
+ * entirely and lets the cascade fall through to less-specific rows.
  */
 
 import { createInterface } from "node:readline/promises";
@@ -27,7 +31,11 @@ import CONST from "../lib/constants.js";
 import db from "../db/index.js";
 import type { UserGalleryRow } from "../db/index.js";
 
-const LEVEL_VALUES = { view: CONST.ACCESS_VIEW, admin: CONST.ACCESS_ADMIN } as const;
+const LEVEL_VALUES = {
+  none: CONST.ACCESS_NONE,
+  view: CONST.ACCESS_VIEW,
+  admin: CONST.ACCESS_ADMIN,
+} as const;
 type LevelName = keyof typeof LEVEL_VALUES;
 const levelName = (value: number | null): string => {
   if (value === null) return "—";
@@ -87,15 +95,16 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
-    "grant <user> <gallery> <level>",
-    "Grant access for a user × gallery pair",
+    "level <user> <gallery> <level>",
+    "Set the access level on a user × gallery row (use 'none' for explicit deny)",
     (y) =>
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
         .positional("gallery", { describe: "Gallery ID (or :all)", type: "string", demandOption: true })
         .positional("level", {
-          describe: "Access level",
-          choices: ["view", "admin"] as const,
+          describe:
+            "Access level — 'none' explicitly denies at this row (cascade stops here)",
+          choices: ["none", "view", "admin"] as const,
           demandOption: true,
         }),
     async (argv) => {
@@ -105,12 +114,12 @@ await yargs(hideBin(process.argv))
         gallery_id: argv.gallery,
         access_level: level,
       });
-      console.log(`✓ Granted ${argv.level} access: (${argv.user}, ${argv.gallery})`);
+      console.log(`✓ Set access to ${argv.level}: (${argv.user}, ${argv.gallery})`);
     }
   )
   .command(
-    "revoke <user> <gallery>",
-    "Delete the row for a user × gallery pair (clears both access and hide_map)",
+    "unset <user> <gallery>",
+    "Delete the row entirely (cascade falls through to less-specific rows)",
     (y) =>
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
@@ -125,7 +134,7 @@ await yargs(hideBin(process.argv))
         }
       }
       await db.deleteUserGallery(argv.user, argv.gallery);
-      console.log(`✓ Revoked: (${argv.user}, ${argv.gallery})`);
+      console.log(`✓ Unset: (${argv.user}, ${argv.gallery})`);
     }
   )
   .command(

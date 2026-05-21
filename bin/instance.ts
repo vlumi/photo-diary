@@ -304,7 +304,7 @@ if (mode === "new") {
   console.log("  ./code/converter/bin/start-prod.sh");
   console.log("  ./bin/user.ts -u <username> -p <password>");
   console.log(`  ./bin/gallery.ts --id ${name} --title "${name}"`);
-  console.log("  ./bin/access.ts grant <username> :all admin");
+  console.log("  ./bin/access.ts level <username> :all admin");
 } else if (mode === "upgrade") {
   console.log("Upgrade prepared. Restart pm2 to activate:");
   console.log(`  pm2 restart ${name} ${name}-converter`);
