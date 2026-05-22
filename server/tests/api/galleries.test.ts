@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { init } from "../../app.js";
 import dummyFactory from "../../db/dummy.js";
+import dbFacade from "../../db/index.js";
 import { createApi, loginUser } from "./helper.js";
 
 const db = dummyFactory();
@@ -444,6 +445,44 @@ describe("As gallery12User", () => {
   });
   test("Get invalid", async () => {
     await getGallery(token, "invalid", 403);
+  });
+});
+
+describe("hide_map cascade applied to GET /galleries/:id (regression #201)", () => {
+  let token: string | undefined = undefined;
+  let spy: ReturnType<typeof vi.spyOn>;
+  beforeAll(async () => {
+    token = await loginUser(api, "plainUser");
+  });
+  beforeEach(() => {
+    spy = vi.spyOn(dbFacade, "resolveHideMap").mockResolvedValue(1);
+  });
+  afterEach(() => {
+    spy.mockRestore();
+  });
+
+  test("strips coordinates from the embedded photos array", async () => {
+    const result = await getGallery(token, "gallery1");
+    expect(result.body.hideMap).toBe(true);
+    // gallery1photo.jpg has explicit fixture coords; verify they're nulled.
+    const photo = result.body.photos.find(
+      (p: any) => p.id === "gallery1photo.jpg"
+    );
+    expect(photo).toBeDefined();
+    expect(photo.taken.location.coordinates.latitude).toBeNull();
+    expect(photo.taken.location.coordinates.longitude).toBeNull();
+    expect(photo.taken.location.coordinates.altitude).toBeNull();
+  });
+
+  test("leaves coords untouched when hide_map is undefined", async () => {
+    spy.mockResolvedValue(undefined);
+    const result = await getGallery(token, "gallery1");
+    expect(result.body.hideMap).toBe(false);
+    const photo = result.body.photos.find(
+      (p: any) => p.id === "gallery1photo.jpg"
+    );
+    expect(photo.taken.location.coordinates.latitude).toBe(35.6595);
+    expect(photo.taken.location.coordinates.longitude).toBe(139.7005);
   });
 });
 

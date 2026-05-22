@@ -368,9 +368,9 @@ const dbDump = JSON.stringify({
           country: "jp",
           place: "",
           coordinates: {
-            latitude: undefined,
-            longitude: undefined,
-            altitude: undefined,
+            latitude: 35.6595,
+            longitude: 139.7005,
+            altitude: 36.5,
           },
         },
       },

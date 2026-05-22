@@ -58,14 +58,14 @@ const checkUserPassword = async (
   credentials: Credentials,
   user: StoredUser
 ): Promise<void> => {
-  logger.debug("Check password", credentials, user);
+  logger.debug(`Check password for "${credentials.id}"`);
   return new Promise((resolve, reject) => {
     bcrypt.compare(credentials.password, user.password, (error, result) => {
       if (error || !result) {
-        logger.debug("Invalid password", credentials);
+        logger.debug(`Invalid password for "${credentials.id}"`);
         reject(CONST.ERROR_LOGIN);
       }
-      logger.debug("success!", error, result);
+      logger.debug(`Password check succeeded for "${credentials.id}"`);
       resolve();
     });
   });
@@ -79,7 +79,7 @@ const createToken = async (id: string, isAdmin: boolean): Promise<string> => {
     .sign(encodeSecret(getSecret(id)));
 };
 const authenticateUser = async (credentials: Credentials): Promise<void> => {
-  logger.debug("Authenticating user", credentials);
+  logger.debug(`Authenticating user "${credentials.id}"`);
   try {
     const user = (await db.loadUser(credentials.id)) as StoredUser;
     await checkUserPassword(credentials, user);
@@ -91,7 +91,7 @@ const authenticateUser = async (credentials: Credentials): Promise<void> => {
 };
 const verifyToken = async (token: string) => {
   const decoded = decodeJwt(token) as { id: string };
-  logger.debug("Verifying token", token, secrets[decoded.id]);
+  logger.debug(`Verifying token for "${decoded.id}"`);
 
   const { payload } = await jwtVerify(
     token,

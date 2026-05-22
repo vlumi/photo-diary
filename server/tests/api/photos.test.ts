@@ -1,5 +1,6 @@
 import { init } from "../../app.js";
 import dummyFactory from "../../db/dummy.js";
+import dbFacade from "../../db/index.js";
 import { createApi, loginUser } from "./helper.js";
 
 const db = dummyFactory();
@@ -328,6 +329,43 @@ describe("As gallery12User", () => {
   });
   test("Get invalid", async () => {
     await getPhoto(token, "invalid.jpg", 403);
+  });
+});
+
+describe("hide_map cascade applied to GET /photos and /photos/:id (regression #201)", () => {
+  let token: string | undefined = undefined;
+  let spy: ReturnType<typeof vi.spyOn>;
+  beforeAll(async () => {
+    token = await loginUser(api, "admin");
+  });
+  beforeEach(() => {
+    spy = vi.spyOn(dbFacade, "resolveHideMap").mockResolvedValue(1);
+  });
+  afterEach(() => {
+    spy.mockRestore();
+  });
+
+  test("/photos: coords nulled on the listed photos", async () => {
+    const result = await getPhotos(token);
+    const photo = result.body["gallery1photo.jpg"];
+    expect(photo).toBeDefined();
+    expect(photo.taken.location.coordinates.latitude).toBeNull();
+    expect(photo.taken.location.coordinates.longitude).toBeNull();
+    expect(photo.taken.location.coordinates.altitude).toBeNull();
+  });
+
+  test("/photos/:id: coords nulled on the single photo", async () => {
+    const result = await getPhoto(token, "gallery1photo.jpg");
+    expect(result.body.taken.location.coordinates.latitude).toBeNull();
+    expect(result.body.taken.location.coordinates.longitude).toBeNull();
+    expect(result.body.taken.location.coordinates.altitude).toBeNull();
+  });
+
+  test("coords untouched when hide_map is undefined", async () => {
+    spy.mockResolvedValue(undefined);
+    const result = await getPhoto(token, "gallery1photo.jpg");
+    expect(result.body.taken.location.coordinates.latitude).toBe(35.6595);
+    expect(result.body.taken.location.coordinates.longitude).toBe(139.7005);
   });
 });
 
