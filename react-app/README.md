@@ -53,3 +53,52 @@ Available themes: `blue`, `red`, `grayscale`, `bw`, `alert` (defined in `src/lib
 - `src/lib/` — pure helpers (`calendar`, `collection`, `color`, `config`, `filter`, `format`, `i18n`, `stats`, `theme`, `keypress`, `scroll`, `token`, `api`)
   - `stats.tsx` is the largest module — aggregates photo statistics into chart-ready data and table rows
 - `src/setupTests.ts` — vitest setup (registers `@testing-library/jest-dom` matchers)
+
+## Bundle shape
+
+Production build produces four JS chunks plus a single small entry CSS file and one large per-chunk CSS file for the map:
+
+| Chunk | Raw | gzipped | What |
+| --- | --- | --- | --- |
+| `index-*.js` (main) | ~444 kB | ~143 kB | React + react-dom, react-router, i18next, i18n-iso-countries, Emotion, our `src/` code (gallery shell + calendar views) |
+| `MapContainer-*.js` | ~198 kB | ~60 kB | Leaflet + react-leaflet + leaflet.markercluster — shared lazy chunk loaded on first map render |
+| `Stats-*.js` | ~210 kB | ~72 kB | chart.js + react-chartjs-2 + the stats-aggregation src — loaded on `/g/:id/stats` only |
+| `Photo-*.js` | ~7 kB | ~3 kB | single-photo view src — loaded when opening a photo |
+| `index-*.css` (main) | ~0.4 kB | ~0.2 kB | global tokens + body resets from `App.css` (see "CSS approach" below) |
+| `MapContainer-*.css` | ~17 kB | ~7 kB | leaflet + markercluster stylesheets, follows the MapContainer JS chunk |
+
+Code-splitting boundaries live in [`components/Gallery/index.tsx`](src/components/Gallery/index.tsx) (`Stats` + `Photo` via `React.lazy`) and [`components/MapContainer.lazy.tsx`](src/components/MapContainer.lazy.tsx) (a wrapper that swaps every `MapContainer` import for one shared lazy chunk so leaflet is downloaded only when a map actually renders). Suspense boundaries in each consumer give the map a fixed-height placeholder so the page doesn't reflow when the chunk arrives.
+
+To inspect the chunk composition yourself:
+
+```sh
+ANALYZE=1 npm run build
+open build/bundle-stats.html
+```
+
+That writes a `rollup-plugin-visualizer` treemap (gzipped + brotli sizes) into the build output. The env var is opt-in so regular production builds stay clean.
+
+### Heaviest deps and the case for each
+
+These are the biggest items in the bundle and why they're here (or could go):
+
+| Dep | gz | Notes |
+| --- | --- | --- |
+| `react` + `react-dom` | ~85 kB | unavoidable, framework baseline |
+| `chart.js` | ~89 kB | only in the Stats chunk; the stats page draws several chart types. Replaceable in principle with a smaller lib (uPlot, Chartist) or hand-rolled SVG, but well-tested and the size is paid only by visitors who actually open `/stats`. |
+| `leaflet` + `react-leaflet` + `markercluster` | ~70 kB | shared lazy chunk; only fetched on first map render. Big but functionally hard to substitute for. |
+| `react-router` | ~22 kB | core navigation |
+| `i18next` + `react-i18next` | ~21 kB | i18n runtime |
+| `i18n-iso-countries` (en + fi + ja JSONs) | ~12 kB | three locale dictionaries eagerly imported in `App.tsx`. Lazy-loading only the active language is a clear win (~8 kB gz reclaim) but belongs with the broader i18n architecture pass in #220. |
+| `@emotion/*` (cache + styled + react + serialize + is-prop-valid + stylis) | ~14 kB | CSS-in-JS runtime; see below |
+
+## CSS approach
+
+Two stylesheets in source, two responsibilities:
+
+- **[`src/App.css`](src/App.css)** — global tokens + body resets only (~30 lines). Defines CSS custom properties used by every theme, plus `<body>` font/color/background, anchor color, and a couple of error-state classes. No component styles.
+- **[Emotion](https://emotion.sh)** (`@emotion/styled` + `@emotion/react`'s `css` template + `<Global>`) — everything component-specific. ~38 files use it. Each component owns its visual styles inline via `styled.div` tagged templates; theming flows through props or `useTheme`.
+
+The split is intentional: tokens and global resets in plain CSS (no JS overhead on first paint), component styles in JS-co-located form where they're easiest to maintain. No CSS preprocessor, no CSS modules.
+
+Migration to a different system (vanilla-extract, Tailwind, etc.) is **not currently planned** — Emotion's runtime cost is ~14 kB gz and the consistency win across 38 component files is real. If the bundle audit revisits the question, that's a separate ticket to file.
