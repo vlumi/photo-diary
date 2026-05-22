@@ -51,7 +51,7 @@ jobs:
       - run: npm test --workspace=converter
 
   react-app:
-    name: React app (lint + build + test)
+    name: React app (lint + typecheck + build + test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -62,6 +62,10 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run lint --workspace=react-app
+      # `vite build` uses esbuild which strips types without checking them,
+      # so a missing dedicated `tsc --noEmit` step lets type errors slip
+      # past CI. Run it explicitly.
+      - run: npm run typecheck --workspace=react-app
       - run: npm run build --workspace=react-app
       - run: npm test --workspace=react-app
       # The typed API client is generated from server/openapi.json. Fail

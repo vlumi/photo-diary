@@ -160,7 +160,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
   // values depend on `lang` and `t`, so the memo recomputes on language
   // changes as well as data changes.
   const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
-    if (!photos) return undefined;
+    if (!photos || !countryData) return undefined;
     // The reduce builds up a `{ topic: { category: Set<unknown> } }` shape,
     // then the forEach normalizes each Set into the consumer-facing
     // `UniqueValueEntry[]`. The accumulator is typed as the loose
@@ -226,7 +226,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     return <div className="error">Loading failed</div>;
   }
 
-  if (!meta || !galleries) {
+  if (!meta || !galleries || !countryData) {
     return <div>{t("loading")}</div>;
   }
   if (!galleryId) {
