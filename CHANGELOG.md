@@ -9,6 +9,7 @@
 ### Frontend
 
 - Code-split the `Stats` and `Photo` subtrees out of the main bundle via `React.lazy`. Stats pulls in the aggregate-charts logic; Photo pulls in `react-leaflet` for the per-photo map. Calendar-only browsing no longer downloads either. Main-bundle size 859 kB → 642 kB raw (276 kB → 204 kB gzipped, a 26% reduction). Suspense fallback lives at the Gallery component's root. (closes #162)
+- Bundle audit + `MapContainer` extracted into its own lazy chunk via a `MapContainer.lazy.tsx` wrapper, so leaflet + react-leaflet + markercluster (~60 kB gzipped) are no longer in the main bundle (were previously eagerly imported by Year/Month/Day calendar footers). Each consumer has a Suspense with a fixed-height placeholder so the page doesn't reflow when the map chunk arrives. Main bundle now 444 kB raw / 143 kB gzipped — under vite's 500 kB warning threshold. `react-app/README.md` gains a "Bundle shape" section documenting the chunk layout and the CSS approach (Emotion + a small global `App.css`). `ANALYZE=1 npm run build` writes a `rollup-plugin-visualizer` treemap to `build/bundle-stats.html` for future audits. (closes #221)
 
 ## [0.7.4] - 2026-05-22
 

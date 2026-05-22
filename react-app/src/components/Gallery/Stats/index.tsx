@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 
 import Topic from "./Topic";
-import MapContainer from "../../MapContainer";
+import MapContainer from "../../MapContainer.lazy";
 
 import stats, { type UniqueValues } from "../../../lib/stats";
 

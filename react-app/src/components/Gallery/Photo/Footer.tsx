@@ -6,7 +6,7 @@ import EpochAge from "../EpochAge";
 import EpochDayIndex from "../EpochDayIndex";
 import FlagIcon from "../../FlagIcon";
 import Link from "../Link";
-import MapContainer from "../../MapContainer";
+import MapContainer from "../../MapContainer.lazy";
 import Root from "../Footer";
 
 import config from "../../../lib/config";

@@ -1,6 +1,6 @@
 import React from "react";
 
-import MapContainer from "../../MapContainer";
+import MapContainer from "../../MapContainer.lazy";
 
 import Root from "../Footer";
 
