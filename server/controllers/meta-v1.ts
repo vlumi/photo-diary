@@ -1,4 +1,5 @@
-import type { FastifyPluginAsync } from "fastify";
+import { Type } from "@sinclair/typebox";
+import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/meta.js";
@@ -36,7 +37,9 @@ const envDefaults = (): Record<string, string> => {
   return out;
 };
 
-const plugin: FastifyPluginAsync = async (fastify) => {
+const KeyParam = Type.Object({ key: Type.String() });
+
+const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Get all meta.
    */
@@ -59,27 +62,36 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Get the matching meta.
    */
-  fastify.get<{ Params: { key: string } }>("/:key", async (request) => {
-    // Public, no authorization needed
-    const meta = await model.getMeta(`instance_${request.params.key}`);
-    return cleanMeta(meta);
-  });
+  fastify.get(
+    "/:key",
+    { schema: { params: KeyParam } },
+    async (request) => {
+      // Public, no authorization needed
+      const meta = await model.getMeta(`instance_${request.params.key}`);
+      return cleanMeta(meta);
+    }
+  );
 
   /**
    * Update the matching meta.
    */
-  fastify.put<{ Params: { key: string } }>("/:key", async (request) => {
-    await authorizer.authorizeAdmin(request.user.id);
-    const meta = {};
-    // TODO: validate and set content from request.body
-    return await model.updateMeta(meta);
-  });
+  fastify.put(
+    "/:key",
+    { schema: { params: KeyParam } },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const meta = {};
+      // TODO: validate and set content from request.body
+      return await model.updateMeta(meta);
+    }
+  );
 
   /**
    * Delete the matching meta.
    */
-  fastify.delete<{ Params: { key: string } }>(
+  fastify.delete(
     "/:key",
+    { schema: { params: KeyParam } },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.deleteMeta(request.params.key);

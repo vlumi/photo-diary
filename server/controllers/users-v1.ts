@@ -1,4 +1,5 @@
-import type { FastifyPluginAsync } from "fastify";
+import { Type } from "@sinclair/typebox";
+import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/user.js";
@@ -10,7 +11,9 @@ const init = async () => {
   await model.init();
 };
 
-const plugin: FastifyPluginAsync = async (fastify) => {
+const UserIdParam = Type.Object({ userId: Type.String() });
+
+const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Get all users.
    */
@@ -34,26 +37,35 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Get the matching user.
    */
-  fastify.get<{ Params: { userId: string } }>("/:userId", async (request) => {
-    await authorizer.authorizeAdmin(request.user.id);
-    return await model.getUser(request.params.userId);
-  });
+  fastify.get(
+    "/:userId",
+    { schema: { params: UserIdParam } },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      return await model.getUser(request.params.userId);
+    }
+  );
 
   /**
    * Update the matching user.
    */
-  fastify.put<{ Params: { userId: string } }>("/:userId", async (request) => {
-    await authorizer.authorizeAdmin(request.user.id);
-    const user = {};
-    // TODO: validate and set content from request.body
-    return await model.updateUser(user);
-  });
+  fastify.put(
+    "/:userId",
+    { schema: { params: UserIdParam } },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const user = {};
+      // TODO: validate and set content from request.body
+      return await model.updateUser(user);
+    }
+  );
 
   /**
    * Delete the matching user.
    */
-  fastify.delete<{ Params: { userId: string } }>(
+  fastify.delete(
     "/:userId",
+    { schema: { params: UserIdParam } },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.deleteUser(request.params.userId);

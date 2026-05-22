@@ -1,4 +1,5 @@
-import type { FastifyPluginAsync } from "fastify";
+import { Type } from "@sinclair/typebox";
+import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import { LoginError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
@@ -12,10 +13,18 @@ const init = async () => {
   await model.init();
 };
 
-interface LoginBody {
-  id?: string;
-  password?: string;
-}
+// Body schema for the login POST. Both fields are *optional* on the schema
+// so the handler controls the response: missing credentials hit the
+// `LoginError` path (401), matching pre-Fastify behaviour. Tightening the
+// schema to `required: ["id", "password"]` would short-circuit to a 400
+// validation error, which is a wire-shape regression for clients that rely
+// on the 401.
+const LoginBody = Type.Object({
+  id: Type.Optional(Type.String()),
+  password: Type.Optional(Type.String()),
+});
+
+const UserIdParam = Type.Object({ userId: Type.String() });
 
 // Per-IP throttle for the login POST. 10 *failed* attempts per 15-minute
 // window: a successful login doesn't tick the counter, so a typo'ing operator
@@ -55,7 +64,7 @@ const recordLoginFailure = (ip: string) => {
   entry.count += 1;
 };
 
-const plugin: FastifyPluginAsync = async (fastify) => {
+const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Verify and keep-alive token.
    */
@@ -66,38 +75,42 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Login, creating a new token.
    */
-  fastify.post<{ Body: LoginBody }>("/", async (request, reply) => {
-    if (isRateLimited(request.ip)) {
-      reply
-        .status(429)
-        .send({ error: "Too many failed login attempts. Try again later." });
-      return;
+  fastify.post(
+    "/",
+    { schema: { body: LoginBody } },
+    async (request, reply) => {
+      if (isRateLimited(request.ip)) {
+        reply
+          .status(429)
+          .send({ error: "Too many failed login attempts. Try again later." });
+        return;
+      }
+      logger.debug(`Login attempt for "${request.body?.id}"`);
+      const credentials = {
+        id: request.body?.id,
+        password: request.body?.password,
+      };
+      if (!credentials.id || !credentials.password) {
+        recordLoginFailure(request.ip);
+        throw new LoginError();
+      }
+      try {
+        await model.authenticateUser({
+          id: credentials.id,
+          password: credentials.password,
+        });
+      } catch (error) {
+        recordLoginFailure(request.ip);
+        throw error;
+      }
+      const token = await authorizer
+        .authorizeAdmin(credentials.id)
+        .then(() => model.createToken(credentials.id as string, true))
+        .catch(() => model.createToken(credentials.id as string, false));
+      logger.debug(`User "${credentials.id}" logged in successfully.`);
+      reply.status(200).send({ token });
     }
-    logger.debug(`Login attempt for "${request.body?.id}"`);
-    const credentials = {
-      id: request.body?.id,
-      password: request.body?.password,
-    };
-    if (!credentials.id || !credentials.password) {
-      recordLoginFailure(request.ip);
-      throw new LoginError();
-    }
-    try {
-      await model.authenticateUser({
-        id: credentials.id,
-        password: credentials.password,
-      });
-    } catch (error) {
-      recordLoginFailure(request.ip);
-      throw error;
-    }
-    const token = await authorizer
-      .authorizeAdmin(credentials.id)
-      .then(() => model.createToken(credentials.id as string, true))
-      .catch(() => model.createToken(credentials.id as string, false));
-    logger.debug(`User "${credentials.id}" logged in successfully.`);
-    reply.status(200).send({ token });
-  });
+  );
 
   /**
    * Logout, revoking the requesting user's tokens.
@@ -110,8 +123,9 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Logout (admin), revoking all tokens for another user.
    */
-  fastify.delete<{ Params: { userId: string } }>(
+  fastify.delete(
     "/:userId",
+    { schema: { params: UserIdParam } },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.revokeToken(request.params.userId);

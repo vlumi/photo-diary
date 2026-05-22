@@ -1,4 +1,5 @@
-import type { FastifyPluginAsync } from "fastify";
+import { Type } from "@sinclair/typebox";
+import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import CONST from "../lib/constants.js";
 import authorizerFactory from "../lib/authorizer.js";
@@ -12,7 +13,9 @@ const init = async () => {
   await model.init();
 };
 
-const plugin: FastifyPluginAsync = async (fastify) => {
+const PhotoIdParam = Type.Object({ photoId: Type.String() });
+
+const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Get all photos.
    */
@@ -46,30 +49,39 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Get the matching photo.
    */
-  fastify.get<{ Params: { photoId: string } }>("/:photoId", async (request) => {
-    await authorizer.authorizeView(request.user.id);
-    const photo = await model.getPhoto(request.params.photoId);
-    if (await shouldHideMap(request.user.id, CONST.SPECIAL_GALLERY_ALL)) {
-      maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
+  fastify.get(
+    "/:photoId",
+    { schema: { params: PhotoIdParam } },
+    async (request) => {
+      await authorizer.authorizeView(request.user.id);
+      const photo = await model.getPhoto(request.params.photoId);
+      if (await shouldHideMap(request.user.id, CONST.SPECIAL_GALLERY_ALL)) {
+        maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
+      }
+      return photo;
     }
-    return photo;
-  });
+  );
 
   /**
    * Update the matching photo.
    */
-  fastify.put<{ Params: { photoId: string } }>("/:photoId", async (request) => {
-    await authorizer.authorizeAdmin(request.user.id);
-    const photo = {};
-    // TODO: validate and set content from request.body
-    return await model.updatePhoto(photo);
-  });
+  fastify.put(
+    "/:photoId",
+    { schema: { params: PhotoIdParam } },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const photo = {};
+      // TODO: validate and set content from request.body
+      return await model.updatePhoto(photo);
+    }
+  );
 
   /**
    * Delete the matching photo.
    */
-  fastify.delete<{ Params: { photoId: string } }>(
+  fastify.delete(
     "/:photoId",
+    { schema: { params: PhotoIdParam } },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.deletePhoto(request.params.photoId);
