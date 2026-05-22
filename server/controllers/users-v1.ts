@@ -1,4 +1,4 @@
-import express from "express";
+import type { FastifyPluginAsync } from "fastify";
 
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/user.js";
@@ -9,56 +9,57 @@ const model = modelFactory();
 const init = async () => {
   await model.init();
 };
-const router = express.Router();
 
-export default { init, router };
+const plugin: FastifyPluginAsync = async (fastify) => {
+  /**
+   * Get all users.
+   */
+  fastify.get("/", async (request) => {
+    await authorizer.authorizeAdmin(request.user.id);
+    const cleanUser = (user: { id: string }) => ({ id: user.id });
+    const users = (await model.getUsers()) as Array<{ id: string }>;
+    return users.map(cleanUser);
+  });
 
-/**
- * Get all users.
- */
-router.get("/", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.id);
-  const cleanUser = (user: { id: string }) => {
-    return {
-      id: user.id,
-    };
-  };
-  const users = (await model.getUsers()) as Array<{ id: string }>;
-  response.json(users.map(cleanUser));
-});
-/**
- * Create a user.
- */
-router.post("/", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.id);
-  const user = {};
-  // TODO: validate and set content from request.body
-  const createdUser = await model.createUser(user);
-  response.json(createdUser);
-});
-/**
- * Get the matching user.
- */
-router.get("/:userId", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.id);
-  const user = await model.getUser(request.params.userId);
-  response.json(user);
-});
-/**
- * Update the matching user.
- */
-router.put("/:userId", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.id);
-  const user = {};
-  // TODO: validate and set content from request.body
-  const updateduser = await model.updateUser(user);
-  response.json(updateduser);
-});
-/**
- * Delete the matching user.
- */
-router.delete("/:userId", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.id);
-  await model.deleteUser(request.params.userId);
-  response.status(204).end();
-});
+  /**
+   * Create a user.
+   */
+  fastify.post("/", async (request) => {
+    await authorizer.authorizeAdmin(request.user.id);
+    const user = {};
+    // TODO: validate and set content from request.body
+    return await model.createUser(user);
+  });
+
+  /**
+   * Get the matching user.
+   */
+  fastify.get<{ Params: { userId: string } }>("/:userId", async (request) => {
+    await authorizer.authorizeAdmin(request.user.id);
+    return await model.getUser(request.params.userId);
+  });
+
+  /**
+   * Update the matching user.
+   */
+  fastify.put<{ Params: { userId: string } }>("/:userId", async (request) => {
+    await authorizer.authorizeAdmin(request.user.id);
+    const user = {};
+    // TODO: validate and set content from request.body
+    return await model.updateUser(user);
+  });
+
+  /**
+   * Delete the matching user.
+   */
+  fastify.delete<{ Params: { userId: string } }>(
+    "/:userId",
+    async (request, reply) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      await model.deleteUser(request.params.userId);
+      reply.status(204).send();
+    }
+  );
+};
+
+export default { init, plugin };

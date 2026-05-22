@@ -3,8 +3,8 @@ export type AuthUser = {
   isAdmin?: boolean;
 } & Record<string, unknown>;
 
-declare module "express-serve-static-core" {
-  interface Request {
+declare module "fastify" {
+  interface FastifyRequest {
     user: AuthUser;
     token?: string;
   }

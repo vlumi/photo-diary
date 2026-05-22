@@ -1,9 +1,10 @@
-import type { RequestHandler } from "express";
-
 import { NotFoundError } from "../errors.js";
 
-const fallbackRoute: RequestHandler = (_request, _response, next) => {
-  next(new NotFoundError());
+// Registered via `setNotFoundHandler`. Fastify invokes this when no route
+// matches; throwing here routes the response through `errorHandler`, which
+// reads `NotFoundError.status` (404) and formats the body.
+const fallbackRoute = () => {
+  throw new NotFoundError();
 };
 
 export default fallbackRoute;

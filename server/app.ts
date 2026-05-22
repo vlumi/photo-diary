@@ -2,9 +2,9 @@ import path from "node:path";
 
 import Fastify, { type FastifyInstance } from "fastify";
 import fastifyExpress from "@fastify/express";
-import express from "express";
-import compression from "compression";
-import helmet from "helmet";
+import fastifyHelmet from "@fastify/helmet";
+import fastifyCompress from "@fastify/compress";
+import fastifyStatic from "@fastify/static";
 
 import config from "./lib/config/index.js";
 
@@ -16,30 +16,48 @@ import photosV1 from "./controllers/photos-v1.js";
 import galleryPhotosV1 from "./controllers/gallery-photos-v1.js";
 
 import middleware from "./lib/middleware/index.js";
+import { NotFoundError } from "./lib/errors.js";
 import logger from "./lib/logger.js";
 
-// First step of the Fastify migration (#167, slice 1): the public surface is
-// a Fastify instance, but every existing Express middleware / controller is
-// mounted through `@fastify/express`. This preserves the entire request
-// pipeline (routing, params, body parsing, error handling, supertest tests)
-// unchanged while the host framework moves. Subsequent slices convert
-// controllers + middleware to native Fastify and drop the adapter.
+// Slice 2 of the Fastify migration (#167): controllers + middleware are now
+// native Fastify routes/hooks. Slice 3 will drop the `@fastify/express`
+// registration below — it's no longer wired to anything but stays for one
+// PR to keep the slice diffs honest.
 export const app: FastifyInstance = Fastify({
-  // Disable Fastify's own logger — morgan still drives request logging via
-  // the Express adapter for now (switched to pino in slice 2).
-  logger: false,
-  // Match Express's behaviour: take exactly one hop of `X-Forwarded-For`
-  // unwrapping from nginx so req.ip / rate-limiter keying still works.
   trustProxy: 1,
+  // Express's router treated trailing slashes as optional by default
+  // (`strict: false`). The gallery-photos LIST route was registered as
+  // `/:galleryId/` but the SPA calls it without the trailing slash —
+  // Fastify is strict, so we match Express's lenient behaviour here so
+  // existing client URLs keep working.
+  ignoreTrailingSlash: true,
+  logger:
+    config.ENV === "test"
+      ? false
+      : {
+        level: process.env.LOG_LEVEL ?? "info",
+        transport:
+            config.ENV === "dev"
+              ? {
+                target: "pino-pretty",
+                options: {
+                  translateTime: "SYS:yyyy-mm-dd HH:MM:ss.l",
+                  ignore: "pid,hostname",
+                  singleLine: true,
+                },
+              }
+              : undefined,
+      },
+  // We emit one structured per-response log line via the `requestLogger`
+  // onResponse hook below — disabling Fastify's built-in completion line
+  // keeps logs from being noisy with two lines per request.
+  disableRequestLogging: true,
 });
 
 const STATIC_DIR =
   process.env.STATIC_DIR ?? path.join(import.meta.dirname, "build");
 
-// Register the entire Express pipeline as Fastify plugins at module load —
-// Fastify requires all plugins to be registered before `app.ready()`, and the
-// test suite re-calls `init()` between tests, so registration cannot live
-// inside `init()` without double-registering.
+// Adapter from slice 1, retained for one PR. Slice 3 drops it.
 await app.register(fastifyExpress);
 
 // helmet sets a baseline of security headers (HSTS, nosniff, frame-ancestors
@@ -52,44 +70,56 @@ await app.register(fastifyExpress);
 // the no-referrer default strips the `Referer` header on every outbound
 // request, which breaks the leaflet map widget — OSM's volunteer-run tile
 // servers reject referrer-less requests as bot traffic (osm.wiki/Blocked).
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
-  })
-);
-app.use(compression());
-app.use(express.json());
+await app.register(fastifyHelmet, {
+  contentSecurityPolicy: false,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+});
+await app.register(fastifyCompress);
+
 // Discourage indexing and AI scraping on every response. robots.txt is the
 // authoritative signal; this header covers non-HTML resources (photo files)
 // and reaches scrapers that honor X-Robots-Tag values like `noai`/`noimageai`.
-app.use((_req, res, next) => {
-  res.setHeader("X-Robots-Tag", "noindex, noai, noimageai");
-  next();
+app.addHook("onSend", async (_request, reply) => {
+  reply.header("X-Robots-Tag", "noindex, noai, noimageai");
 });
+
 // Multi-instance deploys may invoke the server from a different CWD (the
 // per-instance directory), so resolve the bundled frontend relative to this
 // source file by default. `STATIC_DIR` overrides if you need a different
 // build location.
-app.use(express.static(STATIC_DIR));
-app.use("/g", express.static(STATIC_DIR));
-app.use("/g/*splat", express.static(STATIC_DIR));
+await app.register(fastifyStatic, {
+  root: STATIC_DIR,
+  prefix: "/",
+});
 
-app.use(middleware.tokenFilter);
+app.addHook("onRequest", middleware.tokenFilter);
 /* istanbul ignore next */
 if (config.ENV !== "test") {
-  app.use(middleware.requestLogger);
+  app.addHook("onResponse", middleware.requestLogger);
 }
 
-app.use("/api/v1/meta", metaV1.router);
-app.use("/api/v1/tokens", tokensV1.router);
-app.use("/api/v1/users", usersV1.router);
-app.use("/api/v1/galleries", galleriesV1.router);
-app.use("/api/v1/photos", photosV1.router);
-app.use("/api/v1/gallery-photos", galleryPhotosV1.router);
+await app.register(metaV1.plugin, { prefix: "/api/v1/meta" });
+await app.register(tokensV1.plugin, { prefix: "/api/v1/tokens" });
+await app.register(usersV1.plugin, { prefix: "/api/v1/users" });
+await app.register(galleriesV1.plugin, { prefix: "/api/v1/galleries" });
+await app.register(photosV1.plugin, { prefix: "/api/v1/photos" });
+await app.register(galleryPhotosV1.plugin, {
+  prefix: "/api/v1/gallery-photos",
+});
 
-app.use(middleware.unknownEndpoint);
-app.use(middleware.errorHandler);
+// Fastify's not-found handler does double duty: SPA routes (`/g`, `/g/*`)
+// serve `index.html` so deep links into the calendar tree resolve via React
+// Router; everything else (including unknown `/api/*` paths) throws into the
+// shared `errorHandler` to get the JSON 404 the API has always produced.
+app.setNotFoundHandler(async (request, reply) => {
+  const pathOnly = request.url.split("?")[0];
+  if (pathOnly === "/g" || pathOnly.startsWith("/g/")) {
+    return reply.type("text/html").sendFile("index.html");
+  }
+  throw new NotFoundError();
+});
+
+app.setErrorHandler(middleware.errorHandler);
 
 export const init = async () => {
   logger.debug("Initialize app start");

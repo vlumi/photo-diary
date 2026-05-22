@@ -6,6 +6,7 @@
 
 - Replace string-constant error throws with a typed `AppError` class hierarchy (`AccessError`, `NotFoundError`, `LoginError`, `InvalidTokenError`, `NotImplementedError`, `UnavailableError`) in `server/lib/errors.ts`. Each subclass carries its HTTP status; the error-handler middleware reads `.status` and echoes `.message` as the JSON response. The legacy `CONST.ERROR_*` string constants and the dual-path switch in error-handler.ts are now retired (no remaining throw sites referenced them). Wire-shape unchanged for every existing endpoint. (closes #219)
 - Fastify migration slice 1/3: the server is now a Fastify instance, but every existing Express middleware and controller is mounted unchanged through `@fastify/express`. No behaviour change on the wire — the entire 606-test suite passes as-is. Slices 2 and 3 convert controllers + middleware to native Fastify and drop the adapter. (part of #167)
+- Fastify migration slice 2/3: all 6 controllers and 4 middleware files are now native Fastify routes/hooks, helmet/compression/static/body-parsing are `@fastify/*` plugins, and morgan is replaced by pino (with pino-pretty in dev). Per-instance log shape changes from morgan's text line to a structured single-line entry preserving `userId` / `ip` / `responseTime`. (part of #167)
 
 ### Frontend
 
