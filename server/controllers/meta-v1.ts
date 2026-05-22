@@ -38,33 +38,48 @@ const envDefaults = (): Record<string, string> => {
 };
 
 const KeyParam = Type.Object({ key: Type.String() });
+const TAGS = ["meta"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Get all meta.
    */
-  fastify.get("/", async () => {
-    // Public, no authorization needed
-    const meta = await model.getMetas();
-    return { ...cleanMeta(meta), ...envDefaults() };
-  });
+  fastify.get(
+    "/",
+    { schema: { tags: TAGS, summary: "Get all per-instance meta" } },
+    async () => {
+      // Public, no authorization needed
+      const meta = await model.getMetas();
+      return { ...cleanMeta(meta), ...envDefaults() };
+    }
+  );
 
   /**
    * Create a meta.
    */
-  fastify.post("/", async (request) => {
-    await authorizer.authorizeAdmin(request.user.id);
-    const meta = {};
-    // TODO: validate and set content from request.body
-    return await model.createMeta(meta);
-  });
+  fastify.post(
+    "/",
+    { schema: { tags: TAGS, summary: "Create a meta entry (admin)" } },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const meta = {};
+      // TODO: validate and set content from request.body
+      return await model.createMeta(meta);
+    }
+  );
 
   /**
    * Get the matching meta.
    */
   fastify.get(
     "/:key",
-    { schema: { params: KeyParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Get one meta entry by key",
+        params: KeyParam,
+      },
+    },
     async (request) => {
       // Public, no authorization needed
       const meta = await model.getMeta(`instance_${request.params.key}`);
@@ -77,7 +92,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.put(
     "/:key",
-    { schema: { params: KeyParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Update one meta entry by key (admin)",
+        params: KeyParam,
+      },
+    },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
       const meta = {};
@@ -91,7 +112,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.delete(
     "/:key",
-    { schema: { params: KeyParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Delete one meta entry by key (admin)",
+        params: KeyParam,
+      },
+    },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.deleteMeta(request.params.key);

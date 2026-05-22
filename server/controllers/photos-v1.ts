@@ -14,44 +14,59 @@ const init = async () => {
 };
 
 const PhotoIdParam = Type.Object({ photoId: Type.String() });
+const TAGS = ["photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Get all photos.
    */
-  fastify.get("/", async (request) => {
-    await authorizer.authorizeView(request.user.id);
-    const photos = await model.getPhotos();
-    // No per-gallery scope here — resolve the user's :all-level preference.
-    // `Object.values` covers both the array shape (real sqlite driver) and the
-    // {photoId: photo} dict shape the dummy driver returns; either way we get
-    // an iterable of photo objects that `maskCoordinates` can mutate in place.
-    if (await shouldHideMap(request.user.id, CONST.SPECIAL_GALLERY_ALL)) {
-      maskCoordinates(
+  fastify.get(
+    "/",
+    { schema: { tags: TAGS, summary: "List all photos" } },
+    async (request) => {
+      await authorizer.authorizeView(request.user.id);
+      const photos = await model.getPhotos();
+      // No per-gallery scope here — resolve the user's :all-level preference.
+      // `Object.values` covers both the array shape (real sqlite driver) and the
+      // {photoId: photo} dict shape the dummy driver returns; either way we get
+      // an iterable of photo objects that `maskCoordinates` can mutate in place.
+      if (await shouldHideMap(request.user.id, CONST.SPECIAL_GALLERY_ALL)) {
+        maskCoordinates(
         Object.values(photos as Record<string, unknown>) as Parameters<
           typeof maskCoordinates
         >[0]
-      );
+        );
+      }
+      return photos;
     }
-    return photos;
-  });
+  );
 
   /**
    * Create a photo.
    */
-  fastify.post("/", async (request) => {
-    await authorizer.authorizeAdmin(request.user.id);
-    const photo = {};
-    // TODO: validate and set content from request.body
-    return await model.createPhoto(photo);
-  });
+  fastify.post(
+    "/",
+    { schema: { tags: TAGS, summary: "Create a photo (admin)" } },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const photo = {};
+      // TODO: validate and set content from request.body
+      return await model.createPhoto(photo);
+    }
+  );
 
   /**
    * Get the matching photo.
    */
   fastify.get(
     "/:photoId",
-    { schema: { params: PhotoIdParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Get one photo by id",
+        params: PhotoIdParam,
+      },
+    },
     async (request) => {
       await authorizer.authorizeView(request.user.id);
       const photo = await model.getPhoto(request.params.photoId);
@@ -67,7 +82,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.put(
     "/:photoId",
-    { schema: { params: PhotoIdParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Update one photo (admin)",
+        params: PhotoIdParam,
+      },
+    },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
       const photo = {};
@@ -81,7 +102,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.delete(
     "/:photoId",
-    { schema: { params: PhotoIdParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Delete one photo (admin)",
+        params: PhotoIdParam,
+      },
+    },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.deletePhoto(request.params.photoId);

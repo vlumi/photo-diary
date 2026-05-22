@@ -25,6 +25,15 @@ jobs:
       - run: npm run lint --workspace=server
       - run: npm run typecheck --workspace=server
       - run: npm test --workspace=server
+      # Regenerate the committed OpenAPI spec and fail if it drifts from
+      # what's checked in. The react-app's typed client (PR D of #167)
+      # codegens against this file; a stale committed spec would silently
+      # break clients. Local devs regenerate via `npm run docs:dump`.
+      - name: Verify server/openapi.json is up to date
+        run: |
+          npm run docs:dump --workspace=server
+          git diff --exit-code -- server/openapi.json \
+            || (echo "::error::server/openapi.json is out of date — run \`npm run docs:dump\` and commit the result" && exit 1)
 
   converter:
     name: Converter (lint + typecheck + test)
