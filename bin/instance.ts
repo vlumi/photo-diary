@@ -32,6 +32,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+
 // ---- types ---------------------------------------------------------------
 
 interface RequiredKey {
@@ -144,25 +147,95 @@ const appendMissingKeys = (
 
 // ---- args ----------------------------------------------------------------
 
-const args = process.argv.slice(2);
-const name = args[0];
-const baseFlagIndex = args.indexOf("--base");
-const base = baseFlagIndex >= 0 ? args[baseFlagIndex + 1] : "/var/photo-diary";
-const fix = args.includes("--fix");
+// An instance dir is recognisable by the combination of `.env` + the `code`
+// symlink. If both are present and no explicit positional was passed, infer
+// the instance dir from cwd — saves operators retyping the name for doctor
+// / --fix runs they're already cd'd into.
+const looksLikeInstanceDir = (dir: string): boolean => {
+  try {
+    return (
+      fs.statSync(path.join(dir, ".env")).isFile() &&
+      fs.lstatSync(path.join(dir, "code")).isSymbolicLink()
+    );
+  } catch {
+    return false;
+  }
+};
 
-if (!name || name.startsWith("--")) {
+const argv = yargs(hideBin(process.argv))
+  .scriptName("instance.ts")
+  .command(
+    "$0 [name]",
+    "Bootstrap, doctor, or upgrade a Photo Diary instance directory",
+    (y) =>
+      y
+        .positional("name", {
+          describe:
+            "Instance directory name under --base. May be omitted when run from inside an existing instance dir; in that case the dir is inferred from cwd and the logical name is read from .env's INSTANCE_NAME.",
+          type: "string",
+        })
+        .option("base", {
+          describe: "Parent directory for the instance dir",
+          type: "string",
+          default: "/var/photo-diary",
+        })
+        .option("fix", {
+          describe:
+            "Append missing required keys to an existing .env (doesn't touch existing values)",
+          type: "boolean",
+          default: false,
+        })
+  )
+  .alias("help", "h")
+  .strict()
+  .parseSync();
+
+const positional = argv.name as string | undefined;
+const baseFlag = argv.base;
+const fix = argv.fix;
+
+// Resolve `instanceDir` first — it's the structural anchor for everything
+// else (path resolution, locating .env, locating the `code` symlink). The
+// *logical* instance name (used for pm2 process labels, display) comes
+// from `.env`'s INSTANCE_NAME below; only the dir matters for paths.
+let instanceDir: string;
+let inferredFromCwd = false;
+if (positional) {
+  instanceDir = path.resolve(String(baseFlag), positional);
+} else if (looksLikeInstanceDir(process.cwd())) {
+  instanceDir = process.cwd();
+  inferredFromCwd = true;
+} else {
   console.error(
-    "Usage: bin/instance.ts <name> [--base <dir>] [--fix]\n" +
-      "  <name>     directory name under --base (default /var/photo-diary)\n" +
-      "  --fix      append missing required keys to an existing .env (doesn't touch existing values)"
+    "Error: no <name> given and cwd is not an instance dir (no `.env` + `code` symlink)."
   );
+  console.error("Run with --help for usage.");
   process.exit(1);
 }
 
-const instanceDir = path.resolve(base, name);
 const envPath = path.join(instanceDir, ".env");
 const codeLinkPath = path.join(instanceDir, "code");
 const instanceBinDir = path.join(instanceDir, "bin");
+
+// Logical name: prefer `.env`'s INSTANCE_NAME (the pm2 process label),
+// fall back to the dir's basename when there's no .env yet or the key
+// is missing. The default `bin/instance.ts` template seeds INSTANCE_NAME
+// equal to the dir name, so for the common case the two match — but
+// operators may legitimately set them apart.
+const instanceName = (() => {
+  try {
+    return (
+      parseEnv(fs.readFileSync(envPath, "utf8")).INSTANCE_NAME ??
+      path.basename(instanceDir)
+    );
+  } catch {
+    return path.basename(instanceDir);
+  }
+})();
+
+if (inferredFromCwd) {
+  console.log(`(inferred instance "${instanceName}" at ${instanceDir} from cwd)`);
+}
 
 // Routine operator scripts surfaced as `<instance>/bin/<name>.ts` symlinks
 // pointing at `<instance>/code/server/bin/<name>.ts`. `instance` itself is
@@ -199,7 +272,7 @@ if (!envExists) {
 
 // 3. .env
 if (mode === "new") {
-  writeEnvFile(envPath, { instanceDir, name });
+  writeEnvFile(envPath, { instanceDir, name: instanceName });
   console.log(`✓ Created ${envPath} (with a fresh random SECRET)`);
 } else {
   const existing = parseEnv(fs.readFileSync(envPath, "utf8"));
@@ -207,7 +280,7 @@ if (mode === "new") {
   if (missing.length === 0) {
     console.log("✓ .env present and complete");
   } else if (fix) {
-    const added = appendMissingKeys(envPath, existing, { instanceDir, name });
+    const added = appendMissingKeys(envPath, existing, { instanceDir, name: instanceName });
     console.log(`✓ Appended missing keys to .env: ${added.join(", ")}`);
   } else {
     console.log("✗ .env is missing values for:");
@@ -303,21 +376,33 @@ if (mode === "new") {
   console.log("  ./code/server/bin/start-prod.sh");
   console.log("  ./code/converter/bin/start-prod.sh");
   console.log("  ./bin/user.ts passwd <username> <password>");
-  console.log(`  ./bin/gallery.ts ${name} --title "${name}"`);
+  console.log(`  ./bin/gallery.ts ${instanceName} --title "${instanceName}"`);
   console.log("  ./bin/access.ts level <username> :all admin");
 } else if (mode === "upgrade") {
-  console.log("Upgrade prepared. Restart pm2 to activate:");
-  console.log(`  pm2 restart ${name} ${name}-converter`);
-  console.log("  # ...or if not yet running:");
+  console.log("Upgrade prepared. Cycle pm2 to pick up the new version:");
+  console.log(`  pm2 delete ${instanceName} ${instanceName}-converter`);
   console.log(`  cd ${instanceDir}`);
   console.log("  ./code/server/bin/start-prod.sh");
   console.log("  ./code/converter/bin/start-prod.sh");
+  console.log("  pm2 save");
+  console.log();
+  console.log(
+    "(pm2 restart preserves cached metadata — the resolved script path and"
+  );
+  console.log(
+    " package.json version are read at start time — so a symlink flip plus a"
+  );
+  console.log(
+    " plain restart silently keeps you on the old version. delete + start"
+  );
+  console.log(" forces re-resolution.)");
   console.log();
   console.log("Rollback (manual, only if needed):");
-  console.log(`  pm2 stop ${name} ${name}-converter`);
+  console.log(`  pm2 delete ${instanceName} ${instanceName}-converter`);
   console.log("  cp db.sqlite3.pre-<version> db.sqlite3");
   console.log(`  ln -snf <old-code-root> ${codeLinkPath}`);
-  console.log(`  pm2 restart ${name} ${name}-converter`);
+  console.log("  ./code/server/bin/start-prod.sh");
+  console.log("  ./code/converter/bin/start-prod.sh");
 } else {
   console.log("Instance state OK.");
 }

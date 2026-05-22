@@ -130,15 +130,21 @@ Both `start-prod.sh` scripts source `.env` from the current working directory, t
 
 #### Upgrading an instance
 
-Re-run `bin/instance.ts` from the new version of the code:
+Re-run `bin/instance.ts` from the new version of the code, then **delete + start** pm2 (not `restart`):
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.8.0/bin/instance.ts dailybw   # backs up the DB, flips the symlink
-pm2 restart dailybw dailybw-converter         # migration runner applies any schema bumps
+/opt/photo-diary/0.8.0/bin/instance.ts dailybw          # backs up the DB, flips the symlink
+pm2 delete dailybw dailybw-converter                    # drop cached metadata
+cd /var/photo-diary/dailybw
+./code/server/bin/start-prod.sh                         # migration runner applies any schema bumps
+./code/converter/bin/start-prod.sh
+pm2 save
 ```
 
-The DB backup is named `db.sqlite3.pre-<new-version>` — a plain file copy that assumes the instance is stopped (started instances may have an inconsistent backup). Rollback is manual: `cp db.sqlite3.pre-<version> db.sqlite3`, point `code` back at the older version, restart pm2.
+`pm2 restart` won't pick up the symlink flip — pm2 caches the resolved script path and the package.json version at the original `start` time, so a restart re-execs the *old* paths and `pm2 list` keeps showing the previous version. `delete` + `start-prod.sh` forces re-resolution and is the only reliable upgrade path today.
+
+The DB backup is named `db.sqlite3.pre-<new-version>` — a plain file copy that assumes the instance is stopped (started instances may have an inconsistent backup). Rollback is manual: `cp db.sqlite3.pre-<version> db.sqlite3`, point `code` back at the older version, then the same `pm2 delete && start-prod.sh` cycle.
 
 #### nginx
 
