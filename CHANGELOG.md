@@ -14,6 +14,12 @@
 - Drop the open `cors()` middleware — none of the documented deploy patterns need cross-origin API access, and bearer-token auth already neutralised most CSRF concerns. If a future setup needs it, add a `CORS_ORIGINS` env knob then. (closes #205)
 - Tighten the token-secret reload interval from 60s to 5s, so a `bin/user.ts passwd` rotation (which kills sessions) takes effect quickly. (closes #206)
 
+### Operator scripts
+
+- `bin/user.ts passwd <id> [password]` now prompts for the password with no echo when the positional is omitted — avoids leaking the password into shell history and `ps`. Positional path stays for scripting. (closes #200)
+- `bin/instance.ts` infers the instance from cwd when invoked inside an existing instance dir (recognised by the `.env` + `code`-symlink pair), reading the logical name from `.env`'s `INSTANCE_NAME` (the pm2 process label) and falling back to the dir's basename when missing — so the pm2 commands in the upgrade output reflect what pm2 actually labels the process. Migrated the script's argv parsing to yargs (matching the other operator scripts) for consistent `--help`, validation, and unknown-flag rejection. (closes #198)
+- Upgrade flow now recommends `pm2 delete && start-prod.sh` instead of `pm2 restart` — restart preserves cached script paths and package.json version, so the previous instruction silently kept the old code running after a symlink flip. README and `bin/instance.ts` Next-steps output both updated. (closes #199)
+
 ## [0.7.1] - 2026-05-21
 
 ### Fixed

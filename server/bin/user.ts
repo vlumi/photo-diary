@@ -7,13 +7,16 @@
  * Subcommands:
  *
  *   user.ts list
- *   user.ts passwd <id> <password> [--keep-secret]
+ *   user.ts passwd <id> [password] [--keep-secret]
  *   user.ts delete <id> [--yes]
  *
  * `passwd` upserts the user — creates if missing, updates the password if
- * present. By default the user's `secret` is rotated too, which invalidates
- * every existing JWT for them (correct for "password lost / leaked" cases).
- * Pass `--keep-secret` to opt out and keep sessions alive across the change.
+ * present. Omit `[password]` to be prompted interactively without echo
+ * (preferred — avoids leaving the password in shell history or `ps`). When
+ * scripting, pass the password as the positional. By default the user's
+ * `secret` is rotated too, which invalidates every existing JWT for them
+ * (correct for "password lost / leaked" cases). Pass `--keep-secret` to opt
+ * out and keep sessions alive across the change.
  *
  * `delete` cascades to the user's `user_gallery` rows (access + hide_map).
  * Confirmation prompt unless `--yes` is given.
@@ -42,6 +45,72 @@ const confirm = async (prompt: string): Promise<boolean> => {
   } finally {
     rl.close();
   }
+};
+
+// Read a line from stdin without echoing it back to the terminal — for
+// passwords. Node has no built-in no-echo helper, so we flip stdin into raw
+// mode and consume bytes manually until enter / EOF. Handles paste (multi-
+// char chunks), backspace, and Ctrl-C.
+const CTRL_C = String.fromCharCode(0x03); // ETX — abort
+const EOF_CHAR = String.fromCharCode(0x04); // EOT — submit (Ctrl-D)
+const DEL = String.fromCharCode(0x7f); // DEL — backspace on most terminals
+const promptHidden = (prompt: string): Promise<string> => {
+  if (!process.stdin.isTTY) {
+    console.error(
+      "Password not provided and stdin is not a TTY. Pass the password as a positional argument when scripting:"
+    );
+    console.error("  user.ts passwd <id> <password>");
+    process.exit(1);
+  }
+  process.stdout.write(prompt);
+  return new Promise((resolve) => {
+    let value = "";
+    const stdin = process.stdin;
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding("utf8");
+    const cleanup = () => {
+      stdin.setRawMode(false);
+      stdin.pause();
+      stdin.removeListener("data", onData);
+    };
+    const onData = (chunk: Buffer | string) => {
+      for (const ch of chunk.toString()) {
+        if (ch === CTRL_C) {
+          // Ctrl-C: behave like the shell would (abort, no resolve).
+          cleanup();
+          process.stdout.write("\n");
+          process.exit(130);
+        }
+        if (ch === "\r" || ch === "\n" || ch === EOF_CHAR) {
+          cleanup();
+          process.stdout.write("\n");
+          resolve(value);
+          return;
+        }
+        if (ch === DEL || ch === "\b") {
+          value = value.slice(0, -1);
+          continue;
+        }
+        value += ch;
+      }
+    };
+    stdin.on("data", onData);
+  });
+};
+
+const promptForNewPassword = async (): Promise<string> => {
+  const first = await promptHidden("New password: ");
+  if (first.length === 0) {
+    console.error("Password cannot be empty.");
+    process.exit(1);
+  }
+  const second = await promptHidden("Confirm:      ");
+  if (first !== second) {
+    console.error("Passwords do not match. Aborted.");
+    process.exit(1);
+  }
+  return first;
 };
 
 const formatTable = (rows: string[][]): string => {
@@ -79,15 +148,15 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
-    "passwd <id> <password>",
+    "passwd <id> [password]",
     "Set a user's password (creates the user if missing; rotates secret by default)",
     (y) =>
       y
         .positional("id", { describe: "User ID", type: "string", demandOption: true })
         .positional("password", {
-          describe: "Password (bcrypt-hashed before storage)",
+          describe:
+            "Password; omit to be prompted interactively without echo (preferred — avoids ps/shell-history leaks)",
           type: "string",
-          demandOption: true,
         })
         .option("keep-secret", {
           describe: "Don't rotate the user's secret (keeps existing JWT sessions valid)",
@@ -95,7 +164,8 @@ await yargs(hideBin(process.argv))
           default: false,
         }),
     async (argv) => {
-      const hash = await bcrypt.hash(argv.password, SALT_ROUNDS);
+      const password = argv.password ?? (await promptForNewPassword());
+      const hash = await bcrypt.hash(password, SALT_ROUNDS);
       const existing = await db
         .loadUser(argv.id)
         .then((u) => u as { id: string })
