@@ -15,13 +15,17 @@ const init = async () => {
 const router = express.Router();
 
 // Per-IP throttle for the login POST. The GET keep-alive and DELETE logout
-// paths aren't rate-limited (they're routine app traffic). 10 attempts per
-// 15-minute window is loose enough not to bother a typo'ing operator and
-// tight enough that brute-force needs a botnet rather than a single IP.
+// paths aren't rate-limited (they're routine app traffic). 10 *failed*
+// attempts per 15-minute window: `skipSuccessfulRequests: true` means a
+// successful login doesn't tick the counter, so a typo'ing operator who then
+// gets it right isn't penalised — only sustained guessing is. Per-IP only;
+// keys off `req.ip`, which requires nginx to forward `X-Forwarded-For` (the
+// README's nginx section shows the headers).
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: { error: "Too many login attempts. Try again later." },
+  skipSuccessfulRequests: true,
+  message: { error: "Too many failed login attempts. Try again later." },
   standardHeaders: true,
   legacyHeaders: false,
 });
