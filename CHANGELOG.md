@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-05-22
+
 ### Fixed
 
 - Apply the `hide_map` cascade on `GET /api/v1/galleries/:id` and `/api/v1/photos` (`/`, `/:id`); previously only `/gallery-photos/...` masked the embedded photos' coordinates, so `hide_map=1` leaked coords through the other two routes. (closes #201)
@@ -232,7 +234,8 @@
 
 ## Initial commit - 2020-07-04
 
-[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/vlumi/photo-diary/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/vlumi/photo-diary/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/vlumi/photo-diary/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/vlumi/photo-diary/compare/v0.5.1...v0.6.0
