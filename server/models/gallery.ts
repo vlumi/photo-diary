@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import CONST from "../lib/constants.js";
+import { NotImplementedError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -23,7 +24,7 @@ const getGalleries = async () => {
 };
 const createGallery = async (gallery: Record<string, any>) => {
   logger.debug("Creating gallery", gallery);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const getGallery = async (galleryId: string) => {
   logger.debug("Getting gallery", galleryId);
@@ -46,9 +47,9 @@ const getGallery = async (galleryId: string) => {
 };
 const updateGallery = async (gallery: Record<string, any>) => {
   logger.debug("Updating gallery", gallery);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const deleteGallery = async (galleryId: string) => {
   logger.debug("Deleting gallery", galleryId);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };

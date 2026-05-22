@@ -1,8 +1,8 @@
 import { SignJWT, jwtVerify, decodeJwt } from "jose";
 import bcrypt from "bcrypt";
 
-import CONST from "../lib/constants.js";
 import config from "../lib/config/index.js";
+import { LoginError, NotImplementedError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -43,7 +43,7 @@ type Credentials = { id: string; password: string };
 type StoredUser = { id: string; password: string; secret: string };
 
 const revokeToken = async (_userId: string): Promise<void> => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 
 export default () => {
@@ -65,7 +65,7 @@ const checkUserPassword = async (
     bcrypt.compare(credentials.password, user.password, (error, result) => {
       if (error || !result) {
         logger.debug(`Invalid password for "${credentials.id}"`);
-        reject(CONST.ERROR_LOGIN);
+        reject(new LoginError());
       }
       logger.debug(`Password check succeeded for "${credentials.id}"`);
       resolve();
@@ -88,7 +88,7 @@ const authenticateUser = async (credentials: Credentials): Promise<void> => {
     // Make sure the secret is up-to-date
     secrets[user.id] = user.secret;
   } catch {
-    throw CONST.ERROR_LOGIN;
+    throw new LoginError();
   }
 };
 const verifyToken = async (token: string) => {
@@ -100,7 +100,7 @@ const verifyToken = async (token: string) => {
     encodeSecret(getSecret(decoded.id))
   );
   if (!payload || payload.id !== decoded.id) {
-    throw CONST.ERROR_LOGIN;
+    throw new LoginError();
   }
   return payload as { id: string; isAdmin?: boolean };
 };
