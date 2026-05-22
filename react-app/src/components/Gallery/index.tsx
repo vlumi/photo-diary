@@ -2,6 +2,7 @@ import React from "react";
 import { Global, css } from "@emotion/react";
 import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 
 import metaService from "../../services/meta";
 import galleryService from "../../services/galleries";
@@ -85,17 +86,7 @@ const Gallery = ({
   isStats = false,
   scrollState,
 }: Props): React.ReactElement => {
-  const [meta, setMeta] = React.useState<Meta | undefined>(undefined);
-  const [galleries, setGalleries] = React.useState<GalleryT[] | undefined>(
-    undefined
-  );
-  const [gallery, setGallery] = React.useState<GalleryT | undefined>(undefined);
-  const [photos, setPhotos] = React.useState<PhotoT[] | undefined>(undefined);
-  const [uniqueValues, setUniqueValues] = React.useState<
-    UniqueValues | undefined
-  >(undefined);
   const [filters, setFilters] = React.useState<FiltersT>({});
-  const [error, setError] = React.useState("");
 
   const { t } = useTranslation();
   const location = useLocation();
@@ -119,56 +110,66 @@ const Gallery = ({
   const month = Number(useParams().month || 0);
   const day = Number(useParams().day || 0);
 
-  const staleGallery = gallery && gallery.id() !== galleryId;
+  // Three server queries, one for each independent data source. TanStack
+  // Query handles caching, dedup, refetch-on-focus, and (via the keyed
+  // `gallery-photos` query) automatic invalidation when `galleryId` changes
+  // — replaces five `useEffect` + `useState` pairs and the manual
+  // stale-gallery reset that used to sit inline in the render body.
+  const metaQuery = useQuery({
+    queryKey: ["meta"],
+    queryFn: () => metaService.getAll(),
+  });
+  const galleriesQuery = useQuery({
+    queryKey: ["galleries", user?.id ?? null],
+    queryFn: async () => {
+      const data = await galleryService.getAll();
+      return data
+        .map((gallery) => GalleryModel(gallery))
+        .filter((g): g is GalleryT => !!g);
+    },
+  });
+  const photosQuery = useQuery({
+    queryKey: ["gallery-photos", galleryId, user?.id ?? null],
+    queryFn: async () => {
+      const data = await galleryPhotosService.get(galleryId as string);
+      return data
+        .map((photo) => PhotoModel(photo))
+        .filter((p): p is PhotoT => !!p);
+    },
+    enabled: !!galleryId,
+  });
+
+  const meta = metaQuery.data as Meta | undefined;
+  const galleries = galleriesQuery.data;
+  const photos = photosQuery.data;
+  const error =
+    metaQuery.error?.message ||
+    galleriesQuery.error?.message ||
+    photosQuery.error?.message ||
+    "";
+
+  // Sync the runtime-tunable config bits the SPA reads from `meta`. Side
+  // effect lives next to the query that produced it; the assignments stay
+  // identical to the pre-TanStack code.
+  React.useEffect(() => {
+    if (!meta) return;
+    config.PHOTO_ROOT_URL = meta.cdn || config.PHOTO_ROOT_URL;
+    if (meta.defaultGallery) config.DEFAULT_GALLERY = meta.defaultGallery;
+    if (meta.defaultTheme) config.DEFAULT_THEME = meta.defaultTheme;
+    if (meta.initialGalleryView)
+      config.INITIAL_GALLERY_VIEW = meta.initialGalleryView;
+    if (meta.firstWeekday !== undefined)
+      config.FIRST_WEEKDAY = Number(meta.firstWeekday);
+  }, [meta]);
 
   const selectedGallery =
     galleries && galleries.find((gallery) => gallery.id() === galleryId);
 
-  React.useEffect(() => {
-    metaService
-      .getAll()
-      .then((returnedMeta) => {
-        const m = returnedMeta as Meta;
-        setMeta(m);
-        config.PHOTO_ROOT_URL = m.cdn || config.PHOTO_ROOT_URL;
-        if (m.defaultGallery) config.DEFAULT_GALLERY = m.defaultGallery;
-        if (m.defaultTheme) config.DEFAULT_THEME = m.defaultTheme;
-        if (m.initialGalleryView)
-          config.INITIAL_GALLERY_VIEW = m.initialGalleryView;
-        if (m.firstWeekday !== undefined)
-          config.FIRST_WEEKDAY = Number(m.firstWeekday);
-      })
-      .catch((error: Error) => setError(error.message));
-  }, []);
-  React.useEffect(() => {
-    galleryService
-      .getAll()
-      .then((returnedGalleries) => {
-        const gals = returnedGalleries
-          .map((gallery) => GalleryModel(gallery))
-          .filter((g): g is GalleryT => !!g);
-        setGalleries(gals);
-      })
-      .catch((error: Error) => setError(error.message));
-  }, [user]);
-  React.useEffect(() => {
-    if (!galleryId) {
-      return;
-    }
-    galleryPhotosService
-      .get(galleryId)
-      .then((photos) => {
-        const mappedPhotos = photos
-          .map((photo) => PhotoModel(photo))
-          .filter((photo): photo is PhotoT => !!photo);
-        setPhotos(mappedPhotos);
-      })
-      .catch((error: Error) => setError(error.message));
-  }, [galleryId, user]);
-  React.useEffect(() => {
-    if (!photos) {
-      return;
-    }
+  // `uniqueValues` is purely derived from photos + i18n bits — language-
+  // dependent value formatting (per #231 the lang-switch perf ticket is
+  // tracked separately; the same memo dependencies apply).
+  const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
+    if (!photos) return undefined;
     // The reduce builds up a `{ topic: { category: Set<unknown> } }` shape,
     // then the forEach normalizes each Set into the consumer-facing
     // `UniqueValueEntry[]`. The accumulator is typed as the loose
@@ -205,12 +206,11 @@ const Gallery = ({
       (flattened as Record<string, Record<string, UniqueValueEntry[]>>)[topic] =
         topicBag;
     });
-    setUniqueValues(flattened);
+    return flattened;
   }, [photos, lang, t, countryData]);
-  React.useEffect(() => {
-    if (!selectedGallery || !photos) {
-      return;
-    }
+
+  const gallery = React.useMemo<GalleryT | undefined>(() => {
+    if (!selectedGallery || !photos) return undefined;
     const filteredPhotos = photos.filter((photo) =>
       Object.values(filters).every(
         (topicFilters) =>
@@ -222,14 +222,8 @@ const Gallery = ({
           )
       )
     );
-    setGallery(selectedGallery.withPhotos(filteredPhotos));
+    return selectedGallery.withPhotos(filteredPhotos);
   }, [selectedGallery, photos, filters]);
-
-  if (staleGallery) {
-    setGallery(undefined);
-    setPhotos(undefined);
-    setUniqueValues(undefined);
-  }
 
   const selectedThemeName = selectedGallery?.theme();
   const activeTheme =
@@ -307,7 +301,7 @@ const Gallery = ({
   }
 
   const renderContent = () => {
-    if (staleGallery || !gallery || !uniqueValues) {
+    if (!gallery || !uniqueValues) {
       return <div>{t("loading")}</div>;
     }
 
