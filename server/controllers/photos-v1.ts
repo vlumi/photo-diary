@@ -14,6 +14,11 @@ const init = async () => {
 };
 
 const PhotoIdParam = Type.Object({ photoId: Type.String() });
+// No response schemas on these endpoints yet — `/api/v1/photos` returns a
+// driver-dependent shape (dict from the dummy fixture, array from sqlite)
+// and the react-app doesn't consume either route. The route on
+// `/api/v1/gallery-photos/:galleryId` is what the SPA actually uses and it
+// has a real schema declared next door.
 const TAGS = ["photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -46,7 +51,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.post(
     "/",
-    { schema: { tags: TAGS, summary: "Create a photo (admin)" } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Create a photo (admin)",
+        security: [{ bearer: [] }],
+      },
+    },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
       const photo = {};
@@ -87,6 +98,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Update one photo (admin)",
         params: PhotoIdParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request) => {
@@ -107,6 +119,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete one photo (admin)",
         params: PhotoIdParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {

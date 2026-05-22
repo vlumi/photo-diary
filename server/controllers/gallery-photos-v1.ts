@@ -17,6 +17,11 @@ const GalleryPhotoParams = Type.Object({
   galleryId: Type.String(),
   photoId: Type.String(),
 });
+// Same permissive pattern as the photos controller — these endpoints return
+// the joined photo metadata, whose exact shape is wider than the contract
+// callers care about.
+const PhotoItem = Type.Object({}, { additionalProperties: true });
+const GalleryPhotosListResponse = Type.Array(PhotoItem);
 const TAGS = ["gallery-photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -30,6 +35,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "List photos in a gallery",
         params: GalleryIdParam,
+        response: { 200: GalleryPhotosListResponse },
       },
     },
     async (request) => {
@@ -55,6 +61,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Get one photo's metadata in a gallery's context",
         params: GalleryPhotoParams,
+        response: { 200: PhotoItem },
       },
     },
     async (request) => {
@@ -83,6 +90,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Link a photo to a gallery (admin)",
         params: GalleryPhotoParams,
+        security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {
@@ -108,6 +116,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Unlink a photo from a gallery (admin)",
         params: GalleryPhotoParams,
+        security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {

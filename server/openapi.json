@@ -24,7 +24,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
           }
         }
       },
@@ -32,6 +41,11 @@
         "summary": "Create a meta entry (admin)",
         "tags": [
           "meta"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
         ],
         "responses": {
           "200": {
@@ -58,7 +72,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
           }
         }
       },
@@ -75,6 +98,11 @@
             "in": "path",
             "name": "key",
             "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
           }
         ],
         "responses": {
@@ -96,6 +124,11 @@
             "in": "path",
             "name": "key",
             "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
           }
         ],
         "responses": {
@@ -142,7 +175,22 @@
         },
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "token"
+                  ],
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -150,6 +198,11 @@
         "summary": "Log out (revoke all tokens for the requester)",
         "tags": [
           "tokens"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
         ],
         "responses": {
           "200": {
@@ -174,6 +227,11 @@
             "required": true
           }
         ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response"
@@ -187,9 +245,32 @@
         "tags": [
           "users"
         ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -197,6 +278,11 @@
         "summary": "Create a user (admin)",
         "tags": [
           "users"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
         ],
         "responses": {
           "200": {
@@ -221,6 +307,11 @@
             "required": true
           }
         ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response"
@@ -240,6 +331,11 @@
             "in": "path",
             "name": "userId",
             "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
           }
         ],
         "responses": {
@@ -263,6 +359,11 @@
             "required": true
           }
         ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response"
@@ -278,7 +379,30 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "hideMap"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "hideMap": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -286,6 +410,11 @@
         "summary": "Create a gallery (admin)",
         "tags": [
           "galleries"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
         ],
         "responses": {
           "200": {
@@ -312,7 +441,27 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "hideMap"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "hideMap": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -329,6 +478,11 @@
             "in": "path",
             "name": "galleryId",
             "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
           }
         ],
         "responses": {
@@ -350,6 +504,11 @@
             "in": "path",
             "name": "galleryId",
             "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
           }
         ],
         "responses": {
@@ -375,6 +534,11 @@
         "summary": "Create a photo (admin)",
         "tags": [
           "photos"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
         ],
         "responses": {
           "200": {
@@ -420,6 +584,11 @@
             "required": true
           }
         ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response"
@@ -439,6 +608,11 @@
             "in": "path",
             "name": "photoId",
             "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
           }
         ],
         "responses": {
@@ -466,7 +640,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -497,7 +683,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
           }
         }
       },
@@ -522,6 +717,11 @@
             "in": "path",
             "name": "photoId",
             "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
           }
         ],
         "responses": {
@@ -551,6 +751,11 @@
             "in": "path",
             "name": "photoId",
             "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
           }
         ],
         "responses": {

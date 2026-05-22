@@ -1,7 +1,7 @@
 import { Type } from "@sinclair/typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
-import { LoginError } from "../lib/errors.js";
+import { LoginError, RateLimitError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/token.js";
@@ -23,6 +23,7 @@ const LoginBody = Type.Object({
   id: Type.Optional(Type.String()),
   password: Type.Optional(Type.String()),
 });
+const LoginResponse = Type.Object({ token: Type.String() });
 
 const UserIdParam = Type.Object({ userId: Type.String() });
 
@@ -64,6 +65,12 @@ const recordLoginFailure = (ip: string) => {
   entry.count += 1;
 };
 
+// Test-only helper: reset the in-memory failed-login counter so each
+// rate-limit test starts from a clean slate. Not for production callers.
+export const _resetLoginRateLimitForTests = () => {
+  failedLogins.clear();
+};
+
 const TAGS = ["tokens"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -88,14 +95,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Log in, issuing a new token",
         body: LoginBody,
+        response: { 200: LoginResponse },
       },
     },
     async (request, reply) => {
       if (isRateLimited(request.ip)) {
-        reply
-          .status(429)
-          .send({ error: "Too many failed login attempts. Try again later." });
-        return;
+        throw new RateLimitError(
+          "Too many failed login attempts. Try again later."
+        );
       }
       logger.debug(`Login attempt for "${request.body?.id}"`);
       const credentials = {
@@ -133,6 +140,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Log out (revoke all tokens for the requester)",
+        security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {
@@ -151,6 +159,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Revoke all tokens for another user (admin)",
         params: UserIdParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {

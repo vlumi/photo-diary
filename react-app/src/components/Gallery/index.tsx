@@ -128,7 +128,7 @@ const Gallery = ({
     metaService
       .getAll()
       .then((returnedMeta) => {
-        const m = returnedMeta as unknown as Meta;
+        const m = returnedMeta as Meta;
         setMeta(m);
         config.PHOTO_ROOT_URL = m.cdn || config.PHOTO_ROOT_URL;
         if (m.defaultGallery) config.DEFAULT_GALLERY = m.defaultGallery;
@@ -144,7 +144,7 @@ const Gallery = ({
     galleryService
       .getAll()
       .then((returnedGalleries) => {
-        const gals = (returnedGalleries as unknown as unknown[])
+        const gals = returnedGalleries
           .map((gallery) => GalleryModel(gallery))
           .filter((g): g is GalleryT => !!g);
         setGalleries(gals);
@@ -158,7 +158,7 @@ const Gallery = ({
     galleryPhotosService
       .get(galleryId)
       .then((photos) => {
-        const mappedPhotos = (photos as unknown as unknown[])
+        const mappedPhotos = photos
           .map((photo) => PhotoModel(photo))
           .filter((photo): photo is PhotoT => !!photo);
         setPhotos(mappedPhotos);
