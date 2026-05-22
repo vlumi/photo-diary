@@ -1,7 +1,7 @@
 import express from "express";
 
 import authorizerFactory from "../lib/authorizer.js";
-import { shouldHideMap } from "../lib/privacy.js";
+import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/gallery.js";
 
 const authorizer = authorizerFactory();
@@ -72,12 +72,18 @@ router.get("/:galleryId", async (request, response) => {
     request.user.id,
     request.params.galleryId
   );
-  const gallery = await model.getGallery(request.params.galleryId);
+  const gallery = (await model.getGallery(request.params.galleryId)) as Record<
+    string,
+    unknown
+  > & { photos?: unknown[] };
   const hideMap = await shouldHideMap(
     request.user.id,
     request.params.galleryId
   );
-  response.json({ ...(gallery as Record<string, unknown>), hideMap });
+  if (hideMap && gallery.photos) {
+    maskCoordinates(gallery.photos as Parameters<typeof maskCoordinates>[0]);
+  }
+  response.json({ ...gallery, hideMap });
 });
 /**
  * Update gallery properties

@@ -25,7 +25,7 @@ router.get("/", (request, response) => {
  * Login, creating a new token.
  */
 router.post("/", async (request, response, next) => {
-  logger.debug("Login", request.body);
+  logger.debug(`Login attempt for "${request.body?.id}"`);
   const credentials = {
     id: request.body.id,
     password: request.body.password,

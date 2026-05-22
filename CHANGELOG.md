@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Apply the `hide_map` cascade on `GET /api/v1/galleries/:id` and `/api/v1/photos` (`/`, `/:id`); previously only `/gallery-photos/...` masked the embedded photos' coordinates, so `hide_map=1` leaked coords through the other two routes. (closes #201)
+- Stop logging credentials, JWT secrets, and tokens in debug-level statements (`tokens-v1.ts`, `models/token.ts`); only the user ID is logged now. Prevents plaintext password leaks into pm2 logs whenever `DEBUG=true` is flipped to triage a login issue. (closes #202)
+
 ## [0.7.1] - 2026-05-21
 
 ### Fixed
