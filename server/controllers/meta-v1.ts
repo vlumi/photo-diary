@@ -1,4 +1,4 @@
-import express from "express";
+import type { FastifyPluginAsync } from "fastify";
 
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/meta.js";
@@ -9,9 +9,6 @@ const model = modelFactory();
 const init = async () => {
   await model.init();
 };
-const router = express.Router();
-
-export default { init, router };
 
 const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
   return Object.keys(meta)
@@ -39,47 +36,56 @@ const envDefaults = (): Record<string, string> => {
   return out;
 };
 
-/**
- * Get all meta.
- */
-router.get("/", async (request, response) => {
-  // Public, no authorization needed
-  const meta = await model.getMetas();
-  response.json({ ...cleanMeta(meta), ...envDefaults() });
-});
-/**
- * Create a meta.
- */
-router.post("/", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.id);
-  const meta = {};
-  // TODO: validate and set content from request.body
-  const createdMeta = await model.createMeta(meta);
-  response.json(createdMeta);
-});
-/**
- * Get the matching meta.
- */
-router.get("/:key", async (request, response) => {
-  // Public, no authorization needed
-  const meta = await model.getMeta(`instance_${request.params.key}`);
-  response.json(cleanMeta(meta));
-});
-/**
- * Update the matching meta.
- */
-router.put("/:key", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.id);
-  const meta = {};
-  // TODO: validate and set content from request.body
-  const updatedMeta = await model.updateMeta(meta);
-  response.json(updatedMeta);
-});
-/**
- * Delete the matching meta.
- */
-router.delete("/:key", async (request, response) => {
-  await authorizer.authorizeAdmin(request.user.id);
-  await model.deleteMeta(request.params.key);
-  response.status(204).end();
-});
+const plugin: FastifyPluginAsync = async (fastify) => {
+  /**
+   * Get all meta.
+   */
+  fastify.get("/", async () => {
+    // Public, no authorization needed
+    const meta = await model.getMetas();
+    return { ...cleanMeta(meta), ...envDefaults() };
+  });
+
+  /**
+   * Create a meta.
+   */
+  fastify.post("/", async (request) => {
+    await authorizer.authorizeAdmin(request.user.id);
+    const meta = {};
+    // TODO: validate and set content from request.body
+    return await model.createMeta(meta);
+  });
+
+  /**
+   * Get the matching meta.
+   */
+  fastify.get<{ Params: { key: string } }>("/:key", async (request) => {
+    // Public, no authorization needed
+    const meta = await model.getMeta(`instance_${request.params.key}`);
+    return cleanMeta(meta);
+  });
+
+  /**
+   * Update the matching meta.
+   */
+  fastify.put<{ Params: { key: string } }>("/:key", async (request) => {
+    await authorizer.authorizeAdmin(request.user.id);
+    const meta = {};
+    // TODO: validate and set content from request.body
+    return await model.updateMeta(meta);
+  });
+
+  /**
+   * Delete the matching meta.
+   */
+  fastify.delete<{ Params: { key: string } }>(
+    "/:key",
+    async (request, reply) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      await model.deleteMeta(request.params.key);
+      reply.status(204).send();
+    }
+  );
+};
+
+export default { init, plugin };
