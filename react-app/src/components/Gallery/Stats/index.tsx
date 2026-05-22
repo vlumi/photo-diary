@@ -52,7 +52,7 @@ const Stats = ({
 
   React.useEffect(() => {
     stats.generate(photos, uniqueValues).then((stats) => setData(stats));
-  }, [photos, uniqueValues, t]);
+  }, [photos, uniqueValues]);
 
   if (!data) {
     return (
