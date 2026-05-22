@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Photo Diary API",
-    "description": "Self-hosted photo-diary backend. Schema is generated from TypeBox-validated route handlers — see #167 PR B/C for the migration that produced this document.",
+    "description": "Self-hosted photo-diary backend. Schema is generated from TypeBox-validated route handlers.",
     "version": "0.7.4"
   },
   "components": {

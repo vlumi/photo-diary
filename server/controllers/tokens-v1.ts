@@ -38,9 +38,9 @@ const UserIdParam = Type.Object({ userId: Type.String() });
 // self-hosted single-instance deploy.
 //
 // `@fastify/rate-limit` was the natural plugin choice but doesn't support
-// the equivalent of express-rate-limit's `skipSuccessfulRequests`, which
-// was the whole point of #213. Twenty lines of plain Map state preserves
-// the 0.7.3 behavior without pulling in a custom store.
+// the equivalent of express-rate-limit's `skipSuccessfulRequests` (count
+// only failed attempts, never the typo-then-success case). Twenty lines of
+// plain Map state preserves the behaviour without pulling in a custom store.
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_FAILURES = 10;
 const failedLogins = new Map<string, { count: number; firstAt: number }>();

@@ -66,19 +66,17 @@ const pkg = JSON.parse(
   readFileSync(path.join(import.meta.dirname, "package.json"), "utf8")
 ) as { version: string };
 
-// @fastify/swagger introspects every registered route's `schema` (from
-// PR B) into an OpenAPI document — it has to register *before* the
-// controllers do, so it captures every route as it's added. The spec is
-// queried at any time via `app.swagger()`; the UI is exposed separately
-// below.
+// @fastify/swagger introspects every registered route's `schema` into an
+// OpenAPI document — it has to register *before* the controllers do, so it
+// captures every route as it's added. The spec is queried at any time via
+// `app.swagger()`; the UI is exposed separately below.
 await app.register(fastifySwagger, {
   openapi: {
     info: {
       title: "Photo Diary API",
       description:
         "Self-hosted photo-diary backend. Schema is generated from " +
-        "TypeBox-validated route handlers — see #167 PR B/C for the " +
-        "migration that produced this document.",
+        "TypeBox-validated route handlers.",
       version: pkg.version,
     },
     tags: [

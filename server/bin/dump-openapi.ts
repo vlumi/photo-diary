@@ -7,9 +7,9 @@
  * Usage:
  *   bin/dump-openapi.ts [--out <path>]
  *
- * Defaults to `server/openapi.json` (committed to the repo). The react-app
- * codegen (#167 PR D) reads from there to keep the typed client in lockstep
- * with the server contract.
+ * Defaults to `server/openapi.json` (committed to the repo). The react-app's
+ * typed API client codegens against the committed file so the contract on
+ * either side stays in lockstep.
  *
  * Boots the app (which initialises models against the dummy driver so the
  * server can start without a real DB) just long enough to call
