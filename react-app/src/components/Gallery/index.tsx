@@ -10,13 +10,18 @@ import galleryPhotosService from "../../services/gallery-photos";
 import Title from "./Title";
 import Filters from "./Filters";
 import ListBody from "./ListBody";
-import Stats from "./Stats";
 import Empty from "./Empty";
 import Full from "./Full";
 import Year from "./Year";
 import Month from "./Month";
 import Day from "./Day";
-import Photo from "./Photo";
+// `Stats` and `Photo` are the two big subtrees by bundle weight (Stats pulls
+// in the aggregate-charts logic; Photo pulls in `react-leaflet` for the
+// per-photo map). React.lazy puts each in its own chunk so a user browsing
+// the calendar never has to download the stats or single-photo code paths
+// until they actually navigate to one. Suspense fallback below.
+const Stats = React.lazy(() => import("./Stats"));
+const Photo = React.lazy(() => import("./Photo"));
 
 import GalleryModel, { type Gallery as GalleryT } from "../../models/GalleryModel";
 import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
@@ -466,7 +471,9 @@ const Gallery = ({
   return (
     <>
       <Global styles={globalStyles(activeTheme)} />
-      {renderContent()}
+      <React.Suspense fallback={<div>{t("loading")}</div>}>
+        {renderContent()}
+      </React.Suspense>
     </>
   );
 };

@@ -6,6 +6,10 @@
 
 - Replace string-constant error throws with a typed `AppError` class hierarchy (`AccessError`, `NotFoundError`, `LoginError`, `InvalidTokenError`, `NotImplementedError`, `UnavailableError`) in `server/lib/errors.ts`. Each subclass carries its HTTP status; the error-handler middleware reads `.status` and echoes `.message` as the JSON response. The legacy `CONST.ERROR_*` string constants and the dual-path switch in error-handler.ts are now retired (no remaining throw sites referenced them). Wire-shape unchanged for every existing endpoint. (closes #219)
 
+### Frontend
+
+- Code-split the `Stats` and `Photo` subtrees out of the main bundle via `React.lazy`. Stats pulls in the aggregate-charts logic; Photo pulls in `react-leaflet` for the per-photo map. Calendar-only browsing no longer downloads either. Main-bundle size 859 kB → 642 kB raw (276 kB → 204 kB gzipped, a 26% reduction). Suspense fallback lives at the Gallery component's root. (closes #162)
+
 ## [0.7.4] - 2026-05-22
 
 ### Fixed
