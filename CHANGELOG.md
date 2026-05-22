@@ -6,6 +6,10 @@
 
 - Login rate-limit now skips successful requests — only failed login attempts count toward the per-IP limit, so a typo'ing operator who then gets it right isn't throttled (only sustained guessing is). The per-IP keying still needs nginx to forward `X-Forwarded-For` for it to actually distinguish clients (already in the README's recommended nginx block).
 
+### Server
+
+- Request logger now prepends a local-time timestamp (`[YYYY-MM-DD HH:MM:SS.mmm]`, matching lib/logger.ts so request lines interleave cleanly with the rest of the log) and includes the client IP (`:remote-addr`, resolved through `req.ip` so trust-proxy unwrapping applies) — also makes it visible which address the per-IP rate-limiter is keying off; an operator seeing `127.0.0.1` on every line knows the nginx vhost is missing `proxy_set_header X-Forwarded-For …`.
+
 ## [0.7.2] - 2026-05-22
 
 ### Fixed
