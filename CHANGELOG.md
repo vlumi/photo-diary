@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-05-22
+
 ### Fixed
 
 - Login rate-limit now skips successful requests — only failed login attempts count toward the per-IP limit, so a typo'ing operator who then gets it right isn't throttled (only sustained guessing is). The per-IP keying still needs nginx to forward `X-Forwarded-For` for it to actually distinguish clients (already in the README's recommended nginx block).
@@ -242,7 +244,8 @@
 
 ## Initial commit - 2020-07-04
 
-[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.2...HEAD
+[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.3...HEAD
+[0.7.3]: https://github.com/vlumi/photo-diary/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/vlumi/photo-diary/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/vlumi/photo-diary/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/vlumi/photo-diary/compare/v0.6.0...v0.7.0
