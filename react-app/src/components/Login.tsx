@@ -5,11 +5,12 @@ import { useTranslation } from "react-i18next";
 
 import TopMenuButton from "./TopMenuButton";
 
-import UserModel, { type User } from "../models/UserModel";
+import UserModel from "../models/UserModel";
 
 import tokenService from "../services/tokens";
 
 import token from "../lib/token";
+import { useUserStore } from "../stores";
 
 const Form = styled.form``;
 const Input = styled.input`
@@ -23,15 +24,12 @@ const Input = styled.input`
   background-color: var(--header-sub-color);
 `;
 
-interface Props {
-  setUser: (user: User | undefined) => void;
-}
-
-const Login = ({ setUser }: Props): React.ReactElement => {
+const Login = (): React.ReactElement => {
   const [userId, setUserId] = React.useState("");
   const [password, setPassword] = React.useState("");
 
   const { t } = useTranslation();
+  const setUser = useUserStore((s) => s.setUser);
 
   const login = async (userId: string, password: string) => {
     try {

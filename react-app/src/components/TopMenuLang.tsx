@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled";
-import { useTranslation } from "react-i18next";
+
+import { useLangStore } from "../stores";
 
 const Lang = styled.span`
   margin: auto 0;
@@ -21,17 +22,12 @@ const LangInput = styled.input`
   width: 0;
 `;
 
-interface Props {
-  lang: string;
-}
-
-const TopMenuLang = ({ lang }: Props): React.ReactElement => {
-  const { i18n } = useTranslation();
+const TopMenuLang = (): React.ReactElement => {
+  const lang = useLangStore((s) => s.lang);
+  const setLang = useLangStore((s) => s.setLang);
 
   const handleLangChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const lang = event.target.value;
-    i18n.changeLanguage(lang);
-    window.localStorage.setItem("lang", lang);
+    setLang(event.target.value);
   };
 
   return (

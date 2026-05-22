@@ -36,17 +36,13 @@ import stats, {
 } from "../../lib/stats";
 import theme from "../../lib/theme";
 
-import type { Filters as FiltersT } from "../../lib/filter";
-import type { User } from "../../models/UserModel";
+import {
+  useUserStore,
+  useLangStore,
+  useFiltersStore,
+  useScrollStore,
+} from "../../stores";
 
-interface CountryData {
-  getName(code: string, lang: string): string | undefined;
-  isValid(code: string): boolean;
-}
-interface ScrollState {
-  get: (path: string) => number;
-  set: (path: string, position: number) => void;
-}
 interface Meta {
   cdn?: string;
   name?: string;
@@ -72,34 +68,29 @@ const globalStyles = (theme: ActiveTheme) => css`
 `;
 
 interface Props {
-  user?: User;
-  lang: string;
-  countryData: CountryData;
   isStats?: boolean;
-  scrollState: ScrollState;
 }
 
-const Gallery = ({
-  user,
-  lang,
-  countryData,
-  isStats = false,
-  scrollState,
-}: Props): React.ReactElement => {
-  const [filters, setFilters] = React.useState<FiltersT>({});
+const Gallery = ({ isStats = false }: Props): React.ReactElement => {
+  const user = useUserStore((s) => s.user);
+  const lang = useLangStore((s) => s.lang);
+  const countryData = useLangStore((s) => s.countryData);
+  const filters = useFiltersStore((s) => s.filters);
+  const setFilters = useFiltersStore((s) => s.setFilters);
+  const setScroll = useScrollStore((s) => s.set);
 
   const { t } = useTranslation();
   const location = useLocation();
 
   React.useEffect(() => {
     const handleScroll = () => {
-      scrollState.set(location.pathname, window.pageYOffset);
+      setScroll(location.pathname, window.pageYOffset);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [location, scrollState]);
+  }, [location, setScroll]);
 
   const context = isStats ? "stats" : "gallery";
 

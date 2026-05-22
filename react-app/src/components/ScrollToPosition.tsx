@@ -1,25 +1,19 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-interface ScrollState {
-  get: (path: string) => number;
-  set: (path: string, position: number) => void;
-}
+import { useScrollStore } from "../stores";
 
 interface Props {
   children?: React.ReactNode;
-  scrollState: ScrollState;
 }
 
-const ScrollToPosition = ({
-  children,
-  scrollState,
-}: Props): React.ReactElement => {
+const ScrollToPosition = ({ children }: Props): React.ReactElement => {
   const location = useLocation();
+  const get = useScrollStore((s) => s.get);
   useEffect(() => {
-    const y = scrollState.get(location.pathname);
+    const y = get(location.pathname);
     setTimeout(() => window.scrollTo(0, y), 0);
-  }, [location, scrollState]);
+  }, [location, get]);
   return <>{children}</>;
 };
 export default ScrollToPosition;
