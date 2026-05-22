@@ -1,4 +1,5 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 
 import CONST from "../lib/constants.js";
 import logger from "../lib/logger.js";
@@ -13,6 +14,18 @@ const init = async () => {
 };
 const router = express.Router();
 
+// Per-IP throttle for the login POST. The GET keep-alive and DELETE logout
+// paths aren't rate-limited (they're routine app traffic). 10 attempts per
+// 15-minute window is loose enough not to bother a typo'ing operator and
+// tight enough that brute-force needs a botnet rather than a single IP.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Too many login attempts. Try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 export default { init, router };
 
 /**
@@ -24,7 +37,7 @@ router.get("/", (request, response) => {
 /**
  * Login, creating a new token.
  */
-router.post("/", async (request, response, next) => {
+router.post("/", loginLimiter, async (request, response, next) => {
   logger.debug(`Login attempt for "${request.body?.id}"`);
   const credentials = {
     id: request.body.id,

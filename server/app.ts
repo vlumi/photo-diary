@@ -1,8 +1,8 @@
 import path from "node:path";
 
 import express from "express";
-import cors from "cors";
 import compression from "compression";
+import helmet from "helmet";
 
 import config from "./lib/config/index.js";
 
@@ -17,7 +17,15 @@ import middleware from "./lib/middleware/index.js";
 import logger from "./lib/logger.js";
 
 export const app = express();
-app.use(cors());
+// nginx sits in front of every supported deploy; trust one hop so
+// `req.ip` reflects the real client and rate-limiters key off the right
+// address instead of all looking like 127.0.0.1.
+app.set("trust proxy", 1);
+// helmet sets a baseline of security headers (HSTS, nosniff, frame-ancestors
+// DENY, Referrer-Policy, Permissions-Policy, …). CSP is left off — the
+// default policy would break the bundle's inline styles / dynamic imports
+// and warrants its own audit before being enabled.
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(express.json());
 // Discourage indexing and AI scraping on every response. robots.txt is the

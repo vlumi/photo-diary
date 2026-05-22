@@ -29,11 +29,13 @@ const getSecret = (userId: string): string => {
 const init = async (): Promise<void> => {
   await loadSecrets();
   if (reloadTimer) clearTimeout(reloadTimer);
-  // Reload every minute or so. unref() so the timer doesn't keep the
-  // event loop alive on its own (matters in tests).
+  // 5-second reload so a `bin/user.ts passwd` rotation (which kills sessions
+  // by rotating the user's `secret`) takes effect quickly. The DB read is one
+  // indexed SELECT against a small table; trivial cost. unref() so the timer
+  // doesn't keep the event loop alive on its own (matters in tests).
   reloadTimer = setTimeout(() => {
     init().catch(() => {});
-  }, 60000);
+  }, 5000);
   reloadTimer.unref();
 };
 

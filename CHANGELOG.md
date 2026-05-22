@@ -7,6 +7,13 @@
 - Apply the `hide_map` cascade on `GET /api/v1/galleries/:id` and `/api/v1/photos` (`/`, `/:id`); previously only `/gallery-photos/...` masked the embedded photos' coordinates, so `hide_map=1` leaked coords through the other two routes. (closes #201)
 - Stop logging credentials, JWT secrets, and tokens in debug-level statements (`tokens-v1.ts`, `models/token.ts`); only the user ID is logged now. Prevents plaintext password leaks into pm2 logs whenever `DEBUG=true` is flipped to triage a login issue. (closes #202)
 
+### Server
+
+- Add `helmet` for baseline security headers (HSTS, X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer, X-Frame-Options, Permissions-Policy, etc.); CSP intentionally left off pending a bundle audit. (closes #204)
+- Rate-limit `POST /api/v1/tokens` (login) to 10 attempts per IP per 15 minutes via `express-rate-limit`; trust-proxy set to 1 so the limit keys off the real client IP behind nginx. (closes #203)
+- Drop the open `cors()` middleware — none of the documented deploy patterns need cross-origin API access, and bearer-token auth already neutralised most CSRF concerns. If a future setup needs it, add a `CORS_ORIGINS` env knob then. (closes #205)
+- Tighten the token-secret reload interval from 60s to 5s, so a `bin/user.ts passwd` rotation (which kills sessions) takes effect quickly. (closes #206)
+
 ## [0.7.1] - 2026-05-21
 
 ### Fixed
