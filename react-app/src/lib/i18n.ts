@@ -12,6 +12,7 @@ const resources = { en, fi, ja };
 i18n.use(initReactI18next).init({
   resources,
   lng: config.DEFAULT_LANGUAGE,
+  fallbackLng: "en",
 
   keySeparator: false,
 

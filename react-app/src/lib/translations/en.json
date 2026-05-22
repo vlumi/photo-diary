@@ -48,18 +48,18 @@
     "months-short": "{{count}}m",
     "days-short": "{{count}}d",
 
-    "years-long": "{{count}} year",
-    "years-long_plural": "{{count}} years",
-    "months-long": "{{count}} month",
-    "months-long_plural": "{{count}} months",
-    "days-long": "{{count}} day",
-    "days-long_plural": "{{count}} days",
+    "years-long_one": "{{count}} year",
+    "years-long_other": "{{count}} years",
+    "months-long_one": "{{count}} month",
+    "months-long_other": "{{count}} months",
+    "days-long_one": "{{count}} day",
+    "days-long_other": "{{count}} days",
 
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "Day number {{count}}",
 
-    "photo-count": "{{count}} photo",
-    "photo-count_plural": "{{count}} photos",
+    "photo-count_one": "{{count}} photo",
+    "photo-count_other": "{{count}} photos",
 
     "stats-filters": "Filters",
 

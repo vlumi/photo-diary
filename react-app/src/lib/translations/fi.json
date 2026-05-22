@@ -48,18 +48,18 @@
     "months-short": "{{count}} kk",
     "days-short": "{{count}} pv",
 
-    "years-long": "{{count}} vuosi",
-    "years-long_plural": "{{count}} vuotta",
-    "months-long": "{{count}} kuukausi",
-    "months-long_plural": "{{count}} kuukautta",
-    "days-long": "{{count}} päivä",
-    "days-long_plural": "{{count}} päivää",
+    "years-long_one": "{{count}} vuosi",
+    "years-long_other": "{{count}} vuotta",
+    "months-long_one": "{{count}} kuukausi",
+    "months-long_other": "{{count}} kuukautta",
+    "days-long_one": "{{count}} päivä",
+    "days-long_other": "{{count}} päivää",
 
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "{{count}}. päivä",
 
-    "photo-count": "{{count}} kuva",
-    "photo-count_plural": "{{count}} kuvaa",
+    "photo-count_one": "{{count}} kuva",
+    "photo-count_other": "{{count}} kuvaa",
 
     "stats-filters": "Suodattimet",
 
