@@ -40,6 +40,14 @@ Per-gallery values (`theme`, `initial_view`, `hostname`) on each gallery row in 
 
 Available themes: `blue`, `red`, `grayscale`, `bw`, `alert` (defined in `src/lib/theme.ts`). Supported languages: `en`, `fi`, `ja`.
 
+## Internationalization (i18n)
+
+UI strings live in [`src/lib/translations/`](src/lib/translations/) as one flat JSON per language. Keys use hyphens (`stats-col-camera`) and i18next runs with `keySeparator: false` so dots in values don't trigger nested lookups. `fallbackLng: "en"` covers any key missing from `fi` / `ja`.
+
+Plurals use the CLDR-style `_one` / `_other` suffixes that i18next v4 expects (i18next 21+). Translators add the suffixed variants and callers pass `t("photo-count", { count })`; the resolver picks the right form per the active language's plural rules. Japanese uses only `_other` (CLDR has no `_one` category for `ja`).
+
+Country names come from [`i18n-iso-countries`](https://www.npmjs.com/package/i18n-iso-countries) — its per-language JSON dictionaries are dynamic-imported in [`App.tsx`](src/App.tsx) so each language ships as its own ~2 kB gz chunk instead of all three being eagerly pulled into the main bundle. A loading placeholder renders briefly the first time a language's dictionary is fetched; switching back to a previously loaded language is instant (registered locales are cached in the singleton).
+
 ## Structure
 
 - `src/index.tsx` — entry, mounts `<App>` inside `React.StrictMode`
@@ -60,10 +68,11 @@ Production build produces four JS chunks plus a single small entry CSS file and 
 
 | Chunk | Raw | gzipped | What |
 | --- | --- | --- | --- |
-| `index-*.js` (main) | ~444 kB | ~143 kB | React + react-dom, react-router, i18next, i18n-iso-countries, Emotion, our `src/` code (gallery shell + calendar views) |
+| `index-*.js` (main) | ~429 kB | ~136 kB | React + react-dom, react-router, i18next, i18n-iso-countries runtime, Emotion, our `src/` code (gallery shell + calendar views) |
 | `MapContainer-*.js` | ~198 kB | ~60 kB | Leaflet + react-leaflet + leaflet.markercluster — shared lazy chunk loaded on first map render |
 | `Stats-*.js` | ~210 kB | ~72 kB | chart.js + react-chartjs-2 + the stats-aggregation src — loaded on `/g/:id/stats` only |
 | `Photo-*.js` | ~7 kB | ~3 kB | single-photo view src — loaded when opening a photo |
+| `en-*.js` / `fi-*.js` / `ja-*.js` | ~4–6 kB | ~2–3 kB | country-name dictionaries from `i18n-iso-countries`, one chunk per language, fetched when that language is first activated |
 | `index-*.css` (main) | ~0.4 kB | ~0.2 kB | global tokens + body resets from `App.css` (see "CSS approach" below) |
 | `MapContainer-*.css` | ~17 kB | ~7 kB | leaflet + markercluster stylesheets, follows the MapContainer JS chunk |
 
@@ -89,7 +98,7 @@ These are the biggest items in the bundle and why they're here (or could go):
 | `leaflet` + `react-leaflet` + `markercluster` | ~70 kB | shared lazy chunk; only fetched on first map render. Big but functionally hard to substitute for. |
 | `react-router` | ~22 kB | core navigation |
 | `i18next` + `react-i18next` | ~21 kB | i18n runtime |
-| `i18n-iso-countries` (en + fi + ja JSONs) | ~12 kB | three locale dictionaries eagerly imported in `App.tsx`. Lazy-loading only the active language is a clear win (~8 kB gz reclaim) but belongs with the broader i18n architecture pass in #220. |
+| `i18n-iso-countries` runtime | ~5 kB | the registration/lookup core stays in main; per-language dictionaries are split into their own chunks (`en/fi/ja-*.js`) and fetched on demand. See the "Internationalization" section above. |
 | `@emotion/*` (cache + styled + react + serialize + is-prop-valid + stylis) | ~14 kB | CSS-in-JS runtime; see below |
 
 ## CSS approach
