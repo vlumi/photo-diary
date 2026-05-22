@@ -24,7 +24,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    * Get all photos in the gallery.
    */
   fastify.get(
-    "/:galleryId/",
+    "/:galleryId",
     {
       schema: {
         tags: TAGS,

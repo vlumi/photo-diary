@@ -1,9 +1,8 @@
-import api from "../lib/api";
+import api, { unwrap } from "../lib/api";
 
-const baseUrl = "/api/v1/meta";
+const getAll = async () => unwrap(api.GET("/api/v1/meta", {}));
 
-const getAll = async (): Promise<unknown> => api(baseUrl);
-
-const get = async (key: string): Promise<unknown> => api(`${baseUrl}/${key}`);
+const get = async (key: string) =>
+  unwrap(api.GET("/api/v1/meta/{key}", { params: { path: { key } } }));
 
 export default { getAll, get };

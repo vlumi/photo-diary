@@ -64,3 +64,13 @@ jobs:
       - run: npm run lint --workspace=react-app
       - run: npm run build --workspace=react-app
       - run: npm test --workspace=react-app
+      # The typed API client is generated from server/openapi.json. Fail
+      # CI if the committed `src/lib/api-schema.ts` is stale (committed
+      # spec changed but codegen wasn't rerun) so the client and the
+      # server contract can't silently drift. Local devs regenerate with
+      # `npm run api:codegen --workspace=react-app`.
+      - name: Verify react-app/src/lib/api-schema.ts is up to date
+        run: |
+          npm run api:codegen --workspace=react-app
+          git diff --exit-code -- react-app/src/lib/api-schema.ts \
+            || (echo "::error::react-app/src/lib/api-schema.ts is out of date — run \`npm run api:codegen --workspace=react-app\` and commit the result" && exit 1)

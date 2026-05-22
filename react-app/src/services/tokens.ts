@@ -1,15 +1,8 @@
-import api from "../lib/api";
+import api, { unwrap } from "../lib/api";
 
-const baseUrl = "/api/v1/tokens";
+const login = async (id: string, password: string) =>
+  unwrap(api.POST("/api/v1/tokens", { body: { id, password } }));
 
-const login = async (id: string, password: string): Promise<unknown> =>
-  api(baseUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, password }),
-  });
-
-const logout = async (): Promise<unknown> =>
-  api(baseUrl, { method: "DELETE" });
+const logout = async () => unwrap(api.DELETE("/api/v1/tokens", {}));
 
 export default { login, logout };

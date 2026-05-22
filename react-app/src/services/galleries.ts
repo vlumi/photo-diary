@@ -1,10 +1,12 @@
-import api from "../lib/api";
+import api, { unwrap } from "../lib/api";
 
-const baseUrl = "/api/v1/galleries";
+const getAll = async () => unwrap(api.GET("/api/v1/galleries", {}));
 
-const getAll = async (): Promise<unknown> => api(baseUrl);
-
-const get = async (galleryId: string): Promise<unknown> =>
-  api(`${baseUrl}/${galleryId}`);
+const get = async (galleryId: string) =>
+  unwrap(
+    api.GET("/api/v1/galleries/{galleryId}", {
+      params: { path: { galleryId } },
+    })
+  );
 
 export default { getAll, get };

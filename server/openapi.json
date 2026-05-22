@@ -448,7 +448,7 @@
         }
       }
     },
-    "/api/v1/gallery-photos/{galleryId}/": {
+    "/api/v1/gallery-photos/{galleryId}": {
       "get": {
         "summary": "List photos in a gallery",
         "tags": [

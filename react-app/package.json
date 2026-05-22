@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "api:codegen": "openapi-typescript ../server/openapi.json -o src/lib/api-schema.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -25,6 +26,7 @@
     "jose": "^6.2.3",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.2.1",
     "react-chartjs-2": "^5.3.1",
     "react-country-flag": "^3.0.2",
@@ -49,6 +51,7 @@
     "eslint-plugin-react": "^7.37.5",
     "globals": "^17.6.0",
     "jsdom": "^27.0.1",
+    "openapi-typescript": "^7.13.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "typescript": "^6.0.3",
     "vite": "^8.0.13",
