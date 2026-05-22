@@ -1,7 +1,6 @@
 import path from "node:path";
 
 import Fastify, { type FastifyInstance } from "fastify";
-import fastifyExpress from "@fastify/express";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyCompress from "@fastify/compress";
 import fastifyStatic from "@fastify/static";
@@ -19,18 +18,15 @@ import middleware from "./lib/middleware/index.js";
 import { NotFoundError } from "./lib/errors.js";
 import logger from "./lib/logger.js";
 
-// Slice 2 of the Fastify migration (#167): controllers + middleware are now
-// native Fastify routes/hooks. Slice 3 will drop the `@fastify/express`
-// registration below — it's no longer wired to anything but stays for one
-// PR to keep the slice diffs honest.
 export const app: FastifyInstance = Fastify({
   trustProxy: 1,
   // Express's router treated trailing slashes as optional by default
   // (`strict: false`). The gallery-photos LIST route was registered as
   // `/:galleryId/` but the SPA calls it without the trailing slash —
   // Fastify is strict, so we match Express's lenient behaviour here so
-  // existing client URLs keep working.
-  ignoreTrailingSlash: true,
+  // existing client URLs keep working. Lives under `routerOptions` to
+  // dodge the FSTDEP022 deprecation; Fastify 6 will require it there.
+  routerOptions: { ignoreTrailingSlash: true },
   logger:
     config.ENV === "test"
       ? false
@@ -56,9 +52,6 @@ export const app: FastifyInstance = Fastify({
 
 const STATIC_DIR =
   process.env.STATIC_DIR ?? path.join(import.meta.dirname, "build");
-
-// Adapter from slice 1, retained for one PR. Slice 3 drops it.
-await app.register(fastifyExpress);
 
 // helmet sets a baseline of security headers (HSTS, nosniff, frame-ancestors
 // DENY, Referrer-Policy, Permissions-Policy, …). CSP is left off — the
