@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- OpenStreetMap tile fetches were blocked with 403 (`osm.wiki/Blocked`) after 0.7.2 added helmet — its default `Referrer-Policy: no-referrer` stripped the `Referer` header on every outbound request, which OSM's volunteer-run tile servers reject as bot traffic. Overridden to `strict-origin-when-cross-origin` (modern browser default) so the browser sends just the origin on cross-origin requests, satisfying OSM without leaking the full URL.
+
 ## [0.7.3] - 2026-05-22
 
 ### Fixed
