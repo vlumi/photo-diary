@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import CONST from "../lib/constants.js";
+import { NotImplementedError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -24,13 +24,13 @@ const getUser = async (id: string) => {
 };
 const createUser = async (user: Record<string, any>) => {
   logger.debug("Creating user", user);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const updateUser = async (user: Record<string, any>) => {
   logger.debug("Updating user", user);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const deleteUser = async (id: string) => {
   logger.debug("Deleting user", id);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };

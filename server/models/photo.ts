@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import CONST from "../lib/constants.js";
+import { NotImplementedError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -23,7 +23,7 @@ const getPhotos = async () => {
 
 const createPhoto = async (photo: Record<string, any>) => {
   logger.debug("Creating photo", photo);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 
 const getPhoto = async (photoId: string) => {
@@ -33,10 +33,10 @@ const getPhoto = async (photoId: string) => {
 
 const updatePhoto = async (photo: Record<string, any>) => {
   logger.debug("Updating photo", photo);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 
 const deletePhoto = async (photoId: string) => {
   logger.debug("Deleting photo", photoId);
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
