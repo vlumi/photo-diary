@@ -1,13 +1,13 @@
 /**
- * Typed Error hierarchy for the server. Replaces the string-constant style
- * (`throw CONST.ERROR_ACCESS`) with `instanceof`-checkable subclasses, each
- * carrying its HTTP status as a class property and an optional context
- * payload for diagnostics.
+ * Typed Error hierarchy for the server. Every server-side throw is one of
+ * these subclasses; the error-handler middleware reads `.status` to set the
+ * HTTP response code and echoes `.message` as the JSON `error` field. Each
+ * subclass has a default message that matches the historical
+ * `CONST.ERROR_*` string it replaced, so wire-shape stays stable.
  *
- * Migration is incremental — the error-handler middleware understands both
- * forms during the transition; `CONST.ERROR_*` strings stay aliased to the
- * same `.message` text so they keep mapping to the same HTTP status. The
- * preferred form for new code is `throw new <SpecificError>(message?, ctx?)`.
+ * Constructor takes `(message?, context?)`. The optional context is a plain
+ * object stashed on the instance for diagnostics — useful for logging or
+ * tests, never serialised into the HTTP response.
  *
  * Usage:
  *   throw new NotFoundError();

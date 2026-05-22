@@ -1,7 +1,7 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
 
-import CONST from "../lib/constants.js";
+import { LoginError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/token.js";
@@ -48,7 +48,7 @@ router.post("/", loginLimiter, async (request, response, next) => {
     password: request.body.password,
   };
   if (!credentials.id || !credentials.password) {
-    next(CONST.ERROR_LOGIN);
+    next(new LoginError());
     return;
   }
   await model.authenticateUser(credentials);
