@@ -48,13 +48,17 @@
     "months-short": "{{count}}ヶ月",
     "days-short": "{{count}}日",
 
+    "years-long_one": "{{count}}歳",
     "years-long_other": "{{count}}歳",
+    "months-long_one": "{{count}}ヶ月",
     "months-long_other": "{{count}}ヶ月",
+    "days-long_one": "{{count}}日",
     "days-long_other": "{{count}}日",
 
     "epoch-day-short": "#{{count}}",
     "epoch-day-long": "第{{count}}日",
 
+    "photo-count_one": "{{count}}枚",
     "photo-count_other": "{{count}}枚",
 
     "stats-filters": "フィルター",
