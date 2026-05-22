@@ -1,6 +1,7 @@
 import path from "node:path";
 
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify from "fastify";
+import { type TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyCompress from "@fastify/compress";
 import fastifyStatic from "@fastify/static";
@@ -18,7 +19,7 @@ import middleware from "./lib/middleware/index.js";
 import { NotFoundError } from "./lib/errors.js";
 import logger from "./lib/logger.js";
 
-export const app: FastifyInstance = Fastify({
+export const app = Fastify({
   trustProxy: 1,
   // Express's router treated trailing slashes as optional by default
   // (`strict: false`). The gallery-photos LIST route was registered as
@@ -48,7 +49,7 @@ export const app: FastifyInstance = Fastify({
   // onResponse hook below — disabling Fastify's built-in completion line
   // keeps logs from being noisy with two lines per request.
   disableRequestLogging: true,
-});
+}).withTypeProvider<TypeBoxTypeProvider>();
 
 const STATIC_DIR =
   process.env.STATIC_DIR ?? path.join(import.meta.dirname, "build");

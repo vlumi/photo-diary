@@ -6,6 +6,7 @@
 
 - Replace string-constant error throws with a typed `AppError` class hierarchy (`AccessError`, `NotFoundError`, `LoginError`, `InvalidTokenError`, `NotImplementedError`, `UnavailableError`) in `server/lib/errors.ts`. Each subclass carries its HTTP status; the error-handler middleware reads `.status` and echoes `.message` as the JSON response. The legacy `CONST.ERROR_*` string constants and the dual-path switch in error-handler.ts are now retired (no remaining throw sites referenced them). Wire-shape unchanged for every existing endpoint. (closes #219)
 - Migrate the server from Express to Fastify (host framework swap). Routes are native Fastify plugins; auth/error/404 are Fastify hooks; helmet, compression, and static-file serving move to `@fastify/*` plugins; morgan is replaced by pino with pino-pretty in dev. Wire shape is unchanged — same URLs, same response bodies, same status codes — but per-request log lines are now structured (still carrying `userId` / `ip` / `responseTime`). (part of #167)
+- Adopt TypeBox as the schema-and-types source for each route — every `:param` is now validated against a JSON Schema at the framework boundary, and route handlers infer their `request.params` / `request.body` types from the same definition. The login POST gains a body schema (`{ id?, password? }`); malformed structural bodies now reject with 400 before the handler runs (previously a non-object body fell through to 401 LoginError). (part of #167)
 
 ### Frontend
 

@@ -1,4 +1,5 @@
-import type { FastifyPluginAsync } from "fastify";
+import { Type } from "@sinclair/typebox";
+import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
@@ -11,12 +12,19 @@ const init = async () => {
   await model.init();
 };
 
-const plugin: FastifyPluginAsync = async (fastify) => {
+const GalleryIdParam = Type.Object({ galleryId: Type.String() });
+const GalleryPhotoParams = Type.Object({
+  galleryId: Type.String(),
+  photoId: Type.String(),
+});
+
+const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Get all photos in the gallery.
    */
-  fastify.get<{ Params: { galleryId: string } }>(
+  fastify.get(
     "/:galleryId/",
+    { schema: { params: GalleryIdParam } },
     async (request) => {
       await authorizer.authorizeGalleryView(
         request.user.id,
@@ -33,8 +41,9 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Get the properties of a photo in gallery context.
    */
-  fastify.get<{ Params: { galleryId: string; photoId: string } }>(
+  fastify.get(
     "/:galleryId/:photoId",
+    { schema: { params: GalleryPhotoParams } },
     async (request) => {
       await authorizer.authorizeGalleryView(
         request.user.id,
@@ -54,8 +63,9 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Link a photo to a gallery.
    */
-  fastify.put<{ Params: { galleryId: string; photoId: string } }>(
+  fastify.put(
     "/:galleryId/:photoId",
+    { schema: { params: GalleryPhotoParams } },
     async (request, reply) => {
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
@@ -72,8 +82,9 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Unlink a photo from a gallery.
    */
-  fastify.delete<{ Params: { galleryId: string; photoId: string } }>(
+  fastify.delete(
     "/:galleryId/:photoId",
+    { schema: { params: GalleryPhotoParams } },
     async (request, reply) => {
       await authorizer.authorizeGalleryAdmin(
         request.user.id,

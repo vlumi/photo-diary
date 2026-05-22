@@ -1,4 +1,5 @@
-import type { FastifyPluginAsync } from "fastify";
+import { Type } from "@sinclair/typebox";
+import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
@@ -11,6 +12,8 @@ const init = async () => {
   await model.init();
 };
 
+const GalleryIdParam = Type.Object({ galleryId: Type.String() });
+
 const annotateWithHideMap = async (
   userId: string,
   galleries: Array<{ id: string }>
@@ -22,7 +25,7 @@ const annotateWithHideMap = async (
     }))
   );
 
-const plugin: FastifyPluginAsync = async (fastify) => {
+const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Get all galleries (admin sees all; guests/users see what they can view).
    */
@@ -61,8 +64,9 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Get a single gallery, including its photos.
    */
-  fastify.get<{ Params: { galleryId: string } }>(
+  fastify.get(
     "/:galleryId",
+    { schema: { params: GalleryIdParam } },
     async (request) => {
       await authorizer.authorizeGalleryView(
         request.user.id,
@@ -87,8 +91,9 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Update gallery properties.
    */
-  fastify.put<{ Params: { galleryId: string } }>(
+  fastify.put(
     "/:galleryId",
+    { schema: { params: GalleryIdParam } },
     async (request) => {
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
@@ -103,8 +108,9 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   /**
    * Delete a gallery.
    */
-  fastify.delete<{ Params: { galleryId: string } }>(
+  fastify.delete(
     "/:galleryId",
+    { schema: { params: GalleryIdParam } },
     async (request, reply) => {
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
