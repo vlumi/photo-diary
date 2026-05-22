@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-05-22
+
 ### Fixed
 
 - OpenStreetMap tile fetches were blocked with 403 (`osm.wiki/Blocked`) after 0.7.2 added helmet — its default `Referrer-Policy: no-referrer` stripped the `Referer` header on every outbound request, which OSM's volunteer-run tile servers reject as bot traffic. Overridden to `strict-origin-when-cross-origin` (modern browser default) so the browser sends just the origin on cross-origin requests, satisfying OSM without leaking the full URL.
@@ -248,7 +250,8 @@
 
 ## Initial commit - 2020-07-04
 
-[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.3...HEAD
+[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.4...HEAD
+[0.7.4]: https://github.com/vlumi/photo-diary/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/vlumi/photo-diary/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/vlumi/photo-diary/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/vlumi/photo-diary/compare/v0.7.0...v0.7.1
