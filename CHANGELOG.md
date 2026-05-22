@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Login rate-limit now skips successful requests — only failed login attempts count toward the per-IP limit, so a typo'ing operator who then gets it right isn't throttled (only sustained guessing is). The per-IP keying still needs nginx to forward `X-Forwarded-For` for it to actually distinguish clients (already in the README's recommended nginx block).
+
 ## [0.7.2] - 2026-05-22
 
 ### Fixed
