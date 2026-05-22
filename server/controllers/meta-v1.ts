@@ -38,6 +38,11 @@ const envDefaults = (): Record<string, string> => {
 };
 
 const KeyParam = Type.Object({ key: Type.String() });
+// The meta endpoints return arbitrary instance-level keys (`cdn`, `image`,
+// the env-driven `defaultGallery`/`defaultTheme`/...) — the exact field set
+// varies per deploy, so the schema accepts any shape and Fastify's response
+// serializer passes extra fields through.
+const MetaResponse = Type.Object({}, { additionalProperties: true });
 const TAGS = ["meta"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -46,7 +51,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.get(
     "/",
-    { schema: { tags: TAGS, summary: "Get all per-instance meta" } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Get all per-instance meta",
+        response: { 200: MetaResponse },
+      },
+    },
     async () => {
       // Public, no authorization needed
       const meta = await model.getMetas();
@@ -59,7 +70,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.post(
     "/",
-    { schema: { tags: TAGS, summary: "Create a meta entry (admin)" } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Create a meta entry (admin)",
+        security: [{ bearer: [] }],
+      },
+    },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
       const meta = {};
@@ -78,6 +95,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Get one meta entry by key",
         params: KeyParam,
+        response: { 200: MetaResponse },
       },
     },
     async (request) => {
@@ -97,6 +115,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Update one meta entry by key (admin)",
         params: KeyParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request) => {
@@ -117,6 +136,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete one meta entry by key (admin)",
         params: KeyParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {

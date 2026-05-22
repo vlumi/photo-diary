@@ -13,6 +13,20 @@ const init = async () => {
 };
 
 const GalleryIdParam = Type.Object({ galleryId: Type.String() });
+// Galleries carry many DB-derived fields beyond `id` + `hideMap` — title,
+// description, theme, hostname, photos, etc. The shape varies and the
+// react-app consumes them via `GalleryModel(...)` which tolerates extras.
+// Declare the contract for the two fields we care about and let everything
+// else pass through.
+const GalleryListItem = Type.Object(
+  { id: Type.String(), hideMap: Type.Boolean() },
+  { additionalProperties: true }
+);
+const GalleryListResponse = Type.Array(GalleryListItem);
+const GalleryItemResponse = Type.Object(
+  { id: Type.String(), hideMap: Type.Boolean() },
+  { additionalProperties: true }
+);
 const TAGS = ["galleries"];
 
 const annotateWithHideMap = async (
@@ -36,6 +50,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "List galleries visible to the requester",
+        response: { 200: GalleryListResponse },
       },
     },
     async (request) => {
@@ -66,7 +81,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.post(
     "/",
-    { schema: { tags: TAGS, summary: "Create a gallery (admin)" } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Create a gallery (admin)",
+        security: [{ bearer: [] }],
+      },
+    },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
       const gallery = {};
@@ -85,6 +106,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Get one gallery (with photos)",
         params: GalleryIdParam,
+        response: { 200: GalleryItemResponse },
       },
     },
     async (request) => {
@@ -94,7 +116,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       );
       const gallery = (await model.getGallery(
         request.params.galleryId
-      )) as Record<string, unknown> & { photos?: unknown[] };
+      )) as Record<string, unknown> & { id: string; photos?: unknown[] };
       const hideMap = await shouldHideMap(
         request.user.id,
         request.params.galleryId
@@ -118,6 +140,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Update gallery properties (admin)",
         params: GalleryIdParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request) => {
@@ -141,6 +164,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete a gallery (admin)",
         params: GalleryIdParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {

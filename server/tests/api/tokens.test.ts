@@ -1,10 +1,15 @@
 import { init } from "../../app.js";
+import { _resetLoginRateLimitForTests } from "../../controllers/tokens-v1.js";
 import { createApi, loginUser } from "./helper.js";
 
 const { api, close } = createApi();
 
 beforeEach(async () => {
   await init();
+  // The login throttle holds in-memory per-IP failure counts that persist
+  // across tests (supertest always connects from 127.0.0.1, so every test
+  // shares one IP key). Reset between tests so each scenario starts fresh.
+  _resetLoginRateLimitForTests();
 });
 
 afterAll(close);
@@ -39,6 +44,58 @@ describe("Login", () => {
     expect(result.body.token).toBeDefined();
   });
 });
+describe("Login rate limit", () => {
+  test("10 failed logins → 11th returns 429", async () => {
+    for (let i = 0; i < 10; i++) {
+      await api
+        .post("/api/v1/tokens")
+        .send({ id: "admin", password: "wrong" })
+        .expect(401);
+    }
+    const result = await api
+      .post("/api/v1/tokens")
+      .send({ id: "admin", password: "wrong" })
+      .expect(429);
+    expect(result.body.error).toMatch(/too many failed login attempts/i);
+  });
+
+  test("Successful logins do not tick the counter", async () => {
+    // 5 failures + a successful login + 5 more failures = 10 failures total.
+    // The 11th request should still pass through to the credential check (=
+    // not 429) — proving the success didn't add to the failure count.
+    for (let i = 0; i < 5; i++) {
+      await api
+        .post("/api/v1/tokens")
+        .send({ id: "admin", password: "wrong" })
+        .expect(401);
+    }
+    await api
+      .post("/api/v1/tokens")
+      .send({ id: "admin", password: "foobar" })
+      .expect(200);
+    for (let i = 0; i < 5; i++) {
+      await api
+        .post("/api/v1/tokens")
+        .send({ id: "admin", password: "wrong" })
+        .expect(401);
+    }
+    // 10 failures cumulative, so the next failure should trip the limit.
+    await api
+      .post("/api/v1/tokens")
+      .send({ id: "admin", password: "wrong" })
+      .expect(429);
+  });
+
+  test("Successful logins alone never trip the limit", async () => {
+    for (let i = 0; i < 15; i++) {
+      await api
+        .post("/api/v1/tokens")
+        .send({ id: "admin", password: "foobar" })
+        .expect(200);
+    }
+  });
+});
+
 describe("Keep-alive", () => {
   let token: string | undefined = undefined;
   beforeEach(async () => {

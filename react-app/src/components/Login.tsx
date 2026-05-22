@@ -35,12 +35,7 @@ const Login = ({ setUser }: Props): React.ReactElement => {
 
   const login = async (userId: string, password: string) => {
     try {
-      // Two-step cast because the login route doesn't ship a response
-      // schema yet (deferred to a follow-up); the codegen types `data` as
-      // `undefined` until then.
-      const data = (await tokenService.login(userId, password)) as unknown as {
-        token: string;
-      };
+      const data = await tokenService.login(userId, password);
       const rawToken = data.token;
       // TODO: sign/verify
       const userData = JSON.parse(

@@ -54,6 +54,16 @@ export class AccessError extends AppError {
   }
 }
 
+export class RateLimitError extends AppError {
+  override status = 429;
+  constructor(
+    message = "Too many requests",
+    context?: Record<string, unknown>
+  ) {
+    super(message, context);
+  }
+}
+
 export class NotImplementedError extends AppError {
   override status = 501;
   constructor(message = "Not implemented", context?: Record<string, unknown>) {

@@ -22,7 +22,7 @@ import token from "./token";
 // `globalThis.fetch = mock` wouldn't reach the client.
 const client = createClient<paths>({
   baseUrl: window.location.origin,
-  fetch: (input, init) => globalThis.fetch(input, init),
+  fetch: (input) => globalThis.fetch(input),
 });
 
 client.use({

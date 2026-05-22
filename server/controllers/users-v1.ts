@@ -12,6 +12,8 @@ const init = async () => {
 };
 
 const UserIdParam = Type.Object({ userId: Type.String() });
+const UserSummary = Type.Object({ id: Type.String() });
+const UsersListResponse = Type.Array(UserSummary);
 const TAGS = ["users"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -20,7 +22,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.get(
     "/",
-    { schema: { tags: TAGS, summary: "List all users (admin)" } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "List all users (admin)",
+        response: { 200: UsersListResponse },
+        security: [{ bearer: [] }],
+      },
+    },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
       const cleanUser = (user: { id: string }) => ({ id: user.id });
@@ -34,7 +43,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.post(
     "/",
-    { schema: { tags: TAGS, summary: "Create a user (admin)" } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Create a user (admin)",
+        security: [{ bearer: [] }],
+      },
+    },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
       const user = {};
@@ -53,6 +68,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Get a user by id (admin)",
         params: UserIdParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request) => {
@@ -71,6 +87,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Update a user by id (admin)",
         params: UserIdParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request) => {
@@ -91,6 +108,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete a user by id (admin)",
         params: UserIdParam,
+        security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {

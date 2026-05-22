@@ -159,6 +159,13 @@ if (config.ENV !== "test") {
   app.addHook("onResponse", middleware.requestLogger);
 }
 
+// Register the global error handler *before* the controller plugins. Each
+// `app.register(...)` creates a child scope that inherits the parent's
+// error handler at registration time — setting `setErrorHandler` after
+// the plugins would only override the root scope, leaving the controller
+// scopes with Fastify's default `{statusCode, error, message}` body.
+app.setErrorHandler(middleware.errorHandler);
+
 await app.register(metaV1.plugin, { prefix: "/api/v1/meta" });
 await app.register(tokensV1.plugin, { prefix: "/api/v1/tokens" });
 await app.register(usersV1.plugin, { prefix: "/api/v1/users" });
@@ -179,8 +186,6 @@ app.setNotFoundHandler(async (request, reply) => {
   }
   throw new NotFoundError();
 });
-
-app.setErrorHandler(middleware.errorHandler);
 
 export const init = async () => {
   logger.debug("Initialize app start");

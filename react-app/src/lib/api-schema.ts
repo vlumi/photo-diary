@@ -26,7 +26,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
                 };
             };
         };
@@ -80,7 +84,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
                 };
             };
         };
@@ -181,7 +189,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            token: string;
+                        };
+                    };
                 };
             };
         };
@@ -267,7 +279,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            id: string;
+                        }[];
+                    };
                 };
             };
         };
@@ -395,7 +411,14 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": ({
+                            id: string;
+                            hideMap: boolean;
+                        } & {
+                            [key: string]: unknown;
+                        })[];
+                    };
                 };
             };
         };
@@ -449,7 +472,14 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            id: string;
+                            hideMap: boolean;
+                        } & {
+                            [key: string]: unknown;
+                        };
+                    };
                 };
             };
         };
@@ -653,7 +683,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        }[];
+                    };
                 };
             };
         };
@@ -690,7 +724,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
                 };
             };
         };
