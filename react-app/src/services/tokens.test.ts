@@ -2,33 +2,40 @@ import { vi, beforeEach, test, expect } from "vitest";
 
 import tokens from "./tokens";
 
-const mockFetch = (body: unknown = "") =>
-  vi.fn().mockResolvedValue({
-    ok: true,
-    text: async () => (body === "" ? "" : JSON.stringify(body)),
-  });
+const mockFetch = (body: unknown, status = 200) =>
+  vi.fn().mockResolvedValue(
+    new Response(body === undefined ? null : JSON.stringify(body), {
+      status,
+      headers: { "Content-Type": "application/json" },
+    })
+  );
+
+const calledRequest = () =>
+  (globalThis.fetch as unknown as { mock: { calls: [Request][] } }).mock
+    .calls[0][0];
 
 beforeEach(() => {
   vi.restoreAllMocks();
 });
 
 test("login()", async () => {
-  globalThis.fetch = mockFetch({}) as unknown as typeof fetch;
+  globalThis.fetch = mockFetch({ token: "tok" }) as unknown as typeof fetch;
 
   await tokens.login("user", "password");
-  expect((globalThis.fetch as any).mock.calls[0][0]).toBe("/api/v1/tokens");
-  const init = (globalThis.fetch as any).mock.calls[0][1];
-  expect(init.method).toBe("POST");
-  expect(JSON.parse(init.body)).toStrictEqual({
+  const request = calledRequest();
+  expect(request.url).toContain("/api/v1/tokens");
+  expect(request.method).toBe("POST");
+  expect(await request.json()).toStrictEqual({
     id: "user",
     password: "password",
   });
 });
 
 test("logout()", async () => {
-  globalThis.fetch = mockFetch() as unknown as typeof fetch;
+  globalThis.fetch = mockFetch(undefined, 204) as unknown as typeof fetch;
 
-  await expect(tokens.logout()).resolves.toStrictEqual({});
-  expect((globalThis.fetch as any).mock.calls[0][0]).toBe("/api/v1/tokens");
-  expect((globalThis.fetch as any).mock.calls[0][1].method).toBe("DELETE");
+  await tokens.logout();
+  const request = calledRequest();
+  expect(request.url).toContain("/api/v1/tokens");
+  expect(request.method).toBe("DELETE");
 });
