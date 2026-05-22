@@ -165,9 +165,9 @@ const Gallery = ({
   const selectedGallery =
     galleries && galleries.find((gallery) => gallery.id() === galleryId);
 
-  // `uniqueValues` is purely derived from photos + i18n bits — language-
-  // dependent value formatting (per #231 the lang-switch perf ticket is
-  // tracked separately; the same memo dependencies apply).
+  // `uniqueValues` is derived from photos + i18n bits — the displayed
+  // values depend on `lang` and `t`, so the memo recomputes on language
+  // changes as well as data changes.
   const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
     if (!photos) return undefined;
     // The reduce builds up a `{ topic: { category: Set<unknown> } }` shape,
