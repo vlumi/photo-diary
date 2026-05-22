@@ -7,13 +7,6 @@ const SESSION_LENGTH_MS = 1000 * 60 * 60 * 24 * 7;
 const API_ROOT = "/api";
 const GUEST_USER = ":guest";
 
-const ERROR_NOT_IMPLEMENTED = "Not implemented";
-const ERROR_NOT_FOUND = "Not found";
-const ERROR_LOGIN = "Login failed";
-const ERROR_INVALID_TOKEN = "Invalid token";
-const ERROR_ACCESS = "Access denied";
-const ERROR_UNAVAILABLE = "Service not available";
-
 const STATS_UNKNOWN = "[unknown]";
 
 const SPECIAL_GALLERY_PREFIX = ":";
@@ -68,13 +61,6 @@ export default {
 
   API_ROOT,
   GUEST_USER,
-
-  ERROR_NOT_IMPLEMENTED,
-  ERROR_NOT_FOUND,
-  ERROR_LOGIN,
-  ERROR_INVALID_TOKEN,
-  ERROR_ACCESS,
-  ERROR_UNAVAILABLE,
 
   STATS_UNKNOWN,
 
