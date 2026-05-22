@@ -1,6 +1,7 @@
 import type { Request, RequestHandler } from "express";
 
 import CONST from "../constants.js";
+import { InvalidTokenError } from "../errors.js";
 import tokenFactory from "../../models/token.js";
 import logger from "../logger.js";
 
@@ -41,7 +42,7 @@ const tokenFilter: RequestHandler = (request, _response, next) => {
     })
     .catch((error) => {
       logger.debug("Token verification failed", error);
-      next(CONST.ERROR_INVALID_TOKEN);
+      next(new InvalidTokenError());
     });
 };
 

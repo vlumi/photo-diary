@@ -2,10 +2,27 @@ import type { ErrorRequestHandler } from "express";
 import * as HttpStatus from "http-status-codes";
 
 import CONST from "../constants.js";
+import { AppError } from "../errors.js";
 import logger from "../logger.js";
 
+// Two error shapes co-exist during the typed-Error migration (#219):
+//
+// 1. `AppError` subclasses with a `.status` property. Preferred for new code
+//    and the migration target.
+// 2. Legacy `CONST.ERROR_*` string constants. Still works via the switch
+//    below — kept for the duration of the migration so a partial rollout
+//    doesn't break anything.
+//
+// New-style errors get their `.message` echoed as the response payload; old
+// string-style throws echo the string as-is. The wire shape stays the same.
 const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
   logger.debug(error);
+
+  if (error instanceof AppError) {
+    response.status(error.status).send({ error: error.message });
+    return;
+  }
+
   switch (error) {
     case CONST.ERROR_NOT_FOUND:
       response.status(HttpStatus.NOT_FOUND).send({ error });

@@ -1,5 +1,6 @@
 import CONST from "../../lib/constants.js";
 import authorizerFactory from "../../lib/authorizer.js";
+import { AccessError } from "../../lib/errors.js";
 import dbOriginal from "../../db/index.js";
 
 vi.mock("../../db/index.js", () => ({
@@ -23,7 +24,7 @@ type Authorize = (user: string, gallery?: any) => Promise<unknown>;
 const fail = (authorize: Authorize, user: string, gallery?: string) => {
   expect.assertions(1);
   return authorize(user, gallery).catch((e) =>
-    expect(e).toBe(CONST.ERROR_ACCESS)
+    expect(e).toBeInstanceOf(AccessError)
   );
 };
 

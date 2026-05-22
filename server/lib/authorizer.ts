@@ -1,4 +1,5 @@
 import CONST from "./constants.js";
+import { AccessError } from "./errors.js";
 import db from "../db/index.js";
 
 export default () => {
@@ -14,7 +15,7 @@ export default () => {
 // access level under the user-first cascade (see `resolveAccessLevel` in
 // db/sqlite3/index.ts), compare to the required threshold, throw on miss.
 // Catch-all so any underlying error (DB miss, etc.) reads as a uniform
-// ERROR_ACCESS to callers rather than leaking driver-specific failures.
+// AccessError to callers rather than leaking driver-specific failures.
 
 const requireLevel = async (
   userId: string,
@@ -24,10 +25,11 @@ const requireLevel = async (
   try {
     const level = await db.resolveAccessLevel(userId, galleryId);
     if (level === undefined || level < required) {
-      throw CONST.ERROR_ACCESS;
+      throw new AccessError(undefined, { userId, galleryId, required });
     }
-  } catch {
-    throw CONST.ERROR_ACCESS;
+  } catch (e) {
+    if (e instanceof AccessError) throw e;
+    throw new AccessError(undefined, { userId, galleryId, required });
   }
 };
 
