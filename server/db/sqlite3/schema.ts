@@ -1,4 +1,4 @@
-import CONST from "../../lib/constants.js";
+import { NotImplementedError } from "../../lib/errors.js";
 
 // Raw DB row shapes (one per table). Mirror the SELECT column list exactly.
 export interface MetaRow {
@@ -191,7 +191,7 @@ export default () => {
         row.access_level,
       ],
       mapInsert: (): unknown[] => {
-        throw CONST.ERROR_NOT_IMPLEMENTED;
+        throw new NotImplementedError();
       },
       buildCreateQuery: () => buildCreateQuery(SCHEMA.userGallery),
       buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.userGallery),
@@ -241,7 +241,7 @@ export default () => {
     },
     galleryPhoto: {
       mapRow: (): GalleryPhoto => {
-        throw CONST.ERROR_NOT_IMPLEMENTED;
+        throw new NotImplementedError();
       },
       mapInsert: (link: GalleryPhoto): unknown[] => [link.galleryId, link.photoId],
 
