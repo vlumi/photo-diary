@@ -1,11 +1,13 @@
 import supertest, { type Agent } from "supertest";
 import { app } from "../../app.js";
 
-// Create one persistent server per test file. Letting supertest spin up an
-// ephemeral server per request causes intermittent "Parse Error: Expected
-// HTTP/" failures (port-reuse race between consecutive ephemeral servers).
+// Pass Fastify's underlying http.Server to supertest. supertest binds an
+// ephemeral port on first request and tears it down via `close()`. Routes
+// are registered at module load, so `app.server` already knows the full
+// pipeline — `init()` only needs to finish before the first request fires
+// (handled by each test file's `beforeEach`).
 export const createApi = () => {
-  const server = app.listen();
+  const server = app.server;
   const api = supertest(server);
   const close = () => new Promise<void>((resolve) => server.close(() => resolve()));
   return { api, close };
