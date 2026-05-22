@@ -4,7 +4,7 @@
 
 ### Server
 
-- Introduce a typed `AppError` class hierarchy (`AccessError`, `NotFoundError`, `LoginError`, `InvalidTokenError`, `NotImplementedError`, `UnavailableError`) in `server/lib/errors.ts`, each carrying its HTTP status. Error-handler middleware now recognises both `instanceof AppError` and the legacy `CONST.ERROR_*` string constants so the rest of the codebase can migrate incrementally. Migrated consumers so far: `lib/authorizer.ts`, `lib/middleware/token-filter.ts`, and the five `models/*.ts` files (token + the four mutation-stub models). Wire-shape unchanged. (in progress — #219)
+- Introduce a typed `AppError` class hierarchy (`AccessError`, `NotFoundError`, `LoginError`, `InvalidTokenError`, `NotImplementedError`, `UnavailableError`) in `server/lib/errors.ts`, each carrying its HTTP status. Error-handler middleware now recognises both `instanceof AppError` and the legacy `CONST.ERROR_*` string constants so the rest of the codebase can migrate incrementally. Migrated consumers so far: `lib/authorizer.ts`, `lib/middleware/token-filter.ts`, the five `models/*.ts` files, and the three db-layer files (`db/sqlite3/index.ts`, `db/sqlite3/schema.ts`, `db/dummy.ts`). Wire-shape unchanged. (in progress — #219)
 
 ## [0.7.4] - 2026-05-22
 

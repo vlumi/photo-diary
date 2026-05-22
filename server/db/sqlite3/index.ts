@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 
 import CONST from "../../lib/constants.js";
+import { NotFoundError } from "../../lib/errors.js";
 import config from "../../lib/config/index.js";
 import logger from "../../lib/logger.js";
 import { migrate } from "./migrate.js";
@@ -86,7 +87,7 @@ const loadMeta = async (key: string) => {
   const row = db.prepare(SCHEMA.meta.buildSelectByIdQuery()).get(key) as
     | MetaRow
     | undefined;
-  if (!row) throw CONST.ERROR_NOT_FOUND;
+  if (!row) throw new NotFoundError();
   return SCHEMA.meta.mapRow(row);
 };
 const updateMeta = async (key: string, meta: Partial<MetaRow>) => {
@@ -107,7 +108,7 @@ const loadUser = async (userId: string) => {
   const row = db.prepare(SCHEMA.user.buildSelectByIdQuery()).get(userId) as
     | UserRow
     | undefined;
-  if (!row) throw CONST.ERROR_NOT_FOUND;
+  if (!row) throw new NotFoundError();
   return SCHEMA.user.mapRow(row);
 };
 const updateUser = async (userId: string, user: Partial<User>) => {
@@ -261,7 +262,7 @@ const loadGallery = async (galleryId: string) => {
   const row = db
     .prepare(SCHEMA.gallery.buildSelectByIdQuery())
     .get(galleryId) as GalleryRow | undefined;
-  if (!row) throw CONST.ERROR_NOT_FOUND;
+  if (!row) throw new NotFoundError();
   return SCHEMA.gallery.mapRow(row);
 };
 const updateGallery = async (galleryId: string, gallery: GalleryInput) => {
@@ -345,7 +346,7 @@ const loadGalleryPhoto = async (galleryId: string, photoId: string) => {
     ? stmt.all(photoId)
     : stmt.all(galleryId, photoId)) as PhotoRow[];
   if (rows.length === 0) {
-    throw CONST.ERROR_NOT_FOUND;
+    throw new NotFoundError();
   }
   return schema.mapRow(rows[0], 0);
 };
@@ -379,7 +380,7 @@ const loadPhoto = async (photoId: string) => {
   const row = db.prepare(SCHEMA.photo.buildSelectByIdQuery()).get(photoId) as
     | PhotoRow
     | undefined;
-  if (!row) throw CONST.ERROR_NOT_FOUND;
+  if (!row) throw new NotFoundError();
   return SCHEMA.photo.mapRow(row, 0);
 };
 const updatePhoto = async (photoId: string, photo: PhotoInput) => {

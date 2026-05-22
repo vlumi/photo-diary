@@ -2,9 +2,10 @@
 import { randomUUID } from "node:crypto";
 
 import CONST from "../lib/constants.js";
+import { NotFoundError, NotImplementedError } from "../lib/errors.js";
 
 const notImplemented = async (): Promise<never> => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 
 /**
@@ -62,32 +63,32 @@ const loadMetas = async () => {
   return Object.values(db.meta);
 };
 const createMeta = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const loadMeta = async (key: string) => {
   if (!(key in db.meta)) {
-    throw CONST.ERROR_NOT_FOUND;
+    throw new NotFoundError();
   }
   return db.meta[key];
 };
 const updateMeta = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 
 const loadUsers = async () => {
   return Object.values(db.users);
 };
 const createUser = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const loadUser = async (id: string) => {
   if (!(id in db.users)) {
-    throw CONST.ERROR_NOT_FOUND;
+    throw new NotFoundError();
   }
   return db.users[id];
 };
 const updateUser = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 
 const resolveAccessLevel = async (
@@ -114,16 +115,16 @@ const loadGalleries = async () => {
   return Object.values(db.galleries).sort();
 };
 const createGallery = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const loadGallery = async (galleryId: string) => {
   if (!(galleryId in db.galleries)) {
-    throw CONST.ERROR_NOT_FOUND;
+    throw new NotFoundError();
   }
   return db.galleries[galleryId];
 };
 const updateGallery = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 
 const comparePhotos = (a: any, b: any) =>
@@ -147,7 +148,7 @@ const loadGalleryPhotos = async (galleryId: string) => {
     }
     default: {
       if (!(galleryId in db.galleries)) {
-        throw CONST.ERROR_NOT_FOUND;
+        throw new NotFoundError();
       }
       const photos = db.galleryPhotos[galleryId]
         .map((photoId: string) => db.photos[photoId])
@@ -157,7 +158,7 @@ const loadGalleryPhotos = async (galleryId: string) => {
   }
 };
 const linkGalleryPhoto = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const loadGalleryPhoto = async (galleryId: string, photoId: string) => {
   const handleGalleryAll = async () => {
@@ -171,7 +172,7 @@ const loadGalleryPhoto = async (galleryId: string, photoId: string) => {
       .map((id: string) => db.photos[id])
       .sort(comparePhotos);
     if (photos.length === 0) {
-      throw CONST.ERROR_NOT_FOUND;
+      throw new NotFoundError();
     }
     return photos[0];
   };
@@ -183,19 +184,19 @@ const loadGalleryPhoto = async (galleryId: string, photoId: string) => {
       .map((id: string) => db.photos[id])
       .sort(comparePhotos);
     if (photos.length === 0) {
-      throw CONST.ERROR_NOT_FOUND;
+      throw new NotFoundError();
     }
     return photos[0];
   };
   const handleGallery = async () => {
     if (!(galleryId in db.galleries)) {
-      throw CONST.ERROR_NOT_FOUND;
+      throw new NotFoundError();
     }
     const photos = db.galleryPhotos[galleryId]
       .filter((id: string) => id === photoId)
       .map((id: string) => db.photos[id]);
     if (photos.length === 0) {
-      throw CONST.ERROR_NOT_FOUND;
+      throw new NotFoundError();
     }
     return photos[0];
   };
@@ -212,29 +213,29 @@ const loadGalleryPhoto = async (galleryId: string, photoId: string) => {
   }
 };
 const unlinkGalleryPhoto = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const unlinkAllPhotos = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const unlinkAllGalleries = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 
 const loadPhotos = async () => {
   return db.photos;
 };
 const createPhoto = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 const loadPhoto = async (photoId: string) => {
   if (!(photoId in db.photos)) {
-    throw CONST.ERROR_NOT_FOUND;
+    throw new NotFoundError();
   }
   return db.photos[photoId];
 };
 const updatePhoto = async () => {
-  throw CONST.ERROR_NOT_IMPLEMENTED;
+  throw new NotImplementedError();
 };
 
 const dbDump = JSON.stringify({
