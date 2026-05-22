@@ -28,9 +28,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
-                  "properties": {}
+                  "properties": {},
+                  "additionalProperties": true
                 }
               }
             }
@@ -76,9 +76,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
-                  "properties": {}
+                  "properties": {},
+                  "additionalProperties": true
                 }
               }
             }
@@ -385,7 +385,6 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "additionalProperties": true,
                     "type": "object",
                     "required": [
                       "id",
@@ -398,7 +397,8 @@
                       "hideMap": {
                         "type": "boolean"
                       }
-                    }
+                    },
+                    "additionalProperties": true
                   }
                 }
               }
@@ -445,7 +445,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
                   "required": [
                     "id",
@@ -458,7 +457,8 @@
                     "hideMap": {
                       "type": "boolean"
                     }
-                  }
+                  },
+                  "additionalProperties": true
                 }
               }
             }
@@ -646,9 +646,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "additionalProperties": true,
                     "type": "object",
-                    "properties": {}
+                    "properties": {},
+                    "additionalProperties": true
                   }
                 }
               }
@@ -687,9 +687,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
-                  "properties": {}
+                  "properties": {},
+                  "additionalProperties": true
                 }
               }
             }
