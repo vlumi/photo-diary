@@ -64,20 +64,32 @@ const recordLoginFailure = (ip: string) => {
   entry.count += 1;
 };
 
+const TAGS = ["tokens"];
+
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Verify and keep-alive token.
    */
-  fastify.get("/", async (_request, reply) => {
-    reply.status(200).send();
-  });
+  fastify.get(
+    "/",
+    { schema: { tags: TAGS, summary: "Verify token (keep-alive)" } },
+    async (_request, reply) => {
+      reply.status(200).send();
+    }
+  );
 
   /**
    * Login, creating a new token.
    */
   fastify.post(
     "/",
-    { schema: { body: LoginBody } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Log in, issuing a new token",
+        body: LoginBody,
+      },
+    },
     async (request, reply) => {
       if (isRateLimited(request.ip)) {
         reply
@@ -115,17 +127,32 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Logout, revoking the requesting user's tokens.
    */
-  fastify.delete("/", async (request, reply) => {
-    await model.revokeToken(request.user.id);
-    reply.status(204).send();
-  });
+  fastify.delete(
+    "/",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Log out (revoke all tokens for the requester)",
+      },
+    },
+    async (request, reply) => {
+      await model.revokeToken(request.user.id);
+      reply.status(204).send();
+    }
+  );
 
   /**
    * Logout (admin), revoking all tokens for another user.
    */
   fastify.delete(
     "/:userId",
-    { schema: { params: UserIdParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Revoke all tokens for another user (admin)",
+        params: UserIdParam,
+      },
+    },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.revokeToken(request.params.userId);

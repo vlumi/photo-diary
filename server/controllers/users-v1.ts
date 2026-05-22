@@ -12,34 +12,49 @@ const init = async () => {
 };
 
 const UserIdParam = Type.Object({ userId: Type.String() });
+const TAGS = ["users"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Get all users.
    */
-  fastify.get("/", async (request) => {
-    await authorizer.authorizeAdmin(request.user.id);
-    const cleanUser = (user: { id: string }) => ({ id: user.id });
-    const users = (await model.getUsers()) as Array<{ id: string }>;
-    return users.map(cleanUser);
-  });
+  fastify.get(
+    "/",
+    { schema: { tags: TAGS, summary: "List all users (admin)" } },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const cleanUser = (user: { id: string }) => ({ id: user.id });
+      const users = (await model.getUsers()) as Array<{ id: string }>;
+      return users.map(cleanUser);
+    }
+  );
 
   /**
    * Create a user.
    */
-  fastify.post("/", async (request) => {
-    await authorizer.authorizeAdmin(request.user.id);
-    const user = {};
-    // TODO: validate and set content from request.body
-    return await model.createUser(user);
-  });
+  fastify.post(
+    "/",
+    { schema: { tags: TAGS, summary: "Create a user (admin)" } },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const user = {};
+      // TODO: validate and set content from request.body
+      return await model.createUser(user);
+    }
+  );
 
   /**
    * Get the matching user.
    */
   fastify.get(
     "/:userId",
-    { schema: { params: UserIdParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Get a user by id (admin)",
+        params: UserIdParam,
+      },
+    },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
       return await model.getUser(request.params.userId);
@@ -51,7 +66,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.put(
     "/:userId",
-    { schema: { params: UserIdParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Update a user by id (admin)",
+        params: UserIdParam,
+      },
+    },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
       const user = {};
@@ -65,7 +86,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.delete(
     "/:userId",
-    { schema: { params: UserIdParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Delete a user by id (admin)",
+        params: UserIdParam,
+      },
+    },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.deleteUser(request.params.userId);

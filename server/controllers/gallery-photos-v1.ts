@@ -17,6 +17,7 @@ const GalleryPhotoParams = Type.Object({
   galleryId: Type.String(),
   photoId: Type.String(),
 });
+const TAGS = ["gallery-photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
@@ -24,7 +25,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.get(
     "/:galleryId/",
-    { schema: { params: GalleryIdParam } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "List photos in a gallery",
+        params: GalleryIdParam,
+      },
+    },
     async (request) => {
       await authorizer.authorizeGalleryView(
         request.user.id,
@@ -43,7 +50,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.get(
     "/:galleryId/:photoId",
-    { schema: { params: GalleryPhotoParams } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Get one photo's metadata in a gallery's context",
+        params: GalleryPhotoParams,
+      },
+    },
     async (request) => {
       await authorizer.authorizeGalleryView(
         request.user.id,
@@ -65,7 +78,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.put(
     "/:galleryId/:photoId",
-    { schema: { params: GalleryPhotoParams } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Link a photo to a gallery (admin)",
+        params: GalleryPhotoParams,
+      },
+    },
     async (request, reply) => {
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
@@ -84,7 +103,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.delete(
     "/:galleryId/:photoId",
-    { schema: { params: GalleryPhotoParams } },
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Unlink a photo from a gallery (admin)",
+        params: GalleryPhotoParams,
+      },
+    },
     async (request, reply) => {
       await authorizer.authorizeGalleryAdmin(
         request.user.id,

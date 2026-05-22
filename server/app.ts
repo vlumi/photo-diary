@@ -1,10 +1,14 @@
 import path from "node:path";
 
+import { readFileSync } from "node:fs";
+
 import Fastify from "fastify";
 import { type TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyCompress from "@fastify/compress";
 import fastifyStatic from "@fastify/static";
+import fastifySwagger from "@fastify/swagger";
+import fastifySwaggerUi from "@fastify/swagger-ui";
 
 import config from "./lib/config/index.js";
 
@@ -53,6 +57,71 @@ export const app = Fastify({
 
 const STATIC_DIR =
   process.env.STATIC_DIR ?? path.join(import.meta.dirname, "build");
+
+// Read the server's own `package.json` for the OpenAPI `info.version`. Sync
+// I/O at module load is fine here — it's a single small file, one read per
+// process. `package.json` lives next to the compiled `app.js` in prod and
+// next to `app.ts` in dev; either way `import.meta.dirname` resolves it.
+const pkg = JSON.parse(
+  readFileSync(path.join(import.meta.dirname, "package.json"), "utf8")
+) as { version: string };
+
+// @fastify/swagger introspects every registered route's `schema` (from
+// PR B) into an OpenAPI document — it has to register *before* the
+// controllers do, so it captures every route as it's added. The spec is
+// queried at any time via `app.swagger()`; the UI is exposed separately
+// below.
+await app.register(fastifySwagger, {
+  openapi: {
+    info: {
+      title: "Photo Diary API",
+      description:
+        "Self-hosted photo-diary backend. Schema is generated from " +
+        "TypeBox-validated route handlers — see #167 PR B/C for the " +
+        "migration that produced this document.",
+      version: pkg.version,
+    },
+    tags: [
+      { name: "meta", description: "Per-instance frontend defaults" },
+      { name: "tokens", description: "Auth: login, keep-alive, logout" },
+      { name: "users", description: "User management (admin)" },
+      { name: "galleries", description: "Gallery metadata" },
+      { name: "photos", description: "Photo metadata (cross-gallery)" },
+      {
+        name: "gallery-photos",
+        description: "Photo metadata scoped to one gallery",
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearer: {
+          type: "http",
+          scheme: "bearer",
+          description:
+            "JWT issued by POST /api/v1/tokens. Send as " +
+            "`Authorization: Bearer <token>`.",
+        },
+      },
+    },
+  },
+});
+
+// Swagger UI is opt-in: always on in dev, gated by `ENABLE_DOCS=true` in
+// any other environment. The JSON spec endpoint is exposed only when the
+// UI is — operators who want the spec for codegen can run
+// `npm run docs:dump` instead, which renders the file without exposing it
+// over HTTP.
+const DOCS_EXPOSED =
+  config.ENV === "dev" || process.env.ENABLE_DOCS === "true";
+if (DOCS_EXPOSED) {
+  await app.register(fastifySwaggerUi, {
+    routePrefix: "/api/v1/docs",
+    uiConfig: {
+      docExpansion: "list",
+      deepLinking: true,
+    },
+  });
+}
 
 // helmet sets a baseline of security headers (HSTS, nosniff, frame-ancestors
 // DENY, Referrer-Policy, Permissions-Policy, …). CSP is left off — the
