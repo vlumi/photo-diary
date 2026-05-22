@@ -25,7 +25,21 @@ app.set("trust proxy", 1);
 // DENY, Referrer-Policy, Permissions-Policy, …). CSP is left off — the
 // default policy would break the bundle's inline styles / dynamic imports
 // and warrants its own audit before being enabled.
-app.use(helmet({ contentSecurityPolicy: false }));
+//
+// `Referrer-Policy` overridden from helmet's default `no-referrer` to
+// `strict-origin-when-cross-origin` (modern browser default since 2020):
+// the no-referrer default strips the `Referer` header on every outbound
+// request, which breaks the leaflet map widget — OSM's volunteer-run tile
+// servers reject referrer-less requests as bot traffic (osm.wiki/Blocked).
+// `strict-origin-when-cross-origin` sends just the origin
+// (https://gallery.example.com) on cross-origin HTTPS requests, satisfying
+// OSM's check without leaking the full request URL.
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  })
+);
 app.use(compression());
 app.use(express.json());
 // Discourage indexing and AI scraping on every response. robots.txt is the
