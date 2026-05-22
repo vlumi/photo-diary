@@ -7,7 +7,7 @@ import TopMenuButton from "./TopMenuButton";
 import Login from "./Login";
 import Logout from "./Logout";
 
-import type { User } from "../models/UserModel";
+import { useUserStore } from "../stores";
 
 const Root = styled.div`
   height: 25px;
@@ -25,7 +25,7 @@ const Container = styled.span`
   flex-wrap: nowrap;
   white-space: nowrap;
 `;
-const User = styled.span`
+const UserName = styled.span`
   margin: auto 10px;
   color: var(--inactive-color);
   flex-grow: 1;
@@ -43,15 +43,10 @@ const HideButton = styled(TopMenuButton)`
   width: 23px;
 `;
 
-interface Props {
-  user: User | undefined;
-  setUser: (user: User | undefined) => void;
-  lang: string;
-}
-
-const TopMenu = ({ user, setUser, lang }: Props): React.ReactElement => {
+const TopMenu = (): React.ReactElement => {
   const { t } = useTranslation();
   const [showLogin, setShowLogin] = React.useState(false);
+  const user = useUserStore((s) => s.user);
 
   const toggleShowLogin = () => setShowLogin(!showLogin);
 
@@ -61,19 +56,17 @@ const TopMenu = ({ user, setUser, lang }: Props): React.ReactElement => {
         setShowLogin(false);
       }
       return (
-        <>
-          <Container>
-            <User>{user.id()}</User> <TopMenuLang lang={lang} />
-            <Logout setUser={setUser} />
-          </Container>
-        </>
+        <Container>
+          <UserName>{user.id()}</UserName> <TopMenuLang />
+          <Logout />
+        </Container>
       );
     }
     return (
       <>
         <ToggleBlock $visible={!showLogin}>
           <Container>
-            <TopMenuLang lang={lang} />
+            <TopMenuLang />
             <TopMenuButton onClick={toggleShowLogin}>
               {t("login")}
             </TopMenuButton>
@@ -81,7 +74,7 @@ const TopMenu = ({ user, setUser, lang }: Props): React.ReactElement => {
         </ToggleBlock>
         <ToggleBlock $visible={showLogin}>
           <Container>
-            <Login setUser={setUser} />
+            <Login />
             <HideButton onClick={toggleShowLogin}>╳</HideButton>
           </Container>
         </ToggleBlock>

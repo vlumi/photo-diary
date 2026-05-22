@@ -8,32 +8,13 @@ import {
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
-import countryData from "i18n-iso-countries";
-
 import "./App.css";
 
 import ScrollToPosition from "./components/ScrollToPosition";
 import TopMenu from "./components/TopMenu";
 import Gallery from "./components/Gallery";
 
-import UserModel, { type User } from "./models/UserModel";
-
-import config from "./lib/config";
-import scroll from "./lib/scroll";
-import token from "./lib/token";
-
-type CountryLocale = Parameters<typeof countryData.registerLocale>[0];
-
-// Country-name locales are loaded on demand so the main bundle ships only the
-// active language. Static imports of all three would pull ~21 kB raw (~6 kB gz)
-// of dictionaries into the main chunk; dynamic imports give each language its
-// own chunk that's fetched when the user actually switches to it.
-const countryLoaders: Record<string, () => Promise<{ default: CountryLocale }>> = {
-  en: () => import("i18n-iso-countries/langs/en.json"),
-  fi: () => import("i18n-iso-countries/langs/fi.json"),
-  ja: () => import("i18n-iso-countries/langs/ja.json"),
-};
-const loadedLocales = new Set<string>();
+import { useLangStore } from "./stores";
 
 const Footer = styled.div`
   width: 100%;
@@ -44,121 +25,42 @@ const Footer = styled.div`
   color: var(--inactive-color);
 `;
 
-const loadCountryData = async (lang: string) => {
-  const loader = countryLoaders[lang] ?? countryLoaders.en;
-  if (!loadedLocales.has(lang)) {
-    const mod = await loader();
-    countryData.registerLocale(mod.default);
-    loadedLocales.add(lang);
-  }
-  return countryData;
-};
-
 const App = (): React.ReactElement => {
-  const [user, setUser] = React.useState<User | undefined>(undefined);
-  const [lang, setLang] = React.useState<string>(config.DEFAULT_LANGUAGE);
-  const [activeCountryData, setCountryData] = React.useState<
-    typeof countryData | undefined
-  >(undefined);
+  const { t } = useTranslation();
 
-  const scrollState = scroll();
-
-  const { i18n, t } = useTranslation();
-
-  React.useEffect(() => {
-    let cancelled = false;
-    loadCountryData(lang).then((data) => {
-      if (!cancelled) setCountryData(data);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [lang]);
-
-  React.useEffect(() => {
-    const handler = (next: string) => setLang(next);
-    i18n.on("languageChanged", handler);
-    return () => {
-      i18n.off("languageChanged", handler);
-    };
-  }, [i18n]);
-  const storedLang = window.localStorage.getItem("lang");
-  if (storedLang && storedLang !== lang) {
-    i18n.changeLanguage(storedLang);
-  } else if (lang !== i18n.language) {
-    i18n.changeLanguage(lang);
-  }
-
-  if (!user) {
-    const storedUserJson = window.localStorage.getItem("user");
-    if (storedUserJson) {
-      const storedUser = UserModel(JSON.parse(storedUserJson));
-      if (storedUser) {
-        token.setToken(storedUser.token());
-        setUser(storedUser);
-      }
-    }
-  }
+  // Wait for the country-name dictionary to be loaded before rendering the
+  // gallery routes — they pass `countryData` deep into the Stats / Filters
+  // subviews and rendering with `undefined` would cause runtime errors. The
+  // lang store loads the active language's dictionary at module load.
+  const countryDataReady = useLangStore((s) => s.countryData !== undefined);
 
   return (
     <>
       <title>Photo diary</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="robots" content="noindex" />
-      <TopMenu user={user} setUser={setUser} lang={lang} />
+      <TopMenu />
       <Router>
-        <ScrollToPosition scrollState={scrollState}>
-          {!activeCountryData ? (
+        <ScrollToPosition>
+          {!countryDataReady ? (
             <div>{t("loading")}</div>
           ) : (
-          <Routes>
-            <Route
-              path="/g/:galleryId/stats"
-              element={
-                <Gallery
-                  user={user}
-                  lang={lang}
-                  countryData={activeCountryData}
-                  isStats={true}
-                  scrollState={scrollState}
-                />
-              }
-            />
-            <Route
-              path="/g/:galleryId/:year/:month/:day/:photoId"
-              element={
-                <Gallery
-                  user={user}
-                  lang={lang}
-                  countryData={activeCountryData}
-                  scrollState={scrollState}
-                />
-              }
-            />
-            <Route
-              path="/g/:galleryId/:year?/:month?/:day?"
-              element={
-                <Gallery
-                  user={user}
-                  lang={lang}
-                  countryData={activeCountryData}
-                  scrollState={scrollState}
-                />
-              }
-            />
-            <Route
-              path="/g"
-              element={
-                <Gallery
-                  user={user}
-                  lang={lang}
-                  countryData={activeCountryData}
-                  scrollState={scrollState}
-                />
-              }
-            />
-            <Route path="/" element={<Navigate to="/g" replace />} />
-          </Routes>
+            <Routes>
+              <Route
+                path="/g/:galleryId/stats"
+                element={<Gallery isStats={true} />}
+              />
+              <Route
+                path="/g/:galleryId/:year/:month/:day/:photoId"
+                element={<Gallery />}
+              />
+              <Route
+                path="/g/:galleryId/:year?/:month?/:day?"
+                element={<Gallery />}
+              />
+              <Route path="/g" element={<Gallery />} />
+              <Route path="/" element={<Navigate to="/g" replace />} />
+            </Routes>
           )}
         </ScrollToPosition>
         <Footer>

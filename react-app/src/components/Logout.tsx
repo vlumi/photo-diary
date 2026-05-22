@@ -5,16 +5,13 @@ import { useTranslation } from "react-i18next";
 import TopMenuButton from "./TopMenuButton";
 
 import token from "../lib/token";
-import type { User } from "../models/UserModel";
+import { useUserStore } from "../stores";
 
 const Form = styled.form``;
 
-interface Props {
-  setUser: (user: User | undefined) => void;
-}
-
-const Logout = ({ setUser }: Props): React.ReactElement => {
+const Logout = (): React.ReactElement => {
   const { t } = useTranslation();
+  const setUser = useUserStore((s) => s.setUser);
 
   const handleLogout = (event: React.FormEvent) => {
     event.preventDefault();
