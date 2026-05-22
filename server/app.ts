@@ -25,6 +25,12 @@ import logger from "./lib/logger.js";
 // PR to keep the slice diffs honest.
 export const app: FastifyInstance = Fastify({
   trustProxy: 1,
+  // Express's router treated trailing slashes as optional by default
+  // (`strict: false`). The gallery-photos LIST route was registered as
+  // `/:galleryId/` but the SPA calls it without the trailing slash —
+  // Fastify is strict, so we match Express's lenient behaviour here so
+  // existing client URLs keep working.
+  ignoreTrailingSlash: true,
   logger:
     config.ENV === "test"
       ? false
