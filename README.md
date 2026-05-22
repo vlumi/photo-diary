@@ -91,7 +91,7 @@ sudo install -d -o "$USER" /opt/photo-diary /var/photo-diary
 GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` (no rename step), then run `npm run setup` to install everything and build the bundled frontend:
 
 ```sh
-V=0.7.1
+V=0.7.2
 mkdir -p "/opt/photo-diary/$V"
 curl -L "https://github.com/vlumi/photo-diary/archive/refs/tags/v$V.tar.gz" \
   | tar xz -C "/opt/photo-diary/$V" --strip-components=1
@@ -106,7 +106,7 @@ Repeat this block for each new version you want to land on this host.
 The `bin/instance.ts` script handles directory creation, `.env` generation (with a fresh random `SECRET`), the `code` symlink, and the per-instance `bin/` shortcuts in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary/0.7.1/bin/instance.ts dailybw
+/opt/photo-diary/0.7.2/bin/instance.ts dailybw
 ```
 
 That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The script can be invoked from any working directory; the instance dir is derived from the name (and the `--base <dir>` flag, default `/var/photo-diary`, if you want instances under a different parent). Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
