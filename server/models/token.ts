@@ -51,6 +51,15 @@ const revokeToken = async (_userId: string): Promise<void> => {
   throw new NotImplementedError();
 };
 
+// Called by `user.changePassword` after rotating the DB-side secret so the
+// in-memory cache used for signing/verifying is in sync before the cache's
+// 5-second reload window. Without this, the freshly-issued JWT for the
+// just-changed-password user would be signed with the stale cached secret
+// and fail verification on the very next request.
+const setSecret = (userId: string, secret: string): void => {
+  secrets[userId] = secret;
+};
+
 export default () => {
   return {
     init,
@@ -58,6 +67,7 @@ export default () => {
     createToken,
     verifyToken,
     revokeToken,
+    setSecret,
   };
 };
 

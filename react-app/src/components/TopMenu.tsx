@@ -1,12 +1,8 @@
 import React from "react";
 import styled from "@emotion/styled";
-import { useTranslation } from "react-i18next";
 
 import TopMenuLang from "./TopMenuLang";
-import TopMenuButton from "./TopMenuButton";
-import Logout from "./Logout";
-
-import { useUserStore, useLoginModalStore } from "../stores";
+import UserMenu from "./UserMenu";
 
 const Root = styled.div`
   height: 25px;
@@ -24,42 +20,13 @@ const Container = styled.span`
   flex-wrap: nowrap;
   white-space: nowrap;
 `;
-const UserName = styled.span`
-  margin: auto 10px;
-  color: var(--header-color);
-  flex-grow: 1;
-  text-align: left;
-  font-weight: bold;
-`;
 
-const TopMenu = (): React.ReactElement => {
-  const { t } = useTranslation();
-  const user = useUserStore((s) => s.user);
-  const openLoginModal = useLoginModalStore((s) => s.open);
-
-  // Two states: logged in (show user name + lang switcher + logout) vs not
-  // (show lang switcher + a Log in button that opens the floating modal).
-  // The login form itself lives in the modal — the top menu no longer
-  // expands inline.
-  return (
-    <Root>
-      <Container>
-        {user ? (
-          <>
-            <UserName>{user.id()}</UserName>
-            <TopMenuLang />
-            <Logout />
-          </>
-        ) : (
-          <>
-            <TopMenuLang />
-            <TopMenuButton onClick={() => openLoginModal()}>
-              {t("login")}
-            </TopMenuButton>
-          </>
-        )}
-      </Container>
-    </Root>
-  );
-};
+const TopMenu = (): React.ReactElement => (
+  <Root>
+    <Container>
+      <TopMenuLang />
+      <UserMenu />
+    </Container>
+  </Root>
+);
 export default TopMenu;

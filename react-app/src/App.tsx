@@ -15,6 +15,7 @@ import TopMenu from "./components/TopMenu";
 import Gallery from "./components/Gallery";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
+import ChangePasswordModal from "./components/ChangePasswordModal";
 
 import { useLangStore } from "./stores";
 
@@ -43,6 +44,7 @@ const App = (): React.ReactElement => {
       <meta name="robots" content="noindex" />
       <Notifications />
       <LoginModal />
+      <ChangePasswordModal />
       <TopMenu />
       <Router>
         <ScrollToPosition>
