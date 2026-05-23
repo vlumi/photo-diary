@@ -4,10 +4,9 @@ import { useTranslation } from "react-i18next";
 
 import TopMenuLang from "./TopMenuLang";
 import TopMenuButton from "./TopMenuButton";
-import Login from "./Login";
 import Logout from "./Logout";
 
-import { useUserStore } from "../stores";
+import { useUserStore, useLoginModalStore } from "../stores";
 
 const Root = styled.div`
   height: 25px;
@@ -32,56 +31,35 @@ const UserName = styled.span`
   text-align: left;
   font-weight: bold;
 `;
-const ToggleBlock = styled("span", {
-  shouldForwardProp: (prop) => prop !== "$visible",
-})<{ $visible: boolean }>`
-  display: ${(props) => (props.$visible ? "" : "none")};
-`;
-const HideButton = styled(TopMenuButton)`
-  color: var(--header-color);
-  background: var(--header-background);
-  padding: 0;
-  width: 23px;
-`;
 
 const TopMenu = (): React.ReactElement => {
   const { t } = useTranslation();
-  const [showLogin, setShowLogin] = React.useState(false);
   const user = useUserStore((s) => s.user);
+  const openLoginModal = useLoginModalStore((s) => s.open);
 
-  const toggleShowLogin = () => setShowLogin(!showLogin);
-
-  const renderContent = () => {
-    if (user) {
-      if (showLogin) {
-        setShowLogin(false);
-      }
-      return (
-        <Container>
-          <UserName>{user.id()}</UserName> <TopMenuLang />
-          <Logout />
-        </Container>
-      );
-    }
-    return (
-      <>
-        <ToggleBlock $visible={!showLogin}>
-          <Container>
+  // Two states: logged in (show user name + lang switcher + logout) vs not
+  // (show lang switcher + a Log in button that opens the floating modal).
+  // The login form itself lives in the modal — the top menu no longer
+  // expands inline.
+  return (
+    <Root>
+      <Container>
+        {user ? (
+          <>
+            <UserName>{user.id()}</UserName>
             <TopMenuLang />
-            <TopMenuButton onClick={toggleShowLogin}>
+            <Logout />
+          </>
+        ) : (
+          <>
+            <TopMenuLang />
+            <TopMenuButton onClick={() => openLoginModal()}>
               {t("login")}
             </TopMenuButton>
-          </Container>
-        </ToggleBlock>
-        <ToggleBlock $visible={showLogin}>
-          <Container>
-            <Login />
-            <HideButton onClick={toggleShowLogin}>╳</HideButton>
-          </Container>
-        </ToggleBlock>
-      </>
-    );
-  };
-  return <Root>{renderContent()}</Root>;
+          </>
+        )}
+      </Container>
+    </Root>
+  );
 };
 export default TopMenu;

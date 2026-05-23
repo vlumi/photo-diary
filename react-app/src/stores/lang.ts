@@ -27,8 +27,13 @@ const loadCountryData = async (lang: string) => {
   return countryData;
 };
 
-const initialLang =
-  window.localStorage.getItem("lang") ?? config.DEFAULT_LANGUAGE;
+// `localStorage` is guarded for test environments / SSR where it may not
+// be defined when the module first loads.
+const storedLang =
+  typeof window !== "undefined" && window.localStorage
+    ? window.localStorage.getItem("lang")
+    : null;
+const initialLang = storedLang ?? config.DEFAULT_LANGUAGE;
 
 interface LangState {
   lang: string;

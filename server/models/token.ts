@@ -1,8 +1,13 @@
-import { SignJWT, jwtVerify, decodeJwt } from "jose";
+import { SignJWT, jwtVerify, decodeJwt, errors as joseErrors } from "jose";
 import bcrypt from "bcrypt";
 
 import config from "../lib/config/index.js";
-import { LoginError, NotImplementedError } from "../lib/errors.js";
+import CONST from "../lib/constants.js";
+import {
+  LoginError,
+  NotImplementedError,
+  TokenExpiredError,
+} from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -74,10 +79,14 @@ const checkUserPassword = async (
 };
 const createToken = async (id: string, isAdmin: boolean): Promise<string> => {
   const tokenContent = { id, isAdmin };
-  // TODO: expiration
+  // `setExpirationTime` accepts a number-of-seconds or a relative duration
+  // string. Using seconds (a Date `+ duration / 1000`) keeps the math
+  // explicit and matches the `iat` units jose uses.
+  const expSeconds = Math.floor((Date.now() + CONST.SESSION_LENGTH_MS) / 1000);
   return await new SignJWT(tokenContent)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
+    .setExpirationTime(expSeconds)
     .sign(encodeSecret(getSecret(id)));
 };
 const authenticateUser = async (credentials: Credentials): Promise<void> => {
@@ -95,12 +104,23 @@ const verifyToken = async (token: string) => {
   const decoded = decodeJwt(token) as { id: string };
   logger.debug(`Verifying token for "${decoded.id}"`);
 
-  const { payload } = await jwtVerify(
-    token,
-    encodeSecret(getSecret(decoded.id))
-  );
-  if (!payload || payload.id !== decoded.id) {
-    throw new LoginError();
+  try {
+    const { payload } = await jwtVerify(
+      token,
+      encodeSecret(getSecret(decoded.id))
+    );
+    if (!payload || payload.id !== decoded.id) {
+      throw new LoginError();
+    }
+    return payload as { id: string; isAdmin?: boolean };
+  } catch (error) {
+    // Re-throw expiration as the typed error the frontend switches on so a
+    // mid-session expiry surfaces the re-login modal rather than the generic
+    // "invalid token" path. Everything else (signature mismatch, malformed,
+    // tampered) keeps falling through as a generic verification failure.
+    if (error instanceof joseErrors.JWTExpired) {
+      throw new TokenExpiredError();
+    }
+    throw error;
   }
-  return payload as { id: string; isAdmin?: boolean };
 };

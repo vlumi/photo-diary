@@ -47,6 +47,13 @@ export class InvalidTokenError extends AppError {
   }
 }
 
+export class TokenExpiredError extends AppError {
+  override status = 401;
+  constructor(message = "Token expired", context?: Record<string, unknown>) {
+    super(message, context);
+  }
+}
+
 export class AccessError extends AppError {
   override status = 403;
   constructor(message = "Access denied", context?: Record<string, unknown>) {

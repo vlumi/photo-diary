@@ -1,7 +1,7 @@
 import type { FastifyRequest, onRequestHookHandler } from "fastify";
 
 import CONST from "../constants.js";
-import { InvalidTokenError } from "../errors.js";
+import { InvalidTokenError, TokenExpiredError } from "../errors.js";
 import tokenFactory from "../../models/token.js";
 import logger from "../logger.js";
 
@@ -31,6 +31,13 @@ const tokenFilter: onRequestHookHandler = async (request) => {
     request.token = token;
   } catch (error) {
     logger.debug("Token verification failed", error);
+    // Surface the expired-vs-invalid distinction the model throws so the
+    // SPA can show the re-login modal on expiry; opaque verification
+    // failures (signature mismatch, malformed, tampered) stay as
+    // `InvalidTokenError`.
+    if (error instanceof TokenExpiredError) {
+      throw error;
+    }
     throw new InvalidTokenError();
   }
 };

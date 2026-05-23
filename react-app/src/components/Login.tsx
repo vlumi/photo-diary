@@ -4,8 +4,6 @@ import * as jose from "jose";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 
-import TopMenuButton from "./TopMenuButton";
-
 import UserModel from "../models/UserModel";
 
 import tokenService from "../services/tokens";
@@ -14,21 +12,58 @@ import { HttpError } from "../lib/api";
 import token from "../lib/token";
 import { useUserStore, useNotificationsStore } from "../stores";
 
-const Form = styled.form``;
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
 const Input = styled.input`
-  flex-grow: 1;
-  max-width: 200px;
-  width: 75px;
-  height: 21px;
-  border: 1px;
-  margin: 0 2px;
-  color: var(--header-background);
-  background-color: var(--header-sub-color);
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-size: 1em;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  color: var(--primary-color);
+  background-color: var(--primary-background);
+`;
+const SubmitButton = styled.button`
+  padding: 8px 14px;
+  font-size: 1em;
+  font-weight: bold;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  color: var(--header-color);
+  background: var(--header-background);
+  cursor: pointer;
+  &:hover {
+    filter: brightness(1.15);
+  }
+`;
+// Inline error pill rendered between the form and the submit button.
+// Login lives inside a modal whose backdrop visually hides the toast
+// strip, so wrong-credentials messages and the rate-limit hint go here
+// instead of `notify()` — the toast surface stays for non-login errors.
+const ErrorMessage = styled.div`
+  padding: 8px 12px;
+  border: 1px solid #a02020;
+  background: #7a1a1a;
+  color: #fee;
+  border-radius: 4px;
+  font-size: 0.9em;
 `;
 
-const Login = (): React.ReactElement => {
+interface Props {
+  // Modal wrapper closes itself on successful login.
+  onSuccess?: () => void;
+  autoFocus?: boolean;
+}
+
+const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
   const [userId, setUserId] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState<string | undefined>(undefined);
 
   const { t } = useTranslation();
   const setUser = useUserStore((s) => s.setUser);
@@ -54,7 +89,14 @@ const Login = (): React.ReactElement => {
       // view of `/galleries` and `/gallery-photos`.
       queryClient.invalidateQueries({ queryKey: ["galleries"] });
       queryClient.invalidateQueries({ queryKey: ["gallery-photos"] });
-    } catch (error) {
+      setError(undefined);
+      onSuccess?.();
+      // Success toast fires after the modal closes (onSuccess closes it),
+      // so the user sees it on the now-uncovered backdrop. The toast
+      // surface is the right fit here — there's no longer a form to
+      // attach an inline confirmation to.
+      notify("success", t("login-success", { userId: user.id() }));
+    } catch (err) {
       token.clearToken();
       // Only the `user` key is auth state — the `lang` preference and
       // anything else live alongside but aren't tied to login, so the
@@ -68,16 +110,17 @@ const Login = (): React.ReactElement => {
       // user not found, network blip) gets the vague `Invalid username
       // or password` so the response doesn't help an attacker
       // distinguish "bad password for real user" from "unknown user".
-      if (error instanceof HttpError && error.response.status === 429) {
-        notify("warning", t("login-rate-limited"));
+      if (err instanceof HttpError && err.response.status === 429) {
+        setError(t("login-rate-limited"));
       } else {
-        notify("error", t("login-failed"));
+        setError(t("login-failed"));
       }
     }
   };
 
   const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
+    setError(undefined);
     login(userId, password);
     setPassword("");
   };
@@ -88,17 +131,21 @@ const Login = (): React.ReactElement => {
         type="text"
         value={userId}
         name="userId"
-        placeholder="Username"
+        autoComplete="username"
+        placeholder={t("login-username")}
+        autoFocus={autoFocus}
         onChange={({ target }) => setUserId(target.value)}
       />
       <Input
         type="password"
         value={password}
         name="password"
-        placeholder="Password"
+        autoComplete="current-password"
+        placeholder={t("login-password")}
         onChange={({ target }) => setPassword(target.value)}
       />
-      <TopMenuButton type="submit">{t("login")}</TopMenuButton>
+      {error && <ErrorMessage role="alert">{error}</ErrorMessage>}
+      <SubmitButton type="submit">{t("login")}</SubmitButton>
     </Form>
   );
 };
