@@ -3,7 +3,11 @@ import createClient from "openapi-fetch";
 import type { paths } from "./api-schema";
 import token from "./token";
 import i18n from "./i18n";
-import { useUserStore, useLoginModalStore } from "../stores";
+import {
+  useUserStore,
+  useLoginModalStore,
+  useChangePasswordModalStore,
+} from "../stores";
 
 // Single typed client for the entire server API. The `paths` type is
 // generated from the committed `server/openapi.json` (CI verifies the
@@ -50,6 +54,10 @@ client.use({
     token.clearToken();
     window.localStorage.removeItem("user");
     useUserStore.getState().setUser(undefined);
+    // Close any other modal that might be open (e.g. change-password mid-
+    // submit) so the login modal doesn't stack on top of it — two
+    // backdrops at once reads as broken.
+    useChangePasswordModalStore.getState().close();
     useLoginModalStore.getState().open(i18n.t("session-expired"));
   },
 });
