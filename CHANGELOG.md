@@ -5,7 +5,7 @@
 ### Server
 
 - Collapse "no view permission" and "gallery doesn't exist" into the same response on `GET /api/v1/galleries/:id` (`200 { id, hideMap: false }`) and `GET /api/v1/gallery-photos/:galleryId` (`200 []`). The single-photo endpoint similarly returns `404` for both cases (was `403` for no-access, `404` for no-such-photo). Without this, an unauthenticated walk of gallery IDs could enumerate which ones exist by reading the `403` / `404` distinction.
-- JWTs now expire after the existing `SESSION_LENGTH_MS` (7 days) — `setExpirationTime` was wired into the sign step, and the verify path distinguishes `JWTExpired` (jose) from other verification failures so the wire response is the new typed `TokenExpiredError` instead of the generic `InvalidTokenError`. (closes #207)
+- JWTs now expire after `SESSION_LENGTH_MS` (90 days, bumped from the 7-day constant that was defined but unused). `setExpirationTime` is wired into the sign step, and the verify path distinguishes `JWTExpired` (jose) from other verification failures so the wire response is the new typed `TokenExpiredError` instead of the generic `InvalidTokenError`. (closes #207)
 
 ### Frontend
 
