@@ -17,14 +17,14 @@ interface CountryData {
 const Root = styled.div`
   height: 212px;
   margin: 1px;
-  background-color: var(--inactive-color);
+  background-color: var(--photo-frame-mat);
   text-align: left;
 `;
 const TN = styled.span`
   display: block;
   background-repeat: no-repeat;
   background-position: 5px 5px;
-  border: solid var(--primary-color) 1px;
+  border: solid var(--photo-frame-border) 1px;
   margin: 0;
   padding: 0;
   text-align: left;

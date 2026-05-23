@@ -2,7 +2,7 @@ type ThemeName =
   | "blue"
   | "red"
   | "grayscale"
-  | "bw"
+  | "contrast"
   | "alert"
   | "dark"
   | "amoled"
@@ -13,13 +13,15 @@ type ThemeName =
   | "paper";
 
 // Theme variable roles:
-//   primary-color       main text / dark accents on light backgrounds; also the photo-frame border colour
-//   primary-background  page background
-//   inactive-color      muted text and borders (disabled, weekday labels); also the photo-frame mat colour
-//   header-color        text on header bands (top menu, day-title column)
-//   header-sub-color    secondary text on header bands (weekday short labels under day numbers)
-//   header-background   background of header bands
-//   filter              CSS filter applied to the photos themselves (grayscale, sepia, ...)
+//   primary-color        main text / dark accents
+//   primary-background   page background
+//   inactive-color       muted text and borders (disabled, weekday labels)
+//   header-color         text on header bands (top menu, day-title column)
+//   header-sub-color     secondary text on header bands
+//   header-background    background of header bands
+//   photo-frame-mat      matte colour around the photo (intentionally neutral, not theme-tinted)
+//   photo-frame-border   thin border between matte and photo (neutral)
+//   filter               CSS filter applied to the photos themselves (grayscale, sepia, ...)
 type ThemeKey =
   | "primary-color"
   | "primary-background"
@@ -27,8 +29,23 @@ type ThemeKey =
   | "header-color"
   | "header-sub-color"
   | "header-background"
+  | "photo-frame-mat"
+  | "photo-frame-border"
   | "filter";
 type Theme = Record<ThemeKey, string>;
+
+// Photo-frame variables are deliberately kept neutral (not tinted) so the
+// matte reads as a separator between the photo and the surrounding theme,
+// not as more theme chrome. Light themes share one neutral pair, dark
+// themes another.
+const FRAME_LIGHT = {
+  "photo-frame-mat": "#b0b0b0",
+  "photo-frame-border": "#444",
+} as const;
+const FRAME_DARK = {
+  "photo-frame-mat": "#555",
+  "photo-frame-border": "#aaa",
+} as const;
 
 const THEMES: Record<ThemeName, Theme> = {
   blue: {
@@ -38,6 +55,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#ddf",
     "header-background": "#004",
+    ...FRAME_LIGHT,
     filter: "none",
   },
   red: {
@@ -47,6 +65,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#f0e3e3",
     "header-background": "#4a1424",
+    ...FRAME_LIGHT,
     filter: "none",
   },
   grayscale: {
@@ -56,20 +75,24 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#ddd",
     "header-background": "#444",
+    ...FRAME_LIGHT,
     filter: "grayscale(100%)",
   },
-  // High-contrast light: pure black on white, no photo filter.
-  bw: {
+  // High-contrast light: pure black on white, no photo filter. Renamed
+  // from `bw` since the monochrome-photo filter is gone — too close to
+  // grayscale otherwise.
+  contrast: {
     "primary-color": "#000",
     "primary-background": "#fff",
     "inactive-color": "#666",
     "header-color": "#fff",
     "header-sub-color": "#ddd",
     "header-background": "#000",
+    ...FRAME_LIGHT,
     filter: "none",
   },
-  // Loud red-on-yellow surface used as a visibility flag for the `:private`
-  // gallery — see memory `alert-theme-purpose`. Not a generic style.
+  // Loud red-on-yellow surface used as a visibility flag for the
+  // `:private` gallery. Not a generic style — see project memory.
   alert: {
     "primary-color": "#f00",
     "primary-background": "#ff6",
@@ -77,6 +100,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#ff6",
     "header-sub-color": "#ddd",
     "header-background": "#f00",
+    ...FRAME_LIGHT,
     filter: "none",
   },
   dark: {
@@ -86,6 +110,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#aaa",
     "header-background": "#2a2a2a",
+    ...FRAME_DARK,
     filter: "none",
   },
   amoled: {
@@ -95,6 +120,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#aaa",
     "header-background": "#000",
+    ...FRAME_DARK,
     filter: "none",
   },
   forest: {
@@ -104,10 +130,10 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#e8f0e6",
     "header-background": "#1e3a2a",
+    ...FRAME_LIGHT,
     filter: "none",
   },
-  // Light overall: dark-text-on-light header for a lighter feel than the
-  // dark-header-with-white-text pattern other themes use.
+  // Light overall: dark-text-on-light header, no dark header band.
   silver: {
     "primary-color": "#3a4250",
     "primary-background": "#e8ebef",
@@ -115,6 +141,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#2a3540",
     "header-sub-color": "#6a7580",
     "header-background": "#d4dadf",
+    ...FRAME_LIGHT,
     filter: "none",
   },
   // Photo-focused: dark backdrop so photos read like prints on a museum
@@ -126,6 +153,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#888",
     "header-sub-color": "#666",
     "header-background": "#0a0a0a",
+    ...FRAME_DARK,
     filter: "none",
   },
   teal: {
@@ -135,17 +163,19 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#e0eef0",
     "header-background": "#114040",
+    ...FRAME_LIGHT,
     filter: "none",
   },
-  // Warm cream / printed-album feel without the photo-desaturation that
-  // sepia carried — the photos themselves stay unmodified.
+  // Creamy printed-album feel without the photo desaturation that sepia
+  // carried — page + header are both light cream, dark text reads on top.
   paper: {
     "primary-color": "#3a2e20",
-    "primary-background": "#f8f1e4",
+    "primary-background": "#faf4e8",
     "inactive-color": "#b8a890",
-    "header-color": "#f8f1e4",
-    "header-sub-color": "#d8c9b0",
-    "header-background": "#4a3a28",
+    "header-color": "#3a2e20",
+    "header-sub-color": "#8a7a60",
+    "header-background": "#ece1ce",
+    ...FRAME_LIGHT,
     filter: "none",
   },
 };
@@ -159,7 +189,7 @@ const MANIFEST: ThemeManifestEntry[] = [
   { id: "blue", displayName: "Blue" },
   { id: "red", displayName: "Red" },
   { id: "grayscale", displayName: "Grayscale" },
-  { id: "bw", displayName: "High Contrast" },
+  { id: "contrast", displayName: "High Contrast" },
   { id: "alert", displayName: "Alert" },
   { id: "dark", displayName: "Dark" },
   { id: "amoled", displayName: "AMOLED" },
