@@ -27,6 +27,21 @@ const getGallery = async (token: string | undefined, galleryId: string, status =
     .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
+// Every "the requester can't see this gallery" case (no access AND no such
+// gallery, regardless of role) collapses to the same 200 with an empty
+// payload — the privacy rationale is that the difference between the two
+// otherwise lets an unauthenticated attacker enumerate gallery IDs. This
+// helper centralises the assertion so the tests stay readable.
+const expectGalleryUnavailable = async (
+  token: string | undefined,
+  galleryId: string
+) => {
+  const req = api.get(`/api/v1/galleries/${galleryId}`);
+  if (token) req.set("Authorization", `Bearer ${token}`);
+  const result = await req.expect(200);
+  expect(result.body).toStrictEqual({ id: galleryId, hideMap: false });
+};
+
 const expectGallery1 = (result: { body: Record<string, any> }) => {
   expect(result.body.id).toBe("gallery1");
   expect(result.body.title).toBe("gallery 1");
@@ -94,26 +109,26 @@ describe("As guest", () => {
     expect(result.body.length).toBe(1);
   });
   test("Get gallery1", async () => {
-    await api.get("/api/v1/galleries/gallery1").expect(403);
+    await expectGalleryUnavailable(undefined, "gallery1");
   });
   test("Get gallery2", async () => {
-    await api.get("/api/v1/galleries/gallery2").expect(403);
+    await expectGalleryUnavailable(undefined, "gallery2");
   });
   test("Get gallery3", async () => {
     const result = await api.get("/api/v1/galleries/gallery3").expect(200);
     expectGallery3(result);
   });
   test("Get :all", async () => {
-    await api.get("/api/v1/galleries/:all").expect(403);
+    await expectGalleryUnavailable(undefined, ":all");
   });
   test("Get :public", async () => {
-    await api.get("/api/v1/galleries/:public").expect(403);
+    await expectGalleryUnavailable(undefined, ":public");
   });
   test("Get :private", async () => {
-    await api.get("/api/v1/galleries/:private").expect(403);
+    await expectGalleryUnavailable(undefined, ":private");
   });
   test("Get invalid", async () => {
-    await api.get("/api/v1/galleries/invalid").expect(403);
+    await expectGalleryUnavailable(undefined, "invalid");
   });
 });
 
@@ -131,10 +146,10 @@ describe("As blocked user", () => {
     expect(result.body.length).toBe(0);
   });
   test("Get gallery1", async () => {
-    await getGallery(token, "gallery1", 403);
+    await expectGalleryUnavailable(token, "gallery1");
   });
   test("Get gallery2", async () => {
-    await getGallery(token, "gallery2", 403);
+    await expectGalleryUnavailable(token, "gallery2");
   });
   test("Get gallery3 (anonymous, not as blockedUser)", async () => {
     // Anonymous request — :guest has gallery3=VIEW, so this still works.
@@ -142,16 +157,16 @@ describe("As blocked user", () => {
     expectGallery3(result);
   });
   test("Get :all", async () => {
-    await getGallery(token, ":all", 403);
+    await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
-    await getGallery(token, ":public", 403);
+    await expectGalleryUnavailable(token, ":public");
   });
   test("Get :private", async () => {
-    await getGallery(token, ":private", 403);
+    await expectGalleryUnavailable(token, ":private");
   });
   test("Get invalid", async () => {
-    await getGallery(token, "invalid", 403);
+    await expectGalleryUnavailable(token, "invalid");
   });
 });
 
@@ -166,26 +181,26 @@ describe("As simple user", () => {
     expect(result.body.length).toBe(1);
   });
   test("Get gallery1", async () => {
-    await getGallery(token, "gallery1", 403);
+    await expectGalleryUnavailable(token, "gallery1");
   });
   test("Get gallery2", async () => {
-    await getGallery(token, "gallery2", 403);
+    await expectGalleryUnavailable(token, "gallery2");
   });
   test("Get gallery3", async () => {
     const result = await getGallery(token, "gallery3", 200);
     expectGallery3(result);
   });
   test("Get :all", async () => {
-    await getGallery(token, ":all", 403);
+    await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
-    await getGallery(token, ":public", 403);
+    await expectGalleryUnavailable(token, ":public");
   });
   test("Get :private", async () => {
-    await getGallery(token, ":private", 403);
+    await expectGalleryUnavailable(token, ":private");
   });
   test("Get invalid", async () => {
-    await getGallery(token, "invalid", 403);
+    await expectGalleryUnavailable(token, "invalid");
   });
 });
 
@@ -212,17 +227,17 @@ describe("As publicUser", () => {
     expectGallery3(result);
   });
   test("Get :all", async () => {
-    await getGallery(token, ":all", 403);
+    await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
     const result = await getGallery(token, ":public");
     expectGalleryPublic(result);
   });
   test("Get :private", async () => {
-    await getGallery(token, ":private", 403);
+    await expectGalleryUnavailable(token, ":private");
   });
   test("Get invalid", async () => {
-    await getGallery(token, "invalid", 404);
+    await expectGalleryUnavailable(token, "invalid");
   });
 });
 
@@ -261,7 +276,7 @@ describe("As admin", () => {
     expectGalleryPrivate(result);
   });
   test("Get invalid", async () => {
-    await getGallery(token, "invalid", 404);
+    await expectGalleryUnavailable(token, "invalid");
   });
 });
 
@@ -300,7 +315,7 @@ describe("As gallery1Admin", () => {
     expectGalleryPrivate(result);
   });
   test("Get invalid", async () => {
-    await getGallery(token, "invalid", 404);
+    await expectGalleryUnavailable(token, "invalid");
   });
 });
 
@@ -315,7 +330,7 @@ describe("As gallery2Admin", () => {
     expect(result.body.length).toBe(2);
   });
   test("Get gallery1", async () => {
-    await getGallery(token, "gallery1", 403);
+    await expectGalleryUnavailable(token, "gallery1");
   });
   test("Get gallery2", async () => {
     const result = await getGallery(token, "gallery2");
@@ -326,16 +341,16 @@ describe("As gallery2Admin", () => {
     expectGallery3(result);
   });
   test("Get :all", async () => {
-    await getGallery(token, ":all", 403);
+    await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
-    await getGallery(token, ":public", 403);
+    await expectGalleryUnavailable(token, ":public");
   });
   test("Get :private", async () => {
-    await getGallery(token, ":private", 403);
+    await expectGalleryUnavailable(token, ":private");
   });
   test("Get invalid", async () => {
-    await getGallery(token, "invalid", 403);
+    await expectGalleryUnavailable(token, "invalid");
   });
 });
 
@@ -374,7 +389,7 @@ describe("As plainUser", () => {
     expectGalleryPrivate(result);
   });
   test("Get invalid", async () => {
-    await getGallery(token, "invalid", 404);
+    await expectGalleryUnavailable(token, "invalid");
   });
 });
 
@@ -397,19 +412,19 @@ describe("As gallery1User", () => {
     expectGallery3(result);
   });
   test("Get gallery2", async () => {
-    await getGallery(token, "gallery2", 403);
+    await expectGalleryUnavailable(token, "gallery2");
   });
   test("Get :all", async () => {
-    await getGallery(token, ":all", 403);
+    await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
-    await getGallery(token, ":public", 403);
+    await expectGalleryUnavailable(token, ":public");
   });
   test("Get :private", async () => {
-    await getGallery(token, ":private", 403);
+    await expectGalleryUnavailable(token, ":private");
   });
   test("Get invalid", async () => {
-    await getGallery(token, "invalid", 403);
+    await expectGalleryUnavailable(token, "invalid");
   });
 });
 
@@ -432,23 +447,23 @@ describe("As gallery12User", () => {
     expectGallery2(result);
   });
   test("Get gallery3", async () => {
-    await getGallery(token, "gallery3", 403);
+    await expectGalleryUnavailable(token, "gallery3");
   });
   test("Get :all", async () => {
-    await getGallery(token, ":all", 403);
+    await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
-    await getGallery(token, ":public", 403);
+    await expectGalleryUnavailable(token, ":public");
   });
   test("Get :private", async () => {
-    await getGallery(token, ":private", 403);
+    await expectGalleryUnavailable(token, ":private");
   });
   test("Get invalid", async () => {
-    await getGallery(token, "invalid", 403);
+    await expectGalleryUnavailable(token, "invalid");
   });
 });
 
-describe("hide_map cascade applied to GET /galleries/:id (regression #201)", () => {
+describe("hide_map cascade applied to GET /galleries/:id", () => {
   let token: string | undefined = undefined;
   let spy: ReturnType<typeof vi.spyOn>;
   beforeAll(async () => {

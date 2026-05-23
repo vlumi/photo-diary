@@ -2,6 +2,7 @@ import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
+import { AccessError, NotFoundError } from "../lib/errors.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/gallery-photo.js";
 
@@ -39,15 +40,25 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      await authorizer.authorizeGalleryView(
-        request.user.id,
-        request.params.galleryId
-      );
-      const photos = await model.getGalleryPhotos(request.params.galleryId);
-      if (await shouldHideMap(request.user.id, request.params.galleryId)) {
-        maskCoordinates(photos as Parameters<typeof maskCoordinates>[0]);
+      // Both "no view permission" and "gallery doesn't exist" collapse to
+      // an empty array — see the matching note in `galleries-v1.ts` for
+      // why the difference would otherwise leak.
+      try {
+        await authorizer.authorizeGalleryView(
+          request.user.id,
+          request.params.galleryId
+        );
+        const photos = await model.getGalleryPhotos(request.params.galleryId);
+        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
+          maskCoordinates(photos as Parameters<typeof maskCoordinates>[0]);
+        }
+        return photos;
+      } catch (error) {
+        if (error instanceof AccessError || error instanceof NotFoundError) {
+          return [];
+        }
+        throw error;
       }
-      return photos;
     }
   );
 
@@ -65,18 +76,30 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      await authorizer.authorizeGalleryView(
-        request.user.id,
-        request.params.galleryId
-      );
-      const photo = await model.getGalleryPhoto(
-        request.params.galleryId,
-        request.params.photoId
-      );
-      if (await shouldHideMap(request.user.id, request.params.galleryId)) {
-        maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
+      // Single-photo lookup uses a uniform 404: gallery-level enumeration
+      // is the actual leak the empty-payload trick guards against, and
+      // photos aren't enumerable via the LIST surface anyway. So both
+      // "no access" and "no such photo" return 404 — converted from
+      // `AccessError` to `NotFoundError` here so the wire shape is one.
+      try {
+        await authorizer.authorizeGalleryView(
+          request.user.id,
+          request.params.galleryId
+        );
+        const photo = await model.getGalleryPhoto(
+          request.params.galleryId,
+          request.params.photoId
+        );
+        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
+          maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
+        }
+        return photo;
+      } catch (error) {
+        if (error instanceof AccessError) {
+          throw new NotFoundError();
+        }
+        throw error;
       }
-      return photo;
     }
   );
 

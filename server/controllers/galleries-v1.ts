@@ -2,6 +2,7 @@ import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
+import { AccessError, NotFoundError } from "../lib/errors.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/gallery.js";
 
@@ -110,23 +111,36 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      await authorizer.authorizeGalleryView(
-        request.user.id,
-        request.params.galleryId
-      );
-      const gallery = (await model.getGallery(
-        request.params.galleryId
-      )) as Record<string, unknown> & { id: string; photos?: unknown[] };
-      const hideMap = await shouldHideMap(
-        request.user.id,
-        request.params.galleryId
-      );
-      if (hideMap && gallery.photos) {
-        maskCoordinates(
-          gallery.photos as Parameters<typeof maskCoordinates>[0]
+      // Both "no view permission" and "gallery doesn't exist" collapse to
+      // the same empty payload — without this, an unauthenticated walk of
+      // gallery IDs could enumerate which ones exist by reading the
+      // 403-vs-404 difference. The gallery LIST endpoint already filters
+      // to authorised galleries; this closes the matching hole on direct
+      // GET by id.
+      try {
+        await authorizer.authorizeGalleryView(
+          request.user.id,
+          request.params.galleryId
         );
+        const gallery = (await model.getGallery(
+          request.params.galleryId
+        )) as Record<string, unknown> & { id: string; photos?: unknown[] };
+        const hideMap = await shouldHideMap(
+          request.user.id,
+          request.params.galleryId
+        );
+        if (hideMap && gallery.photos) {
+          maskCoordinates(
+            gallery.photos as Parameters<typeof maskCoordinates>[0]
+          );
+        }
+        return { ...gallery, hideMap };
+      } catch (error) {
+        if (error instanceof AccessError || error instanceof NotFoundError) {
+          return { id: request.params.galleryId, hideMap: false };
+        }
+        throw error;
       }
-      return { ...gallery, hideMap };
     }
   );
 
