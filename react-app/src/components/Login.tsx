@@ -2,6 +2,7 @@ import React from "react";
 import styled from "@emotion/styled";
 import * as jose from "jose";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 
 import TopMenuButton from "./TopMenuButton";
 
@@ -30,6 +31,7 @@ const Login = (): React.ReactElement => {
 
   const { t } = useTranslation();
   const setUser = useUserStore((s) => s.setUser);
+  const queryClient = useQueryClient();
 
   const login = async (userId: string, password: string) => {
     try {
@@ -44,9 +46,18 @@ const Login = (): React.ReactElement => {
       token.setToken(rawToken);
       window.localStorage.setItem("user", user.toJson());
       setUser(user);
+      // Drop any access-derived data we cached under the previous (guest or
+      // other-user) key. Without this, toggling auth state inside the
+      // `staleTime` window leaves the SPA showing the previous identity's
+      // view of `/galleries` and `/gallery-photos`.
+      queryClient.invalidateQueries({ queryKey: ["galleries"] });
+      queryClient.invalidateQueries({ queryKey: ["gallery-photos"] });
     } catch (_error) {
       token.clearToken();
-      window.localStorage.clear();
+      // Only the `user` key is auth state — the `lang` preference and
+      // anything else live alongside but aren't tied to login, so the
+      // previous `localStorage.clear()` here was a privacy/UX overreach.
+      window.localStorage.removeItem("user");
       setUser(undefined);
       // TODO: notify user
     }

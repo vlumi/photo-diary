@@ -9,6 +9,7 @@
 ### Frontend
 
 - Navigating to a gallery the requester can't see (private gallery, non-existent ID, or a revoked session) no longer hangs on a persistent "Loading" spinner — the SPA renders the empty-gallery view directly without firing the photos API call. The Title bar's gallery dropdown gains an italicised placeholder option for the unavailable id (matching the URL) so the selection is honest, and renders even when only one real gallery is accessible so the user has a way to switch into it.
+- Login / logout now invalidate the access-derived TanStack Query caches (`["galleries"]`, `["gallery-photos"]`) so the gallery list, map visibility, and any other per-user data refreshes immediately — previously the SPA would keep showing the prior identity's view until a manual reload. Logout's bearer-token cleanup also runs before the React re-render now (not after), so the queries fired by the user change don't send the just-revoked token. Drive-by: `localStorage.clear()` in the auth paths is narrowed to just the `user` key so the `lang` preference (and any other unrelated storage) survives auth state changes. (closes #244)
 
 ## [0.8.0] - 2026-05-22
 
