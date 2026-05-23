@@ -164,4 +164,92 @@ describe("As gallery12User", () => {
   });
 });
 
+const changePassword = async (
+  token: string | undefined,
+  body: Record<string, string>,
+  status = 200
+) =>
+  api
+    .put("/api/v1/users/self/password")
+    .set("Authorization", `Bearer ${token}`)
+    .send(body)
+    .expect(status);
+
+describe("PUT /users/self/password", () => {
+  test("Guest cannot change password", async () => {
+    await api
+      .put("/api/v1/users/self/password")
+      .send({ currentPassword: "foobar", newPassword: "new-secret-123" })
+      .expect(403);
+  });
+
+  test("Wrong current password is rejected with 422 (body problem, not session)", async () => {
+    const token = await loginUser(api, "admin");
+    await changePassword(
+      token,
+      { currentPassword: "wrong", newPassword: "new-secret-123" },
+      422
+    );
+  });
+
+  test("Empty current password is rejected by the schema (400)", async () => {
+    const token = await loginUser(api, "admin");
+    await changePassword(
+      token,
+      { currentPassword: "", newPassword: "new-secret-123" },
+      400
+    );
+  });
+
+  test("Empty new password is rejected by the schema (400)", async () => {
+    const token = await loginUser(api, "admin");
+    await changePassword(
+      token,
+      { currentPassword: "foobar", newPassword: "" },
+      400
+    );
+  });
+
+  test("Successful change returns a fresh token that verifies", async () => {
+    const token = await loginUser(api, "admin");
+    const result = await changePassword(token, {
+      currentPassword: "foobar",
+      newPassword: "fresh-secret-123",
+    });
+    expect(result.body.token).toBeDefined();
+    expect(typeof result.body.token).toBe("string");
+    // The new token should verify on the next request — secret cache was
+    // rotated in-process so the freshly-minted JWT signs against the right
+    // secret.
+    await api
+      .get("/api/v1/tokens")
+      .set("Authorization", `Bearer ${result.body.token}`)
+      .expect(200);
+  });
+
+  test("The new password works for subsequent logins", async () => {
+    const token = await loginUser(api, "admin");
+    await changePassword(token, {
+      currentPassword: "foobar",
+      newPassword: "newer-secret-456",
+    });
+    await api
+      .post("/api/v1/tokens")
+      .send({ id: "admin", password: "newer-secret-456" })
+      .expect(200);
+  });
+
+  test("The old password no longer works after the change", async () => {
+    const token = await loginUser(api, "admin");
+    await changePassword(token, {
+      currentPassword: "foobar",
+      newPassword: "yet-another-secret-789",
+    });
+    await api
+      .post("/api/v1/tokens")
+      .send({ id: "admin", password: "foobar" })
+      .expect(401);
+  });
+});
+
 afterAll(() => {});

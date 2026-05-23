@@ -1,11 +1,15 @@
 import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
+import CONST from "../lib/constants.js";
+import { AccessError } from "../lib/errors.js";
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/user.js";
+import tokenFactory from "../models/token.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
+const tokens = tokenFactory();
 
 const init = async () => {
   await model.init();
@@ -14,6 +18,11 @@ const init = async () => {
 const UserIdParam = Type.Object({ userId: Type.String() });
 const UserSummary = Type.Object({ id: Type.String() });
 const UsersListResponse = Type.Array(UserSummary);
+const ChangePasswordBody = Type.Object({
+  currentPassword: Type.String({ minLength: 1 }),
+  newPassword: Type.String({ minLength: 1 }),
+});
+const ChangePasswordResponse = Type.Object({ token: Type.String() });
 const TAGS = ["users"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -115,6 +124,46 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.deleteUser(request.params.userId);
       reply.status(204).send();
+    }
+  );
+
+  /**
+   * Self-service password change. The caller's identity comes from the
+   * verified JWT, so the path doesn't take a user id — the operator can't
+   * accidentally (or maliciously) target someone else by tweaking the URL.
+   */
+  fastify.put(
+    "/self/password",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Change the caller's own password",
+        body: ChangePasswordBody,
+        response: { 200: ChangePasswordResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      if (request.user.id === CONST.GUEST_USER) {
+        // Guests have no password to change. AccessError matches the rest
+        // of the "you can't do this" patterns in this codebase.
+        throw new AccessError();
+      }
+      const { newSecret } = await model.changePassword(
+        request.user.id,
+        request.body.currentPassword,
+        request.body.newPassword
+      );
+      // Rotate the in-memory cache so the freshly-minted JWT verifies on
+      // the very next request — without this, signing would use the stale
+      // cached secret and the new token would fail until the 5-second
+      // cache reload caught up.
+      tokens.setSecret(request.user.id, newSecret);
+      const token = await tokens.createToken(
+        request.user.id,
+        !!request.user.isAdmin
+      );
+      return { token };
     }
   );
 };

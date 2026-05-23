@@ -71,6 +71,16 @@ export class RateLimitError extends AppError {
   }
 }
 
+export class ValidationError extends AppError {
+  override status = 422;
+  constructor(
+    message = "Invalid input",
+    context?: Record<string, unknown>
+  ) {
+    super(message, context);
+  }
+}
+
 export class NotImplementedError extends AppError {
   override status = 501;
   constructor(message = "Not implemented", context?: Record<string, unknown>) {

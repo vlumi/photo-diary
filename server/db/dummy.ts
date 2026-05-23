@@ -87,8 +87,11 @@ const loadUser = async (id: string) => {
   }
   return db.users[id];
 };
-const updateUser = async () => {
-  throw new NotImplementedError();
+const updateUser = async (userId: string, patch: Record<string, unknown>) => {
+  if (!(userId in db.users)) {
+    throw new NotFoundError();
+  }
+  Object.assign(db.users[userId], patch);
 };
 
 const resolveAccessLevel = async (
