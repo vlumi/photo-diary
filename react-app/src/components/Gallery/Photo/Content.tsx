@@ -12,7 +12,7 @@ const Root = styled.div`
   position: relative;
   display: flex;
   flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   overflow: hidden;
   margin: 5px 0;
@@ -187,14 +187,16 @@ const Content = ({
     maxAvailWidth,
     maxRatio
   );
-  // The frame grows to the full available viewport once zoomed in, so
-  // a portrait photo on a landscape screen can use the side margins for
-  // the zoomed-in pixels instead of wasting them. Frame uses CSS
-  // `content-box`, so `width` already refers to the content area
-  // (= the clipping rectangle inside the matte).
+  // On zoom-in the frame widens to the available viewport so portrait-
+  // on-landscape can put its empty side margins to use. Height stays
+  // at the photo's fit dimension — growing it too would make a
+  // landscape photo on a portrait phone snap to nearly full-screen,
+  // which is jarring. Frame uses CSS `content-box`, so `width` already
+  // refers to the content area (= the clipping rectangle inside the
+  // matte).
   const isZoomed = zoom.scale > 1;
   const frameWidth = isZoomed ? maxAvailWidth : imageWidth;
-  const frameHeight = isZoomed ? maxAvailHeight : imageHeight;
+  const frameHeight = imageHeight;
 
   // Latest dimensions in a ref so the wheel useEffect (registered once)
   // always reads the current values for clamp + anchor math.
@@ -230,11 +232,10 @@ const Content = ({
         const nextY = anchoredTranslate(anchorY, z.y, z.scale, nextScale);
         const sz = sizeRef.current;
         const nextFrameW = nextScale > 1 ? sz.maxAvailWidth : sz.imageWidth;
-        const nextFrameH = nextScale > 1 ? sz.maxAvailHeight : sz.imageHeight;
         return {
           scale: nextScale,
           x: clampOffset(nextX, sz.imageWidth * nextScale, nextFrameW),
-          y: clampOffset(nextY, sz.imageHeight * nextScale, nextFrameH),
+          y: clampOffset(nextY, sz.imageHeight * nextScale, sz.imageHeight),
         };
       });
     };
@@ -339,11 +340,10 @@ const Content = ({
         nextScale
       );
       const nextFrameW = nextScale > 1 ? maxAvailWidth : imageWidth;
-      const nextFrameH = nextScale > 1 ? maxAvailHeight : imageHeight;
       setZoom({
         scale: nextScale,
         x: clampOffset(nextX, imageWidth * nextScale, nextFrameW),
-        y: clampOffset(nextY, imageHeight * nextScale, nextFrameH),
+        y: clampOffset(nextY, imageHeight * nextScale, imageHeight),
       });
     } else if (e.touches.length === 1 && dragRef.current) {
       const t = e.touches[0];
