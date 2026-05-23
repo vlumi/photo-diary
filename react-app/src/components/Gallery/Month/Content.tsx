@@ -21,9 +21,7 @@ const Root = styled.div`
   flex-wrap: wrap;
   justify-content: flex-start;
 `;
-// `box-shadow` rather than border so the highlight doesn't shift layout
-// (border-width changes would re-flow neighbouring DayTitles).
-const DayTitle = styled.h3<{ $highlighted?: boolean }>`
+const DayTitle = styled.h3`
   color: var(--header-color);
   background: var(--header-background);
   font-size: 18pt;
@@ -36,8 +34,6 @@ const DayTitle = styled.h3<{ $highlighted?: boolean }>`
   border-radius: 15px 0 0 15px;
   height: 200px;
   min-width: 25px;
-  ${({ $highlighted }) =>
-    $highlighted ? "box-shadow: 0 0 0 3px var(--primary-color);" : ""}
 `;
 const DaySubTitle = styled.span`
   display: block;
@@ -69,12 +65,17 @@ const Content = ({
   const { t } = useTranslation();
 
   // Scroll the highlighted day into view when arriving on `/g/.../<day>`.
-  // `getElementById` rather than a ref so the lookup survives re-renders
-  // and only fires when the `day` URL segment changes.
+  // Wrapped in `requestAnimationFrame` to fire after the macrotask queue,
+  // which means it lands *after* `ScrollToPosition`'s `setTimeout(0)` in
+  // [App.tsx](../../App.tsx) (which would otherwise reset us to the
+  // store's saved scroll position and silently undo this jump).
   React.useEffect(() => {
     if (!day) return;
-    const el = document.getElementById(`month-day-${day}`);
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const handle = requestAnimationFrame(() => {
+      const el = document.getElementById(`month-day-${day}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(handle);
   }, [day, year, month]);
 
   if (!gallery.includesMonth(year, month)) {
@@ -136,9 +137,10 @@ const Content = ({
         photos={gallery.photos(year, month, d)}
         lang={lang}
         countryData={countryData}
+        highlighted={isHighlighted}
       >
         <Link gallery={gallery} year={year} month={month} day={d}>
-          <DayTitle id={`month-day-${d}`} $highlighted={isHighlighted}>
+          <DayTitle id={`month-day-${d}`}>
             {d}
             <DaySubTitle>
               {t(`weekday-short-${calendar.dayOfWeek(year, month, d)}`)}

@@ -3,7 +3,6 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
 import DayCell from "./DayCell";
-import Link from "../Link";
 
 import color from "../../../lib/color";
 import format from "../../../lib/format";
@@ -63,22 +62,15 @@ const Day = ({
 
   const { t } = useTranslation();
 
-  const renderDayValue = (
-    gallery: Gallery,
-    year: number,
-    month: number,
-    day: number,
-    photoCount: number
-  ): React.ReactNode => {
+  // Day cells render the day number only; the whole month tile is the
+  // link target (see [Year/Month.tsx](./Month.tsx)). The previous per-day
+  // Link to `/g/<gallery>/<year>/<month>/<day>` was dropped along with
+  // the standalone Day view (#274) — day URLs still work for shared
+  // links and surface as a click on the DayTitle inside Month, but they
+  // aren't promoted as the primary navigation target from the heatmap.
+  const renderDayValue = (day: number): React.ReactNode => {
     if (day === 0) {
       return <></>;
-    }
-    if (photoCount > 0) {
-      return (
-        <Link gallery={gallery} year={year} month={month} day={day}>
-          {day}
-        </Link>
-      );
     }
     return day;
   };
@@ -96,15 +88,11 @@ const Day = ({
     count: photoCount,
   })}`;
   if (photoCount === 0) {
-    return (
-      <None title={title}>
-        {renderDayValue(gallery, year, month, day, photoCount)}
-      </None>
-    );
+    return <None title={title}>{renderDayValue(day)}</None>;
   }
   return (
     <Some style={style} title={title}>
-      {renderDayValue(gallery, year, month, day, photoCount)}
+      {renderDayValue(day)}
     </Some>
   );
 };
