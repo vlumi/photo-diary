@@ -19,9 +19,9 @@ const Root = styled.div`
 const Frame = styled("span", {
   shouldForwardProp: (prop) => prop !== "$width" && prop !== "$height",
 })<{ $width: number; $height: number }>`
-  border: solid #004 1px;
+  border: solid var(--primary-color) 1px;
   padding: 10px;
-  background-color: #bbb;
+  background-color: var(--inactive-color);
   flex-grow: 0;
   flex-shrink: 0;
   width: ${(props) => props.$width}px;

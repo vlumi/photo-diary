@@ -6,15 +6,16 @@ type ThemeName =
   | "alert"
   | "dark"
   | "amoled"
-  | "sepia"
   | "forest"
   | "silver"
-  | "showcase";
+  | "showcase"
+  | "teal"
+  | "paper";
 
 // Theme variable roles:
-//   primary-color       main text / dark accents on light backgrounds
+//   primary-color       main text / dark accents on light backgrounds; also the photo-frame border colour
 //   primary-background  page background
-//   inactive-color      muted text and borders (disabled, weekday labels, etc)
+//   inactive-color      muted text and borders (disabled, weekday labels); also the photo-frame mat colour
 //   header-color        text on header bands (top menu, day-title column)
 //   header-sub-color    secondary text on header bands (weekday short labels under day numbers)
 //   header-background   background of header bands
@@ -40,12 +41,12 @@ const THEMES: Record<ThemeName, Theme> = {
     filter: "none",
   },
   red: {
-    "primary-color": "#400",
-    "primary-background": "#fdd",
-    "inactive-color": "#b99",
+    "primary-color": "#4a1424",
+    "primary-background": "#f0e3e3",
+    "inactive-color": "#b59a9a",
     "header-color": "#fff",
-    "header-sub-color": "#fdd",
-    "header-background": "#400",
+    "header-sub-color": "#f0e3e3",
+    "header-background": "#4a1424",
     filter: "none",
   },
   grayscale: {
@@ -57,15 +58,18 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#444",
     filter: "grayscale(100%)",
   },
+  // High-contrast light: pure black on white, no photo filter.
   bw: {
     "primary-color": "#000",
-    "primary-background": "#ddd",
-    "inactive-color": "#999",
+    "primary-background": "#fff",
+    "inactive-color": "#666",
     "header-color": "#fff",
     "header-sub-color": "#ddd",
     "header-background": "#000",
-    filter: "grayscale(100%)",
+    filter: "none",
   },
+  // Loud red-on-yellow surface used as a visibility flag for the `:private`
+  // gallery — see memory `alert-theme-purpose`. Not a generic style.
   alert: {
     "primary-color": "#f00",
     "primary-background": "#ff6",
@@ -93,15 +97,6 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#000",
     filter: "none",
   },
-  sepia: {
-    "primary-color": "#4a3a2a",
-    "primary-background": "#f5e6d3",
-    "inactive-color": "#b09a85",
-    "header-color": "#f5e6d3",
-    "header-sub-color": "#d4c4ad",
-    "header-background": "#4a3a2a",
-    filter: "sepia(80%)",
-  },
   forest: {
     "primary-color": "#1e3a2a",
     "primary-background": "#e8f0e6",
@@ -111,13 +106,15 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#1e3a2a",
     filter: "none",
   },
+  // Light overall: dark-text-on-light header for a lighter feel than the
+  // dark-header-with-white-text pattern other themes use.
   silver: {
-    "primary-color": "#2a3540",
+    "primary-color": "#3a4250",
     "primary-background": "#e8ebef",
     "inactive-color": "#8a95a0",
-    "header-color": "#fff",
-    "header-sub-color": "#e8ebef",
-    "header-background": "#2a3540",
+    "header-color": "#2a3540",
+    "header-sub-color": "#6a7580",
+    "header-background": "#d4dadf",
     filter: "none",
   },
   // Photo-focused: dark backdrop so photos read like prints on a museum
@@ -131,6 +128,26 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#0a0a0a",
     filter: "none",
   },
+  teal: {
+    "primary-color": "#114040",
+    "primary-background": "#e0eef0",
+    "inactive-color": "#80a0a0",
+    "header-color": "#fff",
+    "header-sub-color": "#e0eef0",
+    "header-background": "#114040",
+    filter: "none",
+  },
+  // Warm cream / printed-album feel without the photo-desaturation that
+  // sepia carried — the photos themselves stay unmodified.
+  paper: {
+    "primary-color": "#3a2e20",
+    "primary-background": "#f8f1e4",
+    "inactive-color": "#b8a890",
+    "header-color": "#f8f1e4",
+    "header-sub-color": "#d8c9b0",
+    "header-background": "#4a3a28",
+    filter: "none",
+  },
 };
 
 interface ThemeManifestEntry {
@@ -142,14 +159,15 @@ const MANIFEST: ThemeManifestEntry[] = [
   { id: "blue", displayName: "Blue" },
   { id: "red", displayName: "Red" },
   { id: "grayscale", displayName: "Grayscale" },
-  { id: "bw", displayName: "Black & White" },
+  { id: "bw", displayName: "High Contrast" },
   { id: "alert", displayName: "Alert" },
   { id: "dark", displayName: "Dark" },
   { id: "amoled", displayName: "AMOLED" },
-  { id: "sepia", displayName: "Sepia" },
   { id: "forest", displayName: "Forest" },
   { id: "silver", displayName: "Silver" },
   { id: "showcase", displayName: "Showcase" },
+  { id: "teal", displayName: "Teal" },
+  { id: "paper", displayName: "Paper" },
 ];
 
 const isThemeName = (name: string): name is ThemeName => name in THEMES;
