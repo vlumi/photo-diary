@@ -368,42 +368,21 @@ The pipeline is intentionally split: the converter doesn't touch the DB at all, 
 
 ## Roadmap
 
-Features planned for a 1.0 release.
+Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- Front-end
-  - Global admin view
-    - Manage users & ACL
-    - Manage galleries
-    - Manage photos
-    - Manage gallery/photo linking
-- Back-end
-  - Fully tested Modification API
-    - User
-    - ACL
-    - Gallery
-    - Photo
-    - Gallery-photo linking
-- Hybrid galleries
-  - Combine galleries to form new galleries
-  - Apply filters to an existing gallery
+- [**0.10 — Browsing UX polish**](https://github.com/vlumi/photo-diary/milestone/12): full-screen map layer (#41), touch-tracking swipe navigation (#175), faster language switch on Stats (#231), server-side token revocation (#256).
+- [**0.11 — Converter standalone improvements**](https://github.com/vlumi/photo-diary/milestone/13): reverse-geocode coordinates into a default place name (#246).
+- [**0.12 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), converter writes the photo row directly to the DB (#223), inbox subdirectories auto-link to galleries (#245), per-language place names (#247).
+- [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261).
 
 ## Backlog
 
-These features would be nice to have, but are too far into the future to put on the roadmap.
+Ideas without a milestone yet — too far out to schedule, kept here so they don't get lost.
 
-- Front-end
-  - Gallery view
-    - Multiple display sizes, dynamically chosen to match client window size
-    - Photo license information
-      - Permit/deny original size download by users
-  - Gallery admin view (TBD)
-    - Manage authorized galleries
-    - Manage photos linked to only authorized galleries
-    - Manage gallery/photo linking
-  - Photo property filter improvements
-    - Range filters for continuous variables: time, exposure values
-    - Coordinate filter, within a radius
-- Back-end
-  - Drivers for different DBs; PostgreSQL, MySQL/MariaDB, MongoDB, ...
+- **Hybrid galleries** (#22) — union/filtered virtual galleries. Parked post-1.0 pending data-model and ACL-composition decisions.
+- **Dynamic display sizes** (#262) — pick the smallest rendition that covers the viewport, `srcset`-style.
+- **Photo license + original-size download** (#263) — license metadata on the photo row + a gated download path for `original/` bytes.
+- **Filter UX: range + radius filters** (#264) — range filters for time/exposure, coordinate filter within a radius.
+- **Alternate DB drivers** (#265) — PostgreSQL is the obvious second backend; MySQL/MongoDB further out.
 
 ## [Version History](CHANGELOG.md)
