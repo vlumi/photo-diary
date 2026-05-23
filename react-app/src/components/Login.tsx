@@ -4,8 +4,6 @@ import * as jose from "jose";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 
-import TopMenuButton from "./TopMenuButton";
-
 import UserModel from "../models/UserModel";
 
 import tokenService from "../services/tokens";
@@ -14,19 +12,43 @@ import { HttpError } from "../lib/api";
 import token from "../lib/token";
 import { useUserStore, useNotificationsStore } from "../stores";
 
-const Form = styled.form``;
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
 const Input = styled.input`
-  flex-grow: 1;
-  max-width: 200px;
-  width: 75px;
-  height: 21px;
-  border: 1px;
-  margin: 0 2px;
-  color: var(--header-background);
-  background-color: var(--header-sub-color);
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-size: 1em;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  color: var(--primary-color);
+  background-color: var(--primary-background);
+`;
+const SubmitButton = styled.button`
+  padding: 8px 14px;
+  font-size: 1em;
+  font-weight: bold;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  color: var(--header-color);
+  background: var(--header-background);
+  cursor: pointer;
+  &:hover {
+    filter: brightness(1.15);
+  }
 `;
 
-const Login = (): React.ReactElement => {
+interface Props {
+  // Modal wrapper closes itself on successful login.
+  onSuccess?: () => void;
+  autoFocus?: boolean;
+}
+
+const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
   const [userId, setUserId] = React.useState("");
   const [password, setPassword] = React.useState("");
 
@@ -54,6 +76,7 @@ const Login = (): React.ReactElement => {
       // view of `/galleries` and `/gallery-photos`.
       queryClient.invalidateQueries({ queryKey: ["galleries"] });
       queryClient.invalidateQueries({ queryKey: ["gallery-photos"] });
+      onSuccess?.();
     } catch (error) {
       token.clearToken();
       // Only the `user` key is auth state — the `lang` preference and
@@ -88,17 +111,20 @@ const Login = (): React.ReactElement => {
         type="text"
         value={userId}
         name="userId"
-        placeholder="Username"
+        autoComplete="username"
+        placeholder={t("login-username")}
+        autoFocus={autoFocus}
         onChange={({ target }) => setUserId(target.value)}
       />
       <Input
         type="password"
         value={password}
         name="password"
-        placeholder="Password"
+        autoComplete="current-password"
+        placeholder={t("login-password")}
         onChange={({ target }) => setPassword(target.value)}
       />
-      <TopMenuButton type="submit">{t("login")}</TopMenuButton>
+      <SubmitButton type="submit">{t("login")}</SubmitButton>
     </Form>
   );
 };

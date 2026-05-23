@@ -7,6 +7,11 @@
     "logout": "Kirjaudu ulos",
     "login-failed": "Virheellinen käyttäjätunnus tai salasana",
     "login-rate-limited": "Liian monta epäonnistunutta kirjautumisyritystä. Yritä myöhemmin uudelleen.",
+    "login-title": "Kirjaudu sisään",
+    "login-username": "Käyttäjätunnus",
+    "login-password": "Salasana",
+    "login-close": "Sulje",
+    "session-expired": "Istuntosi on vanhentunut. Kirjaudu sisään uudelleen.",
 
     "nav-galleries": "Galleriat",
     "nav-gallery-top": "Palaa alkuun",

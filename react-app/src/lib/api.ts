@@ -2,6 +2,12 @@ import createClient from "openapi-fetch";
 
 import type { paths } from "./api-schema";
 import token from "./token";
+import i18n from "./i18n";
+import {
+  useUserStore,
+  useLoginModalStore,
+  useNotificationsStore,
+} from "../stores";
 
 // Single typed client for the entire server API. The `paths` type is
 // generated from the committed `server/openapi.json` (CI verifies the
@@ -33,6 +39,23 @@ client.use({
       request.headers.set(name, value);
     });
     return request;
+  },
+  // Global mid-session 401 handler. If a request that *had* an
+  // Authorization header (i.e. the user had a session) comes back 401,
+  // assume the token is expired or invalidated, clear local auth state,
+  // and open the login modal with a "session expired" toast. Requests
+  // without an Authorization header (login attempts, guest browsing) are
+  // ignored here — Login's `catch` handles those.
+  onResponse({ request, response }) {
+    if (response.status !== 401) return;
+    if (!request.headers.get("authorization")) return;
+    token.clearToken();
+    window.localStorage.removeItem("user");
+    useUserStore.getState().setUser(undefined);
+    useNotificationsStore
+      .getState()
+      .notify("warning", i18n.t("session-expired"));
+    useLoginModalStore.getState().open();
   },
 });
 

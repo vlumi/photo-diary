@@ -7,6 +7,11 @@
     "logout": "Logout",
     "login-failed": "Invalid username or password",
     "login-rate-limited": "Too many failed login attempts. Try again later.",
+    "login-title": "Log in",
+    "login-username": "Username",
+    "login-password": "Password",
+    "login-close": "Close",
+    "session-expired": "Your session has expired. Please log in again.",
 
     "nav-galleries": "Galleries",
     "nav-gallery-top": "Back to top",
