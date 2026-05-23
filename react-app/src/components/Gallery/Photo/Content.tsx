@@ -138,8 +138,12 @@ const Content = ({
     startClientY: number;
     baseX: number;
     baseY: number;
-    moved: boolean;
   } | null>(null);
+  // Survives mouseup→click. Browsers fire `click` after `mouseup` even
+  // when there was significant motion in between, so we need to remember
+  // "last gesture was a drag" past the mouseup-time cleanup of dragRef.
+  // Reset at mousedown for the next gesture.
+  const draggedRef = React.useRef(false);
   const [grabbing, setGrabbing] = React.useState(false);
 
   if (!gallery.includesPhoto(year, month, day, photo)) {
@@ -178,6 +182,7 @@ const Content = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
+    draggedRef.current = false;
     if (zoom.scale <= 1) return;
     e.preventDefault();
     dragRef.current = {
@@ -185,7 +190,6 @@ const Content = ({
       startClientY: e.clientY,
       baseX: zoom.x,
       baseY: zoom.y,
-      moved: false,
     };
     setGrabbing(true);
   };
@@ -197,7 +201,7 @@ const Content = ({
       Math.abs(dx) > CLICK_VS_DRAG_THRESHOLD_PX ||
       Math.abs(dy) > CLICK_VS_DRAG_THRESHOLD_PX
     ) {
-      dragRef.current.moved = true;
+      draggedRef.current = true;
     }
     setZoom((z) => ({
       scale: z.scale,
@@ -215,9 +219,11 @@ const Content = ({
       dragRef.current = null;
     }
   };
-  // Suppress the click when the mouse-down was the start of a drag.
+  // Suppress full-screen toggle when this click is the tail of a drag —
+  // browsers fire `click` after `mouseup` even with significant motion.
   const handleClick = (e: React.MouseEvent<HTMLImageElement>) => {
-    if (dragRef.current?.moved) {
+    if (draggedRef.current) {
+      draggedRef.current = false;
       e.preventDefault();
       e.stopPropagation();
       return;
