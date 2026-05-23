@@ -28,25 +28,27 @@ const Frame = styled("span", {
   width: ${(props) => props.$width}px;
   height: ${(props) => props.$height}px;
 `;
-// Clipping happens at the matte's inner edge (not the frame's outer
-// edge) so a zoomed image extends behind the matte, not over it.
+// Centered so the image (which keeps its scale-1 fit dimensions) sits in
+// the middle of the larger frame when zoomed. Clipping happens here so
+// the image extends behind the matte, not over it.
 const ImageClip = styled.span`
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   overflow: hidden;
 `;
 // `touch-action: none` so the browser's default pinch/pan/swipe handling
-// doesn't fight our touch handlers — without it, the iOS browser
-// intercepts two-finger pinch as page zoom and our handlers never fire.
-// `will-change: transform` so the GPU compositor handles live scale/pan
-// without re-rasterising on every frame.
+// doesn't fight our touch handlers. `will-change: transform` lets the
+// GPU compositor handle scale/pan without re-rasterising every frame.
 const Image = styled("img", {
   shouldForwardProp: (prop) =>
     prop !== "$scale" && prop !== "$x" && prop !== "$y" && prop !== "$grabbing",
 })<{ $scale: number; $x: number; $y: number; $grabbing: boolean }>`
   width: ${(props) => props.width};
   height: ${(props) => props.height};
+  flex-shrink: 0;
   transform: translate(${(props) => props.$x}px, ${(props) => props.$y}px)
     scale(${(props) => props.$scale});
   transform-origin: center center;
@@ -81,26 +83,43 @@ const calculateHeight = (
   return Math.floor(maxWidth / photoRatio);
 };
 
-// At scale S the rendered image is S× the frame dimensions, so the pan
-// offset can go up to ±(S - 1) × dim / 2 in each axis before the image
-// edge crosses into the frame interior.
+// Pan offset is clamped per axis so the scaled image's edge can't cross
+// into the frame's content area. When the scaled image fits the frame
+// in that axis (frame ≥ scaledImage), no pan is allowed there at all.
 const clampOffset = (
   offset: number,
-  scale: number,
-  dimension: number
+  scaledImageDim: number,
+  frameContentDim: number
 ): number => {
-  if (scale <= 1) return 0;
-  const limit = ((scale - 1) * dimension) / 2;
+  if (scaledImageDim <= frameContentDim) return 0;
+  const limit = (scaledImageDim - frameContentDim) / 2;
   return Math.max(-limit, Math.min(limit, offset));
 };
 
 const WHEEL_STEP = 1.1;
 const MIN_SCALE = 1;
 const MAX_SCALE = 8;
+const FRAME_PADDING = 10;
 const clampScale = (s: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, s));
 
 const touchDistance = (a: React.Touch, b: React.Touch): number =>
   Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+
+// Cursor/pinch-anchored zoom: shift the translate so that the point at
+// `anchorOffset` (relative to the frame center, in screen pixels) ends
+// up over the same image pixel after the scale change. Derivation:
+//   cursor = frameCenter + (pixel - imageCenter) * s + (tx, ty)
+// solving for (tx', ty') at the new scale s' with the same pixel gives
+//   (tx', ty') = anchorOffset * (1 - s'/s) + (tx, ty) * (s'/s)
+const anchoredTranslate = (
+  anchorOffset: number,
+  oldTranslate: number,
+  oldScale: number,
+  newScale: number
+): number => {
+  const k = newScale / oldScale;
+  return anchorOffset * (1 - k) + oldTranslate * k;
+};
 
 interface Props {
   gallery: Gallery;
@@ -142,25 +161,56 @@ const Content = ({
   const pinchRef = React.useRef<{
     startDistance: number;
     startScale: number;
+    startX: number;
+    startY: number;
+    midViewportX: number;
+    midViewportY: number;
   } | null>(null);
   const frameRef = React.useRef<HTMLSpanElement | null>(null);
   const [grabbing, setGrabbing] = React.useState(false);
 
-  // Dimensions and computed render size live in refs so the wheel
-  // useEffect (which must be registered before the early return below
-  // to keep hook order stable) can read the current values without
-  // re-binding on every photo/resize.
   const photoRatio = photo.ratio();
   const browserScale = window.visualViewport?.scale ?? 1;
-  const maxWidth = (dimensions.width - 62) * browserScale;
-  const maxHeight = (dimensions.height - 107) * browserScale;
-  const maxRatio = maxWidth / maxHeight;
-  const width = calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio);
-  const height = calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio);
-  const widthRef = React.useRef(width);
-  const heightRef = React.useRef(height);
-  widthRef.current = width;
-  heightRef.current = height;
+  const maxAvailWidth = (dimensions.width - 62) * browserScale;
+  const maxAvailHeight = (dimensions.height - 107) * browserScale;
+  const maxRatio = maxAvailWidth / maxAvailHeight;
+  // Image keeps its natural fit-to-viewport dimensions at every zoom
+  // level; the `transform: scale` handles the zoom visually.
+  const imageWidth = calculateWidth(
+    photoRatio,
+    maxAvailWidth,
+    maxAvailHeight,
+    maxRatio
+  );
+  const imageHeight = calculateHeight(
+    photoRatio,
+    maxAvailHeight,
+    maxAvailWidth,
+    maxRatio
+  );
+  // The frame grows to the full available viewport once zoomed in, so
+  // a portrait photo on a landscape screen can use the side margins for
+  // the zoomed-in pixels instead of wasting them.
+  const isZoomed = zoom.scale > 1;
+  const frameWidth = isZoomed ? maxAvailWidth : imageWidth;
+  const frameHeight = isZoomed ? maxAvailHeight : imageHeight;
+  const frameContentWidth = frameWidth - 2 * FRAME_PADDING;
+  const frameContentHeight = frameHeight - 2 * FRAME_PADDING;
+
+  // Latest dimensions in a ref so the wheel useEffect (registered once)
+  // always reads the current values for clamp + anchor math.
+  const sizeRef = React.useRef({
+    imageWidth,
+    imageHeight,
+    maxAvailWidth,
+    maxAvailHeight,
+  });
+  sizeRef.current = {
+    imageWidth,
+    imageHeight,
+    maxAvailWidth,
+    maxAvailHeight,
+  };
 
   // React attaches `wheel` listeners as passive by default, so
   // `e.preventDefault()` would be a no-op (and Chrome warns on every
@@ -171,12 +221,24 @@ const Content = ({
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const factor = e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
+      const rect = el.getBoundingClientRect();
+      const anchorX = e.clientX - rect.left - rect.width / 2;
+      const anchorY = e.clientY - rect.top - rect.height / 2;
       setZoom((z) => {
         const nextScale = clampScale(z.scale * factor);
+        if (nextScale === z.scale) return z;
+        const nextX = anchoredTranslate(anchorX, z.x, z.scale, nextScale);
+        const nextY = anchoredTranslate(anchorY, z.y, z.scale, nextScale);
+        const sz = sizeRef.current;
+        const nextFrameW =
+          (nextScale > 1 ? sz.maxAvailWidth : sz.imageWidth) - 2 * FRAME_PADDING;
+        const nextFrameH =
+          (nextScale > 1 ? sz.maxAvailHeight : sz.imageHeight) -
+          2 * FRAME_PADDING;
         return {
           scale: nextScale,
-          x: clampOffset(z.x, nextScale, widthRef.current),
-          y: clampOffset(z.y, nextScale, heightRef.current),
+          x: clampOffset(nextX, sz.imageWidth * nextScale, nextFrameW),
+          y: clampOffset(nextY, sz.imageHeight * nextScale, nextFrameH),
         };
       });
     };
@@ -207,8 +269,16 @@ const Content = ({
     const dy = e.clientY - dragRef.current.startClientY;
     setZoom((z) => ({
       scale: z.scale,
-      x: clampOffset(dragRef.current!.baseX + dx, z.scale, width),
-      y: clampOffset(dragRef.current!.baseY + dy, z.scale, height),
+      x: clampOffset(
+        dragRef.current!.baseX + dx,
+        imageWidth * z.scale,
+        frameContentWidth
+      ),
+      y: clampOffset(
+        dragRef.current!.baseY + dy,
+        imageHeight * z.scale,
+        frameContentHeight
+      ),
     }));
   };
   const handleMouseUp = () => {
@@ -222,15 +292,21 @@ const Content = ({
     }
   };
 
-  // Two fingers → pinch zoom (scale relative to initial distance).
+  // Two fingers → pinch zoom, anchored at the midpoint between fingers.
   // One finger when already zoomed → drag-to-pan.
-  // One finger at scale 1 → no-op here; the parent <Swipeable> handles
+  // One finger at scale 1 → no-op here; parent <Swipeable> handles
   // swipe-to-next/prev.
   const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
     if (e.touches.length === 2) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
       pinchRef.current = {
-        startDistance: touchDistance(e.touches[0], e.touches[1]),
+        startDistance: touchDistance(t1, t2),
         startScale: zoom.scale,
+        startX: zoom.x,
+        startY: zoom.y,
+        midViewportX: (t1.clientX + t2.clientX) / 2,
+        midViewportY: (t1.clientY + t2.clientY) / 2,
       };
       dragRef.current = null;
     } else if (e.touches.length === 1 && zoom.scale > 1) {
@@ -250,19 +326,47 @@ const Content = ({
         pinchRef.current.startScale *
           (newDistance / pinchRef.current.startDistance)
       );
-      setZoom((z) => ({
+      const rect = frameRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const anchorX = pinchRef.current.midViewportX - rect.left - rect.width / 2;
+      const anchorY = pinchRef.current.midViewportY - rect.top - rect.height / 2;
+      const nextX = anchoredTranslate(
+        anchorX,
+        pinchRef.current.startX,
+        pinchRef.current.startScale,
+        nextScale
+      );
+      const nextY = anchoredTranslate(
+        anchorY,
+        pinchRef.current.startY,
+        pinchRef.current.startScale,
+        nextScale
+      );
+      const nextFrameW =
+        (nextScale > 1 ? maxAvailWidth : imageWidth) - 2 * FRAME_PADDING;
+      const nextFrameH =
+        (nextScale > 1 ? maxAvailHeight : imageHeight) - 2 * FRAME_PADDING;
+      setZoom({
         scale: nextScale,
-        x: clampOffset(z.x, nextScale, width),
-        y: clampOffset(z.y, nextScale, height),
-      }));
+        x: clampOffset(nextX, imageWidth * nextScale, nextFrameW),
+        y: clampOffset(nextY, imageHeight * nextScale, nextFrameH),
+      });
     } else if (e.touches.length === 1 && dragRef.current) {
       const t = e.touches[0];
       const dx = t.clientX - dragRef.current.startClientX;
       const dy = t.clientY - dragRef.current.startClientY;
       setZoom((z) => ({
         scale: z.scale,
-        x: clampOffset(dragRef.current!.baseX + dx, z.scale, width),
-        y: clampOffset(dragRef.current!.baseY + dy, z.scale, height),
+        x: clampOffset(
+          dragRef.current!.baseX + dx,
+          imageWidth * z.scale,
+          frameContentWidth
+        ),
+        y: clampOffset(
+          dragRef.current!.baseY + dy,
+          imageHeight * z.scale,
+          frameContentHeight
+        ),
       }));
     }
   };
@@ -273,13 +377,13 @@ const Content = ({
 
   return (
     <Root>
-      <Frame ref={frameRef} $width={width} $height={height}>
+      <Frame ref={frameRef} $width={frameWidth} $height={frameHeight}>
         <ImageClip>
           <Image
             src={path}
             alt={photo.id()}
-            width={width}
-            height={height}
+            width={imageWidth}
+            height={imageHeight}
             $scale={zoom.scale}
             $x={zoom.x}
             $y={zoom.y}
