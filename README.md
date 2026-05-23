@@ -2,6 +2,8 @@
 
 **Photo Diary** is a calendar-based photo gallery platform for self-hosting. The photos are arranged by the date they were shot, in calendar-based views, aimed at diaries and other, date-based photography projects.
 
+Live examples: [dailybw.misaki.fi](https://dailybw.misaki.fi) and [papusama.misaki.fi](https://papusama.misaki.fi).
+
 Key features include:
 
 - Calendar-based views (year, month, day, photo)
