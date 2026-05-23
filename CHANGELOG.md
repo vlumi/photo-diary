@@ -6,6 +6,10 @@
 
 - Collapse "no view permission" and "gallery doesn't exist" into the same response on `GET /api/v1/galleries/:id` (`200 { id, hideMap: false }`) and `GET /api/v1/gallery-photos/:galleryId` (`200 []`). The single-photo endpoint similarly returns `404` for both cases (was `403` for no-access, `404` for no-such-photo). Without this, an unauthenticated walk of gallery IDs could enumerate which ones exist by reading the `403` / `404` distinction.
 
+### Frontend
+
+- Navigating to a gallery the requester can't see (private gallery, non-existent ID, or a revoked session) no longer hangs on a persistent "Loading" spinner — the SPA renders the empty-gallery view directly without firing the photos API call. The Title bar's gallery dropdown gains an italicised placeholder option for the unavailable id (matching the URL) so the selection is honest, and renders even when only one real gallery is accessible so the user has a way to switch into it.
+
 ## [0.8.0] - 2026-05-22
 
 ### Server

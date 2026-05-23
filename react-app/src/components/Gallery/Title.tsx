@@ -28,6 +28,10 @@ const TitleSelect = styled.select`
 const GallerySelect = styled(TitleSelect)`
   text-align-last: right;
 `;
+const UnavailableOption = styled.option`
+  font-style: italic;
+  color: var(--inactive-color);
+`;
 const ContextSelect = styled(TitleSelect)`
   text-align-last: left;
 `;
@@ -88,6 +92,30 @@ const Title = ({
       }
     };
 
+    // The current gallery isn't one the requester can see (URL points to a
+    // private / non-existent gallery). Without this branch the `<select>`
+    // value doesn't match any option and the browser falls back to
+    // displaying the first one — making it look like the user is *in* that
+    // gallery, and blocking them from navigating to it because picking it
+    // wouldn't fire `onChange`. Render a disabled, italicised placeholder
+    // matching the URL so the selection is honest, and always show the
+    // dropdown (even when only one real gallery is accessible) so the user
+    // has a way to switch.
+    const isUnavailable = !galleries.some((g) => g.id() === gallery.id());
+    if (isUnavailable) {
+      return (
+        <GallerySelect value={gallery.id()} onChange={changeHandler}>
+          <UnavailableOption value={gallery.id()} disabled>
+            — {gallery.id()}
+          </UnavailableOption>
+          {galleries.map((gallery) => (
+            <TitleOption key={gallery.id()} value={gallery.id()}>
+              {gallery.title()}
+            </TitleOption>
+          ))}
+        </GallerySelect>
+      );
+    }
     if (galleries.length > 1) {
       return (
         <GallerySelect value={gallery.id()} onChange={changeHandler}>

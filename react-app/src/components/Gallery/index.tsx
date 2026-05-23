@@ -119,6 +119,14 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
         .filter((g): g is GalleryT => !!g);
     },
   });
+  // Only fire the photos query once we know the gallery is in the LIST
+  // the requester can see — for an unknown / private gallery the SPA
+  // skips the API call entirely and renders the empty-gallery view
+  // synthesized from the URL params.
+  const galleryInList =
+    !!galleryId &&
+    !!galleriesQuery.data &&
+    galleriesQuery.data.some((g) => g.id() === galleryId);
   const photosQuery = useQuery({
     queryKey: ["gallery-photos", galleryId, user?.id ?? null],
     queryFn: async () => {
@@ -127,7 +135,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
         .map((photo) => PhotoModel(photo))
         .filter((p): p is PhotoT => !!p);
     },
-    enabled: !!galleryId,
+    enabled: galleryInList,
   });
 
   const meta = metaQuery.data as Meta | undefined;
@@ -289,6 +297,30 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
         </div>
       </>
     );
+  }
+
+  // The requested gallery isn't in the LIST the requester can see — could
+  // be a non-existent ID, a private gallery they don't have access to, or
+  // one their session was revoked from. Render the same empty-gallery view
+  // a real-but-empty gallery would use (so the difference doesn't leak),
+  // and skip the photos API call. The Title bar's gallery dropdown gives
+  // the user a way back to a gallery they can actually see.
+  if (!galleryInList) {
+    const emptyGallery = GalleryModel({ id: galleryId });
+    if (emptyGallery) {
+      return (
+        <>
+          <Global styles={globalStyles(activeTheme)} />
+          <Empty gallery={emptyGallery}>
+            <Title
+              galleries={galleries}
+              gallery={emptyGallery}
+              context={context}
+            />
+          </Empty>
+        </>
+      );
+    }
   }
 
   const renderContent = () => {
