@@ -399,8 +399,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     }
     // Month renders the same view whether or not a `day` is in the URL.
     // When `day` is set, it scrolls that day's thumbnails into view and
-    // visually highlights the DayTitle; the per-day standalone view from
-    // pre-0.10 was merged in here (closes #274).
+    // visually highlights the DayTitle.
     if (!photoId) {
       return (
         <Month

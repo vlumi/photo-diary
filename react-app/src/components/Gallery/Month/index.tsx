@@ -28,10 +28,9 @@ interface Props {
 }
 
 // `day` is purely a scroll/highlight anchor — every interaction (prev/next,
-// Escape) still operates at the month level. The dedicated Day view that
-// used to live under `./Day/` was merged in here (closes #274); landing on
-// `/g/.../<year>/<month>/<day>` now renders the whole Month with that
-// day's thumbnails scrolled into view and the DayTitle visually marked.
+// Escape) still operates at the month level. Landing on
+// `/g/.../<year>/<month>/<day>` renders the whole Month with that day's
+// thumbnails scrolled into view and the DayTitle visually marked.
 const Month = ({
   children,
   gallery,

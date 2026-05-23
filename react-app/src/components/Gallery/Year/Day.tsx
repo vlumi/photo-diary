@@ -63,10 +63,8 @@ const Day = ({
   const { t } = useTranslation();
 
   // Day cells render the day number only; the whole month tile is the
-  // link target (see [Year/Month.tsx](./Month.tsx)). The previous per-day
-  // Link to `/g/<gallery>/<year>/<month>/<day>` was dropped along with
-  // the standalone Day view (#274) — day URLs still work for shared
-  // links and surface as a click on the DayTitle inside Month, but they
+  // link target (see `./Month.tsx`). Day URLs still work for shared links
+  // and surface as a click on the DayTitle inside Month view, but they
   // aren't promoted as the primary navigation target from the heatmap.
   const renderDayValue = (day: number): React.ReactNode => {
     if (day === 0) {
