@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-05-23
+
+### Fixed
+
+- Logging out via the profile-icon `UserMenu` no longer leaves the previous identity's access-derived state on screen (gallery list, map visibility, per-photo coordinates). The `queryClient.invalidateQueries` calls #244 added to the original `Logout.tsx` got lost when #182 deleted that file and inlined the logout flow into `UserMenu.handleLogout`; restored.
+
 ## [0.9.0] - 2026-05-23
 
 ### Server
