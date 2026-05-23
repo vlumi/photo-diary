@@ -22,15 +22,33 @@ Photo Diary is split into separate independent modules, each handling its own su
 
 ### Basic Setup
 
-- Requires Node.js 22 or newer; npm 10+ recommended (npm workspaces)
-- From the repo root, run `npm run setup` — installs every workspace ([server](server), [converter](converter), [react-app](react-app)) and builds the frontend into [server](server)/`build/` for production
-- Create a photo-repository directory structure, separate from the code
-  - Must include the sub-directories `inbox`, `original`, `display`, and `thumbnail`
-  - The directory layout is fixed: the `photos/` subdirectory of the instance dir holds the photo repository, and the SQLite DB file lives at `<instance>/db.sqlite3`. Symlink the subdirectories (or the whole instance dir) if you need them on a different disk.
-- Set `DB_DRIVER=sqlite3` in [server](server)/`.env`. The DB file is created at `<instance>/db.sqlite3` on first server start; the migration runner bootstraps the schema and applies any pending migrations on every start
-- Start [server](server) and [converter](converter) as background processes, e.g. via [pm2](https://pm2.keymetrics.io/) — both use `npm run prod` which invokes `pm2 start --interpreter tsx`
-- Seed the first user and at least one gallery via the operator scripts surfaced as `<instance>/bin/<name>.ts` symlinks (created by `bin/instance.ts`). E.g. `./bin/user.ts passwd alice ...` and `./bin/gallery.ts dailybw --title "Daily B&W"`. Grant the user admin access with `./bin/access.ts level alice :all admin`. See [server/README.md](server/README.md) for the management scripts and the access-control model in detail.
-- Set the instance's `cdn` value (via `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'` or the `/api/v1/meta` API) to the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). This overrides the frontend's `/` default at runtime — the bundle itself ships no per-instance config
+Quickstart for a single personal instance. For the full production layout (multi-version code under `/opt/`, per-instance dirs under `/var/`, nginx vhosts, atomic upgrades, backup) see [Multi-Instance Deployment](#multi-instance-deployment) below; for an in-repo dev setup without an instance dir at all, see [Dev Mode](#dev-mode).
+
+1. **Prerequisites + install.** Node.js 22 or newer (npm 10+ recommended for workspaces). From the repo root, `npm run setup` installs every workspace ([server](server), [converter](converter), [react-app](react-app)) and builds the frontend into [server](server)/`build/`.
+2. **Bootstrap the instance directory** with [`bin/instance.ts`](bin/instance.ts). It creates the dir tree (`photos/{inbox,original,display,thumbnail}/`), generates `.env` with a fresh random `SECRET`, links `code` to this checkout, and surfaces operator shortcuts at `<instance>/bin/{photo,gallery,user,access}.ts`:
+
+   ```sh
+   ./bin/instance.ts <name> --base <parent-dir>
+   ```
+
+   Default `--base` is `/var/photo-diary` (the production layout); pass any other path for a personal setup. See [Bootstrapping a new instance](#bootstrapping-a-new-instance) for the dir layout, `.env` keys, and re-run-as-doctor semantics.
+3. **Start the processes** via the per-instance `start-prod.sh` scripts (pm2-managed; the DB file is created at `<instance>/db.sqlite3` on first start and the migration runner bootstraps the schema on every start):
+
+   ```sh
+   cd <parent-dir>/<name>
+   ./code/server/bin/start-prod.sh
+   ./code/converter/bin/start-prod.sh
+   ```
+
+4. **Seed the first user, gallery, and admin grant** via the per-instance operator shortcuts. See [server/README.md](server/README.md) for the full management toolkit and the access-control model:
+
+   ```sh
+   ./bin/user.ts passwd <user> <password>
+   ./bin/gallery.ts <gallery-id> --title "<Title>"
+   ./bin/access.ts level <user> :all admin
+   ```
+
+5. **Set the instance `cdn`** — the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). Via the `/api/v1/meta` API or `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'`. This overrides the frontend's `/` default at runtime; the bundle itself ships no per-instance config.
 
 ### Dev Mode
 
