@@ -33,7 +33,7 @@ const NextThumbnailContainer = styled(ThumbnailContainer)`
 const ThumbnailFrame = styled.div`
   margin: 0;
   padding: 2px;
-  border: solid #004 1px;
+  border: solid var(--photo-frame-border) 1px;
 `;
 const Description = styled.span`
   flex-grow: 1;

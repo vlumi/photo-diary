@@ -18,12 +18,21 @@ const Root = styled.div`
 const MainTitle = styled.h1`
   margin: 0;
 `;
+// Explicit `color` because `background: none` lets the page background
+// through, but the browser default text colour stays black — unreadable
+// on dark themes. `option` rules style the native dropdown popup, which
+// otherwise renders with platform defaults that ignore the theme.
 const TitleSelect = styled.select`
   font-size: 1em;
   background: none;
   border: none;
   font-weight: bold;
   text-align-last: right;
+  color: var(--primary-color);
+  & option {
+    background: var(--primary-background);
+    color: var(--primary-color);
+  }
 `;
 const GallerySelect = styled(TitleSelect)`
   text-align-last: right;

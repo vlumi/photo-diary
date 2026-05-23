@@ -62,6 +62,9 @@ const globalStyles = (theme: ActiveTheme) => css`
     --header-color: ${theme.get("header-color")};
     --header-sub-color: ${theme.get("header-sub-color")};
     --header-background: ${theme.get("header-background")};
+    --tile-background: ${theme.get("tile-background")};
+    --photo-frame-mat: ${theme.get("photo-frame-mat")};
+    --photo-frame-border: ${theme.get("photo-frame-border")};
     filter: ${theme.get("filter")};
   }
 `;
