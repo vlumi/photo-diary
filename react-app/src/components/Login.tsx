@@ -74,10 +74,16 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
     try {
       const data = await tokenService.login(userId, password);
       const rawToken = data.token;
-      // TODO: sign/verify
-      const userData = JSON.parse(
-        new TextDecoder().decode(jose.base64url.decode(rawToken.split(".")[1]))
-      );
+      // We trust the just-issued token (the server signed it; we got it
+      // back from the response body). `decodeJwt` parses the claims
+      // without verifying the signature — verification happens server-
+      // side on every subsequent request via `verifyToken`. Using jose's
+      // decoder instead of the hand-rolled base64-then-JSON dance keeps
+      // the JWT handling consistent with the rest of the codebase.
+      const userData = jose.decodeJwt(rawToken) as unknown as {
+        id: string;
+        isAdmin?: boolean;
+      };
       const user = UserModel(userData, rawToken);
 
       token.setToken(rawToken);
