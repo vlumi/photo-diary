@@ -3,7 +3,6 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
 import DayCell from "./DayCell";
-import Link from "../Link";
 
 import color from "../../../lib/color";
 import format from "../../../lib/format";
@@ -63,22 +62,9 @@ const Day = ({
 
   const { t } = useTranslation();
 
-  const renderDayValue = (
-    gallery: Gallery,
-    year: number,
-    month: number,
-    day: number,
-    photoCount: number
-  ): React.ReactNode => {
+  const renderDayValue = (day: number): React.ReactNode => {
     if (day === 0) {
       return <></>;
-    }
-    if (photoCount > 0) {
-      return (
-        <Link gallery={gallery} year={year} month={month} day={day}>
-          {day}
-        </Link>
-      );
     }
     return day;
   };
@@ -96,15 +82,11 @@ const Day = ({
     count: photoCount,
   })}`;
   if (photoCount === 0) {
-    return (
-      <None title={title}>
-        {renderDayValue(gallery, year, month, day, photoCount)}
-      </None>
-    );
+    return <None title={title}>{renderDayValue(day)}</None>;
   }
   return (
     <Some style={style} title={title}>
-      {renderDayValue(gallery, year, month, day, photoCount)}
+      {renderDayValue(day)}
     </Some>
   );
 };

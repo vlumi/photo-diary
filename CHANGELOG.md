@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Merge the standalone Day view into Month — navigating to `/g/<gallery>/<year>/<month>/<day>` now renders the whole Month with that day's `DayTitle` highlighted and scrolled into view, rather than a dedicated per-day page. Shared/bookmarked day URLs still work; the calendar hierarchy collapses from Year → Month → Day → Photo to Year → Month → Photo, matching how Photo's up-nav already skipped the Day view.
+
 ## [0.9.1] - 2026-05-23
 
 ### Fixed

@@ -48,6 +48,7 @@ interface Props {
   gallery: Gallery;
   year: number;
   month: number;
+  day?: number;
   lang: string;
   countryData: CountryData;
 }
@@ -57,10 +58,22 @@ const Content = ({
   gallery,
   year,
   month,
+  day,
   lang,
   countryData,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
+
+  // RAF defers past ScrollToPosition's setTimeout(0) — without that delay
+  // the parent's scroll restore fires last and undoes this jump.
+  React.useEffect(() => {
+    if (!day) return;
+    const handle = requestAnimationFrame(() => {
+      const el = document.getElementById(`month-day-${day}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [day, year, month]);
 
   if (!gallery.includesMonth(year, month)) {
     return (
@@ -112,22 +125,34 @@ const Content = ({
     }
   };
 
-  const renderDay = (day: number) => {
+  // `skipScrollRestore` opts the toggle out of ScrollToPosition — we
+  // handle the scroll ourselves above and don't want a flash to top
+  // between click and our scrollIntoView.
+  const renderDay = (d: number) => {
+    const isHighlighted = d === day;
+    const linkDay = isHighlighted ? undefined : d;
     return (
       <Thumbnails
-        key={"" + year + month + day}
+        key={"" + year + month + d}
         gallery={gallery}
-        photos={gallery.photos(year, month, day)}
+        photos={gallery.photos(year, month, d)}
         lang={lang}
         countryData={countryData}
+        highlighted={isHighlighted}
       >
-        <Link gallery={gallery} year={year} month={month} day={day}>
-          <DayTitle>
-            {day}
+        <Link
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={linkDay}
+          state={{ skipScrollRestore: true }}
+        >
+          <DayTitle id={`month-day-${d}`}>
+            {d}
             <DaySubTitle>
-              {t(`weekday-short-${calendar.dayOfWeek(year, month, day)}`)}
+              {t(`weekday-short-${calendar.dayOfWeek(year, month, d)}`)}
             </DaySubTitle>
-            {renderEpochInfo(day)}
+            {renderEpochInfo(d)}
           </DayTitle>
         </Link>
       </Thumbnails>

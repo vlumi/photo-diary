@@ -13,6 +13,7 @@ interface Props {
   day?: number;
   photo?: Photo;
   context?: string;
+  state?: Record<string, unknown>;
 }
 
 const Link = ({
@@ -24,31 +25,32 @@ const Link = ({
   photo,
   day,
   context,
+  state,
 }: Props): React.ReactElement => {
   if (gallery && context === "stats") {
     return (
-      <ReactLink className={className} to={gallery.statsPath()}>
+      <ReactLink className={className} to={gallery.statsPath()} state={state}>
         {children}
       </ReactLink>
     );
   }
   if (photo && gallery) {
     return (
-      <ReactLink className={className} to={photo.path(gallery)}>
+      <ReactLink className={className} to={photo.path(gallery)} state={state}>
         {children}
       </ReactLink>
     );
   }
   if (!gallery) {
     return (
-      <ReactLink className={className} to="/g">
+      <ReactLink className={className} to="/g" state={state}>
         {children}
       </ReactLink>
     );
   }
   const path = gallery.path(year, month, day);
   return (
-    <ReactLink className={className} to={path}>
+    <ReactLink className={className} to={path} state={state}>
       {children}
     </ReactLink>
   );

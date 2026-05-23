@@ -12,6 +12,15 @@ import type { Gallery } from "../../../models/GalleryModel";
 
 type ActiveTheme = { get: (name: string) => string };
 
+// `display: block` so the inline `<a>` lays out as a tile, and
+// `color: inherit; text-decoration: none` so the wrapped content keeps
+// its existing visual styling instead of picking up the browser's link
+// defaults.
+const MonthLink = styled(Link)`
+  display: block;
+  color: inherit;
+  text-decoration: none;
+`;
 const Root = styled.div`
   width: 214px;
   height: 238px;
@@ -41,13 +50,6 @@ const MonthContainer = styled.div`
   display: block;
   width: 100%;
   height: 180px;
-
-  & :link {
-    color: var(--primary-color);
-  }
-  & :visited {
-    color: var(--primary-color);
-  }
 `;
 const MonthGrid = styled.table`
   border-collapse: collapse;
@@ -84,20 +86,9 @@ const Month = ({
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
-  const renderTitle = (gallery: Gallery, year: number, month: number) => {
-    if (gallery.includesMonth(year, month)) {
-      return (
-        <Link gallery={gallery} year={year} month={month}>
-          <MonthTitle>{month}</MonthTitle>
-        </Link>
-      );
-    }
-    return <MonthTitle>{month}</MonthTitle>;
-  };
-
-  return (
+  const tile = (
     <Root>
-      {renderTitle(gallery, year, month)}
+      <MonthTitle>{month}</MonthTitle>
       <MonthContainer>
         <MonthGrid>
           <Header>
@@ -128,5 +119,14 @@ const Month = ({
       </MonthContainer>
     </Root>
   );
+
+  if (gallery.includesMonth(year, month)) {
+    return (
+      <MonthLink gallery={gallery} year={year} month={month}>
+        {tile}
+      </MonthLink>
+    );
+  }
+  return tile;
 };
 export default Month;

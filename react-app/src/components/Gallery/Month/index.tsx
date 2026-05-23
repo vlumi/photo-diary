@@ -22,6 +22,7 @@ interface Props {
   gallery: Gallery;
   year: number;
   month: number;
+  day?: number;
   lang: string;
   countryData: CountryData;
 }
@@ -31,6 +32,7 @@ const Month = ({
   gallery,
   year,
   month,
+  day,
   lang,
   countryData,
 }: Props): React.ReactElement => {
@@ -100,7 +102,7 @@ const Month = ({
   return (
     <>
       <title>
-        {gallery.title(year, month)} — {t("nav-gallery")}
+        {gallery.title(year, month, day)} — {t("nav-gallery")}
       </title>
       <Navigation gallery={gallery} year={year} month={month} />
       <Swipeable onSwiped={handleSwipe}>
@@ -108,6 +110,7 @@ const Month = ({
           gallery={gallery}
           year={year}
           month={month}
+          day={day}
           lang={lang}
           countryData={countryData}
         >
