@@ -2,11 +2,13 @@
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-05-23
+
 ### Server
 
 - Collapse "no view permission" and "gallery doesn't exist" into the same response on `GET /api/v1/galleries/:id` (`200 { id, hideMap: false }`) and `GET /api/v1/gallery-photos/:galleryId` (`200 []`). The single-photo endpoint similarly returns `404` for both cases (was `403` for no-access, `404` for no-such-photo). Without this, an unauthenticated walk of gallery IDs could enumerate which ones exist by reading the `403` / `404` distinction.
 - JWTs now expire after `SESSION_LENGTH_MS` (90 days, bumped from the 7-day constant that was defined but unused). `setExpirationTime` is wired into the sign step, and the verify path distinguishes `JWTExpired` (jose) from other verification failures so the wire response is the new typed `TokenExpiredError` instead of the generic `InvalidTokenError`. (closes #207)
-- `PUT /api/v1/users/self/password` lets an authenticated user change their own password without admin help. Body: `{ currentPassword, newPassword }`; verifies the current password via bcrypt, hashes the new one, rotates the user's `secret` (invalidating every other outstanding JWT for the user — same security model as `bin/user.ts passwd`), and returns a freshly-minted JWT so the caller's current session stays alive. Guests get 403; wrong current password gets 401. (part of #182)
+- `PUT /api/v1/users/self/password` lets an authenticated user change their own password without admin help. Body: `{ currentPassword, newPassword }`; verifies the current password via bcrypt, hashes the new one, rotates the user's `secret` (invalidating every other outstanding JWT for the user — same security model as `bin/user.ts passwd`), and returns a freshly-minted JWT so the caller's current session stays alive. Guests get 403; wrong current password gets 422 (body content, not a session problem — keeps the SPA's global 401 handler from kicking the user out of their valid session). New `ValidationError(422)` added to the typed error hierarchy. (part of #182)
 
 ### Frontend
 
@@ -15,6 +17,7 @@
 - Add a responsive toast-notification surface (`<Notifications />` mounted at the app root, backed by a `useNotificationsStore` Zustand store with per-type defaults, click-to-dismiss, and auto-dismiss timeouts). Login uses it to surface "invalid username or password" for 401s and the rate-limit message for 429s — previously failures were silently swallowed via a `TODO: notify user` comment. The toast strip spans edge-to-edge on phones and tucks into the top-right of wider viewports. (closes #248)
 - Move the login form out of the top menu and into a floating modal. A global onResponse handler in the openapi-fetch client catches any 401 with an Authorization header attached and opens the modal — same UX whether the bearer expired (now possible after the JWT expiration change), the operator rotated the user's secret, or the token was otherwise invalidated mid-session. A "session expired" toast accompanies the modal so the user understands why they're being asked to log in again. The URL is preserved across the re-login so they land back where they were; if the new session has narrower access, the empty-gallery view from the previous PRs takes over. (closes #207)
 - Replace the inline login/logout buttons in the top menu with a profile icon (`<UserMenu>`). Outlined `BsPerson` when not logged in (clicking opens the login modal); filled `BsPersonFill` when logged in (clicking opens a dropdown with the username, "Change password", and "Log out"). The "Change password" entry opens a new floating `<ChangePasswordModal>` mirroring the login modal's shape — three fields (current / new / confirm), inline error pill on failure, success toast on completion. The new JWT returned by the backend is swapped into local state so the user stays logged in across the rotation. (closes #182)
+- Global 401 handler closes the change-password modal before opening the login modal so a session expiry mid-change-password no longer stacks two backdrops. The hand-rolled JWT-payload decode in `Login.tsx` (`JSON.parse(TextDecoder.decode(jose.base64url.decode(...)))`) is replaced with a direct `jose.decodeJwt(rawToken)` call — same effect, matches the codebase's `jose` usage everywhere else, retires the `TODO: sign/verify` comment.
 
 ## [0.8.0] - 2026-05-22
 
