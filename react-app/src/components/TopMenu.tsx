@@ -27,9 +27,10 @@ const Container = styled.span`
 `;
 const UserName = styled.span`
   margin: auto 10px;
-  color: var(--inactive-color);
+  color: var(--header-color);
   flex-grow: 1;
   text-align: left;
+  font-weight: bold;
 `;
 const ToggleBlock = styled("span", {
   shouldForwardProp: (prop) => prop !== "$visible",

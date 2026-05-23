@@ -4,15 +4,17 @@ import styled from "@emotion/styled";
 import { useNotificationsStore } from "../stores";
 import type { NotificationType } from "../stores/notifications";
 
-// Anchored top of viewport. On a phone (narrow viewport) the strip spans
-// edge-to-edge with small margins so messages are readable without forcing
-// the user to reach for a corner; on a wider screen it tucks into the
-// top-right and caps at a comfortable reading width. `pointer-events: none`
-// on the container lets clicks through the gaps between toasts; each toast
-// re-enables them on itself so click-to-dismiss still works.
+// Anchored under the 25px top menu so the toast strip doesn't overlap the
+// login form / logout button / language picker that live up there. On a
+// phone (narrow viewport) the strip spans edge-to-edge with small margins
+// so messages are readable without forcing the user to reach for a corner;
+// on a wider screen it tucks into the top-right and caps at a comfortable
+// reading width. `pointer-events: none` on the container lets clicks fall
+// through the gaps between toasts; each toast re-enables them on itself
+// so click-to-dismiss still works.
 const Container = styled.div`
   position: fixed;
-  top: 10px;
+  top: 35px;
   left: 10px;
   right: 10px;
   z-index: 1000;
