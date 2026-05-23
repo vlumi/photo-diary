@@ -136,41 +136,52 @@ const Content = ({
     startDistance: number;
     startScale: number;
   } | null>(null);
+  const frameRef = React.useRef<HTMLSpanElement | null>(null);
   const [grabbing, setGrabbing] = React.useState(false);
+
+  // Dimensions and computed render size live in refs so the wheel
+  // useEffect (which must be registered before the early return below
+  // to keep hook order stable) can read the current values without
+  // re-binding on every photo/resize.
+  const photoRatio = photo.ratio();
+  const browserScale = window.visualViewport?.scale ?? 1;
+  const maxWidth = (dimensions.width - 62) * browserScale;
+  const maxHeight = (dimensions.height - 107) * browserScale;
+  const maxRatio = maxWidth / maxHeight;
+  const width = calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio);
+  const height = calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio);
+  const widthRef = React.useRef(width);
+  const heightRef = React.useRef(height);
+  widthRef.current = width;
+  heightRef.current = height;
+
+  // React attaches `wheel` listeners as passive by default, so
+  // `e.preventDefault()` would be a no-op (and Chrome warns on every
+  // scroll). Native non-passive listener instead.
+  React.useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
+      setZoom((z) => {
+        const nextScale = clampScale(z.scale * factor);
+        return {
+          scale: nextScale,
+          x: clampOffset(z.x, nextScale, widthRef.current),
+          y: clampOffset(z.y, nextScale, heightRef.current),
+        };
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [setZoom]);
 
   if (!gallery.includesPhoto(year, month, day, photo)) {
     return <i>Empty</i>;
   }
 
-  const getScale = (): number => {
-    if (window.visualViewport) {
-      return window.visualViewport.scale;
-    }
-    return 1;
-  };
-
-  const photoRatio = photo.ratio();
-  const scale = getScale();
-  const maxWidth = (dimensions.width - 62) * scale;
-  const maxHeight = (dimensions.height - 107) * scale;
-  const maxRatio = maxWidth / maxHeight;
-
   const path = `${config.PHOTO_ROOT_URL}display/${photo.id()}`;
-  const width = calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio);
-  const height = calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio);
-
-  const handleWheel = (e: React.WheelEvent<HTMLSpanElement>) => {
-    e.preventDefault();
-    const factor = e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
-    setZoom((z) => {
-      const nextScale = clampScale(z.scale * factor);
-      return {
-        scale: nextScale,
-        x: clampOffset(z.x, nextScale, width),
-        y: clampOffset(z.y, nextScale, height),
-      };
-    });
-  };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
     if (zoom.scale <= 1) return;
@@ -255,7 +266,7 @@ const Content = ({
 
   return (
     <Root>
-      <Frame $width={width} $height={height} onWheel={handleWheel}>
+      <Frame ref={frameRef} $width={width} $height={height}>
         <Image
           src={path}
           alt={photo.id()}
