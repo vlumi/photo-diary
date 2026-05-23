@@ -8,7 +8,7 @@
 
 ### Frontend
 
-- Navigating to a gallery the requester can't see (private gallery, non-existent ID, or a revoked session) no longer hangs on a persistent "Loading" spinner. The SPA now checks whether the requested gallery is in the LIST it can see and renders the empty-gallery view (with the Title dropdown for back-navigation) without firing the photos API call.
+- Navigating to a gallery the requester can't see (private gallery, non-existent ID, or a revoked session) no longer hangs on a persistent "Loading" spinner — the SPA renders the empty-gallery view directly without firing the photos API call. The Title bar's gallery dropdown gains an italicised placeholder option for the unavailable id (matching the URL) so the selection is honest, and renders even when only one real gallery is accessible so the user has a way to switch into it.
 
 ## [0.8.0] - 2026-05-22
 
