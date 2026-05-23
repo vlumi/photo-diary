@@ -1243,3 +1243,160 @@ describe("collectTopics", () => {
     expect(topics[3].categories.length).toBe(9);
   });
 });
+
+// Language stability: chart numeric data, table standard scores, and table
+// row keys are pure functions of the stats input — they must not change
+// when only `lang` / `t` / `countryData` change. These tests are a safety
+// net for the upcoming collectTopics split (`buildRawTopics` +
+// `applyTopicLabels`) so the refactor can't silently regress.
+describe("collectTopics — language stability", () => {
+  const mockT = ((x: string) => x) as never;
+  const mockCountryData = {
+    isValid: (c: string) => c === "jp" || c === "us",
+    getName: () => "Country",
+  };
+  const mockTheme = { get: () => "#000" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const buildPhotos = (): any[] => [
+    PhotoModel({
+      id: "1.jpg",
+      index: 0,
+      title: "",
+      description: "",
+      taken: {
+        instant: {
+          timestamp: "2020-01-01 13:00:00",
+          year: 2020,
+          month: 1,
+          day: 1,
+          hour: 13,
+          minute: 0,
+          second: 0,
+        },
+        author: "Alice",
+        location: {
+          country: "jp",
+          place: "",
+          coordinates: { latitude: 30, longitude: 30, altitude: null },
+        },
+      },
+      camera: { make: "Sony", model: "A7", serial: null },
+      lens: { make: "Sony", model: "24mm", serial: null },
+      exposure: {
+        focalLength: 24,
+        aperture: 2.8,
+        exposureTime: 0.01,
+        iso: 100,
+      },
+      dimensions: {
+        original: { width: 6000, height: 4000 },
+        display: { width: 1500, height: 1000 },
+        thumbnail: { width: 300, height: 200 },
+      },
+    }),
+    PhotoModel({
+      id: "2.jpg",
+      index: 1,
+      title: "",
+      description: "",
+      taken: {
+        instant: {
+          timestamp: "2020-06-15 09:30:00",
+          year: 2020,
+          month: 6,
+          day: 15,
+          hour: 9,
+          minute: 30,
+          second: 0,
+        },
+        author: "Bob",
+        location: {
+          country: "us",
+          place: "",
+          coordinates: { latitude: 40, longitude: -100, altitude: null },
+        },
+      },
+      camera: { make: "Canon", model: "EOS R5", serial: null },
+      lens: { make: "Canon", model: "50mm", serial: null },
+      exposure: {
+        focalLength: 50,
+        aperture: 4.0,
+        exposureTime: 0.005,
+        iso: 200,
+      },
+      dimensions: {
+        original: { width: 8000, height: 6000 },
+        display: { width: 1500, height: 1100 },
+        thumbnail: { width: 300, height: 220 },
+      },
+    }),
+  ];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const collect = async (lang: string): Promise<any> => {
+    const photos = buildPhotos();
+    const data = await stats.generate(photos, {});
+    return stats.collectTopics(data, lang, mockT, mockCountryData, mockTheme);
+  };
+
+  test("chart datasets have identical numeric values across languages", async () => {
+    const en = await collect("en");
+    const fi = await collect("fi");
+    expect(fi.length).toBe(en.length);
+    for (let ti = 0; ti < en.length; ti++) {
+      expect(fi[ti].key).toBe(en[ti].key);
+      expect(fi[ti].categories.length).toBe(en[ti].categories.length);
+      for (let ci = 0; ci < en[ti].categories.length; ci++) {
+        const enCat = en[ti].categories[ci];
+        const fiCat = fi[ti].categories[ci];
+        if (!enCat.charts) continue;
+        expect(fiCat.charts.length).toBe(enCat.charts.length);
+        for (let chi = 0; chi < enCat.charts.length; chi++) {
+          // Datasets carry numeric chart data + colors — neither depends
+          // on language. Labels (text strings under the bars/slices)
+          // *do* depend on language and are intentionally not asserted.
+          expect(fiCat.charts[chi].data.datasets).toStrictEqual(
+            enCat.charts[chi].data.datasets
+          );
+        }
+      }
+    }
+  });
+
+  test("table row keys (encoded raw keys) are identical across languages", async () => {
+    const en = await collect("en");
+    const fi = await collect("fi");
+    for (let ti = 0; ti < en.length; ti++) {
+      for (let ci = 0; ci < en[ti].categories.length; ci++) {
+        const enCat = en[ti].categories[ci];
+        const fiCat = fi[ti].categories[ci];
+        if (!enCat.table) continue;
+        expect(fiCat.table.map((r: { key: string }) => r.key)).toStrictEqual(
+          enCat.table.map((r: { key: string }) => r.key)
+        );
+      }
+    }
+  });
+
+  test("table standardScore values are identical across languages", async () => {
+    const en = await collect("en");
+    const fi = await collect("fi");
+    for (let ti = 0; ti < en.length; ti++) {
+      for (let ci = 0; ci < en[ti].categories.length; ci++) {
+        const enCat = en[ti].categories[ci];
+        const fiCat = fi[ti].categories[ci];
+        if (!enCat.table) continue;
+        expect(fiCat.table.length).toBe(enCat.table.length);
+        for (let ri = 0; ri < enCat.table.length; ri++) {
+          const enScore = enCat.table[ri].standardScore;
+          const fiScore = fiCat.table[ri].standardScore;
+          // NaN === NaN is false; handle it explicitly so a 1-row
+          // distribution (where stddev is undefined) still passes.
+          if (Number.isNaN(enScore) && Number.isNaN(fiScore)) continue;
+          expect(fiScore).toBe(enScore);
+        }
+      }
+    }
+  });
+});
