@@ -128,8 +128,15 @@ const Content = ({
     }
   };
 
+  // Clicking a DayTitle toggles the day in the URL: highlighting a new
+  // day adds it, clicking the already-highlighted day's title removes
+  // it (drops back to `/g/.../<year>/<month>`). `skipScrollRestore`
+  // keeps `<ScrollToPosition>` from snapping the page to 0 during the
+  // toggle — we already know what we want to do with the scroll (jump
+  // to the new day for an "add", stay put for a "remove").
   const renderDay = (d: number) => {
     const isHighlighted = d === day;
+    const linkDay = isHighlighted ? undefined : d;
     return (
       <Thumbnails
         key={"" + year + month + d}
@@ -139,7 +146,13 @@ const Content = ({
         countryData={countryData}
         highlighted={isHighlighted}
       >
-        <Link gallery={gallery} year={year} month={month} day={d}>
+        <Link
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={linkDay}
+          state={{ skipScrollRestore: true }}
+        >
           <DayTitle id={`month-day-${d}`}>
             {d}
             <DaySubTitle>
