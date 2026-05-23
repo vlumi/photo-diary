@@ -41,6 +41,34 @@ import color from "./color";
 import config from "./config";
 import type { Photo } from "../models/PhotoModel";
 
+// Build-phase cache: stores the language-independent chunk of each
+// category's collectFoo work (sorted flat array, datasets with stable
+// colors, value ranks, mean/stddev) keyed on the raw bucket object
+// reference. On a language switch, `data.count.byAuthor` (and every
+// sibling bucket) is the same reference across calls, so we return
+// cached datasets — the chart `data.datasets` arrays stay reference-
+// equal across calls, which is what stops chart.js from doing a full
+// rebuild on every language switch (the actual #231 perception fix).
+// Theme is part of the cache check (a theme change recomputes colors).
+const buildPhaseCache = new WeakMap<object, { theme: unknown; result: any }>();
+const getBuilt = <T,>(
+  bucket: object,
+  theme: unknown,
+  builder: () => T
+): T => {
+  const entry = buildPhaseCache.get(bucket);
+  if (entry && entry.theme === theme) return entry.result as T;
+  const result = builder();
+  buildPhaseCache.set(bucket, { theme, result });
+  return result;
+};
+// `collectWeekday`'s build is fed a transformed object (key shift for
+// `FIRST_WEEKDAY`), not the raw `byWeekday`. Without this cache, every
+// call creates a fresh transformed object and the `getBuilt` cache above
+// misses on its bucket-reference key. Stable raw bucket → stable
+// transformed bucket → stable cache hit downstream.
+const transformedWeekdayCache = new WeakMap<object, object>();
+
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
   isValid(code: string): boolean;
@@ -228,56 +256,12 @@ const collectTopics = (
     },
   });
 
-  const mapToChartData = (
-    foldedData: any,
-    formatter: any = format.identity,
-    maxEntries = 0,
-    otherLabel: any = t("stats-other")
-  ): any => {
-    const valueRanks = collection.calculateRanks(foldedData, (_: any) =>
-      Number(_.value)
-    );
-    const doMap = (data: any) => {
-      const colorGradients = color.colorGradient(
-        theme.get("header-background"),
-        theme.get("header-color"),
-        data.length
-      );
-      const colors = data
-        .map((_: any) => Number(_.value))
-        .map((value: any) => colorGradients[valueRanks[value]]);
-      return [
-        {
-          labels: data
-            .map(encodeLabelKey(formatter))
-            .map((_: any) => JSON.stringify(_.key)),
-          datasets: [
-            {
-              data: data.map((_: any) => _.value),
-              backgroundColor: colors,
-              borderWidth: 0.5,
-              barThickness: "flex",
-              minBarLength: 3,
-              barPercentage: 1,
-              categoryPercentage: 1,
-            },
-          ],
-        },
-        valueRanks,
-      ];
-    };
-    return collection.truncateAndProcess(
-      foldedData,
-      maxEntries,
-      doMap,
-      (data: any) => {
-        return {
-          key: otherLabel,
-          value: data.map((_: any) => _.value).reduce((a: any, b: any) => a + b, 0),
-        };
-      }
-    );
-  };
+  // Build-phase sentinel for the truncated "other" row. The truncated
+  // entry list is part of the cached language-independent build, so the
+  // "other" key has to be language-independent too. The label phase
+  // (encodeLabelKey, below) swaps the sentinel for the real `otherLabel`
+  // — which IS language-dependent — when generating the chart label.
+  const OTHER_SENTINEL = Symbol.for("photo-diary/stats/__other__");
   const transformData = ({
     original,
     comparator = collection.numSortByFieldDesc("value"),
@@ -291,14 +275,60 @@ const collectTopics = (
     limit?: number;
     otherLabel?: any;
   }): any => {
-    const flat = collection.foldToArray(original, comparator);
-    const [data, valueRanks] = mapToChartData(
-      flat,
-      formatter,
-      limit,
-      otherLabel
-    );
-    return [flat, data, valueRanks];
+    // Cached, language-independent chunk: sort, truncate, ranks, colors,
+    // dataset arrays. Keyed on (rawBucket, theme) — when only `lang` /
+    // `t` change across calls, this lookup hits and the same datasets
+    // array reference flows back into chart `data.datasets`, which is
+    // what stops chart.js from doing a full rebuild on language switch.
+    const built = getBuilt(original, theme, () => {
+      const flat = collection.foldToArray(original, comparator);
+      const valueRanks = collection.calculateRanks(flat, (_: any) =>
+        Number(_.value)
+      );
+      const chartFlat: any[] =
+        limit > 0 && flat.length > limit
+          ? [
+              ...flat.slice(0, limit - 1),
+              {
+                key: OTHER_SENTINEL,
+                value: flat
+                  .slice(limit - 1)
+                  .reduce((a: any, b: any) => a + Number(b.value), 0),
+              },
+            ]
+          : flat;
+      const colorGradients = color.colorGradient(
+        theme.get("header-background"),
+        theme.get("header-color"),
+        chartFlat.length
+      );
+      const colors = chartFlat.map(
+        (e: any) => colorGradients[valueRanks[Number(e.value)]]
+      );
+      const datasets = [
+        {
+          data: chartFlat.map((e: any) => Number(e.value)),
+          backgroundColor: colors,
+          borderWidth: 0.5,
+          barThickness: "flex",
+          minBarLength: 3,
+          barPercentage: 1,
+          categoryPercentage: 1,
+        },
+      ];
+      return { flat, chartFlat, valueRanks, datasets };
+    });
+    // Language-dependent: labels (per-call). The datasets ref is reused
+    // from the cached build, so chart.js sees the same datasets array
+    // even though the wrapping `data` object is fresh per call.
+    const labels = built.chartFlat.map((entry: any) => {
+      const rawKey = entry.key === OTHER_SENTINEL ? otherLabel : entry.key;
+      return JSON.stringify({
+        name: formatter(localizeUnknownKey(rawKey)),
+        share: format.share(entry.value, data.count.total),
+      });
+    });
+    return [built.flat, { labels, datasets: built.datasets }, built.valueRanks];
   };
   const calculateStatistics = (values: any) => {
     if (values.length === 0) {
@@ -439,55 +469,56 @@ const collectTopics = (
   };
 
   const collectYearMonth = (byYearMonth: any, daysInYearMonth: any) => {
-    const mapToChartData = (deep: any) => {
-      if (!deep || !deep.length) {
-        return {
-          labels: [],
-          datasets: [],
-        };
-      }
-      const colorGradients = color.colorGradient(
-        theme.get("header-background"),
-        theme.get("header-color"),
-        deep.length
-      );
-      return {
-        labels: [...Array(12).keys()].map((entry: any) =>
-          t(`month-long-${entry + 1}`)
-        ),
-        datasets: deep.map((entry: any, i: any) => {
-          return {
-            label: entry.key,
-            backgroundColor: colorGradients[i],
-            data: [...Array(12).keys()].map((month: any) => entry.value[month + 1]),
-            fill: true,
-            lineTension: 0.4,
-          };
-        }),
-      };
-    };
-    const deep = Object.keys(byYearMonth)
-      .sort((a: any, b: any) => a - b)
-      .map((year: any) => {
-        return {
-          key: year,
-          value: byYearMonth[year],
-        };
-      });
-    const data = mapToChartData(deep);
-    const flat = deep
-      .sort((a: any, b: any) => Number(b.key) - Number(a.key))
-      .flatMap((year: any) => {
-        return [...Array(12).keys()]
-          .sort((a: any, b: any) => b - a)
-          .filter((month: any) => `${month + 1}` in year.value)
-          .map((month: any) => {
-            return {
+    // Line chart datasets (one per year) are language-independent — only
+    // the 12 x-axis labels (month names) depend on the active language.
+    // Cache the datasets so they keep the same reference across language
+    // switches; produce fresh labels per call.
+    const built = getBuilt(byYearMonth, theme, () => {
+      const deep = Object.keys(byYearMonth)
+        .sort((a: any, b: any) => a - b)
+        .map((year: any) => ({ key: year, value: byYearMonth[year] }));
+      const datasets = deep.length
+        ? (() => {
+            const colorGradients = color.colorGradient(
+              theme.get("header-background"),
+              theme.get("header-color"),
+              deep.length
+            );
+            return deep.map((entry: any, i: any) => ({
+              label: entry.key,
+              backgroundColor: colorGradients[i],
+              data: [...Array(12).keys()].map(
+                (month: any) => entry.value[month + 1]
+              ),
+              fill: true,
+              lineTension: 0.4,
+            }));
+          })()
+        : [];
+      const flat = deep
+        .sort((a: any, b: any) => Number(b.key) - Number(a.key))
+        .flatMap((year: any) => {
+          return [...Array(12).keys()]
+            .sort((a: any, b: any) => b - a)
+            .filter((month: any) => `${month + 1}` in year.value)
+            .map((month: any) => ({
               key: [year.key, month + 1],
               value: year.value[month + 1],
-            };
-          });
-      });
+            }));
+        });
+      const valueRanks = collection.calculateRanks(flat, (_: any) =>
+        Number(_.value)
+      );
+      return { datasets, flat, valueRanks };
+    });
+    const data = {
+      labels: [...Array(12).keys()].map((entry: any) =>
+        t(`month-long-${entry + 1}`)
+      ),
+      datasets: built.datasets,
+    };
+    const flat = built.flat;
+    const valueRanks = built.valueRanks;
     const average = (value: any, year: any, month: any) => {
       if (
         !(year in daysInYearMonth) ||
@@ -503,7 +534,6 @@ const collectTopics = (
       return average(entry.value, year, month);
     });
     const { mean, stddev } = calculateStatistics(values);
-    const valueRanks = collection.calculateRanks(flat, (_: any) => Number(_.value));
     return {
       key: "year-month",
       title: t("stats-category-year-month"),
@@ -603,11 +633,19 @@ const collectTopics = (
     };
   };
   const collectWeekday = (byWeekday: any, total: any) => {
+    let shifted = transformedWeekdayCache.get(byWeekday);
+    if (!shifted) {
+      shifted = (collection.transformObjectKeys(
+        byWeekday,
+        (dow: any, value: any) => {
+          const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
+          return [key, value];
+        }
+      ) ?? {}) as object;
+      transformedWeekdayCache.set(byWeekday, shifted);
+    }
     const [flat, data, valueRanks] = transformData({
-      original: collection.transformObjectKeys(byWeekday, (dow: any, value: any) => {
-        const key = dow < config.FIRST_WEEKDAY ? Number(dow) + 7 : dow;
-        return [key, value];
-      }),
+      original: shifted,
       comparator: collection.numSortByFieldAsc("key"),
       formatter: (dow: any) => t(`weekday-long-${format.dayOfWeek(dow)}`),
       limit: 24,

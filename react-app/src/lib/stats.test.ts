@@ -1333,16 +1333,23 @@ describe("collectTopics — language stability", () => {
     }),
   ];
 
+  // Generate `data` once and share it across tests. The reference-equality
+  // assertion below requires the same `data` reference, since the
+  // build-phase cache in stats.tsx keys on rawBucket references (which
+  // come from `data.count.byFoo`).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const collect = async (lang: string): Promise<any> => {
+  let sharedData: any;
+  beforeAll(async () => {
     const photos = buildPhotos();
-    const data = await stats.generate(photos, {});
-    return stats.collectTopics(data, lang, mockT, mockCountryData, mockTheme);
-  };
+    sharedData = await stats.generate(photos, {});
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const collect = (lang: string): any =>
+    stats.collectTopics(sharedData, lang, mockT, mockCountryData, mockTheme);
 
-  test("chart datasets have identical numeric values across languages", async () => {
-    const en = await collect("en");
-    const fi = await collect("fi");
+  test("chart datasets have identical numeric values across languages", () => {
+    const en = collect("en");
+    const fi = collect("fi");
     expect(fi.length).toBe(en.length);
     for (let ti = 0; ti < en.length; ti++) {
       expect(fi[ti].key).toBe(en[ti].key);
@@ -1364,9 +1371,9 @@ describe("collectTopics — language stability", () => {
     }
   });
 
-  test("table row keys (encoded raw keys) are identical across languages", async () => {
-    const en = await collect("en");
-    const fi = await collect("fi");
+  test("table row keys (encoded raw keys) are identical across languages", () => {
+    const en = collect("en");
+    const fi = collect("fi");
     for (let ti = 0; ti < en.length; ti++) {
       for (let ci = 0; ci < en[ti].categories.length; ci++) {
         const enCat = en[ti].categories[ci];
@@ -1379,9 +1386,9 @@ describe("collectTopics — language stability", () => {
     }
   });
 
-  test("table standardScore values are identical across languages", async () => {
-    const en = await collect("en");
-    const fi = await collect("fi");
+  test("table standardScore values are identical across languages", () => {
+    const en = collect("en");
+    const fi = collect("fi");
     for (let ti = 0; ti < en.length; ti++) {
       for (let ci = 0; ci < en[ti].categories.length; ci++) {
         const enCat = en[ti].categories[ci];
@@ -1398,5 +1405,33 @@ describe("collectTopics — language stability", () => {
         }
       }
     }
+  });
+
+  // The actual #231 fix: chart.js receives the same `data.datasets`
+  // array reference across language switches, so it does a fast
+  // labels-only update instead of a full rebuild. Locks in the
+  // build-phase cache behaviour.
+  test("chart datasets array carries the same reference across languages", () => {
+    const en = collect("en");
+    const fi = collect("fi");
+    let chartsChecked = 0;
+    for (let ti = 0; ti < en.length; ti++) {
+      for (let ci = 0; ci < en[ti].categories.length; ci++) {
+        const enCat = en[ti].categories[ci];
+        const fiCat = fi[ti].categories[ci];
+        if (!enCat.charts) continue;
+        for (let chi = 0; chi < enCat.charts.length; chi++) {
+          // Reference equality, not just structural equality.
+          expect(fiCat.charts[chi].data.datasets).toBe(
+            enCat.charts[chi].data.datasets
+          );
+          chartsChecked++;
+        }
+      }
+    }
+    // Sanity: at least some charts were checked. Fixture has 2 photos
+    // across multiple categories — should be ≥20 chart specs across
+    // the 4 topics.
+    expect(chartsChecked).toBeGreaterThan(10);
   });
 });
