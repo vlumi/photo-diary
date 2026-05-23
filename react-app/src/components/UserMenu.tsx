@@ -15,20 +15,30 @@ const Root = styled.div`
   display: flex;
   align-items: center;
 `;
+// 40px wide so the tap target meets the usual accessibility floor on
+// mobile (the top menu's 25px height caps the vertical dimension; the
+// extra horizontal padding gives thumbs room). 1.4em font-size makes the
+// icon glyph itself larger so it's easier to see and aim for. Hover and
+// keyboard-focus paint a `--header-sub-color` background instead of
+// shifting the icon colour — the previous `color: var(--primary-color)`
+// hover blended into the header background on most themes and the icon
+// effectively disappeared.
 const IconButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  width: 40px;
   height: 25px;
   padding: 0;
   border: none;
   background: none;
   color: var(--header-color);
-  font-size: 1.1em;
+  font-size: 1.4em;
   cursor: pointer;
-  &:hover {
-    color: var(--primary-color);
+  transition: background 0.1s;
+  &:hover,
+  &:focus-visible {
+    background: var(--header-sub-color);
   }
 `;
 const Dropdown = styled.div`
