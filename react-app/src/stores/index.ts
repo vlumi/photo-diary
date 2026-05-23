@@ -2,3 +2,4 @@ export { useUserStore } from "./user";
 export { useLangStore } from "./lang";
 export { useFiltersStore } from "./filters";
 export { useScrollStore } from "./scroll";
+export { useNotificationsStore } from "./notifications";
