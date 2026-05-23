@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
 import token from "../lib/token";
@@ -86,6 +87,7 @@ const UserMenu = (): React.ReactElement => {
   const openLoginModal = useLoginModalStore((s) => s.open);
   const openChangePasswordModal = useChangePasswordModalStore((s) => s.open);
   const setUser = useUserStore((s) => s.setUser);
+  const queryClient = useQueryClient();
 
   const [isOpen, setIsOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -111,12 +113,19 @@ const UserMenu = (): React.ReactElement => {
   const handleLogout = () => {
     setIsOpen(false);
     // Order matters: clear the bearer before `setUser` so the React
-    // re-render's queries don't fire with the just-revoked token. Same
-    // sequence as `Logout.tsx`. localStorage is narrowed to the `user`
-    // key so the `lang` preference survives.
+    // re-render's queries don't fire with the just-revoked token.
+    // localStorage is narrowed to the `user` key so the `lang`
+    // preference survives.
     token.clearToken();
     window.localStorage.removeItem("user");
     setUser(undefined);
+    // Drop the access-derived caches under the previous user key so the
+    // re-render fetches the new (guest) view instead of leaving the
+    // previous identity's data on screen — galleries dropdown / map
+    // visibility / per-photo coords. This was on the deleted Logout.tsx
+    // and got lost when UserMenu inlined the logout handler in #182.
+    queryClient.invalidateQueries({ queryKey: ["galleries"] });
+    queryClient.invalidateQueries({ queryKey: ["gallery-photos"] });
   };
 
   if (!user) {
