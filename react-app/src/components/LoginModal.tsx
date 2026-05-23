@@ -48,6 +48,18 @@ const CloseButton = styled.button`
     color: var(--primary-color);
   }
 `;
+// Contextual banner used by the 401 handler (e.g. "session expired").
+// Lives inside the modal so the message is visible alongside the form
+// that resolves it — the toast strip sits behind the modal backdrop.
+const ContextMessage = styled.div`
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid #9b6c00;
+  background: #6b4a00;
+  color: #fef6e0;
+  border-radius: 4px;
+  font-size: 0.9em;
+`;
 
 // Floating login modal. Opens via the `useLoginModalStore` — either from
 // the explicit "Log in" button in the top menu, or automatically when the
@@ -59,6 +71,7 @@ const CloseButton = styled.button`
 const LoginModal = (): React.ReactElement | null => {
   const isOpen = useLoginModalStore((s) => s.isOpen);
   const close = useLoginModalStore((s) => s.close);
+  const message = useLoginModalStore((s) => s.message);
   const { t } = useTranslation();
 
   React.useEffect(() => {
@@ -94,6 +107,7 @@ const LoginModal = (): React.ReactElement | null => {
             ╳
           </CloseButton>
         </Header>
+        {message && <ContextMessage>{message}</ContextMessage>}
         <Login onSuccess={close} />
       </ModalBox>
     </Backdrop>

@@ -10,7 +10,7 @@ import tokenService from "../services/tokens";
 
 import { HttpError } from "../lib/api";
 import token from "../lib/token";
-import { useUserStore, useNotificationsStore } from "../stores";
+import { useUserStore } from "../stores";
 
 const Form = styled.form`
   display: flex;
@@ -41,6 +41,18 @@ const SubmitButton = styled.button`
     filter: brightness(1.15);
   }
 `;
+// Inline error pill rendered between the form and the submit button.
+// Login lives inside a modal whose backdrop visually hides the toast
+// strip, so wrong-credentials messages and the rate-limit hint go here
+// instead of `notify()` — the toast surface stays for non-login errors.
+const ErrorMessage = styled.div`
+  padding: 8px 12px;
+  border: 1px solid #a02020;
+  background: #7a1a1a;
+  color: #fee;
+  border-radius: 4px;
+  font-size: 0.9em;
+`;
 
 interface Props {
   // Modal wrapper closes itself on successful login.
@@ -51,10 +63,10 @@ interface Props {
 const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
   const [userId, setUserId] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState<string | undefined>(undefined);
 
   const { t } = useTranslation();
   const setUser = useUserStore((s) => s.setUser);
-  const notify = useNotificationsStore((s) => s.notify);
   const queryClient = useQueryClient();
 
   const login = async (userId: string, password: string) => {
@@ -76,8 +88,9 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
       // view of `/galleries` and `/gallery-photos`.
       queryClient.invalidateQueries({ queryKey: ["galleries"] });
       queryClient.invalidateQueries({ queryKey: ["gallery-photos"] });
+      setError(undefined);
       onSuccess?.();
-    } catch (error) {
+    } catch (err) {
       token.clearToken();
       // Only the `user` key is auth state — the `lang` preference and
       // anything else live alongside but aren't tied to login, so the
@@ -91,16 +104,17 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
       // user not found, network blip) gets the vague `Invalid username
       // or password` so the response doesn't help an attacker
       // distinguish "bad password for real user" from "unknown user".
-      if (error instanceof HttpError && error.response.status === 429) {
-        notify("warning", t("login-rate-limited"));
+      if (err instanceof HttpError && err.response.status === 429) {
+        setError(t("login-rate-limited"));
       } else {
-        notify("error", t("login-failed"));
+        setError(t("login-failed"));
       }
     }
   };
 
   const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
+    setError(undefined);
     login(userId, password);
     setPassword("");
   };
@@ -124,6 +138,7 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
         placeholder={t("login-password")}
         onChange={({ target }) => setPassword(target.value)}
       />
+      {error && <ErrorMessage role="alert">{error}</ErrorMessage>}
       <SubmitButton type="submit">{t("login")}</SubmitButton>
     </Form>
   );

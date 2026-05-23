@@ -53,7 +53,9 @@ const TopMenu = (): React.ReactElement => {
         ) : (
           <>
             <TopMenuLang />
-            <TopMenuButton onClick={openLoginModal}>{t("login")}</TopMenuButton>
+            <TopMenuButton onClick={() => openLoginModal()}>
+              {t("login")}
+            </TopMenuButton>
           </>
         )}
       </Container>
