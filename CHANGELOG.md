@@ -5,6 +5,7 @@
 ### Frontend
 
 - Merge the standalone Day view into Month — navigating to `/g/<gallery>/<year>/<month>/<day>` now renders the whole Month with that day's `DayTitle` highlighted and scrolled into view, rather than a dedicated per-day page. Shared/bookmarked day URLs still work; the calendar hierarchy collapses from Year → Month → Day → Photo to Year → Month → Photo, matching how Photo's up-nav already skipped the Day view.
+- Ship six new built-in themes alongside the existing five: `dark` (true dark mode), `amoled` (pure-black background for OLED screens), `sepia` (warm cream + sepia-filtered photos for a vintage feel), `forest` (earthy green), `silver` (cool slate-gray), and `showcase` (museum-wall dark backdrop with muted chrome so the photos pop). Themes are picked via `DEFAULT_THEME` in `.env` or per-gallery `theme` column on the `gallery` row.
 
 ## [0.9.1] - 2026-05-23
 
