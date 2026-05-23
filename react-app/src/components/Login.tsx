@@ -10,7 +10,7 @@ import tokenService from "../services/tokens";
 
 import { HttpError } from "../lib/api";
 import token from "../lib/token";
-import { useUserStore } from "../stores";
+import { useUserStore, useNotificationsStore } from "../stores";
 
 const Form = styled.form`
   display: flex;
@@ -67,6 +67,7 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
 
   const { t } = useTranslation();
   const setUser = useUserStore((s) => s.setUser);
+  const notify = useNotificationsStore((s) => s.notify);
   const queryClient = useQueryClient();
 
   const login = async (userId: string, password: string) => {
@@ -90,6 +91,11 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
       queryClient.invalidateQueries({ queryKey: ["gallery-photos"] });
       setError(undefined);
       onSuccess?.();
+      // Success toast fires after the modal closes (onSuccess closes it),
+      // so the user sees it on the now-uncovered backdrop. The toast
+      // surface is the right fit here — there's no longer a form to
+      // attach an inline confirmation to.
+      notify("success", t("login-success", { userId: user.id() }));
     } catch (err) {
       token.clearToken();
       // Only the `user` key is auth state — the `lang` preference and
