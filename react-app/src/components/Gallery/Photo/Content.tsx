@@ -27,6 +27,13 @@ const Frame = styled("span", {
   flex-shrink: 0;
   width: ${(props) => props.$width}px;
   height: ${(props) => props.$height}px;
+`;
+// Clipping happens at the matte's inner edge (not the frame's outer
+// edge) so a zoomed image extends behind the matte, not over it.
+const ImageClip = styled.span`
+  display: block;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 `;
 // `touch-action: none` so the browser's default pinch/pan/swipe handling
@@ -267,25 +274,27 @@ const Content = ({
   return (
     <Root>
       <Frame ref={frameRef} $width={width} $height={height}>
-        <Image
-          src={path}
-          alt={photo.id()}
-          width={width}
-          height={height}
-          $scale={zoom.scale}
-          $x={zoom.x}
-          $y={zoom.y}
-          $grabbing={grabbing}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchEnd}
-          draggable={false}
-        />
+        <ImageClip>
+          <Image
+            src={path}
+            alt={photo.id()}
+            width={width}
+            height={height}
+            $scale={zoom.scale}
+            $x={zoom.x}
+            $y={zoom.y}
+            $grabbing={grabbing}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+            draggable={false}
+          />
+        </ImageClip>
       </Frame>
     </Root>
   );
