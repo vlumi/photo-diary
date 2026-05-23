@@ -99,7 +99,6 @@ const clampOffset = (
 const WHEEL_STEP = 1.1;
 const MIN_SCALE = 1;
 const MAX_SCALE = 8;
-const FRAME_PADDING = 10;
 const clampScale = (s: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, s));
 
 const touchDistance = (a: React.Touch, b: React.Touch): number =>
@@ -190,12 +189,12 @@ const Content = ({
   );
   // The frame grows to the full available viewport once zoomed in, so
   // a portrait photo on a landscape screen can use the side margins for
-  // the zoomed-in pixels instead of wasting them.
+  // the zoomed-in pixels instead of wasting them. Frame uses CSS
+  // `content-box`, so `width` already refers to the content area
+  // (= the clipping rectangle inside the matte).
   const isZoomed = zoom.scale > 1;
   const frameWidth = isZoomed ? maxAvailWidth : imageWidth;
   const frameHeight = isZoomed ? maxAvailHeight : imageHeight;
-  const frameContentWidth = frameWidth - 2 * FRAME_PADDING;
-  const frameContentHeight = frameHeight - 2 * FRAME_PADDING;
 
   // Latest dimensions in a ref so the wheel useEffect (registered once)
   // always reads the current values for clamp + anchor math.
@@ -230,11 +229,8 @@ const Content = ({
         const nextX = anchoredTranslate(anchorX, z.x, z.scale, nextScale);
         const nextY = anchoredTranslate(anchorY, z.y, z.scale, nextScale);
         const sz = sizeRef.current;
-        const nextFrameW =
-          (nextScale > 1 ? sz.maxAvailWidth : sz.imageWidth) - 2 * FRAME_PADDING;
-        const nextFrameH =
-          (nextScale > 1 ? sz.maxAvailHeight : sz.imageHeight) -
-          2 * FRAME_PADDING;
+        const nextFrameW = nextScale > 1 ? sz.maxAvailWidth : sz.imageWidth;
+        const nextFrameH = nextScale > 1 ? sz.maxAvailHeight : sz.imageHeight;
         return {
           scale: nextScale,
           x: clampOffset(nextX, sz.imageWidth * nextScale, nextFrameW),
@@ -272,12 +268,12 @@ const Content = ({
       x: clampOffset(
         dragRef.current!.baseX + dx,
         imageWidth * z.scale,
-        frameContentWidth
+        frameWidth
       ),
       y: clampOffset(
         dragRef.current!.baseY + dy,
         imageHeight * z.scale,
-        frameContentHeight
+        frameHeight
       ),
     }));
   };
@@ -342,10 +338,8 @@ const Content = ({
         pinchRef.current.startScale,
         nextScale
       );
-      const nextFrameW =
-        (nextScale > 1 ? maxAvailWidth : imageWidth) - 2 * FRAME_PADDING;
-      const nextFrameH =
-        (nextScale > 1 ? maxAvailHeight : imageHeight) - 2 * FRAME_PADDING;
+      const nextFrameW = nextScale > 1 ? maxAvailWidth : imageWidth;
+      const nextFrameH = nextScale > 1 ? maxAvailHeight : imageHeight;
       setZoom({
         scale: nextScale,
         x: clampOffset(nextX, imageWidth * nextScale, nextFrameW),
@@ -360,12 +354,12 @@ const Content = ({
         x: clampOffset(
           dragRef.current!.baseX + dx,
           imageWidth * z.scale,
-          frameContentWidth
+          frameWidth
         ),
         y: clampOffset(
           dragRef.current!.baseY + dy,
           imageHeight * z.scale,
-          frameContentHeight
+          frameHeight
         ),
       }));
     }
