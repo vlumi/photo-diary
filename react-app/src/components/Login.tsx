@@ -10,8 +10,9 @@ import UserModel from "../models/UserModel";
 
 import tokenService from "../services/tokens";
 
+import { HttpError } from "../lib/api";
 import token from "../lib/token";
-import { useUserStore } from "../stores";
+import { useUserStore, useNotificationsStore } from "../stores";
 
 const Form = styled.form``;
 const Input = styled.input`
@@ -31,6 +32,7 @@ const Login = (): React.ReactElement => {
 
   const { t } = useTranslation();
   const setUser = useUserStore((s) => s.setUser);
+  const notify = useNotificationsStore((s) => s.notify);
   const queryClient = useQueryClient();
 
   const login = async (userId: string, password: string) => {
@@ -52,14 +54,25 @@ const Login = (): React.ReactElement => {
       // view of `/galleries` and `/gallery-photos`.
       queryClient.invalidateQueries({ queryKey: ["galleries"] });
       queryClient.invalidateQueries({ queryKey: ["gallery-photos"] });
-    } catch (_error) {
+    } catch (error) {
       token.clearToken();
       // Only the `user` key is auth state — the `lang` preference and
       // anything else live alongside but aren't tied to login, so the
       // previous `localStorage.clear()` here was a privacy/UX overreach.
       window.localStorage.removeItem("user");
       setUser(undefined);
-      // TODO: notify user
+      // 429 is the only failure mode whose specific cause is useful to
+      // surface — `Too many failed attempts` is actionable (wait + try
+      // later), and the rate-limit branch was already public on the
+      // unauthenticated endpoint anyway. Everything else (bad creds,
+      // user not found, network blip) gets the vague `Invalid username
+      // or password` so the response doesn't help an attacker
+      // distinguish "bad password for real user" from "unknown user".
+      if (error instanceof HttpError && error.response.status === 429) {
+        notify("warning", t("login-rate-limited"));
+      } else {
+        notify("error", t("login-failed"));
+      }
     }
   };
 

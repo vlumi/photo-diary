@@ -5,6 +5,8 @@
 
     "login": "Kirjaudu sisään",
     "logout": "Kirjaudu ulos",
+    "login-failed": "Virheellinen käyttäjätunnus tai salasana",
+    "login-rate-limited": "Liian monta epäonnistunutta kirjautumisyritystä. Yritä myöhemmin uudelleen.",
 
     "nav-galleries": "Galleriat",
     "nav-gallery-top": "Palaa alkuun",

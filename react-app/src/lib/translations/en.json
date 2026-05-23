@@ -5,6 +5,8 @@
 
     "login": "Login",
     "logout": "Logout",
+    "login-failed": "Invalid username or password",
+    "login-rate-limited": "Too many failed login attempts. Try again later.",
 
     "nav-galleries": "Galleries",
     "nav-gallery-top": "Back to top",

@@ -5,6 +5,8 @@
 
     "login": "ログイン",
     "logout": "ログアウト",
+    "login-failed": "ユーザー名またはパスワードが違います",
+    "login-rate-limited": "ログイン試行回数が多すぎます。しばらくしてからもう一度お試しください。",
 
     "nav-galleries": "ギャラリー",
     "nav-gallery-top": "トップへ",

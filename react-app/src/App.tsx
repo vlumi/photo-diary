@@ -13,6 +13,7 @@ import "./App.css";
 import ScrollToPosition from "./components/ScrollToPosition";
 import TopMenu from "./components/TopMenu";
 import Gallery from "./components/Gallery";
+import Notifications from "./components/Notifications";
 
 import { useLangStore } from "./stores";
 
@@ -39,6 +40,7 @@ const App = (): React.ReactElement => {
       <title>Photo diary</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="robots" content="noindex" />
+      <Notifications />
       <TopMenu />
       <Router>
         <ScrollToPosition>
