@@ -19,6 +19,7 @@ type ThemeName =
 //   header-color         text on header bands (top menu, day-title column)
 //   header-sub-color     secondary text on header bands
 //   header-background    background of header bands
+//   tile-background      background of the Year view's month tiles (distinct from page bg so tiles read as cards)
 //   photo-frame-mat      matte colour around the photo (intentionally neutral, not theme-tinted)
 //   photo-frame-border   thin border between matte and photo (neutral)
 //   filter               CSS filter applied to the photos themselves (grayscale, sepia, ...)
@@ -29,6 +30,7 @@ type ThemeKey =
   | "header-color"
   | "header-sub-color"
   | "header-background"
+  | "tile-background"
   | "photo-frame-mat"
   | "photo-frame-border"
   | "filter";
@@ -55,6 +57,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#ddf",
     "header-background": "#004",
+    "tile-background": "#fff",
     ...FRAME_LIGHT,
     filter: "none",
   },
@@ -65,6 +68,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#f0e3e3",
     "header-background": "#4a1424",
+    "tile-background": "#fff",
     ...FRAME_LIGHT,
     filter: "none",
   },
@@ -75,6 +79,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#ddd",
     "header-background": "#444",
+    "tile-background": "#fff",
     ...FRAME_LIGHT,
     filter: "grayscale(100%)",
   },
@@ -88,6 +93,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#ddd",
     "header-background": "#000",
+    "tile-background": "#fff",
     ...FRAME_LIGHT,
     filter: "none",
   },
@@ -100,6 +106,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#ff6",
     "header-sub-color": "#ddd",
     "header-background": "#f00",
+    "tile-background": "#ff6",
     ...FRAME_LIGHT,
     filter: "none",
   },
@@ -110,6 +117,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#aaa",
     "header-background": "#2a2a2a",
+    "tile-background": "#2a2a2a",
     ...FRAME_DARK,
     filter: "none",
   },
@@ -120,6 +128,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#aaa",
     "header-background": "#000",
+    "tile-background": "#1a1a1a",
     ...FRAME_DARK,
     filter: "none",
   },
@@ -130,6 +139,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#e8f0e6",
     "header-background": "#1e3a2a",
+    "tile-background": "#fff",
     ...FRAME_LIGHT,
     filter: "none",
   },
@@ -141,6 +151,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#2a3540",
     "header-sub-color": "#6a7580",
     "header-background": "#d4dadf",
+    "tile-background": "#fff",
     ...FRAME_LIGHT,
     filter: "none",
   },
@@ -153,6 +164,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#888",
     "header-sub-color": "#666",
     "header-background": "#0a0a0a",
+    "tile-background": "#1f1f1f",
     ...FRAME_DARK,
     filter: "none",
   },
@@ -163,6 +175,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#fff",
     "header-sub-color": "#e0eef0",
     "header-background": "#114040",
+    "tile-background": "#fff",
     ...FRAME_LIGHT,
     filter: "none",
   },
@@ -175,6 +188,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-color": "#3a2e20",
     "header-sub-color": "#8a7a60",
     "header-background": "#ece1ce",
+    "tile-background": "#fefaf0",
     ...FRAME_LIGHT,
     filter: "none",
   },

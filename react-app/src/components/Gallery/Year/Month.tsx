@@ -28,7 +28,7 @@ const Root = styled.div`
   border-style: solid;
   border-width: 1px;
   border-radius: 10px;
-  background-color: var(--header-color);
+  background-color: var(--tile-background);
   overflow: hidden;
 `;
 const MonthTitle = styled.h3`
