@@ -390,19 +390,21 @@ The pipeline is intentionally split: the converter doesn't touch the DB at all, 
 
 Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- [**0.10 — Browsing UX polish**](https://github.com/vlumi/photo-diary/milestone/12): full-screen map layer (#41), touch-tracking swipe navigation (#175), faster language switch on Stats (#231), server-side token revocation (#256).
-- [**0.11 — Converter standalone improvements**](https://github.com/vlumi/photo-diary/milestone/13): reverse-geocode coordinates into a default place name (#246).
-- [**0.12 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), converter writes the photo row directly to the DB (#223), inbox subdirectories auto-link to galleries (#245), per-language place names (#247).
-- [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261).
+- [**0.10 — UI/UX polish**](https://github.com/vlumi/photo-diary/milestone/12): full-screen map layer (#41), touch-tracking swipe navigation (#175), Stats language-switch slowness (#231 + server-side stats #286), server-side logout via refresh tokens (#256), Stats layout overhaul (#273), Day-view role (#274), photo-view up-navigation (#275), photo-view as modal over Month/Day (#276), photo-view controlled zoom (#277), map collapsed to a modal (#278), more built-in themes (#279).
+- [**0.11 — Converter + operator ergonomics**](https://github.com/vlumi/photo-diary/milestone/13): reverse-geocode coordinates into a default place name (#246), `bin/meta.ts` operator script (#269), converter filename-collision policy (#272), `instance.ts` output polish (#284).
+- [**0.12 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), converter writes the photo row directly to the DB (#223), inbox subdirectories auto-link to galleries (#245), per-language place names (#247), ACL user groups (#270), ACL `:all` floor rule (#271), admin theme selector (#287).
+- [**0.13 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), saved filters / sub-galleries (#285), Postgres driver alongside SQLite (#265).
+- [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283).
 
 ## Backlog
 
 Ideas without a milestone yet — too far out to schedule, kept here so they don't get lost.
 
-- **Hybrid galleries** (#22) — union/filtered virtual galleries. Parked post-1.0 pending data-model and ACL-composition decisions.
 - **Dynamic display sizes** (#262) — pick the smallest rendition that covers the viewport, `srcset`-style.
 - **Photo license + original-size download** (#263) — license metadata on the photo row + a gated download path for `original/` bytes.
-- **Filter UX: range + radius filters** (#264) — range filters for time/exposure, coordinate filter within a radius.
-- **Alternate DB drivers** (#265) — PostgreSQL is the obvious second backend; MySQL/MongoDB further out.
+- **Range filters for continuous variables** (#264) — time, focal length, aperture, etc. Coordinate-radius dropped in favour of place-categorical filtering after #246.
+- **Non-calendar gallery view** (#280) — alternative renderer for galleries that aren't date-shaped.
+- **Content localization for photo metadata** (#281) — per-language titles/captions/place names; manual-entry friction is the real blocker.
+- **Release-themes README history** (#282) — small narrative section for past major milestones.
 
 ## [Version History](CHANGELOG.md)
