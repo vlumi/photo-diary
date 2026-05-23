@@ -12,12 +12,10 @@ import type { Gallery } from "../../../models/GalleryModel";
 
 type ActiveTheme = { get: (name: string) => string };
 
-// The whole month tile is wrapped in a single Link to the Month view —
-// `./Day.tsx`'s per-day cells render the day number only, so this is the
-// only navigation surface out of the Year view. `display: block` so the
-// inline `<a>` lays out as a tile, and `color: inherit; text-decoration:
-// none` so the wrapped content keeps the existing visual styling rather
-// than picking up the browser's default link styling.
+// `display: block` so the inline `<a>` lays out as a tile, and
+// `color: inherit; text-decoration: none` so the wrapped content keeps
+// its existing visual styling instead of picking up the browser's link
+// defaults.
 const MonthLink = styled(Link)`
   display: block;
   color: inherit;

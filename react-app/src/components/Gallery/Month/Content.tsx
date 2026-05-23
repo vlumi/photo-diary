@@ -64,11 +64,8 @@ const Content = ({
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
-  // Scroll the highlighted day into view when arriving on `/g/.../<day>`.
-  // Wrapped in `requestAnimationFrame` to fire after the macrotask queue,
-  // which means it lands *after* `ScrollToPosition`'s `setTimeout(0)` in
-  // [App.tsx](../../App.tsx) (which would otherwise reset us to the
-  // store's saved scroll position and silently undo this jump).
+  // RAF defers past ScrollToPosition's setTimeout(0) — without that delay
+  // the parent's scroll restore fires last and undoes this jump.
   React.useEffect(() => {
     if (!day) return;
     const handle = requestAnimationFrame(() => {
@@ -128,12 +125,9 @@ const Content = ({
     }
   };
 
-  // Clicking a DayTitle toggles the day in the URL: highlighting a new
-  // day adds it, clicking the already-highlighted day's title removes
-  // it (drops back to `/g/.../<year>/<month>`). `skipScrollRestore`
-  // keeps `<ScrollToPosition>` from snapping the page to 0 during the
-  // toggle — we already know what we want to do with the scroll (jump
-  // to the new day for an "add", stay put for a "remove").
+  // `skipScrollRestore` opts the toggle out of ScrollToPosition — we
+  // handle the scroll ourselves above and don't want a flash to top
+  // between click and our scrollIntoView.
   const renderDay = (d: number) => {
     const isHighlighted = d === day;
     const linkDay = isHighlighted ? undefined : d;

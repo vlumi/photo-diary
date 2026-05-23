@@ -10,13 +10,8 @@ interface CountryData {
   getName(code: string, lang: string): string | undefined;
 }
 
-// Each photo gets its own `<Root>` (so the outer `flex-wrap` can break
-// between photos as the viewport narrows). `$highlighted` tints every
-// such Root for the day being highlighted — `color-mix` produces a
-// semi-transparent primary-color band that reads as "this group of
-// thumbnails belongs to the highlighted day" across the wrap, without
-// needing to restructure the layout to nest the day's photos under a
-// single wrapper.
+// `color-mix` because no theme variable is bright enough to read as
+// "highlighted" against arbitrary thumbnail backgrounds.
 const Root = styled.div<{ $highlighted?: boolean }>`
   vertical-align: top;
   display: flex;

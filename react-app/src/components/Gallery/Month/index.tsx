@@ -27,10 +27,6 @@ interface Props {
   countryData: CountryData;
 }
 
-// `day` is purely a scroll/highlight anchor — every interaction (prev/next,
-// Escape) still operates at the month level. Landing on
-// `/g/.../<year>/<month>/<day>` renders the whole Month with that day's
-// thumbnails scrolled into view and the DayTitle visually marked.
 const Month = ({
   children,
   gallery,

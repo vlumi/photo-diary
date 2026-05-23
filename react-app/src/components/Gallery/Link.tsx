@@ -4,11 +4,6 @@ import { Link as ReactLink } from "react-router-dom";
 import type { Gallery } from "../../models/GalleryModel";
 import type { Photo } from "../../models/PhotoModel";
 
-// `state` is forwarded to react-router's Link.state so callers can pass
-// route-level metadata (e.g. `{ skipScrollRestore: true }`, which
-// `<ScrollToPosition>` checks to leave the scroll position alone). Kept
-// as a generic record so adding a new flag doesn't require touching this
-// file.
 interface Props {
   children: React.ReactNode;
   className?: string;

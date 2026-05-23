@@ -7,12 +7,9 @@ interface Props {
   children?: React.ReactNode;
 }
 
-// Callers that handle scroll themselves (e.g. Month's day-highlight
-// scroll-into-view) pass `state: { skipScrollRestore: true }` on their
-// `<Link>`. Without that opt-out, the default `setTimeout(0)` here would
-// race against the caller's own scroll logic — for the Day URL case,
-// jumping the page to 0 first and then forcing the caller to scroll
-// back, producing a visible flash to top.
+// `state.skipScrollRestore` lets callers that handle scroll themselves
+// opt out — otherwise our setTimeout(0) snaps to the saved position and
+// undoes whatever the caller just did.
 const ScrollToPosition = ({ children }: Props): React.ReactElement => {
   const location = useLocation();
   const get = useScrollStore((s) => s.get);
