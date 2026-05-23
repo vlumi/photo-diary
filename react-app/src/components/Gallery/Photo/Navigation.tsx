@@ -6,6 +6,8 @@ import {
   BsFillCalendarFill,
   BsCaretRightFill,
   BsSkipForwardFill,
+  BsArrowsFullscreen,
+  BsFullscreenExit,
 } from "react-icons/bs";
 
 import Root from "../Navigation";
@@ -27,6 +29,30 @@ const TitleContainer = styled.div`
 const Title = styled.span`
   margin: 0 5px;
 `;
+const FullscreenButton = styled.button`
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+`;
+
+// Fullscreen API isn't supported in iOS Safari for arbitrary elements
+// (only video) — surface the toggle only where it actually works.
+const fullscreenSupported = (): boolean =>
+  typeof document !== "undefined" && document.fullscreenEnabled === true;
+
+const toggleFullScreen = () => {
+  if (!document.fullscreenElement) {
+    document.getElementById("root")?.requestFullscreen();
+  } else if (document.exitFullscreen) {
+    document.exitFullscreen();
+  }
+};
 
 interface Props {
   gallery: Gallery;
@@ -45,6 +71,16 @@ const Navigation = ({
   photo,
   lang,
 }: Props): React.ReactElement => {
+  const [isFullscreen, setIsFullscreen] = React.useState(
+    typeof document !== "undefined" && !!document.fullscreenElement
+  );
+  React.useEffect(() => {
+    if (!fullscreenSupported()) return;
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
 
@@ -93,6 +129,15 @@ const Navigation = ({
       <NavLink gallery={gallery} photo={lastPhoto} $visibility={nextVisibility}>
         <BsSkipForwardFill />
       </NavLink>
+      {fullscreenSupported() && (
+        <FullscreenButton
+          type="button"
+          onClick={toggleFullScreen}
+          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+        >
+          {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
+        </FullscreenButton>
+      )}
     </Root>
   );
 };

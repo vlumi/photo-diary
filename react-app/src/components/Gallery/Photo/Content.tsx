@@ -29,7 +29,10 @@ const Frame = styled("span", {
   height: ${(props) => props.$height}px;
   overflow: hidden;
 `;
-// `will-change: transform` so the GPU compositor handles the scale/pan
+// `touch-action: none` so the browser's default pinch/pan/swipe handling
+// doesn't fight our touch handlers — without it, the iOS browser
+// intercepts two-finger pinch as page zoom and our handlers never fire.
+// `will-change: transform` so the GPU compositor handles live scale/pan
 // without re-rasterising on every frame.
 const Image = styled("img", {
   shouldForwardProp: (prop) =>
@@ -42,9 +45,10 @@ const Image = styled("img", {
   transform-origin: center center;
   will-change: transform;
   cursor: ${(props) =>
-    props.$scale > 1 ? (props.$grabbing ? "grabbing" : "grab") : "zoom-in"};
+    props.$scale > 1 ? (props.$grabbing ? "grabbing" : "grab") : "auto"};
   user-select: none;
   -webkit-user-drag: none;
+  touch-action: none;
 `;
 
 const calculateWidth = (
@@ -70,19 +74,9 @@ const calculateHeight = (
   return Math.floor(maxWidth / photoRatio);
 };
 
-const toggleFullScreen = () => {
-  if (!document.fullscreenElement) {
-    document.getElementById("root")?.requestFullscreen();
-  } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    }
-  }
-};
-
 // At scale S the rendered image is S× the frame dimensions, so the pan
 // offset can go up to ±(S - 1) × dim / 2 in each axis before the image
-// edge crosses into the frame.
+// edge crosses into the frame interior.
 const clampOffset = (
   offset: number,
   scale: number,
@@ -98,9 +92,8 @@ const MIN_SCALE = 1;
 const MAX_SCALE = 8;
 const clampScale = (s: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, s));
 
-// Treat the post-drag click as a no-op (so full-screen toggle doesn't
-// fire) only when the pointer actually moved a meaningful distance.
-const CLICK_VS_DRAG_THRESHOLD_PX = 5;
+const touchDistance = (a: React.Touch, b: React.Touch): number =>
+  Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
 
 interface Props {
   gallery: Gallery;
@@ -139,11 +132,10 @@ const Content = ({
     baseX: number;
     baseY: number;
   } | null>(null);
-  // Survives mouseup→click. Browsers fire `click` after `mouseup` even
-  // when there was significant motion in between, so we need to remember
-  // "last gesture was a drag" past the mouseup-time cleanup of dragRef.
-  // Reset at mousedown for the next gesture.
-  const draggedRef = React.useRef(false);
+  const pinchRef = React.useRef<{
+    startDistance: number;
+    startScale: number;
+  } | null>(null);
   const [grabbing, setGrabbing] = React.useState(false);
 
   if (!gallery.includesPhoto(year, month, day, photo)) {
@@ -172,7 +164,6 @@ const Content = ({
     const factor = e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
     setZoom((z) => {
       const nextScale = clampScale(z.scale * factor);
-      // Re-clamp pan offsets — zooming out can shrink the allowed range.
       return {
         scale: nextScale,
         x: clampOffset(z.x, nextScale, width),
@@ -182,7 +173,6 @@ const Content = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
-    draggedRef.current = false;
     if (zoom.scale <= 1) return;
     e.preventDefault();
     dragRef.current = {
@@ -197,12 +187,6 @@ const Content = ({
     if (!dragRef.current) return;
     const dx = e.clientX - dragRef.current.startClientX;
     const dy = e.clientY - dragRef.current.startClientY;
-    if (
-      Math.abs(dx) > CLICK_VS_DRAG_THRESHOLD_PX ||
-      Math.abs(dy) > CLICK_VS_DRAG_THRESHOLD_PX
-    ) {
-      draggedRef.current = true;
-    }
     setZoom((z) => ({
       scale: z.scale,
       x: clampOffset(dragRef.current!.baseX + dx, z.scale, width),
@@ -219,16 +203,54 @@ const Content = ({
       dragRef.current = null;
     }
   };
-  // Suppress full-screen toggle when this click is the tail of a drag —
-  // browsers fire `click` after `mouseup` even with significant motion.
-  const handleClick = (e: React.MouseEvent<HTMLImageElement>) => {
-    if (draggedRef.current) {
-      draggedRef.current = false;
-      e.preventDefault();
-      e.stopPropagation();
-      return;
+
+  // Two fingers → pinch zoom (scale relative to initial distance).
+  // One finger when already zoomed → drag-to-pan.
+  // One finger at scale 1 → no-op here; the parent <Swipeable> handles
+  // swipe-to-next/prev.
+  const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length === 2) {
+      pinchRef.current = {
+        startDistance: touchDistance(e.touches[0], e.touches[1]),
+        startScale: zoom.scale,
+      };
+      dragRef.current = null;
+    } else if (e.touches.length === 1 && zoom.scale > 1) {
+      const t = e.touches[0];
+      dragRef.current = {
+        startClientX: t.clientX,
+        startClientY: t.clientY,
+        baseX: zoom.x,
+        baseY: zoom.y,
+      };
     }
-    toggleFullScreen();
+  };
+  const handleTouchMove = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length === 2 && pinchRef.current) {
+      const newDistance = touchDistance(e.touches[0], e.touches[1]);
+      const nextScale = clampScale(
+        pinchRef.current.startScale *
+          (newDistance / pinchRef.current.startDistance)
+      );
+      setZoom((z) => ({
+        scale: nextScale,
+        x: clampOffset(z.x, nextScale, width),
+        y: clampOffset(z.y, nextScale, height),
+      }));
+    } else if (e.touches.length === 1 && dragRef.current) {
+      const t = e.touches[0];
+      const dx = t.clientX - dragRef.current.startClientX;
+      const dy = t.clientY - dragRef.current.startClientY;
+      setZoom((z) => ({
+        scale: z.scale,
+        x: clampOffset(dragRef.current!.baseX + dx, z.scale, width),
+        y: clampOffset(dragRef.current!.baseY + dy, z.scale, height),
+      }));
+    }
+  };
+  const handleTouchEnd = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length < 2) pinchRef.current = null;
+    if (e.touches.length === 0) dragRef.current = null;
   };
 
   return (
@@ -243,11 +265,14 @@ const Content = ({
           $x={zoom.x}
           $y={zoom.y}
           $grabbing={grabbing}
-          onClick={handleClick}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
           draggable={false}
         />
       </Frame>
