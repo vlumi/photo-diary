@@ -54,6 +54,16 @@ const Stats = ({
     stats.generate(photos, uniqueValues).then((stats) => setData(stats));
   }, [photos, uniqueValues]);
 
+  // Memoize so unrelated re-renders (filter UI ticks, parent prop changes
+  // that don't touch data/lang/theme) don't re-run the topic build —
+  // which currently fans out into ~30 chart-data objects and table-row
+  // arrays. Step 1 of the #231 fix; chart-data stability across `lang`
+  // switches comes in a follow-up that splits collectTopics internally.
+  const topics = React.useMemo(
+    () => (data ? stats.collectTopics(data, lang, t, countryData, theme) : []),
+    [data, lang, t, countryData, theme]
+  );
+
   if (!data) {
     return (
       <>
@@ -74,17 +84,15 @@ const Stats = ({
     <>
       {children}
       <Root>
-        {stats
-          .collectTopics(data, lang, t, countryData, theme)
-          .map((topic) => (
-            <Topic
-              key={topic.key}
-              topic={topic}
-              filters={filters}
-              setFilters={setFilters}
-              theme={theme}
-            />
-          ))}
+        {topics.map((topic) => (
+          <Topic
+            key={topic.key}
+            topic={topic}
+            filters={filters}
+            setFilters={setFilters}
+            theme={theme}
+          />
+        ))}
         {renderMap(mapPhotos)}
       </Root>
     </>
