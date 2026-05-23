@@ -183,12 +183,12 @@ describe("PUT /users/self/password", () => {
       .expect(403);
   });
 
-  test("Wrong current password is rejected with 401", async () => {
+  test("Wrong current password is rejected with 422 (body problem, not session)", async () => {
     const token = await loginUser(api, "admin");
     await changePassword(
       token,
       { currentPassword: "wrong", newPassword: "new-secret-123" },
-      401
+      422
     );
   });
 

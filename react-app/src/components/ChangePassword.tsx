@@ -99,7 +99,11 @@ const ChangePassword = ({ onSuccess }: Props): React.ReactElement => {
       onSuccess?.();
       notify("success", t("change-password-success"));
     } catch (err) {
-      if (err instanceof HttpError && err.response.status === 401) {
+      // 422 = the server says the body is wrong (we only send the wrong-
+      // current case from this form), distinct from a 401 which would
+      // mean the session itself stopped working. The latter is handled
+      // by the global handler in `lib/api.ts`.
+      if (err instanceof HttpError && err.response.status === 422) {
         setError(t("change-password-wrong-current"));
       } else {
         setError(t("change-password-failed"));

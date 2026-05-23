@@ -2,7 +2,7 @@
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcrypt";
 
-import { LoginError, NotImplementedError } from "../lib/errors.js";
+import { NotImplementedError, ValidationError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -60,7 +60,11 @@ const changePassword = async (
   const match = await bcrypt.compare(currentPassword, user.password);
   if (!match) {
     logger.debug(`Current password mismatch for "${userId}"`);
-    throw new LoginError();
+    // 422 (not 401) — the bearer token is still valid, the user IS
+    // authenticated, the *body* is what's wrong. Returning 401 here would
+    // trip the SPA's global session-expired handler and kick the user out
+    // of their otherwise-fine session.
+    throw new ValidationError("Current password is incorrect");
   }
   const newHash = await bcrypt.hash(newPassword, 10);
   const newSecret = randomBytes(32).toString("hex");
