@@ -15,7 +15,6 @@ import Empty from "./Empty";
 import Full from "./Full";
 import Year from "./Year";
 import Month from "./Month";
-import Day from "./Day";
 // `Stats` and `Photo` are the two big subtrees by bundle weight (Stats pulls
 // in the aggregate-charts logic; Photo pulls in `react-leaflet` for the
 // per-photo map). React.lazy puts each in its own chunk so a user browsing
@@ -398,12 +397,17 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
         </Year>
       );
     }
-    if (!day) {
+    // Month renders the same view whether or not a `day` is in the URL.
+    // When `day` is set, it scrolls that day's thumbnails into view and
+    // visually highlights the DayTitle; the per-day standalone view from
+    // pre-0.10 was merged in here (closes #274).
+    if (!photoId) {
       return (
         <Month
           gallery={gallery}
           year={year}
           month={month}
+          day={day || undefined}
           lang={lang}
           countryData={countryData}
         >
@@ -413,6 +417,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
             context={context}
             year={year}
             month={month}
+            day={day || undefined}
           />
           <Filters
             filters={filters}
@@ -422,34 +427,6 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
             countryData={countryData}
           />
         </Month>
-      );
-    }
-    if (!photoId) {
-      return (
-        <Day
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
-          lang={lang}
-          countryData={countryData}
-        >
-          <Title
-            galleries={galleries}
-            gallery={gallery}
-            context={context}
-            year={year}
-            month={month}
-            day={day}
-          />
-          <Filters
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
-        </Day>
       );
     }
     const photo = gallery.photo(year, month, day, photoId);

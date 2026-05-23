@@ -21,7 +21,9 @@ const Root = styled.div`
   flex-wrap: wrap;
   justify-content: flex-start;
 `;
-const DayTitle = styled.h3`
+// `box-shadow` rather than border so the highlight doesn't shift layout
+// (border-width changes would re-flow neighbouring DayTitles).
+const DayTitle = styled.h3<{ $highlighted?: boolean }>`
   color: var(--header-color);
   background: var(--header-background);
   font-size: 18pt;
@@ -34,6 +36,8 @@ const DayTitle = styled.h3`
   border-radius: 15px 0 0 15px;
   height: 200px;
   min-width: 25px;
+  ${({ $highlighted }) =>
+    $highlighted ? "box-shadow: 0 0 0 3px var(--primary-color);" : ""}
 `;
 const DaySubTitle = styled.span`
   display: block;
@@ -48,6 +52,7 @@ interface Props {
   gallery: Gallery;
   year: number;
   month: number;
+  day?: number;
   lang: string;
   countryData: CountryData;
 }
@@ -57,10 +62,20 @@ const Content = ({
   gallery,
   year,
   month,
+  day,
   lang,
   countryData,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
+
+  // Scroll the highlighted day into view when arriving on `/g/.../<day>`.
+  // `getElementById` rather than a ref so the lookup survives re-renders
+  // and only fires when the `day` URL segment changes.
+  React.useEffect(() => {
+    if (!day) return;
+    const el = document.getElementById(`month-day-${day}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [day, year, month]);
 
   if (!gallery.includesMonth(year, month)) {
     return (
@@ -112,22 +127,23 @@ const Content = ({
     }
   };
 
-  const renderDay = (day: number) => {
+  const renderDay = (d: number) => {
+    const isHighlighted = d === day;
     return (
       <Thumbnails
-        key={"" + year + month + day}
+        key={"" + year + month + d}
         gallery={gallery}
-        photos={gallery.photos(year, month, day)}
+        photos={gallery.photos(year, month, d)}
         lang={lang}
         countryData={countryData}
       >
-        <Link gallery={gallery} year={year} month={month} day={day}>
-          <DayTitle>
-            {day}
+        <Link gallery={gallery} year={year} month={month} day={d}>
+          <DayTitle id={`month-day-${d}`} $highlighted={isHighlighted}>
+            {d}
             <DaySubTitle>
-              {t(`weekday-short-${calendar.dayOfWeek(year, month, day)}`)}
+              {t(`weekday-short-${calendar.dayOfWeek(year, month, d)}`)}
             </DaySubTitle>
-            {renderEpochInfo(day)}
+            {renderEpochInfo(d)}
           </DayTitle>
         </Link>
       </Thumbnails>

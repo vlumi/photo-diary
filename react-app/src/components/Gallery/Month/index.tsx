@@ -22,15 +22,22 @@ interface Props {
   gallery: Gallery;
   year: number;
   month: number;
+  day?: number;
   lang: string;
   countryData: CountryData;
 }
 
+// `day` is purely a scroll/highlight anchor — every interaction (prev/next,
+// Escape) still operates at the month level. The dedicated Day view that
+// used to live under `./Day/` was merged in here (closes #274); landing on
+// `/g/.../<year>/<month>/<day>` now renders the whole Month with that
+// day's thumbnails scrolled into view and the DayTitle visually marked.
 const Month = ({
   children,
   gallery,
   year,
   month,
+  day,
   lang,
   countryData,
 }: Props): React.ReactElement => {
@@ -100,7 +107,7 @@ const Month = ({
   return (
     <>
       <title>
-        {gallery.title(year, month)} — {t("nav-gallery")}
+        {gallery.title(year, month, day)} — {t("nav-gallery")}
       </title>
       <Navigation gallery={gallery} year={year} month={month} />
       <Swipeable onSwiped={handleSwipe}>
@@ -108,6 +115,7 @@ const Month = ({
           gallery={gallery}
           year={year}
           month={month}
+          day={day}
           lang={lang}
           countryData={countryData}
         >
