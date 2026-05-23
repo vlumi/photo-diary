@@ -5,6 +5,7 @@ import config from "../../../lib/config";
 
 import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo } from "../../../models/PhotoModel";
+import type { ZoomState } from "./index";
 
 const Root = styled.div`
   flex-grow: 1;
@@ -26,10 +27,24 @@ const Frame = styled("span", {
   flex-shrink: 0;
   width: ${(props) => props.$width}px;
   height: ${(props) => props.$height}px;
+  overflow: hidden;
 `;
-const Image = styled.img`
+// `will-change: transform` so the GPU compositor handles the scale/pan
+// without re-rasterising on every frame.
+const Image = styled("img", {
+  shouldForwardProp: (prop) =>
+    prop !== "$scale" && prop !== "$x" && prop !== "$y" && prop !== "$grabbing",
+})<{ $scale: number; $x: number; $y: number; $grabbing: boolean }>`
   width: ${(props) => props.width};
   height: ${(props) => props.height};
+  transform: translate(${(props) => props.$x}px, ${(props) => props.$y}px)
+    scale(${(props) => props.$scale});
+  transform-origin: center center;
+  will-change: transform;
+  cursor: ${(props) =>
+    props.$scale > 1 ? (props.$grabbing ? "grabbing" : "grab") : "zoom-in"};
+  user-select: none;
+  -webkit-user-drag: none;
 `;
 
 const calculateWidth = (
@@ -65,12 +80,36 @@ const toggleFullScreen = () => {
   }
 };
 
+// At scale S the rendered image is S× the frame dimensions, so the pan
+// offset can go up to ±(S - 1) × dim / 2 in each axis before the image
+// edge crosses into the frame.
+const clampOffset = (
+  offset: number,
+  scale: number,
+  dimension: number
+): number => {
+  if (scale <= 1) return 0;
+  const limit = ((scale - 1) * dimension) / 2;
+  return Math.max(-limit, Math.min(limit, offset));
+};
+
+const WHEEL_STEP = 1.1;
+const MIN_SCALE = 1;
+const MAX_SCALE = 8;
+const clampScale = (s: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, s));
+
+// Treat the post-drag click as a no-op (so full-screen toggle doesn't
+// fire) only when the pointer actually moved a meaningful distance.
+const CLICK_VS_DRAG_THRESHOLD_PX = 5;
+
 interface Props {
   gallery: Gallery;
   year: number;
   month: number;
   day: number;
   photo: Photo;
+  zoom: ZoomState;
+  setZoom: React.Dispatch<React.SetStateAction<ZoomState>>;
 }
 
 const Content = ({
@@ -79,6 +118,8 @@ const Content = ({
   month,
   day,
   photo,
+  zoom,
+  setZoom,
 }: Props): React.ReactElement => {
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
@@ -91,6 +132,15 @@ const Content = ({
     window.addEventListener("resize", updateDimensions);
     return () => window.removeEventListener("resize", updateDimensions);
   });
+
+  const dragRef = React.useRef<{
+    startClientX: number;
+    startClientY: number;
+    baseX: number;
+    baseY: number;
+    moved: boolean;
+  } | null>(null);
+  const [grabbing, setGrabbing] = React.useState(false);
 
   if (!gallery.includesPhoto(year, month, day, photo)) {
     return <i>Empty</i>;
@@ -113,15 +163,86 @@ const Content = ({
   const width = calculateWidth(photoRatio, maxWidth, maxHeight, maxRatio);
   const height = calculateHeight(photoRatio, maxHeight, maxWidth, maxRatio);
 
+  const handleWheel = (e: React.WheelEvent<HTMLSpanElement>) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
+    setZoom((z) => {
+      const nextScale = clampScale(z.scale * factor);
+      // Re-clamp pan offsets — zooming out can shrink the allowed range.
+      return {
+        scale: nextScale,
+        x: clampOffset(z.x, nextScale, width),
+        y: clampOffset(z.y, nextScale, height),
+      };
+    });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (zoom.scale <= 1) return;
+    e.preventDefault();
+    dragRef.current = {
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      baseX: zoom.x,
+      baseY: zoom.y,
+      moved: false,
+    };
+    setGrabbing(true);
+  };
+  const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startClientX;
+    const dy = e.clientY - dragRef.current.startClientY;
+    if (
+      Math.abs(dx) > CLICK_VS_DRAG_THRESHOLD_PX ||
+      Math.abs(dy) > CLICK_VS_DRAG_THRESHOLD_PX
+    ) {
+      dragRef.current.moved = true;
+    }
+    setZoom((z) => ({
+      scale: z.scale,
+      x: clampOffset(dragRef.current!.baseX + dx, z.scale, width),
+      y: clampOffset(dragRef.current!.baseY + dy, z.scale, height),
+    }));
+  };
+  const handleMouseUp = () => {
+    setGrabbing(false);
+    dragRef.current = null;
+  };
+  const handleMouseLeave = () => {
+    if (dragRef.current) {
+      setGrabbing(false);
+      dragRef.current = null;
+    }
+  };
+  // Suppress the click when the mouse-down was the start of a drag.
+  const handleClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (dragRef.current?.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    toggleFullScreen();
+  };
+
   return (
     <Root>
-      <Frame $width={width} $height={height}>
+      <Frame $width={width} $height={height} onWheel={handleWheel}>
         <Image
           src={path}
           alt={photo.id()}
           width={width}
           height={height}
-          onClick={toggleFullScreen}
+          $scale={zoom.scale}
+          $x={zoom.x}
+          $y={zoom.y}
+          $grabbing={grabbing}
+          onClick={handleClick}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          draggable={false}
         />
       </Frame>
     </Root>

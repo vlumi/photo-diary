@@ -31,6 +31,20 @@ interface Props {
   countryData: CountryData;
 }
 
+// Zoom state lives here so `<Swipeable>` can be bypassed while zoomed
+// (otherwise drag-to-pan would also fire swipe-to-next/prev) and so
+// navigating to another photo resets the zoom cleanly.
+const ZOOM_STEP = 1.2;
+const MIN_SCALE = 1;
+const MAX_SCALE = 8;
+const clampScale = (s: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, s));
+export interface ZoomState {
+  scale: number;
+  x: number;
+  y: number;
+}
+const ZOOM_RESET: ZoomState = { scale: 1, x: 0, y: 0 };
+
 const Photo = ({
   gallery,
   year,
@@ -41,8 +55,25 @@ const Photo = ({
   countryData,
 }: Props): React.ReactElement => {
   const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
+  const [zoom, setZoom] = React.useState<ZoomState>(ZOOM_RESET);
 
   const { t } = useTranslation();
+
+  // Reset zoom whenever the photo changes — including via prev/next nav.
+  React.useEffect(() => {
+    setZoom(ZOOM_RESET);
+  }, [photo.id()]);
+
+  useKeyPress("+", () =>
+    setZoom((z) => ({ ...z, scale: clampScale(z.scale * ZOOM_STEP) }))
+  );
+  useKeyPress("=", () =>
+    setZoom((z) => ({ ...z, scale: clampScale(z.scale * ZOOM_STEP) }))
+  );
+  useKeyPress("-", () =>
+    setZoom((z) => ({ ...z, scale: clampScale(z.scale / ZOOM_STEP) }))
+  );
+  useKeyPress("0", () => setZoom(ZOOM_RESET));
 
   const handlMoveToFirst = () => {
     const first = gallery.firstPhoto();
@@ -118,24 +149,49 @@ const Photo = ({
         photo={photo}
         lang={lang}
       />
-      <Swipeable onSwiped={handleSwipe}>
-        <Content
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
-          photo={photo}
-        />
-        <Footer
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
-          photo={photo}
-          lang={lang}
-          countryData={countryData}
-        />
-      </Swipeable>
+      {zoom.scale === 1 ? (
+        <Swipeable onSwiped={handleSwipe}>
+          <Content
+            gallery={gallery}
+            year={year}
+            month={month}
+            day={day}
+            photo={photo}
+            zoom={zoom}
+            setZoom={setZoom}
+          />
+          <Footer
+            gallery={gallery}
+            year={year}
+            month={month}
+            day={day}
+            photo={photo}
+            lang={lang}
+            countryData={countryData}
+          />
+        </Swipeable>
+      ) : (
+        <>
+          <Content
+            gallery={gallery}
+            year={year}
+            month={month}
+            day={day}
+            photo={photo}
+            zoom={zoom}
+            setZoom={setZoom}
+          />
+          <Footer
+            gallery={gallery}
+            year={year}
+            month={month}
+            day={day}
+            photo={photo}
+            lang={lang}
+            countryData={countryData}
+          />
+        </>
+      )}
     </>
   );
 };
