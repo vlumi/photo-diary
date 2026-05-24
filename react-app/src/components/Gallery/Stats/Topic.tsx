@@ -33,15 +33,16 @@ const Title = styled.h3`
   border-color: var(--header-background);
   border-radius: 10px 0;
 `;
-// Responsive tile grid: auto-fill packs as many ~300px-wide columns as
+// Responsive tile grid: auto-fill packs as many 330px-wide columns as
 // the row can hold, all sharing 1fr so every tile is the same width
-// across rows. `min(300px, 100%)` clamps the column min to the
-// container width on very narrow viewports so a single tile fills the
-// row instead of overflowing — important on phones where the previous
-// fixed 330px wasted 60-80px on the right.
+// across rows. 330px floor matches the previous fixed-width tile and
+// gives the inline charts (~300px combined) enough room to render
+// without overflowing. On viewports too narrow to fit a single 330px
+// tile (sub-360px phones) the tile overflows by a few pixels — rare
+// in practice and a cleaner trade-off than letting the charts squash.
 const Categories = styled.section`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
   gap: 2px;
   align-content: start;
   min-width: 0;
