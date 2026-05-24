@@ -85,7 +85,102 @@ export interface StatsCategory {
   charts?: ChartSpec[];
   tableColumns?: TableColumn[];
   table?: TableRow[];
+  summaryExtras?: SummaryExtras;
 }
+// Shapes for the expanded Summary view (see SummaryModal). Attached
+// only to the `summary` category. The four sub-trees answer one
+// question each: when (period), how peaked (peaks), how varied
+// (variety), what favourites (mostUsed).
+export interface PeakEntry {
+  key: string | number;
+  value: number;
+}
+// A peak distribution can have one clear leader, a small tie of 2-3,
+// or be effectively flat (4+ values within ~1% of the max). The third
+// case matters for evenly-distributed projects (e.g. a 365-style
+// daily diary on weekdays/month-name) where faking a leader would be
+// misleading.
+export type PeakShape =
+  | { kind: "leader"; entries: PeakEntry[]; value: number }
+  | { kind: "tied"; entries: PeakEntry[]; value: number }
+  | { kind: "even"; value: number; count: number };
+export interface SummaryPeriod {
+  from?: { year: number; month: number; day: number };
+  to?: { year: number; month: number; day: number };
+  totalPhotos: number;
+  totalDays: number;
+  spanYears: number;
+  spanMonths: number;
+  averagePerDay: number;
+}
+export interface SummaryVariety {
+  authors: number;
+  countries: number;
+  cameras: number;
+  lenses: number;
+  cameraMakes: number;
+  cameraLenses: number;
+  focalLengths: number;
+  apertures: number;
+  exposureTimes: number;
+  isos: number;
+  years: number;
+  yearMonths: number;
+}
+export interface SummaryExtras {
+  period: SummaryPeriod;
+  variety: SummaryVariety;
+  peaks: {
+    year: PeakShape;
+    month: PeakShape;
+    weekday: PeakShape;
+    hour: PeakShape;
+  };
+  mostUsed: {
+    author: PeakShape;
+    country: PeakShape;
+    camera: PeakShape;
+    lens: PeakShape;
+    cameraLens: PeakShape;
+    focalLength: PeakShape;
+    aperture: PeakShape;
+    exposureTime: PeakShape;
+    iso: PeakShape;
+  };
+}
+
+// Bucket → peak shape. Filters out zero-count entries first so a
+// pre-allocated bucket map (byHour has all 24 keys, byMonth has all
+// 12) doesn't drag down the "near-tied" count with empties.
+const detectPeakShape = (
+  buckets: Record<string, number> | undefined
+): PeakShape => {
+  const entries = Object.entries(buckets ?? {})
+    .map(([key, value]) => ({ key, value: Number(value) || 0 }))
+    .filter((e) => e.value > 0)
+    .sort((a, b) => b.value - a.value);
+  if (entries.length === 0) {
+    return { kind: "leader", entries: [], value: 0 };
+  }
+  const max = entries[0].value;
+  const NEAR_TIE_THRESHOLD = 0.01;
+  const tied = entries.filter(
+    (e) => Math.abs(e.value - max) / max < NEAR_TIE_THRESHOLD
+  );
+  if (tied.length === 1) {
+    return { kind: "leader", entries: tied, value: max };
+  }
+  if (tied.length <= 3) {
+    return { kind: "tied", entries: tied, value: max };
+  }
+  const meanValue =
+    entries.reduce((s, e) => s + e.value, 0) / entries.length;
+  return { kind: "even", value: Math.round(meanValue), count: entries.length };
+};
+const countDistinctNonZero = (
+  buckets: Record<string, number> | undefined
+): number =>
+  Object.values(buckets ?? {}).filter((v) => Number(v) > 0).length;
 export interface StatsTopic {
   key: string;
   title: string;
@@ -325,6 +420,57 @@ const collectTopics = (
       return dateDiff(maxDate, minDate);
     };
     const diff = getTimeDiff(count);
+    const byTime = count.byTime || {};
+    const byGear = count.byGear || {};
+    const byExposure = count.byExposure || {};
+    const yearMonthsDistinct = Object.values(
+      (byTime.byYearMonth ?? {}) as Record<string, Record<string, number>>
+    ).reduce(
+      (acc, monthMap) => acc + countDistinctNonZero(monthMap),
+      0
+    );
+    const summaryExtras: SummaryExtras = {
+      period: {
+        from: byTime.minDate,
+        to: byTime.maxDate,
+        totalPhotos: count.total,
+        totalDays: byTime.days || 0,
+        spanYears: diff.years(),
+        spanMonths: diff.months(),
+        averagePerDay: count.total / (byTime.days || 1),
+      },
+      variety: {
+        authors: countDistinctNonZero(count.byAuthor),
+        countries: countDistinctNonZero(count.byCountry),
+        cameras: countDistinctNonZero(byGear.byCamera),
+        lenses: countDistinctNonZero(byGear.byLens),
+        cameraMakes: countDistinctNonZero(byGear.byCameraMake),
+        cameraLenses: countDistinctNonZero(byGear.byCameraLens),
+        focalLengths: countDistinctNonZero(byExposure.byFocalLength),
+        apertures: countDistinctNonZero(byExposure.byAperture),
+        exposureTimes: countDistinctNonZero(byExposure.byExposureTime),
+        isos: countDistinctNonZero(byExposure.byIso),
+        years: countDistinctNonZero(byTime.byYear),
+        yearMonths: yearMonthsDistinct,
+      },
+      peaks: {
+        year: detectPeakShape(byTime.byYear),
+        month: detectPeakShape(byTime.byMonth),
+        weekday: detectPeakShape(byTime.byWeekday),
+        hour: detectPeakShape(byTime.byHour),
+      },
+      mostUsed: {
+        author: detectPeakShape(count.byAuthor),
+        country: detectPeakShape(count.byCountry),
+        camera: detectPeakShape(byGear.byCamera),
+        lens: detectPeakShape(byGear.byLens),
+        cameraLens: detectPeakShape(byGear.byCameraLens),
+        focalLength: detectPeakShape(byExposure.byFocalLength),
+        aperture: detectPeakShape(byExposure.byAperture),
+        exposureTime: detectPeakShape(byExposure.byExposureTime),
+        iso: detectPeakShape(byExposure.byIso),
+      },
+    };
     return {
       key: "summary",
       title: t("stats-category-summary"),
@@ -337,6 +483,7 @@ const collectTopics = (
         months: formatNumber.oneDecimal(diff.months()),
         days: formatNumber.default(diff.days()),
       }),
+      summaryExtras,
     };
   };
   const collectAuthor = (byAuthor: any, total: any) => {

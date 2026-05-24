@@ -1181,7 +1181,10 @@ describe("collectTopics", () => {
     expect(topics[0].key).toBe("general");
     expect(topics[0].title).toBe("stats-topic-general");
     expect(topics[0].categories.length).toBe(3);
-    expect(topics[0].categories[0]).toStrictEqual({
+    // `toMatchObject` so the new `summaryExtras` field (for the
+    // expanded Summary modal) doesn't have to be re-asserted in
+    // every test — the existing assertion covers the inline KPIs.
+    expect(topics[0].categories[0]).toMatchObject({
       key: "summary",
       title: "stats-category-summary",
       kpi: [
