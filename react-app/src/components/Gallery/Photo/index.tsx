@@ -235,7 +235,24 @@ const Photo = ({
     setRedirect(gallery.path(year, month));
   }, [gallery, year, month]);
 
-  useKeyPress("Escape", handleClose);
+  // Photo modal lives over a mounted Month; both register window-
+  // level Escape listeners via `useKeyPress`. Without coordination
+  // both fire on the same Escape press — Photo navigates to Month,
+  // Month then navigates to Year, and the user lands one level too
+  // high. Listen in the capture phase and stopImmediatePropagation
+  // so Photo's handler always runs first and Month's is skipped
+  // while the modal is open.
+  React.useEffect(() => {
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      handleClose();
+    };
+    window.addEventListener("keydown", onEscape, true);
+    return () => window.removeEventListener("keydown", onEscape, true);
+  }, [handleClose]);
+
   useKeyPress("Home", handlMoveToFirst);
   useKeyPress("ArrowLeft", handlMoveToPrevious);
   useKeyPress("ArrowRight", handlMoveToNext);
