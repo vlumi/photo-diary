@@ -20,6 +20,9 @@ const Backdrop = styled.div`
   justify-content: center;
   padding: 20px;
 `;
+// 720px comfortably fits the side-by-side charts (~600px) plus
+// padding; on narrower viewports the `width: 100%` + outer 20px
+// backdrop padding takes over and the modal shrinks to fit.
 const ModalBox = styled.div`
   background: var(--primary-background);
   color: var(--primary-color);
@@ -27,7 +30,7 @@ const ModalBox = styled.div`
   border-radius: 6px;
   padding: 20px;
   width: 100%;
-  max-width: 480px;
+  max-width: 720px;
   max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;

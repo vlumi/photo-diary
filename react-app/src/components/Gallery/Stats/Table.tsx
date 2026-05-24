@@ -67,6 +67,9 @@ const Column = styled("td", {
   vertical-align: top;
   text-align: ${(props) => props.$align};
   overflow: hidden;
+  /* Allow long category labels (e.g. camera-lens names) to wrap rather
+     than forcing the table wider than its container. */
+  overflow-wrap: anywhere;
 `;
 const ExpandRow = styled.tr`
   cursor: pointer;
