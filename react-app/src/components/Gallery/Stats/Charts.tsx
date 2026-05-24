@@ -4,7 +4,7 @@ import styled from "@emotion/styled";
 import "chart.js/auto";
 import { Doughnut, PolarArea, Bar, Line } from "react-chartjs-2";
 
-import type { StatsCategory } from "../../../lib/stats";
+import type { ChartSpec, SortMode, StatsCategory } from "../../../lib/stats";
 
 const Root = styled.div`
   margin: 5px;
@@ -30,15 +30,55 @@ const StyledChartContainer2 = styled.div`
 
 interface Props {
   category: StatsCategory;
+  // "value" is the category's natural sort (what `collectTopics` built);
+  // "count" re-orders labels/data/colors in parallel by count desc.
+  // Only meaningful for `valueSortable` categories — pass-through "value"
+  // for everything else.
+  sortMode?: SortMode;
 }
 
-const Charts = ({ category }: Props): React.ReactElement => {
+// Re-order the chart's labels + each dataset's data (and backgroundColor
+// where present) in parallel by data desc. Datasets without a `data`
+// array (none today, but safe) pass through unchanged.
+const sortByCountDesc = (data: any): any => {
+  if (!data?.datasets?.[0]?.data) {
+    return data;
+  }
+  const counts: number[] = data.datasets[0].data.map((v: unknown) => Number(v));
+  const order = counts
+    .map((_, i) => i)
+    .sort((a, b) => counts[b] - counts[a]);
+  const reorder = <T,>(arr: T[]): T[] => order.map((i) => arr[i]);
+  return {
+    ...data,
+    labels: data.labels ? reorder(data.labels) : data.labels,
+    datasets: data.datasets.map((ds: any) => ({
+      ...ds,
+      data: reorder(ds.data),
+      ...(Array.isArray(ds.backgroundColor)
+        ? { backgroundColor: reorder(ds.backgroundColor) }
+        : {}),
+    })),
+  };
+};
+
+const Charts = ({
+  category,
+  sortMode = "value",
+}: Props): React.ReactElement => {
   if (!category.charts) {
     return <></>;
   }
+  const charts: ChartSpec[] =
+    sortMode === "count"
+      ? category.charts.map((chart) => ({
+          ...chart,
+          data: sortByCountDesc(chart.data),
+        }))
+      : category.charts;
   return (
     <Root>
-      {category.charts.map((chart) => {
+      {charts.map((chart) => {
         const key = `${category.key}:${chart.type}`;
         switch (chart.type) {
           case "doughnut":

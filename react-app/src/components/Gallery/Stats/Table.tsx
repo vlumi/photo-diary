@@ -6,6 +6,7 @@ import color from "../../../lib/color";
 import stats from "../../../lib/stats";
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import type {
+  SortMode,
   StatsTopic,
   StatsCategory,
   TableRow,
@@ -122,6 +123,9 @@ interface Props {
   // Omitted from the modal itself so it shows every row.
   limit?: number;
   onExpand?: () => void;
+  // Modal-only override; inline view leaves this unset and the natural
+  // sort stands (with the cap re-sorting as a separate concern below).
+  sortMode?: SortMode;
 }
 
 const Table = ({
@@ -132,6 +136,7 @@ const Table = ({
   theme,
   limit,
   onExpand,
+  sortMode = "value",
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
@@ -245,18 +250,22 @@ const Table = ({
 
   const fullTable = category.table;
   const shouldCap = limit !== undefined && fullTable.length > limit;
-  // When capping, re-sort by raw count desc so "+ N more…" reads as
-  // "we showed you the top 10; click to see the rest" rather than "we
-  // truncated by whatever the original sort was" (which is by value
-  // for the exposure categories, making the first 10 = lowest 10
-  // values — not what the user wants from a glance). The modal
-  // (limit undefined) keeps the original sort so the distribution
-  // shape stays visible.
-  const visibleTable = shouldCap
-    ? [...fullTable]
-        .sort((a, b) => Number(b._count ?? 0) - Number(a._count ?? 0))
-        .slice(0, limit)
+  // Two reasons to re-sort by raw count desc:
+  // - Inline view capping (`shouldCap`): "+ N more…" needs to read as
+  //   "top 10; click to see the rest" rather than "first 10 of the
+  //   natural sort" (which for value-sorted categories = the 10
+  //   lowest values).
+  // - Modal sort toggle in "count" mode (#299): the user explicitly
+  //   asked for top-by-count instead of the natural value sort.
+  // Inline view leaves `sortMode` at "value"; capping is the only
+  // reason it ever re-sorts there.
+  const resort = shouldCap || sortMode === "count";
+  const sortedTable = resort
+    ? [...fullTable].sort(
+        (a, b) => Number(b._count ?? 0) - Number(a._count ?? 0)
+      )
     : fullTable;
+  const visibleTable = shouldCap ? sortedTable.slice(0, limit) : sortedTable;
   const hiddenCount = shouldCap ? fullTable.length - limit : 0;
 
   return (

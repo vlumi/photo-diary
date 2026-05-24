@@ -64,6 +64,10 @@ export interface ChartSpec {
   data: any;
   options: any;
 }
+// "value" is the category's natural sort (chronological, or
+// ascending/descending by the bucketed value); "count" is top-by-count
+// desc. Only `valueSortable` categories actually offer the toggle.
+export type SortMode = "value" | "count";
 export interface TableColumn {
   title: string;
   align: string;
@@ -86,6 +90,12 @@ export interface StatsCategory {
   tableColumns?: TableColumn[];
   table?: TableRow[];
   summaryExtras?: SummaryExtras;
+  // Set on categories whose natural sort is "by value" (focal length
+  // ascending, exposure time descending, …) rather than "by count" —
+  // the expanded modal offers a toggle to flip between the natural
+  // value sort and a top-by-count view. Time/chronology categories
+  // stay false: the calendar order is the only sensible reading.
+  valueSortable?: boolean;
 }
 // Shapes for the expanded Summary view (see SummaryModal). Attached
 // only to the `summary` category. The four sub-trees answer one
@@ -1015,6 +1025,7 @@ const collectTopics = (
     return {
       key: "focal-length",
       title: t("stats-category-focal-length"),
+      valueSortable: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1053,6 +1064,7 @@ const collectTopics = (
     return {
       key: "aperture",
       title: t("stats-category-aperture"),
+      valueSortable: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1089,6 +1101,7 @@ const collectTopics = (
     return {
       key: "exposure-time",
       title: t("stats-category-exposure-time"),
+      valueSortable: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1127,6 +1140,7 @@ const collectTopics = (
     return {
       key: "iso",
       title: t("stats-category-iso"),
+      valueSortable: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1163,6 +1177,7 @@ const collectTopics = (
     return {
       key: "ev",
       title: t("stats-category-ev"),
+      valueSortable: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1199,6 +1214,7 @@ const collectTopics = (
     return {
       key: "lv",
       title: t("stats-category-lv"),
+      valueSortable: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1235,6 +1251,7 @@ const collectTopics = (
     return {
       key: "resolution",
       title: t("stats-category-resolution"),
+      valueSortable: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
