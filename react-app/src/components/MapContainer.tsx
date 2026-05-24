@@ -48,40 +48,39 @@ const getPolyline = (positions: LatLngExpression[]) => {
 // When the map mounts inside a container whose final size isn't
 // known yet (the metadata panel is `position: absolute` with
 // `max-width`/`max-height` that resolve after layout), Leaflet
-// computes its first `fitBounds` against the initial container
-// rect and the marker can land off-centre. After the panel
-// settles, calling `invalidateSize()` makes Leaflet re-measure;
-// `fitBounds` re-runs the fit against the corrected size.
+// renders against the initial container rect and the marker can
+// land off-centre. After the panel settles, calling
+// `invalidateSize({pan: false})` makes Leaflet re-measure while
+// keeping the current view centre — no panning side-effect from
+// the default `pan: true` (which was shifting the view north as
+// the container grew).
 //
-// `bounds`/`boundsOptions` are read via refs so the effect deps
-// stay stable — otherwise every parent render produces new
-// reference identities and the effect would fire on every render,
-// queuing fitBounds calls and animating the view repeatedly. We
-// re-run only when the position signature actually changes.
-const InvalidateSizeOnMount = ({
-  bounds,
-  boundsOptions,
+// For the single-photo case, explicitly `setView` on the point
+// after the resize so we never go through Leaflet's fitBounds
+// heuristics for a zero-area bound (which were the original
+// source of "map ends up north of pin"). Multi-photo maps leave
+// the initial `bounds`-prop fit in place.
+const Refit = ({
+  singlePoint,
+  maxZoom,
   positionKey,
 }: {
-  bounds: Leaflet.LatLngBoundsExpression;
-  boundsOptions?: Leaflet.FitBoundsOptions;
+  singlePoint: LatLngExpression | undefined;
+  maxZoom: number;
   positionKey: string;
 }): null => {
   const map = useMap();
-  const boundsRef = React.useRef(bounds);
-  const optionsRef = React.useRef(boundsOptions);
-  boundsRef.current = bounds;
-  optionsRef.current = boundsOptions;
+  const pointRef = React.useRef(singlePoint);
+  pointRef.current = singlePoint;
   React.useEffect(() => {
     const t = window.setTimeout(() => {
-      map.invalidateSize();
-      map.fitBounds(boundsRef.current, {
-        ...optionsRef.current,
-        animate: false,
-      });
+      map.invalidateSize({ pan: false });
+      if (pointRef.current) {
+        map.setView(pointRef.current, maxZoom, { animate: false });
+      }
     }, 100);
     return () => window.clearTimeout(t);
-  }, [map, positionKey]);
+  }, [map, positionKey, maxZoom]);
   return null;
 };
 
@@ -106,20 +105,17 @@ const MapContainer = ({
     (photo) => photo.coordinates() as LatLngExpression
   );
   const resolvedMaxZoom = maxZoom ? maxZoom : 14;
-  const bounds = Leaflet.latLngBounds(positions);
-  // No asymmetric padding — fit the bounds centred on the pin
-  // (or on the centroid for multi-photo). Yes, the default marker
-  // icon's body extends north of the geographic anchor, but
-  // shifting the *map view* to compensate ends up reading as
-  // "the map is north of the actual pin", which is more
-  // confusing than the icon body sitting slightly above centre.
-  const boundsOptions: Leaflet.FitBoundsOptions = {
-    maxZoom: resolvedMaxZoom,
-  };
-  // Stable key from the position signature so the
-  // InvalidateSizeOnMount effect re-runs only when the actual
-  // location changes (e.g. navigating to a different photo), not
-  // on every parent render.
+  const singlePhoto = positions.length === 1;
+  // Single-photo: initialise with explicit center + zoom so the
+  // map never goes through Leaflet's fitBounds path for a
+  // zero-area bound. Multi-photo: use bounds to fit all
+  // coordinates.
+  const bounds = singlePhoto ? undefined : Leaflet.latLngBounds(positions);
+  const center = singlePhoto ? positions[0] : undefined;
+  const initialZoom = singlePhoto ? resolvedMaxZoom : undefined;
+  // Stable key from the position signature so `Refit` re-runs
+  // only when the actual location changes (navigating to a
+  // different photo), not on every parent render.
   const positionKey = positions
     .map((p) => {
       if (Array.isArray(p)) return `${p[0]},${p[1]}`;
@@ -135,13 +131,14 @@ const MapContainer = ({
     <Root $height={height}>
       <Map
         bounds={bounds}
-        boundsOptions={boundsOptions}
+        center={center}
+        zoom={initialZoom}
         maxZoom={resolvedMaxZoom}
         style={{ height: "100%" }}
       >
-        <InvalidateSizeOnMount
-          bounds={bounds}
-          boundsOptions={boundsOptions}
+        <Refit
+          singlePoint={center}
+          maxZoom={resolvedMaxZoom}
           positionKey={positionKey}
         />
         <TileLayer
