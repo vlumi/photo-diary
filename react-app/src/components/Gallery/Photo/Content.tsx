@@ -184,16 +184,15 @@ const Content = ({
   // `dimensions` is the measured Root size — already excludes the
   // modal's Navigation/Footer chrome and reflects the Frame's
   // `max-width: 1400px` cap. Subtract the photo frame's own
-  // matte+border (10px padding + 1px border each side = 22).
-  // Extra 16px on the vertical axis (8 top + 8 bottom) so the
-  // photo isn't pinned to the Navigation / Footer edges; without
-  // it landscape photos on wide screens fill the height exactly
-  // and the modal feels cramped.
+  // matte+border (10px padding + 1px border each side = 22), plus
+  // 16px breathing room on each axis (8 per side) so the matte
+  // doesn't pin against the modal Frame edges.
   const FRAME_CHROME = 22;
-  const VERTICAL_BREATHING = 16;
-  const maxAvailWidth = (dimensions.width - FRAME_CHROME) * browserScale;
+  const BREATHING = 16;
+  const maxAvailWidth =
+    (dimensions.width - FRAME_CHROME - BREATHING) * browserScale;
   const maxAvailHeight =
-    (dimensions.height - FRAME_CHROME - VERTICAL_BREATHING) * browserScale;
+    (dimensions.height - FRAME_CHROME - BREATHING) * browserScale;
   const maxRatio = maxAvailWidth / maxAvailHeight;
   // Image keeps its natural fit-to-viewport dimensions at every zoom
   // level; the `transform: scale` handles the zoom visually.
