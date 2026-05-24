@@ -149,7 +149,7 @@ describe("As admin", () => {
       expect(result.body.id).toBe("gallery12photo.jpg");
     });
     test("Get gallery2photo.jpg", async () => {
-      getGalleryPhoto(token, "gallery1", "gallery2photo.jpg", 404);
+      await getGalleryPhoto(token, "gallery1", "gallery2photo.jpg", 404);
     });
     test("Get orphanphoto.jpg", async () => {
       await getGalleryPhoto(token, "gallery1", "orphanphoto.jpg", 404);
@@ -246,7 +246,7 @@ describe("As admin", () => {
   });
   describe("Gallery :private", () => {
     test("Get gallery1photo.jpg", async () => {
-      getGalleryPhoto(token, ":private", "gallery2photo.jpg", 404);
+      await getGalleryPhoto(token, ":private", "gallery2photo.jpg", 404);
     });
     test("Get orphanphoto.jpg", async () => {
       const result = await getGalleryPhoto(
@@ -391,7 +391,7 @@ describe("As gallery1Admin", () => {
   });
   describe("Gallery :private", () => {
     test("Get gallery1photo.jpg", async () => {
-      getGalleryPhoto(token, ":private", "gallery2photo.jpg", 404);
+      await getGalleryPhoto(token, ":private", "gallery2photo.jpg", 404);
     });
     test("Get orphanphoto.jpg", async () => {
       const result = await getGalleryPhoto(
@@ -637,7 +637,7 @@ describe("As plainUser", () => {
   });
   describe("Gallery :private", () => {
     test("Get gallery1photo.jpg", async () => {
-      getGalleryPhoto(token, ":private", "gallery2photo.jpg", 404);
+      await getGalleryPhoto(token, ":private", "gallery2photo.jpg", 404);
     });
     test("Get orphanphoto.jpg", async () => {
       const result = await getGalleryPhoto(
