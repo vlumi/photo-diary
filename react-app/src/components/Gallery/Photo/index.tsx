@@ -5,6 +5,7 @@ import styled from "@emotion/styled";
 import {
   BsArrowsFullscreen,
   BsFullscreenExit,
+  BsInfoCircleFill,
   BsXLg,
 } from "react-icons/bs";
 import type { SwipeEventData } from "react-swipeable";
@@ -13,7 +14,7 @@ import Swipeable from "../../Swipeable";
 
 import Navigation from "./Navigation";
 import Content from "./Content";
-import Footer from "./Footer";
+import MetadataPanel from "./MetadataPanel";
 
 import useKeyPress from "../../../lib/keypress";
 
@@ -117,6 +118,15 @@ const FullscreenButton = styled(FloatingButton)`
   top: 58px;
   left: 8px;
 `;
+// Info toggle sits in the photo area's bottom-right corner, the
+// inverse of the fullscreen toggle. The metadata panel anchors at
+// the same edge — toggling it on overlays the panel above the
+// button (the panel's own bottom-right is at 16px from the
+// corner, with the button at 8px).
+const InfoButton = styled(FloatingButton)`
+  bottom: 8px;
+  right: 8px;
+`;
 // Body wraps Content+Footer in a flex column that fills the leftover
 // space inside the modal Frame (between Navigation and the bottom
 // edge). Without this Content's `flex-grow: 1` would be ineffective
@@ -184,6 +194,13 @@ const Photo = ({
     document.addEventListener("fullscreenchange", onChange);
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
+
+  // Metadata panel: open by default on desktop, closed on mobile so
+  // the photo gets every available pixel. Persist across photo
+  // changes within the same modal session.
+  const [showMetadata, setShowMetadata] = React.useState(
+    typeof window !== "undefined" && window.innerWidth > 600
+  );
 
   const { t } = useTranslation();
 
@@ -323,6 +340,15 @@ const Photo = ({
             {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
           </FullscreenButton>
         )}
+        <InfoButton
+          type="button"
+          onClick={() => setShowMetadata((s) => !s)}
+          aria-label={t("photo-metadata")}
+          aria-pressed={showMetadata}
+          title={t("photo-metadata")}
+        >
+          <BsInfoCircleFill />
+        </InfoButton>
         {zoom.scale === 1 ? (
           <SwipeBody onSwiped={handleSwipe}>
             <Content
@@ -333,15 +359,6 @@ const Photo = ({
               photo={photo}
               zoom={zoom}
               setZoom={setZoom}
-            />
-            <Footer
-              gallery={gallery}
-              year={year}
-              month={month}
-              day={day}
-              photo={photo}
-              lang={lang}
-              countryData={countryData}
             />
           </SwipeBody>
         ) : (
@@ -355,16 +372,19 @@ const Photo = ({
               zoom={zoom}
               setZoom={setZoom}
             />
-            <Footer
-              gallery={gallery}
-              year={year}
-              month={month}
-              day={day}
-              photo={photo}
-              lang={lang}
-              countryData={countryData}
-            />
           </Body>
+        )}
+        {showMetadata && (
+          <MetadataPanel
+            gallery={gallery}
+            year={year}
+            month={month}
+            day={day}
+            photo={photo}
+            lang={lang}
+            countryData={countryData}
+            onClose={() => setShowMetadata(false)}
+          />
         )}
       </Frame>
     </Backdrop>

@@ -1,15 +1,13 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
+import { BsXLg } from "react-icons/bs";
 
 import EpochAge from "../EpochAge";
 import EpochDayIndex from "../EpochDayIndex";
 import FlagIcon from "../../FlagIcon";
-import Link from "../Link";
 import MapContainer from "../../MapContainer.lazy";
-import Root from "../Footer";
 
-import config from "../../../lib/config";
 import format from "../../../lib/format";
 
 import type { Gallery } from "../../../models/GalleryModel";
@@ -19,40 +17,86 @@ interface CountryData {
   getName(code: string, lang: string): string | undefined;
 }
 
-const ThumbnailContainer = styled.span`
-  width: 70px;
-  height: 50px;
+// Floating panel anchored to the bottom-right of the Photo modal,
+// over the photo. Carries everything the old `<Footer>` carried
+// except the timestamp (now persistently visible in the toolbar
+// centre) and the prev/next thumbnails (redundant with the
+// toolbar's prev/skip nav).
+const Root = styled.div`
+  position: absolute;
+  z-index: 9;
+  right: 16px;
+  bottom: 16px;
+  max-width: min(360px, calc(100% - 32px));
+  max-height: calc(100% - 100px);
   display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 `;
-const PreviousThumbnailContainer = styled(ThumbnailContainer)`
-  justify-content: flex-start;
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 `;
-const NextThumbnailContainer = styled(ThumbnailContainer)`
-  justify-content: flex-end;
+const HeaderTitle = styled.span`
+  font-size: 0.8em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
 `;
-const ThumbnailFrame = styled.div`
-  margin: 0;
-  padding: 2px;
-  border: solid var(--photo-frame-border) 1px;
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 12px;
+  &:hover {
+    color: #fff;
+  }
 `;
-const Description = styled.span`
-  flex-grow: 1;
-  text-align: center;
-  margin: 0 10px;
+const Body = styled.div`
+  padding: 10px 14px 14px;
+  overflow-y: auto;
+  font-size: 0.85em;
+  line-height: 1.4;
 `;
-const Details = styled.div`
-  font-size: small;
-  text-align: right;
-  color: var(--inactive-color);
+const Title = styled.div`
+  font-weight: 600;
+  margin-bottom: 6px;
+  line-height: 1.3;
+`;
+const Row = styled.div`
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 4px;
+`;
+const Muted = styled.div`
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85em;
+  margin-top: 4px;
 `;
 const Part = styled.span`
-  display: inline-block;
+  display: inline;
 `;
 const Copyright = styled.div`
-  flex-grow: 1;
-  text-align: center;
-  margin: 0 10px;
-  font-size: x-small;
+  font-size: 0.75em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 10px;
+`;
+const MapBox = styled.div`
+  margin-top: 10px;
+  height: 160px;
+  border-radius: 6px;
+  overflow: hidden;
 `;
 
 interface Props {
@@ -63,9 +107,10 @@ interface Props {
   photo: Photo;
   lang: string;
   countryData: CountryData;
+  onClose: () => void;
 }
 
-const Footer = ({
+const MetadataPanel = ({
   gallery,
   year,
   month,
@@ -73,44 +118,18 @@ const Footer = ({
   photo,
   lang,
   countryData,
+  onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
-
-  const previousPhoto = gallery.previousPhoto(year, month, day, photo);
-  const nextPhoto = gallery.nextPhoto(year, month, day, photo);
   const formatExposure = format.exposure(lang, t);
 
-  const renderAdjacentPhoto = (adjacentPhoto: Photo) => {
-    if (adjacentPhoto === photo) {
-      return <></>;
-    }
-    const dimensions = adjacentPhoto.thumbnailDimensions();
-    const style = {
-      width: `${Math.floor(dimensions.width / 5)}px`,
-      height: `${Math.floor(dimensions.height / 5)}px`,
-    };
-    const path = `${config.PHOTO_ROOT_URL}display/${adjacentPhoto.id()}`;
-
-    return (
-      <Link gallery={gallery} photo={adjacentPhoto}>
-        <ThumbnailFrame style={style}>
-          <img src={path} alt={adjacentPhoto.id()} style={style} />
-        </ThumbnailFrame>
-      </Link>
-    );
-  };
-
   const renderPlace = () => {
-    if (!photo.hasPlace()) {
-      return "";
-    }
+    if (!photo.hasPlace()) return null;
     return <Part>{photo.place()}</Part>;
   };
   const renderCountry = () => {
     const countryCode = photo.countryCode();
-    if (!photo.hasCountry() || !countryCode) {
-      return "";
-    }
+    if (!photo.hasCountry() || !countryCode) return null;
     return (
       <Part>
         {photo.countryName(lang, countryData)} <FlagIcon code={countryCode} />
@@ -120,19 +139,18 @@ const Footer = ({
   const renderLocation = () => {
     const country = renderCountry();
     const place = renderPlace();
+    if (!country && !place) return null;
     return (
-      <Details>
+      <Row>
         {place}
         {place && country ? ", " : ""}
         {country}
-      </Details>
+      </Row>
     );
   };
   const renderCoordinates = () => {
-    if (!photo.hasCoordinates()) {
-      return <></>;
-    }
-    return <Details>{photo.formatCoordinates()}</Details>;
+    if (!photo.hasCoordinates()) return null;
+    return <Muted>{photo.formatCoordinates()}</Muted>;
   };
   const renderExposure = () => {
     const focalLength = photo.focalLength();
@@ -144,7 +162,7 @@ const Footer = ({
     const aspectRatio = photo.aspectRatio();
     const exposureValue = photo.exposureValue();
     const lightValue = photo.lightValue();
-    return [
+    const parts = [
       focalLength ? `ƒ=${formatExposure.focalLength(focalLength)}㎜` : "",
       aperture ? formatExposure.aperture(aperture) : "",
       exposureTime ? `${formatExposure.exposureTime(exposureTime)}s` : "",
@@ -156,35 +174,30 @@ const Footer = ({
         : "",
       exposureValue ? `EV${formatExposure.ev(exposureValue)}` : "",
       lightValue ? `LV${formatExposure.ev(lightValue)}` : "",
-    ].join(" ");
+    ]
+      .filter(Boolean)
+      .join(" ");
+    if (!parts) return null;
+    return <Muted>{parts}</Muted>;
   };
   const renderGear = () => {
     const camera = photo.formatCamera();
     const lens = photo.formatLens();
-
-    if (!camera && !lens) {
-      return "";
-    }
-    if (!camera) {
-      return <>{lens}</>;
-    }
-    if (!lens) {
-      return <>{camera}</>;
-    }
+    if (!camera && !lens) return null;
+    if (!camera) return <Muted>{lens}</Muted>;
+    if (!lens) return <Muted>{camera}</Muted>;
     return (
-      <>
+      <Muted>
         <Part>{camera}</Part> + <Part>{lens}</Part>
-      </>
+      </Muted>
     );
   };
   const renderEpochInfo = () => {
-    if (!gallery.hasEpoch()) {
-      return <></>;
-    }
+    if (!gallery.hasEpoch()) return null;
     switch (gallery.epochType()) {
       case "birthday":
         return (
-          <Details>
+          <Muted>
             <EpochAge
               gallery={gallery}
               year={year}
@@ -193,11 +206,11 @@ const Footer = ({
               format="long"
               separator=" "
             />
-          </Details>
+          </Muted>
         );
       case "1-index":
         return (
-          <Details>
+          <Muted>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -206,11 +219,11 @@ const Footer = ({
               lang={lang}
               format="long"
             />
-          </Details>
+          </Muted>
         );
       case "0-index":
         return (
-          <Details>
+          <Muted>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -220,51 +233,47 @@ const Footer = ({
               format="long"
               start={0}
             />
-          </Details>
+          </Muted>
         );
       default:
-        return "";
+        return null;
     }
   };
   const renderMap = () => {
-    if (!photo.hasCoordinates() || gallery.hideMap()) {
-      return "";
-    }
-    return <MapContainer positions={[photo]} />;
-  };
-
-  const renderContent = () => {
-    if (!photo) {
-      return <></>;
-    }
+    if (!photo.hasCoordinates() || gallery.hideMap()) return null;
     return (
-      <>
-        <Root>
-          <PreviousThumbnailContainer>
-            {renderAdjacentPhoto(previousPhoto)}
-          </PreviousThumbnailContainer>
-          <Description>
-            <h4>{photo.formatTimestamp()}</h4>
-            {photo.title()}
-            {renderLocation()}
-            {renderCoordinates()}
-            <Details>{renderExposure()}</Details>
-            <Details>{renderGear()}</Details>
-            {renderEpochInfo()}
-            <Copyright>
-              <Part>Photo Copyright © {photo.author()}</Part>{" "}
-              <Part>All rights reserved.</Part>
-            </Copyright>
-          </Description>
-          <NextThumbnailContainer>
-            {renderAdjacentPhoto(nextPhoto)}
-          </NextThumbnailContainer>
-        </Root>
-        <Root>{renderMap()}</Root>
-      </>
+      <MapBox>
+        <MapContainer positions={[photo]} />
+      </MapBox>
     );
   };
 
-  return renderContent();
+  return (
+    <Root role="dialog" aria-label={t("photo-metadata")}>
+      <Header>
+        <HeaderTitle>{t("photo-metadata")}</HeaderTitle>
+        <CloseButton
+          type="button"
+          onClick={onClose}
+          aria-label={t("close")}
+          title={t("close")}
+        >
+          <BsXLg />
+        </CloseButton>
+      </Header>
+      <Body>
+        {photo.title() && <Title>{photo.title()}</Title>}
+        {renderLocation()}
+        {renderCoordinates()}
+        {renderExposure()}
+        {renderGear()}
+        {renderEpochInfo()}
+        {renderMap()}
+        <Copyright>
+          Photo Copyright © {photo.author()}. All rights reserved.
+        </Copyright>
+      </Body>
+    </Root>
+  );
 };
-export default Footer;
+export default MetadataPanel;
