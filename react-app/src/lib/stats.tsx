@@ -367,6 +367,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -419,6 +420,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -525,6 +527,7 @@ const collectTopics = (
           }),
           count: formatNumber.default(entry.value),
           average: formatNumber.twoDecimal(average(entry.value, year, month)),
+          _count: entry.value,
           standardScore: (average(entry.value, year, month) - mean) / stddev,
         };
       }),
@@ -561,6 +564,7 @@ const collectTopics = (
           average: t("stats-per-day", {
             count: formatNumber.twoDecimal(entry.value / daysInYear[entry.key]),
           }),
+          _count: entry.value,
           standardScore: (entry.value / daysInYear[entry.key] - mean) / stddev,
         };
       }),
@@ -597,6 +601,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -636,6 +641,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -672,6 +678,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -722,6 +729,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -756,6 +764,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -790,6 +799,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -826,6 +836,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -878,6 +889,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -913,6 +925,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -950,6 +963,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -985,6 +999,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -1020,6 +1035,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -1055,6 +1071,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -1090,6 +1107,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -1124,6 +1142,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -1157,6 +1176,7 @@ const collectTopics = (
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
+          _count: entry.value,
           standardScore: (entry.value - mean) / stddev,
         };
       }),

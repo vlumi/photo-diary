@@ -8,11 +8,17 @@ import type { StatsTopic } from "../../../lib/stats";
 
 type ActiveTheme = { get: (name: string) => string };
 
+// Grid (instead of flex) for the title + categories row. Grid items
+// stretch in both axes by default, so the vertical title bar reaches
+// the full height of the wrapped categories grid in every browser —
+// the previous flex layout left it short in Firefox because
+// `writing-mode: vertical-rl` makes intrinsic block-size = text
+// height rather than the flex stretch.
 const Root = styled.section`
   width: 100%;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: stretch;
 `;
 const Title = styled.h3`
   text-align: left;
@@ -27,10 +33,19 @@ const Title = styled.h3`
   border-color: var(--header-background);
   border-radius: 10px 0;
 `;
+// Responsive tile grid: auto-fill packs as many 330px-wide columns as
+// the row can hold, all sharing 1fr so every tile is the same width
+// across rows. 330px floor matches the previous fixed-width tile and
+// gives the inline charts (~300px combined) enough room to render
+// without overflowing. On viewports too narrow to fit a single 330px
+// tile (sub-360px phones) the tile overflows by a few pixels — rare
+// in practice and a cleaner trade-off than letting the charts squash.
 const Categories = styled.section`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 2px;
+  align-content: start;
+  min-width: 0;
 `;
 
 interface Props {

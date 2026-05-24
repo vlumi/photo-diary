@@ -21,6 +21,11 @@ const Root = styled.div`
   flex-wrap: wrap;
   justify-content: flex-start;
   align-items: flex-start;
+  /* Match the 5px horizontal inset that the sibling Filters bar uses
+     (margin: 0 5px in Filters/index.tsx). Now that the category tiles
+     fill the full row width with the responsive grid, the previous
+     edge-to-edge layout made Filters' inset look misaligned. */
+  margin: 0 5px;
 `;
 
 interface Props {

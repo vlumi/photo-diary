@@ -2,6 +2,7 @@
   "translation": {
     "loading": "Ladataan...",
     "empty": "Tyhjä",
+    "close": "Sulje",
 
     "login": "Kirjaudu sisään",
     "logout": "Kirjaudu ulos",
@@ -82,6 +83,8 @@
 
     "stats-unknown": "N/A",
     "stats-other": "Muut",
+    "stats-more_one": "+ {{count}} muu…",
+    "stats-more_other": "+ {{count}} muuta…",
     "stats-year-month": "{{month}} {{year}}",
     "stats-per-day": "{{count}}/päivä",
 

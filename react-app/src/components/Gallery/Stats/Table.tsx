@@ -67,6 +67,22 @@ const Column = styled("td", {
   vertical-align: top;
   text-align: ${(props) => props.$align};
   overflow: hidden;
+  /* Allow long category labels (e.g. camera-lens names) to wrap rather
+     than forcing the table wider than its container. */
+  overflow-wrap: anywhere;
+`;
+const ExpandRow = styled.tr`
+  cursor: pointer;
+  color: var(--inactive-color);
+  font-style: italic;
+  &:hover {
+    color: var(--header-color);
+    background-color: var(--header-background);
+  }
+`;
+const ExpandCell = styled.td`
+  padding: 2px;
+  text-align: center;
 `;
 
 interface HeatColorCache {
@@ -100,6 +116,12 @@ interface Props {
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
+  // Optional cap on the number of rows shown inline. When the actual row
+  // count exceeds the cap, a trailing "+ N more…" row is rendered that
+  // fires `onExpand` (typically to open a modal with the full table).
+  // Omitted from the modal itself so it shows every row.
+  limit?: number;
+  onExpand?: () => void;
 }
 
 const Table = ({
@@ -108,6 +130,8 @@ const Table = ({
   filters,
   setFilters,
   theme,
+  limit,
+  onExpand,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
@@ -219,6 +243,22 @@ const Table = ({
     });
   };
 
+  const fullTable = category.table;
+  const shouldCap = limit !== undefined && fullTable.length > limit;
+  // When capping, re-sort by raw count desc so "+ N more…" reads as
+  // "we showed you the top 10; click to see the rest" rather than "we
+  // truncated by whatever the original sort was" (which is by value
+  // for the exposure categories, making the first 10 = lowest 10
+  // values — not what the user wants from a glance). The modal
+  // (limit undefined) keeps the original sort so the distribution
+  // shape stays visible.
+  const visibleTable = shouldCap
+    ? [...fullTable]
+        .sort((a, b) => Number(b._count ?? 0) - Number(a._count ?? 0))
+        .slice(0, limit)
+    : fullTable;
+  const hiddenCount = shouldCap ? fullTable.length - limit : 0;
+
   return (
     <Root>
       <Block>
@@ -232,7 +272,14 @@ const Table = ({
             </Header>
           ))}
         </HeaderRow>
-        {renderRows(topic.key, category.key, category.table)}
+        {renderRows(topic.key, category.key, visibleTable)}
+        {hiddenCount > 0 && onExpand && (
+          <ExpandRow onClick={onExpand}>
+            <ExpandCell colSpan={tableColumns.length}>
+              {t("stats-more", { count: hiddenCount })}
+            </ExpandCell>
+          </ExpandRow>
+        )}
       </Block>
     </Root>
   );

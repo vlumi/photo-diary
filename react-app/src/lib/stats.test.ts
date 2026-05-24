@@ -1208,6 +1208,7 @@ describe("collectTopics", () => {
         author: "Author One",
         count: "2",
         share: "100.0%",
+        _count: 2,
         standardScore: NaN,
       },
     ]);
@@ -1229,6 +1230,7 @@ describe("collectTopics", () => {
         rank: "1",
         count: "2",
         share: "100.0%",
+        _count: 2,
         standardScore: NaN,
       },
     ]);
