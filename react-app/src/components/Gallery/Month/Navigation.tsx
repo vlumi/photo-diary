@@ -1,34 +1,28 @@
 import React from "react";
 import styled from "@emotion/styled";
-import { useTranslation } from "react-i18next";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
-  BsFillCalendarFill,
   BsCaretRightFill,
   BsSkipForwardFill,
 } from "react-icons/bs";
 
-import FormatDate from "../../FormatDate";
-
 import Root from "../Navigation";
 import Link from "../Link";
-import UpLink from "../UpLink";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
+const Group = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "$visibility",
 })<{ $visibility: string }>`
-  visibility: ${(props) => props.$visibility};
-`;
-const TitleContainer = styled.div`
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
-`;
-const Title = styled.span`
-  margin: 0 5px;
+  visibility: ${(props) => props.$visibility};
 `;
 
 interface Props {
@@ -42,7 +36,6 @@ const Navigation = ({
   year,
   month,
 }: Props): React.ReactElement => {
-  const { t } = useTranslation();
   const prevVisibility = gallery.isFirstMonth(year, month) ? "hidden" : "";
   const nextVisibility = gallery.isLastMonth(year, month) ? "hidden" : "";
 
@@ -52,51 +45,42 @@ const Navigation = ({
   const [lastYear, lastMonth] = gallery.lastMonth();
   return (
     <Root>
-      <NavLink
-        gallery={gallery}
-        year={firstYear}
-        month={firstMonth}
-        $visibility={prevVisibility}
-      >
-        <BsSkipBackwardFill />
-      </NavLink>
-      <NavLink
-        gallery={gallery}
-        year={previousYear}
-        month={previousMonth}
-        $visibility={prevVisibility}
-      >
-        <BsCaretLeftFill />
-      </NavLink>
-      <UpLink
-        gallery={gallery}
-        year={year}
-        aria-label={t("nav-up-to-year")}
-        title={t("nav-up-to-year")}
-      >
-        <TitleContainer>
-          <BsFillCalendarFill />
-          <Title>
-            <FormatDate year={year} month={month} />
-          </Title>
-        </TitleContainer>
-      </UpLink>
-      <NavLink
-        gallery={gallery}
-        year={nextYear}
-        month={nextMonth}
-        $visibility={nextVisibility}
-      >
-        <BsCaretRightFill />
-      </NavLink>
-      <NavLink
-        gallery={gallery}
-        year={lastYear}
-        month={lastMonth}
-        $visibility={nextVisibility}
-      >
-        <BsSkipForwardFill />
-      </NavLink>
+      <Group>
+        <NavLink
+          gallery={gallery}
+          year={firstYear}
+          month={firstMonth}
+          $visibility={prevVisibility}
+        >
+          <BsSkipBackwardFill />
+        </NavLink>
+        <NavLink
+          gallery={gallery}
+          year={previousYear}
+          month={previousMonth}
+          $visibility={prevVisibility}
+        >
+          <BsCaretLeftFill />
+        </NavLink>
+      </Group>
+      <Group>
+        <NavLink
+          gallery={gallery}
+          year={nextYear}
+          month={nextMonth}
+          $visibility={nextVisibility}
+        >
+          <BsCaretRightFill />
+        </NavLink>
+        <NavLink
+          gallery={gallery}
+          year={lastYear}
+          month={lastMonth}
+          $visibility={nextVisibility}
+        >
+          <BsSkipForwardFill />
+        </NavLink>
+      </Group>
     </Root>
   );
 };

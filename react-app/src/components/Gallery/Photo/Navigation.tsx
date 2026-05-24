@@ -1,10 +1,8 @@
 import React from "react";
 import styled from "@emotion/styled";
-import { useTranslation } from "react-i18next";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
-  BsFillCalendarFill,
   BsCaretRightFill,
   BsSkipForwardFill,
   BsArrowsFullscreen,
@@ -13,23 +11,21 @@ import {
 
 import Root from "../Navigation";
 import Link from "../Link";
-import UpLink from "../UpLink";
 
 import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo } from "../../../models/PhotoModel";
 
+const Group = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "$visibility",
 })<{ $visibility: string }>`
-  visibility: ${(props) => props.$visibility};
-`;
-const TitleContainer = styled.div`
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
-`;
-const Title = styled.span`
-  margin: 0 5px;
+  visibility: ${(props) => props.$visibility};
 `;
 const FullscreenButton = styled.button`
   background: none;
@@ -71,9 +67,7 @@ const Navigation = ({
   month,
   day,
   photo,
-  lang,
 }: Props): React.ReactElement => {
-  const { t } = useTranslation();
   const [isFullscreen, setIsFullscreen] = React.useState(
     typeof document !== "undefined" && !!document.fullscreenElement
   );
@@ -107,46 +101,47 @@ const Navigation = ({
   const lastPhoto = lastDayPhotos[lastDayPhotos.length - 1];
   return (
     <Root>
-      <NavLink gallery={gallery} photo={firstPhoto} $visibility={prevVisibility}>
-        <BsSkipBackwardFill />
-      </NavLink>
-      <NavLink
-        gallery={gallery}
-        photo={previousPhoto}
-        $visibility={prevVisibility}
-      >
-        <BsCaretLeftFill />
-      </NavLink>
-      <UpLink
-        gallery={gallery}
-        year={year}
-        month={month}
-        aria-label={t("nav-up-to-month")}
-        title={t("nav-up-to-month")}
-      >
-        <TitleContainer>
-          <BsFillCalendarFill />
-          <Title>
-            #
-            {photo ? new Intl.NumberFormat(lang).format(photo.index() + 1) : ""}
-          </Title>
-        </TitleContainer>
-      </UpLink>
-      <NavLink gallery={gallery} photo={nextPhoto} $visibility={nextVisibility}>
-        <BsCaretRightFill />
-      </NavLink>
-      <NavLink gallery={gallery} photo={lastPhoto} $visibility={nextVisibility}>
-        <BsSkipForwardFill />
-      </NavLink>
-      {fullscreenSupported() && (
-        <FullscreenButton
-          type="button"
-          onClick={toggleFullScreen}
-          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+      <Group>
+        <NavLink
+          gallery={gallery}
+          photo={firstPhoto}
+          $visibility={prevVisibility}
         >
-          {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
-        </FullscreenButton>
-      )}
+          <BsSkipBackwardFill />
+        </NavLink>
+        <NavLink
+          gallery={gallery}
+          photo={previousPhoto}
+          $visibility={prevVisibility}
+        >
+          <BsCaretLeftFill />
+        </NavLink>
+      </Group>
+      <Group>
+        <NavLink
+          gallery={gallery}
+          photo={nextPhoto}
+          $visibility={nextVisibility}
+        >
+          <BsCaretRightFill />
+        </NavLink>
+        <NavLink
+          gallery={gallery}
+          photo={lastPhoto}
+          $visibility={nextVisibility}
+        >
+          <BsSkipForwardFill />
+        </NavLink>
+        {fullscreenSupported() && (
+          <FullscreenButton
+            type="button"
+            onClick={toggleFullScreen}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
+          </FullscreenButton>
+        )}
+      </Group>
     </Root>
   );
 };
