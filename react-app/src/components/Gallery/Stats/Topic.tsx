@@ -33,10 +33,18 @@ const Title = styled.h3`
   border-color: var(--header-background);
   border-radius: 10px 0;
 `;
+// Responsive tile grid: auto-fill packs as many ~300px-wide columns as
+// the row can hold, all sharing 1fr so every tile is the same width
+// across rows. `min(300px, 100%)` clamps the column min to the
+// container width on very narrow viewports so a single tile fills the
+// row instead of overflowing — important on phones where the previous
+// fixed 330px wasted 60-80px on the right.
 const Categories = styled.section`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 2px;
+  align-content: start;
+  min-width: 0;
 `;
 
 interface Props {
