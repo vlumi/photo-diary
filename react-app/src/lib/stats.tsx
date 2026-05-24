@@ -90,12 +90,20 @@ export interface StatsCategory {
   tableColumns?: TableColumn[];
   table?: TableRow[];
   summaryExtras?: SummaryExtras;
-  // Set on categories whose natural sort is "by value" (focal length
-  // ascending, exposure time descending, …) rather than "by count" —
-  // the expanded modal offers a toggle to flip between the natural
-  // value sort and a top-by-count view. Time/chronology categories
-  // stay false: the calendar order is the only sensible reading.
+  // Set on categories that should offer the modal sort toggle ("By
+  // value" vs "Top"). What "By value" means depends on the category:
+  //   - Exposure ranges: numeric ascending/descending (the natural
+  //     sort already produced by collectTopics).
+  //   - Time: chronological (year/month/weekday/hour calendar order).
+  //   - Gear & people-or-place: alphabetical by display label — these
+  //     pre-sort to count-desc in collectTopics, so the toggle has to
+  //     do the re-sort itself; `valueSortByLabel` marks that case.
   valueSortable?: boolean;
+  // True when the modal's "By value" mode should re-sort by display
+  // label (alphabetical) instead of trusting the natural order. Set
+  // for gear/people-or-place categories whose natural sort is by
+  // count.
+  valueSortByLabel?: boolean;
 }
 // Shapes for the expanded Summary view (see SummaryModal). Attached
 // only to the `summary` category. The four sub-trees answer one
@@ -505,6 +513,8 @@ const collectTopics = (
     return {
       key: "author",
       title: t("stats-category-author"),
+      valueSortable: true,
+      valueSortByLabel: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -541,6 +551,8 @@ const collectTopics = (
     return {
       key: "country",
       title: t("stats-category-country"),
+      valueSortable: true,
+      valueSortByLabel: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -666,6 +678,7 @@ const collectTopics = (
     return {
       key: "year-month",
       title: t("stats-category-year-month"),
+      valueSortable: true,
       charts: [{ type: "line", data, options: chartOptions.line }],
       tableColumns: [
         { title: "rank", align: "right", header: true },
@@ -702,6 +715,7 @@ const collectTopics = (
     return {
       key: "year",
       title: t("stats-category-year"),
+      valueSortable: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -739,6 +753,7 @@ const collectTopics = (
     return {
       key: "month",
       title: t("stats-category-month"),
+      valueSortable: true,
       charts: [
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -779,6 +794,7 @@ const collectTopics = (
     return {
       key: "weekday",
       title: t("stats-category-weekday"),
+      valueSortable: true,
       charts: [
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -816,6 +832,7 @@ const collectTopics = (
     return {
       key: "hour",
       title: t("stats-category-hour"),
+      valueSortable: true,
       charts: [
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -867,6 +884,8 @@ const collectTopics = (
     return {
       key: "camera-make",
       title: t("stats-category-camera-make"),
+      valueSortable: true,
+      valueSortByLabel: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -902,6 +921,8 @@ const collectTopics = (
     return {
       key: "camera",
       title: t("stats-category-camera"),
+      valueSortable: true,
+      valueSortByLabel: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -937,6 +958,8 @@ const collectTopics = (
     return {
       key: "lens",
       title: t("stats-category-lens"),
+      valueSortable: true,
+      valueSortByLabel: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -974,6 +997,8 @@ const collectTopics = (
     return {
       key: "camera-lens",
       title: t("stats-category-camera-lens"),
+      valueSortable: true,
+      valueSortByLabel: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },

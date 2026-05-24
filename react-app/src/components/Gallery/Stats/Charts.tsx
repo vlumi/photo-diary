@@ -37,17 +37,12 @@ interface Props {
   sortMode?: SortMode;
 }
 
-// Re-order the chart's labels + each dataset's data (and backgroundColor
-// where present) in parallel by data desc. Datasets without a `data`
-// array (none today, but safe) pass through unchanged.
-const sortByCountDesc = (data: any): any => {
+// Re-zip labels + each dataset's data (and backgroundColor where
+// present) in `order`. Datasets without a `data` array pass through.
+const applyOrder = (data: any, order: number[]): any => {
   if (!data?.datasets?.[0]?.data) {
     return data;
   }
-  const counts: number[] = data.datasets[0].data.map((v: unknown) => Number(v));
-  const order = counts
-    .map((_, i) => i)
-    .sort((a, b) => counts[b] - counts[a]);
   const reorder = <T,>(arr: T[]): T[] => order.map((i) => arr[i]);
   return {
     ...data,
@@ -62,6 +57,29 @@ const sortByCountDesc = (data: any): any => {
   };
 };
 
+const sortByCountDesc = (data: any): any => {
+  if (!data?.datasets?.[0]?.data) return data;
+  const counts: number[] = data.datasets[0].data.map((v: unknown) => Number(v));
+  const order = counts
+    .map((_, i) => i)
+    .sort((a, b) => counts[b] - counts[a]);
+  return applyOrder(data, order);
+};
+
+// Labels are JSON-stringified display strings (or JSON-stringified
+// arrays for camera-lens). Stringified form sorts cleanly for our
+// purposes — comparing `"Apple"` vs `"Banana"` (raw bytes) gives the
+// expected alphabetical order, and the camera-lens `["A","B"]` form
+// stays well-ordered too.
+const sortByLabelAsc = (data: any): any => {
+  if (!data?.labels) return data;
+  const labels: string[] = data.labels;
+  const order = labels
+    .map((_, i) => i)
+    .sort((a, b) => labels[a].localeCompare(labels[b]));
+  return applyOrder(data, order);
+};
+
 const Charts = ({
   category,
   sortMode = "value",
@@ -69,13 +87,18 @@ const Charts = ({
   if (!category.charts) {
     return <></>;
   }
-  const charts: ChartSpec[] =
+  const transform: ((data: any) => any) | null =
     sortMode === "count"
-      ? category.charts.map((chart) => ({
-          ...chart,
-          data: sortByCountDesc(chart.data),
-        }))
-      : category.charts;
+      ? sortByCountDesc
+      : category.valueSortByLabel
+        ? sortByLabelAsc
+        : null;
+  const charts: ChartSpec[] = transform
+    ? category.charts.map((chart) => ({
+        ...chart,
+        data: transform(chart.data),
+      }))
+    : category.charts;
   return (
     <Root>
       {charts.map((chart) => {

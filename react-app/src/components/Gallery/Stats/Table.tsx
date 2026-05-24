@@ -249,22 +249,32 @@ const Table = ({
   };
 
   const fullTable = category.table;
-  const shouldCap = limit !== undefined && fullTable.length > limit;
-  // Two reasons to re-sort by raw count desc:
-  // - Inline view capping (`shouldCap`): "+ N more…" needs to read as
-  //   "top 10; click to see the rest" rather than "first 10 of the
-  //   natural sort" (which for value-sorted categories = the 10
-  //   lowest values).
-  // - Modal sort toggle in "count" mode (#299): the user explicitly
-  //   asked for top-by-count instead of the natural value sort.
-  // Inline view leaves `sortMode` at "value"; capping is the only
-  // reason it ever re-sorts there.
-  const resort = shouldCap || sortMode === "count";
-  const sortedTable = resort
-    ? [...fullTable].sort(
+  const isInline = limit !== undefined;
+  const shouldCap = isInline && fullTable.length > limit;
+  // Inline view always reads as top-by-count — even short categories
+  // (weekday's 7 rows, month's 12) sort more usefully by frequency
+  // than by their chronological default. The modal then offers "By
+  // value" as the alternate reading. The exposure modal's natural
+  // numeric sort and the gear modal's alphabetical sort are both
+  // handled here under `sortMode === "value"`:
+  //   - `valueSortByLabel` (gear, people-or-place) → alpha sort on
+  //     the display column (which lives at `row[category.key]`).
+  //   - Otherwise → the order from collectTopics (exposure numeric,
+  //     time chronological).
+  const sortedTable = (() => {
+    if (sortMode === "count" || isInline) {
+      return [...fullTable].sort(
         (a, b) => Number(b._count ?? 0) - Number(a._count ?? 0)
-      )
-    : fullTable;
+      );
+    }
+    if (category.valueSortByLabel) {
+      const labelCol = category.key;
+      return [...fullTable].sort((a, b) =>
+        String(a[labelCol] ?? "").localeCompare(String(b[labelCol] ?? ""))
+      );
+    }
+    return fullTable;
+  })();
   const visibleTable = shouldCap ? sortedTable.slice(0, limit) : sortedTable;
   const hiddenCount = shouldCap ? fullTable.length - limit : 0;
 

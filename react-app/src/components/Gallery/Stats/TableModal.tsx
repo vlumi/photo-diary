@@ -111,7 +111,10 @@ const TableModal = ({
   onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
-  const [sortMode, setSortMode] = React.useState<SortMode>("value");
+  // "Top" is the default: the user typically lands here from the
+  // inline view's top-10 list, so opening to the same ordering is the
+  // less-jarring landing. "By value" is the alternate reading.
+  const [sortMode, setSortMode] = React.useState<SortMode>("count");
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
