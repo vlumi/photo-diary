@@ -1,6 +1,8 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import styled from "@emotion/styled";
+import { BsXLg } from "react-icons/bs";
 import type { SwipeEventData } from "react-swipeable";
 
 import Swipeable from "../../Swipeable";
@@ -19,9 +21,6 @@ interface CountryData {
 }
 
 interface Props {
-  // Accepted (and ignored) to match the layout pattern used by Year/Month/Day —
-  // Gallery/index wraps a Title+Filters block inside <Photo>, but Photo doesn't render it.
-  children?: React.ReactNode;
   gallery: Gallery;
   year: number;
   month: number;
@@ -30,6 +29,42 @@ interface Props {
   lang: string;
   countryData: CountryData;
 }
+
+// Modal overlay over the Month view rendered by Gallery/index.tsx
+// when the URL targets a photo. `position: fixed; inset: 0` so the
+// modal claims the viewport above whatever's mounted underneath.
+// Backdrop uses the theme background (opaque) for the MVP — the
+// architectural change is the value here (no Month remount on
+// close, direct-link entries now mount Month synchronously). The
+// "Month visible behind" visual will land in a follow-up once the
+// chrome colours have been adjusted to read on a dimmed background
+// across every theme.
+const Backdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--primary-background);
+  display: flex;
+  flex-direction: column;
+`;
+const CloseButton = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 10;
+  background: none;
+  border: none;
+  color: var(--header-color);
+  font-size: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  &:hover {
+    color: var(--primary-color);
+  }
+`;
 
 // Zoom state lives here so `<Swipeable>` can be bypassed while zoomed
 // (otherwise drag-to-pan would also fire swipe-to-next/prev) and so
@@ -102,10 +137,12 @@ const Photo = ({
     }
   };
 
-  useKeyPress("Escape", () => {
+  const handleClose = React.useCallback(() => {
     window.history.pushState({}, "");
     setRedirect(gallery.path(year, month));
-  });
+  }, [gallery, year, month]);
+
+  useKeyPress("Escape", handleClose);
   useKeyPress("Home", handlMoveToFirst);
   useKeyPress("ArrowLeft", handlMoveToPrevious);
   useKeyPress("ArrowRight", handlMoveToNext);
@@ -137,7 +174,7 @@ const Photo = ({
   }
 
   return (
-    <>
+    <Backdrop role="dialog" aria-modal="true">
       <title>
         {gallery.title(year, month, day, photo)} — {t("nav-gallery")}
       </title>
@@ -149,6 +186,14 @@ const Photo = ({
         photo={photo}
         lang={lang}
       />
+      <CloseButton
+        type="button"
+        onClick={handleClose}
+        aria-label={t("close")}
+        title={t("close")}
+      >
+        <BsXLg />
+      </CloseButton>
       {zoom.scale === 1 ? (
         <Swipeable onSwiped={handleSwipe}>
           <Content
@@ -192,7 +237,7 @@ const Photo = ({
           />
         </>
       )}
-    </>
+    </Backdrop>
   );
 };
 export default Photo;
