@@ -3,10 +3,19 @@ import { useSwipeable, type SwipeableProps } from "react-swipeable";
 
 interface Props extends SwipeableProps {
   children?: React.ReactNode;
+  className?: string;
 }
 
-const Swipeable = ({ children, ...props }: Props): React.ReactElement => {
+const Swipeable = ({
+  children,
+  className,
+  ...props
+}: Props): React.ReactElement => {
   const handlers = useSwipeable(props);
-  return <div {...handlers}>{children}</div>;
+  return (
+    <div className={className} {...handlers}>
+      {children}
+    </div>
+  );
 };
 export default Swipeable;

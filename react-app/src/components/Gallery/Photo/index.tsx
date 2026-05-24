@@ -89,6 +89,25 @@ const CloseButton = styled.button`
     color: var(--primary-color);
   }
 `;
+// Body wraps Content+Footer in a flex column that fills the leftover
+// space inside the modal Frame (between Navigation and the bottom
+// edge). Without this Content's `flex-grow: 1` would be ineffective
+// — Swipeable's plain `<div>` (or the React fragment in the zoomed
+// branch) breaks the flex chain, and Content's Root collapses to
+// its own content size, which then feeds back into the
+// ResizeObserver inside Content and runs the photo down to nothing.
+const Body = styled.div`
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+`;
+const SwipeBody = styled(Swipeable)`
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+`;
 
 // Zoom state lives here so `<Swipeable>` can be bypassed while zoomed
 // (otherwise drag-to-pan would also fire swipe-to-next/prev) and so
@@ -228,7 +247,7 @@ const Photo = ({
           <BsXLg />
         </CloseButton>
         {zoom.scale === 1 ? (
-          <Swipeable onSwiped={handleSwipe}>
+          <SwipeBody onSwiped={handleSwipe}>
             <Content
               gallery={gallery}
               year={year}
@@ -247,9 +266,9 @@ const Photo = ({
               lang={lang}
               countryData={countryData}
             />
-          </Swipeable>
+          </SwipeBody>
         ) : (
-          <>
+          <Body>
             <Content
               gallery={gallery}
               year={year}
@@ -268,7 +287,7 @@ const Photo = ({
               lang={lang}
               countryData={countryData}
             />
-          </>
+          </Body>
         )}
       </Frame>
     </Backdrop>
