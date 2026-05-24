@@ -36,8 +36,13 @@ const Path = styled.nav`
 `;
 const Separator = styled(BsChevronRight)`
   flex: 0 0 auto;
-  font-size: 0.7em;
-  color: var(--inactive-color);
+  font-size: 0.85em;
+  /* --inactive-color reads as near-invisible on some themes (blue's
+     inactive is a low-contrast tint against the bar background).
+     Use currentColor at reduced opacity so the chevron is always a
+     dimmed copy of the breadcrumb text, regardless of theme. */
+  color: currentColor;
+  opacity: 0.55;
 `;
 const Crumb = styled.span`
   flex: 0 1 auto;
