@@ -1,62 +1,66 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
+import {
+  BsImages,
+  BsBarChartFill,
+  BsCalendar3,
+  BsCalendar2,
+  BsCalendarDay,
+} from "react-icons/bs";
+import type { IconType } from "react-icons";
 
 import type { StatsCategory } from "../../../lib/stats";
 
 const Root = styled.div`
-  margin: 0;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 6px;
+  padding: 4px 0;
 `;
-const List = styled.ul`
+const Kpi = styled.div`
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  flex-wrap: wrap;
-  margin: 0;
-  padding: 0;
+  justify-content: flex-start;
+  padding: 12px 6px;
+  background: var(--tile-background);
+  border: 1px solid var(--inactive-color);
+  border-radius: 6px;
 `;
-const Kpi = styled.li`
-  display: flex;
-  flex-wrap: wrap;
-  border: solid black 1px;
-  align-items: flex-start;
-  margin: 5px;
-  padding: 0;
+const IconWrap = styled.div`
+  font-size: 1.4em;
+  color: var(--primary-color);
+  opacity: 0.7;
+  margin-bottom: 6px;
+  display: inline-flex;
 `;
-const Title = styled.h3`
-  color: var(--header-color);
-  background-color: var(--header-background);
-  flex-grow: 1;
-  flex-shrink: 1;
-  width: 100%;
-  margin: auto;
-  padding: 0;
+const Label = styled.div`
+  font-size: 0.75em;
+  color: var(--inactive-color);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   text-align: center;
 `;
-const Box = styled.span`
-  flex-grow: 1;
-  width: 100%;
-  height: 80px;
-  padding: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+const Value = styled.div`
+  font-size: 1.5em;
   font-weight: bold;
-`;
-const Value = styled.span`
-  margin: auto;
-  padding: 0;
-  font-size: xx-large;
+  color: var(--primary-color);
   text-align: center;
-  vertical-align: middle;
+  line-height: 1.1;
 `;
+
+// Per-KPI icon. Keys match the kpi.key values produced by
+// `collectSummary` in `lib/stats.tsx`.
+const ICONS: Record<string, IconType> = {
+  photos: BsImages,
+  average: BsBarChartFill,
+  years: BsCalendar3,
+  months: BsCalendar2,
+  days: BsCalendarDay,
+};
 
 interface Props {
   category: StatsCategory;
@@ -70,22 +74,26 @@ const Summary = ({ category }: Props): React.ReactElement => {
   }
   return (
     <Root>
-      <List>
-        {category.kpi.map((kpi) => (
+      {category.kpi.map((kpi) => {
+        const Icon = ICONS[kpi.key];
+        return (
           <Kpi key={`kpi:${kpi.key}`}>
-            <Title>{t(`stats-kpi-title-${kpi.key}`)}</Title>
+            {Icon && (
+              <IconWrap aria-hidden="true">
+                <Icon />
+              </IconWrap>
+            )}
+            <Label>{t(`stats-kpi-title-${kpi.key}`)}</Label>
             <Value>
-              <Box>
-                {String(
-                  t(`stats-kpi-${kpi.key}`, {
-                    count: kpi.value,
-                  } as never)
-                )}
-              </Box>
+              {String(
+                t(`stats-kpi-${kpi.key}`, {
+                  count: kpi.value,
+                } as never)
+              )}
             </Value>
           </Kpi>
-        ))}
-      </List>
+        );
+      })}
     </Root>
   );
 };

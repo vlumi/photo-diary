@@ -8,11 +8,17 @@ import type { StatsTopic } from "../../../lib/stats";
 
 type ActiveTheme = { get: (name: string) => string };
 
+// Grid (instead of flex) for the title + categories row. Grid items
+// stretch in both axes by default, so the vertical title bar reaches
+// the full height of the wrapped categories grid in every browser —
+// the previous flex layout left it short in Firefox because
+// `writing-mode: vertical-rl` makes intrinsic block-size = text
+// height rather than the flex stretch.
 const Root = styled.section`
   width: 100%;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: stretch;
 `;
 const Title = styled.h3`
   text-align: left;
