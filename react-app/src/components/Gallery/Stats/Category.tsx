@@ -9,22 +9,17 @@ import TableModal from "./TableModal";
 import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic, StatsCategory } from "../../../lib/stats";
 
-// Variable-length count-sorted distributions (cameras, lenses,
-// year-months, etc.) get truncated in the inline category card — the
-// user can open the full table in a modal via a trailing "+ N more…"
-// row. 12 lines up with months and fits a comfortable mobile screen.
-//
-// Intrinsically-bounded chronological categories are exempt: cutting
-// the hour distribution off at noon would hide PM hours entirely;
-// month/weekday/orientation are short enough to render fully anyway
-// and the cap was making them feel arbitrary too.
-const INLINE_TABLE_LIMIT = 12;
-const ALWAYS_FULL_CATEGORIES = new Set([
-  "hour",
-  "weekday",
-  "month",
-  "orientation",
-]);
+// Threshold-based capping: show every row inline when the distribution
+// is short enough that the user can scan the whole thing comfortably;
+// cap at INLINE_TABLE_LIMIT once it gets longer. The threshold of 24
+// covers every intrinsically-bounded category (hour=24, weekday=7,
+// month=12, orientation=3) plus the exposure settings that usually
+// land under 24 (aperture, ISO, often focal-length). Long distributions
+// (cameras/lenses on busy galleries, year-month on multi-year
+// galleries, dense exposure-time/focal-length) get the cap + expand
+// modal.
+const INLINE_TABLE_LIMIT = 10;
+const INLINE_AUTO_FULL_BELOW = 24;
 
 type ActiveTheme = { get: (name: string) => string };
 
@@ -61,9 +56,9 @@ const Category = ({
   theme,
 }: Props): React.ReactElement => {
   const [modalOpen, setModalOpen] = React.useState(false);
-  const limit = ALWAYS_FULL_CATEGORIES.has(category.key)
-    ? undefined
-    : INLINE_TABLE_LIMIT;
+  const rowCount = category.table?.length ?? 0;
+  const limit =
+    rowCount > INLINE_AUTO_FULL_BELOW ? INLINE_TABLE_LIMIT : undefined;
   return (
     <Root
       key={`${topic.key}:${category.key}`}
