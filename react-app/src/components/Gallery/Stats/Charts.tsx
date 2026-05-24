@@ -30,12 +30,21 @@ const StyledChartContainer2 = styled.div`
 
 interface Props {
   category: StatsCategory;
-  // "value" is the category's natural sort (what `collectTopics` built);
-  // "count" re-orders labels/data/colors in parallel by count desc.
-  // Only meaningful for `valueSortable` categories — pass-through "value"
-  // for everything else.
+  // Passed by the modal only. When omitted (the inline view),
+  // charts render in the natural order from `collectTopics` — no
+  // re-sort. The modal's "Top" mode re-zips by count desc; the
+  // modal's "By value" mode re-zips alphabetically for
+  // `valueSortByLabel` categories and otherwise no-ops.
   sortMode?: SortMode;
 }
+
+// Line and polar charts encode shape via position: the year-month
+// trend line is meaningless when sorted by count, and the cyclical
+// polar charts (month / weekday / hour) lose their wheel arrangement.
+// Doughnut and horizontal-bar are agnostic — segments and bars can
+// land in any order — so the modal toggle only re-zips those.
+const isReorderable = (type: ChartSpec["type"]): boolean =>
+  type === "doughnut" || type === "horizontal-bar";
 
 // Re-zip labels + each dataset's data (and backgroundColor where
 // present) in `order`. Datasets without a `data` array pass through.
@@ -80,24 +89,22 @@ const sortByLabelAsc = (data: any): any => {
   return applyOrder(data, order);
 };
 
-const Charts = ({
-  category,
-  sortMode = "value",
-}: Props): React.ReactElement => {
+const Charts = ({ category, sortMode }: Props): React.ReactElement => {
   if (!category.charts) {
     return <></>;
   }
   const transform: ((data: any) => any) | null =
     sortMode === "count"
       ? sortByCountDesc
-      : category.valueSortByLabel
+      : sortMode === "value" && category.valueSortByLabel
         ? sortByLabelAsc
         : null;
   const charts: ChartSpec[] = transform
-    ? category.charts.map((chart) => ({
-        ...chart,
-        data: transform(chart.data),
-      }))
+    ? category.charts.map((chart) =>
+        isReorderable(chart.type)
+          ? { ...chart, data: transform(chart.data) }
+          : chart
+      )
     : category.charts;
   return (
     <Root>

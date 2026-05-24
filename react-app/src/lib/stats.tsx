@@ -76,6 +76,12 @@ export interface TableColumn {
 export interface TableRow {
   key: string;
   standardScore?: number;
+  // Plain-text label for alphabetical sort. Optional — only needed
+  // when the display column is JSX rather than a string (e.g.
+  // country, where the column carries a `<FlagIcon>` alongside the
+  // name). String-column rows are sortable directly via
+  // `row[category.key]`.
+  _label?: string;
   [columnKey: string]: unknown;
 }
 // A single category bag: summary categories carry `kpi`; data categories
@@ -590,6 +596,10 @@ const collectTopics = (
             format.share(entry.value, total)
           )}%`,
           _count: entry.value,
+          _label: format.countryName(
+            lang,
+            countryData
+          )(localizeUnknownKey(entry.key)),
           standardScore: (entry.value - mean) / stddev,
         };
       }),

@@ -268,9 +268,17 @@ const Table = ({
       );
     }
     if (category.valueSortByLabel) {
+      // Country renders the display column as `<><FlagIcon/> name</>`,
+      // so its sortable string lives in the optional `_label` field.
+      // String-column categories (author / camera / lens / …) sort
+      // via `row[category.key]` directly.
       const labelCol = category.key;
+      const labelOf = (row: TableRow): string =>
+        typeof row._label === "string"
+          ? row._label
+          : String(row[labelCol] ?? "");
       return [...fullTable].sort((a, b) =>
-        String(a[labelCol] ?? "").localeCompare(String(b[labelCol] ?? ""))
+        labelOf(a).localeCompare(labelOf(b))
       );
     }
     return fullTable;
