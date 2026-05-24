@@ -27,7 +27,7 @@ const Root = styled("div", { shouldForwardProp: (prop) => prop !== "$height" })<
   width: 100%;
   height: ${(props) => (props.$height ? props.$height : 400)}px;
   padding: 0;
-  margin: 10px 0;
+  margin: 0;
 `;
 const PopupContent = styled.span`
   text-align: center;

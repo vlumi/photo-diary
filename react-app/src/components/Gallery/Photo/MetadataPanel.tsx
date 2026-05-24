@@ -239,9 +239,14 @@ const MetadataPanel = ({
   };
   const renderMap = () => {
     if (!photo.hasCoordinates() || gallery.hideMap()) return null;
+    // Pass the explicit height matching `<MapBox>` so Leaflet
+    // measures the actual visible area. Without this, MapContainer
+    // defaults to 400px while MapBox clips at 160 — Leaflet
+    // renders at 400 and the marker ends up below the visible
+    // strip.
     return (
       <MapBox>
-        <MapContainer positions={[photo]} />
+        <MapContainer positions={[photo]} height={160} />
       </MapBox>
     );
   };
