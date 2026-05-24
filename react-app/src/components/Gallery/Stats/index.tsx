@@ -71,17 +71,18 @@ const Stats = ({
   const [committedTopics, setCommittedTopics] = React.useState<
     ReturnType<typeof stats.collectTopics>
   >([]);
-  // `useTransition` keeps `isPending` true for the whole duration of the
-  // transition — including chart.js's blocking redraw — so the overlay
-  // stays visible the entire time the page is busy. (Earlier
-  // `useDeferredValue` attempt let the overlay flash for ~1 frame then
-  // disappear under the redraw.)
-  const [isPending, startTransition] = React.useTransition();
-  // Skip the transition on the very first compute after `data` lands —
-  // there are no previous topics to leave on screen, so an overlay
-  // would just paint over an empty stats area. Subsequent recomputes
-  // (lang switch, filter change, theme switch, gallery switch) do go
-  // through the transition.
+  // Explicit state machine. `isUpdating` becomes true the moment a
+  // recompute is triggered, paints (via double-RAF) BEFORE the heavy
+  // setCommittedTopics → chart.js redraw blocks the main thread, and
+  // stays true until a second double-RAF after the heavy paint clears
+  // it. Earlier `useTransition` / `useDeferredValue` attempts left the
+  // overlay invisible because React batched the two commits and the
+  // browser never got a chance to paint the in-between state.
+  const [isUpdating, setIsUpdating] = React.useState(false);
+  // First compute after `data` lands skips the overlay — there are no
+  // previous topics to leave on screen, so painting an overlay over an
+  // empty stats area is just noise. Subsequent recomputes (lang
+  // switch, filter change, theme switch, gallery switch) overlay.
   const isFirstUpdateRef = React.useRef(true);
 
   const { t } = useTranslation();
@@ -103,12 +104,46 @@ const Stats = ({
       );
       return;
     }
-    startTransition(() => {
-      setCommittedTopics(
-        stats.collectTopics(data, lang, t, countryData, theme)
-      );
+    setIsUpdating(true);
+    // Double RAF: first frame schedules the second; second runs AFTER
+    // the browser has painted the isUpdating=true state. Only then do
+    // we trigger the heavy chart.js redraw via setCommittedTopics, so
+    // the overlay is on screen for the full duration of the rebuild.
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        setCommittedTopics(
+          stats.collectTopics(data, lang, t, countryData, theme)
+        );
+      });
     });
-  }, [data, lang, t, countryData, theme]);
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+    // `t` deliberately omitted: react-i18next returns a fresh function
+    // per render, which would spuriously re-fire this effect even when
+    // the language hasn't changed. `lang` covers the actual change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, lang, countryData, theme]);
+
+  // After committedTopics changes (= heavy work has committed +
+  // chart.js has redrawn + browser has painted), schedule another
+  // double-RAF to clear the overlay. Skipped on initial commit because
+  // isUpdating is false there.
+  React.useEffect(() => {
+    if (!isUpdating) return;
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        setIsUpdating(false);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+  }, [committedTopics, isUpdating]);
 
   if (!data) {
     return (
@@ -140,7 +175,7 @@ const Stats = ({
           />
         ))}
         {renderMap(mapPhotos)}
-        {isPending && <UpdatingOverlay>{t("updating")}</UpdatingOverlay>}
+        {isUpdating && <UpdatingOverlay>{t("updating")}</UpdatingOverlay>}
       </Root>
     </>
   );
