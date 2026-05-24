@@ -9,6 +9,7 @@ import {
 
 import Root from "../Navigation";
 import Link from "../Link";
+import FormatDate from "../../FormatDate";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
@@ -16,6 +17,18 @@ const Group = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+`;
+// Current year shown in the middle of the bar. The breadcrumb above
+// has it too, but the bar otherwise reads as empty between the
+// left and right control clusters — restore the visual centre.
+const Centre = styled.div`
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 0.7em;
+  color: var(--header-sub-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "$visibility",
@@ -56,6 +69,9 @@ const Navigation = ({ gallery, year }: Props): React.ReactElement => {
           <BsCaretLeftFill />
         </NavLink>
       </Group>
+      <Centre>
+        <FormatDate year={year} />
+      </Centre>
       <Group>
         <NavLink
           gallery={gallery}

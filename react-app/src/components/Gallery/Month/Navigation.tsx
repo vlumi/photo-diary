@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
@@ -16,6 +17,19 @@ const Group = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+`;
+// Current "month-name year" shown in the middle of the bar so it
+// doesn't read empty between the left and right control clusters.
+// Uses the localised long month name (matching how the breadcrumb
+// renders the month crumb).
+const Centre = styled.div`
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 0.7em;
+  color: var(--header-sub-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "$visibility",
@@ -36,6 +50,7 @@ const Navigation = ({
   year,
   month,
 }: Props): React.ReactElement => {
+  const { t } = useTranslation();
   const prevVisibility = gallery.isFirstMonth(year, month) ? "hidden" : "";
   const nextVisibility = gallery.isLastMonth(year, month) ? "hidden" : "";
 
@@ -63,6 +78,9 @@ const Navigation = ({
           <BsCaretLeftFill />
         </NavLink>
       </Group>
+      <Centre>
+        {t(`month-long-${month}`)} {year}
+      </Centre>
       <Group>
         <NavLink
           gallery={gallery}
