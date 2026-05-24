@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { BsArrowsFullscreen } from "react-icons/bs";
 
 import Summary from "./Summary";
 import Charts from "./Charts";
@@ -25,7 +26,9 @@ const Root = styled.div`
 // Title is the always-available click target for the expand modal —
 // covers categories with ≤ INLINE_TABLE_LIMIT rows too (where the
 // "+ N more…" row at the bottom of the table would otherwise not
-// appear). The hover treatment gives a hint that it's clickable.
+// appear). The fullscreen-arrows icon on the right makes the
+// affordance discoverable; the hover border gives a hint that the
+// whole bar is interactive.
 const Title = styled.h3`
   color: var(--header-color);
   background: var(--header-background);
@@ -39,9 +42,20 @@ const Title = styled.h3`
   border-radius: 5px;
   cursor: pointer;
   user-select: none;
+  position: relative;
   &:hover {
     border-color: var(--primary-color);
   }
+`;
+const ExpandIcon = styled.span`
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.55em;
+  color: var(--header-sub-color);
+  display: inline-flex;
+  align-items: center;
 `;
 
 interface Props {
@@ -67,7 +81,12 @@ const Category = ({
       data-type="category"
       data-key={category.key}
     >
-      <Title onClick={openModal}>{category.title}</Title>
+      <Title onClick={openModal}>
+        {category.title}
+        <ExpandIcon aria-hidden="true">
+          <BsArrowsFullscreen />
+        </ExpandIcon>
+      </Title>
       <Summary category={category} />
       <Charts category={category} />
       <Table
