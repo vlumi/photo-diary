@@ -34,9 +34,14 @@ interface Props {
 // that lets Month show through (theme-independent dark so the
 // contrast against the photo is consistent across themes).
 // Backdrop click closes the modal — see `handleBackdropClick`.
+// Height uses `100dvh` (dynamic viewport) so on mobile Chrome the
+// modal tracks the visual viewport as the URL bar shows/hides;
+// `inset: 0` is the desktop fallback (and the spec behaviour
+// before dvh is honoured).
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
+  height: 100dvh;
   z-index: 100;
   background: rgba(0, 0, 0, 0.82);
   display: flex;

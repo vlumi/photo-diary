@@ -16,6 +16,10 @@ const Root = styled.div`
   align-items: center;
   padding: 0 5px;
   gap: 6px;
+  /* Comfortable tap target for the breadcrumb crumbs on touch
+     devices — the bar previously hugged the text height (~30px)
+     which is below the 44px iOS HIG recommendation. */
+  min-height: 44px;
 `;
 // Breadcrumb path. Each crumb segment is either a `<Link>` (parent
 // level — click to navigate up) or plain text (current level —

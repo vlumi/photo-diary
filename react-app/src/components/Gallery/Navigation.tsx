@@ -14,6 +14,7 @@ const Root = styled.nav`
   z-index: 1;
   width: 100%;
   height: 50px;
+  box-sizing: border-box;
   color: var(--header-color);
   background: var(--header-background);
   font-size: 24pt;

@@ -11,16 +11,40 @@ import {
   BsXLg,
 } from "react-icons/bs";
 
-import Root from "../Navigation";
+import SharedRoot from "../Navigation";
 import Link from "../Link";
 
 import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo } from "../../../models/PhotoModel";
 
+// Photo lives inside a position:fixed modal — the shared Root's
+// `position: sticky; top: 0` has no scrolling ancestor here and on
+// mobile Chrome it interacts badly with body scroll (the bar
+// appears to "fall off" the top of the modal). Override to a
+// regular block in the flex column.
+const Root = styled(SharedRoot)`
+  position: relative;
+  top: auto;
+  left: auto;
+  flex: 0 0 auto;
+`;
 const Group = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+`;
+// Photo position indicator in the centre of the bar. Without it the
+// bar reads as empty between the left and right control clusters
+// (the breadcrumb's `#N` sits in the Title bar above the modal,
+// not inside the modal itself).
+const Centre = styled.div`
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 0.6em;
+  color: var(--header-sub-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 // Tools sub-group sits in the right group, slightly separated from
 // the next/skip-next nav arrows so the close + fullscreen buttons
@@ -82,9 +106,15 @@ const Navigation = ({
   month,
   day,
   photo,
+  lang,
   onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
+  const totalPhotos = gallery.photos().length;
+  const photoIndex = photo.index() + 1;
+  const positionLabel = `${new Intl.NumberFormat(lang).format(
+    photoIndex
+  )} / ${new Intl.NumberFormat(lang).format(totalPhotos)}`;
   const [isFullscreen, setIsFullscreen] = React.useState(
     typeof document !== "undefined" && !!document.fullscreenElement
   );
@@ -134,6 +164,7 @@ const Navigation = ({
           <BsCaretLeftFill />
         </NavLink>
       </Group>
+      <Centre aria-label={t("nav-photo-position")}>{positionLabel}</Centre>
       <Group>
         <NavLink
           gallery={gallery}
