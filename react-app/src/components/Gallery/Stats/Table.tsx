@@ -242,7 +242,18 @@ const Table = ({
 
   const fullTable = category.table;
   const shouldCap = limit !== undefined && fullTable.length > limit;
-  const visibleTable = shouldCap ? fullTable.slice(0, limit) : fullTable;
+  // When capping, re-sort by raw count desc so "+ N more…" reads as
+  // "we showed you the top 10; click to see the rest" rather than "we
+  // truncated by whatever the original sort was" (which is by value
+  // for the exposure categories, making the first 10 = lowest 10
+  // values — not what the user wants from a glance). The modal
+  // (limit undefined) keeps the original sort so the distribution
+  // shape stays visible.
+  const visibleTable = shouldCap
+    ? [...fullTable]
+        .sort((a, b) => Number(b._count ?? 0) - Number(a._count ?? 0))
+        .slice(0, limit)
+    : fullTable;
   const hiddenCount = shouldCap ? fullTable.length - limit : 0;
 
   return (
