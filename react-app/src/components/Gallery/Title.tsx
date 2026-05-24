@@ -45,7 +45,12 @@ const Separator = styled(BsChevronRight)`
   opacity: 0.55;
 `;
 const Crumb = styled.span`
-  flex: 0 1 auto;
+  /* Short fixed-length crumbs (year / month / photo number) stay
+     at their natural width — only the gallery name is allowed to
+     truncate when the bar runs out of horizontal room. The
+     GalleryCrumb / GallerySelect overrides below opt back into
+     shrinking. */
+  flex: 0 0 auto;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -65,9 +70,8 @@ const LinkCrumb = styled(Crumb)`
   }
 `;
 // The gallery name is the longest variable-width element in the
-// path. Cap its growth so the year / month / photo crumbs stay
-// fully visible; the cap kicks in via `min-width: 0` + ellipsis
-// when total width is tight (mobile).
+// path and the only crumb that's allowed to shrink/ellipsis when
+// horizontal room runs out — see the comment on `Crumb` above.
 const GalleryCrumb = styled(Crumb)`
   font-weight: bold;
   flex: 0 1 auto;
@@ -96,6 +100,11 @@ const TitleSelect = styled.select`
 `;
 const GallerySelect = styled(TitleSelect)`
   text-align-last: left;
+  /* Same shrink priority as the single-gallery GalleryCrumb span:
+     this select truncates first when the bar runs out of room,
+     leaving the short year / month / photo crumbs full. */
+  flex: 0 1 auto;
+  min-width: 0;
 `;
 const UnavailableOption = styled.option`
   font-style: italic;
