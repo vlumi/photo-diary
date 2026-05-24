@@ -7,15 +7,19 @@ import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo } from "../../../models/PhotoModel";
 import type { ZoomState } from "./index";
 
+// flex-start so the matte sits just below the Navigation bar
+// with minimal top breathing; padding-bottom keeps room at the
+// bottom for the floating info button.
 const Root = styled.div`
   flex-grow: 1;
   position: relative;
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   overflow: hidden;
-  margin: 5px 0;
+  padding: 8px 0 24px;
+  box-sizing: border-box;
 `;
 const Frame = styled("span", {
   shouldForwardProp: (prop) => prop !== "$width" && prop !== "$height",
@@ -139,11 +143,8 @@ const Content = ({
   zoom,
   setZoom,
 }: Props): React.ReactElement => {
-  // Size to the actual container (the photo modal's content area)
-  // via ResizeObserver, not the viewport. The modal `<Frame>` is
-  // capped at 1400px max-width, so on wide screens the photo area
-  // is narrower than `window.innerWidth` and viewport-based sizing
-  // would overshoot — landscape photos got cut from the sides.
+  // Measure the actual container, not the viewport — the modal
+  // Frame caps at 1400px so wide-screen landscapes would overshoot.
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
@@ -181,18 +182,17 @@ const Content = ({
 
   const photoRatio = photo.ratio();
   const browserScale = window.visualViewport?.scale ?? 1;
-  // `dimensions` is the measured Root size — already excludes the
-  // modal's Navigation/Footer chrome and reflects the Frame's
-  // `max-width: 1400px` cap. Subtract the photo frame's own
-  // matte+border (10px padding + 1px border each side = 22), plus
-  // 16px breathing room on each axis (8 per side) so the matte
-  // doesn't pin against the modal Frame edges.
+  // FRAME_CHROME = the photo frame's matte+border (10 padding +
+  // 1 border each side). H_BREATHING = horizontal side breathing.
+  // ROOT_PADDING_V = Root's `padding: 8 0 24` (which the
+  // border-box `dimensions.height` includes).
   const FRAME_CHROME = 22;
-  const BREATHING = 16;
+  const H_BREATHING = 16;
+  const ROOT_PADDING_V = 32;
   const maxAvailWidth =
-    (dimensions.width - FRAME_CHROME - BREATHING) * browserScale;
+    (dimensions.width - FRAME_CHROME - H_BREATHING) * browserScale;
   const maxAvailHeight =
-    (dimensions.height - FRAME_CHROME - BREATHING) * browserScale;
+    (dimensions.height - FRAME_CHROME - ROOT_PADDING_V) * browserScale;
   const maxRatio = maxAvailWidth / maxAvailHeight;
   // Image keeps its natural fit-to-viewport dimensions at every zoom
   // level; the `transform: scale` handles the zoom visually.
@@ -208,13 +208,10 @@ const Content = ({
     maxAvailWidth,
     maxRatio
   );
-  // Frame stays at the photo's natural fit dimensions across every
-  // zoom level — the modal design has its own visible boundary (see
-  // `Photo/index.tsx`), so the photo sitting in a stable matte inside
-  // that frame reads more cleanly than the frame growing into the
-  // scrim on zoom. Pan limits (below) compute against this stable
-  // frame size; the scaled image overflows it and the ImageClip
-  // handles the clip.
+  // Frame stays at natural fit dimensions across all zoom levels.
+  // The modal already has a visible boundary, so growing the matte
+  // on zoom only confuses the layout. ImageClip clips the scaled
+  // image; pan limits below use this stable size.
   const frameWidth = imageWidth;
   const frameHeight = imageHeight;
 

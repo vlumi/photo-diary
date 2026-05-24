@@ -79,6 +79,7 @@
 
     "photo-count_one": "{{count}}枚",
     "photo-count_other": "{{count}}枚",
+    "photo-metadata": "写真情報",
 
     "stats-filters": "フィルター",
 

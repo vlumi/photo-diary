@@ -5,6 +5,7 @@ import styled from "@emotion/styled";
 import {
   BsArrowsFullscreen,
   BsFullscreenExit,
+  BsInfoCircleFill,
   BsXLg,
 } from "react-icons/bs";
 import type { SwipeEventData } from "react-swipeable";
@@ -13,7 +14,7 @@ import Swipeable from "../../Swipeable";
 
 import Navigation from "./Navigation";
 import Content from "./Content";
-import Footer from "./Footer";
+import MetadataPanel from "./MetadataPanel";
 
 import useKeyPress from "../../../lib/keypress";
 
@@ -34,37 +35,28 @@ interface Props {
   countryData: CountryData;
 }
 
-// Modal overlay over the Month view rendered by Gallery/index.tsx
-// when the URL targets a photo. The backdrop is a dimmed scrim
-// that lets Month show through (theme-independent dark so the
-// contrast against the photo is consistent across themes).
-// Backdrop click closes the modal — see `handleBackdropClick`.
-// Height uses `100dvh` (dynamic viewport) so on mobile Chrome the
-// modal tracks the visual viewport as the URL bar shows/hides;
-// `inset: 0` is the desktop fallback (and the spec behaviour
-// before dvh is honoured).
+// Modal overlay over the Month view (see Gallery/index.tsx).
+// `100dvh` tracks mobile Chrome's visual viewport as the URL bar
+// shows/hides. `box-sizing: border-box` so the explicit height
+// + padding don't add up past the viewport — without it the
+// modal extends ~40px past the bottom on desktop. z-index above
+// Leaflet's panes (200-700) so a map on Month underneath can't
+// bleed through the scrim.
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
   height: 100dvh;
-  z-index: 100;
+  box-sizing: border-box;
+  z-index: 1000;
   background: rgba(0, 0, 0, 0.82);
   display: flex;
   align-items: stretch;
   justify-content: center;
   padding: 20px;
-  /* Mobile: lose the inset so the photo claims the full viewport
-     — the dimmed-Month-behind effect doesn't read at narrow widths
-     and the photo needs every pixel it can get. */
   @media (max-width: 600px) {
-    padding: 0;
+    padding: 8px;
   }
 `;
-// Contained modal frame — visible boundary, rounded corners, soft
-// drop shadow so the modal reads as a panel sitting *above* the
-// dimmed Month. Theme background so the chrome inside still reads
-// correctly (Footer text colour, Navigation icons) without needing
-// a separate "modal theme".
 const Frame = styled.div`
   flex: 1 1 auto;
   max-width: 1400px;
@@ -80,14 +72,9 @@ const Frame = styled.div`
     box-shadow: none;
   }
 `;
-// Floating corner buttons over the modal. Close lives at the
-// Frame's top-right (above the Navigation bar via z-index — small
-// enough not to fight skip-next visually). Fullscreen lives at
-// the photo area's top-left so it reads as "make this photo
-// bigger" rather than "modal chrome". Both are pill-style with a
-// translucent backdrop so they remain visible regardless of the
-// underlying content (Navigation chrome on one side, photo or
-// matte on the other).
+// Floating corner buttons over the modal: close, fullscreen, info
+// toggle. Pill-style with a translucent backdrop so they remain
+// visible against any underlying content.
 const FloatingButton = styled.button`
   position: absolute;
   z-index: 10;
@@ -111,19 +98,19 @@ const CloseButton = styled(FloatingButton)`
   top: 8px;
   right: 8px;
 `;
-// 58 = 50px Navigation height + 8px breathing — pins the button
-// to the photo area's top-left corner just below the toolbar.
+// 58 = 50px Navigation height + 8px clearance.
 const FullscreenButton = styled(FloatingButton)`
   top: 58px;
   left: 8px;
 `;
-// Body wraps Content+Footer in a flex column that fills the leftover
-// space inside the modal Frame (between Navigation and the bottom
-// edge). Without this Content's `flex-grow: 1` would be ineffective
-// — Swipeable's plain `<div>` (or the React fragment in the zoomed
-// branch) breaks the flex chain, and Content's Root collapses to
-// its own content size, which then feeds back into the
-// ResizeObserver inside Content and runs the photo down to nothing.
+const InfoButton = styled(FloatingButton)`
+  bottom: 16px;
+  right: 16px;
+`;
+// Flex column that gives Content a stable parent size. Without
+// this Content's flex-grow has no flex parent — Swipeable's plain
+// div breaks the chain — and Content's ResizeObserver feeds back
+// into itself and shrinks the photo to nothing.
 const Body = styled.div`
   flex: 1 1 auto;
   min-height: 0;
@@ -137,9 +124,9 @@ const SwipeBody = styled(Swipeable)`
   flex-direction: column;
 `;
 
-// Zoom state lives here so `<Swipeable>` can be bypassed while zoomed
-// (otherwise drag-to-pan would also fire swipe-to-next/prev) and so
-// navigating to another photo resets the zoom cleanly.
+// Zoom state lives here so Swipeable is bypassed while zoomed
+// (drag-to-pan would otherwise fire swipe-to-next/prev) and so
+// photo navigation resets the zoom cleanly.
 const ZOOM_STEP = 1.2;
 const MIN_SCALE = 1;
 const MAX_SCALE = 8;
@@ -151,8 +138,7 @@ export interface ZoomState {
 }
 const ZOOM_RESET: ZoomState = { scale: 1, x: 0, y: 0 };
 
-// Fullscreen API isn't supported in iOS Safari for arbitrary
-// elements (only video) — surface the toggle only where it works.
+// iOS Safari only supports the Fullscreen API on <video>.
 const fullscreenSupported = (): boolean =>
   typeof document !== "undefined" && document.fullscreenEnabled === true;
 
@@ -185,13 +171,28 @@ const Photo = ({
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
+  // Open by default on desktop, closed on mobile so the photo gets
+  // every available pixel.
+  const [showMetadata, setShowMetadata] = React.useState(
+    typeof window !== "undefined" && window.innerWidth > 600
+  );
+
+  // Freeze the Month underneath while the modal is open.
+  React.useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
   const { t } = useTranslation();
 
-  // Reset zoom whenever the photo changes — including via prev/next nav.
   React.useEffect(() => {
     setZoom(ZOOM_RESET);
   }, [photo.id()]);
 
+  useKeyPress("i", () => setShowMetadata((s) => !s));
   useKeyPress("+", () =>
     setZoom((z) => ({ ...z, scale: clampScale(z.scale * ZOOM_STEP) }))
   );
@@ -235,13 +236,10 @@ const Photo = ({
     setRedirect(gallery.path(year, month));
   }, [gallery, year, month]);
 
-  // Photo modal lives over a mounted Month; both register window-
-  // level Escape listeners via `useKeyPress`. Without coordination
-  // both fire on the same Escape press — Photo navigates to Month,
-  // Month then navigates to Year, and the user lands one level too
-  // high. Listen in the capture phase and stopImmediatePropagation
-  // so Photo's handler always runs first and Month's is skipped
-  // while the modal is open.
+  // Both Photo and the mounted Month register Escape listeners on
+  // window. Capture phase + stopImmediatePropagation so Photo's
+  // handler runs first and Month's is skipped while the modal is
+  // open — otherwise one Escape press skips two levels up.
   React.useEffect(() => {
     const onEscape = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
@@ -323,6 +321,15 @@ const Photo = ({
             {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
           </FullscreenButton>
         )}
+        <InfoButton
+          type="button"
+          onClick={() => setShowMetadata((s) => !s)}
+          aria-label={t("photo-metadata")}
+          aria-pressed={showMetadata}
+          title={t("photo-metadata")}
+        >
+          <BsInfoCircleFill />
+        </InfoButton>
         {zoom.scale === 1 ? (
           <SwipeBody onSwiped={handleSwipe}>
             <Content
@@ -333,15 +340,6 @@ const Photo = ({
               photo={photo}
               zoom={zoom}
               setZoom={setZoom}
-            />
-            <Footer
-              gallery={gallery}
-              year={year}
-              month={month}
-              day={day}
-              photo={photo}
-              lang={lang}
-              countryData={countryData}
             />
           </SwipeBody>
         ) : (
@@ -355,16 +353,19 @@ const Photo = ({
               zoom={zoom}
               setZoom={setZoom}
             />
-            <Footer
-              gallery={gallery}
-              year={year}
-              month={month}
-              day={day}
-              photo={photo}
-              lang={lang}
-              countryData={countryData}
-            />
           </Body>
+        )}
+        {showMetadata && (
+          <MetadataPanel
+            gallery={gallery}
+            year={year}
+            month={month}
+            day={day}
+            photo={photo}
+            lang={lang}
+            countryData={countryData}
+            onClose={() => setShowMetadata(false)}
+          />
         )}
       </Frame>
     </Backdrop>

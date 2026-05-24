@@ -30,18 +30,40 @@ const Group = styled.div`
   align-items: center;
   gap: 16px;
 `;
-// Photo position indicator in the centre of the bar. Without it the
-// bar reads as empty between the left and right control clusters
-// (the breadcrumb's `#N` sits in the Title bar above the modal,
-// not inside the modal itself).
+// Two-line info block in the centre of the bar: date/time on the
+// primary line (the bit the user wants visible without opening the
+// metadata panel) and the photo's position (#N / total) on a
+// smaller secondary line. Without this the bar reads as empty
+// between the left and right control clusters — the breadcrumb's
+// `#N` sits in the Title bar above the modal, but the modal Frame
+// covers that, so we surface the same info here.
 const Centre = styled.div`
   flex: 0 1 auto;
   min-width: 0;
-  font-size: 0.6em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--header-color);
+  text-align: center;
+`;
+const TimestampLine = styled.div`
+  font-size: 0.55em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+`;
+const PositionLine = styled.div`
+  font-size: 0.45em;
   color: var(--header-sub-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 `;
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "$visibility",
@@ -74,6 +96,7 @@ const Navigation = ({
   const positionLabel = `${new Intl.NumberFormat(lang).format(
     photoIndex
   )} / ${new Intl.NumberFormat(lang).format(totalPhotos)}`;
+  const timestamp = photo.formatTimestamp();
 
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
@@ -114,7 +137,12 @@ const Navigation = ({
           <BsCaretLeftFill />
         </NavLink>
       </Group>
-      <Centre aria-label={t("nav-photo-position")}>{positionLabel}</Centre>
+      <Centre>
+        <TimestampLine>{timestamp}</TimestampLine>
+        <PositionLine aria-label={t("nav-photo-position")}>
+          {positionLabel}
+        </PositionLine>
+      </Centre>
       <Group>
         <NavLink
           gallery={gallery}
