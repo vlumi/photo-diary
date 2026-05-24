@@ -25,6 +25,10 @@ interface Props {
   day?: number;
   lang: string;
   countryData: CountryData;
+  // True when the Photo modal is mounted on top — suppresses the
+  // scroll-to-day on subsequent day changes so the Month doesn't
+  // visibly scroll under the modal during in-modal navigation.
+  modalActive?: boolean;
 }
 
 const Month = ({
@@ -35,6 +39,7 @@ const Month = ({
   day,
   lang,
   countryData,
+  modalActive,
 }: Props): React.ReactElement => {
   const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
 
@@ -113,6 +118,7 @@ const Month = ({
           day={day}
           lang={lang}
           countryData={countryData}
+          modalActive={modalActive}
         >
           {children}
         </Content>

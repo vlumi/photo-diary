@@ -449,6 +449,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
           day={day || undefined}
           lang={lang}
           countryData={countryData}
+          modalActive
         >
           <Title
             galleries={galleries}

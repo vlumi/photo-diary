@@ -51,6 +51,7 @@ interface Props {
   day?: number;
   lang: string;
   countryData: CountryData;
+  modalActive?: boolean;
 }
 
 const Content = ({
@@ -61,19 +62,27 @@ const Content = ({
   day,
   lang,
   countryData,
+  modalActive,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
   // RAF defers past ScrollToPosition's setTimeout(0) — without that delay
-  // the parent's scroll restore fires last and undoes this jump.
+  // the parent's scroll restore fires last and undoes this jump. While
+  // the Photo modal is mounted on top, fire only once (the initial mount
+  // — so closing a direct-link photo URL lands on the right day) and
+  // skip subsequent day-prop changes triggered by in-modal photo
+  // navigation, which otherwise visibly scroll Month under the modal.
+  const hasScrolledRef = React.useRef(false);
   React.useEffect(() => {
     if (!day) return;
+    if (modalActive && hasScrolledRef.current) return;
+    hasScrolledRef.current = true;
     const handle = requestAnimationFrame(() => {
       const el = document.getElementById(`month-day-${day}`);
       el?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     return () => cancelAnimationFrame(handle);
-  }, [day, year, month]);
+  }, [day, year, month, modalActive]);
 
   if (!gallery.includesMonth(year, month)) {
     return (
