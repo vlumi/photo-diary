@@ -435,32 +435,47 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     if (!photo) {
       return <div>{t("loading")}</div>;
     }
+    // Photo URL mounts the same Month view underneath the Photo
+    // modal. Closing the modal returns to the Month state without a
+    // remount (preserves scroll position, filter UI state, etc.).
+    // Direct-link entries land here too — Month renders synchronously
+    // before the Photo modal opens on top.
     return (
-      <Photo
-        gallery={gallery}
-        year={year}
-        month={month}
-        day={day}
-        photo={photo}
-        lang={lang}
-        countryData={countryData}
-      >
-        <Title
-          galleries={galleries}
+      <>
+        <Month
           gallery={gallery}
-          context={context}
+          year={year}
+          month={month}
+          day={day || undefined}
+          lang={lang}
+          countryData={countryData}
+        >
+          <Title
+            galleries={galleries}
+            gallery={gallery}
+            context={context}
+            year={year}
+            month={month}
+            day={day || undefined}
+          />
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            uniqueValues={uniqueValues}
+            lang={lang}
+            countryData={countryData}
+          />
+        </Month>
+        <Photo
+          gallery={gallery}
           year={year}
           month={month}
           day={day}
-        />
-        <Filters
-          filters={filters}
-          setFilters={setFilters}
-          uniqueValues={uniqueValues}
+          photo={photo}
           lang={lang}
           countryData={countryData}
         />
-      </Photo>
+      </>
     );
   };
 

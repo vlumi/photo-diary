@@ -1,6 +1,8 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import styled from "@emotion/styled";
+import { BsXLg } from "react-icons/bs";
 import type { SwipeEventData } from "react-swipeable";
 
 import Swipeable from "../../Swipeable";
@@ -19,9 +21,6 @@ interface CountryData {
 }
 
 interface Props {
-  // Accepted (and ignored) to match the layout pattern used by Year/Month/Day —
-  // Gallery/index wraps a Title+Filters block inside <Photo>, but Photo doesn't render it.
-  children?: React.ReactNode;
   gallery: Gallery;
   year: number;
   month: number;
@@ -30,6 +29,85 @@ interface Props {
   lang: string;
   countryData: CountryData;
 }
+
+// Modal overlay over the Month view rendered by Gallery/index.tsx
+// when the URL targets a photo. The backdrop is a dimmed scrim
+// that lets Month show through (theme-independent dark so the
+// contrast against the photo is consistent across themes).
+// Backdrop click closes the modal — see `handleBackdropClick`.
+const Backdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 20px;
+  /* Mobile: lose the inset so the photo claims the full viewport
+     — the dimmed-Month-behind effect doesn't read at narrow widths
+     and the photo needs every pixel it can get. */
+  @media (max-width: 600px) {
+    padding: 0;
+  }
+`;
+// Contained modal frame — visible boundary, rounded corners, soft
+// drop shadow so the modal reads as a panel sitting *above* the
+// dimmed Month. Theme background so the chrome inside still reads
+// correctly (Footer text colour, Navigation icons) without needing
+// a separate "modal theme".
+const Frame = styled.div`
+  flex: 1 1 auto;
+  max-width: 1400px;
+  background: var(--primary-background);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  @media (max-width: 600px) {
+    border-radius: 0;
+    box-shadow: none;
+  }
+`;
+const CloseButton = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 10;
+  background: none;
+  border: none;
+  color: var(--header-color);
+  font-size: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  &:hover {
+    color: var(--primary-color);
+  }
+`;
+// Body wraps Content+Footer in a flex column that fills the leftover
+// space inside the modal Frame (between Navigation and the bottom
+// edge). Without this Content's `flex-grow: 1` would be ineffective
+// — Swipeable's plain `<div>` (or the React fragment in the zoomed
+// branch) breaks the flex chain, and Content's Root collapses to
+// its own content size, which then feeds back into the
+// ResizeObserver inside Content and runs the photo down to nothing.
+const Body = styled.div`
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+`;
+const SwipeBody = styled(Swipeable)`
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+`;
 
 // Zoom state lives here so `<Swipeable>` can be bypassed while zoomed
 // (otherwise drag-to-pan would also fire swipe-to-next/prev) and so
@@ -102,10 +180,12 @@ const Photo = ({
     }
   };
 
-  useKeyPress("Escape", () => {
+  const handleClose = React.useCallback(() => {
     window.history.pushState({}, "");
     setRedirect(gallery.path(year, month));
-  });
+  }, [gallery, year, month]);
+
+  useKeyPress("Escape", handleClose);
   useKeyPress("Home", handlMoveToFirst);
   useKeyPress("ArrowLeft", handlMoveToPrevious);
   useKeyPress("ArrowRight", handlMoveToNext);
@@ -136,63 +216,81 @@ const Photo = ({
     return <Navigate to={redirect} replace />;
   }
 
+  const handleBackdropClick = (event: React.MouseEvent) => {
+    if (event.target === event.currentTarget) handleClose();
+  };
+
   return (
-    <>
+    <Backdrop
+      role="dialog"
+      aria-modal="true"
+      onClick={handleBackdropClick}
+    >
       <title>
         {gallery.title(year, month, day, photo)} — {t("nav-gallery")}
       </title>
-      <Navigation
-        gallery={gallery}
-        year={year}
-        month={month}
-        day={day}
-        photo={photo}
-        lang={lang}
-      />
-      {zoom.scale === 1 ? (
-        <Swipeable onSwiped={handleSwipe}>
-          <Content
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            photo={photo}
-            zoom={zoom}
-            setZoom={setZoom}
-          />
-          <Footer
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            photo={photo}
-            lang={lang}
-            countryData={countryData}
-          />
-        </Swipeable>
-      ) : (
-        <>
-          <Content
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            photo={photo}
-            zoom={zoom}
-            setZoom={setZoom}
-          />
-          <Footer
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            photo={photo}
-            lang={lang}
-            countryData={countryData}
-          />
-        </>
-      )}
-    </>
+      <Frame>
+        <Navigation
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={day}
+          photo={photo}
+          lang={lang}
+        />
+        <CloseButton
+          type="button"
+          onClick={handleClose}
+          aria-label={t("close")}
+          title={t("close")}
+        >
+          <BsXLg />
+        </CloseButton>
+        {zoom.scale === 1 ? (
+          <SwipeBody onSwiped={handleSwipe}>
+            <Content
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              photo={photo}
+              zoom={zoom}
+              setZoom={setZoom}
+            />
+            <Footer
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              photo={photo}
+              lang={lang}
+              countryData={countryData}
+            />
+          </SwipeBody>
+        ) : (
+          <Body>
+            <Content
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              photo={photo}
+              zoom={zoom}
+              setZoom={setZoom}
+            />
+            <Footer
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              photo={photo}
+              lang={lang}
+              countryData={countryData}
+            />
+          </Body>
+        )}
+      </Frame>
+    </Backdrop>
   );
 };
 export default Photo;

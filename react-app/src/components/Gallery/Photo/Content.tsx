@@ -139,17 +139,28 @@ const Content = ({
   zoom,
   setZoom,
 }: Props): React.ReactElement => {
+  // Size to the actual container (the photo modal's content area)
+  // via ResizeObserver, not the viewport. The modal `<Frame>` is
+  // capped at 1400px max-width, so on wide screens the photo area
+  // is narrower than `window.innerWidth` and viewport-based sizing
+  // would overshoot — landscape photos got cut from the sides.
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
-  const updateDimensions = () => {
-    setDimensions({ width: window.innerWidth, height: window.innerHeight });
-  };
   React.useEffect(() => {
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  });
+    const el = rootRef.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setDimensions({ width: rect.width, height: rect.height });
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const dragRef = React.useRef<{
     startClientX: number;
@@ -170,8 +181,18 @@ const Content = ({
 
   const photoRatio = photo.ratio();
   const browserScale = window.visualViewport?.scale ?? 1;
-  const maxAvailWidth = (dimensions.width - 62) * browserScale;
-  const maxAvailHeight = (dimensions.height - 107) * browserScale;
+  // `dimensions` is the measured Root size — already excludes the
+  // modal's Navigation/Footer chrome and reflects the Frame's
+  // `max-width: 1400px` cap. Subtract the photo frame's own
+  // matte+border (10px padding + 1px border each side = 22), plus
+  // 16px breathing room on each axis (8 per side) so the matte
+  // doesn't pin against the modal Frame edges.
+  const FRAME_CHROME = 22;
+  const BREATHING = 16;
+  const maxAvailWidth =
+    (dimensions.width - FRAME_CHROME - BREATHING) * browserScale;
+  const maxAvailHeight =
+    (dimensions.height - FRAME_CHROME - BREATHING) * browserScale;
   const maxRatio = maxAvailWidth / maxAvailHeight;
   // Image keeps its natural fit-to-viewport dimensions at every zoom
   // level; the `transform: scale` handles the zoom visually.
@@ -187,31 +208,21 @@ const Content = ({
     maxAvailWidth,
     maxRatio
   );
-  // On zoom-in the frame widens to the available viewport so portrait-
-  // on-landscape can put its empty side margins to use. Height stays
-  // at the photo's fit dimension — growing it too would make a
-  // landscape photo on a portrait phone snap to nearly full-screen,
-  // which is jarring. Frame uses CSS `content-box`, so `width` already
-  // refers to the content area (= the clipping rectangle inside the
-  // matte).
-  const isZoomed = zoom.scale > 1;
-  const frameWidth = isZoomed ? maxAvailWidth : imageWidth;
+  // Frame stays at the photo's natural fit dimensions across every
+  // zoom level — the modal design has its own visible boundary (see
+  // `Photo/index.tsx`), so the photo sitting in a stable matte inside
+  // that frame reads more cleanly than the frame growing into the
+  // scrim on zoom. Pan limits (below) compute against this stable
+  // frame size; the scaled image overflows it and the ImageClip
+  // handles the clip.
+  const frameWidth = imageWidth;
   const frameHeight = imageHeight;
 
-  // Latest dimensions in a ref so the wheel useEffect (registered once)
-  // always reads the current values for clamp + anchor math.
-  const sizeRef = React.useRef({
-    imageWidth,
-    imageHeight,
-    maxAvailWidth,
-    maxAvailHeight,
-  });
-  sizeRef.current = {
-    imageWidth,
-    imageHeight,
-    maxAvailWidth,
-    maxAvailHeight,
-  };
+  // Latest image dimensions in a ref so the wheel useEffect
+  // (registered once) always reads the current values for clamp +
+  // anchor math.
+  const sizeRef = React.useRef({ imageWidth, imageHeight });
+  sizeRef.current = { imageWidth, imageHeight };
 
   // React attaches `wheel` listeners as passive by default, so
   // `e.preventDefault()` would be a no-op (and Chrome warns on every
@@ -231,10 +242,9 @@ const Content = ({
         const nextX = anchoredTranslate(anchorX, z.x, z.scale, nextScale);
         const nextY = anchoredTranslate(anchorY, z.y, z.scale, nextScale);
         const sz = sizeRef.current;
-        const nextFrameW = nextScale > 1 ? sz.maxAvailWidth : sz.imageWidth;
         return {
           scale: nextScale,
-          x: clampOffset(nextX, sz.imageWidth * nextScale, nextFrameW),
+          x: clampOffset(nextX, sz.imageWidth * nextScale, sz.imageWidth),
           y: clampOffset(nextY, sz.imageHeight * nextScale, sz.imageHeight),
         };
       });
@@ -339,10 +349,9 @@ const Content = ({
         pinchRef.current.startScale,
         nextScale
       );
-      const nextFrameW = nextScale > 1 ? maxAvailWidth : imageWidth;
       setZoom({
         scale: nextScale,
-        x: clampOffset(nextX, imageWidth * nextScale, nextFrameW),
+        x: clampOffset(nextX, imageWidth * nextScale, imageWidth),
         y: clampOffset(nextY, imageHeight * nextScale, imageHeight),
       });
     } else if (e.touches.length === 1 && dragRef.current) {
@@ -370,7 +379,7 @@ const Content = ({
   };
 
   return (
-    <Root>
+    <Root ref={rootRef}>
       <Frame ref={frameRef} $width={frameWidth} $height={frameHeight}>
         <ImageClip>
           <Image
