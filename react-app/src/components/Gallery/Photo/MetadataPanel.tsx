@@ -169,9 +169,7 @@ const MetadataPanel = ({
       iso ? `ISO${formatExposure.iso(iso)}` : "",
       resolution ? `${formatExposure.resolution(resolution)}MP` : "",
       orientation ? `${formatExposure.orientation(orientation)}` : "",
-      aspectRatio
-        ? `${formatExposure.aspectRatio(Number(aspectRatio))}`
-        : "",
+      aspectRatio ? String(aspectRatio) : "",
       exposureValue ? `EV${formatExposure.ev(exposureValue)}` : "",
       lightValue ? `LV${formatExposure.ev(lightValue)}` : "",
     ]
