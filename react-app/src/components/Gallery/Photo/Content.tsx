@@ -184,15 +184,20 @@ const Content = ({
   // `dimensions` is the measured Root size — already excludes the
   // modal's Navigation/Footer chrome and reflects the Frame's
   // `max-width: 1400px` cap. Subtract the photo frame's own
-  // matte+border (10px padding + 1px border each side = 22), plus
-  // 16px breathing room on each axis (8 per side) so the matte
-  // doesn't pin against the modal Frame edges.
+  // matte+border (10px padding + 1px border each side = 22) plus
+  // breathing room on each axis so the matte doesn't pin against
+  // the modal Frame edges. The vertical breathing is larger than
+  // horizontal: on wide screens viewing portrait photos the photo
+  // is height-limited, and 8px (the old 16/2) wasn't enough to
+  // keep the matte off the modal's bottom edge — the photo and
+  // its matte read as "running off the bottom".
   const FRAME_CHROME = 22;
-  const BREATHING = 16;
+  const H_BREATHING = 16;
+  const V_BREATHING = 48;
   const maxAvailWidth =
-    (dimensions.width - FRAME_CHROME - BREATHING) * browserScale;
+    (dimensions.width - FRAME_CHROME - H_BREATHING) * browserScale;
   const maxAvailHeight =
-    (dimensions.height - FRAME_CHROME - BREATHING) * browserScale;
+    (dimensions.height - FRAME_CHROME - V_BREATHING) * browserScale;
   const maxRatio = maxAvailWidth / maxAvailHeight;
   // Image keeps its natural fit-to-viewport dimensions at every zoom
   // level; the `transform: scale` handles the zoom visually.
