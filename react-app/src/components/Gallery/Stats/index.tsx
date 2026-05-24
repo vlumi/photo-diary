@@ -17,10 +17,31 @@ interface CountryData {
 type ActiveTheme = { get: (name: string) => string };
 
 const Root = styled.div`
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
   align-items: flex-start;
+`;
+// Overlay only the Stats content area (charts + tables + map) while
+// chart.js is busy rebuilding — the top menu / nav / Title above this
+// component stay responsive. `pointer-events: none` so the user can
+// still hover/click underlying chrome while the overlay is up.
+const UpdatingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+  background: color-mix(
+    in srgb,
+    var(--photo-frame-mat) 60%,
+    transparent
+  );
+  font-size: 1.2em;
+  color: var(--primary-color);
 `;
 
 interface Props {
@@ -55,14 +76,21 @@ const Stats = ({
   }, [photos, uniqueValues]);
 
   // Memoize so unrelated re-renders (filter UI ticks, parent prop changes
-  // that don't touch data/lang/theme) don't re-run the topic build —
-  // which currently fans out into ~30 chart-data objects and table-row
-  // arrays. Step 1 of the #231 fix; chart-data stability across `lang`
-  // switches comes in a follow-up that splits collectTopics internally.
+  // that don't touch data/lang/theme) don't re-run the topic build.
   const topics = React.useMemo(
     () => (data ? stats.collectTopics(data, lang, t, countryData, theme) : []),
     [data, lang, t, countryData, theme]
   );
+  // `useDeferredValue` keeps rendering the previous topics while React
+  // schedules the heavy re-render (chart.js's ~30-chart rebuild). The
+  // overlay paints on the first commit (deferredTopics still pointing
+  // at the old value, isPending=true), the browser yields, then the
+  // second commit lands the new topics and chart.js does its work.
+  // Without this the language switch freezes the page for the whole
+  // duration. Real fix is #286 (server-side stats); this is the
+  // perception-layer bandage until then.
+  const deferredTopics = React.useDeferredValue(topics);
+  const isPending = deferredTopics !== topics;
 
   if (!data) {
     return (
@@ -84,7 +112,7 @@ const Stats = ({
     <>
       {children}
       <Root>
-        {topics.map((topic) => (
+        {deferredTopics.map((topic) => (
           <Topic
             key={topic.key}
             topic={topic}
@@ -94,6 +122,7 @@ const Stats = ({
           />
         ))}
         {renderMap(mapPhotos)}
+        {isPending && <UpdatingOverlay>{t("updating")}</UpdatingOverlay>}
       </Root>
     </>
   );

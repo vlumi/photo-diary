@@ -1,6 +1,7 @@
 {
   "translation": {
     "loading": "Ladataan...",
+    "updating": "Päivitetään...",
     "empty": "Tyhjä",
 
     "login": "Kirjaudu sisään",
