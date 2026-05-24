@@ -2,7 +2,6 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
-import { BsXLg } from "react-icons/bs";
 import type { SwipeEventData } from "react-swipeable";
 
 import Swipeable from "../../Swipeable";
@@ -69,24 +68,6 @@ const Frame = styled.div`
   @media (max-width: 600px) {
     border-radius: 0;
     box-shadow: none;
-  }
-`;
-const CloseButton = styled.button`
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  z-index: 10;
-  background: none;
-  border: none;
-  color: var(--header-color);
-  font-size: 20px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
-  &:hover {
-    color: var(--primary-color);
   }
 `;
 // Body wraps Content+Footer in a flex column that fills the leftover
@@ -237,15 +218,8 @@ const Photo = ({
           day={day}
           photo={photo}
           lang={lang}
+          onClose={handleClose}
         />
-        <CloseButton
-          type="button"
-          onClick={handleClose}
-          aria-label={t("close")}
-          title={t("close")}
-        >
-          <BsXLg />
-        </CloseButton>
         {zoom.scale === 1 ? (
           <SwipeBody onSwiped={handleSwipe}>
             <Content

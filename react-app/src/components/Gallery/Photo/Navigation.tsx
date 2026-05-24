@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
@@ -7,6 +8,7 @@ import {
   BsSkipForwardFill,
   BsArrowsFullscreen,
   BsFullscreenExit,
+  BsXLg,
 } from "react-icons/bs";
 
 import Root from "../Navigation";
@@ -20,6 +22,15 @@ const Group = styled.div`
   align-items: center;
   gap: 12px;
 `;
+// Tools sub-group sits in the right group, slightly separated from
+// the next/skip-next nav arrows so the close + fullscreen buttons
+// read as "modal chrome" rather than another pair of nav controls.
+const Tools = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 18px;
+`;
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "$visibility",
 })<{ $visibility: string }>`
@@ -27,7 +38,7 @@ const NavLink = styled(Link, {
   align-items: center;
   visibility: ${(props) => props.$visibility};
 `;
-const FullscreenButton = styled.button`
+const IconButton = styled.button`
   background: none;
   border: none;
   color: inherit;
@@ -37,6 +48,9 @@ const FullscreenButton = styled.button`
   align-items: center;
   padding: 0;
   margin: 0;
+  &:hover {
+    color: var(--primary-color);
+  }
 `;
 
 // Fullscreen API isn't supported in iOS Safari for arbitrary elements
@@ -59,6 +73,7 @@ interface Props {
   day: number;
   photo: Photo;
   lang: string;
+  onClose: () => void;
 }
 
 const Navigation = ({
@@ -67,7 +82,9 @@ const Navigation = ({
   month,
   day,
   photo,
+  onClose,
 }: Props): React.ReactElement => {
+  const { t } = useTranslation();
   const [isFullscreen, setIsFullscreen] = React.useState(
     typeof document !== "undefined" && !!document.fullscreenElement
   );
@@ -132,15 +149,26 @@ const Navigation = ({
         >
           <BsSkipForwardFill />
         </NavLink>
-        {fullscreenSupported() && (
-          <FullscreenButton
+        <Tools>
+          {fullscreenSupported() && (
+            <IconButton
+              type="button"
+              onClick={toggleFullScreen}
+              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
+            </IconButton>
+          )}
+          <IconButton
             type="button"
-            onClick={toggleFullScreen}
-            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            onClick={onClose}
+            aria-label={t("close")}
+            title={t("close")}
           >
-            {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
-          </FullscreenButton>
-        )}
+            <BsXLg />
+          </IconButton>
+        </Tools>
       </Group>
     </Root>
   );
