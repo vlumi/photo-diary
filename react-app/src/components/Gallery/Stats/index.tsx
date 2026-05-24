@@ -68,6 +68,21 @@ const Stats = ({
   hideMap,
 }: Props): React.ReactElement => {
   const [data, setData] = React.useState<any>(undefined);
+  const [committedTopics, setCommittedTopics] = React.useState<
+    ReturnType<typeof stats.collectTopics>
+  >([]);
+  // `useTransition` keeps `isPending` true for the whole duration of the
+  // transition — including chart.js's blocking redraw — so the overlay
+  // stays visible the entire time the page is busy. (Earlier
+  // `useDeferredValue` attempt let the overlay flash for ~1 frame then
+  // disappear under the redraw.)
+  const [isPending, startTransition] = React.useTransition();
+  // Skip the transition on the very first compute after `data` lands —
+  // there are no previous topics to leave on screen, so an overlay
+  // would just paint over an empty stats area. Subsequent recomputes
+  // (lang switch, filter change, theme switch, gallery switch) do go
+  // through the transition.
+  const isFirstUpdateRef = React.useRef(true);
 
   const { t } = useTranslation();
 
@@ -75,22 +90,25 @@ const Stats = ({
     stats.generate(photos, uniqueValues).then((stats) => setData(stats));
   }, [photos, uniqueValues]);
 
-  // Memoize so unrelated re-renders (filter UI ticks, parent prop changes
-  // that don't touch data/lang/theme) don't re-run the topic build.
-  const topics = React.useMemo(
-    () => (data ? stats.collectTopics(data, lang, t, countryData, theme) : []),
-    [data, lang, t, countryData, theme]
-  );
-  // `useDeferredValue` keeps rendering the previous topics while React
-  // schedules the heavy re-render (chart.js's ~30-chart rebuild). The
-  // overlay paints on the first commit (deferredTopics still pointing
-  // at the old value, isPending=true), the browser yields, then the
-  // second commit lands the new topics and chart.js does its work.
-  // Without this the language switch freezes the page for the whole
-  // duration. Real fix is #286 (server-side stats); this is the
-  // perception-layer bandage until then.
-  const deferredTopics = React.useDeferredValue(topics);
-  const isPending = deferredTopics !== topics;
+  React.useEffect(() => {
+    if (!data) {
+      setCommittedTopics([]);
+      isFirstUpdateRef.current = true;
+      return;
+    }
+    if (isFirstUpdateRef.current) {
+      isFirstUpdateRef.current = false;
+      setCommittedTopics(
+        stats.collectTopics(data, lang, t, countryData, theme)
+      );
+      return;
+    }
+    startTransition(() => {
+      setCommittedTopics(
+        stats.collectTopics(data, lang, t, countryData, theme)
+      );
+    });
+  }, [data, lang, t, countryData, theme]);
 
   if (!data) {
     return (
@@ -112,7 +130,7 @@ const Stats = ({
     <>
       {children}
       <Root>
-        {deferredTopics.map((topic) => (
+        {committedTopics.map((topic) => (
           <Topic
             key={topic.key}
             topic={topic}
