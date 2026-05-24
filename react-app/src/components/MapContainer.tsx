@@ -64,19 +64,29 @@ const MapContainer = ({
   const positions = photos.map(
     (photo) => photo.coordinates() as LatLngExpression
   );
-  // Single-photo case: a zero-area `bounds` makes Leaflet center
-  // somewhere ambiguous (and at small map sizes the marker can end
-  // up off the visible area entirely). Use explicit `center` +
-  // `zoom` instead so the pin sits in the middle of the map.
   const singlePhoto = positions.length === 1;
   const resolvedMaxZoom = maxZoom ? maxZoom : 14;
-  const bounds = singlePhoto ? undefined : Leaflet.latLngBounds(positions);
+  const bounds = Leaflet.latLngBounds(positions);
+  // Default Leaflet markers are anchored at the bottom tip (the
+  // geographic point sits at the icon's bottom). Centring the map
+  // exactly on the point puts the marker's body (41px tall)
+  // entirely above the centre — visually the pin reads as "north
+  // of centre". For the single-photo case, fit the bounds with
+  // extra padding at the top so the point shifts toward the
+  // bottom of the visible area, leaving the marker body centred
+  // on the map. Multi-photo maps fit naturally.
+  const boundsOptions = singlePhoto
+    ? {
+        paddingTopLeft: [0, 40] as [number, number],
+        paddingBottomRight: [0, 0] as [number, number],
+        maxZoom: resolvedMaxZoom,
+      }
+    : undefined;
   return (
     <Root $height={height}>
       <Map
         bounds={bounds}
-        center={singlePhoto ? positions[0] : undefined}
-        zoom={singlePhoto ? resolvedMaxZoom : undefined}
+        boundsOptions={boundsOptions}
         maxZoom={resolvedMaxZoom}
         style={{ height: "100%" }}
       >
