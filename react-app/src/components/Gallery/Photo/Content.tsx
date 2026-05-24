@@ -139,17 +139,28 @@ const Content = ({
   zoom,
   setZoom,
 }: Props): React.ReactElement => {
+  // Size to the actual container (the photo modal's content area)
+  // via ResizeObserver, not the viewport. The modal `<Frame>` is
+  // capped at 1400px max-width, so on wide screens the photo area
+  // is narrower than `window.innerWidth` and viewport-based sizing
+  // would overshoot — landscape photos got cut from the sides.
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
-  const updateDimensions = () => {
-    setDimensions({ width: window.innerWidth, height: window.innerHeight });
-  };
   React.useEffect(() => {
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  });
+    const el = rootRef.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setDimensions({ width: rect.width, height: rect.height });
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const dragRef = React.useRef<{
     startClientX: number;
@@ -170,15 +181,14 @@ const Content = ({
 
   const photoRatio = photo.ratio();
   const browserScale = window.visualViewport?.scale ?? 1;
-  // 62 / 107 = chrome surrounding the photo (Navigation bar + Footer
-  // + the Frame's own matte border + padding); 40 = the modal
-  // Backdrop's 20px padding on each side (Photo now lives inside a
-  // modal frame — see `Photo/index.tsx`). On mobile (≤ 600px) the
-  // Backdrop loses its padding; the extra 40 then comes back as a
-  // sliver of unused space rather than producing overflow, which is
-  // the safe trade-off.
-  const maxAvailWidth = (dimensions.width - 62 - 40) * browserScale;
-  const maxAvailHeight = (dimensions.height - 107 - 40) * browserScale;
+  // `dimensions` is the measured Root size — already excludes the
+  // modal's Navigation/Footer chrome and reflects the Frame's
+  // `max-width: 1400px` cap. Subtract the photo frame's own
+  // matte+border (10px padding + 1px border each side = 22) to get
+  // the image's available area.
+  const FRAME_CHROME = 22;
+  const maxAvailWidth = (dimensions.width - FRAME_CHROME) * browserScale;
+  const maxAvailHeight = (dimensions.height - FRAME_CHROME) * browserScale;
   const maxRatio = maxAvailWidth / maxAvailHeight;
   // Image keeps its natural fit-to-viewport dimensions at every zoom
   // level; the `transform: scale` handles the zoom visually.
@@ -365,7 +375,7 @@ const Content = ({
   };
 
   return (
-    <Root>
+    <Root ref={rootRef}>
       <Frame ref={frameRef} $width={frameWidth} $height={frameHeight}>
         <ImageClip>
           <Image
