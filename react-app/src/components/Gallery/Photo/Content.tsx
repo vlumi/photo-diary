@@ -194,31 +194,21 @@ const Content = ({
     maxAvailWidth,
     maxRatio
   );
-  // On zoom-in the frame widens to the available viewport so portrait-
-  // on-landscape can put its empty side margins to use. Height stays
-  // at the photo's fit dimension — growing it too would make a
-  // landscape photo on a portrait phone snap to nearly full-screen,
-  // which is jarring. Frame uses CSS `content-box`, so `width` already
-  // refers to the content area (= the clipping rectangle inside the
-  // matte).
-  const isZoomed = zoom.scale > 1;
-  const frameWidth = isZoomed ? maxAvailWidth : imageWidth;
+  // Frame stays at the photo's natural fit dimensions across every
+  // zoom level — the modal design has its own visible boundary (see
+  // `Photo/index.tsx`), so the photo sitting in a stable matte inside
+  // that frame reads more cleanly than the frame growing into the
+  // scrim on zoom. Pan limits (below) compute against this stable
+  // frame size; the scaled image overflows it and the ImageClip
+  // handles the clip.
+  const frameWidth = imageWidth;
   const frameHeight = imageHeight;
 
-  // Latest dimensions in a ref so the wheel useEffect (registered once)
-  // always reads the current values for clamp + anchor math.
-  const sizeRef = React.useRef({
-    imageWidth,
-    imageHeight,
-    maxAvailWidth,
-    maxAvailHeight,
-  });
-  sizeRef.current = {
-    imageWidth,
-    imageHeight,
-    maxAvailWidth,
-    maxAvailHeight,
-  };
+  // Latest image dimensions in a ref so the wheel useEffect
+  // (registered once) always reads the current values for clamp +
+  // anchor math.
+  const sizeRef = React.useRef({ imageWidth, imageHeight });
+  sizeRef.current = { imageWidth, imageHeight };
 
   // React attaches `wheel` listeners as passive by default, so
   // `e.preventDefault()` would be a no-op (and Chrome warns on every
@@ -238,10 +228,9 @@ const Content = ({
         const nextX = anchoredTranslate(anchorX, z.x, z.scale, nextScale);
         const nextY = anchoredTranslate(anchorY, z.y, z.scale, nextScale);
         const sz = sizeRef.current;
-        const nextFrameW = nextScale > 1 ? sz.maxAvailWidth : sz.imageWidth;
         return {
           scale: nextScale,
-          x: clampOffset(nextX, sz.imageWidth * nextScale, nextFrameW),
+          x: clampOffset(nextX, sz.imageWidth * nextScale, sz.imageWidth),
           y: clampOffset(nextY, sz.imageHeight * nextScale, sz.imageHeight),
         };
       });
@@ -346,10 +335,9 @@ const Content = ({
         pinchRef.current.startScale,
         nextScale
       );
-      const nextFrameW = nextScale > 1 ? maxAvailWidth : imageWidth;
       setZoom({
         scale: nextScale,
-        x: clampOffset(nextX, imageWidth * nextScale, nextFrameW),
+        x: clampOffset(nextX, imageWidth * nextScale, imageWidth),
         y: clampOffset(nextY, imageHeight * nextScale, imageHeight),
       });
     } else if (e.touches.length === 1 && dragRef.current) {
