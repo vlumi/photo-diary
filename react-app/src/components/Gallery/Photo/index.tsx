@@ -2,6 +2,11 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
+import {
+  BsArrowsFullscreen,
+  BsFullscreenExit,
+  BsXLg,
+} from "react-icons/bs";
 import type { SwipeEventData } from "react-swipeable";
 
 import Swipeable from "../../Swipeable";
@@ -75,6 +80,43 @@ const Frame = styled.div`
     box-shadow: none;
   }
 `;
+// Floating corner buttons over the modal. Close lives at the
+// Frame's top-right (above the Navigation bar via z-index — small
+// enough not to fight skip-next visually). Fullscreen lives at
+// the photo area's top-left so it reads as "make this photo
+// bigger" rather than "modal chrome". Both are pill-style with a
+// translucent backdrop so they remain visible regardless of the
+// underlying content (Navigation chrome on one side, photo or
+// matte on the other).
+const FloatingButton = styled.button`
+  position: absolute;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  &:hover {
+    background: rgba(0, 0, 0, 0.7);
+  }
+`;
+const CloseButton = styled(FloatingButton)`
+  top: 8px;
+  right: 8px;
+`;
+// 58 = 50px Navigation height + 8px breathing — pins the button
+// to the photo area's top-left corner just below the toolbar.
+const FullscreenButton = styled(FloatingButton)`
+  top: 58px;
+  left: 8px;
+`;
 // Body wraps Content+Footer in a flex column that fills the leftover
 // space inside the modal Frame (between Navigation and the bottom
 // edge). Without this Content's `flex-grow: 1` would be ineffective
@@ -109,6 +151,19 @@ export interface ZoomState {
 }
 const ZOOM_RESET: ZoomState = { scale: 1, x: 0, y: 0 };
 
+// Fullscreen API isn't supported in iOS Safari for arbitrary
+// elements (only video) — surface the toggle only where it works.
+const fullscreenSupported = (): boolean =>
+  typeof document !== "undefined" && document.fullscreenEnabled === true;
+
+const toggleFullScreen = () => {
+  if (!document.fullscreenElement) {
+    document.getElementById("root")?.requestFullscreen();
+  } else if (document.exitFullscreen) {
+    document.exitFullscreen();
+  }
+};
+
 const Photo = ({
   gallery,
   year,
@@ -120,6 +175,15 @@ const Photo = ({
 }: Props): React.ReactElement => {
   const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
   const [zoom, setZoom] = React.useState<ZoomState>(ZOOM_RESET);
+  const [isFullscreen, setIsFullscreen] = React.useState(
+    typeof document !== "undefined" && !!document.fullscreenElement
+  );
+  React.useEffect(() => {
+    if (!fullscreenSupported()) return;
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
 
   const { t } = useTranslation();
 
@@ -223,8 +287,25 @@ const Photo = ({
           day={day}
           photo={photo}
           lang={lang}
-          onClose={handleClose}
         />
+        <CloseButton
+          type="button"
+          onClick={handleClose}
+          aria-label={t("close")}
+          title={t("close")}
+        >
+          <BsXLg />
+        </CloseButton>
+        {fullscreenSupported() && (
+          <FullscreenButton
+            type="button"
+            onClick={toggleFullScreen}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
+          </FullscreenButton>
+        )}
         {zoom.scale === 1 ? (
           <SwipeBody onSwiped={handleSwipe}>
             <Content

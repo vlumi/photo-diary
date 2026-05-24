@@ -6,9 +6,6 @@ import {
   BsCaretLeftFill,
   BsCaretRightFill,
   BsSkipForwardFill,
-  BsArrowsFullscreen,
-  BsFullscreenExit,
-  BsXLg,
 } from "react-icons/bs";
 
 import SharedRoot from "../Navigation";
@@ -46,15 +43,6 @@ const Centre = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
 `;
-// Tools sub-group sits in the right group, slightly separated from
-// the next/skip-next nav arrows so the close + fullscreen buttons
-// read as "modal chrome" rather than another pair of nav controls.
-const Tools = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: 18px;
-`;
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "$visibility",
 })<{ $visibility: string }>`
@@ -62,33 +50,6 @@ const NavLink = styled(Link, {
   align-items: center;
   visibility: ${(props) => props.$visibility};
 `;
-const IconButton = styled.button`
-  background: none;
-  border: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  padding: 0;
-  margin: 0;
-  &:hover {
-    color: var(--primary-color);
-  }
-`;
-
-// Fullscreen API isn't supported in iOS Safari for arbitrary elements
-// (only video) — surface the toggle only where it actually works.
-const fullscreenSupported = (): boolean =>
-  typeof document !== "undefined" && document.fullscreenEnabled === true;
-
-const toggleFullScreen = () => {
-  if (!document.fullscreenElement) {
-    document.getElementById("root")?.requestFullscreen();
-  } else if (document.exitFullscreen) {
-    document.exitFullscreen();
-  }
-};
 
 interface Props {
   gallery: Gallery;
@@ -97,7 +58,6 @@ interface Props {
   day: number;
   photo: Photo;
   lang: string;
-  onClose: () => void;
 }
 
 const Navigation = ({
@@ -107,7 +67,6 @@ const Navigation = ({
   day,
   photo,
   lang,
-  onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const totalPhotos = gallery.photos().length;
@@ -115,15 +74,6 @@ const Navigation = ({
   const positionLabel = `${new Intl.NumberFormat(lang).format(
     photoIndex
   )} / ${new Intl.NumberFormat(lang).format(totalPhotos)}`;
-  const [isFullscreen, setIsFullscreen] = React.useState(
-    typeof document !== "undefined" && !!document.fullscreenElement
-  );
-  React.useEffect(() => {
-    if (!fullscreenSupported()) return;
-    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
 
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
@@ -180,26 +130,6 @@ const Navigation = ({
         >
           <BsSkipForwardFill />
         </NavLink>
-        <Tools>
-          {fullscreenSupported() && (
-            <IconButton
-              type="button"
-              onClick={toggleFullScreen}
-              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-              title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-            >
-              {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
-            </IconButton>
-          )}
-          <IconButton
-            type="button"
-            onClick={onClose}
-            aria-label={t("close")}
-            title={t("close")}
-          >
-            <BsXLg />
-          </IconButton>
-        </Tools>
       </Group>
     </Root>
   );
