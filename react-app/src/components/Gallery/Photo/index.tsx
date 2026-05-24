@@ -100,8 +100,8 @@ const FullscreenButton = styled(FloatingButton)`
   left: 8px;
 `;
 const InfoButton = styled(FloatingButton)`
-  bottom: 8px;
-  right: 8px;
+  bottom: 16px;
+  right: 16px;
 `;
 // Flex column that gives Content a stable parent size. Without
 // this Content's flex-grow has no flex parent — Swipeable's plain

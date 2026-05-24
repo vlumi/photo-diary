@@ -18,15 +18,15 @@ interface CountryData {
 }
 
 // Floating panel anchored to the bottom-right, above the info
-// toggle button. `bottom: 52px` = button bottom (8) + button
+// toggle button. `bottom: 60px` = button bottom (16) + button
 // diameter (34) + 10px gap.
 const Root = styled.div`
   position: absolute;
   z-index: 9;
   right: 16px;
-  bottom: 52px;
+  bottom: 60px;
   max-width: min(360px, calc(100% - 32px));
-  max-height: calc(100% - 130px);
+  max-height: calc(100% - 140px);
   display: flex;
   flex-direction: column;
   background: rgba(0, 0, 0, 0.78);
