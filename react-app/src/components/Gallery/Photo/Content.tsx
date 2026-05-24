@@ -170,8 +170,15 @@ const Content = ({
 
   const photoRatio = photo.ratio();
   const browserScale = window.visualViewport?.scale ?? 1;
-  const maxAvailWidth = (dimensions.width - 62) * browserScale;
-  const maxAvailHeight = (dimensions.height - 107) * browserScale;
+  // 62 / 107 = chrome surrounding the photo (Navigation bar + Footer
+  // + the Frame's own matte border + padding); 40 = the modal
+  // Backdrop's 20px padding on each side (Photo now lives inside a
+  // modal frame — see `Photo/index.tsx`). On mobile (≤ 600px) the
+  // Backdrop loses its padding; the extra 40 then comes back as a
+  // sliver of unused space rather than producing overflow, which is
+  // the safe trade-off.
+  const maxAvailWidth = (dimensions.width - 62 - 40) * browserScale;
+  const maxAvailHeight = (dimensions.height - 107 - 40) * browserScale;
   const maxRatio = maxAvailWidth / maxAvailHeight;
   // Image keeps its natural fit-to-viewport dimensions at every zoom
   // level; the `transform: scale` handles the zoom visually.

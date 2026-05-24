@@ -31,21 +31,45 @@ interface Props {
 }
 
 // Modal overlay over the Month view rendered by Gallery/index.tsx
-// when the URL targets a photo. `position: fixed; inset: 0` so the
-// modal claims the viewport above whatever's mounted underneath.
-// Backdrop uses the theme background (opaque) for the MVP — the
-// architectural change is the value here (no Month remount on
-// close, direct-link entries now mount Month synchronously). The
-// "Month visible behind" visual will land in a follow-up once the
-// chrome colours have been adjusted to read on a dimmed background
-// across every theme.
+// when the URL targets a photo. The backdrop is a dimmed scrim
+// that lets Month show through (theme-independent dark so the
+// contrast against the photo is consistent across themes).
+// Backdrop click closes the modal — see `handleBackdropClick`.
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
   z-index: 100;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 20px;
+  /* Mobile: lose the inset so the photo claims the full viewport
+     — the dimmed-Month-behind effect doesn't read at narrow widths
+     and the photo needs every pixel it can get. */
+  @media (max-width: 600px) {
+    padding: 0;
+  }
+`;
+// Contained modal frame — visible boundary, rounded corners, soft
+// drop shadow so the modal reads as a panel sitting *above* the
+// dimmed Month. Theme background so the chrome inside still reads
+// correctly (Footer text colour, Navigation icons) without needing
+// a separate "modal theme".
+const Frame = styled.div`
+  flex: 1 1 auto;
+  max-width: 1400px;
   background: var(--primary-background);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  @media (max-width: 600px) {
+    border-radius: 0;
+    box-shadow: none;
+  }
 `;
 const CloseButton = styled.button`
   position: absolute;
@@ -173,70 +197,80 @@ const Photo = ({
     return <Navigate to={redirect} replace />;
   }
 
+  const handleBackdropClick = (event: React.MouseEvent) => {
+    if (event.target === event.currentTarget) handleClose();
+  };
+
   return (
-    <Backdrop role="dialog" aria-modal="true">
+    <Backdrop
+      role="dialog"
+      aria-modal="true"
+      onClick={handleBackdropClick}
+    >
       <title>
         {gallery.title(year, month, day, photo)} — {t("nav-gallery")}
       </title>
-      <Navigation
-        gallery={gallery}
-        year={year}
-        month={month}
-        day={day}
-        photo={photo}
-        lang={lang}
-      />
-      <CloseButton
-        type="button"
-        onClick={handleClose}
-        aria-label={t("close")}
-        title={t("close")}
-      >
-        <BsXLg />
-      </CloseButton>
-      {zoom.scale === 1 ? (
-        <Swipeable onSwiped={handleSwipe}>
-          <Content
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            photo={photo}
-            zoom={zoom}
-            setZoom={setZoom}
-          />
-          <Footer
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            photo={photo}
-            lang={lang}
-            countryData={countryData}
-          />
-        </Swipeable>
-      ) : (
-        <>
-          <Content
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            photo={photo}
-            zoom={zoom}
-            setZoom={setZoom}
-          />
-          <Footer
-            gallery={gallery}
-            year={year}
-            month={month}
-            day={day}
-            photo={photo}
-            lang={lang}
-            countryData={countryData}
-          />
-        </>
-      )}
+      <Frame>
+        <Navigation
+          gallery={gallery}
+          year={year}
+          month={month}
+          day={day}
+          photo={photo}
+          lang={lang}
+        />
+        <CloseButton
+          type="button"
+          onClick={handleClose}
+          aria-label={t("close")}
+          title={t("close")}
+        >
+          <BsXLg />
+        </CloseButton>
+        {zoom.scale === 1 ? (
+          <Swipeable onSwiped={handleSwipe}>
+            <Content
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              photo={photo}
+              zoom={zoom}
+              setZoom={setZoom}
+            />
+            <Footer
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              photo={photo}
+              lang={lang}
+              countryData={countryData}
+            />
+          </Swipeable>
+        ) : (
+          <>
+            <Content
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              photo={photo}
+              zoom={zoom}
+              setZoom={setZoom}
+            />
+            <Footer
+              gallery={gallery}
+              year={year}
+              month={month}
+              day={day}
+              photo={photo}
+              lang={lang}
+              countryData={countryData}
+            />
+          </>
+        )}
+      </Frame>
     </Backdrop>
   );
 };
