@@ -48,7 +48,11 @@ const Backdrop = styled.div`
   position: fixed;
   inset: 0;
   height: 100dvh;
-  z-index: 100;
+  /* Above Leaflet's tile / overlay / marker / popup panes (z-index
+     200-700 in the default Leaflet stylesheet) so the Month map
+     underneath stays under the modal scrim instead of bleeding
+     through on top of it. */
+  z-index: 1000;
   background: rgba(0, 0, 0, 0.82);
   display: flex;
   align-items: stretch;
