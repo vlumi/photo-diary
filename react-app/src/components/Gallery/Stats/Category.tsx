@@ -4,9 +4,16 @@ import styled from "@emotion/styled";
 import Summary from "./Summary";
 import Charts from "./Charts";
 import Table from "./Table";
+import TableModal from "./TableModal";
 
 import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic, StatsCategory } from "../../../lib/stats";
+
+// Distributions with more than this many entries get truncated in the
+// inline category card; the user can open the full table in a modal
+// via a trailing "+ N more…" row. Chosen to line up with months/12
+// and fit a comfortable screen height on mobile.
+const INLINE_TABLE_LIMIT = 12;
 
 type ActiveTheme = { get: (name: string) => string };
 
@@ -42,6 +49,7 @@ const Category = ({
   setFilters,
   theme,
 }: Props): React.ReactElement => {
+  const [modalOpen, setModalOpen] = React.useState(false);
   return (
     <Root
       key={`${topic.key}:${category.key}`}
@@ -57,7 +65,19 @@ const Category = ({
         filters={filters}
         setFilters={setFilters}
         theme={theme}
+        limit={INLINE_TABLE_LIMIT}
+        onExpand={() => setModalOpen(true)}
       />
+      {modalOpen && (
+        <TableModal
+          topic={topic}
+          category={category}
+          filters={filters}
+          setFilters={setFilters}
+          theme={theme}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </Root>
   );
 };

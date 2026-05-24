@@ -68,6 +68,19 @@ const Column = styled("td", {
   text-align: ${(props) => props.$align};
   overflow: hidden;
 `;
+const ExpandRow = styled.tr`
+  cursor: pointer;
+  color: var(--inactive-color);
+  font-style: italic;
+  &:hover {
+    color: var(--header-color);
+    background-color: var(--header-background);
+  }
+`;
+const ExpandCell = styled.td`
+  padding: 2px;
+  text-align: center;
+`;
 
 interface HeatColorCache {
   from: string | undefined;
@@ -100,6 +113,12 @@ interface Props {
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
+  // Optional cap on the number of rows shown inline. When the actual row
+  // count exceeds the cap, a trailing "+ N more…" row is rendered that
+  // fires `onExpand` (typically to open a modal with the full table).
+  // Omitted from the modal itself so it shows every row.
+  limit?: number;
+  onExpand?: () => void;
 }
 
 const Table = ({
@@ -108,6 +127,8 @@ const Table = ({
   filters,
   setFilters,
   theme,
+  limit,
+  onExpand,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
@@ -219,6 +240,11 @@ const Table = ({
     });
   };
 
+  const fullTable = category.table;
+  const shouldCap = limit !== undefined && fullTable.length > limit;
+  const visibleTable = shouldCap ? fullTable.slice(0, limit) : fullTable;
+  const hiddenCount = shouldCap ? fullTable.length - limit : 0;
+
   return (
     <Root>
       <Block>
@@ -232,7 +258,14 @@ const Table = ({
             </Header>
           ))}
         </HeaderRow>
-        {renderRows(topic.key, category.key, category.table)}
+        {renderRows(topic.key, category.key, visibleTable)}
+        {hiddenCount > 0 && onExpand && (
+          <ExpandRow onClick={onExpand}>
+            <ExpandCell colSpan={tableColumns.length}>
+              {t("stats-more", { count: hiddenCount })}
+            </ExpandCell>
+          </ExpandRow>
+        )}
       </Block>
     </Root>
   );
