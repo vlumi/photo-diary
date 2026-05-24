@@ -1234,6 +1234,7 @@ describe("collectTopics", () => {
         count: "2",
         share: "100.0%",
         _count: 2,
+        _label: "Japan",
         standardScore: NaN,
       },
     ]);

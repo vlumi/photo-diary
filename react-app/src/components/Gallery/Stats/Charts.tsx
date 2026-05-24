@@ -4,7 +4,7 @@ import styled from "@emotion/styled";
 import "chart.js/auto";
 import { Doughnut, PolarArea, Bar, Line } from "react-chartjs-2";
 
-import type { StatsCategory } from "../../../lib/stats";
+import type { ChartSpec, SortMode, StatsCategory } from "../../../lib/stats";
 
 const Root = styled.div`
   margin: 5px;
@@ -30,15 +30,85 @@ const StyledChartContainer2 = styled.div`
 
 interface Props {
   category: StatsCategory;
+  // Passed by the modal only. When omitted (the inline view),
+  // charts render in the natural order from `collectTopics` — no
+  // re-sort. The modal's "Top" mode re-zips by count desc; the
+  // modal's "By value" mode re-zips alphabetically for
+  // `valueSortByLabel` categories and otherwise no-ops.
+  sortMode?: SortMode;
 }
 
-const Charts = ({ category }: Props): React.ReactElement => {
+// Line and polar charts encode shape via position: the year-month
+// trend line is meaningless when sorted by count, and the cyclical
+// polar charts (month / weekday / hour) lose their wheel arrangement.
+// Doughnut and horizontal-bar are agnostic — segments and bars can
+// land in any order — so the modal toggle only re-zips those.
+const isReorderable = (type: ChartSpec["type"]): boolean =>
+  type === "doughnut" || type === "horizontal-bar";
+
+// Re-zip labels + each dataset's data (and backgroundColor where
+// present) in `order`. Datasets without a `data` array pass through.
+const applyOrder = (data: any, order: number[]): any => {
+  if (!data?.datasets?.[0]?.data) {
+    return data;
+  }
+  const reorder = <T,>(arr: T[]): T[] => order.map((i) => arr[i]);
+  return {
+    ...data,
+    labels: data.labels ? reorder(data.labels) : data.labels,
+    datasets: data.datasets.map((ds: any) => ({
+      ...ds,
+      data: reorder(ds.data),
+      ...(Array.isArray(ds.backgroundColor)
+        ? { backgroundColor: reorder(ds.backgroundColor) }
+        : {}),
+    })),
+  };
+};
+
+const sortByCountDesc = (data: any): any => {
+  if (!data?.datasets?.[0]?.data) return data;
+  const counts: number[] = data.datasets[0].data.map((v: unknown) => Number(v));
+  const order = counts
+    .map((_, i) => i)
+    .sort((a, b) => counts[b] - counts[a]);
+  return applyOrder(data, order);
+};
+
+// Labels are JSON-stringified display strings (or JSON-stringified
+// arrays for camera-lens). Stringified form sorts cleanly for our
+// purposes — comparing `"Apple"` vs `"Banana"` (raw bytes) gives the
+// expected alphabetical order, and the camera-lens `["A","B"]` form
+// stays well-ordered too.
+const sortByLabelAsc = (data: any): any => {
+  if (!data?.labels) return data;
+  const labels: string[] = data.labels;
+  const order = labels
+    .map((_, i) => i)
+    .sort((a, b) => labels[a].localeCompare(labels[b]));
+  return applyOrder(data, order);
+};
+
+const Charts = ({ category, sortMode }: Props): React.ReactElement => {
   if (!category.charts) {
     return <></>;
   }
+  const transform: ((data: any) => any) | null =
+    sortMode === "count"
+      ? sortByCountDesc
+      : sortMode === "value" && category.valueSortByLabel
+        ? sortByLabelAsc
+        : null;
+  const charts: ChartSpec[] = transform
+    ? category.charts.map((chart) =>
+        isReorderable(chart.type)
+          ? { ...chart, data: transform(chart.data) }
+          : chart
+      )
+    : category.charts;
   return (
     <Root>
-      {category.charts.map((chart) => {
+      {charts.map((chart) => {
         const key = `${category.key}:${chart.type}`;
         switch (chart.type) {
           case "doughnut":

@@ -6,7 +6,7 @@ import Charts from "./Charts";
 import Table from "./Table";
 
 import type { Filters as FiltersT } from "../../../lib/filter";
-import type { StatsTopic, StatsCategory } from "../../../lib/stats";
+import type { StatsTopic, StatsCategory, SortMode } from "../../../lib/stats";
 
 type ActiveTheme = { get: (name: string) => string };
 
@@ -20,9 +20,6 @@ const Backdrop = styled.div`
   justify-content: center;
   padding: 20px;
 `;
-// 720px comfortably fits the side-by-side charts (~600px) plus
-// padding; on narrower viewports the `width: 100%` + outer 20px
-// backdrop padding takes over and the modal shrinks to fit.
 const ModalBox = styled.div`
   background: var(--primary-background);
   color: var(--primary-color);
@@ -40,11 +37,43 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   margin-bottom: 14px;
+`;
+const TitleGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
 `;
 const Title = styled.h2`
   margin: 0;
   font-size: 1.1em;
+`;
+const SortToggle = styled.div`
+  display: inline-flex;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  overflow: hidden;
+`;
+const SortButton = styled.button<{ $active: boolean }>`
+  border: none;
+  background: ${({ $active }) =>
+    $active ? "var(--header-background)" : "transparent"};
+  color: ${({ $active }) =>
+    $active ? "var(--header-color)" : "var(--inactive-color)"};
+  font-size: 0.75em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  cursor: pointer;
+  &:hover {
+    color: var(--header-color);
+  }
+  & + & {
+    border-left: 1px solid var(--inactive-color);
+  }
 `;
 const CloseButton = styled.button`
   border: none;
@@ -82,6 +111,10 @@ const TableModal = ({
   onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
+  // "Top" is the default: the user typically lands here from the
+  // inline view's top-10 list, so opening to the same ordering is the
+  // less-jarring landing. "By value" is the alternate reading.
+  const [sortMode, setSortMode] = React.useState<SortMode>("count");
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -104,21 +137,44 @@ const TableModal = ({
     >
       <ModalBox>
         <Header>
-          <Title id={`stats-modal-${topic.key}-${category.key}-title`}>
-            {category.title}
-          </Title>
+          <TitleGroup>
+            <Title id={`stats-modal-${topic.key}-${category.key}-title`}>
+              {category.title}
+            </Title>
+            {category.valueSortable && (
+              <SortToggle role="group" aria-label={t("stats-modal-sort-label")}>
+                <SortButton
+                  type="button"
+                  $active={sortMode === "value"}
+                  aria-pressed={sortMode === "value"}
+                  onClick={() => setSortMode("value")}
+                >
+                  {t("stats-modal-sort-by-value")}
+                </SortButton>
+                <SortButton
+                  type="button"
+                  $active={sortMode === "count"}
+                  aria-pressed={sortMode === "count"}
+                  onClick={() => setSortMode("count")}
+                >
+                  {t("stats-modal-sort-by-count")}
+                </SortButton>
+              </SortToggle>
+            )}
+          </TitleGroup>
           <CloseButton type="button" onClick={onClose} aria-label={t("close")}>
             ╳
           </CloseButton>
         </Header>
         <ScrollArea>
-          <Charts category={category} />
+          <Charts category={category} sortMode={sortMode} />
           <Table
             topic={topic}
             category={category}
             filters={filters}
             setFilters={setFilters}
             theme={theme}
+            sortMode={sortMode}
           />
         </ScrollArea>
       </ModalBox>

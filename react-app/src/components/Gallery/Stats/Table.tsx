@@ -6,6 +6,7 @@ import color from "../../../lib/color";
 import stats from "../../../lib/stats";
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import type {
+  SortMode,
   StatsTopic,
   StatsCategory,
   TableRow,
@@ -122,6 +123,9 @@ interface Props {
   // Omitted from the modal itself so it shows every row.
   limit?: number;
   onExpand?: () => void;
+  // Modal-only override; inline view leaves this unset and the natural
+  // sort stands (with the cap re-sorting as a separate concern below).
+  sortMode?: SortMode;
 }
 
 const Table = ({
@@ -132,6 +136,7 @@ const Table = ({
   theme,
   limit,
   onExpand,
+  sortMode = "value",
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
@@ -244,19 +249,41 @@ const Table = ({
   };
 
   const fullTable = category.table;
-  const shouldCap = limit !== undefined && fullTable.length > limit;
-  // When capping, re-sort by raw count desc so "+ N more…" reads as
-  // "we showed you the top 10; click to see the rest" rather than "we
-  // truncated by whatever the original sort was" (which is by value
-  // for the exposure categories, making the first 10 = lowest 10
-  // values — not what the user wants from a glance). The modal
-  // (limit undefined) keeps the original sort so the distribution
-  // shape stays visible.
-  const visibleTable = shouldCap
-    ? [...fullTable]
-        .sort((a, b) => Number(b._count ?? 0) - Number(a._count ?? 0))
-        .slice(0, limit)
-    : fullTable;
+  const isInline = limit !== undefined;
+  const shouldCap = isInline && fullTable.length > limit;
+  // Inline view always reads as top-by-count — even short categories
+  // (weekday's 7 rows, month's 12) sort more usefully by frequency
+  // than by their chronological default. The modal then offers "By
+  // value" as the alternate reading. The exposure modal's natural
+  // numeric sort and the gear modal's alphabetical sort are both
+  // handled here under `sortMode === "value"`:
+  //   - `valueSortByLabel` (gear, people-or-place) → alpha sort on
+  //     the display column (which lives at `row[category.key]`).
+  //   - Otherwise → the order from collectTopics (exposure numeric,
+  //     time chronological).
+  const sortedTable = (() => {
+    if (sortMode === "count" || isInline) {
+      return [...fullTable].sort(
+        (a, b) => Number(b._count ?? 0) - Number(a._count ?? 0)
+      );
+    }
+    if (category.valueSortByLabel) {
+      // Country renders the display column as `<><FlagIcon/> name</>`,
+      // so its sortable string lives in the optional `_label` field.
+      // String-column categories (author / camera / lens / …) sort
+      // via `row[category.key]` directly.
+      const labelCol = category.key;
+      const labelOf = (row: TableRow): string =>
+        typeof row._label === "string"
+          ? row._label
+          : String(row[labelCol] ?? "");
+      return [...fullTable].sort((a, b) =>
+        labelOf(a).localeCompare(labelOf(b))
+      );
+    }
+    return fullTable;
+  })();
+  const visibleTable = shouldCap ? sortedTable.slice(0, limit) : sortedTable;
   const hiddenCount = shouldCap ? fullTable.length - limit : 0;
 
   return (
