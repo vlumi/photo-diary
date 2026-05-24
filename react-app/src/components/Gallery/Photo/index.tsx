@@ -37,12 +37,16 @@ interface Props {
 
 // Modal overlay over the Month view (see Gallery/index.tsx).
 // `100dvh` tracks mobile Chrome's visual viewport as the URL bar
-// shows/hides. z-index above Leaflet's panes (200-700) so a map
-// on Month underneath can't bleed through the scrim.
+// shows/hides. `box-sizing: border-box` so the explicit height
+// + padding don't add up past the viewport — without it the
+// modal extends ~40px past the bottom on desktop. z-index above
+// Leaflet's panes (200-700) so a map on Month underneath can't
+// bleed through the scrim.
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
   height: 100dvh;
+  box-sizing: border-box;
   z-index: 1000;
   background: rgba(0, 0, 0, 0.82);
   display: flex;
