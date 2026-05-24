@@ -24,12 +24,6 @@ const Root = styled(SharedRoot)`
   top: auto;
   left: auto;
   flex: 0 0 auto;
-  /* Reserve room on the right for the floating close [X] button
-     (top-right of the modal Frame, 8px from the edge with a 34px
-     diameter) so skip-next doesn't sit directly under it. Keeps
-     the left side at the shared default — fullscreen lives below
-     the bar, not beside skip-prev. */
-  padding-right: 56px;
 `;
 const Group = styled.div`
   display: flex;

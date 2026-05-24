@@ -19,7 +19,7 @@ const Root = styled.nav`
   background: var(--header-background);
   font-size: 24pt;
   margin: 0;
-  padding: 0 24px;
+  padding: 0 56px;
   display: flex;
   flex-wrap: nowrap;
   justify-content: space-between;
