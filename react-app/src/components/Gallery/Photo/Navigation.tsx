@@ -1,58 +1,55 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
-  BsFillCalendarFill,
   BsCaretRightFill,
   BsSkipForwardFill,
-  BsArrowsFullscreen,
-  BsFullscreenExit,
 } from "react-icons/bs";
 
-import Root from "../Navigation";
+import SharedRoot from "../Navigation";
 import Link from "../Link";
 
 import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo } from "../../../models/PhotoModel";
 
+// Photo lives inside a position:fixed modal — the shared Root's
+// `position: sticky; top: 0` has no scrolling ancestor here and on
+// mobile Chrome it interacts badly with body scroll (the bar
+// appears to "fall off" the top of the modal). Override to a
+// regular block in the flex column.
+const Root = styled(SharedRoot)`
+  position: relative;
+  top: auto;
+  left: auto;
+  flex: 0 0 auto;
+`;
+const Group = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
+// Photo position indicator in the centre of the bar. Without it the
+// bar reads as empty between the left and right control clusters
+// (the breadcrumb's `#N` sits in the Title bar above the modal,
+// not inside the modal itself).
+const Centre = styled.div`
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 0.6em;
+  color: var(--header-sub-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "$visibility",
 })<{ $visibility: string }>`
-  visibility: ${(props) => props.$visibility};
-`;
-const TitleContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-const Title = styled.span`
-  margin: 0 5px;
-`;
-const FullscreenButton = styled.button`
-  background: none;
-  border: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  padding: 0;
-  margin: 0;
+  visibility: ${(props) => props.$visibility};
 `;
-
-// Fullscreen API isn't supported in iOS Safari for arbitrary elements
-// (only video) — surface the toggle only where it actually works.
-const fullscreenSupported = (): boolean =>
-  typeof document !== "undefined" && document.fullscreenEnabled === true;
-
-const toggleFullScreen = () => {
-  if (!document.fullscreenElement) {
-    document.getElementById("root")?.requestFullscreen();
-  } else if (document.exitFullscreen) {
-    document.exitFullscreen();
-  }
-};
 
 interface Props {
   gallery: Gallery;
@@ -71,15 +68,12 @@ const Navigation = ({
   photo,
   lang,
 }: Props): React.ReactElement => {
-  const [isFullscreen, setIsFullscreen] = React.useState(
-    typeof document !== "undefined" && !!document.fullscreenElement
-  );
-  React.useEffect(() => {
-    if (!fullscreenSupported()) return;
-    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
+  const { t } = useTranslation();
+  const totalPhotos = gallery.photos().length;
+  const photoIndex = photo.index() + 1;
+  const positionLabel = `${new Intl.NumberFormat(lang).format(
+    photoIndex
+  )} / ${new Intl.NumberFormat(lang).format(totalPhotos)}`;
 
   const [firstYear, firstMonth, firstDay] = gallery.firstDay();
   const [lastYear, lastMonth, lastDay] = gallery.lastDay();
@@ -104,40 +98,39 @@ const Navigation = ({
   const lastPhoto = lastDayPhotos[lastDayPhotos.length - 1];
   return (
     <Root>
-      <NavLink gallery={gallery} photo={firstPhoto} $visibility={prevVisibility}>
-        <BsSkipBackwardFill />
-      </NavLink>
-      <NavLink
-        gallery={gallery}
-        photo={previousPhoto}
-        $visibility={prevVisibility}
-      >
-        <BsCaretLeftFill />
-      </NavLink>
-      <Link gallery={gallery} year={year} month={month}>
-        <TitleContainer>
-          <BsFillCalendarFill />
-          <Title>
-            #
-            {photo ? new Intl.NumberFormat(lang).format(photo.index() + 1) : ""}
-          </Title>
-        </TitleContainer>
-      </Link>
-      <NavLink gallery={gallery} photo={nextPhoto} $visibility={nextVisibility}>
-        <BsCaretRightFill />
-      </NavLink>
-      <NavLink gallery={gallery} photo={lastPhoto} $visibility={nextVisibility}>
-        <BsSkipForwardFill />
-      </NavLink>
-      {fullscreenSupported() && (
-        <FullscreenButton
-          type="button"
-          onClick={toggleFullScreen}
-          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+      <Group>
+        <NavLink
+          gallery={gallery}
+          photo={firstPhoto}
+          $visibility={prevVisibility}
         >
-          {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
-        </FullscreenButton>
-      )}
+          <BsSkipBackwardFill />
+        </NavLink>
+        <NavLink
+          gallery={gallery}
+          photo={previousPhoto}
+          $visibility={prevVisibility}
+        >
+          <BsCaretLeftFill />
+        </NavLink>
+      </Group>
+      <Centre aria-label={t("nav-photo-position")}>{positionLabel}</Centre>
+      <Group>
+        <NavLink
+          gallery={gallery}
+          photo={nextPhoto}
+          $visibility={nextVisibility}
+        >
+          <BsCaretRightFill />
+        </NavLink>
+        <NavLink
+          gallery={gallery}
+          photo={lastPhoto}
+          $visibility={nextVisibility}
+        >
+          <BsSkipForwardFill />
+        </NavLink>
+      </Group>
     </Root>
   );
 };

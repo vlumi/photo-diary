@@ -2,7 +2,11 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
-import { BsXLg } from "react-icons/bs";
+import {
+  BsArrowsFullscreen,
+  BsFullscreenExit,
+  BsXLg,
+} from "react-icons/bs";
 import type { SwipeEventData } from "react-swipeable";
 
 import Swipeable from "../../Swipeable";
@@ -35,9 +39,14 @@ interface Props {
 // that lets Month show through (theme-independent dark so the
 // contrast against the photo is consistent across themes).
 // Backdrop click closes the modal — see `handleBackdropClick`.
+// Height uses `100dvh` (dynamic viewport) so on mobile Chrome the
+// modal tracks the visual viewport as the URL bar shows/hides;
+// `inset: 0` is the desktop fallback (and the spec behaviour
+// before dvh is honoured).
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
+  height: 100dvh;
   z-index: 100;
   background: rgba(0, 0, 0, 0.82);
   display: flex;
@@ -71,23 +80,42 @@ const Frame = styled.div`
     box-shadow: none;
   }
 `;
-const CloseButton = styled.button`
+// Floating corner buttons over the modal. Close lives at the
+// Frame's top-right (above the Navigation bar via z-index — small
+// enough not to fight skip-next visually). Fullscreen lives at
+// the photo area's top-left so it reads as "make this photo
+// bigger" rather than "modal chrome". Both are pill-style with a
+// translucent backdrop so they remain visible regardless of the
+// underlying content (Navigation chrome on one side, photo or
+// matte on the other).
+const FloatingButton = styled.button`
   position: absolute;
-  top: 8px;
-  right: 12px;
   z-index: 10;
-  background: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
   border: none;
-  color: var(--header-color);
-  font-size: 20px;
-  cursor: pointer;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
   &:hover {
-    color: var(--primary-color);
+    background: rgba(0, 0, 0, 0.7);
   }
+`;
+const CloseButton = styled(FloatingButton)`
+  top: 8px;
+  right: 8px;
+`;
+// 58 = 50px Navigation height + 8px breathing — pins the button
+// to the photo area's top-left corner just below the toolbar.
+const FullscreenButton = styled(FloatingButton)`
+  top: 58px;
+  left: 8px;
 `;
 // Body wraps Content+Footer in a flex column that fills the leftover
 // space inside the modal Frame (between Navigation and the bottom
@@ -123,6 +151,19 @@ export interface ZoomState {
 }
 const ZOOM_RESET: ZoomState = { scale: 1, x: 0, y: 0 };
 
+// Fullscreen API isn't supported in iOS Safari for arbitrary
+// elements (only video) — surface the toggle only where it works.
+const fullscreenSupported = (): boolean =>
+  typeof document !== "undefined" && document.fullscreenEnabled === true;
+
+const toggleFullScreen = () => {
+  if (!document.fullscreenElement) {
+    document.getElementById("root")?.requestFullscreen();
+  } else if (document.exitFullscreen) {
+    document.exitFullscreen();
+  }
+};
+
 const Photo = ({
   gallery,
   year,
@@ -134,6 +175,15 @@ const Photo = ({
 }: Props): React.ReactElement => {
   const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
   const [zoom, setZoom] = React.useState<ZoomState>(ZOOM_RESET);
+  const [isFullscreen, setIsFullscreen] = React.useState(
+    typeof document !== "undefined" && !!document.fullscreenElement
+  );
+  React.useEffect(() => {
+    if (!fullscreenSupported()) return;
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
 
   const { t } = useTranslation();
 
@@ -185,7 +235,24 @@ const Photo = ({
     setRedirect(gallery.path(year, month));
   }, [gallery, year, month]);
 
-  useKeyPress("Escape", handleClose);
+  // Photo modal lives over a mounted Month; both register window-
+  // level Escape listeners via `useKeyPress`. Without coordination
+  // both fire on the same Escape press — Photo navigates to Month,
+  // Month then navigates to Year, and the user lands one level too
+  // high. Listen in the capture phase and stopImmediatePropagation
+  // so Photo's handler always runs first and Month's is skipped
+  // while the modal is open.
+  React.useEffect(() => {
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      handleClose();
+    };
+    window.addEventListener("keydown", onEscape, true);
+    return () => window.removeEventListener("keydown", onEscape, true);
+  }, [handleClose]);
+
   useKeyPress("Home", handlMoveToFirst);
   useKeyPress("ArrowLeft", handlMoveToPrevious);
   useKeyPress("ArrowRight", handlMoveToNext);
@@ -246,6 +313,16 @@ const Photo = ({
         >
           <BsXLg />
         </CloseButton>
+        {fullscreenSupported() && (
+          <FullscreenButton
+            type="button"
+            onClick={toggleFullScreen}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
+          </FullscreenButton>
+        )}
         {zoom.scale === 1 ? (
           <SwipeBody onSwiped={handleSwipe}>
             <Content

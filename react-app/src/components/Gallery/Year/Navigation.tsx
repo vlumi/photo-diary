@@ -3,30 +3,39 @@ import styled from "@emotion/styled";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
-  BsFillHouseFill,
   BsCaretRightFill,
   BsSkipForwardFill,
 } from "react-icons/bs";
 
-import FormatDate from "../../FormatDate";
-
 import Root from "../Navigation";
 import Link from "../Link";
+import FormatDate from "../../FormatDate";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
+const Group = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
+// Current year shown in the middle of the bar. The breadcrumb above
+// has it too, but the bar otherwise reads as empty between the
+// left and right control clusters — restore the visual centre.
+const Centre = styled.div`
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 0.7em;
+  color: var(--header-sub-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "$visibility",
 })<{ $visibility: string }>`
-  visibility: ${(props) => props.$visibility};
-`;
-const TitleContainer = styled.div`
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
-`;
-const Title = styled.span`
-  margin: 0 5px;
+  visibility: ${(props) => props.$visibility};
 `;
 
 interface Props {
@@ -44,30 +53,41 @@ const Navigation = ({ gallery, year }: Props): React.ReactElement => {
   const lastYear = gallery.lastYear();
   return (
     <Root>
-      <NavLink gallery={gallery} year={firstYear} $visibility={prevVisibility}>
-        <BsSkipBackwardFill />
-      </NavLink>
-      <NavLink
-        gallery={gallery}
-        year={previousYear}
-        $visibility={prevVisibility}
-      >
-        <BsCaretLeftFill />
-      </NavLink>
-      <Link>
-        <TitleContainer>
-          <BsFillHouseFill />
-          <Title>
-            <FormatDate year={year} />
-          </Title>
-        </TitleContainer>
-      </Link>
-      <NavLink gallery={gallery} year={nextYear} $visibility={nextVisibility}>
-        <BsCaretRightFill />
-      </NavLink>
-      <NavLink gallery={gallery} year={lastYear} $visibility={nextVisibility}>
-        <BsSkipForwardFill />
-      </NavLink>
+      <Group>
+        <NavLink
+          gallery={gallery}
+          year={firstYear}
+          $visibility={prevVisibility}
+        >
+          <BsSkipBackwardFill />
+        </NavLink>
+        <NavLink
+          gallery={gallery}
+          year={previousYear}
+          $visibility={prevVisibility}
+        >
+          <BsCaretLeftFill />
+        </NavLink>
+      </Group>
+      <Centre>
+        <FormatDate year={year} />
+      </Centre>
+      <Group>
+        <NavLink
+          gallery={gallery}
+          year={nextYear}
+          $visibility={nextVisibility}
+        >
+          <BsCaretRightFill />
+        </NavLink>
+        <NavLink
+          gallery={gallery}
+          year={lastYear}
+          $visibility={nextVisibility}
+        >
+          <BsSkipForwardFill />
+        </NavLink>
+      </Group>
     </Root>
   );
 };

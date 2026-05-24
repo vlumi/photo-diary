@@ -88,7 +88,7 @@ const Month = ({
 
   const tile = (
     <Root>
-      <MonthTitle>{month}</MonthTitle>
+      <MonthTitle>{t(`month-long-${month}`)}</MonthTitle>
       <MonthContainer>
         <MonthGrid>
           <Header>

@@ -1,34 +1,30 @@
 import React from "react";
 import styled from "@emotion/styled";
 
-const Root = styled.h2`
+// Calendar-level navigation bar shared by Photo / Month / Year.
+// Now that the path/breadcrumb lives in the Title bar above, this
+// row carries sibling navigation only: prev/skip on the left edge,
+// next/skip + fullscreen on the right. Groups (left vs right) keep
+// the controls clustered so the bar reads as two button stacks
+// with empty centre rather than evenly-spread icons.
+const Root = styled.nav`
   position: sticky;
   top: 0;
   left: 0;
   z-index: 1;
   width: 100%;
   height: 50px;
+  box-sizing: border-box;
   color: var(--header-color);
   background: var(--header-background);
   font-size: 24pt;
-  font-weight: bold;
-  text-align: center;
   margin: 0;
-  padding: 0;
+  padding: 0 56px;
   display: flex;
   flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-
-  > * {
-    flex-grow: 1;
-    flex-shrink: 1;
-    vertical-align: middle;
-    position: relative;
-    display: inline;
-  }
   & :link {
-    position: relative;
     color: var(--header-color);
   }
   & :visited {

@@ -457,6 +457,8 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
             year={year}
             month={month}
             day={day || undefined}
+            photo={photo}
+            lang={lang}
           />
           <Filters
             filters={filters}
