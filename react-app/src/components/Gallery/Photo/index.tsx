@@ -58,11 +58,12 @@ const Backdrop = styled.div`
   align-items: stretch;
   justify-content: center;
   padding: 20px;
-  /* Mobile: lose the inset so the photo claims the full viewport
-     — the dimmed-Month-behind effect doesn't read at narrow widths
-     and the photo needs every pixel it can get. */
+  /* Mobile: small inset so the modal Frame doesn't kiss the
+     viewport edge — keeps a hairline of the dimmed scrim visible
+     all around so the modal reads as floating rather than as a
+     route change. */
   @media (max-width: 600px) {
-    padding: 0;
+    padding: 8px;
   }
 `;
 // Contained modal frame — visible boundary, rounded corners, soft
