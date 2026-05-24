@@ -12,10 +12,16 @@ const Root = styled.div`
   position: relative;
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
+  /* Align the photo Frame to the top of the content area rather
+     than centring it vertically — keeps the top breathing minimal
+     (matching the horizontal sides) and lets the bottom breathing
+     stay generous without pushing the photo into the middle of
+     an empty zone. */
+  align-items: flex-start;
   justify-content: center;
   overflow: hidden;
-  margin: 5px 0;
+  padding: 8px 0 24px;
+  box-sizing: border-box;
 `;
 const Frame = styled("span", {
   shouldForwardProp: (prop) => prop !== "$width" && prop !== "$height",
@@ -181,23 +187,24 @@ const Content = ({
 
   const photoRatio = photo.ratio();
   const browserScale = window.visualViewport?.scale ?? 1;
-  // `dimensions` is the measured Root size — already excludes the
-  // modal's Navigation/Footer chrome and reflects the Frame's
-  // `max-width: 1400px` cap. Subtract the photo frame's own
-  // matte+border (10px padding + 1px border each side = 22) plus
-  // breathing room on each axis so the matte doesn't pin against
-  // the modal Frame edges. The vertical breathing is larger than
-  // horizontal: on wide screens viewing portrait photos the photo
-  // is height-limited, and 8px (the old 16/2) wasn't enough to
-  // keep the matte off the modal's bottom edge — the photo and
-  // its matte read as "running off the bottom".
+  // `dimensions` is the measured Root border-box — already
+  // excludes the modal's Navigation chrome and reflects the
+  // Frame's `max-width: 1400px` cap. Subtract:
+  //   - FRAME_CHROME: the photo frame's own matte+border
+  //     (10px padding + 1px border each side = 22)
+  //   - H_BREATHING: side breathing inside Root
+  //   - ROOT_PADDING_V: Root's own `padding: 8px 0 24px`
+  //     (8 top + 24 bottom). Asymmetric — top stays minimal so
+  //     the photo doesn't float in the middle of the Content
+  //     area below the Navigation bar; bottom gets more room so
+  //     the matte doesn't kiss the modal's bottom edge.
   const FRAME_CHROME = 22;
   const H_BREATHING = 16;
-  const V_BREATHING = 48;
+  const ROOT_PADDING_V = 32;
   const maxAvailWidth =
     (dimensions.width - FRAME_CHROME - H_BREATHING) * browserScale;
   const maxAvailHeight =
-    (dimensions.height - FRAME_CHROME - V_BREATHING) * browserScale;
+    (dimensions.height - FRAME_CHROME - ROOT_PADDING_V) * browserScale;
   const maxRatio = maxAvailWidth / maxAvailHeight;
   // Image keeps its natural fit-to-viewport dimensions at every zoom
   // level; the `transform: scale` handles the zoom visually.
