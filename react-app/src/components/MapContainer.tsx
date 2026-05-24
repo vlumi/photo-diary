@@ -45,21 +45,17 @@ const getPolyline = (positions: LatLngExpression[]) => {
   return <Polyline positions={positions} />;
 };
 
-// When the map mounts inside a container whose final size isn't
-// known yet (the metadata panel is `position: absolute` with
-// `max-width`/`max-height` that resolve after layout), Leaflet
-// renders against the initial container rect and the marker can
-// land off-centre. After the panel settles, calling
-// `invalidateSize({pan: false})` makes Leaflet re-measure while
-// keeping the current view centre — no panning side-effect from
-// the default `pan: true` (which was shifting the view north as
-// the container grew).
+// react-leaflet's `<MapContainer>` uses `center`, `zoom`, and
+// `bounds` only as the initial setup; prop changes after mount
+// don't move the view. The metadata panel keeps the map mounted
+// while the user navigates between photos, so we need to push
+// the new coordinates into Leaflet's instance manually when the
+// position changes.
 //
-// For the single-photo case, explicitly `setView` on the point
-// after the resize so we never go through Leaflet's fitBounds
-// heuristics for a zero-area bound (which were the original
-// source of "map ends up north of pin"). Multi-photo maps leave
-// the initial `bounds`-prop fit in place.
+// Re-runs only when `positionKey` actually changes (a stable
+// primitive derived from the coordinates), not on every parent
+// render — otherwise the effect would re-fire constantly and
+// the map view would animate on every render.
 const Refit = ({
   singlePoint,
   maxZoom,
@@ -73,13 +69,9 @@ const Refit = ({
   const pointRef = React.useRef(singlePoint);
   pointRef.current = singlePoint;
   React.useEffect(() => {
-    const t = window.setTimeout(() => {
-      map.invalidateSize({ pan: false });
-      if (pointRef.current) {
-        map.setView(pointRef.current, maxZoom, { animate: false });
-      }
-    }, 100);
-    return () => window.clearTimeout(t);
+    if (pointRef.current) {
+      map.setView(pointRef.current, maxZoom, { animate: false });
+    }
   }, [map, positionKey, maxZoom]);
   return null;
 };
@@ -116,16 +108,10 @@ const MapContainer = ({
   // Stable key from the position signature so `Refit` re-runs
   // only when the actual location changes (navigating to a
   // different photo), not on every parent render.
-  const positionKey = positions
-    .map((p) => {
-      if (Array.isArray(p)) return `${p[0]},${p[1]}`;
-      if (typeof p === "object" && p !== null && "lat" in p && "lng" in p) {
-        return `${(p as { lat: number; lng: number }).lat},${
-          (p as { lat: number; lng: number }).lng
-        }`;
-      }
-      return JSON.stringify(p);
-    })
+  // `photo.coordinates()` returns `[lat, lng]` tuples, so a flat
+  // string join is enough.
+  const positionKey = (positions as [number, number][])
+    .map(([lat, lng]) => `${lat},${lng}`)
     .join("|");
   return (
     <Root $height={height}>
