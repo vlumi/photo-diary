@@ -16,7 +16,7 @@ import type { Gallery } from "../../../models/GalleryModel";
 const Group = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 `;
 // Current month name (localised) shown in the middle of the bar
 // so it doesn't read empty between the left and right control

@@ -16,7 +16,7 @@ import type { Gallery } from "../../../models/GalleryModel";
 const Group = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 `;
 // Current year shown in the middle of the bar. The breadcrumb above
 // has it too, but the bar otherwise reads as empty between the
