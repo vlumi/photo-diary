@@ -22,13 +22,17 @@ interface CountryData {
 // except the timestamp (now persistently visible in the toolbar
 // centre) and the prev/next thumbnails (redundant with the
 // toolbar's prev/skip nav).
+//
+// `bottom: 52px` clears the info-toggle button (8px from the
+// edge + 34px diameter + 10px breathing) so the panel sits just
+// above the button rather than overlapping it.
 const Root = styled.div`
   position: absolute;
   z-index: 9;
   right: 16px;
-  bottom: 16px;
+  bottom: 52px;
   max-width: min(360px, calc(100% - 32px));
-  max-height: calc(100% - 100px);
+  max-height: calc(100% - 130px);
   display: flex;
   flex-direction: column;
   background: rgba(0, 0, 0, 0.78);
