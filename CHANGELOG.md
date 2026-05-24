@@ -4,6 +4,8 @@
 
 ### Frontend
 
+- Stats Summary category gains an expand modal with a richer overall-stats view organised into four sections: Period (first/last/span/totals), Peaks (busiest year/month-name/weekday/hour), Variety (distinct-value counts per category), Most-used (top entry per author/country/camera/lens/focal-length/aperture/exposure-time/ISO). Peaks and Most-used use tie-aware rendering — a single leader is shown as "X — N", a 2–3-way tie as "X, Y, Z — N each", and 4+ near-tied or near-flat distributions (typical for evenly-spread categories like weekday on a 365-style daily diary) as "Evenly distributed (~N each)" rather than picking a fake leader.
+
 - Stats category tables cap at 10 rows inline, sorted by count desc so every category reads as a "top 10". Click the category title (or the trailing "+ N more…" row when there are more entries) to open the full distribution in a floating modal — opens regardless of row count, so even short tables can be expanded to see the natural-order view alongside the chart at a larger size. Click-to-filter works the same in both views.
 - Stats summary KPIs (photos / average / years / months / days) get a card-based redesign — each KPI in its own bordered tile with an icon, an uppercase label, and a prominent numeric value. CSS Grid auto-fits the cards to the available width so the row wraps cleanly on narrow viewports.
 - Stats topic title bar (the vertical "General" / "Time" / "Gear" / "Exposure" labels on the left of each topic section) now extends to the full height of the topic on Firefox too. The previous flex layout left it short because `writing-mode: vertical-rl` interacts poorly with flex stretching; switched to CSS Grid which stretches both axes uniformly.

@@ -96,6 +96,8 @@ const Stats = ({
             filters={filters}
             setFilters={setFilters}
             theme={theme}
+            lang={lang}
+            countryData={countryData}
           />
         ))}
         {renderMap(mapPhotos)}

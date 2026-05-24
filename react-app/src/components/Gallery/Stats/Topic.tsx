@@ -7,6 +7,10 @@ import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic } from "../../../lib/stats";
 
 type ActiveTheme = { get: (name: string) => string };
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+  isValid(code: string): boolean;
+}
 
 // Grid (instead of flex) for the title + categories row. Grid items
 // stretch in both axes by default, so the vertical title bar reaches
@@ -53,6 +57,8 @@ interface Props {
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
+  lang: string;
+  countryData: CountryData;
 }
 
 const Topic = ({
@@ -60,6 +66,8 @@ const Topic = ({
   filters,
   setFilters,
   theme,
+  lang,
+  countryData,
 }: Props): React.ReactElement => {
   return (
     <Root key={topic.key} data-type="topic" data-key={topic.key}>
@@ -73,6 +81,8 @@ const Topic = ({
             filters={filters}
             setFilters={setFilters}
             theme={theme}
+            lang={lang}
+            countryData={countryData}
           />
         ))}
       </Categories>

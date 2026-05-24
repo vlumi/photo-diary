@@ -6,9 +6,15 @@ import Summary from "./Summary";
 import Charts from "./Charts";
 import Table from "./Table";
 import TableModal from "./TableModal";
+import SummaryModal from "./SummaryModal";
 
 import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic, StatsCategory } from "../../../lib/stats";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+  isValid(code: string): boolean;
+}
 
 // Uniform cap: the inline category card always shows at most 10 rows,
 // sorted by count desc, regardless of how many entries the
@@ -71,6 +77,8 @@ interface Props {
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
+  lang: string;
+  countryData: CountryData;
 }
 
 const Category = ({
@@ -79,13 +87,18 @@ const Category = ({
   filters,
   setFilters,
   theme,
+  lang,
+  countryData,
 }: Props): React.ReactElement => {
   const [modalOpen, setModalOpen] = React.useState(false);
-  // Only categories with a table have something to expand. The summary
-  // category (kpi-only) would open an empty modal — disable the click
-  // target and hide the expand icon so the affordance only shows where
-  // it actually does something.
-  const hasExpandableContent = !!category.table;
+  // Two flavours of modal:
+  // - Chart + table categories use TableModal (full distribution).
+  // - The summary category uses SummaryModal (period / peaks / variety
+  //   / most-used overview).
+  // Either way the category title is the click affordance.
+  const hasTable = !!category.table;
+  const hasSummaryExtras = !!category.summaryExtras;
+  const hasExpandableContent = hasTable || hasSummaryExtras;
   const openModal = hasExpandableContent
     ? () => setModalOpen(true)
     : undefined;
@@ -114,13 +127,21 @@ const Category = ({
         limit={INLINE_TABLE_LIMIT}
         onExpand={openModal}
       />
-      {modalOpen && (
+      {modalOpen && hasTable && (
         <TableModal
           topic={topic}
           category={category}
           filters={filters}
           setFilters={setFilters}
           theme={theme}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+      {modalOpen && hasSummaryExtras && !hasTable && (
+        <SummaryModal
+          category={category}
+          lang={lang}
+          countryData={countryData}
           onClose={() => setModalOpen(false)}
         />
       )}
