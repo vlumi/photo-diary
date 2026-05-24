@@ -7,6 +7,7 @@ import {
   Marker,
   Polyline,
   Popup,
+  useMap,
 } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 
@@ -42,6 +43,37 @@ Leaflet.Marker.prototype.options.icon = DefaultIcon;
 
 const getPolyline = (positions: LatLngExpression[]) => {
   return <Polyline positions={positions} />;
+};
+
+// When the map mounts inside a container whose final size isn't
+// known yet (the metadata panel is `position: absolute` with
+// `max-width`/`max-height` that resolve after layout), Leaflet
+// computes its first `fitBounds` against the initial container
+// rect and the marker can land off-centre. After the panel
+// settles, calling `invalidateSize()` makes Leaflet re-measure
+// and re-fit. The second tick covers the case where the panel is
+// still transitioning into place when the first invalidate ran.
+const InvalidateSizeOnMount = ({
+  bounds,
+  boundsOptions,
+}: {
+  bounds: Leaflet.LatLngBoundsExpression;
+  boundsOptions?: Leaflet.FitBoundsOptions;
+}): null => {
+  const map = useMap();
+  React.useEffect(() => {
+    const refit = () => {
+      map.invalidateSize();
+      map.fitBounds(bounds, boundsOptions);
+    };
+    const t1 = window.setTimeout(refit, 50);
+    const t2 = window.setTimeout(refit, 300);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [map, bounds, boundsOptions]);
+  return null;
 };
 
 interface Props {
@@ -90,6 +122,10 @@ const MapContainer = ({
         maxZoom={resolvedMaxZoom}
         style={{ height: "100%" }}
       >
+        <InvalidateSizeOnMount
+          bounds={bounds}
+          boundsOptions={boundsOptions}
+        />
         <TileLayer
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
