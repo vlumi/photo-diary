@@ -35,42 +35,24 @@ interface Props {
   countryData: CountryData;
 }
 
-// Modal overlay over the Month view rendered by Gallery/index.tsx
-// when the URL targets a photo. The backdrop is a dimmed scrim
-// that lets Month show through (theme-independent dark so the
-// contrast against the photo is consistent across themes).
-// Backdrop click closes the modal — see `handleBackdropClick`.
-// Height uses `100dvh` (dynamic viewport) so on mobile Chrome the
-// modal tracks the visual viewport as the URL bar shows/hides;
-// `inset: 0` is the desktop fallback (and the spec behaviour
-// before dvh is honoured).
+// Modal overlay over the Month view (see Gallery/index.tsx).
+// `100dvh` tracks mobile Chrome's visual viewport as the URL bar
+// shows/hides. z-index above Leaflet's panes (200-700) so a map
+// on Month underneath can't bleed through the scrim.
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
   height: 100dvh;
-  /* Above Leaflet's tile / overlay / marker / popup panes (z-index
-     200-700 in the default Leaflet stylesheet) so the Month map
-     underneath stays under the modal scrim instead of bleeding
-     through on top of it. */
   z-index: 1000;
   background: rgba(0, 0, 0, 0.82);
   display: flex;
   align-items: stretch;
   justify-content: center;
   padding: 20px;
-  /* Mobile: small inset so the modal Frame doesn't kiss the
-     viewport edge — keeps a hairline of the dimmed scrim visible
-     all around so the modal reads as floating rather than as a
-     route change. */
   @media (max-width: 600px) {
     padding: 8px;
   }
 `;
-// Contained modal frame — visible boundary, rounded corners, soft
-// drop shadow so the modal reads as a panel sitting *above* the
-// dimmed Month. Theme background so the chrome inside still reads
-// correctly (Footer text colour, Navigation icons) without needing
-// a separate "modal theme".
 const Frame = styled.div`
   flex: 1 1 auto;
   max-width: 1400px;
@@ -86,14 +68,9 @@ const Frame = styled.div`
     box-shadow: none;
   }
 `;
-// Floating corner buttons over the modal. Close lives at the
-// Frame's top-right (above the Navigation bar via z-index — small
-// enough not to fight skip-next visually). Fullscreen lives at
-// the photo area's top-left so it reads as "make this photo
-// bigger" rather than "modal chrome". Both are pill-style with a
-// translucent backdrop so they remain visible regardless of the
-// underlying content (Navigation chrome on one side, photo or
-// matte on the other).
+// Floating corner buttons over the modal: close, fullscreen, info
+// toggle. Pill-style with a translucent backdrop so they remain
+// visible against any underlying content.
 const FloatingButton = styled.button`
   position: absolute;
   z-index: 10;
@@ -117,28 +94,19 @@ const CloseButton = styled(FloatingButton)`
   top: 8px;
   right: 8px;
 `;
-// 58 = 50px Navigation height + 8px breathing — pins the button
-// to the photo area's top-left corner just below the toolbar.
+// 58 = 50px Navigation height + 8px clearance.
 const FullscreenButton = styled(FloatingButton)`
   top: 58px;
   left: 8px;
 `;
-// Info toggle sits in the photo area's bottom-right corner, the
-// inverse of the fullscreen toggle. The metadata panel anchors at
-// the same edge — toggling it on overlays the panel above the
-// button (the panel's own bottom-right is at 16px from the
-// corner, with the button at 8px).
 const InfoButton = styled(FloatingButton)`
   bottom: 8px;
   right: 8px;
 `;
-// Body wraps Content+Footer in a flex column that fills the leftover
-// space inside the modal Frame (between Navigation and the bottom
-// edge). Without this Content's `flex-grow: 1` would be ineffective
-// — Swipeable's plain `<div>` (or the React fragment in the zoomed
-// branch) breaks the flex chain, and Content's Root collapses to
-// its own content size, which then feeds back into the
-// ResizeObserver inside Content and runs the photo down to nothing.
+// Flex column that gives Content a stable parent size. Without
+// this Content's flex-grow has no flex parent — Swipeable's plain
+// div breaks the chain — and Content's ResizeObserver feeds back
+// into itself and shrinks the photo to nothing.
 const Body = styled.div`
   flex: 1 1 auto;
   min-height: 0;
@@ -152,9 +120,9 @@ const SwipeBody = styled(Swipeable)`
   flex-direction: column;
 `;
 
-// Zoom state lives here so `<Swipeable>` can be bypassed while zoomed
-// (otherwise drag-to-pan would also fire swipe-to-next/prev) and so
-// navigating to another photo resets the zoom cleanly.
+// Zoom state lives here so Swipeable is bypassed while zoomed
+// (drag-to-pan would otherwise fire swipe-to-next/prev) and so
+// photo navigation resets the zoom cleanly.
 const ZOOM_STEP = 1.2;
 const MIN_SCALE = 1;
 const MAX_SCALE = 8;
@@ -166,8 +134,7 @@ export interface ZoomState {
 }
 const ZOOM_RESET: ZoomState = { scale: 1, x: 0, y: 0 };
 
-// Fullscreen API isn't supported in iOS Safari for arbitrary
-// elements (only video) — surface the toggle only where it works.
+// iOS Safari only supports the Fullscreen API on <video>.
 const fullscreenSupported = (): boolean =>
   typeof document !== "undefined" && document.fullscreenEnabled === true;
 
@@ -200,18 +167,13 @@ const Photo = ({
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
-  // Metadata panel: open by default on desktop, closed on mobile so
-  // the photo gets every available pixel. Persist across photo
-  // changes within the same modal session.
+  // Open by default on desktop, closed on mobile so the photo gets
+  // every available pixel.
   const [showMetadata, setShowMetadata] = React.useState(
     typeof window !== "undefined" && window.innerWidth > 600
   );
 
-  // Lock body scroll while the modal is open so the Month
-  // underneath doesn't scroll under the scrim (and so the user
-  // can't accidentally scroll the Month map up over the modal).
-  // Restore the previous value on close, not a hardcoded "auto",
-  // in case some other code legitimately set it.
+  // Freeze the Month underneath while the modal is open.
   React.useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -222,7 +184,6 @@ const Photo = ({
 
   const { t } = useTranslation();
 
-  // Reset zoom whenever the photo changes — including via prev/next nav.
   React.useEffect(() => {
     setZoom(ZOOM_RESET);
   }, [photo.id()]);
@@ -271,13 +232,10 @@ const Photo = ({
     setRedirect(gallery.path(year, month));
   }, [gallery, year, month]);
 
-  // Photo modal lives over a mounted Month; both register window-
-  // level Escape listeners via `useKeyPress`. Without coordination
-  // both fire on the same Escape press — Photo navigates to Month,
-  // Month then navigates to Year, and the user lands one level too
-  // high. Listen in the capture phase and stopImmediatePropagation
-  // so Photo's handler always runs first and Month's is skipped
-  // while the modal is open.
+  // Both Photo and the mounted Month register Escape listeners on
+  // window. Capture phase + stopImmediatePropagation so Photo's
+  // handler runs first and Month's is skipped while the modal is
+  // open — otherwise one Escape press skips two levels up.
   React.useEffect(() => {
     const onEscape = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;

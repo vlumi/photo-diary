@@ -17,15 +17,9 @@ interface CountryData {
   getName(code: string, lang: string): string | undefined;
 }
 
-// Floating panel anchored to the bottom-right of the Photo modal,
-// over the photo. Carries everything the old `<Footer>` carried
-// except the timestamp (now persistently visible in the toolbar
-// centre) and the prev/next thumbnails (redundant with the
-// toolbar's prev/skip nav).
-//
-// `bottom: 52px` clears the info-toggle button (8px from the
-// edge + 34px diameter + 10px breathing) so the panel sits just
-// above the button rather than overlapping it.
+// Floating panel anchored to the bottom-right, above the info
+// toggle button. `bottom: 52px` = button bottom (8) + button
+// diameter (34) + 10px gap.
 const Root = styled.div`
   position: absolute;
   z-index: 9;
@@ -243,11 +237,8 @@ const MetadataPanel = ({
   };
   const renderMap = () => {
     if (!photo.hasCoordinates() || gallery.hideMap()) return null;
-    // Pass the explicit height matching `<MapBox>` so Leaflet
-    // measures the actual visible area. Without this, MapContainer
-    // defaults to 400px while MapBox clips at 160 — Leaflet
-    // renders at 400 and the marker ends up below the visible
-    // strip.
+    // Explicit height matches MapBox; without it MapContainer
+    // defaults to 400px and the marker ends up below the 160px clip.
     return (
       <MapBox>
         <MapContainer positions={[photo]} height={160} />
