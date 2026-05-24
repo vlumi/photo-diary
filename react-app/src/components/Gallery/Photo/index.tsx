@@ -202,6 +202,19 @@ const Photo = ({
     typeof window !== "undefined" && window.innerWidth > 600
   );
 
+  // Lock body scroll while the modal is open so the Month
+  // underneath doesn't scroll under the scrim (and so the user
+  // can't accidentally scroll the Month map up over the modal).
+  // Restore the previous value on close, not a hardcoded "auto",
+  // in case some other code legitimately set it.
+  React.useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
   const { t } = useTranslation();
 
   // Reset zoom whenever the photo changes — including via prev/next nav.
