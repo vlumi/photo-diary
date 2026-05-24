@@ -50,29 +50,38 @@ const getPolyline = (positions: LatLngExpression[]) => {
 // `max-width`/`max-height` that resolve after layout), Leaflet
 // computes its first `fitBounds` against the initial container
 // rect and the marker can land off-centre. After the panel
-// settles, calling `invalidateSize()` makes Leaflet re-measure
-// and re-fit. The second tick covers the case where the panel is
-// still transitioning into place when the first invalidate ran.
+// settles, calling `invalidateSize()` makes Leaflet re-measure;
+// `fitBounds` re-runs the fit against the corrected size.
+//
+// `bounds`/`boundsOptions` are read via refs so the effect deps
+// stay stable — otherwise every parent render produces new
+// reference identities and the effect would fire on every render,
+// queuing fitBounds calls and animating the view repeatedly. We
+// re-run only when the position signature actually changes.
 const InvalidateSizeOnMount = ({
   bounds,
   boundsOptions,
+  positionKey,
 }: {
   bounds: Leaflet.LatLngBoundsExpression;
   boundsOptions?: Leaflet.FitBoundsOptions;
+  positionKey: string;
 }): null => {
   const map = useMap();
+  const boundsRef = React.useRef(bounds);
+  const optionsRef = React.useRef(boundsOptions);
+  boundsRef.current = bounds;
+  optionsRef.current = boundsOptions;
   React.useEffect(() => {
-    const refit = () => {
+    const t = window.setTimeout(() => {
       map.invalidateSize();
-      map.fitBounds(bounds, boundsOptions);
-    };
-    const t1 = window.setTimeout(refit, 50);
-    const t2 = window.setTimeout(refit, 300);
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-    };
-  }, [map, bounds, boundsOptions]);
+      map.fitBounds(boundsRef.current, {
+        ...optionsRef.current,
+        animate: false,
+      });
+    }, 100);
+    return () => window.clearTimeout(t);
+  }, [map, positionKey]);
   return null;
 };
 
@@ -96,24 +105,32 @@ const MapContainer = ({
   const positions = photos.map(
     (photo) => photo.coordinates() as LatLngExpression
   );
-  const singlePhoto = positions.length === 1;
   const resolvedMaxZoom = maxZoom ? maxZoom : 14;
   const bounds = Leaflet.latLngBounds(positions);
-  // Default Leaflet markers are anchored at the bottom tip (the
-  // geographic point sits at the icon's bottom). Centring the map
-  // exactly on the point puts the marker's body (41px tall)
-  // entirely above the centre — visually the pin reads as "north
-  // of centre". For the single-photo case, fit the bounds with
-  // extra padding at the top so the point shifts toward the
-  // bottom of the visible area, leaving the marker body centred
-  // on the map. Multi-photo maps fit naturally.
-  const boundsOptions = singlePhoto
-    ? {
-        paddingTopLeft: [0, 40] as [number, number],
-        paddingBottomRight: [0, 0] as [number, number],
-        maxZoom: resolvedMaxZoom,
+  // No asymmetric padding — fit the bounds centred on the pin
+  // (or on the centroid for multi-photo). Yes, the default marker
+  // icon's body extends north of the geographic anchor, but
+  // shifting the *map view* to compensate ends up reading as
+  // "the map is north of the actual pin", which is more
+  // confusing than the icon body sitting slightly above centre.
+  const boundsOptions: Leaflet.FitBoundsOptions = {
+    maxZoom: resolvedMaxZoom,
+  };
+  // Stable key from the position signature so the
+  // InvalidateSizeOnMount effect re-runs only when the actual
+  // location changes (e.g. navigating to a different photo), not
+  // on every parent render.
+  const positionKey = positions
+    .map((p) => {
+      if (Array.isArray(p)) return `${p[0]},${p[1]}`;
+      if (typeof p === "object" && p !== null && "lat" in p && "lng" in p) {
+        return `${(p as { lat: number; lng: number }).lat},${
+          (p as { lat: number; lng: number }).lng
+        }`;
       }
-    : undefined;
+      return JSON.stringify(p);
+    })
+    .join("|");
   return (
     <Root $height={height}>
       <Map
@@ -125,6 +142,7 @@ const MapContainer = ({
         <InvalidateSizeOnMount
           bounds={bounds}
           boundsOptions={boundsOptions}
+          positionKey={positionKey}
         />
         <TileLayer
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
