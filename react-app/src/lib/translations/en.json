@@ -28,6 +28,9 @@
     "nav-gallery-top": "Back to top",
     "nav-gallery": "Gallery",
     "nav-stats": "Statistics",
+    "nav-up-to-month": "Back to month",
+    "nav-up-to-year": "Back to year",
+    "nav-up-to-galleries": "Back to galleries",
 
     "weekday-short-mon": "Mon",
     "weekday-short-tue": "Tue",

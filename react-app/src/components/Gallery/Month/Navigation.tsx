@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
@@ -12,6 +13,7 @@ import FormatDate from "../../FormatDate";
 
 import Root from "../Navigation";
 import Link from "../Link";
+import UpLink from "../UpLink";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
@@ -40,6 +42,7 @@ const Navigation = ({
   year,
   month,
 }: Props): React.ReactElement => {
+  const { t } = useTranslation();
   const prevVisibility = gallery.isFirstMonth(year, month) ? "hidden" : "";
   const nextVisibility = gallery.isLastMonth(year, month) ? "hidden" : "";
 
@@ -65,14 +68,19 @@ const Navigation = ({
       >
         <BsCaretLeftFill />
       </NavLink>
-      <Link gallery={gallery} year={year}>
+      <UpLink
+        gallery={gallery}
+        year={year}
+        aria-label={t("nav-up-to-year")}
+        title={t("nav-up-to-year")}
+      >
         <TitleContainer>
           <BsFillCalendarFill />
           <Title>
             <FormatDate year={year} month={month} />
           </Title>
         </TitleContainer>
-      </Link>
+      </UpLink>
       <NavLink
         gallery={gallery}
         year={nextYear}
