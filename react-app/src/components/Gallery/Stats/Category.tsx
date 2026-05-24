@@ -9,11 +9,22 @@ import TableModal from "./TableModal";
 import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic, StatsCategory } from "../../../lib/stats";
 
-// Distributions with more than this many entries get truncated in the
-// inline category card; the user can open the full table in a modal
-// via a trailing "+ N more…" row. Chosen to line up with months/12
-// and fit a comfortable screen height on mobile.
+// Variable-length count-sorted distributions (cameras, lenses,
+// year-months, etc.) get truncated in the inline category card — the
+// user can open the full table in a modal via a trailing "+ N more…"
+// row. 12 lines up with months and fits a comfortable mobile screen.
+//
+// Intrinsically-bounded chronological categories are exempt: cutting
+// the hour distribution off at noon would hide PM hours entirely;
+// month/weekday/orientation are short enough to render fully anyway
+// and the cap was making them feel arbitrary too.
 const INLINE_TABLE_LIMIT = 12;
+const ALWAYS_FULL_CATEGORIES = new Set([
+  "hour",
+  "weekday",
+  "month",
+  "orientation",
+]);
 
 type ActiveTheme = { get: (name: string) => string };
 
@@ -50,6 +61,9 @@ const Category = ({
   theme,
 }: Props): React.ReactElement => {
   const [modalOpen, setModalOpen] = React.useState(false);
+  const limit = ALWAYS_FULL_CATEGORIES.has(category.key)
+    ? undefined
+    : INLINE_TABLE_LIMIT;
   return (
     <Root
       key={`${topic.key}:${category.key}`}
@@ -65,7 +79,7 @@ const Category = ({
         filters={filters}
         setFilters={setFilters}
         theme={theme}
-        limit={INLINE_TABLE_LIMIT}
+        limit={limit}
         onExpand={() => setModalOpen(true)}
       />
       {modalOpen && (

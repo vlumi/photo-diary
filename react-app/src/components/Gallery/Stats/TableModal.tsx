@@ -2,6 +2,7 @@ import React from "react";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
+import Charts from "./Charts";
 import Table from "./Table";
 
 import type { Filters as FiltersT } from "../../../lib/filter";
@@ -107,6 +108,7 @@ const TableModal = ({
           </CloseButton>
         </Header>
         <ScrollArea>
+          <Charts category={category} />
           <Table
             topic={topic}
             category={category}
