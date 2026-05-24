@@ -227,6 +227,7 @@ const Photo = ({
     setZoom(ZOOM_RESET);
   }, [photo.id()]);
 
+  useKeyPress("i", () => setShowMetadata((s) => !s));
   useKeyPress("+", () =>
     setZoom((z) => ({ ...z, scale: clampScale(z.scale * ZOOM_STEP) }))
   );
