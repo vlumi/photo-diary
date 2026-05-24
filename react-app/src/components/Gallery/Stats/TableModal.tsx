@@ -60,6 +60,7 @@ const CloseButton = styled.button`
 `;
 const ScrollArea = styled.div`
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1 1 auto;
 `;
 
