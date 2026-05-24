@@ -64,12 +64,20 @@ const MapContainer = ({
   const positions = photos.map(
     (photo) => photo.coordinates() as LatLngExpression
   );
-  const bounds = Leaflet.latLngBounds(positions);
+  // Single-photo case: a zero-area `bounds` makes Leaflet center
+  // somewhere ambiguous (and at small map sizes the marker can end
+  // up off the visible area entirely). Use explicit `center` +
+  // `zoom` instead so the pin sits in the middle of the map.
+  const singlePhoto = positions.length === 1;
+  const resolvedMaxZoom = maxZoom ? maxZoom : 14;
+  const bounds = singlePhoto ? undefined : Leaflet.latLngBounds(positions);
   return (
     <Root $height={height}>
       <Map
         bounds={bounds}
-        maxZoom={maxZoom ? maxZoom : 14}
+        center={singlePhoto ? positions[0] : undefined}
+        zoom={singlePhoto ? resolvedMaxZoom : undefined}
+        maxZoom={resolvedMaxZoom}
         style={{ height: "100%" }}
       >
         <TileLayer
