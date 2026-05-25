@@ -390,10 +390,10 @@ The pipeline is intentionally split: the converter doesn't touch the DB at all, 
 
 Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- [**0.10 — UI/UX polish**](https://github.com/vlumi/photo-diary/milestone/12): full-screen map layer (#41), touch-tracking swipe navigation (#175), Stats language-switch slowness (#231 + server-side stats #286), server-side logout via refresh tokens (#256), Stats layout overhaul (#273), Day-view role (#274), photo-view up-navigation (#275), photo-view as modal over Month/Day (#276), photo-view controlled zoom (#277), map collapsed to a modal (#278), more built-in themes (#279).
+- [**0.10 — UI/UX polish**](https://github.com/vlumi/photo-diary/milestone/12): touch-tracking swipe navigation (#175), server-side logout via refresh tokens (#256), photo-view as modal over Month/Day (#276), photo-view controlled zoom (#277), map collapsed to a modal (#278), Month per-day layout redesign (#290).
 - [**0.11 — Converter + operator ergonomics**](https://github.com/vlumi/photo-diary/milestone/13): reverse-geocode coordinates into a default place name (#246), `bin/meta.ts` operator script (#269), converter filename-collision policy (#272), `instance.ts` output polish (#284).
-- [**0.12 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), converter writes the photo row directly to the DB (#223), inbox subdirectories auto-link to galleries (#245), per-language place names (#247), ACL user groups (#270), ACL `:all` floor rule (#271), admin theme selector (#287).
-- [**0.13 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), saved filters / sub-galleries (#285), Postgres driver alongside SQLite (#265).
+- [**0.12 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), converter writes the photo row directly to the DB (#223), inbox subdirectories auto-link to galleries (#245), per-language place names (#247), ACL user groups (#270), ACL `:all` floor rule (#271), more built-in themes (#279), admin theme selector (#287).
+- [**0.13 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), Postgres driver alongside SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286).
 - [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283).
 
 ## Backlog
