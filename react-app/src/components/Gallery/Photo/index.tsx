@@ -285,25 +285,45 @@ const Photo = ({
     handleClose();
   }, [trackControls, handleClose]);
 
-  // Both Photo and the mounted Month register Escape listeners on
-  // window. Capture phase + stopImmediatePropagation so Photo's
-  // handler runs first and Month's is skipped while the modal is
-  // open — otherwise one Escape press skips two levels up.
+  // Photo and the underlying Month both register window keydown
+  // listeners for Escape / Arrow / Home / End. Capture phase +
+  // `stopImmediatePropagation` so Photo's handlers run first and
+  // Month's bubble-phase ones are skipped while the modal is open —
+  // otherwise one Arrow press would navigate the photo AND the month
+  // (closing the modal), and Escape would skip two levels up.
   React.useEffect(() => {
-    const onEscape = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      handleClose();
+    const onKey = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "Escape":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          handleClose();
+          break;
+        case "Home":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          handlMoveToFirst();
+          break;
+        case "End":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          handlMoveToLast();
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          animateToPrev();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          animateToNext();
+          break;
+      }
     };
-    window.addEventListener("keydown", onEscape, true);
-    return () => window.removeEventListener("keydown", onEscape, true);
-  }, [handleClose]);
-
-  useKeyPress("Home", handlMoveToFirst);
-  useKeyPress("ArrowLeft", animateToPrev);
-  useKeyPress("ArrowRight", animateToNext);
-  useKeyPress("End", handlMoveToLast);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [handleClose, animateToPrev, animateToNext]);
 
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
