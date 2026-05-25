@@ -14,11 +14,8 @@ const init = async () => {
 };
 
 const GalleryIdParam = Type.Object({ galleryId: Type.String() });
-// Galleries carry many DB-derived fields beyond `id` + `hideMap` — title,
-// description, theme, hostname, photos, etc. The shape varies and the
-// react-app consumes them via `GalleryModel(...)` which tolerates extras.
-// Declare the contract for the two fields we care about and let everything
-// else pass through.
+// Schema pins the two fields we care about; extras (title, theme,
+// hostname, photos, …) pass through to the client.
 const GalleryListItem = Type.Object(
   { id: Type.String(), hideMap: Type.Boolean() },
   { additionalProperties: true }
@@ -111,12 +108,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      // Both "no view permission" and "gallery doesn't exist" collapse to
-      // the same empty payload — without this, an unauthenticated walk of
-      // gallery IDs could enumerate which ones exist by reading the
-      // 403-vs-404 difference. The gallery LIST endpoint already filters
-      // to authorised galleries; this closes the matching hole on direct
-      // GET by id.
+      // Same empty payload for "no access" and "no such gallery" so
+      // a walk of IDs can't enumerate which exist.
       try {
         await authorizer.authorizeGalleryView(
           request.user.id,

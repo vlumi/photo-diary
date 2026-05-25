@@ -32,9 +32,7 @@ const Frame = styled("span", {
   width: ${(props) => props.$width}px;
   height: ${(props) => props.$height}px;
 `;
-// Centered so the image (which keeps its scale-1 fit dimensions) sits in
-// the middle of the larger frame when zoomed. Clipping happens here so
-// the image extends behind the matte, not over it.
+// Centred + clipped so the scaled image stays under the matte.
 const ImageClip = styled.span`
   display: flex;
   align-items: center;
@@ -43,9 +41,9 @@ const ImageClip = styled.span`
   height: 100%;
   overflow: hidden;
 `;
-// `touch-action: none` so the browser's default pinch/pan/swipe handling
-// doesn't fight our touch handlers. `will-change: transform` lets the
-// GPU compositor handle scale/pan without re-rasterising every frame.
+// touch-action:none stops the browser's default pinch/pan from
+// fighting our touch handlers; will-change:transform keeps the
+// scale/pan on the GPU compositor.
 const Image = styled("img", {
   shouldForwardProp: (prop) =>
     prop !== "$scale" && prop !== "$x" && prop !== "$y" && prop !== "$grabbing",
@@ -87,9 +85,8 @@ const calculateHeight = (
   return Math.floor(maxWidth / photoRatio);
 };
 
-// Pan offset is clamped per axis so the scaled image's edge can't cross
-// into the frame's content area. When the scaled image fits the frame
-// in that axis (frame ≥ scaledImage), no pan is allowed there at all.
+// Clamp pan per axis so the scaled image's edge can't cross into
+// the frame. If frame ≥ scaledImage on that axis, no pan at all.
 const clampOffset = (
   offset: number,
   scaledImageDim: number,
@@ -194,8 +191,8 @@ const Content = ({
   const maxAvailHeight =
     (dimensions.height - FRAME_CHROME - ROOT_PADDING_V) * browserScale;
   const maxRatio = maxAvailWidth / maxAvailHeight;
-  // Image keeps its natural fit-to-viewport dimensions at every zoom
-  // level; the `transform: scale` handles the zoom visually.
+  // Image keeps its fit dimensions at every zoom; transform: scale
+  // does the visual zoom on top.
   const imageWidth = calculateWidth(
     photoRatio,
     maxAvailWidth,
@@ -208,22 +205,16 @@ const Content = ({
     maxAvailWidth,
     maxRatio
   );
-  // Frame stays at natural fit dimensions across all zoom levels.
-  // The modal already has a visible boundary, so growing the matte
-  // on zoom only confuses the layout. ImageClip clips the scaled
-  // image; pan limits below use this stable size.
+  // Frame stays at fit dimensions; ImageClip clips the scaled image.
   const frameWidth = imageWidth;
   const frameHeight = imageHeight;
 
-  // Latest image dimensions in a ref so the wheel useEffect
-  // (registered once) always reads the current values for clamp +
-  // anchor math.
+  // Ref so the once-registered wheel handler reads fresh values.
   const sizeRef = React.useRef({ imageWidth, imageHeight });
   sizeRef.current = { imageWidth, imageHeight };
 
-  // React attaches `wheel` listeners as passive by default, so
-  // `e.preventDefault()` would be a no-op (and Chrome warns on every
-  // scroll). Native non-passive listener instead.
+  // React's `wheel` listeners are passive by default — register
+  // natively so e.preventDefault() works.
   React.useEffect(() => {
     const el = frameRef.current;
     if (!el) return;

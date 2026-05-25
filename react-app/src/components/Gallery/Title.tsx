@@ -16,15 +16,9 @@ const Root = styled.div`
   align-items: center;
   padding: 0 5px;
   gap: 6px;
-  /* Comfortable tap target for the breadcrumb crumbs on touch
-     devices — the bar previously hugged the text height (~30px)
-     which is below the 44px iOS HIG recommendation. */
+  /* 44px iOS HIG tap target. */
   min-height: 44px;
 `;
-// Breadcrumb path. Each crumb segment is either a `<Link>` (parent
-// level — click to navigate up) or plain text (current level —
-// non-interactive). Sits between the house icon and the context
-// selector; truncates the gallery name first when space gets tight.
 const Path = styled.nav`
   display: flex;
   flex-wrap: nowrap;
@@ -37,27 +31,21 @@ const Path = styled.nav`
 const Separator = styled(BsChevronRight)`
   flex: 0 0 auto;
   font-size: 0.85em;
-  /* --inactive-color reads as near-invisible on some themes (blue's
-     inactive is a low-contrast tint against the bar background).
-     Use currentColor at reduced opacity so the chevron is always a
-     dimmed copy of the breadcrumb text, regardless of theme. */
+  /* currentColor + opacity so the chevron stays visible across
+     every theme — --inactive-color is near-invisible on some. */
   color: currentColor;
   opacity: 0.55;
 `;
+// Default crumb: doesn't shrink. The gallery name is the only
+// crumb that's allowed to ellipsis when room runs out — see
+// GalleryCrumb / GallerySelect below.
 const Crumb = styled.span`
-  /* Short fixed-length crumbs (year / month / photo number) stay
-     at their natural width — only the gallery name is allowed to
-     truncate when the bar runs out of horizontal room. The
-     GalleryCrumb / GallerySelect overrides below opt back into
-     shrinking. */
   flex: 0 0 auto;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
-// Active (current view) crumb — same look as link crumbs but
-// non-interactive. Slightly bolder to read as "you are here".
 const CurrentCrumb = styled(Crumb)`
   font-weight: bold;
 `;
@@ -69,9 +57,6 @@ const LinkCrumb = styled(Crumb)`
     text-decoration: underline;
   }
 `;
-// The gallery name is the longest variable-width element in the
-// path and the only crumb that's allowed to shrink/ellipsis when
-// horizontal room runs out — see the comment on `Crumb` above.
 const GalleryCrumb = styled(Crumb)`
   font-weight: bold;
   flex: 0 1 auto;
@@ -81,10 +66,8 @@ const HomeLink = styled(Link)`
   display: inline-flex;
   align-items: center;
 `;
-// Explicit `color` because `background: none` lets the page background
-// through, but the browser default text colour stays black — unreadable
-// on dark themes. `option` rules style the native dropdown popup, which
-// otherwise renders with platform defaults that ignore the theme.
+// Theme-aware colour so the dropdown is readable on dark themes
+// (browser default is black) and option popup respects the theme.
 const TitleSelect = styled.select`
   font-size: 1em;
   background: none;
@@ -100,9 +83,7 @@ const TitleSelect = styled.select`
 `;
 const GallerySelect = styled(TitleSelect)`
   text-align-last: left;
-  /* Same shrink priority as the single-gallery GalleryCrumb span:
-     this select truncates first when the bar runs out of room,
-     leaving the short year / month / photo crumbs full. */
+  /* Truncates first when room runs out — see Crumb above. */
   flex: 0 1 auto;
   min-width: 0;
 `;
@@ -174,15 +155,9 @@ const Title = ({
       }
     };
 
-    // The current gallery isn't one the requester can see (URL points to a
-    // private / non-existent gallery). Without this branch the `<select>`
-    // value doesn't match any option and the browser falls back to
-    // displaying the first one — making it look like the user is *in* that
-    // gallery, and blocking them from navigating to it because picking it
-    // wouldn't fire `onChange`. Render a disabled, italicised placeholder
-    // matching the URL so the selection is honest, and always show the
-    // dropdown (even when only one real gallery is accessible) so the user
-    // has a way to switch.
+    // If the URL targets a gallery the user can't see, render a
+    // disabled italicised placeholder for the missing id and still
+    // show the dropdown so they can switch to an accessible one.
     const isUnavailable = !galleries.some((g) => g.id() === gallery.id());
     if (isUnavailable) {
       return (

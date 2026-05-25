@@ -1,8 +1,6 @@
 import { NotFoundError } from "../errors.js";
 
-// Registered via `setNotFoundHandler`. Fastify invokes this when no route
-// matches; throwing here routes the response through `errorHandler`, which
-// reads `NotFoundError.status` (404) and formats the body.
+// Throw so the response goes through `errorHandler` for uniform formatting.
 const fallbackRoute = () => {
   throw new NotFoundError();
 };

@@ -18,9 +18,7 @@ const GalleryPhotoParams = Type.Object({
   galleryId: Type.String(),
   photoId: Type.String(),
 });
-// Same permissive pattern as the photos controller — these endpoints return
-// the joined photo metadata, whose exact shape is wider than the contract
-// callers care about.
+// Permissive — joined photo metadata, wider than the contract.
 const PhotoItem = Type.Object({}, { additionalProperties: true });
 const GalleryPhotosListResponse = Type.Array(PhotoItem);
 const TAGS = ["gallery-photos"];
@@ -40,9 +38,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      // Both "no view permission" and "gallery doesn't exist" collapse to
-      // an empty array — see the matching note in `galleries-v1.ts` for
-      // why the difference would otherwise leak.
+      // Both "no access" and "no such gallery" → empty array, so
+      // gallery existence can't be enumerated. See galleries-v1.ts.
       try {
         await authorizer.authorizeGalleryView(
           request.user.id,
@@ -76,11 +73,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      // Single-photo lookup uses a uniform 404: gallery-level enumeration
-      // is the actual leak the empty-payload trick guards against, and
-      // photos aren't enumerable via the LIST surface anyway. So both
-      // "no access" and "no such photo" return 404 — converted from
-      // `AccessError` to `NotFoundError` here so the wire shape is one.
+      // Uniform 404 for both "no access" and "no such photo".
       try {
         await authorizer.authorizeGalleryView(
           request.user.id,

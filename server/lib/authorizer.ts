@@ -11,12 +11,7 @@ export default () => {
   };
 };
 
-// All four checks share the same shape: ask the driver for the effective
-// access level under the user-first cascade (see `resolveAccessLevel` in
-// db/sqlite3/index.ts), compare to the required threshold, throw on miss.
-// Catch-all so any underlying error (DB miss, etc.) reads as a uniform
-// AccessError to callers rather than leaking driver-specific failures.
-
+// Catch-all so driver-specific failures surface as a uniform AccessError.
 const requireLevel = async (
   userId: string,
   galleryId: string,

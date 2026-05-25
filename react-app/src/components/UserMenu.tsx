@@ -119,11 +119,9 @@ const UserMenu = (): React.ReactElement => {
     token.clearToken();
     window.localStorage.removeItem("user");
     setUser(undefined);
-    // Drop the access-derived caches under the previous user key so the
-    // re-render fetches the new (guest) view instead of leaving the
-    // previous identity's data on screen — galleries dropdown / map
-    // visibility / per-photo coords. This was on the deleted Logout.tsx
-    // and got lost when UserMenu inlined the logout handler in #182.
+    // Drop access-derived caches so the re-render fetches the guest
+    // view instead of leaving the previous user's galleries / map
+    // visibility / per-photo coords on screen.
     queryClient.invalidateQueries({ queryKey: ["galleries"] });
     queryClient.invalidateQueries({ queryKey: ["gallery-photos"] });
   };
