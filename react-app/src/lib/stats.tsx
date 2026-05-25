@@ -1,16 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// This file aggregates photo statistics into chart-ready data and table rows.
-// The internal accumulator shape is highly dynamic (year/month/day/category
-// indexes built up from runtime data), so the internal helpers use `any` for
-// the carrier objects; the public entry points (`generate`, `decodeTableRowKey`,
-// `collectTopics`) are typed properly.
+// Aggregates photo stats into chart data + table rows. Internal
+// accumulators use `any` because their shape is built dynamically
+// from runtime data; public entry points are properly typed.
 import React from "react";
 
 const mean = (values: number[]): number =>
   values.reduce((sum, v) => sum + v, 0) / values.length;
 
-// Sample stddev with Bessel's correction (divide by n - 1) — matches the previous
-// mathjs default. Returns NaN for n < 2, same as mathjs.std.
+// Sample stddev (Bessel's correction); returns NaN for n < 2.
 const stddev = (values: number[]): number => {
   const m = mean(values);
   const variance =
@@ -21,8 +18,8 @@ import type { TFunction } from "i18next";
 
 import FlagIcon from "../components/FlagIcon";
 
-// Small inline replacement for date-diff (unmaintained). Uses the same
-// 365.25-day-year, 30.4375-day-month conventions that date-diff used.
+// Inline date-diff replacement (the npm package is unmaintained).
+// Uses the same 365.25-day-year, 30.4375-day-month conventions.
 const MS_PER_DAY = 86400000;
 const MS_PER_YEAR = MS_PER_DAY * 365.25;
 const MS_PER_MONTH = MS_PER_YEAR / 12;
@@ -49,18 +46,15 @@ interface Theme {
   get: (name: string) => string;
 }
 
-// Public types describing the shape `collectTopics` returns and the
-// shape `uniqueValues` flowing through Gallery / Filters / Stats components.
-// The internal aggregation carriers stay `any` (see the file header comment);
-// these are the consumer-facing shapes.
+// Consumer-facing shapes for `collectTopics` and `uniqueValues`
+// (internal aggregation carriers stay `any` — see file header).
 export interface KpiItem {
   key: string;
   value: string;
 }
 export interface ChartSpec {
   type: "doughnut" | "polar" | "horizontal-bar" | "line";
-  // chart.js data and options stay `any` — chart.js's own types are deep and
-  // we don't gain from authoring them here.
+  // chart.js's own types are deep; not worth re-authoring here.
   data: any;
   options: any;
 }
@@ -76,18 +70,15 @@ export interface TableColumn {
 export interface TableRow {
   key: string;
   standardScore?: number;
-  // Plain-text label for alphabetical sort. Optional — only needed
-  // when the display column is JSX rather than a string (e.g.
-  // country, where the column carries a `<FlagIcon>` alongside the
-  // name). String-column rows are sortable directly via
-  // `row[category.key]`.
+  // Plain-text label for alphabetical sort. Only needed when the
+  // display column is JSX (country carries a `<FlagIcon>` alongside
+  // the name); string-column rows sort via `row[category.key]`.
   _label?: string;
   [columnKey: string]: unknown;
 }
-// A single category bag: summary categories carry `kpi`; data categories
-// (author/country/year/etc.) carry `charts`/`tableColumns`/`table`. The fields
-// are optional because the union flattens through this single shape; consumers
-// guard with `if (category.kpi)` / `if (category.charts)` etc.
+// Flattened union: summary categories carry `kpi`; data categories
+// carry `charts`/`tableColumns`/`table`. Consumers guard on whichever
+// fields they need.
 export interface StatsCategory {
   key: string;
   title: string;
@@ -96,34 +87,26 @@ export interface StatsCategory {
   tableColumns?: TableColumn[];
   table?: TableRow[];
   summaryExtras?: SummaryExtras;
-  // Set on categories that should offer the modal sort toggle ("By
-  // value" vs "Top"). What "By value" means depends on the category:
-  //   - Exposure ranges: numeric ascending/descending (the natural
-  //     sort already produced by collectTopics).
-  //   - Time: chronological (year/month/weekday/hour calendar order).
-  //   - Gear & people-or-place: alphabetical by display label — these
-  //     pre-sort to count-desc in collectTopics, so the toggle has to
-  //     do the re-sort itself; `valueSortByLabel` marks that case.
+  // Offer the modal sort toggle ("By value" vs "Top"). "By value"
+  // means: exposure → numeric, time → chronological, gear/people →
+  // alphabetical (the alpha case needs `valueSortByLabel` below
+  // because collectTopics pre-sorts gear/people by count-desc).
   valueSortable?: boolean;
-  // True when the modal's "By value" mode should re-sort by display
-  // label (alphabetical) instead of trusting the natural order. Set
-  // for gear/people-or-place categories whose natural sort is by
-  // count.
+  // "By value" re-sorts by display label (alphabetical) rather than
+  // trusting the natural order.
   valueSortByLabel?: boolean;
 }
-// Shapes for the expanded Summary view (see SummaryModal). Attached
-// only to the `summary` category. The four sub-trees answer one
-// question each: when (period), how peaked (peaks), how varied
-// (variety), what favourites (mostUsed).
+// Expanded Summary view (SummaryModal). Four sub-trees:
+// period (when), peaks (how concentrated), variety (how varied),
+// mostUsed (which favourites).
 export interface PeakEntry {
   key: string | number;
   value: number;
 }
-// A peak distribution can have one clear leader, a small tie of 2-3,
-// or be effectively flat (4+ values within ~1% of the max). The third
-// case matters for evenly-distributed projects (e.g. a 365-style
-// daily diary on weekdays/month-name) where faking a leader would be
-// misleading.
+// Three peak shapes: clear leader, 2-3-way tie, or effectively
+// flat (4+ values within ~1% of the max). The "even" case keeps
+// daily-diary weekday/month distributions from getting a fake
+// leader.
 export type PeakShape =
   | { kind: "leader"; entries: PeakEntry[]; value: number }
   | { kind: "tied"; entries: PeakEntry[]; value: number }
@@ -173,9 +156,8 @@ export interface SummaryExtras {
   };
 }
 
-// Bucket → peak shape. Filters out zero-count entries first so a
-// pre-allocated bucket map (byHour has all 24 keys, byMonth has all
-// 12) doesn't drag down the "near-tied" count with empties.
+// Bucket → peak shape. Empties filtered first so pre-allocated
+// maps (byHour, byMonth) don't dilute the near-tied count.
 const detectPeakShape = (
   buckets: Record<string, number> | undefined
 ): PeakShape => {
@@ -214,11 +196,12 @@ export interface UniqueValueEntry {
   key: string | number;
   value: string;
 }
-// Indexed by topic → category. The values are nested arrays of {key, value}
-// entries. Concrete topics include general/time/gear/exposure; concrete
-// categories include author/country/year/year-month/month/weekday/hour/
-// camera-make/camera/lens/camera-lens/focal-length/aperture/exposure-time/
-// iso/ev/lv/resolution/orientation/aspect-ratio.
+// Indexed by topic → category → entries[{key, value}].
+// Topics: general / time / gear / exposure. Categories: author /
+// country / year / year-month / month / weekday / hour / camera-make /
+// camera / lens / camera-lens / focal-length / aperture /
+// exposure-time / iso / ev / lv / resolution / orientation /
+// aspect-ratio.
 export type UniqueValues = Record<string, Record<string, UniqueValueEntry[]>>;
 
 const UNKNOWN = "unknown";
@@ -1407,8 +1390,7 @@ const collectTopics = (
     collectGear(),
     collectExposure(),
   ];
-  // The internal carrier widens chart.type/table cell types to `string`/`any`;
-  // the public StatsTopic shape narrows them back. Runtime values match.
+  // Internal carriers widen chart.type/table cells; runtime matches.
   return topics as unknown as StatsTopic[];
 };
 

@@ -25,12 +25,8 @@ import logger from "./lib/logger.js";
 
 export const app = Fastify({
   trustProxy: 1,
-  // Express's router treated trailing slashes as optional by default
-  // (`strict: false`). The gallery-photos LIST route was registered as
-  // `/:galleryId/` but the SPA calls it without the trailing slash —
-  // Fastify is strict, so we match Express's lenient behaviour here so
-  // existing client URLs keep working. Lives under `routerOptions` to
-  // dodge the FSTDEP022 deprecation; Fastify 6 will require it there.
+  // Match the lenient trailing-slash behaviour the SPA's client URLs
+  // were built against.
   routerOptions: { ignoreTrailingSlash: true },
   logger:
     config.ENV === "test"
@@ -49,27 +45,20 @@ export const app = Fastify({
               }
               : undefined,
       },
-  // We emit one structured per-response log line via the `requestLogger`
-  // onResponse hook below — disabling Fastify's built-in completion line
-  // keeps logs from being noisy with two lines per request.
+  // `requestLogger` (below) emits the structured per-response line.
   disableRequestLogging: true,
 }).withTypeProvider<TypeBoxTypeProvider>();
 
 const STATIC_DIR =
   process.env.STATIC_DIR ?? path.join(import.meta.dirname, "build");
 
-// Read the server's own `package.json` for the OpenAPI `info.version`. Sync
-// I/O at module load is fine here — it's a single small file, one read per
-// process. `package.json` lives next to the compiled `app.js` in prod and
-// next to `app.ts` in dev; either way `import.meta.dirname` resolves it.
+// Server's own `package.json` for the OpenAPI `info.version`.
 const pkg = JSON.parse(
   readFileSync(path.join(import.meta.dirname, "package.json"), "utf8")
 ) as { version: string };
 
-// @fastify/swagger introspects every registered route's `schema` into an
-// OpenAPI document — it has to register *before* the controllers do, so it
-// captures every route as it's added. The spec is queried at any time via
-// `app.swagger()`; the UI is exposed separately below.
+// Must register before the controller plugins so it captures every
+// route's schema as it's added.
 await app.register(fastifySwagger, {
   openapi: {
     info: {
@@ -104,11 +93,8 @@ await app.register(fastifySwagger, {
   },
 });
 
-// Swagger UI is opt-in: always on in dev, gated by `ENABLE_DOCS=true` in
-// any other environment. The JSON spec endpoint is exposed only when the
-// UI is — operators who want the spec for codegen can run
-// `npm run docs:dump` instead, which renders the file without exposing it
-// over HTTP.
+// Swagger UI: always in dev, gated by `ENABLE_DOCS=true` elsewhere.
+// Operators wanting the spec for codegen can `npm run docs:dump`.
 const DOCS_EXPOSED =
   config.ENV === "dev" || process.env.ENABLE_DOCS === "true";
 if (DOCS_EXPOSED) {
@@ -121,33 +107,25 @@ if (DOCS_EXPOSED) {
   });
 }
 
-// helmet sets a baseline of security headers (HSTS, nosniff, frame-ancestors
-// DENY, Referrer-Policy, Permissions-Policy, …). CSP is left off — the
-// default policy would break the bundle's inline styles / dynamic imports
-// and warrants its own audit before being enabled.
-//
-// `Referrer-Policy` overridden from helmet's default `no-referrer` to
-// `strict-origin-when-cross-origin` (modern browser default since 2020):
-// the no-referrer default strips the `Referer` header on every outbound
-// request, which breaks the leaflet map widget — OSM's volunteer-run tile
-// servers reject referrer-less requests as bot traffic (osm.wiki/Blocked).
+// CSP is off because the default would break the SPA's inline
+// styles / dynamic imports (warrants its own audit). Referrer-
+// Policy overridden because OSM's tile servers block referrer-less
+// requests as bot traffic, breaking the Leaflet map widget.
 await app.register(fastifyHelmet, {
   contentSecurityPolicy: false,
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 });
 await app.register(fastifyCompress);
 
-// Discourage indexing and AI scraping on every response. robots.txt is the
-// authoritative signal; this header covers non-HTML resources (photo files)
-// and reaches scrapers that honor X-Robots-Tag values like `noai`/`noimageai`.
+// Discourage indexing / AI scraping on every response — robots.txt
+// only covers HTML, X-Robots-Tag covers photo files too.
 app.addHook("onSend", async (_request, reply) => {
   reply.header("X-Robots-Tag", "noindex, noai, noimageai");
 });
 
-// Multi-instance deploys may invoke the server from a different CWD (the
-// per-instance directory), so resolve the bundled frontend relative to this
-// source file by default. `STATIC_DIR` overrides if you need a different
-// build location.
+// Resolve the bundled frontend relative to this source file so
+// multi-instance deploys (invoked from a per-instance CWD) still
+// find it. `STATIC_DIR` overrides.
 await app.register(fastifyStatic, {
   root: STATIC_DIR,
   prefix: "/",
@@ -159,11 +137,8 @@ if (config.ENV !== "test") {
   app.addHook("onResponse", middleware.requestLogger);
 }
 
-// Register the global error handler *before* the controller plugins. Each
-// `app.register(...)` creates a child scope that inherits the parent's
-// error handler at registration time — setting `setErrorHandler` after
-// the plugins would only override the root scope, leaving the controller
-// scopes with Fastify's default `{statusCode, error, message}` body.
+// Must be before the controller plugins — child scopes inherit
+// the parent's error handler at registration time.
 app.setErrorHandler(middleware.errorHandler);
 
 await app.register(metaV1.plugin, { prefix: "/api/v1/meta" });
@@ -175,10 +150,10 @@ await app.register(galleryPhotosV1.plugin, {
   prefix: "/api/v1/gallery-photos",
 });
 
-// Fastify's not-found handler does double duty: SPA routes (`/g`, `/g/*`)
-// serve `index.html` so deep links into the calendar tree resolve via React
-// Router; everything else (including unknown `/api/*` paths) throws into the
-// shared `errorHandler` to get the JSON 404 the API has always produced.
+// Double-duty 404 handler: serve index.html for SPA routes
+// (`/g`, `/g/*`) so React Router can resolve deep links; everything
+// else (incl. unknown `/api/*`) goes through `errorHandler` for the
+// JSON 404 the API has always produced.
 app.setNotFoundHandler(async (request, reply) => {
   const pathOnly = request.url.split("?")[0];
   if (pathOnly === "/g" || pathOnly.startsWith("/g/")) {

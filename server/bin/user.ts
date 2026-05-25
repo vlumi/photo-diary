@@ -47,13 +47,11 @@ const confirm = async (prompt: string): Promise<boolean> => {
   }
 };
 
-// Read a line from stdin without echoing it back to the terminal — for
-// passwords. Node has no built-in no-echo helper, so we flip stdin into raw
-// mode and consume bytes manually until enter / EOF. Handles paste (multi-
-// char chunks), backspace, and Ctrl-C.
-const CTRL_C = String.fromCharCode(0x03); // ETX — abort
-const EOF_CHAR = String.fromCharCode(0x04); // EOT — submit (Ctrl-D)
-const DEL = String.fromCharCode(0x7f); // DEL — backspace on most terminals
+// No-echo stdin read for passwords: flip raw mode and consume bytes until
+// enter/EOF. Node has no built-in for this.
+const CTRL_C = String.fromCharCode(0x03);
+const EOF_CHAR = String.fromCharCode(0x04);
+const DEL = String.fromCharCode(0x7f);
 const promptHidden = (prompt: string): Promise<string> => {
   if (!process.stdin.isTTY) {
     console.error(
@@ -77,7 +75,6 @@ const promptHidden = (prompt: string): Promise<string> => {
     const onData = (chunk: Buffer | string) => {
       for (const ch of chunk.toString()) {
         if (ch === CTRL_C) {
-          // Ctrl-C: behave like the shell would (abort, no resolve).
           cleanup();
           process.stdout.write("\n");
           process.exit(130);

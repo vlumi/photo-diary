@@ -15,11 +15,8 @@ import Empty from "./Empty";
 import Full from "./Full";
 import Year from "./Year";
 import Month from "./Month";
-// `Stats` and `Photo` are the two big subtrees by bundle weight (Stats pulls
-// in the aggregate-charts logic; Photo pulls in `react-leaflet` for the
-// per-photo map). React.lazy puts each in its own chunk so a user browsing
-// the calendar never has to download the stats or single-photo code paths
-// until they actually navigate to one. Suspense fallback below.
+// Lazy-loaded: Stats pulls aggregate-charts logic, Photo pulls
+// react-leaflet — neither ships until the user navigates there.
 const Stats = React.lazy(() => import("./Stats"));
 const Photo = React.lazy(() => import("./Photo"));
 
@@ -103,11 +100,6 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
   const month = Number(useParams().month || 0);
   const day = Number(useParams().day || 0);
 
-  // Three server queries, one for each independent data source. TanStack
-  // Query handles caching, dedup, refetch-on-focus, and (via the keyed
-  // `gallery-photos` query) automatic invalidation when `galleryId` changes
-  // — replaces five `useEffect` + `useState` pairs and the manual
-  // stale-gallery reset that used to sit inline in the render body.
   const metaQuery = useQuery({
     queryKey: ["meta"],
     queryFn: () => metaService.getAll(),
@@ -121,10 +113,8 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
         .filter((g): g is GalleryT => !!g);
     },
   });
-  // Only fire the photos query once we know the gallery is in the LIST
-  // the requester can see — for an unknown / private gallery the SPA
-  // skips the API call entirely and renders the empty-gallery view
-  // synthesized from the URL params.
+  // Skip the photos query for galleries the requester can't see;
+  // the empty-gallery view is synthesised from URL params instead.
   const galleryInList =
     !!galleryId &&
     !!galleriesQuery.data &&
@@ -149,9 +139,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     photosQuery.error?.message ||
     "";
 
-  // Sync the runtime-tunable config bits the SPA reads from `meta`. Side
-  // effect lives next to the query that produced it; the assignments stay
-  // identical to the pre-TanStack code.
+  // Push runtime-tunable bits from `meta` into the SPA's config singleton.
   React.useEffect(() => {
     if (!meta) return;
     config.PHOTO_ROOT_URL = meta.cdn || config.PHOTO_ROOT_URL;
@@ -166,16 +154,9 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
   const selectedGallery =
     galleries && galleries.find((gallery) => gallery.id() === galleryId);
 
-  // `uniqueValues` is derived from photos + i18n bits — the displayed
-  // values depend on `lang` and `t`, so the memo recomputes on language
-  // changes as well as data changes.
+  // Recomputes on language change too — display values are localised.
   const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
     if (!photos || !countryData) return undefined;
-    // The reduce builds up a `{ topic: { category: Set<unknown> } }` shape,
-    // then the forEach normalizes each Set into the consumer-facing
-    // `UniqueValueEntry[]`. The accumulator is typed as the loose
-    // Record-of-Record-of-Set during the build and cast to `UniqueValues`
-    // once the Sets have been flattened.
     const accumulator: Record<string, Record<string, Set<unknown>>> = photos
       .map((photo) => photo.uniqueValues())
       .reduce(
@@ -301,12 +282,9 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     );
   }
 
-  // The requested gallery isn't in the LIST the requester can see — could
-  // be a non-existent ID, a private gallery they don't have access to, or
-  // one their session was revoked from. Render the same empty-gallery view
-  // a real-but-empty gallery would use (so the difference doesn't leak),
-  // and skip the photos API call. The Title bar's gallery dropdown gives
-  // the user a way back to a gallery they can actually see.
+  // Render the same empty-gallery shape for "doesn't exist" /
+  // "no access" / "session revoked" so the difference doesn't
+  // leak. The Title bar dropdown lets the user pick another.
   if (!galleryInList) {
     const emptyGallery = GalleryModel({ id: galleryId });
     if (emptyGallery) {
@@ -400,9 +378,8 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
         </Year>
       );
     }
-    // Month renders the same view whether or not a `day` is in the URL.
-    // When `day` is set, it scrolls that day's thumbnails into view and
-    // visually highlights the DayTitle.
+    // `day` is optional — when set, Month scrolls to and highlights
+    // that day's thumbnails on initial mount.
     if (!photoId) {
       return (
         <Month
@@ -435,11 +412,8 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     if (!photo) {
       return <div>{t("loading")}</div>;
     }
-    // Photo URL mounts the same Month view underneath the Photo
-    // modal. Closing the modal returns to the Month state without a
-    // remount (preserves scroll position, filter UI state, etc.).
-    // Direct-link entries land here too — Month renders synchronously
-    // before the Photo modal opens on top.
+    // Photo URLs mount Month + Photo together so the modal overlays
+    // a real Month underneath (closing returns there without remount).
     return (
       <>
         <Month

@@ -22,10 +22,8 @@ const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
     }, {});
 };
 
-// Per-instance frontend defaults pulled from the server's `process.env`.
-// Each one is optional — the frontend falls back to its hardcoded default in
-// `lib/config.ts` when the key is absent. Edit the per-instance `.env` file
-// to set these (e.g. `DEFAULT_GALLERY=dailybw`).
+// Per-instance frontend defaults from the server's `process.env`.
+// Each key is optional; the SPA falls back to `lib/config.ts`.
 const envDefaults = (): Record<string, string> => {
   const out: Record<string, string> = {};
   const { DEFAULT_GALLERY, DEFAULT_THEME, INITIAL_GALLERY_VIEW, FIRST_WEEKDAY } =
@@ -38,10 +36,7 @@ const envDefaults = (): Record<string, string> => {
 };
 
 const KeyParam = Type.Object({ key: Type.String() });
-// The meta endpoints return arbitrary instance-level keys (`cdn`, `image`,
-// the env-driven `defaultGallery`/`defaultTheme`/...) — the exact field set
-// varies per deploy, so the schema accepts any shape and Fastify's response
-// serializer passes extra fields through.
+// Open shape — meta keys vary per deploy.
 const MetaResponse = Type.Object({}, { additionalProperties: true });
 const TAGS = ["meta"];
 

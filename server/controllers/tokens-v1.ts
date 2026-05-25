@@ -13,12 +13,9 @@ const init = async () => {
   await model.init();
 };
 
-// Body schema for the login POST. Both fields are *optional* on the schema
-// so the handler controls the response: missing credentials hit the
-// `LoginError` path (401), matching pre-Fastify behaviour. Tightening the
-// schema to `required: ["id", "password"]` would short-circuit to a 400
-// validation error, which is a wire-shape regression for clients that rely
-// on the 401.
+// Fields are optional in the schema so missing credentials hit the
+// handler's 401 path; making them required would short-circuit to
+// a 400 which clients don't expect.
 const LoginBody = Type.Object({
   id: Type.Optional(Type.String()),
   password: Type.Optional(Type.String()),
@@ -27,21 +24,11 @@ const LoginResponse = Type.Object({ token: Type.String() });
 
 const UserIdParam = Type.Object({ userId: Type.String() });
 
-// Per-IP throttle for the login POST. 10 *failed* attempts per 15-minute
-// window: a successful login doesn't tick the counter, so a typo'ing operator
-// who then gets it right isn't penalised — only sustained guessing is. The
-// GET keep-alive and DELETE logout paths aren't rate-limited (they're
-// routine app traffic).
-//
-// In-memory only; per-IP keying off `request.ip` (which respects
-// `trustProxy: 1`, so behind nginx with `X-Forwarded-For` forwarded, it's
-// the real client IP). On server restart the counter resets — fine for a
-// self-hosted single-instance deploy.
-//
-// `@fastify/rate-limit` was the natural plugin choice but doesn't support
-// the equivalent of express-rate-limit's `skipSuccessfulRequests` (count
-// only failed attempts, never the typo-then-success case). Twenty lines of
-// plain Map state preserves the behaviour without pulling in a custom store.
+// Per-IP throttle on the login POST: 10 failed attempts per 15-min
+// window. Successful logins don't tick the counter (a typo'ing user
+// shouldn't be penalised). In-memory; resets on restart.
+// `@fastify/rate-limit` doesn't have express-rate-limit's
+// `skipSuccessfulRequests`, hence the hand-rolled Map.
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_FAILURES = 10;
 const failedLogins = new Map<string, { count: number; firstAt: number }>();
@@ -65,8 +52,7 @@ const recordLoginFailure = (ip: string) => {
   entry.count += 1;
 };
 
-// Test-only helper: reset the in-memory failed-login counter so each
-// rate-limit test starts from a clean slate. Not for production callers.
+// Test-only — reset between rate-limit tests.
 export const _resetLoginRateLimitForTests = () => {
   failedLogins.clear();
 };

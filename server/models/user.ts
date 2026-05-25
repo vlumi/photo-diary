@@ -39,13 +39,9 @@ const deleteUser = async (id: string) => {
   throw new NotImplementedError();
 };
 
-// Self-service password change. Verifies the current password (so a stolen
-// session can't be used to lock the real owner out — the attacker would
-// still need to know the original password), writes the new bcrypt hash,
-// and rotates the user's `secret` so every other outstanding JWT for this
-// user is immediately invalidated. The 10-round cost factor matches
-// `bin/user.ts passwd`. Returns the new secret so the caller can mint a
-// fresh JWT for the current session without forcing an immediate re-login.
+// Verifies the current password so a stolen session can't lock the real
+// owner out, then rotates `secret` to invalidate every other outstanding JWT.
+// Returns the new secret so the caller can re-sign the current session.
 const changePassword = async (
   userId: string,
   currentPassword: string,
@@ -60,10 +56,8 @@ const changePassword = async (
   const match = await bcrypt.compare(currentPassword, user.password);
   if (!match) {
     logger.debug(`Current password mismatch for "${userId}"`);
-    // 422 (not 401) — the bearer token is still valid, the user IS
-    // authenticated, the *body* is what's wrong. Returning 401 here would
-    // trip the SPA's global session-expired handler and kick the user out
-    // of their otherwise-fine session.
+    // 422 not 401: the session is fine, the body is what's wrong. A 401
+    // would trip the SPA's session-expired handler and force re-login.
     throw new ValidationError("Current password is incorrect");
   }
   const newHash = await bcrypt.hash(newPassword, 10);

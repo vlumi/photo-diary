@@ -14,11 +14,8 @@ const init = async () => {
 };
 
 const PhotoIdParam = Type.Object({ photoId: Type.String() });
-// No response schemas on these endpoints yet — `/api/v1/photos` returns a
-// driver-dependent shape (dict from the dummy fixture, array from sqlite)
-// and the react-app doesn't consume either route. The route on
-// `/api/v1/gallery-photos/:galleryId` is what the SPA actually uses and it
-// has a real schema declared next door.
+// No response schemas here — these routes aren't consumed by the
+// SPA (which uses `/api/v1/gallery-photos/:galleryId`).
 const TAGS = ["photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -31,10 +28,9 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request) => {
       await authorizer.authorizeView(request.user.id);
       const photos = await model.getPhotos();
-      // No per-gallery scope here — resolve the user's :all-level preference.
-      // `Object.values` covers both the array shape (real sqlite driver) and the
-      // {photoId: photo} dict shape the dummy driver returns; either way we get
-      // an iterable of photo objects that `maskCoordinates` can mutate in place.
+      // No per-gallery scope — use the :all-level preference.
+      // `Object.values` works for both driver shapes (sqlite array,
+      // dummy dict).
       if (await shouldHideMap(request.user.id, CONST.SPECIAL_GALLERY_ALL)) {
         maskCoordinates(
         Object.values(photos as Record<string, unknown>) as Parameters<
