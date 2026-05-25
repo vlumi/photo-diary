@@ -76,7 +76,7 @@ Mirror the prod layout with a dev "instance" inside the repo. The init script wi
 ./bin/instance.ts dev --base .
 ```
 
-That gives you `<repo>/dev/` with `.env`, `photos/{inbox,…,thumbnail}/`, `code → <repo>`. Each of server, converter, and react-app has a `bin/start-dev.sh` wrapper — run them in the foreground (tsx watch / vite, no pm2):
+That gives you `<repo>/dev/` with `.env`, `photos/{inbox,…,thumbnail}/`, `code → <repo>` (the `dev/` path is gitignored, so the bootstrapped state won't pollute the repo). Each of server, converter, and react-app has a `bin/start-dev.sh` wrapper — run them in the foreground (tsx watch / vite, no pm2):
 
 ```sh
 cd dev

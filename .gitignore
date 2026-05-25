@@ -5,7 +5,7 @@ build/
 coverage/
 .DS_Store
 
-# Local dev instance bootstrapped by `server/bin/init-instance.ts dev --base .`
+# Local dev instance bootstrapped by `./bin/instance.ts dev --base .`
 dev/
 
 # Local sqlite databases that may sit next to the repo root or in server/
