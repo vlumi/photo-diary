@@ -1,0 +1,116 @@
+import React from "react";
+import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
+
+import MapContainer from "../../MapContainer.lazy";
+
+import type { Photo } from "../../../models/PhotoModel";
+
+const Backdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+`;
+const ModalBox = styled.div`
+  background: var(--primary-background);
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 6px;
+  padding: 20px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+`;
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+`;
+const Title = styled.h2`
+  margin: 0;
+  font-size: 1.1em;
+`;
+const CloseButton = styled.button`
+  border: none;
+  background: none;
+  color: var(--inactive-color);
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  &:hover {
+    color: var(--primary-color);
+  }
+`;
+const MapArea = styled.div`
+  flex: 1 1 auto;
+  min-height: 0;
+`;
+
+interface Props {
+  title: string;
+  photos: Photo[];
+  onClose: () => void;
+}
+
+const MapModal = ({ title, photos, onClose }: Props): React.ReactElement => {
+  const { t } = useTranslation();
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // Freeze the Stats scroll underneath while the modal is open — the map
+  // is large enough that the underlying page sliding behind it is jarring.
+  React.useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
+  const onBackdropClick = (event: React.MouseEvent) => {
+    if (event.target === event.currentTarget) onClose();
+  };
+
+  const height =
+    typeof window !== "undefined"
+      ? Math.max(320, Math.min(800, window.innerHeight - 160))
+      : 600;
+
+  return (
+    <Backdrop
+      onClick={onBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="map-modal-title"
+    >
+      <ModalBox>
+        <Header>
+          <Title id="map-modal-title">{title}</Title>
+          <CloseButton type="button" onClick={onClose} aria-label={t("close")}>
+            ╳
+          </CloseButton>
+        </Header>
+        <MapArea>
+          <MapContainer positions={photos} height={height} maxZoom={18} />
+        </MapArea>
+      </ModalBox>
+    </Backdrop>
+  );
+};
+export default MapModal;

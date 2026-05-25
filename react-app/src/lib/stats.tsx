@@ -82,6 +82,14 @@ export interface TableRow {
 export interface StatsCategory {
   key: string;
   title: string;
+  // Discriminator for non-default render paths (e.g. the location card
+  // hosts a map modal instead of the usual Summary/Charts/Table tile).
+  kind?: "location";
+  // `kind: "location"` carries its photo subset + counts; the modal
+  // renders the map from these.
+  photos?: Photo[];
+  geotaggedCount?: number;
+  totalCount?: number;
   kpi?: KpiItem[];
   charts?: ChartSpec[];
   tableColumns?: TableColumn[];
@@ -227,7 +235,8 @@ const collectTopics = (
   lang: string,
   t: TFunction,
   countryData: CountryData,
-  theme: Theme
+  theme: Theme,
+  mapPhotos: Photo[] = []
 ): StatsTopic[] => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang, t);
@@ -588,17 +597,29 @@ const collectTopics = (
       }),
     };
   };
+  const collectLocation = (photos: Photo[], total: number): StatsCategory => ({
+    key: "location",
+    title: t("stats-category-location"),
+    kind: "location",
+    photos,
+    geotaggedCount: photos.length,
+    totalCount: total,
+  });
   const collectGeneral = () => {
     const count = data.count;
     const total = count.total;
+    const categories: any[] = [
+      collectSummary(count),
+      collectAuthor(count.byAuthor, total),
+      collectCountry(count.byCountry, total),
+    ];
+    if (mapPhotos.length > 0) {
+      categories.push(collectLocation(mapPhotos, total));
+    }
     return {
       key: "general",
       title: t("stats-topic-general"),
-      categories: [
-        collectSummary(count),
-        collectAuthor(count.byAuthor, total),
-        collectCountry(count.byCountry, total),
-      ],
+      categories,
     };
   };
 

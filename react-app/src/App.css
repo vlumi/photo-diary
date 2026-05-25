@@ -1,4 +1,8 @@
 html {
+  /* Reserve the scrollbar gutter so locking body overflow (Photo + Stats
+     modals) doesn't reflow the underlying content ~15px wider. */
+  scrollbar-gutter: stable;
+
   --primary-color: #000;
   --primary-background: #ddd;
   --inactive-color: #999;
