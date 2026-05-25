@@ -2,10 +2,10 @@ import React from "react";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
-import MapContainer from "../../MapContainer.lazy";
+import MapContainer from "./MapContainer.lazy";
 
-import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
-import type { Photo } from "../../../models/PhotoModel";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
+import type { Photo } from "../models/PhotoModel";
 
 const Backdrop = styled.div`
   position: fixed;
@@ -60,10 +60,16 @@ const MapArea = styled.div`
 interface Props {
   title: string;
   photos: Photo[];
+  drawLine?: boolean;
   onClose: () => void;
 }
 
-const MapModal = ({ title, photos, onClose }: Props): React.ReactElement => {
+const MapModal = ({
+  title,
+  photos,
+  drawLine,
+  onClose,
+}: Props): React.ReactElement => {
   const { t } = useTranslation();
 
   React.useEffect(() => {
@@ -100,7 +106,12 @@ const MapModal = ({ title, photos, onClose }: Props): React.ReactElement => {
           </CloseButton>
         </Header>
         <MapArea>
-          <MapContainer positions={photos} height={height} maxZoom={18} />
+          <MapContainer
+            positions={photos}
+            height={height}
+            maxZoom={18}
+            drawLine={drawLine}
+          />
         </MapArea>
       </ModalBox>
     </Backdrop>

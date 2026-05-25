@@ -8,7 +8,7 @@ import Charts from "./Charts";
 import Table from "./Table";
 import TableModal from "./TableModal";
 import SummaryModal from "./SummaryModal";
-import MapModal from "./MapModal";
+import MapModal from "../../MapModal";
 
 import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic, StatsCategory } from "../../../lib/stats";
