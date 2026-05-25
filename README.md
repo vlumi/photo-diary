@@ -24,7 +24,7 @@ Key features include:
 - [Photo pipeline](#photo-pipeline)
 - [Roadmap](#roadmap)
 - [Backlog](#backlog)
-- [Version history](CHANGELOG.md)
+- [Version history](#version-history)
 
 ## Structure
 
@@ -405,6 +405,34 @@ Ideas without a milestone yet — too far out to schedule, kept here so they don
 - **Range filters for continuous variables** (#264) — time, focal length, aperture, etc. Coordinate-radius dropped in favour of place-categorical filtering after #246.
 - **Non-calendar gallery view** (#280) — alternative renderer for galleries that aren't date-shaped.
 - **Content localization for photo metadata** (#281) — per-language titles/captions/place names; manual-entry friction is the real blocker.
-- **Release-themes README history** (#282) — small narrative section for past major milestones.
 
-## [Version History](CHANGELOG.md)
+## Version History
+
+Major release themes — see [CHANGELOG.md](CHANGELOG.md) for per-version detail.
+
+### 2020 — foundations
+
+Initial release and rapid follow-ups that established the core gallery, auth/ACL, map, stats, and filter model. The shape the app still has today was laid down here.
+
+- **0.1** (Jul 2020) — Initial release. Read-only calendar views (year/month/day/photo), separate front-end and back-end API, abstract DAO layer.
+- **0.2** (Jul 2020) — New SQLite schema with auth/ACL, embedded map with markers, EN/FI/JP localization, operator scripts for adding users/galleries/photos.
+- **0.3** (Jul 2020) — Per-gallery statistics view; map markers chronologically connected; stats moved client-side.
+- **0.4** (Aug 2020) — Photo property filters across gallery + stats. Migrated to styled-components, broader unit-test coverage.
+
+### 2021–2022 — maintenance
+
+A versioned API surface, instance-level metadata, and dependency catch-ups. Then a long pause.
+
+- **0.5** (Dec 2021) — `/api/v1` versioned API, instance metadata table, CDN-aware photo URL, gallery list with name/description from meta.
+- **0.5.1** (May 2022) — Aspect-ratio stats, react-scripts 5.
+
+### 2026 — modernization & multi-instance
+
+After the hiatus, a burst of releases that modernized the stack, formalized the multi-instance deploy story, and tightened privacy and security.
+
+- **0.6** (May 2026) — Modernization sweep. Express 5, Node 26 (jose replaces jsonwebtoken), ESM across all subtrees, TypeScript everywhere, better-sqlite3, React 19, Vite. Map added to the statistics page with marker clustering. Converter moves from ImageMagick to sharp (~20× faster).
+- **0.7** (May 2026) — Multi-instance deploy pattern: versioned code under `/opt/`, per-instance dirs under `/var/`, atomic upgrades via `code`-symlink flip. Privacy toggle via the four-cell `hide_map` cascade. Security baseline (helmet, login rate limit). Operator scripts renamed to bare nouns (`bin/photo.ts`, `bin/gallery.ts`, …). npm workspaces.
+- **0.8** (May 2026) — Backend framework swap: Express → Fastify, TypeBox schemas, OpenAPI doc + Swagger UI at `/api/v1/docs`, typed `AppError` hierarchy. Frontend adopts a generated `openapi-fetch` client, TanStack Query for server state, Zustand for client state, code-splits the Stats and Photo subtrees out of the main bundle.
+- **0.9** (May 2026) — Privacy hardening (collapse 403/404 distinctions to prevent gallery enumeration), JWT expiration (90 days), self-service password change, global 401 → login-modal handling, toast notifications, profile-icon `UserMenu`.
+
+See the [Roadmap](#roadmap) for what's in flight after 0.9.
