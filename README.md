@@ -9,16 +9,34 @@ Key features include:
 - Calendar-based views (year, month, day, photo)
   - Including map from embedded GPS information
 - Comprehensive photo statistics (time, gear, exposure settings, etc.)
-- Fast browsing – gallery content (apart from actual photos) loaded once at startup
+- Fast browsing — gallery content (apart from actual photos) loaded once at startup
 - User management and basic access control
+
+## Contents
+
+- [Structure](#structure)
+- [Setup](#setup)
+  - [Basic setup](#basic-setup)
+  - [Dev mode](#dev-mode)
+  - [Multi-instance deployment](#multi-instance-deployment)
+    - [Host prep](#one-time-host-prep) · [Getting the code](#getting-the-code-onto-the-host) · [Bootstrap](#bootstrapping-a-new-instance) · [Start](#starting-an-instance) · [Upgrade](#upgrading-an-instance) · [nginx](#nginx) · [Per-gallery vhost](#per-gallery-vhost-mapping) · [Day-to-day ops](#operating-an-instance)
+- [Features](#features)
+- [Photo pipeline](#photo-pipeline)
+- [Roadmap](#roadmap)
+- [Backlog](#backlog)
+- [Version history](CHANGELOG.md)
 
 ## Structure
 
-Photo Diary is split into separate independent modules, each handling its own sub-system:
+Photo Diary is split into independent modules, each handling its own sub-system:
 
-- [react-app](react-app) – Front-end web app
-- [server](server) – Back-end API
-- [converter](converter) – Back-end process for pre-processing new photos to be added to the gallery
+- [react-app](react-app) — front-end React SPA. Served as static files by the backend; no separate hosting required.
+- [server](server) — Fastify + SQLite backend. Exposes `/api/v1` (with an OpenAPI doc at `/api/v1/docs`) and serves the bundled frontend.
+- [converter](converter) — back-end worker that pre-processes new photos (EXIF extraction, thumbnail/display renditions via sharp).
+
+The three pieces communicate via the shared filesystem and SQLite DB rather than over a network — the converter writes to `photos/{display,thumbnail}/` and `inbox/*.json`, the operator (or a future admin UI) registers those JSONs into the DB via `bin/photo.ts`, and the server reads the DB to serve the API. Per-instance state (database, photo files, `.env`) lives in a single instance directory outside the repo; see [Setup](#setup) below.
+
+## Setup
 
 ### Basic Setup
 
@@ -336,24 +354,6 @@ The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` sn
     - Filters apply to both gallery and statistics views
     - Filter values within a single category are additive, photos matching any are included
     - Filter values across categories are subtractive, photos only matching all are included
-- Admin view (TBD)
-  - Add new photos
-    - Pick up from upload directory on the server
-    - Metadata extraction from EXIF
-      - Timestamp
-      - Exposure values
-      - Camera/lens
-    - Manual input
-      - Galleries to link
-      - Author
-      - Country
-      - Override any automatically extracted values
-    - Create thumbnail and display size photos
-  - Update photo properties
-    - Update photo metadata
-    - If original file is still found
-      - Metadata extraction from EXIF
-      - Create thumbnail and display size photos
 - Authentication
   - User login
   - Token-based
