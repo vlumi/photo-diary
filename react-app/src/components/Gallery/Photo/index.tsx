@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 import {
@@ -8,9 +8,7 @@ import {
   BsInfoCircleFill,
   BsXLg,
 } from "react-icons/bs";
-import type { SwipeEventData } from "react-swipeable";
-
-import Swipeable from "../../Swipeable";
+import { motion, useAnimationControls, type PanInfo } from "framer-motion";
 
 import Navigation from "./Navigation";
 import Content from "./Content";
@@ -108,21 +106,24 @@ const InfoButton = styled(FloatingButton)`
   bottom: 16px;
   right: 16px;
 `;
-// Flex column that gives Content a stable parent size. Without
-// this Content's flex-grow has no flex parent — Swipeable's plain
-// div breaks the chain — and Content's ResizeObserver feeds back
-// into itself and shrinks the photo to nothing.
+// Flex column that gives Content a stable parent size. Without this
+// Content's flex-grow has no flex parent and the ResizeObserver feeds
+// back into itself, shrinking the photo to nothing.
 const Body = styled.div`
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
 `;
-const SwipeBody = styled(Swipeable)`
+// Same as Body but draggable on the x axis via framer-motion — used
+// while zoom == 1. `touch-action: pan-y` leaves vertical scroll to
+// the browser; horizontal gestures are intercepted by the drag.
+const DragBody = styled(motion.div)`
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  touch-action: pan-y;
 `;
 
 // Zoom state lives here so Swipeable is bypassed while zoomed
@@ -160,7 +161,7 @@ const Photo = ({
   lang,
   countryData,
 }: Props): React.ReactElement => {
-  const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
+  const navigate = useNavigate();
   const [zoom, setZoom] = React.useState<ZoomState>(ZOOM_RESET);
   const [isFullscreen, setIsFullscreen] = React.useState(
     typeof document !== "undefined" && !!document.fullscreenElement
@@ -202,34 +203,29 @@ const Photo = ({
   const handlMoveToFirst = () => {
     const first = gallery.firstPhoto();
     if (!gallery.isFirstPhoto(photo) && first) {
-      window.history.pushState({}, "");
-      setRedirect(first.path(gallery));
+      navigate(first.path(gallery));
     }
   };
   const handlMoveToPrevious = () => {
     if (!gallery.isFirstPhoto(photo)) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.previousPhoto(year, month, day, photo).path(gallery));
+      navigate(gallery.previousPhoto(year, month, day, photo).path(gallery));
     }
   };
   const handlMoveToNext = () => {
     if (!gallery.isLastPhoto(photo)) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.nextPhoto(year, month, day, photo).path(gallery));
+      navigate(gallery.nextPhoto(year, month, day, photo).path(gallery));
     }
   };
   const handlMoveToLast = () => {
     const last = gallery.lastPhoto();
     if (!gallery.isLastPhoto(photo) && last) {
-      window.history.pushState({}, "");
-      setRedirect(last.path(gallery));
+      navigate(last.path(gallery));
     }
   };
 
   const handleClose = React.useCallback(() => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.path(year, month));
-  }, [gallery, year, month]);
+    navigate(gallery.path(year, month));
+  }, [gallery, year, month, navigate]);
 
   // Both Photo and the mounted Month register Escape listeners on
   // window. Capture phase + stopImmediatePropagation so Photo's
@@ -250,31 +246,51 @@ const Photo = ({
   useKeyPress("ArrowLeft", handlMoveToPrevious);
   useKeyPress("ArrowRight", handlMoveToNext);
   useKeyPress("End", handlMoveToLast);
-  const handleSwipe = (event: SwipeEventData) => {
-    switch (event.dir) {
-      case "Left":
-        handlMoveToNext();
-        break;
-      case "Right":
-        handlMoveToPrevious();
-        break;
-      default:
-        break;
-    }
-  };
 
+  // Touch-tracking horizontal swipe with framer-motion. Photo moves
+  // with the finger via dragElastic-driven rubber-band; on release
+  // commit if the offset crossed ~30% of the viewport width OR the
+  // flick velocity is high enough, otherwise spring back to centre.
+  // x resets to 0 on every photo change so the new photo lands centred.
+  const dragControls = useAnimationControls();
   React.useEffect(() => {
-    if (redirect) {
-      const handle = setTimeout(() => setRedirect(""), 0);
-      return () => {
-        setRedirect("");
-        clearTimeout(handle);
-      };
+    dragControls.set({ x: 0 });
+  }, [photo.id(), dragControls]);
+  const COMMIT_OFFSET_RATIO = 0.3;
+  const COMMIT_VELOCITY = 500;
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    const width = window.innerWidth || 1;
+    const passedDistance = Math.abs(info.offset.x) >= width * COMMIT_OFFSET_RATIO;
+    const passedVelocity = Math.abs(info.velocity.x) >= COMMIT_VELOCITY;
+    if (!passedDistance && !passedVelocity) {
+      dragControls.start({ x: 0, transition: { type: "spring", stiffness: 400, damping: 40 } });
+      return;
     }
-  }, [redirect]);
-  if (redirect) {
-    return <Navigate to={redirect} replace />;
-  }
+    const goingPrev = info.offset.x > 0;
+    const atBoundary = goingPrev
+      ? gallery.isFirstPhoto(photo)
+      : gallery.isLastPhoto(photo);
+    if (atBoundary) {
+      dragControls.start({ x: 0, transition: { type: "spring", stiffness: 400, damping: 40 } });
+      return;
+    }
+    dragControls
+      .start({
+        x: goingPrev ? width : -width,
+        transition: { duration: 0.18, ease: "easeOut" },
+      })
+      .then(() => {
+        dragControls.set({ x: 0 });
+        if (goingPrev) {
+          handlMoveToPrevious();
+        } else {
+          handlMoveToNext();
+        }
+      });
+  };
 
   const handleBackdropClick = (event: React.MouseEvent) => {
     if (event.target === event.currentTarget) handleClose();
@@ -326,7 +342,14 @@ const Photo = ({
           <BsInfoCircleFill />
         </InfoButton>
         {zoom.scale === 1 ? (
-          <SwipeBody onSwiped={handleSwipe}>
+          <DragBody
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.5}
+            dragMomentum={false}
+            animate={dragControls}
+            onDragEnd={handleDragEnd}
+          >
             <Content
               gallery={gallery}
               year={year}
@@ -336,7 +359,7 @@ const Photo = ({
               zoom={zoom}
               setZoom={setZoom}
             />
-          </SwipeBody>
+          </DragBody>
         ) : (
           <Body>
             <Content
