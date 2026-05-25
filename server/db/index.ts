@@ -5,6 +5,7 @@ import type {
   MetaRow,
   Photo,
   PhotoInput,
+  SessionRow,
   User,
   UserGalleryRow,
 } from "./sqlite3/schema.js";
@@ -65,6 +66,25 @@ export default {
   },
   deleteUser: async (userId: string) => {
     await db.deleteUser(userId);
+  },
+
+  createSession: async (session: SessionRow): Promise<void> => {
+    await db.createSession(session);
+  },
+  loadSession: async (sessionId: string): Promise<SessionRow | undefined> => {
+    return await db.loadSession(sessionId);
+  },
+  updateSession: async (
+    sessionId: string,
+    patch: Partial<SessionRow>
+  ): Promise<void> => {
+    await db.updateSession(sessionId, patch);
+  },
+  deleteSession: async (sessionId: string): Promise<void> => {
+    await db.deleteSession(sessionId);
+  },
+  deleteUserSessions: async (userId: string): Promise<void> => {
+    await db.deleteUserSessions(userId);
   },
 
   // Resolve the effective access_level for (userId, galleryId) under the
@@ -156,4 +176,13 @@ export default {
 };
 
 // Re-export shared types so models can use them without reaching into the driver.
-export type { Gallery, GalleryInput, MetaRow, Photo, PhotoInput, User, UserGalleryRow };
+export type {
+  Gallery,
+  GalleryInput,
+  MetaRow,
+  Photo,
+  PhotoInput,
+  SessionRow,
+  User,
+  UserGalleryRow,
+};

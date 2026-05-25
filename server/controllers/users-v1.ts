@@ -22,7 +22,14 @@ const ChangePasswordBody = Type.Object({
   currentPassword: Type.String({ minLength: 1 }),
   newPassword: Type.String({ minLength: 1 }),
 });
-const ChangePasswordResponse = Type.Object({ token: Type.String() });
+// Same shape as the login response — caller's existing session is killed
+// (the user's `secret` rotates, invalidating its access JWT, and existing
+// refresh tokens get cleared along with it), so the response carries a
+// fresh pair for the same device to stay signed in.
+const ChangePasswordResponse = Type.Object({
+  accessToken: Type.String(),
+  refreshToken: Type.String(),
+});
 const TAGS = ["users"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -159,11 +166,17 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       // cached secret and the new token would fail until the 5-second
       // cache reload caught up.
       tokens.setSecret(request.user.id, newSecret);
-      const token = await tokens.createToken(
+      // Other devices' sessions are now stale (their access JWTs verify
+      // against the old secret, and their refresh tokens could otherwise
+      // mint new JWTs under the new secret). Clear them so the change is
+      // a real all-devices logout, then mint a fresh pair for the device
+      // that initiated the change so it stays signed in.
+      await tokens.revokeAllSessions(request.user.id);
+      const pair = await tokens.createSession(
         request.user.id,
         !!request.user.isAdmin
       );
-      return { token };
+      return pair;
     }
   );
 };

@@ -1,15 +1,19 @@
 import { SignJWT, jwtVerify, decodeJwt, errors as joseErrors } from "jose";
 import bcrypt from "bcrypt";
+import { randomUUID, randomBytes } from "node:crypto";
 
 import config from "../lib/config/index.js";
 import CONST from "../lib/constants.js";
 import {
+  InvalidTokenError,
   LoginError,
-  NotImplementedError,
   TokenExpiredError,
 } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
+
+const SALT_ROUNDS = 10;
+const REFRESH_SECRET_BYTES = 32;
 
 const encodeSecret = (secret: string): Uint8Array =>
   new TextEncoder().encode(secret);
@@ -46,9 +50,106 @@ const init = async (): Promise<void> => {
 
 type Credentials = { id: string; password: string };
 type StoredUser = { id: string; password: string; secret: string };
+export type TokenPair = { accessToken: string; refreshToken: string };
 
-const revokeToken = async (_userId: string): Promise<void> => {
-  throw new NotImplementedError();
+// Refresh tokens are sent to the client as `<sessionId>.<secret>`. The
+// session row stores `sessionId` directly and the bcrypt hash of the
+// secret — same shape as the user's password check. Lookup by sessionId,
+// verify the secret with bcrypt, rotate on every refresh so a stolen
+// refresh token only works once (the legitimate client's next refresh
+// then fails too, flagging the breach).
+const generateRefreshTokenParts = () => {
+  const sessionId = randomUUID();
+  const secret = randomBytes(REFRESH_SECRET_BYTES).toString("base64url");
+  return { sessionId, secret, combined: `${sessionId}.${secret}` };
+};
+const parseRefreshToken = (
+  combined: string
+): { sessionId: string; secret: string } | undefined => {
+  const idx = combined.indexOf(".");
+  if (idx <= 0 || idx >= combined.length - 1) return undefined;
+  return {
+    sessionId: combined.slice(0, idx),
+    secret: combined.slice(idx + 1),
+  };
+};
+
+const signAccessToken = async (
+  id: string,
+  isAdmin: boolean
+): Promise<string> => {
+  // `setExpirationTime` accepts a number-of-seconds or a relative duration
+  // string. Using seconds (a Date `+ duration / 1000`) keeps the math
+  // explicit and matches the `iat` units jose uses.
+  const expSeconds = Math.floor(
+    (Date.now() + CONST.ACCESS_TOKEN_LIFETIME_MS) / 1000
+  );
+  return await new SignJWT({ id, isAdmin })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(expSeconds)
+    .sign(encodeSecret(getSecret(id)));
+};
+
+const createSession = async (
+  id: string,
+  isAdmin: boolean
+): Promise<TokenPair> => {
+  const { sessionId, secret, combined } = generateRefreshTokenParts();
+  const hash = await bcrypt.hash(secret, SALT_ROUNDS);
+  const now = Date.now();
+  await db.createSession({
+    id: sessionId,
+    user_id: id,
+    refresh_token_hash: hash,
+    created_at: now,
+    last_used_at: now,
+  });
+  const accessToken = await signAccessToken(id, isAdmin);
+  return { accessToken, refreshToken: combined };
+};
+
+// Validate the refresh token + rotate it. Caller is responsible for
+// re-deriving `isAdmin` (via authorizer) and signing the new access token.
+// Returning just `userId` keeps this model agnostic of the access cascade.
+const verifyAndRotateRefresh = async (
+  refreshToken: string
+): Promise<{ userId: string; refreshToken: string }> => {
+  const parsed = parseRefreshToken(refreshToken);
+  if (!parsed) throw new InvalidTokenError();
+  const row = await db.loadSession(parsed.sessionId);
+  if (!row) throw new InvalidTokenError();
+  // Sliding-window expiry: idle longer than SESSION_LENGTH_MS → expired.
+  if (Date.now() - row.last_used_at > CONST.SESSION_LENGTH_MS) {
+    await db.deleteSession(parsed.sessionId);
+    throw new TokenExpiredError();
+  }
+  const ok = await bcrypt.compare(parsed.secret, row.refresh_token_hash);
+  if (!ok) throw new InvalidTokenError();
+  // Rotate: generate a new secret, replace the hash, and update last_used_at.
+  const newSecret = randomBytes(REFRESH_SECRET_BYTES).toString("base64url");
+  const newHash = await bcrypt.hash(newSecret, SALT_ROUNDS);
+  await db.updateSession(parsed.sessionId, {
+    refresh_token_hash: newHash,
+    last_used_at: Date.now(),
+  });
+  return {
+    userId: row.user_id,
+    refreshToken: `${parsed.sessionId}.${newSecret}`,
+  };
+};
+
+// Logout: delete the session row. Idempotent — silently no-ops on a
+// missing or malformed token so the client's "log out anyway" flow
+// never throws.
+const revokeSession = async (refreshToken: string): Promise<void> => {
+  const parsed = parseRefreshToken(refreshToken);
+  if (!parsed) return;
+  await db.deleteSession(parsed.sessionId);
+};
+
+const revokeAllSessions = async (userId: string): Promise<void> => {
+  await db.deleteUserSessions(userId);
 };
 
 // Sync the in-memory secret cache after a password rotation so the
@@ -62,9 +163,12 @@ export default () => {
   return {
     init,
     authenticateUser,
-    createToken,
+    createSession,
+    signAccessToken,
+    verifyAndRotateRefresh,
     verifyToken,
-    revokeToken,
+    revokeSession,
+    revokeAllSessions,
     setSecret,
   };
 };
@@ -84,18 +188,6 @@ const checkUserPassword = async (
       resolve();
     });
   });
-};
-const createToken = async (id: string, isAdmin: boolean): Promise<string> => {
-  const tokenContent = { id, isAdmin };
-  // `setExpirationTime` accepts a number-of-seconds or a relative duration
-  // string. Using seconds (a Date `+ duration / 1000`) keeps the math
-  // explicit and matches the `iat` units jose uses.
-  const expSeconds = Math.floor((Date.now() + CONST.SESSION_LENGTH_MS) / 1000);
-  return await new SignJWT(tokenContent)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(expSeconds)
-    .sign(encodeSecret(getSecret(id)));
 };
 const authenticateUser = async (credentials: Credentials): Promise<void> => {
   logger.debug(`Authenticating user "${credentials.id}"`);

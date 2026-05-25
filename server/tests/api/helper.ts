@@ -21,5 +21,24 @@ export const loginUser = async (api: Agent, id: string): Promise<string> => {
       password: "foobar",
     })
     .expect(200);
-  return authRes.body.token;
+  return authRes.body.accessToken;
+};
+
+// For tests that need the refresh-token half of the pair (refresh-flow,
+// logout, etc.).
+export const loginUserPair = async (
+  api: Agent,
+  id: string
+): Promise<{ accessToken: string; refreshToken: string }> => {
+  const authRes = await api
+    .post("/api/v1/tokens")
+    .send({
+      id: id,
+      password: "foobar",
+    })
+    .expect(200);
+  return {
+    accessToken: authRes.body.accessToken,
+    refreshToken: authRes.body.refreshToken,
+  };
 };

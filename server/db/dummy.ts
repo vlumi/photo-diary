@@ -27,6 +27,12 @@ export default () => {
     updateUser,
     deleteUser: notImplemented,
 
+    createSession,
+    loadSession,
+    updateSession,
+    deleteSession,
+    deleteUserSessions,
+
     resolveAccessLevel,
     loadUserGalleryRows: notImplemented,
     upsertUserGallery: notImplemented,
@@ -55,8 +61,44 @@ export default () => {
 };
 
 let db: any = undefined;
+const sessions: Record<string, {
+  id: string;
+  user_id: string;
+  refresh_token_hash: string;
+  created_at: number;
+  last_used_at: number;
+}> = {};
 const init = () => {
   db = JSON.parse(dbDump);
+  Object.keys(sessions).forEach((id) => delete sessions[id]);
+};
+
+const createSession = async (session: {
+  id: string;
+  user_id: string;
+  refresh_token_hash: string;
+  created_at: number;
+  last_used_at: number;
+}) => {
+  sessions[session.id] = { ...session };
+};
+const loadSession = async (sessionId: string) => {
+  return sessions[sessionId];
+};
+const updateSession = async (
+  sessionId: string,
+  patch: Partial<{ refresh_token_hash: string; last_used_at: number }>
+) => {
+  if (!(sessionId in sessions)) return;
+  Object.assign(sessions[sessionId], patch);
+};
+const deleteSession = async (sessionId: string) => {
+  delete sessions[sessionId];
+};
+const deleteUserSessions = async (userId: string) => {
+  for (const id of Object.keys(sessions)) {
+    if (sessions[id].user_id === userId) delete sessions[id];
+  }
 };
 
 const loadMetas = async () => {

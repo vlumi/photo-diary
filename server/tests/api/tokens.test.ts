@@ -1,6 +1,6 @@
 import { init } from "../../app.js";
 import { _resetLoginRateLimitForTests } from "../../controllers/tokens-v1.js";
-import { createApi, loginUser } from "./helper.js";
+import { createApi, loginUser, loginUserPair } from "./helper.js";
 
 const { api, close } = createApi();
 
@@ -41,7 +41,10 @@ describe("Login", () => {
         password: "foobar",
       })
       .expect(200);
-    expect(result.body.token).toBeDefined();
+    expect(result.body.accessToken).toBeDefined();
+    expect(typeof result.body.accessToken).toBe("string");
+    expect(result.body.refreshToken).toBeDefined();
+    expect(typeof result.body.refreshToken).toBe("string");
   });
 });
 describe("Login rate limit", () => {
@@ -110,103 +113,96 @@ describe("Keep-alive", () => {
   });
 });
 
-// describe("Logout", () => {
-//   let token: string | undefined = undefined;
-//   beforeEach(async () => {
-//     token = await loginUser(api, "admin");
-//   });
+describe('Refresh', () => {
+  test('rotates the refresh token + returns a fresh access token', async () => {
+    const pair = await loginUserPair(api, 'admin');
+    const refreshed = await api
+      .post('/api/v1/tokens/refresh')
+      .send({ refreshToken: pair.refreshToken })
+      .expect(200);
+    expect(refreshed.body.accessToken).toBeDefined();
+    expect(refreshed.body.refreshToken).toBeDefined();
+    expect(refreshed.body.refreshToken).not.toBe(pair.refreshToken);
+    // Re-using the consumed refresh token fails.
+    await api
+      .post('/api/v1/tokens/refresh')
+      .send({ refreshToken: pair.refreshToken })
+      .expect(401);
+  });
 
-//   test("Success", async () => {
-//     await api
-//       .get("/api/v1/tokens")
-//       .set("Authorization", `Bearer ${token}`)
-//       .expect(200);
-//     await api
-//       .delete("/api/v1/tokens")
-//       .set("Authorization", `Bearer ${token}`)
-//       .expect(204);
-//     await api
-//       .get("/api/v1/tokens")
-//       .set("Authorization", `Bearer ${token}`)
-//       .expect(401);
-//   });
-// });
-// describe("Revoke", () => {
-//   let tokens = [];
-//   beforeEach(async () => {
-//     tokens = [
-//       await loginUser(api, "plainUser"),
-//       await loginUser(api, "plainUser"),
-//       await loginUser(api, "plainUser"),
-//     ];
-//   });
+  test('rejects a malformed refresh token', async () => {
+    await api
+      .post('/api/v1/tokens/refresh')
+      .send({ refreshToken: 'not-a-pair' })
+      .expect(401);
+  });
 
-//   test("Self", async () => {
-//     Promise.all(
-//       tokens.map(async (token) => {
-//         api
-//           .get("/api/v1/tokens")
-//           .set("Authorization", `Bearer ${token}`)
-//           .expect(200);
-//       })
-//     );
-//     await api
-//       .delete("/api/v1/tokens")
-//       .set("Authorization", `Bearer ${tokens[0]}`)
-//       .expect(204);
-//     Promise.all(
-//       tokens.map((token) => {
-//         api
-//           .get("/api/v1/tokens")
-//           .set("Authorization", `Bearer ${token}`)
-//           .expect(401);
-//       })
-//     );
-//   });
-//   test("By admin", async () => {
-//     const adminToken = await loginUser(api, "admin");
-//     Promise.all(
-//       tokens.map(async (token) => {
-//         api
-//           .get("/api/v1/tokens")
-//           .set("Authorization", `Bearer ${token}`)
-//           .expect(200);
-//       })
-//     );
-//     await api
-//       .delete("/api/v1/tokens/plainUser")
-//       .set("Authorization", `Bearer ${adminToken}`)
-//       .expect(204);
-//     Promise.all(
-//       tokens.map((token) => {
-//         api
-//           .get("/api/v1/tokens")
-//           .set("Authorization", `Bearer ${token}`)
-//           .expect(401);
-//       })
-//     );
-//   });
-//   test("By non-admin", async () => {
-//     const otherToken = await loginUser(api, "simpleUser");
-//     Promise.all(
-//       tokens.map(async (token) => {
-//         api
-//           .get("/api/v1/tokens")
-//           .set("Authorization", `Bearer ${token}`)
-//           .expect(200);
-//       })
-//     );
-//     await api
-//       .delete("/api/v1/tokens/plainUser")
-//       .set("Authorization", `Bearer ${otherToken}`)
-//       .expect(403);
-//     Promise.all(
-//       tokens.map((token) => {
-//         api
-//           .get("/api/v1/tokens")
-//           .set("Authorization", `Bearer ${token}`)
-//           .expect(401);
-//       })
-//     );
-//   });
-// });
+  test('returns 400 when the refresh-token body field is missing', async () => {
+    // Body shape is enforced by the typebox schema before the handler runs,
+    // so a missing field short-circuits as a 400 — never reaches the
+    // controller's defensive 401 fallback.
+    await api.post('/api/v1/tokens/refresh').send({}).expect(400);
+  });
+});
+
+describe('Logout', () => {
+  test('revokes only the calling session — other sessions stay valid', async () => {
+    const sessionA = await loginUserPair(api, 'plainUser');
+    const sessionB = await loginUserPair(api, 'plainUser');
+    await api
+      .delete('/api/v1/tokens')
+      .set('Authorization', `Bearer ${sessionA.accessToken}`)
+      .send({ refreshToken: sessionA.refreshToken })
+      .expect(204);
+    await api
+      .post('/api/v1/tokens/refresh')
+      .send({ refreshToken: sessionA.refreshToken })
+      .expect(401);
+    await api
+      .post('/api/v1/tokens/refresh')
+      .send({ refreshToken: sessionB.refreshToken })
+      .expect(200);
+  });
+
+  test('is idempotent — second logout call still 204s', async () => {
+    const session = await loginUserPair(api, 'plainUser');
+    await api
+      .delete('/api/v1/tokens')
+      .set('Authorization', `Bearer ${session.accessToken}`)
+      .send({ refreshToken: session.refreshToken })
+      .expect(204);
+    await api
+      .delete('/api/v1/tokens')
+      .set('Authorization', `Bearer ${session.accessToken}`)
+      .send({ refreshToken: session.refreshToken })
+      .expect(204);
+  });
+});
+
+describe('Admin revoke', () => {
+  test('admin can revoke all sessions for another user', async () => {
+    const adminToken = await loginUser(api, 'admin');
+    const targetA = await loginUserPair(api, 'plainUser');
+    const targetB = await loginUserPair(api, 'plainUser');
+    await api
+      .delete('/api/v1/tokens/plainUser')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(204);
+    await api
+      .post('/api/v1/tokens/refresh')
+      .send({ refreshToken: targetA.refreshToken })
+      .expect(401);
+    await api
+      .post('/api/v1/tokens/refresh')
+      .send({ refreshToken: targetB.refreshToken })
+      .expect(401);
+  });
+
+  test('non-admin gets 403 trying to revoke another user', async () => {
+    const otherToken = await loginUser(api, 'simpleUser');
+    await api
+      .delete('/api/v1/tokens/plainUser')
+      .set('Authorization', `Bearer ${otherToken}`)
+      .expect(403);
+  });
+});

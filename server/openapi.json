@@ -151,7 +151,7 @@
         }
       },
       "post": {
-        "summary": "Log in, issuing a new token",
+        "summary": "Log in, issuing access + refresh tokens",
         "tags": [
           "tokens"
         ],
@@ -181,10 +181,14 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "token"
+                    "accessToken",
+                    "refreshToken"
                   ],
                   "properties": {
-                    "token": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
                       "type": "string"
                     }
                   }
@@ -195,10 +199,25 @@
         }
       },
       "delete": {
-        "summary": "Log out (revoke all tokens for the requester)",
+        "summary": "Log out (revoke this session)",
         "tags": [
           "tokens"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearer": []
@@ -211,9 +230,59 @@
         }
       }
     },
+    "/api/v1/tokens/refresh": {
+      "post": {
+        "summary": "Rotate refresh token, issue a new access token",
+        "tags": [
+          "tokens"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refreshToken"
+                ],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "accessToken",
+                    "refreshToken"
+                  ],
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tokens/{userId}": {
       "delete": {
-        "summary": "Revoke all tokens for another user (admin)",
+        "summary": "Revoke all sessions for another user (admin)",
         "tags": [
           "tokens"
         ],
@@ -414,10 +483,14 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "token"
+                    "accessToken",
+                    "refreshToken"
                   ],
                   "properties": {
-                    "token": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
                       "type": "string"
                     }
                   }

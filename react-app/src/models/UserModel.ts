@@ -1,13 +1,19 @@
 interface UserData {
   id: string | number;
   token?: string;
+  refreshToken?: string;
   isAdmin?: boolean;
 }
 
-const UserModel = (userData: UserData | undefined, token?: string) => {
+const UserModel = (
+  userData: UserData | undefined,
+  token?: string,
+  refreshToken?: string
+) => {
   const importUserData = (
     userData: UserData | undefined,
-    token?: string
+    token?: string,
+    refreshToken?: string
   ): UserData => {
     if (!userData || !("id" in userData) || !userData.id) {
       throw new Error("Invalid user");
@@ -15,14 +21,16 @@ const UserModel = (userData: UserData | undefined, token?: string) => {
     return {
       id: userData.id,
       token: token || userData.token,
+      refreshToken: refreshToken || userData.refreshToken,
       isAdmin: userData.isAdmin,
     };
   };
 
-  const user = importUserData(userData, token);
+  const user = importUserData(userData, token, refreshToken);
   const self = {
     id: () => user.id,
     token: () => user.token,
+    refreshToken: () => user.refreshToken,
     isAdmin: () => !!user.isAdmin,
     toJson: () => JSON.stringify(user),
   };
