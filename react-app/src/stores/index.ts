@@ -5,3 +5,4 @@ export { useScrollStore } from "./scroll";
 export { useNotificationsStore } from "./notifications";
 export { useLoginModalStore } from "./login-modal";
 export { useChangePasswordModalStore } from "./change-password-modal";
+export { useLastGalleryPathStore } from "./last-gallery-path";

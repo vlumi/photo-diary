@@ -7,6 +7,7 @@ import { BsFillHouseFill, BsChevronRight, BsMap } from "react-icons/bs";
 import Link from "./Link";
 import MapModal from "../MapModal";
 
+import { useLastGalleryPathStore } from "../../stores";
 import type { Gallery } from "../../models/GalleryModel";
 import type { Photo } from "../../models/PhotoModel";
 
@@ -92,10 +93,41 @@ const UnavailableOption = styled.option`
   font-style: italic;
   color: var(--inactive-color);
 `;
-const ContextSelect = styled(TitleSelect)`
-  text-align-last: right;
-`;
 const TitleOption = styled.option``;
+// Two-pill segmented control for Gallery / Statistics. Both labels are
+// always visible so the alternate view is a one-click affordance rather
+// than a dropdown affordance. Active pill takes the header-background
+// colour; inactive sits in `inactive-color` and brightens to
+// `primary-color` on hover. Mirrors the SortToggle in `Stats/TableModal`
+// so segmented controls feel uniform across the app.
+const ContextGroup = styled.div`
+  flex: 0 0 auto;
+  display: inline-flex;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  overflow: hidden;
+`;
+const ContextButton = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: ${({ $active }) =>
+    $active ? "var(--header-background)" : "transparent"};
+  color: ${({ $active }) =>
+    $active ? "var(--header-color)" : "var(--inactive-color)"};
+  border: none;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: bold;
+  cursor: ${({ $active }) => ($active ? "default" : "pointer")};
+  & + & {
+    border-left: 1px solid var(--inactive-color);
+  }
+  &:hover {
+    color: ${({ $active }) =>
+      $active ? "var(--header-color)" : "var(--primary-color)"};
+  }
+`;
 const MapButton = styled.button`
   flex: 0 0 auto;
   display: inline-flex;
@@ -138,6 +170,20 @@ const Title = ({
   const [mapOpen, setMapOpen] = React.useState(false);
 
   const { t } = useTranslation();
+
+  // Remember the most recent Gallery URL per gallery id, so flipping to
+  // Statistics and back returns to the same year/month/day (or photo)
+  // instead of the gallery root.
+  const rememberGalleryPath = useLastGalleryPathStore((s) => s.set);
+  const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
+  React.useEffect(() => {
+    if (context === "gallery") {
+      const path = photo
+        ? photo.path(gallery)
+        : gallery.path(year, month, day);
+      rememberGalleryPath(gallery.id(), path);
+    }
+  }, [context, gallery, year, month, day, photo, rememberGalleryPath]);
 
   // Map scope: month if URL identifies a month (or a photo within one),
   // year if only year, none for gallery-list level. Empty array hides
@@ -230,21 +276,40 @@ const Title = ({
   };
 
   const renderContext = () => {
-    const changeHandler = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      const targetContext = event.target.value;
-      if (targetContext && context !== targetContext) {
-        window.history.pushState({}, "");
-        setRedirect(getRedirectPath(gallery, targetContext));
+    const switchTo = (target: string) => {
+      if (target === context) return;
+      window.history.pushState({}, "");
+      // Stats → Gallery: prefer the remembered last-gallery URL for this
+      // gallery so the user lands back on the year/month/day they left
+      // from. Falls through to `getRedirectPath` if nothing's been
+      // remembered yet (first visit, or store reset).
+      if (target === "gallery") {
+        const remembered = lookupGalleryPath(gallery.id());
+        setRedirect(remembered ?? getRedirectPath(gallery, target));
+        return;
       }
+      setRedirect(getRedirectPath(gallery, target));
     };
     return (
-      <ContextSelect value={context} onChange={changeHandler}>
-        {["gallery", "stats"].map((context) => (
-          <TitleOption key={context} value={context}>
-            {t(`nav-${context}`)}
-          </TitleOption>
-        ))}
-      </ContextSelect>
+      <ContextGroup
+        role="group"
+        aria-label={String(t("nav-context-group"))}
+      >
+        {["gallery", "stats"].map((c) => {
+          const active = c === context;
+          return (
+            <ContextButton
+              key={c}
+              type="button"
+              $active={active}
+              aria-pressed={active}
+              onClick={() => switchTo(c)}
+            >
+              {t(`nav-${c}`)}
+            </ContextButton>
+          );
+        })}
+      </ContextGroup>
     );
   };
 
