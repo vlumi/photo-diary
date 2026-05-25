@@ -6,7 +6,7 @@ import {
   BsCaretLeftFill,
   BsCaretRightFill,
   BsSkipForwardFill,
-  BsArrowUp,
+  BsCalendar3,
 } from "react-icons/bs";
 
 import Root, { UpButton } from "../Navigation";
@@ -68,7 +68,7 @@ const Navigation = ({
         aria-label={String(t("nav-up"))}
         title={String(t("nav-up"))}
       >
-        <BsArrowUp />
+        <BsCalendar3 />
       </UpButton>
       <Group>
         <NavLink

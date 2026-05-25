@@ -6,7 +6,7 @@ import {
   BsCaretLeftFill,
   BsCaretRightFill,
   BsSkipForwardFill,
-  BsArrowUp,
+  BsFillHouseFill,
 } from "react-icons/bs";
 
 import Root, { UpButton } from "../Navigation";
@@ -60,7 +60,7 @@ const Navigation = ({ gallery, year }: Props): React.ReactElement => {
         aria-label={String(t("nav-up"))}
         title={String(t("nav-up"))}
       >
-        <BsArrowUp />
+        <BsFillHouseFill />
       </UpButton>
       <Group>
         <NavLink
