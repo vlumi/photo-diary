@@ -6,9 +6,10 @@ import {
   BsCaretLeftFill,
   BsCaretRightFill,
   BsSkipForwardFill,
+  BsCalendar3,
 } from "react-icons/bs";
 
-import Root from "../Navigation";
+import Root, { UpButton } from "../Navigation";
 import Link from "../Link";
 
 import type { Gallery } from "../../../models/GalleryModel";
@@ -61,6 +62,14 @@ const Navigation = ({
   const [lastYear, lastMonth] = gallery.lastMonth();
   return (
     <Root>
+      <UpButton
+        gallery={gallery}
+        year={year}
+        aria-label={String(t("nav-up"))}
+        title={String(t("nav-up"))}
+      >
+        <BsCalendar3 />
+      </UpButton>
       <Group>
         <NavLink
           gallery={gallery}

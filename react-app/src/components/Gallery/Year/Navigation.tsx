@@ -1,13 +1,15 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
 import {
   BsSkipBackwardFill,
   BsCaretLeftFill,
   BsCaretRightFill,
   BsSkipForwardFill,
+  BsFillHouseFill,
 } from "react-icons/bs";
 
-import Root from "../Navigation";
+import Root, { UpButton } from "../Navigation";
 import Link from "../Link";
 import FormatDate from "../../FormatDate";
 
@@ -44,6 +46,7 @@ interface Props {
 }
 
 const Navigation = ({ gallery, year }: Props): React.ReactElement => {
+  const { t } = useTranslation();
   const prevVisibility = gallery.isFirstYear(year) ? "hidden" : "";
   const nextVisibility = gallery.isLastYear(year) ? "hidden" : "";
 
@@ -53,6 +56,12 @@ const Navigation = ({ gallery, year }: Props): React.ReactElement => {
   const lastYear = gallery.lastYear();
   return (
     <Root>
+      <UpButton
+        aria-label={String(t("nav-up"))}
+        title={String(t("nav-up"))}
+      >
+        <BsFillHouseFill />
+      </UpButton>
       <Group>
         <NavLink
           gallery={gallery}
