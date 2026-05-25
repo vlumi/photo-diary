@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import Charts from "./Charts";
 import Table from "./Table";
 
+import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
 import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic, StatsCategory, SortMode } from "../../../lib/stats";
 
@@ -13,8 +14,6 @@ type ActiveTheme = { get: (name: string) => string };
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100dvh;
   background: rgba(0, 0, 0, 0.55);
   z-index: 2000;
   display: flex;
@@ -126,13 +125,7 @@ const TableModal = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  React.useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, []);
+  useBodyScrollLock();
 
   const onBackdropClick = (event: React.MouseEvent) => {
     if (event.target === event.currentTarget) onClose();

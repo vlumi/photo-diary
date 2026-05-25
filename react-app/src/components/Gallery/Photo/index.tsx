@@ -17,6 +17,7 @@ import Content from "./Content";
 import MetadataPanel from "./MetadataPanel";
 
 import useKeyPress from "../../../lib/keypress";
+import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
 
 import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo as PhotoT } from "../../../models/PhotoModel";
@@ -45,10 +46,6 @@ interface Props {
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
-  /* 100vw / 100dvh so the scrim covers the reserved scrollbar gutter
-     (scrollbar-gutter: stable on html) — inset: 0 alone leaves a ~15px
-     uncovered strip on the right while body overflow is locked. */
-  width: 100vw;
   height: 100dvh;
   box-sizing: border-box;
   z-index: 1000;
@@ -182,13 +179,7 @@ const Photo = ({
   );
 
   // Freeze the Month underneath while the modal is open.
-  React.useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, []);
+  useBodyScrollLock();
 
   const { t } = useTranslation();
 

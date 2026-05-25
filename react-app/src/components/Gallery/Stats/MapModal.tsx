@@ -4,13 +4,12 @@ import { useTranslation } from "react-i18next";
 
 import MapContainer from "../../MapContainer.lazy";
 
+import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
 import type { Photo } from "../../../models/PhotoModel";
 
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100dvh;
   background: rgba(0, 0, 0, 0.55);
   z-index: 2000;
   display: flex;
@@ -75,15 +74,7 @@ const MapModal = ({ title, photos, onClose }: Props): React.ReactElement => {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Freeze the Stats scroll underneath while the modal is open — the map
-  // is large enough that the underlying page sliding behind it is jarring.
-  React.useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, []);
+  useBodyScrollLock();
 
   const onBackdropClick = (event: React.MouseEvent) => {
     if (event.target === event.currentTarget) onClose();
