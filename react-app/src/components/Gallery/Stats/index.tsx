@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 
 import Topic from "./Topic";
-import MapContainer from "../../MapContainer.lazy";
 
 import stats, { type UniqueValues } from "../../../lib/stats";
 
@@ -59,12 +58,20 @@ const Stats = ({
     stats.generate(photos, uniqueValues).then((stats) => setData(stats));
   }, [photos, uniqueValues]);
 
+  const mapPhotos = React.useMemo(
+    () => (hideMap ? [] : photos.filter((photo) => photo.hasCoordinates())),
+    [photos, hideMap]
+  );
+
   // Memoize so unrelated re-renders (filter UI ticks, etc.) don't
   // re-run the topic build — it fans out into ~30 chart-data objects
   // and table-row arrays.
   const topics = React.useMemo(
-    () => (data ? stats.collectTopics(data, lang, t, countryData, theme) : []),
-    [data, lang, t, countryData, theme]
+    () =>
+      data
+        ? stats.collectTopics(data, lang, t, countryData, theme, mapPhotos)
+        : [],
+    [data, lang, t, countryData, theme, mapPhotos]
   );
 
   if (!data) {
@@ -74,14 +81,6 @@ const Stats = ({
       </>
     );
   }
-
-  const renderMap = (positions: Photo[]) => {
-    if (!positions || hideMap) {
-      return "";
-    }
-    return <MapContainer positions={positions} height={800} maxZoom={18} />;
-  };
-  const mapPhotos = photos.filter((photo) => photo.hasCoordinates());
 
   return (
     <>
@@ -98,7 +97,6 @@ const Stats = ({
             countryData={countryData}
           />
         ))}
-        {renderMap(mapPhotos)}
       </Root>
     </>
   );

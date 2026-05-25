@@ -1,12 +1,14 @@
 import React from "react";
 import styled from "@emotion/styled";
-import { BsArrowsFullscreen } from "react-icons/bs";
+import { useTranslation } from "react-i18next";
+import { BsArrowsFullscreen, BsGeoAlt } from "react-icons/bs";
 
 import Summary from "./Summary";
 import Charts from "./Charts";
 import Table from "./Table";
 import TableModal from "./TableModal";
 import SummaryModal from "./SummaryModal";
+import MapModal from "./MapModal";
 
 import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic, StatsCategory } from "../../../lib/stats";
@@ -70,6 +72,39 @@ const ExpandIcon = styled.span`
   display: inline-flex;
   align-items: center;
 `;
+const LocationBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px 6px;
+  background: var(--tile-background);
+  border: 1px solid var(--inactive-color);
+  border-radius: 6px;
+  margin: 4px 0;
+`;
+const LocationCount = styled.div`
+  text-align: center;
+  font-size: 0.9em;
+  color: var(--primary-color);
+`;
+const LocationButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: center;
+  border: 1px solid var(--inactive-color);
+  background: var(--primary-background);
+  color: var(--primary-color);
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 0.85em;
+  cursor: pointer;
+  &:hover {
+    border-color: var(--primary-color);
+  }
+`;
 
 interface Props {
   topic: StatsTopic;
@@ -90,15 +125,18 @@ const Category = ({
   lang,
   countryData,
 }: Props): React.ReactElement => {
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = React.useState(false);
-  // Two flavours of modal:
+  // Three flavours of modal:
   // - Chart + table categories use TableModal (full distribution).
   // - The summary category uses SummaryModal (period / peaks / variety
   //   / most-used overview).
+  // - The location category uses MapModal (the full-size map).
   // Either way the category title is the click affordance.
   const hasTable = !!category.table;
   const hasSummaryExtras = !!category.summaryExtras;
-  const hasExpandableContent = hasTable || hasSummaryExtras;
+  const isLocation = category.kind === "location";
+  const hasExpandableContent = hasTable || hasSummaryExtras || isLocation;
   const openModal = hasExpandableContent
     ? () => setModalOpen(true)
     : undefined;
@@ -116,17 +154,34 @@ const Category = ({
           </ExpandIcon>
         )}
       </Title>
-      <Summary category={category} />
-      <Charts category={category} />
-      <Table
-        topic={topic}
-        category={category}
-        filters={filters}
-        setFilters={setFilters}
-        theme={theme}
-        limit={INLINE_TABLE_LIMIT}
-        onExpand={openModal}
-      />
+      {isLocation ? (
+        <LocationBody>
+          <LocationCount>
+            {t("stats-location-geotagged", {
+              count: category.geotaggedCount ?? 0,
+              total: category.totalCount ?? 0,
+            })}
+          </LocationCount>
+          <LocationButton type="button" onClick={openModal}>
+            <BsGeoAlt aria-hidden="true" />
+            {t("stats-location-see-on-map")}
+          </LocationButton>
+        </LocationBody>
+      ) : (
+        <>
+          <Summary category={category} />
+          <Charts category={category} />
+          <Table
+            topic={topic}
+            category={category}
+            filters={filters}
+            setFilters={setFilters}
+            theme={theme}
+            limit={INLINE_TABLE_LIMIT}
+            onExpand={openModal}
+          />
+        </>
+      )}
       {modalOpen && hasTable && (
         <TableModal
           topic={topic}
@@ -142,6 +197,13 @@ const Category = ({
           category={category}
           lang={lang}
           countryData={countryData}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+      {modalOpen && isLocation && (
+        <MapModal
+          title={category.title}
+          photos={category.photos ?? []}
           onClose={() => setModalOpen(false)}
         />
       )}

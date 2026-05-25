@@ -852,9 +852,7 @@ describe("collectTopics", () => {
   const mockTheme = {
     get: () => "#000",
   };
-  test("Empty", () => {
-    const topics = stats.collectTopics(
-      {
+  const baseData = (): any => ({
         count: {
           byAuthor: {
             "Author One": 2,
@@ -1171,7 +1169,11 @@ describe("collectTopics", () => {
           },
           total: 2,
         },
-      },
+      });
+
+  test("Empty", () => {
+    const topics = stats.collectTopics(
+      baseData(),
       "en",
       mockT,
       mockCountryData,
@@ -1247,6 +1249,43 @@ describe("collectTopics", () => {
     expect(topics[3].key).toBe("exposure");
     expect(topics[3].title).toBe("stats-topic-exposure");
     expect(topics[3].categories.length).toBe(9);
+  });
+
+  test("With map photos appends location category to general", () => {
+    const mapPhotos = [{}, {}, {}] as any[];
+    const topics = stats.collectTopics(
+      baseData(),
+      "en",
+      mockT,
+      mockCountryData,
+      mockTheme,
+      mapPhotos
+    );
+    expect(topics[0].key).toBe("general");
+    expect(topics[0].categories.length).toBe(4);
+    expect(topics[0].categories[3]).toMatchObject({
+      key: "location",
+      title: "stats-category-location",
+      kind: "location",
+      geotaggedCount: 3,
+      totalCount: 2,
+    });
+    expect((topics[0].categories[3] as any).photos).toBe(mapPhotos);
+  });
+
+  test("Empty mapPhotos array does not emit location category", () => {
+    const topics = stats.collectTopics(
+      baseData(),
+      "en",
+      mockT,
+      mockCountryData,
+      mockTheme,
+      []
+    );
+    expect(topics[0].categories.length).toBe(3);
+    expect(
+      topics[0].categories.find((c) => c.key === "location")
+    ).toBeUndefined();
   });
 });
 
