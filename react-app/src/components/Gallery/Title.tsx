@@ -7,6 +7,7 @@ import { BsFillHouseFill, BsChevronRight, BsMap } from "react-icons/bs";
 import Link from "./Link";
 import MapModal from "../MapModal";
 
+import { useLastGalleryPathStore } from "../../stores";
 import type { Gallery } from "../../models/GalleryModel";
 import type { Photo } from "../../models/PhotoModel";
 
@@ -170,6 +171,20 @@ const Title = ({
 
   const { t } = useTranslation();
 
+  // Remember the most recent Gallery URL per gallery id, so flipping to
+  // Statistics and back returns to the same year/month/day (or photo)
+  // instead of the gallery root.
+  const rememberGalleryPath = useLastGalleryPathStore((s) => s.set);
+  const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
+  React.useEffect(() => {
+    if (context === "gallery") {
+      const path = photo
+        ? photo.path(gallery)
+        : gallery.path(year, month, day);
+      rememberGalleryPath(gallery.id(), path);
+    }
+  }, [context, gallery, year, month, day, photo, rememberGalleryPath]);
+
   // Map scope: month if URL identifies a month (or a photo within one),
   // year if only year, none for gallery-list level. Empty array hides
   // the button (also when the per-gallery hideMap flag is set).
@@ -264,6 +279,15 @@ const Title = ({
     const switchTo = (target: string) => {
       if (target === context) return;
       window.history.pushState({}, "");
+      // Stats → Gallery: prefer the remembered last-gallery URL for this
+      // gallery so the user lands back on the year/month/day they left
+      // from. Falls through to `getRedirectPath` if nothing's been
+      // remembered yet (first visit, or store reset).
+      if (target === "gallery") {
+        const remembered = lookupGalleryPath(gallery.id());
+        setRedirect(remembered ?? getRedirectPath(gallery, target));
+        return;
+      }
       setRedirect(getRedirectPath(gallery, target));
     };
     return (
