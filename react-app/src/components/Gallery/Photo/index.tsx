@@ -17,6 +17,7 @@ import Content from "./Content";
 import MetadataPanel from "./MetadataPanel";
 
 import useKeyPress from "../../../lib/keypress";
+import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
 
 import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo as PhotoT } from "../../../models/PhotoModel";
@@ -178,13 +179,7 @@ const Photo = ({
   );
 
   // Freeze the Month underneath while the modal is open.
-  React.useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, []);
+  useBodyScrollLock();
 
   const { t } = useTranslation();
 

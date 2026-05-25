@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import Charts from "./Charts";
 import Table from "./Table";
 
+import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
 import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic, StatsCategory, SortMode } from "../../../lib/stats";
 
@@ -123,6 +124,8 @@ const TableModal = ({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  useBodyScrollLock();
 
   const onBackdropClick = (event: React.MouseEvent) => {
     if (event.target === event.currentTarget) onClose();

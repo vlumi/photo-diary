@@ -3,6 +3,7 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
 import format from "../../../lib/format";
+import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
 import type {
   PeakShape,
   StatsCategory,
@@ -160,6 +161,8 @@ const SummaryModal = ({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  useBodyScrollLock();
 
   const extras = category.summaryExtras;
   if (!extras) return null;
