@@ -4,6 +4,8 @@ node_modules/
 build/
 coverage/
 .DS_Store
+.vscode/
+.playwright-mcp/
 
 # Local dev instance bootstrapped by `./bin/instance.ts dev --base .`
 dev/
