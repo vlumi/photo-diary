@@ -6,6 +6,7 @@ import {
   BsCaretLeftFill,
   BsCaretRightFill,
   BsSkipForwardFill,
+  BsArrowUp,
 } from "react-icons/bs";
 
 import SharedRoot from "../Navigation";
@@ -122,6 +123,16 @@ const Navigation = ({
   return (
     <Root>
       <Group>
+        <NavLink
+          gallery={gallery}
+          year={year}
+          month={month}
+          $visibility=""
+          aria-label={String(t("nav-up"))}
+          title={String(t("nav-up"))}
+        >
+          <BsArrowUp />
+        </NavLink>
         <NavLink
           gallery={gallery}
           photo={firstPhoto}
