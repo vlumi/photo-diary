@@ -186,7 +186,7 @@ const Title = ({
   }, [context, gallery, year, month, day, photo, rememberGalleryPath]);
 
   // Map scope: month if URL identifies a month (or a photo within one),
-  // year if only year, none for gallery-list level. Empty array hides
+  // year if only year, whole gallery on Statistics. Empty array hides
   // the button (also when the per-gallery hideMap flag is set).
   const mapPhotos = React.useMemo(() => {
     if (gallery.hideMap()) {
@@ -206,8 +206,11 @@ const Title = ({
         .filter(Boolean)
         .filter((p) => p.hasCoordinates());
     }
+    if (context === "stats") {
+      return gallery.photos().filter((p) => p.hasCoordinates());
+    }
     return [];
-  }, [gallery, year, month]);
+  }, [gallery, year, month, context]);
 
   React.useEffect(() => {
     if (redirect) {
@@ -383,7 +386,7 @@ const Title = ({
         <MapModal
           title={String(t("stats-category-location"))}
           photos={mapPhotos}
-          drawLine
+          drawLine={context !== "stats"}
           onClose={() => setMapOpen(false)}
         />
       )}
