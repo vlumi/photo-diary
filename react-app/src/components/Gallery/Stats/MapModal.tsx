@@ -9,6 +9,8 @@ import type { Photo } from "../../../models/PhotoModel";
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.55);
   z-index: 2000;
   display: flex;

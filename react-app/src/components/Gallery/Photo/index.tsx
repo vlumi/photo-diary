@@ -45,6 +45,10 @@ interface Props {
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
+  /* 100vw / 100dvh so the scrim covers the reserved scrollbar gutter
+     (scrollbar-gutter: stable on html) — inset: 0 alone leaves a ~15px
+     uncovered strip on the right while body overflow is locked. */
+  width: 100vw;
   height: 100dvh;
   box-sizing: border-box;
   z-index: 1000;

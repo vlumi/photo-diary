@@ -11,6 +11,7 @@
 - Gallery Title bar carries a clickable breadcrumb path (`🏠 › Gallery › 2024 › March › #1234`); the Navigation bar below reorganises into left/right control groups. (closes #275)
 - Stats inline map collapses into a Location card in the General topic that opens the full map in a modal on demand; the inline 800px-tall map is gone, Leaflet stays lazy-loaded until the modal is opened, and the page reserves the scrollbar gutter so the modal lock no longer reflows underlying content. (part of #278)
 - Stats `TableModal` and `SummaryModal` now lock body scroll while open so the underlying stats grid no longer drifts behind the modal — matches the Photo modal and the new MapModal from #278.
+- Modal backdrops (Photo / Stats Table / Stats Summary / Stats Map) extend across the reserved scrollbar gutter so the dark scrim covers the full viewport — `inset: 0` alone left a ~15px light strip on the right once `scrollbar-gutter: stable` reserved that area.
 - Stats category tables cap at 10 rows inline (top 10 by count) with the full distribution one click away in a floating modal — click the title or the trailing "+ N more…" row to open it.
 - Stats inline tables always sort by count desc so every category reads as a "top N"; the natural order is still available in the expanded modal.
 - Stats expanded-table modal gains a `Top` / `By value` sort toggle on every data category, defaulting to `Top` to match the inline view.
