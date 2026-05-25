@@ -92,10 +92,41 @@ const UnavailableOption = styled.option`
   font-style: italic;
   color: var(--inactive-color);
 `;
-const ContextSelect = styled(TitleSelect)`
-  text-align-last: right;
-`;
 const TitleOption = styled.option``;
+// Two-pill segmented control for Gallery / Statistics. Both labels are
+// always visible so the alternate view is a one-click affordance rather
+// than a dropdown affordance. Active pill takes the header-background
+// colour; inactive sits in `inactive-color` and brightens to
+// `primary-color` on hover. Mirrors the SortToggle in `Stats/TableModal`
+// so segmented controls feel uniform across the app.
+const ContextGroup = styled.div`
+  flex: 0 0 auto;
+  display: inline-flex;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  overflow: hidden;
+`;
+const ContextButton = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: ${({ $active }) =>
+    $active ? "var(--header-background)" : "transparent"};
+  color: ${({ $active }) =>
+    $active ? "var(--header-color)" : "var(--inactive-color)"};
+  border: none;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: bold;
+  cursor: ${({ $active }) => ($active ? "default" : "pointer")};
+  & + & {
+    border-left: 1px solid var(--inactive-color);
+  }
+  &:hover {
+    color: ${({ $active }) =>
+      $active ? "var(--header-color)" : "var(--primary-color)"};
+  }
+`;
 const MapButton = styled.button`
   flex: 0 0 auto;
   display: inline-flex;
@@ -230,21 +261,31 @@ const Title = ({
   };
 
   const renderContext = () => {
-    const changeHandler = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      const targetContext = event.target.value;
-      if (targetContext && context !== targetContext) {
-        window.history.pushState({}, "");
-        setRedirect(getRedirectPath(gallery, targetContext));
-      }
+    const switchTo = (target: string) => {
+      if (target === context) return;
+      window.history.pushState({}, "");
+      setRedirect(getRedirectPath(gallery, target));
     };
     return (
-      <ContextSelect value={context} onChange={changeHandler}>
-        {["gallery", "stats"].map((context) => (
-          <TitleOption key={context} value={context}>
-            {t(`nav-${context}`)}
-          </TitleOption>
-        ))}
-      </ContextSelect>
+      <ContextGroup
+        role="group"
+        aria-label={String(t("nav-context-group"))}
+      >
+        {["gallery", "stats"].map((c) => {
+          const active = c === context;
+          return (
+            <ContextButton
+              key={c}
+              type="button"
+              $active={active}
+              aria-pressed={active}
+              onClick={() => switchTo(c)}
+            >
+              {t(`nav-${c}`)}
+            </ContextButton>
+          );
+        })}
+      </ContextGroup>
     );
   };
 
