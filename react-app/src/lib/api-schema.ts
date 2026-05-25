@@ -167,7 +167,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Log in, issuing a new token */
+        /** Log in, issuing access + refresh tokens */
         post: {
             parameters: {
                 query?: never;
@@ -191,13 +191,14 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            token: string;
+                            accessToken: string;
+                            refreshToken: string;
                         };
                     };
                 };
             };
         };
-        /** Log out (revoke all tokens for the requester) */
+        /** Log out (revoke this session) */
         delete: {
             parameters: {
                 query?: never;
@@ -205,7 +206,13 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        refreshToken?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -221,6 +228,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tokens/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rotate refresh token, issue a new access token */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        refreshToken: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            accessToken: string;
+                            refreshToken: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tokens/{userId}": {
         parameters: {
             query?: never;
@@ -231,7 +283,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Revoke all tokens for another user (admin) */
+        /** Revoke all sessions for another user (admin) */
         delete: {
             parameters: {
                 query?: never;
@@ -421,7 +473,8 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            token: string;
+                            accessToken: string;
+                            refreshToken: string;
                         };
                     };
                 };

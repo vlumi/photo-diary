@@ -73,22 +73,21 @@ const ChangePassword = ({ onSuccess }: Props): React.ReactElement => {
     }
     setSubmitting(true);
     try {
-      const { token: newToken } = await usersService.changePassword(
+      const { accessToken, refreshToken } = await usersService.changePassword(
         current,
         next
       );
-      // Swap in the new JWT so subsequent requests stay authenticated under
-      // the rotated secret. localStorage's `user` blob holds the token too,
-      // so refresh it from the same `UserModel` round-trip the login path
-      // uses — but we don't have the new user payload from the server, so
-      // re-wrap the existing user with the new raw token. The id / isAdmin
-      // bits don't change on a password rotation.
-      token.setToken(newToken);
+      // Swap in the new pair so subsequent requests stay authenticated
+      // under the rotated secret (and the new session row). All other
+      // sessions for this user were revoked server-side as part of the
+      // change — this device gets a fresh pair to stay signed in.
+      token.setTokens(accessToken, refreshToken);
       const stored = window.localStorage.getItem("user");
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          parsed.token = newToken;
+          parsed.token = accessToken;
+          parsed.refreshToken = refreshToken;
           window.localStorage.setItem("user", JSON.stringify(parsed));
         } catch {
           // Corrupt localStorage — nothing we can do here; the next

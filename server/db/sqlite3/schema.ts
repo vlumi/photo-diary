@@ -10,6 +10,13 @@ export interface UserRow {
   password: string;
   secret: string;
 }
+export interface SessionRow {
+  id: string;
+  user_id: string;
+  refresh_token_hash: string;
+  created_at: number;
+  last_used_at: number;
+}
 export interface UserGalleryRow {
   user_id: string;
   gallery_id: string;
@@ -184,6 +191,33 @@ export default () => {
         buildSelectQuery(SCHEMA.user, conditions),
       buildDeleteQuery: (conditions?: Conditions) =>
         buildDeleteQuery(SCHEMA.user, conditions),
+    },
+    session: {
+      mapRow: (row: SessionRow): SessionRow => ({
+        id: toString(row.id),
+        user_id: toString(row.user_id),
+        refresh_token_hash: toString(row.refresh_token_hash),
+        created_at: Number(row.created_at),
+        last_used_at: Number(row.last_used_at),
+      }),
+      mapInsert: (s: SessionRow): unknown[] => [
+        s.id,
+        s.user_id,
+        s.refresh_token_hash,
+        s.created_at,
+        s.last_used_at,
+      ],
+
+      buildCreateQuery: () => buildCreateQuery(SCHEMA.session),
+      buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.session),
+      buildUpdateByIdQuery: (data: Partial<SessionRow>) =>
+        buildUpdateByIdQuery(SCHEMA.session, data),
+      buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.session),
+
+      buildSelectQuery: (conditions?: Conditions) =>
+        buildSelectQuery(SCHEMA.session, conditions),
+      buildDeleteQuery: (conditions?: Conditions) =>
+        buildDeleteQuery(SCHEMA.session, conditions),
     },
     userGallery: {
       mapRow: (row: UserGalleryRow): UserGalleryAccess => [
@@ -386,6 +420,14 @@ const userMapToRow = (user: Partial<User>): Record<string, unknown> => {
   if ("secret" in user) result.secret = user.secret;
   return result;
 };
+const sessionMapToRow = (
+  s: Partial<SessionRow>
+): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  if ("refresh_token_hash" in s) result.refresh_token_hash = s.refresh_token_hash;
+  if ("last_used_at" in s) result.last_used_at = s.last_used_at;
+  return result;
+};
 const userGalleryMapToRow = (
   userGallery: Partial<UserGalleryRow>
 ): Record<string, unknown> => {
@@ -485,6 +527,19 @@ const SCHEMA = {
     primaryKey: ["id"],
     order: ["id ASC"],
     mapToRow: userMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
+  },
+  session: {
+    table: "session",
+    columns: [
+      "id",
+      "user_id",
+      "refresh_token_hash",
+      "created_at",
+      "last_used_at",
+    ],
+    primaryKey: ["id"],
+    order: ["last_used_at DESC"],
+    mapToRow: sessionMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
   userGallery: {
     table: "user_gallery",

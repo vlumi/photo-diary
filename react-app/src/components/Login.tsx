@@ -73,20 +73,17 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
   const login = async (userId: string, password: string) => {
     try {
       const data = await tokenService.login(userId, password);
-      const rawToken = data.token;
-      // We trust the just-issued token (the server signed it; we got it
-      // back from the response body). `decodeJwt` parses the claims
-      // without verifying the signature — verification happens server-
-      // side on every subsequent request via `verifyToken`. Using jose's
-      // decoder instead of the hand-rolled base64-then-JSON dance keeps
-      // the JWT handling consistent with the rest of the codebase.
-      const userData = jose.decodeJwt(rawToken) as unknown as {
+      // We trust the just-issued access token (the server signed it; we
+      // got it back from the response body). `decodeJwt` parses the
+      // claims without verifying the signature — verification happens
+      // server-side on every subsequent request via `verifyToken`.
+      const userData = jose.decodeJwt(data.accessToken) as unknown as {
         id: string;
         isAdmin?: boolean;
       };
-      const user = UserModel(userData, rawToken);
+      const user = UserModel(userData, data.accessToken, data.refreshToken);
 
-      token.setToken(rawToken);
+      token.setTokens(data.accessToken, data.refreshToken);
       window.localStorage.setItem("user", user.toJson());
       setUser(user);
       // Drop any access-derived data we cached under the previous (guest or
@@ -103,7 +100,7 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
       // attach an inline confirmation to.
       notify("success", t("login-success", { userId: user.id() }));
     } catch (err) {
-      token.clearToken();
+      token.clearTokens();
       // Only the `user` key is auth state — the `lang` preference and
       // anything else live alongside but aren't tied to login, so the
       // previous `localStorage.clear()` here was a privacy/UX overreach.

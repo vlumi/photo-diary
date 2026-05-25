@@ -14,6 +14,7 @@ import schemaFactory, {
   type MetaRow,
   type PhotoInput,
   type PhotoRow,
+  type SessionRow,
   type User,
   type UserGalleryRow,
   type UserRow,
@@ -34,6 +35,12 @@ export default () => {
     loadUser,
     updateUser,
     deleteUser,
+
+    createSession,
+    loadSession,
+    updateSession,
+    deleteSession,
+    deleteUserSessions,
 
     resolveAccessLevel,
     loadUserGalleryRows,
@@ -117,6 +124,35 @@ const updateUser = async (userId: string, user: Partial<User>) => {
   db.prepare(query).run([...values, userId]);
 };
 const deleteUser = async (userId: string) => deleteById(SCHEMA.user, userId);
+
+const createSession = async (session: SessionRow): Promise<void> => {
+  db.prepare(SCHEMA.session.buildCreateQuery()).run(
+    SCHEMA.session.mapInsert(session)
+  );
+};
+const loadSession = async (
+  sessionId: string
+): Promise<SessionRow | undefined> => {
+  const row = db
+    .prepare(SCHEMA.session.buildSelectByIdQuery())
+    .get(sessionId) as SessionRow | undefined;
+  return row ? SCHEMA.session.mapRow(row) : undefined;
+};
+const updateSession = async (
+  sessionId: string,
+  patch: Partial<SessionRow>
+): Promise<void> => {
+  const { query, values } = SCHEMA.session.buildUpdateByIdQuery(patch);
+  if (!query || !values) return;
+  db.prepare(query).run([...values, sessionId]);
+};
+const deleteSession = async (sessionId: string): Promise<void> =>
+  deleteById(SCHEMA.session, sessionId);
+// Used by the admin all-sessions revoke and the cascade from
+// `bin/user.ts passwd` / secret rotation paths that want a clean slate.
+const deleteUserSessions = async (userId: string): Promise<void> => {
+  db.prepare("DELETE FROM session WHERE user_id = ?").run(userId);
+};
 
 // Resolve the access level for (userId, galleryId) under the user-first
 // cascade: user's rows are consulted in gallery-specificity order first, then

@@ -31,6 +31,65 @@ const client = createClient<paths>({
   fetch: (input) => globalThis.fetch(input),
 });
 
+// Refresh tokens rotate on every use, so two parallel refresh calls
+// with the same token would race and the loser would be revoked.
+// Coalesce concurrent 401s into one in-flight refresh attempt.
+let refreshInFlight: Promise<string | undefined> | undefined;
+const refreshOnce = async (): Promise<string | undefined> => {
+  if (refreshInFlight) return refreshInFlight;
+  const current = token.getRefreshToken();
+  if (!current) return undefined;
+  refreshInFlight = (async () => {
+    try {
+      const response = await globalThis.fetch(
+        `${window.location.origin}/api/v1/tokens/refresh`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken: current }),
+        }
+      );
+      if (!response.ok) return undefined;
+      const data = (await response.json()) as {
+        accessToken: string;
+        refreshToken: string;
+      };
+      token.setTokens(data.accessToken, data.refreshToken);
+      // Mirror the new pair into the stored user blob so a reload picks
+      // it up too. The user record's other fields stay as they were.
+      const stored = window.localStorage.getItem("user");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          parsed.token = data.accessToken;
+          parsed.refreshToken = data.refreshToken;
+          window.localStorage.setItem("user", JSON.stringify(parsed));
+        } catch {
+          // Corrupt localStorage — ignore; in-memory tokens are
+          // already updated above.
+        }
+      }
+      return data.accessToken;
+    } catch {
+      return undefined;
+    } finally {
+      refreshInFlight = undefined;
+    }
+  })();
+  return refreshInFlight;
+};
+
+const expireLocalAuth = () => {
+  token.clearTokens();
+  window.localStorage.removeItem("user");
+  useUserStore.getState().setUser(undefined);
+  // Close any other modal that might be open (e.g. change-password mid-
+  // submit) so the login modal doesn't stack on top of it — two
+  // backdrops at once reads as broken.
+  useChangePasswordModalStore.getState().close();
+  useLoginModalStore.getState().open(i18n.t("session-expired"));
+};
+
 client.use({
   onRequest({ request }) {
     const config = token.createConfig();
@@ -40,25 +99,32 @@ client.use({
     });
     return request;
   },
-  // Global mid-session 401 handler. If a request that *had* an
-  // Authorization header (i.e. the user had a session) comes back 401,
-  // assume the token is expired or invalidated, clear local auth state,
-  // and open the login modal with a context message explaining why. The
-  // message goes through the modal store (not the toast strip) because
-  // the modal backdrop visually hides toasts. Requests without an
-  // Authorization header (login attempts, guest browsing) are ignored
-  // here — Login's `catch` handles those inline.
-  onResponse({ request, response }) {
+  // Mid-session 401 handler with refresh fallback. If a request that
+  // *had* an Authorization header comes back 401 and we have a refresh
+  // token in hand, try to refresh once and retry the original request
+  // with the new access token. On refresh failure, fall through to the
+  // pre-existing "clear state + open login modal" flow.
+  // Requests without an Authorization header (login attempts, guest
+  // browsing) are ignored — Login's `catch` handles those inline.
+  async onResponse({ request, response }) {
     if (response.status !== 401) return;
     if (!request.headers.get("authorization")) return;
-    token.clearToken();
-    window.localStorage.removeItem("user");
-    useUserStore.getState().setUser(undefined);
-    // Close any other modal that might be open (e.g. change-password mid-
-    // submit) so the login modal doesn't stack on top of it — two
-    // backdrops at once reads as broken.
-    useChangePasswordModalStore.getState().close();
-    useLoginModalStore.getState().open(i18n.t("session-expired"));
+    // The refresh endpoint itself doesn't get a refresh attempt — that
+    // would loop. Falling through to the login modal is the right
+    // behaviour when refresh itself fails.
+    if (request.url.endsWith("/api/v1/tokens/refresh")) {
+      expireLocalAuth();
+      return;
+    }
+    const newAccess = await refreshOnce();
+    if (!newAccess) {
+      expireLocalAuth();
+      return;
+    }
+    // Retry the original request with the freshly-minted access token.
+    const retry = new Request(request);
+    retry.headers.set("Authorization", `bearer ${newAccess}`);
+    return await globalThis.fetch(retry);
   },
 });
 

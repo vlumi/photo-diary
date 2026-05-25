@@ -210,20 +210,22 @@ describe("PUT /users/self/password", () => {
     );
   });
 
-  test("Successful change returns a fresh token that verifies", async () => {
+  test("Successful change returns a fresh token pair that verifies", async () => {
     const token = await loginUser(api, "admin");
     const result = await changePassword(token, {
       currentPassword: "foobar",
       newPassword: "fresh-secret-123",
     });
-    expect(result.body.token).toBeDefined();
-    expect(typeof result.body.token).toBe("string");
-    // The new token should verify on the next request — secret cache was
-    // rotated in-process so the freshly-minted JWT signs against the right
-    // secret.
+    expect(result.body.accessToken).toBeDefined();
+    expect(typeof result.body.accessToken).toBe("string");
+    expect(result.body.refreshToken).toBeDefined();
+    expect(typeof result.body.refreshToken).toBe("string");
+    // The new access token should verify on the next request — the secret
+    // cache was rotated in-process so the freshly-minted JWT signs against
+    // the right secret.
     await api
       .get("/api/v1/tokens")
-      .set("Authorization", `Bearer ${result.body.token}`)
+      .set("Authorization", `Bearer ${result.body.accessToken}`)
       .expect(200);
   });
 

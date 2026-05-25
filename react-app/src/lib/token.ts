@@ -1,22 +1,31 @@
-let token: string | undefined = undefined;
+// In-memory bearer cache. The User store's localStorage row is the
+// durable copy; this module is read on every API request (via
+// `createConfig`) and updated on login / refresh / logout. Storing
+// both halves of the pair so the refresh-on-401 middleware can mint
+// new access tokens without a re-login.
+let accessToken: string | undefined = undefined;
+let refreshToken: string | undefined = undefined;
 
-const setToken = (newToken?: string): void => {
-  if (newToken) {
-    token = `bearer ${newToken}`;
-  } else {
-    clearToken();
-  }
+const setTokens = (access?: string, refresh?: string): void => {
+  accessToken = access;
+  refreshToken = refresh;
 };
-const clearToken = (): void => {
-  token = undefined;
+const clearTokens = (): void => {
+  accessToken = undefined;
+  refreshToken = undefined;
 };
+const getAccessToken = (): string | undefined => accessToken;
+const getRefreshToken = (): string | undefined => refreshToken;
 
 const createConfig = (): { headers?: { Authorization: string } } => {
-  const config: { headers?: { Authorization: string } } = {};
-  if (token) {
-    config.headers = { Authorization: token };
-  }
-  return config;
+  if (!accessToken) return {};
+  return { headers: { Authorization: `bearer ${accessToken}` } };
 };
 
-export default { setToken, clearToken, createConfig };
+export default {
+  setTokens,
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  createConfig,
+};

@@ -1,7 +1,7 @@
 import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
-import { LoginError, RateLimitError } from "../lib/errors.js";
+import { InvalidTokenError, LoginError, RateLimitError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/token.js";
@@ -20,7 +20,21 @@ const LoginBody = Type.Object({
   id: Type.Optional(Type.String()),
   password: Type.Optional(Type.String()),
 });
-const LoginResponse = Type.Object({ token: Type.String() });
+// Login + refresh both return the same shape: a short-lived JWT for
+// API calls + an opaque refresh token (sessionId.secret) for the
+// rotation endpoint.
+const TokenPairResponse = Type.Object({
+  accessToken: Type.String(),
+  refreshToken: Type.String(),
+});
+const RefreshBody = Type.Object({
+  refreshToken: Type.String(),
+});
+const LogoutBody = Type.Object({
+  // Optional so an already-invalid refresh token (e.g. expired and
+  // already cleared client-side) still hits the idempotent revoke path.
+  refreshToken: Type.Optional(Type.String()),
+});
 
 const UserIdParam = Type.Object({ userId: Type.String() });
 
@@ -59,6 +73,16 @@ export const _resetLoginRateLimitForTests = () => {
 
 const TAGS = ["tokens"];
 
+// Resolve isAdmin via the access cascade. Used at login + refresh so the
+// freshly-signed access token reflects current authorization state (e.g.
+// admin grant removed mid-session takes effect on the next refresh).
+const resolveIsAdmin = async (userId: string): Promise<boolean> => {
+  return authorizer
+    .authorizeAdmin(userId)
+    .then(() => true)
+    .catch(() => false);
+};
+
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
    * Verify and keep-alive token.
@@ -72,16 +96,18 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 
   /**
-   * Login, creating a new token.
+   * Login. Issues an access token (short-lived JWT) and a refresh token
+   * (long-lived opaque). The refresh token is tracked server-side in the
+   * session table — `DELETE /tokens` revokes it.
    */
   fastify.post(
     "/",
     {
       schema: {
         tags: TAGS,
-        summary: "Log in, issuing a new token",
+        summary: "Log in, issuing access + refresh tokens",
         body: LoginBody,
-        response: { 200: LoginResponse },
+        response: { 200: TokenPairResponse },
       },
     },
     async (request, reply) => {
@@ -108,49 +134,80 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         recordLoginFailure(request.ip);
         throw error;
       }
-      const token = await authorizer
-        .authorizeAdmin(credentials.id)
-        .then(() => model.createToken(credentials.id as string, true))
-        .catch(() => model.createToken(credentials.id as string, false));
+      const isAdmin = await resolveIsAdmin(credentials.id);
+      const pair = await model.createSession(credentials.id, isAdmin);
       logger.debug(`User "${credentials.id}" logged in successfully.`);
-      reply.status(200).send({ token });
+      reply.status(200).send(pair);
     }
   );
 
   /**
-   * Logout, revoking the requesting user's tokens.
+   * Refresh. Validates the refresh token (sliding window of
+   * `SESSION_LENGTH_MS`), rotates it, returns a new pair. The old refresh
+   * token immediately stops working — a stolen-but-already-used token
+   * fails on the next call from the legitimate client too, flagging the
+   * breach via a forced re-login.
+   */
+  fastify.post(
+    "/refresh",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Rotate refresh token, issue a new access token",
+        body: RefreshBody,
+        response: { 200: TokenPairResponse },
+      },
+    },
+    async (request, reply) => {
+      if (!request.body?.refreshToken) throw new InvalidTokenError();
+      const { userId, refreshToken } = await model.verifyAndRotateRefresh(
+        request.body.refreshToken
+      );
+      const isAdmin = await resolveIsAdmin(userId);
+      const accessToken = await model.signAccessToken(userId, isAdmin);
+      reply.status(200).send({ accessToken, refreshToken });
+    }
+  );
+
+  /**
+   * Logout: revoke this device's session by deleting its row. Idempotent
+   * on a missing / malformed refresh token so client-side log-out flows
+   * never fail.
    */
   fastify.delete(
     "/",
     {
       schema: {
         tags: TAGS,
-        summary: "Log out (revoke all tokens for the requester)",
+        summary: "Log out (revoke this session)",
+        body: LogoutBody,
         security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {
-      await model.revokeToken(request.user.id);
+      if (request.body?.refreshToken) {
+        await model.revokeSession(request.body.refreshToken);
+      }
       reply.status(204).send();
     }
   );
 
   /**
-   * Logout (admin), revoking all tokens for another user.
+   * Logout (admin): revoke all sessions for another user.
    */
   fastify.delete(
     "/:userId",
     {
       schema: {
         tags: TAGS,
-        summary: "Revoke all tokens for another user (admin)",
+        summary: "Revoke all sessions for another user (admin)",
         params: UserIdParam,
         security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      await model.revokeToken(request.params.userId);
+      await model.revokeAllSessions(request.params.userId);
       reply.status(204).send();
     }
   );

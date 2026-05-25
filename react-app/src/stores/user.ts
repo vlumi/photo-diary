@@ -16,7 +16,7 @@ const rehydrate = (): User | undefined => {
   try {
     const user = UserModel(JSON.parse(stored));
     if (user) {
-      token.setToken(user.token());
+      token.setTokens(user.token(), user.refreshToken());
       return user;
     }
   } catch {

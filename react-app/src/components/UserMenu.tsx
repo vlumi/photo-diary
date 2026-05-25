@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
 import token from "../lib/token";
+import tokenService from "../services/tokens";
 import {
   useUserStore,
   useLoginModalStore,
@@ -112,11 +113,19 @@ const UserMenu = (): React.ReactElement => {
 
   const handleLogout = () => {
     setIsOpen(false);
+    // Server-side revoke first so the session row is gone before we
+    // throw away the refresh token. Fire-and-forget — local state is
+    // cleared regardless of whether the network call succeeds, so a
+    // user offline / mid-rotation can still log out locally.
+    const refreshToken = token.getRefreshToken();
+    if (refreshToken) {
+      tokenService.logout(refreshToken).catch(() => {});
+    }
     // Order matters: clear the bearer before `setUser` so the React
     // re-render's queries don't fire with the just-revoked token.
     // localStorage is narrowed to the `user` key so the `lang`
     // preference survives.
-    token.clearToken();
+    token.clearTokens();
     window.localStorage.removeItem("user");
     setUser(undefined);
     // Drop access-derived caches so the re-render fetches the guest

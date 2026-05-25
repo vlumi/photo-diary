@@ -172,6 +172,14 @@ await yargs(hideBin(process.argv))
         const updates: { password: string; secret?: string } = { password: hash };
         if (!argv["keep-secret"]) updates.secret = randomUUID();
         await db.updateUser(existing.id, updates);
+        if (!argv["keep-secret"]) {
+          // The secret-rotation hammer also has to clear the refresh-token
+          // sessions: refresh tokens aren't signed against the user's secret,
+          // so without this cascade a session could mint a new (now-valid)
+          // access token under the new secret. Same intent as the previous
+          // "all sessions invalidated" message — now it actually is.
+          await db.deleteUserSessions(existing.id);
+        }
         console.log(
           argv["keep-secret"]
             ? `✓ Updated password for "${argv.id}"; existing sessions preserved.`
