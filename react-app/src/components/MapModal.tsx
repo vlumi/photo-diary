@@ -73,11 +73,16 @@ const MapModal = ({
   const { t } = useTranslation();
 
   React.useEffect(() => {
+    // Capture phase + stopImmediatePropagation so the underlying view's
+    // Esc handler (Month/Year navigating one level up) doesn't also fire.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        e.stopImmediatePropagation();
+        onClose();
+      }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [onClose]);
 
   useBodyScrollLock();
