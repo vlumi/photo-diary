@@ -161,6 +161,14 @@ const SummaryModal = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  React.useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
   const extras = category.summaryExtras;
   if (!extras) return null;
 
