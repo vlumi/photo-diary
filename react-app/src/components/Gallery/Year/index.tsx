@@ -7,7 +7,6 @@ import Swipeable from "../../Swipeable";
 
 import Navigation from "./Navigation";
 import Content from "./Content";
-import Footer from "./Footer";
 
 import useKeyPress from "../../../lib/keypress";
 
@@ -106,7 +105,6 @@ const Year = ({
           {children}
         </Content>
       </Swipeable>
-      <Footer gallery={gallery} year={year} />
     </>
   );
 };
