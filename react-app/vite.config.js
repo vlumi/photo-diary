@@ -27,6 +27,13 @@ export default defineConfig({
   },
   build: {
     outDir: "build",
+    // Default warning trips at 500 kB; the index chunk now sits at ~505
+    // kB minified (158 kB gzip) because of unavoidable core deps
+    // (react-dom + react-router + i18next + tanstack-query). Bigger,
+    // optional deps (framer-motion, Leaflet, chart.js) are already in
+    // their own lazy chunks. Bump the threshold so the warning isn't
+    // noise on every build.
+    chunkSizeWarningLimit: 600,
   },
   test: {
     globals: true,
