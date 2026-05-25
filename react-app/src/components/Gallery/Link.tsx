@@ -16,6 +16,7 @@ interface Props {
   state?: Record<string, unknown>;
   "aria-label"?: string;
   title?: string;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 }
 
 const Link = ({
@@ -30,8 +31,9 @@ const Link = ({
   state,
   "aria-label": ariaLabel,
   title,
+  onClick,
 }: Props): React.ReactElement => {
-  const passthrough = { "aria-label": ariaLabel, title };
+  const passthrough = { "aria-label": ariaLabel, title, onClick };
   if (gallery && context === "stats") {
     return (
       <ReactLink

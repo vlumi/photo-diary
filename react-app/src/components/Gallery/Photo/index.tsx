@@ -115,15 +115,30 @@ const Body = styled.div`
   display: flex;
   flex-direction: column;
 `;
-// Same as Body but draggable on the x axis via framer-motion — used
-// while zoom == 1. `touch-action: pan-y` leaves vertical scroll to
-// the browser; horizontal gestures are intercepted by the drag.
-const DragBody = styled(motion.div)`
+// Used while zoom == 1: a 3-slide carousel (prev / current / next)
+// dragged horizontally so the user sees the neighbour peeking from
+// the edge as they swipe. The Frame above clips overflow so slides
+// extending past the Frame are hidden until peeked into view.
+// touch-action: none — the carousel captures both axes (horizontal
+// for nav, vertical for swipe-down-to-close).
+const CarouselViewport = styled.div`
   flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
+  position: relative;
+`;
+const Track = styled(motion.div)`
+  display: flex;
+  flex-direction: row;
+  width: 300%;
+  height: 100%;
+  touch-action: none;
+`;
+const Slide = styled.div`
+  flex: 0 0 33.3333%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  touch-action: pan-y;
 `;
 
 // Zoom state lives here so Swipeable is bypassed while zoomed
@@ -139,6 +154,10 @@ export interface ZoomState {
   y: number;
 }
 const ZOOM_RESET: ZoomState = { scale: 1, x: 0, y: 0 };
+// Adjacent (peeking) slides render a Content too so the user sees the
+// real prev/next photo while dragging. They never zoom — pass a stable
+// no-op setZoom so React's prop-equality reuses memo'd children.
+const noopSetZoom: React.Dispatch<React.SetStateAction<ZoomState>> = () => {};
 
 // iOS Safari only supports the Fullscreen API on <video>.
 const fullscreenSupported = (): boolean =>
@@ -200,20 +219,51 @@ const Photo = ({
   );
   useKeyPress("0", () => setZoom(ZOOM_RESET));
 
+  // 3-slide carousel: track rests at -1/3 so the middle slide
+  // (current photo) is centred in the viewport. Sliding right exposes
+  // slot 0 (prev); sliding left exposes slot 2 (next).
+  const prevPhoto = !gallery.isFirstPhoto(photo)
+    ? gallery.previousPhoto(year, month, day, photo)
+    : undefined;
+  const nextPhoto = !gallery.isLastPhoto(photo)
+    ? gallery.nextPhoto(year, month, day, photo)
+    : undefined;
+  const TRACK_REST = "-33.3333%";
+  const TRACK_PREV = "0%";
+  const TRACK_NEXT = "-66.6667%";
+  const trackControls = useAnimationControls();
+  // useLayoutEffect: snap the track back to centre synchronously after
+  // the photo prop changes, so the new current slide is at viewport
+  // x=0 before the browser paints the new frame. A regular useEffect
+  // would let one frame paint with the track at its post-animation
+  // offset (showing the new "prev" or "next" slide where the user
+  // expects the new current) — the flash the user reported.
+  React.useLayoutEffect(() => {
+    trackControls.set({ x: TRACK_REST, y: 0 });
+  }, [photo.id(), trackControls]);
+
+  const SWIPE_COMMIT_RATIO = 0.3;
+  const SWIPE_COMMIT_VELOCITY = 500;
+  const VERTICAL_CLOSE_RATIO = 0.2;
+  const SPRING = { type: "spring", stiffness: 400, damping: 40 } as const;
+  const SLIDE = { duration: 0.18, ease: "easeOut" } as const;
+
+  const animateToPrev = React.useCallback(async () => {
+    if (!prevPhoto) return;
+    await trackControls.start({ x: TRACK_PREV, transition: SLIDE });
+    navigate(prevPhoto.path(gallery));
+  }, [prevPhoto, gallery, navigate, trackControls]);
+
+  const animateToNext = React.useCallback(async () => {
+    if (!nextPhoto) return;
+    await trackControls.start({ x: TRACK_NEXT, transition: SLIDE });
+    navigate(nextPhoto.path(gallery));
+  }, [nextPhoto, gallery, navigate, trackControls]);
+
   const handlMoveToFirst = () => {
     const first = gallery.firstPhoto();
     if (!gallery.isFirstPhoto(photo) && first) {
       navigate(first.path(gallery));
-    }
-  };
-  const handlMoveToPrevious = () => {
-    if (!gallery.isFirstPhoto(photo)) {
-      navigate(gallery.previousPhoto(year, month, day, photo).path(gallery));
-    }
-  };
-  const handlMoveToNext = () => {
-    if (!gallery.isLastPhoto(photo)) {
-      navigate(gallery.nextPhoto(year, month, day, photo).path(gallery));
     }
   };
   const handlMoveToLast = () => {
@@ -226,6 +276,14 @@ const Photo = ({
   const handleClose = React.useCallback(() => {
     navigate(gallery.path(year, month));
   }, [gallery, year, month, navigate]);
+
+  const animateClose = React.useCallback(async () => {
+    await trackControls.start({
+      y: window.innerHeight,
+      transition: SLIDE,
+    });
+    handleClose();
+  }, [trackControls, handleClose]);
 
   // Both Photo and the mounted Month register Escape listeners on
   // window. Capture phase + stopImmediatePropagation so Photo's
@@ -243,53 +301,39 @@ const Photo = ({
   }, [handleClose]);
 
   useKeyPress("Home", handlMoveToFirst);
-  useKeyPress("ArrowLeft", handlMoveToPrevious);
-  useKeyPress("ArrowRight", handlMoveToNext);
+  useKeyPress("ArrowLeft", animateToPrev);
+  useKeyPress("ArrowRight", animateToNext);
   useKeyPress("End", handlMoveToLast);
 
-  // Touch-tracking horizontal swipe with framer-motion. Photo moves
-  // with the finger via dragElastic-driven rubber-band; on release
-  // commit if the offset crossed ~30% of the viewport width OR the
-  // flick velocity is high enough, otherwise spring back to centre.
-  // x resets to 0 on every photo change so the new photo lands centred.
-  const dragControls = useAnimationControls();
-  React.useEffect(() => {
-    dragControls.set({ x: 0 });
-  }, [photo.id(), dragControls]);
-  const COMMIT_OFFSET_RATIO = 0.3;
-  const COMMIT_VELOCITY = 500;
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
     const width = window.innerWidth || 1;
-    const passedDistance = Math.abs(info.offset.x) >= width * COMMIT_OFFSET_RATIO;
-    const passedVelocity = Math.abs(info.velocity.x) >= COMMIT_VELOCITY;
-    if (!passedDistance && !passedVelocity) {
-      dragControls.start({ x: 0, transition: { type: "spring", stiffness: 400, damping: 40 } });
+    const height = window.innerHeight || 1;
+    const verticalIntent = Math.abs(info.offset.y) > Math.abs(info.offset.x);
+    if (verticalIntent) {
+      const closeByDistance = info.offset.y > height * VERTICAL_CLOSE_RATIO;
+      const closeByVelocity = info.velocity.y > SWIPE_COMMIT_VELOCITY;
+      if (closeByDistance || closeByVelocity) {
+        animateClose();
+        return;
+      }
+      trackControls.start({ y: 0, transition: SPRING });
       return;
     }
+    const passedDistance = Math.abs(info.offset.x) >= width * SWIPE_COMMIT_RATIO;
+    const passedVelocity = Math.abs(info.velocity.x) >= SWIPE_COMMIT_VELOCITY;
     const goingPrev = info.offset.x > 0;
-    const atBoundary = goingPrev
-      ? gallery.isFirstPhoto(photo)
-      : gallery.isLastPhoto(photo);
-    if (atBoundary) {
-      dragControls.start({ x: 0, transition: { type: "spring", stiffness: 400, damping: 40 } });
+    if ((passedDistance || passedVelocity) && goingPrev && prevPhoto) {
+      animateToPrev();
       return;
     }
-    dragControls
-      .start({
-        x: goingPrev ? width : -width,
-        transition: { duration: 0.18, ease: "easeOut" },
-      })
-      .then(() => {
-        dragControls.set({ x: 0 });
-        if (goingPrev) {
-          handlMoveToPrevious();
-        } else {
-          handlMoveToNext();
-        }
-      });
+    if ((passedDistance || passedVelocity) && !goingPrev && nextPhoto) {
+      animateToNext();
+      return;
+    }
+    trackControls.start({ x: TRACK_REST, y: 0, transition: SPRING });
   };
 
   const handleBackdropClick = (event: React.MouseEvent) => {
@@ -313,6 +357,8 @@ const Photo = ({
           day={day}
           photo={photo}
           lang={lang}
+          onPrev={animateToPrev}
+          onNext={animateToNext}
         />
         <CloseButton
           type="button"
@@ -342,24 +388,61 @@ const Photo = ({
           <BsInfoCircleFill />
         </InfoButton>
         {zoom.scale === 1 ? (
-          <DragBody
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.5}
-            dragMomentum={false}
-            animate={dragControls}
-            onDragEnd={handleDragEnd}
-          >
-            <Content
-              gallery={gallery}
-              year={year}
-              month={month}
-              day={day}
-              photo={photo}
-              zoom={zoom}
-              setZoom={setZoom}
-            />
-          </DragBody>
+          <CarouselViewport>
+            <Track
+              drag
+              dragDirectionLock
+              dragConstraints={{
+                left: nextPhoto ? -window.innerWidth : 0,
+                right: prevPhoto ? window.innerWidth : 0,
+                top: 0,
+                bottom: window.innerHeight,
+              }}
+              dragElastic={0.3}
+              dragMomentum={false}
+              animate={trackControls}
+              initial={{ x: TRACK_REST, y: 0 }}
+              onDragEnd={handleDragEnd}
+            >
+              <Slide>
+                {prevPhoto && (
+                  <Content
+                    gallery={gallery}
+                    year={prevPhoto.ymd()[0]}
+                    month={prevPhoto.ymd()[1]}
+                    day={prevPhoto.ymd()[2]}
+                    photo={prevPhoto}
+                    zoom={ZOOM_RESET}
+                    setZoom={noopSetZoom}
+                  />
+                )}
+              </Slide>
+              <Slide>
+                <Content
+                  gallery={gallery}
+                  year={year}
+                  month={month}
+                  day={day}
+                  photo={photo}
+                  zoom={zoom}
+                  setZoom={setZoom}
+                />
+              </Slide>
+              <Slide>
+                {nextPhoto && (
+                  <Content
+                    gallery={gallery}
+                    year={nextPhoto.ymd()[0]}
+                    month={nextPhoto.ymd()[1]}
+                    day={nextPhoto.ymd()[2]}
+                    photo={nextPhoto}
+                    zoom={ZOOM_RESET}
+                    setZoom={noopSetZoom}
+                  />
+                )}
+              </Slide>
+            </Track>
+          </CarouselViewport>
         ) : (
           <Body>
             <Content
