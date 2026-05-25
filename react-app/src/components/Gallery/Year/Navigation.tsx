@@ -9,7 +9,7 @@ import {
   BsArrowUp,
 } from "react-icons/bs";
 
-import Root from "../Navigation";
+import Root, { UpButton } from "../Navigation";
 import Link from "../Link";
 import FormatDate from "../../FormatDate";
 
@@ -56,14 +56,13 @@ const Navigation = ({ gallery, year }: Props): React.ReactElement => {
   const lastYear = gallery.lastYear();
   return (
     <Root>
+      <UpButton
+        aria-label={String(t("nav-up"))}
+        title={String(t("nav-up"))}
+      >
+        <BsArrowUp />
+      </UpButton>
       <Group>
-        <NavLink
-          $visibility=""
-          aria-label={String(t("nav-up"))}
-          title={String(t("nav-up"))}
-        >
-          <BsArrowUp />
-        </NavLink>
         <NavLink
           gallery={gallery}
           year={firstYear}

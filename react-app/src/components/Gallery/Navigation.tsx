@@ -1,6 +1,8 @@
 import React from "react";
 import styled from "@emotion/styled";
 
+import Link from "./Link";
+
 // Shared sibling-navigation bar for Photo / Month / Year (path
 // breadcrumb lives in the Title bar above).
 const Root = styled.nav`
@@ -25,6 +27,32 @@ const Root = styled.nav`
   }
   & :visited {
     color: var(--header-color);
+  }
+`;
+
+// Up affordance for one-tap scope climbing on Month and Year. Sits as a
+// shaded pill at the left edge of the row — absolutely positioned so it
+// doesn't widen the leftmost prev/skip group and the prev/next clusters
+// stay symmetrical around the centre. Matches the Photo modal's
+// `FloatingButton` look (semi-transparent dark fill + white icon) so
+// "pop a level out" affordances feel uniform across the app.
+export const UpButton = styled(Link)`
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  text-decoration: none;
+  &:hover {
+    background: rgba(255, 255, 255, 0.28);
   }
 `;
 
