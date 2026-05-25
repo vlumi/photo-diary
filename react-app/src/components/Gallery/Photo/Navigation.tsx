@@ -80,6 +80,12 @@ interface Props {
   day: number;
   photo: Photo;
   lang: string;
+  // Optional: intercept the prev/next click and run the carousel slide
+  // animation instead of letting the Link navigate directly. First /
+  // Last buttons skip animation by design (jumping multiple photos
+  // would be jarring).
+  onPrev?: () => void;
+  onNext?: () => void;
 }
 
 const Navigation = ({
@@ -89,6 +95,8 @@ const Navigation = ({
   day,
   photo,
   lang,
+  onPrev,
+  onNext,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const totalPhotos = gallery.photos().length;
@@ -133,6 +141,14 @@ const Navigation = ({
           gallery={gallery}
           photo={previousPhoto}
           $visibility={prevVisibility}
+          onClick={
+            onPrev
+              ? (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  onPrev();
+                }
+              : undefined
+          }
         >
           <BsCaretLeftFill />
         </NavLink>
@@ -148,6 +164,14 @@ const Navigation = ({
           gallery={gallery}
           photo={nextPhoto}
           $visibility={nextVisibility}
+          onClick={
+            onNext
+              ? (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  onNext();
+                }
+              : undefined
+          }
         >
           <BsCaretRightFill />
         </NavLink>

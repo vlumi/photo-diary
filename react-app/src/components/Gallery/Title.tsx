@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill, BsChevronRight, BsMap } from "react-icons/bs";
@@ -166,7 +166,7 @@ const Title = ({
   photo,
   lang,
 }: Props): React.ReactElement => {
-  const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
+  const navigate = useNavigate();
   const [mapOpen, setMapOpen] = React.useState(false);
 
   const { t } = useTranslation();
@@ -212,19 +212,6 @@ const Title = ({
     return [];
   }, [gallery, year, month, context]);
 
-  React.useEffect(() => {
-    if (redirect) {
-      const handle = setTimeout(() => setRedirect(""), 0);
-      return () => {
-        setRedirect("");
-        clearTimeout(handle);
-      };
-    }
-  }, [redirect]);
-  if (redirect) {
-    return <Navigate to={redirect} replace />;
-  }
-
   const getRedirectPath = (gallery: Gallery, context: string): string => {
     switch (context) {
       default:
@@ -241,8 +228,7 @@ const Title = ({
         (gallery) => gallery.id() === event.target.value
       );
       if (targetGallery && gallery.id() !== targetGallery.id()) {
-        window.history.pushState({}, "");
-        setRedirect(getRedirectPath(targetGallery, context));
+        navigate(getRedirectPath(targetGallery, context));
       }
     };
 
@@ -281,17 +267,16 @@ const Title = ({
   const renderContext = () => {
     const switchTo = (target: string) => {
       if (target === context) return;
-      window.history.pushState({}, "");
       // Stats → Gallery: prefer the remembered last-gallery URL for this
       // gallery so the user lands back on the year/month/day they left
       // from. Falls through to `getRedirectPath` if nothing's been
       // remembered yet (first visit, or store reset).
       if (target === "gallery") {
         const remembered = lookupGalleryPath(gallery.id());
-        setRedirect(remembered ?? getRedirectPath(gallery, target));
+        navigate(remembered ?? getRedirectPath(gallery, target));
         return;
       }
-      setRedirect(getRedirectPath(gallery, target));
+      navigate(getRedirectPath(gallery, target));
     };
     return (
       <ContextGroup

@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { SwipeEventData } from "react-swipeable";
 
@@ -40,38 +40,33 @@ const Month = ({
   countryData,
   modalActive,
 }: Props): React.ReactElement => {
-  const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
+  const navigate = useNavigate();
 
   const { t } = useTranslation();
 
   const handlMoveToFirst = () => {
     if (!gallery.isFirstMonth(year, month)) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.firstMonth()));
+      navigate(gallery.path(...gallery.firstMonth()));
     }
   };
   const handlMoveToPrevious = () => {
     if (!gallery.isFirstMonth(year, month)) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.previousMonth(year, month)));
+      navigate(gallery.path(...gallery.previousMonth(year, month)));
     }
   };
   const handlMoveToNext = () => {
     if (!gallery.isLastMonth(year, month)) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.nextMonth(year, month)));
+      navigate(gallery.path(...gallery.nextMonth(year, month)));
     }
   };
   const handlMoveToLast = () => {
     if (!gallery.isLastMonth(year, month)) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.path(...gallery.lastMonth()));
+      navigate(gallery.path(...gallery.lastMonth()));
     }
   };
 
   useKeyPress("Escape", () => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.path(year));
+    navigate(gallery.path(year));
   });
   useKeyPress("Home", handlMoveToFirst);
   useKeyPress("ArrowLeft", handlMoveToPrevious);
@@ -89,19 +84,6 @@ const Month = ({
         break;
     }
   };
-
-  React.useEffect(() => {
-    if (redirect) {
-      const handle = setTimeout(() => setRedirect(""), 0);
-      return () => {
-        setRedirect("");
-        clearTimeout(handle);
-      };
-    }
-  }, [redirect]);
-  if (redirect) {
-    return <Navigate to={redirect} replace />;
-  }
 
   return (
     <>

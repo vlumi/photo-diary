@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 import {
@@ -8,9 +8,7 @@ import {
   BsInfoCircleFill,
   BsXLg,
 } from "react-icons/bs";
-import type { SwipeEventData } from "react-swipeable";
-
-import Swipeable from "../../Swipeable";
+import { motion, useAnimationControls, type PanInfo } from "framer-motion";
 
 import Navigation from "./Navigation";
 import Content from "./Content";
@@ -108,19 +106,37 @@ const InfoButton = styled(FloatingButton)`
   bottom: 16px;
   right: 16px;
 `;
-// Flex column that gives Content a stable parent size. Without
-// this Content's flex-grow has no flex parent — Swipeable's plain
-// div breaks the chain — and Content's ResizeObserver feeds back
-// into itself and shrinks the photo to nothing.
+// Flex column that gives Content a stable parent size. Without this
+// Content's flex-grow has no flex parent and the ResizeObserver feeds
+// back into itself, shrinking the photo to nothing.
 const Body = styled.div`
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
 `;
-const SwipeBody = styled(Swipeable)`
+// Used while zoom == 1: a 3-slide carousel (prev / current / next)
+// dragged horizontally so the user sees the neighbour peeking from
+// the edge as they swipe. The Frame above clips overflow so slides
+// extending past the Frame are hidden until peeked into view.
+// touch-action: none — the carousel captures both axes (horizontal
+// for nav, vertical for swipe-down-to-close).
+const CarouselViewport = styled.div`
   flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
+  position: relative;
+`;
+const Track = styled(motion.div)`
+  display: flex;
+  flex-direction: row;
+  width: 300%;
+  height: 100%;
+  touch-action: none;
+`;
+const Slide = styled.div`
+  flex: 0 0 33.3333%;
+  height: 100%;
   display: flex;
   flex-direction: column;
 `;
@@ -138,6 +154,10 @@ export interface ZoomState {
   y: number;
 }
 const ZOOM_RESET: ZoomState = { scale: 1, x: 0, y: 0 };
+// Adjacent (peeking) slides render a Content too so the user sees the
+// real prev/next photo while dragging. They never zoom — pass a stable
+// no-op setZoom so React's prop-equality reuses memo'd children.
+const noopSetZoom: React.Dispatch<React.SetStateAction<ZoomState>> = () => {};
 
 // iOS Safari only supports the Fullscreen API on <video>.
 const fullscreenSupported = (): boolean =>
@@ -160,7 +180,7 @@ const Photo = ({
   lang,
   countryData,
 }: Props): React.ReactElement => {
-  const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
+  const navigate = useNavigate();
   const [zoom, setZoom] = React.useState<ZoomState>(ZOOM_RESET);
   const [isFullscreen, setIsFullscreen] = React.useState(
     typeof document !== "undefined" && !!document.fullscreenElement
@@ -199,82 +219,142 @@ const Photo = ({
   );
   useKeyPress("0", () => setZoom(ZOOM_RESET));
 
+  // 3-slide carousel: track rests at -1/3 so the middle slide
+  // (current photo) is centred in the viewport. Sliding right exposes
+  // slot 0 (prev); sliding left exposes slot 2 (next).
+  const prevPhoto = !gallery.isFirstPhoto(photo)
+    ? gallery.previousPhoto(year, month, day, photo)
+    : undefined;
+  const nextPhoto = !gallery.isLastPhoto(photo)
+    ? gallery.nextPhoto(year, month, day, photo)
+    : undefined;
+  const TRACK_REST = "-33.3333%";
+  const TRACK_PREV = "0%";
+  const TRACK_NEXT = "-66.6667%";
+  const trackControls = useAnimationControls();
+  // useLayoutEffect: snap the track back to centre synchronously after
+  // the photo prop changes, so the new current slide is at viewport
+  // x=0 before the browser paints the new frame. A regular useEffect
+  // would let one frame paint with the track at its post-animation
+  // offset (showing the new "prev" or "next" slide where the user
+  // expects the new current) — the flash the user reported.
+  React.useLayoutEffect(() => {
+    trackControls.set({ x: TRACK_REST, y: 0 });
+  }, [photo.id(), trackControls]);
+
+  const SWIPE_COMMIT_RATIO = 0.3;
+  const SWIPE_COMMIT_VELOCITY = 500;
+  const VERTICAL_CLOSE_RATIO = 0.2;
+  const SPRING = { type: "spring", stiffness: 400, damping: 40 } as const;
+  const SLIDE = { duration: 0.18, ease: "easeOut" } as const;
+
+  const animateToPrev = React.useCallback(async () => {
+    if (!prevPhoto) return;
+    await trackControls.start({ x: TRACK_PREV, transition: SLIDE });
+    navigate(prevPhoto.path(gallery));
+  }, [prevPhoto, gallery, navigate, trackControls]);
+
+  const animateToNext = React.useCallback(async () => {
+    if (!nextPhoto) return;
+    await trackControls.start({ x: TRACK_NEXT, transition: SLIDE });
+    navigate(nextPhoto.path(gallery));
+  }, [nextPhoto, gallery, navigate, trackControls]);
+
   const handlMoveToFirst = () => {
     const first = gallery.firstPhoto();
     if (!gallery.isFirstPhoto(photo) && first) {
-      window.history.pushState({}, "");
-      setRedirect(first.path(gallery));
-    }
-  };
-  const handlMoveToPrevious = () => {
-    if (!gallery.isFirstPhoto(photo)) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.previousPhoto(year, month, day, photo).path(gallery));
-    }
-  };
-  const handlMoveToNext = () => {
-    if (!gallery.isLastPhoto(photo)) {
-      window.history.pushState({}, "");
-      setRedirect(gallery.nextPhoto(year, month, day, photo).path(gallery));
+      navigate(first.path(gallery));
     }
   };
   const handlMoveToLast = () => {
     const last = gallery.lastPhoto();
     if (!gallery.isLastPhoto(photo) && last) {
-      window.history.pushState({}, "");
-      setRedirect(last.path(gallery));
+      navigate(last.path(gallery));
     }
   };
 
   const handleClose = React.useCallback(() => {
-    window.history.pushState({}, "");
-    setRedirect(gallery.path(year, month));
-  }, [gallery, year, month]);
+    navigate(gallery.path(year, month));
+  }, [gallery, year, month, navigate]);
 
-  // Both Photo and the mounted Month register Escape listeners on
-  // window. Capture phase + stopImmediatePropagation so Photo's
-  // handler runs first and Month's is skipped while the modal is
-  // open — otherwise one Escape press skips two levels up.
+  const animateClose = React.useCallback(async () => {
+    await trackControls.start({
+      y: window.innerHeight,
+      transition: SLIDE,
+    });
+    handleClose();
+  }, [trackControls, handleClose]);
+
+  // Photo and the underlying Month both register window keydown
+  // listeners for Escape / Arrow / Home / End. Capture phase +
+  // `stopImmediatePropagation` so Photo's handlers run first and
+  // Month's bubble-phase ones are skipped while the modal is open —
+  // otherwise one Arrow press would navigate the photo AND the month
+  // (closing the modal), and Escape would skip two levels up.
   React.useEffect(() => {
-    const onEscape = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      handleClose();
+    const onKey = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "Escape":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          handleClose();
+          break;
+        case "Home":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          handlMoveToFirst();
+          break;
+        case "End":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          handlMoveToLast();
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          animateToPrev();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          animateToNext();
+          break;
+      }
     };
-    window.addEventListener("keydown", onEscape, true);
-    return () => window.removeEventListener("keydown", onEscape, true);
-  }, [handleClose]);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [handleClose, animateToPrev, animateToNext]);
 
-  useKeyPress("Home", handlMoveToFirst);
-  useKeyPress("ArrowLeft", handlMoveToPrevious);
-  useKeyPress("ArrowRight", handlMoveToNext);
-  useKeyPress("End", handlMoveToLast);
-  const handleSwipe = (event: SwipeEventData) => {
-    switch (event.dir) {
-      case "Left":
-        handlMoveToNext();
-        break;
-      case "Right":
-        handlMoveToPrevious();
-        break;
-      default:
-        break;
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    const width = window.innerWidth || 1;
+    const height = window.innerHeight || 1;
+    const verticalIntent = Math.abs(info.offset.y) > Math.abs(info.offset.x);
+    if (verticalIntent) {
+      const closeByDistance = info.offset.y > height * VERTICAL_CLOSE_RATIO;
+      const closeByVelocity = info.velocity.y > SWIPE_COMMIT_VELOCITY;
+      if (closeByDistance || closeByVelocity) {
+        animateClose();
+        return;
+      }
+      trackControls.start({ y: 0, transition: SPRING });
+      return;
     }
+    const passedDistance = Math.abs(info.offset.x) >= width * SWIPE_COMMIT_RATIO;
+    const passedVelocity = Math.abs(info.velocity.x) >= SWIPE_COMMIT_VELOCITY;
+    const goingPrev = info.offset.x > 0;
+    if ((passedDistance || passedVelocity) && goingPrev && prevPhoto) {
+      animateToPrev();
+      return;
+    }
+    if ((passedDistance || passedVelocity) && !goingPrev && nextPhoto) {
+      animateToNext();
+      return;
+    }
+    trackControls.start({ x: TRACK_REST, y: 0, transition: SPRING });
   };
-
-  React.useEffect(() => {
-    if (redirect) {
-      const handle = setTimeout(() => setRedirect(""), 0);
-      return () => {
-        setRedirect("");
-        clearTimeout(handle);
-      };
-    }
-  }, [redirect]);
-  if (redirect) {
-    return <Navigate to={redirect} replace />;
-  }
 
   const handleBackdropClick = (event: React.MouseEvent) => {
     if (event.target === event.currentTarget) handleClose();
@@ -297,6 +377,8 @@ const Photo = ({
           day={day}
           photo={photo}
           lang={lang}
+          onPrev={animateToPrev}
+          onNext={animateToNext}
         />
         <CloseButton
           type="button"
@@ -326,17 +408,61 @@ const Photo = ({
           <BsInfoCircleFill />
         </InfoButton>
         {zoom.scale === 1 ? (
-          <SwipeBody onSwiped={handleSwipe}>
-            <Content
-              gallery={gallery}
-              year={year}
-              month={month}
-              day={day}
-              photo={photo}
-              zoom={zoom}
-              setZoom={setZoom}
-            />
-          </SwipeBody>
+          <CarouselViewport>
+            <Track
+              drag
+              dragDirectionLock
+              dragConstraints={{
+                left: nextPhoto ? -window.innerWidth : 0,
+                right: prevPhoto ? window.innerWidth : 0,
+                top: 0,
+                bottom: window.innerHeight,
+              }}
+              dragElastic={0.3}
+              dragMomentum={false}
+              animate={trackControls}
+              initial={{ x: TRACK_REST, y: 0 }}
+              onDragEnd={handleDragEnd}
+            >
+              <Slide>
+                {prevPhoto && (
+                  <Content
+                    gallery={gallery}
+                    year={prevPhoto.ymd()[0]}
+                    month={prevPhoto.ymd()[1]}
+                    day={prevPhoto.ymd()[2]}
+                    photo={prevPhoto}
+                    zoom={ZOOM_RESET}
+                    setZoom={noopSetZoom}
+                  />
+                )}
+              </Slide>
+              <Slide>
+                <Content
+                  gallery={gallery}
+                  year={year}
+                  month={month}
+                  day={day}
+                  photo={photo}
+                  zoom={zoom}
+                  setZoom={setZoom}
+                />
+              </Slide>
+              <Slide>
+                {nextPhoto && (
+                  <Content
+                    gallery={gallery}
+                    year={nextPhoto.ymd()[0]}
+                    month={nextPhoto.ymd()[1]}
+                    day={nextPhoto.ymd()[2]}
+                    photo={nextPhoto}
+                    zoom={ZOOM_RESET}
+                    setZoom={noopSetZoom}
+                  />
+                )}
+              </Slide>
+            </Track>
+          </CarouselViewport>
         ) : (
           <Body>
             <Content
