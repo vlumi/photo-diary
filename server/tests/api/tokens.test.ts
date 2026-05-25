@@ -113,11 +113,11 @@ describe("Keep-alive", () => {
   });
 });
 
-describe('Refresh', () => {
-  test('rotates the refresh token + returns a fresh access token', async () => {
-    const pair = await loginUserPair(api, 'admin');
+describe("Refresh", () => {
+  test("rotates the refresh token + returns a fresh access token", async () => {
+    const pair = await loginUserPair(api, "admin");
     const refreshed = await api
-      .post('/api/v1/tokens/refresh')
+      .post("/api/v1/tokens/refresh")
       .send({ refreshToken: pair.refreshToken })
       .expect(200);
     expect(refreshed.body.accessToken).toBeDefined();
@@ -125,84 +125,84 @@ describe('Refresh', () => {
     expect(refreshed.body.refreshToken).not.toBe(pair.refreshToken);
     // Re-using the consumed refresh token fails.
     await api
-      .post('/api/v1/tokens/refresh')
+      .post("/api/v1/tokens/refresh")
       .send({ refreshToken: pair.refreshToken })
       .expect(401);
   });
 
-  test('rejects a malformed refresh token', async () => {
+  test("rejects a malformed refresh token", async () => {
     await api
-      .post('/api/v1/tokens/refresh')
-      .send({ refreshToken: 'not-a-pair' })
+      .post("/api/v1/tokens/refresh")
+      .send({ refreshToken: "not-a-pair" })
       .expect(401);
   });
 
-  test('returns 400 when the refresh-token body field is missing', async () => {
+  test("returns 400 when the refresh-token body field is missing", async () => {
     // Body shape is enforced by the typebox schema before the handler runs,
     // so a missing field short-circuits as a 400 — never reaches the
     // controller's defensive 401 fallback.
-    await api.post('/api/v1/tokens/refresh').send({}).expect(400);
+    await api.post("/api/v1/tokens/refresh").send({}).expect(400);
   });
 });
 
-describe('Logout', () => {
-  test('revokes only the calling session — other sessions stay valid', async () => {
-    const sessionA = await loginUserPair(api, 'plainUser');
-    const sessionB = await loginUserPair(api, 'plainUser');
+describe("Logout", () => {
+  test("revokes only the calling session — other sessions stay valid", async () => {
+    const sessionA = await loginUserPair(api, "plainUser");
+    const sessionB = await loginUserPair(api, "plainUser");
     await api
-      .delete('/api/v1/tokens')
-      .set('Authorization', `Bearer ${sessionA.accessToken}`)
+      .delete("/api/v1/tokens")
+      .set("Authorization", `Bearer ${sessionA.accessToken}`)
       .send({ refreshToken: sessionA.refreshToken })
       .expect(204);
     await api
-      .post('/api/v1/tokens/refresh')
+      .post("/api/v1/tokens/refresh")
       .send({ refreshToken: sessionA.refreshToken })
       .expect(401);
     await api
-      .post('/api/v1/tokens/refresh')
+      .post("/api/v1/tokens/refresh")
       .send({ refreshToken: sessionB.refreshToken })
       .expect(200);
   });
 
-  test('is idempotent — second logout call still 204s', async () => {
-    const session = await loginUserPair(api, 'plainUser');
+  test("is idempotent — second logout call still 204s", async () => {
+    const session = await loginUserPair(api, "plainUser");
     await api
-      .delete('/api/v1/tokens')
-      .set('Authorization', `Bearer ${session.accessToken}`)
+      .delete("/api/v1/tokens")
+      .set("Authorization", `Bearer ${session.accessToken}`)
       .send({ refreshToken: session.refreshToken })
       .expect(204);
     await api
-      .delete('/api/v1/tokens')
-      .set('Authorization', `Bearer ${session.accessToken}`)
+      .delete("/api/v1/tokens")
+      .set("Authorization", `Bearer ${session.accessToken}`)
       .send({ refreshToken: session.refreshToken })
       .expect(204);
   });
 });
 
-describe('Admin revoke', () => {
-  test('admin can revoke all sessions for another user', async () => {
-    const adminToken = await loginUser(api, 'admin');
-    const targetA = await loginUserPair(api, 'plainUser');
-    const targetB = await loginUserPair(api, 'plainUser');
+describe("Admin revoke", () => {
+  test("admin can revoke all sessions for another user", async () => {
+    const adminToken = await loginUser(api, "admin");
+    const targetA = await loginUserPair(api, "plainUser");
+    const targetB = await loginUserPair(api, "plainUser");
     await api
-      .delete('/api/v1/tokens/plainUser')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .delete("/api/v1/tokens/plainUser")
+      .set("Authorization", `Bearer ${adminToken}`)
       .expect(204);
     await api
-      .post('/api/v1/tokens/refresh')
+      .post("/api/v1/tokens/refresh")
       .send({ refreshToken: targetA.refreshToken })
       .expect(401);
     await api
-      .post('/api/v1/tokens/refresh')
+      .post("/api/v1/tokens/refresh")
       .send({ refreshToken: targetB.refreshToken })
       .expect(401);
   });
 
-  test('non-admin gets 403 trying to revoke another user', async () => {
-    const otherToken = await loginUser(api, 'simpleUser');
+  test("non-admin gets 403 trying to revoke another user", async () => {
+    const otherToken = await loginUser(api, "simpleUser");
     await api
-      .delete('/api/v1/tokens/plainUser')
-      .set('Authorization', `Bearer ${otherToken}`)
+      .delete("/api/v1/tokens/plainUser")
+      .set("Authorization", `Bearer ${otherToken}`)
       .expect(403);
   });
 });
