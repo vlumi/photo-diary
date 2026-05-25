@@ -2,9 +2,10 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { BsFillHouseFill, BsChevronRight } from "react-icons/bs";
+import { BsFillHouseFill, BsChevronRight, BsMap } from "react-icons/bs";
 
 import Link from "./Link";
+import MapModal from "../MapModal";
 
 import type { Gallery } from "../../models/GalleryModel";
 import type { Photo } from "../../models/PhotoModel";
@@ -95,6 +96,22 @@ const ContextSelect = styled(TitleSelect)`
   text-align-last: right;
 `;
 const TitleOption = styled.option``;
+const MapButton = styled.button`
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0 4px;
+  margin: 0;
+  cursor: pointer;
+  color: var(--primary-color);
+  font: inherit;
+  line-height: 1;
+  &:hover {
+    color: var(--inactive-color);
+  }
+`;
 
 interface Props {
   galleries: Gallery[];
@@ -118,8 +135,33 @@ const Title = ({
   lang,
 }: Props): React.ReactElement => {
   const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
+  const [mapOpen, setMapOpen] = React.useState(false);
 
   const { t } = useTranslation();
+
+  // Map scope: month if URL identifies a month (or a photo within one),
+  // year if only year, none for gallery-list level. Empty array hides
+  // the button (also when the per-gallery hideMap flag is set).
+  const mapPhotos = React.useMemo(() => {
+    if (gallery.hideMap()) {
+      return [];
+    }
+    if (year !== undefined && month !== undefined) {
+      return gallery
+        .flatMapDays(year, month, (d) => gallery.photos(year, month, d))
+        .filter(Boolean)
+        .filter((p) => p.hasCoordinates());
+    }
+    if (year !== undefined) {
+      return gallery
+        .flatMapMonths(year, (m) =>
+          gallery.flatMapDays(year, m, (d) => gallery.photos(year, m, d))
+        )
+        .filter(Boolean)
+        .filter((p) => p.hasCoordinates());
+    }
+    return [];
+  }, [gallery, year, month]);
 
   React.useEffect(() => {
     if (redirect) {
@@ -262,7 +304,24 @@ const Title = ({
           </>
         )}
       </Path>
+      {mapPhotos.length > 0 && (
+        <MapButton
+          type="button"
+          onClick={() => setMapOpen(true)}
+          aria-label={String(t("stats-location-see-on-map"))}
+        >
+          <BsMap />
+        </MapButton>
+      )}
       {renderContext()}
+      {mapOpen && (
+        <MapModal
+          title={String(t("stats-category-location"))}
+          photos={mapPhotos}
+          drawLine
+          onClose={() => setMapOpen(false)}
+        />
+      )}
     </Root>
   );
 };
