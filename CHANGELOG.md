@@ -26,6 +26,7 @@
 - Stats summary KPIs (photos / average / years / months / days) move to a card-based grid — bordered tiles with icon, uppercase label, and prominent numeric value.
 - Stats topic title bar (vertical `General` / `Time` / `Gear` / `Exposure` labels) now extends to the full topic height on Firefox via CSS Grid (was clipped under flex).
 - Ship seven new built-in themes (`dark`, `amoled`, `forest`, `silver`, `showcase`, `teal`, `paper`) and convert `bw` from a monochrome-filter theme into a true high-contrast light theme; picked via `DEFAULT_THEME` in `.env` or the per-gallery `theme` column.
+- Title bar gains keyboard shortcuts: `m` toggles the map modal, `g` jumps to Gallery, `s` jumps to Stats — the `g` path honours the remembered last-gallery URL. Shortcuts skip when an input / select / textarea is focused so the gallery dropdown's native letter-search keeps working. (closes #327)
 
 ## [0.9.1] - 2026-05-23
 

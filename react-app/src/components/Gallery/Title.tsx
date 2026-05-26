@@ -7,6 +7,7 @@ import { BsFillHouseFill, BsChevronRight, BsMap } from "react-icons/bs";
 import Link from "./Link";
 import MapModal from "../MapModal";
 
+import useKeyPress from "../../lib/keypress";
 import { useLastGalleryPathStore } from "../../stores";
 import type { Gallery } from "../../models/GalleryModel";
 import type { Photo } from "../../models/PhotoModel";
@@ -264,20 +265,27 @@ const Title = ({
     return <GalleryCrumb>{gallery.title()}</GalleryCrumb>;
   };
 
+  const switchTo = (target: string) => {
+    if (target === context) return;
+    // Stats → Gallery: prefer the remembered last-gallery URL for this
+    // gallery so the user lands back on the year/month/day they left
+    // from. Falls through to `getRedirectPath` if nothing's been
+    // remembered yet (first visit, or store reset).
+    if (target === "gallery") {
+      const remembered = lookupGalleryPath(gallery.id());
+      navigate(remembered ?? getRedirectPath(gallery, target));
+      return;
+    }
+    navigate(getRedirectPath(gallery, target));
+  };
+
+  useKeyPress("m", () => {
+    if (mapPhotos.length > 0) setMapOpen((o) => !o);
+  });
+  useKeyPress("g", () => switchTo("gallery"));
+  useKeyPress("s", () => switchTo("stats"));
+
   const renderContext = () => {
-    const switchTo = (target: string) => {
-      if (target === context) return;
-      // Stats → Gallery: prefer the remembered last-gallery URL for this
-      // gallery so the user lands back on the year/month/day they left
-      // from. Falls through to `getRedirectPath` if nothing's been
-      // remembered yet (first visit, or store reset).
-      if (target === "gallery") {
-        const remembered = lookupGalleryPath(gallery.id());
-        navigate(remembered ?? getRedirectPath(gallery, target));
-        return;
-      }
-      navigate(getRedirectPath(gallery, target));
-    };
     return (
       <ContextGroup
         role="group"
@@ -285,6 +293,7 @@ const Title = ({
       >
         {["gallery", "stats"].map((c) => {
           const active = c === context;
+          const shortcut = c === "gallery" ? "g" : "s";
           return (
             <ContextButton
               key={c}
@@ -292,6 +301,7 @@ const Title = ({
               $active={active}
               aria-pressed={active}
               onClick={() => switchTo(c)}
+              title={`${t(`nav-${c}`)} (${shortcut})`}
             >
               {t(`nav-${c}`)}
             </ContextButton>
@@ -362,6 +372,7 @@ const Title = ({
           type="button"
           onClick={() => setMapOpen(true)}
           aria-label={String(t("stats-location-see-on-map"))}
+          title={`${t("stats-location-see-on-map")} (m)`}
         >
           <BsMap />
         </MapButton>
