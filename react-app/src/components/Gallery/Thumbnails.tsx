@@ -10,16 +10,21 @@ interface CountryData {
   getName(code: string, lang: string): string | undefined;
 }
 
-// `color-mix` because no theme variable is bright enough to read as
-// "highlighted" against arbitrary thumbnail backgrounds.
+// Each per-photo Root is a flex sibling in the Month's wrap-flex. When
+// a day is highlighted (`/g/.../year/month/day` URL), every Root for
+// that day's photos gets `--header-background` as its background —
+// the same dark band colour the Navigation row and the day chip use.
+// The 1 px margins inside each Root (around the photo mat and around
+// the chip) expose that dark backdrop on all four sides, so the day
+// group reads as a single dark-matted frame with the chip seamlessly
+// continuous with the surrounding margins — no asymmetric "dark top,
+// light side" effect.
 const Root = styled.div<{ $highlighted?: boolean }>`
   vertical-align: top;
   display: flex;
   flex-wrap: nowrap;
   ${({ $highlighted }) =>
-    $highlighted
-      ? "background: color-mix(in srgb, var(--primary-color) 18%, transparent);"
-      : ""}
+    $highlighted ? "background: var(--header-background);" : ""}
 `;
 
 interface Props {
@@ -50,6 +55,7 @@ const Thumbnails = ({
               photo={photo}
               lang={lang}
               countryData={countryData}
+              highlighted={highlighted}
             />
           </Root>
         );

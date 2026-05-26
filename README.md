@@ -408,7 +408,9 @@ Ideas without a milestone yet — too far out to schedule, kept here so they don
 
 ## Version History
 
-Major release themes — see [CHANGELOG.md](CHANGELOG.md) for per-version detail.
+Photo Diary is the third structural take on a long-running personal photo-gallery side project. The first ([pod.vlumi.net](https://web.archive.org/web/20131208222413/http://pod.vlumi.net/), 2004) was a calendar-grid view with one photo per day — initially Perl/CGI, later rewritten in Ruby/eruby (.rhtml) on Apache. The second ([github.com/vlumi/gallery](https://github.com/vlumi/gallery), 2012) stayed on the Ruby/eruby + Apache base, with SQLite for metadata, jQuery + Colorbox for the photo lightbox, Hammer.js for touch gestures, and a `bin/admin.rb` CLI for ingest (RMagick + exifr for thumbnailing and EXIF). It introduced multi-gallery support (one photo can belong to many galleries, virtual-host → gallery mapping), schema versioning, and per-gallery statistics — most of the conceptual surface Photo Diary still has.
+
+Major release themes follow — see [CHANGELOG.md](CHANGELOG.md) for per-version detail.
 
 ### 2020 — foundations
 

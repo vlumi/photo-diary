@@ -21,26 +21,46 @@ const Root = styled.div`
   flex-wrap: wrap;
   justify-content: flex-start;
 `;
+// Day chip: a flat rectangular badge that rides along inline with the
+// day's first photo (same wrap-flex as everything else, no per-day row
+// break). 212 px tall to match the Thumbnail Root height so the chip
+// and the photo's matte line up at both edges. The chip's dark
+// `--header-background` body against the photo matte is the
+// day-boundary signal — no light accent stripe (that read as an
+// unintended border against the chip's dark bg).
+//
+// `margin: 1px` matches the per-photo Thumbnail margin so the visible
+// gaps around the chip are the same width as gaps between photos; the
+// highlighted-day tint band reads continuously across the row.
 const DayTitle = styled.h3`
-  color: var(--header-color);
-  background: var(--header-background);
-  font-size: 18pt;
-  text-align: center;
+  width: 56px;
+  height: 212px;
   margin: 1px;
-  padding: 5px 3px;
-  border-style: solid;
-  border-width: 1px;
-  border-color: var(--header-background);
-  border-radius: 15px 0 0 15px;
-  height: 200px;
-  min-width: 25px;
+  box-sizing: border-box;
+  background: var(--header-background);
+  color: var(--header-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px;
+  font-weight: 700;
+  font-size: 26pt;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  border: none;
+  scroll-margin-top: 50px;
 `;
 const DaySubTitle = styled.span`
   display: block;
-  font-size: 8pt;
-  margin: 5px 0;
+  font-size: 10pt;
+  font-weight: 500;
+  line-height: 1;
   color: var(--header-sub-color);
   background: inherit;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 `;
 
 interface Props {

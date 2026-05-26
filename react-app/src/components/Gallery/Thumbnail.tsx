@@ -14,10 +14,13 @@ interface CountryData {
   getName(code: string, lang: string): string | undefined;
 }
 
-const Root = styled.div`
+const Root = styled.div<{ $highlighted?: boolean }>`
   height: 212px;
   margin: 1px;
-  background-color: var(--photo-frame-mat);
+  background-color: ${({ $highlighted }) =>
+    $highlighted
+      ? "color-mix(in srgb, var(--primary-color) 70%, var(--photo-frame-mat))"
+      : "var(--photo-frame-mat)"};
   text-align: left;
 `;
 const TN = styled.span`
@@ -44,6 +47,7 @@ interface Props {
   photo: Photo;
   lang: string;
   countryData: CountryData;
+  highlighted?: boolean;
 }
 
 const Thumbnail = ({
@@ -51,6 +55,7 @@ const Thumbnail = ({
   photo,
   lang,
   countryData,
+  highlighted,
 }: Props): React.ReactElement => {
   const url = `url("${config.PHOTO_ROOT_URL}thumbnail/${photo.id()}")`;
   const dimensions = photo.thumbnailDimensions();
@@ -71,7 +76,7 @@ const Thumbnail = ({
     );
   };
   return (
-    <Root>
+    <Root $highlighted={highlighted}>
       <Link gallery={gallery} photo={photo}>
         <TN style={style}></TN>
       </Link>
