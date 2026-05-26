@@ -164,6 +164,7 @@ const looksLikeInstanceDir = (dir: string): boolean => {
 
 const argv = yargs(hideBin(process.argv))
   .scriptName("instance.ts")
+  .locale("en")
   .command(
     "$0 [name]",
     "Bootstrap, doctor, or upgrade a Photo Diary instance directory",
@@ -256,7 +257,7 @@ if (inferredFromCwd) {
 // bootstrap and upgrade, and `./code/bin/instance.ts` for the rare doctor
 // re-run; a per-instance shortcut would be ambiguous about which code
 // version it points at.
-const OPERATOR_SCRIPTS = ["photo", "gallery", "user", "access"];
+const OPERATOR_SCRIPTS = ["photo", "gallery", "user", "access", "meta"];
 
 // ---- run -----------------------------------------------------------------
 

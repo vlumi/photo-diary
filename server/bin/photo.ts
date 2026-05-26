@@ -10,6 +10,7 @@ import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
 const argv = yargs(hideBin(process.argv))
+  .locale("en")
   .usage("Usage: $0 [options] [JSON-files]")
   .nargs("gallery", 1)
   .describe("gallery", "Set to gallery, repeat for multiple")

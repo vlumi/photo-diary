@@ -5,6 +5,9 @@
 ### Tooling
 
 - `bin/instance.ts` upgrade-mode output reorganises around the recommended path: a "Next — cycle pm2 …" heading with the command block, a single-line "Note:" caveat (down from four), a horizontal rule, then a "Rollback — ONLY if the steps above didn't work" block. New `--quiet` / `-q` flag suppresses informational output (errors and warnings still surface) for scripted re-runs; missing-key warnings now route to stderr where they belong. (closes #284)
+- New `bin/meta.ts` operator script (`list` / `get` / `set [--force]`) paralleling `bin/{user,gallery,photo,access}.ts` so the `meta` table can be read and written without `curl` against `/api/v1/meta` or raw SQL; unknown keys rejected by default, `schema_version` hard-blocked, per-instance `bin/meta.ts` symlink wired up via `bin/instance.ts`. (closes #269)
+- Drive-by fix in the sqlite3 driver's `metaMapToRow`, which produced empty SET clauses on `db.updateMeta` until the new `bin/meta.ts` exercised that path.
+- Pin yargs to `.locale("en")` across all operator scripts (`bin/instance.ts` + `server/bin/{meta,user,gallery,photo,access}.ts`) so a non-English shell locale (`LANG=ja_JP.UTF-8` etc.) no longer half-translates `--help` against fully-English status / error text.
 
 ## [0.10.0] - 2026-05-26
 
