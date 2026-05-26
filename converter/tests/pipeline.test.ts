@@ -161,16 +161,16 @@ test("re-importing the same SOOC replaces files in place and preserves opinion f
   assert.equal(row.taken.location.place, "Tokyo");
 });
 
-test("JSON-first stub: enrichment arrives before the SOOC, merges on intake", async () => {
-  // Operator runs `bin/photo.ts <coords.json>` before uploading the SOOC.
-  // The resulting row has originalFilename set (via id) but no EXIF-derived
-  // taken/camera fields. When the SOOC arrives, the converter should
-  // recognise the stub and merge onto it rather than creating a second row.
+test("JSON-first stub with matching timestamp merges on SOOC intake", async () => {
+  // Operator's enrichment JSON includes the capture timestamp (matches
+  // EXIF DateTimeOriginal of the fixture). The converter merges onto
+  // the existing stub instead of creating a second row.
   const stubId = "IMG_1234.jpg";
   await db.createPhoto({
     id: stubId,
     originalFilename: stubId,
     taken: {
+      instant: { timestamp: "2024-01-15 10:30:45" },
       location: {
         coordinates: { latitude: 35.6762, longitude: 139.6503, altitude: null },
         country: "JP",
@@ -183,20 +183,49 @@ test("JSON-first stub: enrichment arrives before the SOOC, merges on intake", as
   await setup("with-exif.jpg", "IMG_1234.jpg");
   await processFile("IMG_1234.jpg", rootDir);
 
-  // The stub's id is reused; no second row was created.
   const countAfter = Object.keys((await db.loadPhotos()) as Record<string, any>).length;
   assert.equal(
     countAfter,
     countBefore,
-    "JSON-first stub should merge with SOOC, not produce a duplicate"
+    "matching-timestamp stub should merge with SOOC, not produce a duplicate"
   );
   const row = (await db.loadPhoto(stubId)) as any;
   // Operator-set coords + country survive.
   assert.equal(row.taken.location.country, "JP");
   assert.equal(row.taken.location.coordinates.latitude, 35.6762);
-  // EXIF-derived fields now populated.
+  // EXIF-derived fields refreshed.
   assert.equal(row.camera.make, "TestMake");
   assert.equal(row.taken.instant.timestamp, "2024-01-15 10:30:45");
+});
+
+test("JSON-first stub WITHOUT timestamp does NOT merge (could be unrelated photos)", async () => {
+  // Same camera filename, no proof it's the same photo. The stub
+  // stays untouched; the SOOC imports as a new row with its own id.
+  // The operator can still find both via `bin/photo.ts search`.
+  const stubId = "IMG_1234.jpg";
+  await db.createPhoto({
+    id: stubId,
+    originalFilename: stubId,
+    taken: {
+      location: {
+        coordinates: { latitude: 35.6762, longitude: 139.6503, altitude: null },
+      },
+    },
+  } as any);
+
+  await setup("with-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  // Stub row still present, unchanged.
+  const stub = (await db.loadPhoto(stubId)) as any;
+  assert.equal(stub.id, stubId);
+  assert.equal(stub.taken.location.coordinates.latitude, 35.6762);
+  // A separate row was created for the SOOC with the new id format.
+  const sooc = await onlyFile(path.join(rootDir, "original"));
+  assert.match(sooc, ID_PATTERN);
+  assert.notEqual(sooc, stubId);
+  const soocRow = (await db.loadPhoto(sooc)) as any;
+  assert.equal(soocRow.originalFilename, "IMG_1234.jpg");
 });
 
 test("EXIF-less re-import is NOT deduplicated (mtime isn't strong enough)", async () => {

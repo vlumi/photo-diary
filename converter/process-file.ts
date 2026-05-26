@@ -31,53 +31,43 @@ export default async (
   const generated = await generateId(originalPath);
   const exifTimestamp = generated.exifTimestamp;
 
-  // Reuse-existing-row detection. Two cases:
+  // Reuse-existing-row detection: a row whose originalFilename AND
+  // taken.instant.timestamp both match the incoming SOOC's EXIF
+  // DateTimeOriginal. Covers two operator flows:
   //
-  //   1. Re-import — a row with the same originalFilename AND EXIF
-  //      DateTimeOriginal exists. Lightroom re-export of the same shot;
-  //      overwrite files in place.
-  //   2. JSON-first stub — a row with the same originalFilename but
-  //      empty `taken`. The operator ran `bin/photo.ts <coords.json>`
-  //      before the SOOC arrived; merge so coords + factual EXIF land
-  //      on a single row instead of two.
+  //   1. Lightroom re-export — operator edits an existing photo,
+  //      re-publishes, drops the new SOOC. Same shot, same EXIF;
+  //      overwrite display/thumbnail/original/sidecar in place,
+  //      refresh the row's EXIF-derived columns.
+  //   2. JSON-first stub — operator's enrichment JSON (with the
+  //      photo's capture timestamp) arrived before the SOOC; the
+  //      timestamp match links them on intake.
   //
-  // EXIF-derived fields on the row refresh below, but opinion fields
-  // (title, country, place, author, description) stay — `photoMapToRow`
-  // only writes keys present in the input, so unmentioned columns
-  // aren't touched. EXIF-less re-imports still create new rows
-  // (mtime isn't strong enough to be confident).
+  // Opinion columns (title, country, place, author, description)
+  // stay — `photoMapToRow` only writes keys present in the input
+  // properties, so unmentioned columns aren't touched.
+  //
+  // Without a timestamp match, we never merge: two same-named files
+  // could be unrelated photos (counter rollover, multi-camera setups),
+  // and matching on originalFilename alone would silently merge them.
+  // EXIF-less SOOCs and stubs without `taken.instant.timestamp`
+  // therefore always import as new rows.
   let id = generated.id;
   let isReimport = false;
-  const candidates = (await db.loadPhotosByOriginalFilename(
-    originalFilename
-  )) as Array<{ id: string; taken?: { instant?: { timestamp?: string } } }>;
-  let matched: { id: string } | undefined;
   if (exifTimestamp) {
-    matched = candidates.find(
+    const candidates = (await db.loadPhotosByOriginalFilename(
+      originalFilename
+    )) as Array<{ id: string; taken?: { instant?: { timestamp?: string } } }>;
+    const matched = candidates.find(
       (c) => c.taken?.instant?.timestamp === exifTimestamp
     );
-  }
-  if (!matched) {
-    // Stub: row's `taken` is empty (NULL in DB → "" through mapRow).
-    // "Invalid date" rows (EXIF-less imports the converter produced)
-    // stay distinct — we can't be confident they're the same photo.
-    const stubs = candidates.filter(
-      (c) => !c.taken?.instant?.timestamp
-    );
-    if (stubs.length === 1) {
-      matched = stubs[0];
+    if (matched) {
+      id = matched.id;
+      isReimport = true;
       logger.info(
-        `[${originalFilename}] Merging onto JSON-first row ${matched.id} (enrichment arrived before the SOOC); opinion fields preserved`
+        `[${originalFilename}] Reusing existing id ${id} (originalFilename + taken match); opinion fields preserved`
       );
     }
-  } else {
-    logger.info(
-      `[${originalFilename}] Re-importing onto existing id ${matched.id} (same originalFilename + EXIF DateTimeOriginal); opinion fields preserved`
-    );
-  }
-  if (matched) {
-    id = matched.id;
-    isReimport = true;
   }
 
   const newInboxPath = path.join(rootDir, DIR_INBOX, id);
