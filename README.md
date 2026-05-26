@@ -66,7 +66,13 @@ Quickstart for a single personal instance. For the full production layout (multi
    ./bin/access.ts level <user> :all admin
    ```
 
-5. **Set the instance `cdn`** — the public URL that serves `display/` and `thumbnail/` (typically the same nginx host). Via the `/api/v1/meta` API or `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'`. This overrides the frontend's `/` default at runtime; the bundle itself ships no per-instance config.
+5. **Set the instance `cdn`** — the public URL that serves `display/` and `thumbnail/` (typically the same nginx host):
+
+   ```sh
+   ./bin/meta.ts set instance_cdn https://photos.example.com/
+   ```
+
+   This overrides the frontend's `/` default at runtime; the bundle itself ships no per-instance config. The same value can also be set via the `/api/v1/meta` API or `UPDATE meta SET value='…' WHERE key='instance_cdn'` directly if the operator script isn't reachable.
 
 ### Dev Mode
 
@@ -186,7 +192,7 @@ The DB backup is named `db.sqlite3.pre-<new-version>` — a plain file copy that
 
 #### nginx
 
-One server block per instance, proxying to its `PORT` (set in the instance's `.env`). nginx also serves `display/` and `thumbnail/` directly from disk — the server never streams photos, only their metadata. The `cdn` meta row (set via the [API](server/README.md) or `UPDATE meta SET value='https://photos.example.com/' WHERE key='instance_cdn'`) tells the frontend which URL to load images from; typically the same host the API is on.
+One server block per instance, proxying to its `PORT` (set in the instance's `.env`). nginx also serves `display/` and `thumbnail/` directly from disk — the server never streams photos, only their metadata. The `cdn` meta row (set via `./bin/meta.ts set instance_cdn …` — or the [API](server/README.md) / raw SQL as fallback) tells the frontend which URL to load images from; typically the same host the API is on.
 
 A realistic per-instance vhost with TLS, certbot-managed certs, proxy headers, and aggressive caching on the photo locations:
 

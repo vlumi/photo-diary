@@ -409,9 +409,8 @@ const metaMapToRow = (
   meta: Partial<MetaRow>
 ): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
-  if ("key" in meta && meta.key !== undefined && "value" in meta) {
-    result[meta.key] = meta.value;
-  }
+  if ("key" in meta) result.key = meta.key;
+  if ("value" in meta) result.value = meta.value;
   return result;
 };
 const userMapToRow = (user: Partial<User>): Record<string, unknown> => {
