@@ -126,18 +126,92 @@ test("processes a JPEG without EXIF, falling back to mtime for the id", async ()
   assert.ok(props.dimensions.original.width > 0);
 });
 
-test("two photos with the same camera filename get distinct ids", async () => {
+test("re-importing the same SOOC replaces files in place and preserves opinion fields", async () => {
   await setup("with-exif.jpg", "IMG_1234.jpg");
   await processFile("IMG_1234.jpg", rootDir);
 
+  const id = await onlyFile(path.join(rootDir, "original"));
+
+  // Operator sets opinion fields via `bin/photo.ts` — those should
+  // survive a re-import.
+  await db.updatePhoto(id, {
+    title: "Operator-set title",
+    taken: { location: { country: "JP", place: "Tokyo" } },
+  } as any);
+
+  // Re-drop the same SOOC (Lightroom re-publish). Same originalFilename
+  // + EXIF DateTimeOriginal → converter reuses the existing id.
   await setup("with-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  // Still exactly one photo on disk (overwritten in place).
+  const originalAfter = await fs.promises.readdir(
+    path.join(rootDir, "original")
+  );
+  assert.deepEqual(originalAfter, [id]);
+
+  const row = (await db.loadPhoto(id)) as any;
+  assert.equal(row.id, id);
+  assert.equal(row.originalFilename, "IMG_1234.jpg");
+  // EXIF-derived fields refreshed.
+  assert.equal(row.camera.make, "TestMake");
+  // Opinion fields preserved.
+  assert.equal(row.title, "Operator-set title");
+  assert.equal(row.taken.location.country, "JP");
+  assert.equal(row.taken.location.place, "Tokyo");
+});
+
+test("JSON-first stub: enrichment arrives before the SOOC, merges on intake", async () => {
+  // Operator runs `bin/photo.ts <coords.json>` before uploading the SOOC.
+  // The resulting row has originalFilename set (via id) but no EXIF-derived
+  // taken/camera fields. When the SOOC arrives, the converter should
+  // recognise the stub and merge onto it rather than creating a second row.
+  const stubId = "IMG_1234.jpg";
+  await db.createPhoto({
+    id: stubId,
+    originalFilename: stubId,
+    taken: {
+      location: {
+        coordinates: { latitude: 35.6762, longitude: 139.6503, altitude: null },
+        country: "JP",
+      },
+    },
+  } as any);
+
+  const countBefore = Object.keys((await db.loadPhotos()) as Record<string, any>).length;
+
+  await setup("with-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  // The stub's id is reused; no second row was created.
+  const countAfter = Object.keys((await db.loadPhotos()) as Record<string, any>).length;
+  assert.equal(
+    countAfter,
+    countBefore,
+    "JSON-first stub should merge with SOOC, not produce a duplicate"
+  );
+  const row = (await db.loadPhoto(stubId)) as any;
+  // Operator-set coords + country survive.
+  assert.equal(row.taken.location.country, "JP");
+  assert.equal(row.taken.location.coordinates.latitude, 35.6762);
+  // EXIF-derived fields now populated.
+  assert.equal(row.camera.make, "TestMake");
+  assert.equal(row.taken.instant.timestamp, "2024-01-15 10:30:45");
+});
+
+test("EXIF-less re-import is NOT deduplicated (mtime isn't strong enough)", async () => {
+  await setup("no-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  // Without an EXIF DateTimeOriginal, the converter can't be confident
+  // the second drop is the same photo, so both get imported. The
+  // operator can clean up via the admin UI later (or via the
+  // upcoming bin/photo-rename.ts --scramble path).
+  await setup("no-exif.jpg", "IMG_1234.jpg");
   await processFile("IMG_1234.jpg", rootDir);
 
   const originals = await fs.promises.readdir(path.join(rootDir, "original"));
-  const jpgs = originals.filter((e) => e.endsWith(".jpg"));
-  assert.equal(jpgs.length, 2, "second import should not overwrite first");
-  // The uuid portion differs even when the timestamp prefix is identical.
-  assert.notEqual(jpgs[0], jpgs[1]);
+  assert.equal(originals.filter((e) => e.endsWith(".jpg")).length, 2);
 });
 
 test("rejects an empty file", async () => {

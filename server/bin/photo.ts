@@ -157,13 +157,19 @@ const processPhoto = async (photo: any, argv: any) => {
     }
     return;
   }
-  // create
+  // create — default originalFilename to the input id so the converter's
+  // `loadPhotosByOriginalFilename` finds this row when the SOOC eventually
+  // arrives (JSON-first stub flow). The operator's existing
+  // `{ id, taken: { location: { coordinates }}}` JSONs keep working without
+  // having to also send originalFilename explicitly.
+  const create = { ...photo };
+  if (!create.originalFilename) create.originalFilename = create.id;
   try {
-    await db.createPhoto(photo);
-    logger.info(`Created "${photo.id}"`);
-    await addToGalleries(photo.id, argv.gallery);
+    await db.createPhoto(create);
+    logger.info(`Created "${create.id}"`);
+    await addToGalleries(create.id, argv.gallery);
   } catch (error) {
-    logger.error(`Creating "${photo.id}" failed:`, error);
+    logger.error(`Creating "${create.id}" failed:`, error);
   }
 };
 

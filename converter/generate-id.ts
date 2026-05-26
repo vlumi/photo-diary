@@ -8,7 +8,7 @@ import exifr from "exifr";
 // portion disambiguates same-second captures. `:` would be illegal
 // on Windows filesystems and ambiguous in URLs, so `T` and `-`
 // stand in throughout.
-const formatTimestamp = (date: Date): string => {
+const formatIdTimestamp = (date: Date): string => {
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
     `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
@@ -16,24 +16,44 @@ const formatTimestamp = (date: Date): string => {
   );
 };
 
-export default async (filePath: string): Promise<string> => {
-  let timestamp: Date | undefined;
+// `YYYY-MM-DD HH:MM:SS` matches the `photo.taken` DB column format
+// so the dedup check in process-file can compare strings directly.
+const formatDbTimestamp = (date: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  );
+};
+
+export interface GenerateIdResult {
+  id: string;
+  // EXIF DateTimeOriginal in `YYYY-MM-DD HH:MM:SS` form, or null when the
+  // file has no EXIF capture timestamp (fell back to mtime). The dedup
+  // check in process-file uses this; null disables the check (mtime is
+  // not a strong-enough duplicate signal).
+  exifTimestamp: string | null;
+}
+
+export default async (filePath: string): Promise<GenerateIdResult> => {
+  let exifDate: Date | undefined;
   try {
     const exif = (await exifr.parse(filePath, {
       pick: ["DateTimeOriginal", "CreateDate"],
     })) as { DateTimeOriginal?: Date; CreateDate?: Date } | undefined;
     const t = exif?.DateTimeOriginal ?? exif?.CreateDate;
     if (t instanceof Date && !Number.isNaN(t.getTime())) {
-      timestamp = t;
+      exifDate = t;
     }
   } catch {
     // exifr throws on EXIF-less files; fall through to mtime.
   }
-  if (!timestamp) {
-    timestamp = (await fs.promises.stat(filePath)).mtime;
-  }
-  const ts = formatTimestamp(timestamp);
+  const timestamp =
+    exifDate ?? (await fs.promises.stat(filePath)).mtime;
   const ext = path.extname(filePath).toLowerCase();
   const uuid = randomUUID().slice(0, 8);
-  return `${ts}-${uuid}${ext}`;
+  return {
+    id: `${formatIdTimestamp(timestamp)}-${uuid}${ext}`,
+    exifTimestamp: exifDate ? formatDbTimestamp(exifDate) : null,
+  };
 };
