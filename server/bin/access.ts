@@ -77,6 +77,7 @@ const confirm = async (prompt: string): Promise<boolean> => {
 
 await yargs(hideBin(process.argv))
   .scriptName("access.ts")
+  .locale("en")
   .strict()
   .demandCommand(1, "Specify a subcommand: list, grant, revoke, or hide-map")
   .command(

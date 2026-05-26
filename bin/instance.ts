@@ -164,6 +164,7 @@ const looksLikeInstanceDir = (dir: string): boolean => {
 
 const argv = yargs(hideBin(process.argv))
   .scriptName("instance.ts")
+  .locale("en")
   .command(
     "$0 [name]",
     "Bootstrap, doctor, or upgrade a Photo Diary instance directory",

@@ -16,6 +16,7 @@ import db from "../db/index.js";
 
 const argv = yargs(hideBin(process.argv))
   .scriptName("gallery.ts")
+  .locale("en")
   .usage("Usage: $0 <id> [options]")
   .strict()
   .command("$0 <id>", "Create or update a gallery", (y) =>

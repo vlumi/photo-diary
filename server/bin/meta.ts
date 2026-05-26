@@ -48,6 +48,7 @@ const formatTable = (rows: string[][]): string => {
 
 await yargs(hideBin(process.argv))
   .scriptName("meta.ts")
+  .locale("en")
   .strict()
   .demandCommand(1, "Specify a subcommand: list, get, or set")
   .command(
