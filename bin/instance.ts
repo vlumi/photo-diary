@@ -185,6 +185,13 @@ const argv = yargs(hideBin(process.argv))
           type: "boolean",
           default: false,
         })
+        .option("quiet", {
+          describe:
+            "Suppress informational output; errors and warnings still surface. For scripted re-runs.",
+          type: "boolean",
+          default: false,
+          alias: "q",
+        })
   )
   .alias("help", "h")
   .strict()
@@ -193,6 +200,11 @@ const argv = yargs(hideBin(process.argv))
 const positional = argv.name as string | undefined;
 const baseFlag = argv.base;
 const fix = argv.fix;
+const quiet = argv.quiet;
+
+const log: typeof console.log = (...args) => {
+  if (!quiet) console.log(...args);
+};
 
 // Resolve `instanceDir` first — it's the structural anchor for everything
 // else (path resolution, locating .env, locating the `code` symlink). The
@@ -234,7 +246,7 @@ const instanceName = (() => {
 })();
 
 if (inferredFromCwd) {
-  console.log(`(inferred instance "${instanceName}" at ${instanceDir} from cwd)`);
+  log(`(inferred instance "${instanceName}" at ${instanceDir} from cwd)`);
 }
 
 // Routine operator scripts surfaced as `<instance>/bin/<name>.ts` symlinks
@@ -248,9 +260,9 @@ const OPERATOR_SCRIPTS = ["photo", "gallery", "user", "access"];
 
 // ---- run -----------------------------------------------------------------
 
-console.log(`Instance dir: ${instanceDir}`);
-console.log(`Code root:    ${CODE_ROOT} (v${readVersion(CODE_ROOT)})`);
-console.log();
+log(`Instance dir: ${instanceDir}`);
+log(`Code root:    ${CODE_ROOT} (v${readVersion(CODE_ROOT)})`);
+log();
 
 // 1. Directories
 for (const d of [".", ...REQUIRED_DIRS]) {
@@ -273,19 +285,19 @@ if (!envExists) {
 // 3. .env
 if (mode === "new") {
   writeEnvFile(envPath, { instanceDir, name: instanceName });
-  console.log(`✓ Created ${envPath} (with a fresh random SECRET)`);
+  log(`✓ Created ${envPath} (with a fresh random SECRET)`);
 } else {
   const existing = parseEnv(fs.readFileSync(envPath, "utf8"));
   const missing = REQUIRED_KEYS.filter(({ key }) => !existing[key]);
   if (missing.length === 0) {
-    console.log("✓ .env present and complete");
+    log("✓ .env present and complete");
   } else if (fix) {
     const added = appendMissingKeys(envPath, existing, { instanceDir, name: instanceName });
-    console.log(`✓ Appended missing keys to .env: ${added.join(", ")}`);
+    log(`✓ Appended missing keys to .env: ${added.join(", ")}`);
   } else {
-    console.log("✗ .env is missing values for:");
-    for (const m of missing) console.log(`    ${m.key} (${m.description})`);
-    console.log("  Re-run with --fix to append defaults, or edit manually.");
+    console.warn("✗ .env is missing values for:");
+    for (const m of missing) console.warn(`    ${m.key} (${m.description})`);
+    console.warn("  Re-run with --fix to append defaults, or edit manually.");
   }
 }
 
@@ -293,7 +305,7 @@ if (mode === "new") {
 if (mode === "upgrade" && previousCodeTarget) {
   const oldVersion = readVersion(previousCodeTarget);
   const newVersion = readVersion(CODE_ROOT);
-  console.log(
+  log(
     `Upgrading from v${oldVersion} (${previousCodeTarget}) to v${newVersion} (${CODE_ROOT})`
   );
 
@@ -307,12 +319,12 @@ if (mode === "upgrade" && previousCodeTarget) {
       finalBackup = `${backupPath}.${counter++}`;
     }
     fs.copyFileSync(dbPath, finalBackup);
-    console.log(`✓ Backed up DB to ${finalBackup}`);
-    console.log(
+    log(`✓ Backed up DB to ${finalBackup}`);
+    log(
       "  (Stop the instance before upgrading — the backup may be inconsistent if pm2 is still running.)"
     );
   } else {
-    console.log(`  ${dbPath} doesn't exist yet — skipping backup`);
+    log(`  ${dbPath} doesn't exist yet — skipping backup`);
   }
 }
 
@@ -322,7 +334,7 @@ if (previousCodeTarget !== CODE_ROOT) {
     fs.unlinkSync(codeLinkPath);
   }
   fs.symlinkSync(CODE_ROOT, codeLinkPath);
-  console.log(
+  log(
     `✓ ${previousCodeTarget ? "Updated" : "Created"} ${codeLinkPath} → ${CODE_ROOT}`
   );
 }
@@ -353,56 +365,55 @@ for (const script of OPERATOR_SCRIPTS) {
   createdShortcuts.push(filename);
 }
 if (createdShortcuts.length > 0) {
-  console.log(
+  log(
     `✓ ${createdShortcuts.length === OPERATOR_SCRIPTS.length ? "Created" : "Refreshed"} ` +
       `bin/ shortcuts: ${createdShortcuts.join(", ")}`
   );
 }
 
 // 6. Directories report (doctor)
-console.log();
-console.log("Directories:");
+log();
+log("Directories:");
 for (const d of REQUIRED_DIRS) {
   const full = path.join(instanceDir, d);
   const present = fs.existsSync(full);
-  console.log(`  ${present ? "✓" : "✗"} ${d}`);
+  log(`  ${present ? "✓" : "✗"} ${d}`);
 }
 
 // 7. Next steps
-console.log();
+log();
 if (mode === "new") {
-  console.log("Instance ready. Next:");
-  console.log(`  cd ${instanceDir}`);
-  console.log("  ./code/server/bin/start-prod.sh");
-  console.log("  ./code/converter/bin/start-prod.sh");
-  console.log("  ./bin/user.ts passwd <username> <password>");
-  console.log(`  ./bin/gallery.ts ${instanceName} --title "${instanceName}"`);
-  console.log("  ./bin/access.ts level <username> :all admin");
+  log("Instance ready. Next:");
+  log(`  cd ${instanceDir}`);
+  log("  ./code/server/bin/start-prod.sh");
+  log("  ./code/converter/bin/start-prod.sh");
+  log("  ./bin/user.ts passwd <username> <password>");
+  log(`  ./bin/gallery.ts ${instanceName} --title "${instanceName}"`);
+  log("  ./bin/access.ts level <username> :all admin");
 } else if (mode === "upgrade") {
-  console.log("Upgrade prepared. Cycle pm2 to pick up the new version:");
-  console.log(`  pm2 delete ${instanceName} ${instanceName}-converter`);
-  console.log(`  cd ${instanceDir}`);
-  console.log("  ./code/server/bin/start-prod.sh");
-  console.log("  ./code/converter/bin/start-prod.sh");
-  console.log("  pm2 save");
-  console.log();
-  console.log(
-    "(pm2 restart preserves cached metadata — the resolved script path and"
+  log("Upgrade prepared. Next — cycle pm2 to pick up the new version:");
+  log();
+  log(`  pm2 delete ${instanceName} ${instanceName}-converter`);
+  log(`  cd ${instanceDir}`);
+  log("  ./code/server/bin/start-prod.sh");
+  log("  ./code/converter/bin/start-prod.sh");
+  log("  pm2 save");
+  log();
+  log(
+    "  Note: pm2 restart silently keeps the old version (cached script path"
   );
-  console.log(
-    " package.json version are read at start time — so a symlink flip plus a"
+  log(
+    "  + package.json are read at start time). Delete + start forces re-resolution."
   );
-  console.log(
-    " plain restart silently keeps you on the old version. delete + start"
-  );
-  console.log(" forces re-resolution.)");
-  console.log();
-  console.log("Rollback (manual, only if needed):");
-  console.log(`  pm2 delete ${instanceName} ${instanceName}-converter`);
-  console.log("  cp db.sqlite3.pre-<version> db.sqlite3");
-  console.log(`  ln -snf <old-code-root> ${codeLinkPath}`);
-  console.log("  ./code/server/bin/start-prod.sh");
-  console.log("  ./code/converter/bin/start-prod.sh");
+  log();
+  log("─".repeat(60));
+  log("Rollback — ONLY if the steps above didn't work:");
+  log();
+  log(`  pm2 delete ${instanceName} ${instanceName}-converter`);
+  log("  cp db.sqlite3.pre-<version> db.sqlite3");
+  log(`  ln -snf <old-code-root> ${codeLinkPath}`);
+  log("  ./code/server/bin/start-prod.sh");
+  log("  ./code/converter/bin/start-prod.sh");
 } else {
-  console.log("Instance state OK.");
+  log("Instance state OK.");
 }

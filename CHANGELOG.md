@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Tooling
+
+- `bin/instance.ts` upgrade-mode output reorganises around the recommended path: a "Next — cycle pm2 …" heading with the command block, a single-line "Note:" caveat (down from four), a horizontal rule, then a "Rollback — ONLY if the steps above didn't work" block. New `--quiet` / `-q` flag suppresses informational output (errors and warnings still surface) for scripted re-runs; missing-key warnings now route to stderr where they belong. (closes #284)
+
 ## [0.10.0] - 2026-05-26
 
 ### Frontend
