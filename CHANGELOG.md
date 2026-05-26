@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-05-26
+
 ### Frontend
 
 - Merge the standalone Day view into Month — `/g/<gallery>/<year>/<month>/<day>` now scrolls the highlighted day into view within Month rather than rendering a dedicated per-day page (shared/bookmarked day URLs still work).

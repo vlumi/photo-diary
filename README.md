@@ -96,13 +96,13 @@ Directory layout:
 ```text
 /opt/photo-diary/                       # parent dir, owned by the deploy user (see below)
   0.8.0/                                #   each version unpacked into its own subdir
-  0.9.1/                                #   so different instances can run different versions
+  0.10.0/                                #   so different instances can run different versions
                                         #   and upgrades are atomic (flip a symlink)
 
 /var/photo-diary/
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
-    code -> /opt/photo-diary/0.9.1      # symlink to the code version this instance runs
+    code -> /opt/photo-diary/0.10.0      # symlink to the code version this instance runs
     db.sqlite3                          # auto-created on first server start
     photos/
       inbox/  original/  display/  thumbnail/
@@ -129,7 +129,7 @@ sudo install -d -o "$USER" /opt/photo-diary /var/photo-diary
 GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` (no rename step), then run `npm run setup` to install everything and build the bundled frontend:
 
 ```sh
-V=0.9.1
+V=0.10.0
 mkdir -p "/opt/photo-diary/$V"
 curl -L "https://github.com/vlumi/photo-diary/archive/refs/tags/v$V.tar.gz" \
   | tar xz -C "/opt/photo-diary/$V" --strip-components=1
@@ -144,7 +144,7 @@ Repeat this block for each new version you want to land on this host.
 The `bin/instance.ts` script handles directory creation, `.env` generation (with a fresh random `SECRET`), the `code` symlink, and the per-instance `bin/` shortcuts in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary/0.9.1/bin/instance.ts dailybw
+/opt/photo-diary/0.10.0/bin/instance.ts dailybw
 ```
 
 That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The script can be invoked from any working directory; the instance dir is derived from the name (and the `--base <dir>` flag, default `/var/photo-diary`, if you want instances under a different parent). Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
@@ -172,7 +172,7 @@ Re-run `bin/instance.ts` from the new version of the code, then **delete + start
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.9.1/bin/instance.ts dailybw          # backs up the DB, flips the symlink
+/opt/photo-diary/0.10.0/bin/instance.ts dailybw          # backs up the DB, flips the symlink
 pm2 delete dailybw dailybw-converter                    # drop cached metadata
 cd /var/photo-diary/dailybw
 ./code/server/bin/start-prod.sh                         # migration runner applies any schema bumps
@@ -390,7 +390,6 @@ The pipeline is intentionally split: the converter doesn't touch the DB at all, 
 
 Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- [**0.10 — UI/UX polish**](https://github.com/vlumi/photo-diary/milestone/12): touch-tracking swipe navigation (#175), server-side logout via refresh tokens (#256), photo-view as modal over Month/Day (#276), photo-view controlled zoom (#277), map collapsed to a modal (#278), Month per-day layout redesign (#290).
 - [**0.11 — Converter + operator ergonomics**](https://github.com/vlumi/photo-diary/milestone/13): reverse-geocode coordinates into a default place name (#246), `bin/meta.ts` operator script (#269), converter filename-collision policy (#272), `instance.ts` output polish (#284).
 - [**0.12 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), converter writes the photo row directly to the DB (#223), inbox subdirectories auto-link to galleries (#245), per-language place names (#247), ACL user groups (#270), ACL `:all` floor rule (#271), more built-in themes (#279), admin theme selector (#287).
 - [**0.13 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), Postgres driver alongside SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286).
@@ -436,5 +435,6 @@ After the hiatus, a burst of releases that modernized the stack, formalized the 
 - **0.7** (May 2026) — Multi-instance deploy pattern: versioned code under `/opt/`, per-instance dirs under `/var/`, atomic upgrades via `code`-symlink flip. Privacy toggle via the four-cell `hide_map` cascade. Security baseline (helmet, login rate limit). Operator scripts renamed to bare nouns (`bin/photo.ts`, `bin/gallery.ts`, …). npm workspaces.
 - **0.8** (May 2026) — Backend framework swap: Express → Fastify, TypeBox schemas, OpenAPI doc + Swagger UI at `/api/v1/docs`, typed `AppError` hierarchy. Frontend adopts a generated `openapi-fetch` client, TanStack Query for server state, Zustand for client state, code-splits the Stats and Photo subtrees out of the main bundle.
 - **0.9** (May 2026) — Privacy hardening (collapse 403/404 distinctions to prevent gallery enumeration), JWT expiration (90 days), self-service password change, global 401 → login-modal handling, toast notifications, profile-icon `UserMenu`.
+- **0.10** (May 2026) — UI/UX polish across the calendar and Stats views. Photo view becomes a modal over Month with touch-tracking swipe and controlled zoom. Stats grows an expanded Summary, a Location card with map-in-modal, and modal-based deep dives for each category. Title bar carries a clickable breadcrumb with Up-navigation and a gallery/stats segmented control. The standalone Day view merges into Month, and seven new built-in themes ship. Server-side logout via refresh-token sessions.
 
-See the [Roadmap](#roadmap) for what's in flight after 0.9.
+See the [Roadmap](#roadmap) for what's in flight after 0.10.
