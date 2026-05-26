@@ -7,6 +7,10 @@ coverage/
 .vscode/
 .playwright-mcp/
 
+# Ad-hoc visual-verification screenshots written by playwright MCP /
+# manual checks. Local only; never committed.
+screenshots/
+
 # Local dev instance bootstrapped by `./bin/instance.ts dev --base .`
 dev/
 
