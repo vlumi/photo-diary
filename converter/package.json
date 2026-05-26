@@ -10,7 +10,7 @@
     "dumpexif": "tsx bin/dump-exif.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "tsx --test tests/**/*.test.ts"
+    "test": "DB_DRIVER=dummy SECRET=test NODE_ENV=test tsx --test tests/**/*.test.ts"
   },
   "author": "Ville Misaki",
   "license": "MIT",
@@ -23,6 +23,7 @@
     "exifr": "^7.1.3",
     "geo-coord": "^0.2.0",
     "image-size": "^2.0.2",
+    "photo-diary-server": "*",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

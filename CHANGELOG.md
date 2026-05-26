@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Server
+
+- New `photo.original_filename` column (schema migration `006`) records the basename the photo arrived with, backfilling existing rows to `id` so the values match pre-rename. Sets up the `(id, originalFilename, dateTimeOriginal)` lookup chain #272 needs once rename-on-import lands.
+
+### Converter
+
+- Converter now inserts a minimal photo row into the DB at JPEG intake — id, originalFilename, EXIF-derived `taken`/camera/lens/exposure, file dimensions — so `bin/photo.ts <enriched.json>` becomes pure update rather than create-or-update. Opinion fields (title, country, place, author, …) stay empty for the operator's enrichment JSON. Skip-if-exists so re-imports don't clobber prior enrichment. (closes #223)
+
 ### Tooling
 
 - `bin/instance.ts` upgrade-mode output reorganises around the recommended path: a "Next — cycle pm2 …" heading with the command block, a single-line "Note:" caveat (down from four), a horizontal rule, then a "Rollback — ONLY if the steps above didn't work" block. New `--quiet` / `-q` flag suppresses informational output (errors and warnings still surface) for scripted re-runs; missing-key warnings now route to stderr where they belong. (closes #284)

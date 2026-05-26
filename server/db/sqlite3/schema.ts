@@ -42,6 +42,7 @@ export interface GalleryPhotoRow {
 }
 export interface PhotoRow {
   id: string;
+  original_filename: string | null;
   title: string;
   description: string;
   author: string;
@@ -90,6 +91,7 @@ export interface GalleryPhoto {
 }
 export interface Photo {
   id: string;
+  originalFilename: string | undefined;
   index: number;
   title: string;
   description: string;
@@ -298,6 +300,7 @@ export default () => {
 
         return {
           id: toString(row.id),
+          originalFilename: row.original_filename ?? undefined,
           index,
           title: toString(row.title),
           description: toString(row.description),
@@ -358,6 +361,7 @@ export default () => {
         const map = photoMapToRow(photo);
         return [
           photo.id,
+          map.original_filename,
           map.title,
           map.description,
           map.author,
@@ -450,6 +454,7 @@ const galleryMapToRow = (
 };
 const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
+  if ("originalFilename" in photo) result.original_filename = photo.originalFilename;
   if ("title" in photo) result.title = photo.title;
   if ("description" in photo) result.description = photo.description;
   if (photo.taken) {
@@ -575,6 +580,7 @@ const SCHEMA = {
     table: "photo",
     columns: [
       "id",
+      "original_filename",
       "title",
       "description",
       "author",
