@@ -55,6 +55,7 @@ export default () => {
     loadPhotos,
     createPhoto,
     loadPhoto,
+    loadPhotosByOriginalFilename,
     updatePhoto,
     deletePhoto: notImplemented,
   };
@@ -279,6 +280,11 @@ const loadPhoto = async (photoId: string) => {
     throw new NotFoundError();
   }
   return db.photos[photoId];
+};
+const loadPhotosByOriginalFilename = async (originalFilename: string) => {
+  return Object.values(db.photos).filter(
+    (p: any) => p.originalFilename === originalFilename
+  );
 };
 const updatePhoto = async (photoId: string, patch: Record<string, unknown>) => {
   if (!(photoId in db.photos)) {

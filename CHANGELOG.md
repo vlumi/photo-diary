@@ -5,15 +5,18 @@
 ### Server
 
 - New `photo.original_filename` column (schema migration `006`) records the basename the photo arrived with, backfilling existing rows to `id` so the values match pre-rename. Sets up the `(id, originalFilename, dateTimeOriginal)` lookup chain #272 needs once rename-on-import lands.
+- New `db.loadPhotosByOriginalFilename(name)` driver method (sqlite3 + dummy) so the lookup chain and `bin/photo.ts search` can find photos by their human-recognised camera filename.
 
 ### Converter
 
+- Converter renames every imported JPEG to a stable `<YYYY-MM-DDTHH-MM-SS>-<8-hex-uuid>.<ext>` at intake — timestamp from EXIF `DateTimeOriginal` (fallback file mtime), short uuid for collision-free disambiguation. Display / thumbnail / original / sidecar JSON all share the new id; the original camera filename rides along on `photo.original_filename` for `bin/photo.ts` lookup. Counter-rollover collisions stop overwriting each other. (closes #272)
 - Converter now inserts a minimal photo row into the DB at JPEG intake — id, originalFilename, EXIF-derived `taken`/camera/lens/exposure, file dimensions — so `bin/photo.ts <enriched.json>` becomes pure update rather than create-or-update. Opinion fields (title, country, place, author, …) stay empty for the operator's enrichment JSON. Skip-if-exists so re-imports don't clobber prior enrichment. (closes #223)
 
 ### Tooling
 
 - `bin/instance.ts` upgrade-mode output reorganises around the recommended path: a "Next — cycle pm2 …" heading with the command block, a single-line "Note:" caveat (down from four), a horizontal rule, then a "Rollback — ONLY if the steps above didn't work" block. New `--quiet` / `-q` flag suppresses informational output (errors and warnings still surface) for scripted re-runs; missing-key warnings now route to stderr where they belong. (closes #284)
 - New `bin/meta.ts` operator script (`list` / `get` / `set [--force]`) paralleling `bin/{user,gallery,photo,access}.ts` so the `meta` table can be read and written without `curl` against `/api/v1/meta` or raw SQL; unknown keys rejected by default, `schema_version` hard-blocked, per-instance `bin/meta.ts` symlink wired up via `bin/instance.ts`. (closes #269)
+- `bin/photo.ts` restructured into yargs subcommands: the previous bare-positional behaviour becomes the default `$0 <files..>` command, and a new `search <originalFilename>` subcommand lists photos sharing a camera filename (collision triage). The default command grows a lookup chain (`id` → `originalFilename` → `(originalFilename, taken)` → loud-error on ambiguity → create on no match) so enrichment JSONs with the SOOC filename still find rows renamed by #272. (part of #272)
 - Drive-by fix in the sqlite3 driver's `metaMapToRow`, which produced empty SET clauses on `db.updateMeta` until the new `bin/meta.ts` exercised that path.
 - Pin yargs to `.locale("en")` across all operator scripts (`bin/instance.ts` + `server/bin/{meta,user,gallery,photo,access}.ts`) so a non-English shell locale (`LANG=ja_JP.UTF-8` etc.) no longer half-translates `--help` against fully-English status / error text.
 
