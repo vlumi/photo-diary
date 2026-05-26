@@ -47,5 +47,12 @@ export default [
         ...globals.vitest,
       },
     },
+    rules: {
+      // Tests routinely mock partial objects via `as any` and assert on
+      // shapes TS can't fully prove; relax these in test files rather
+      // than dotting per-file disable comments around.
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+    },
   },
 ];
