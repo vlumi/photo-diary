@@ -7,6 +7,16 @@ process.argv.slice(2).forEach((filePath) => {
   const fileName = path.basename(filePath);
   const rootDir = path.dirname(filePath);
   readExif(fileName, rootDir)
-    .then((properties) => console.log(JSON.stringify(properties)))
+    .then((properties) => {
+      // Include originalFilename so the output is ready to feed into
+      // `bin/photo.ts` as an enrichment JSON without the operator's
+      // script having to add it. `id` and `originalFilename` are the
+      // same value here (the SOOC's basename); after the converter
+      // imports the photo they diverge — `id` becomes the
+      // <ts>-<uuid> stable id while `originalFilename` stays as
+      // this name.
+      properties.originalFilename = fileName;
+      console.log(JSON.stringify(properties));
+    })
     .catch((err) => console.error(err));
 });
