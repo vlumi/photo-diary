@@ -7,6 +7,10 @@ import { fileURLToPath } from "node:url";
 
 import processFile from "../process-file.js";
 import { imageSizeFromFile } from "image-size/fromFile";
+import db from "photo-diary-server/db/index.js";
+import dummyFactory from "photo-diary-server/db/dummy.js";
+
+const dummy = dummyFactory();
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(here, "fixtures");
@@ -18,6 +22,7 @@ beforeEach(async () => {
   for (const sub of ["inbox", "original", "display", "thumbnail"]) {
     await fs.promises.mkdir(path.join(rootDir, sub));
   }
+  await dummy.init();
 });
 
 afterEach(async () => {
@@ -81,6 +86,13 @@ test("processes a JPEG with EXIF end-to-end", async () => {
   assert.ok(props.dimensions.original.width > 0);
   assert.ok(props.dimensions.display.width > 0);
   assert.ok(props.dimensions.thumbnail.width > 0);
+
+  // Minimal DB row created at intake with the factual EXIF fields +
+  // originalFilename. Opinion fields (title, country, place, …) stay
+  // empty for the operator's enrichment JSON to fill in later.
+  const row = (await db.loadPhoto("photo.jpg")) as Record<string, unknown>;
+  assert.equal(row.id, "photo.jpg");
+  assert.equal(row.originalFilename, "photo.jpg");
 });
 
 test("processes a JPEG without EXIF, producing 'Invalid date' placeholders", async () => {

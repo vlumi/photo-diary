@@ -298,6 +298,7 @@ describe("Gallery Photo", () => {
 describe("Photo", () => {
   const cols = [
     "id",
+    "original_filename",
     "title",
     "description",
     "author",
@@ -330,7 +331,7 @@ describe("Photo", () => {
   ].join(",");
   test("Build create query", () =>
     expect(schema.photo.buildCreateQuery()).toBe(
-      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.photo.buildSelectByIdQuery()).toBe(

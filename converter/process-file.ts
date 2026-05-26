@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import db from "photo-diary-server/db/index.js";
+
 import { DIR_INBOX, DIR_ORIGINAL, TARGETS } from "./lib/constants.js";
 import * as logger from "./lib/logger.js";
 import extractProperties from "./extract-properties/index.js";
@@ -20,7 +22,24 @@ export default async (fileName: string, rootDir: string): Promise<void> => {
     TARGETS.map((target) => convertImage(fileName, rootDir, target))
   );
 
-  await extractProperties(fileName, rootDir);
+  const properties = await extractProperties(fileName, rootDir);
+
+  // Minimal DB row at intake — id, originalFilename, EXIF-derived
+  // factual fields. Opinion fields (title, country, place, …) stay
+  // empty; the operator's enrichment JSON via `bin/photo.ts` fills
+  // them in. Skip-if-exists so re-imports don't clobber prior
+  // enrichment.
+  const id = properties.id as string;
+  const existing = await db
+    .loadPhoto(id)
+    .then(() => true)
+    .catch(() => false);
+  if (existing) {
+    logger.debug(`[${fileName}] DB row already exists for ${id}; skipping insert`);
+  } else {
+    await db.createPhoto({ ...properties, originalFilename: fileName });
+    logger.debug(`[${fileName}] Created DB row for ${id}`);
+  }
 
   logger.debug(`[${fileName}] Moving file`);
   await fs.promises.rename(

@@ -270,8 +270,9 @@ const unlinkAllGalleries = async () => {
 const loadPhotos = async () => {
   return db.photos;
 };
-const createPhoto = async () => {
-  throw new NotImplementedError();
+const createPhoto = async (photo: { id?: string } & Record<string, unknown>) => {
+  if (!db.photos) db.photos = {};
+  if (photo.id) db.photos[photo.id] = photo;
 };
 const loadPhoto = async (photoId: string) => {
   if (!(photoId in db.photos)) {
@@ -279,8 +280,11 @@ const loadPhoto = async (photoId: string) => {
   }
   return db.photos[photoId];
 };
-const updatePhoto = async () => {
-  throw new NotImplementedError();
+const updatePhoto = async (photoId: string, patch: Record<string, unknown>) => {
+  if (!(photoId in db.photos)) {
+    throw new NotFoundError();
+  }
+  Object.assign(db.photos[photoId], patch);
 };
 
 const dbDump = JSON.stringify({
