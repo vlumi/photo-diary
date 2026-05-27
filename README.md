@@ -396,7 +396,7 @@ The pipeline is intentionally split: the converter doesn't touch the DB at all, 
 
 Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- [**0.11 — Converter + operator ergonomics**](https://github.com/vlumi/photo-diary/milestone/13): reverse-geocode coordinates into a structured per-language place hierarchy (#246), `bin/meta.ts` operator script (#269), converter filename-collision policy (#272), `instance.ts` output polish (#284), Stats Location card geotagged/not split (#336), `bin/ audit` across operator scripts (#337).
+- [**0.11 — Converter + operator ergonomics**](https://github.com/vlumi/photo-diary/milestone/13): reverse-geocode coordinates into a structured per-language place hierarchy (#246), `bin/meta.ts` operator script (#269), converter filename-collision policy (#272), `instance.ts` output polish (#284), Stats Location card geotagged/not split (#336), `bin/ audit` across operator scripts (#337), `bin/photo.ts audit --country-mismatch` (#346).
 - [**0.12 — Geocoded location surfaced**](https://github.com/vlumi/photo-diary/milestone/16): render the auto-populated `geocoded_place` per UI language in the metadata panel (#247), filter chain for geocoded state / city / district with cross-language-stable URLs (#344), Stats Places topic with drill-down by state / city / district (#345). All consumers of the data #246 lays down.
 - [**0.13 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), inbox subdirectories auto-link to galleries (#245), ACL user groups (#270), ACL `:all` floor rule (#271), more built-in themes (#279), admin theme selector (#287), converter picks up JSON in inbox (#333), per-language editing for place / title / description (#343).
 - [**0.14 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), Postgres driver alongside SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286).
@@ -413,7 +413,6 @@ Ideas without a milestone yet — too far out to schedule, kept here so they don
 - **Content localization for photo metadata** (#281) — per-language titles/captions/place names; manual-entry friction is the real blocker.
 - **Map modal: keep open across prev/next month/year navigation** (#321) — restores the cross-month/year geographic sweep that the inline-footer-map workflow had before the modal-isation in #313.
 - **Filter pills: edit value in place** (#342) — clicking an existing filter's value opens the same selector the topic-adder uses, so changing country=jp → fi takes two clicks instead of four.
-- **`bin/photo.ts audit --country-mismatch`** (#346) — flag photos where the operator-set `country_code` and the Nominatim-derived `geocoded_country_code` disagree. File-now-prioritise-later: revisit once #246's data has been backfilled and mismatches are real.
 
 ## Version History
 
