@@ -137,4 +137,63 @@ await yargs(hideBin(process.argv))
       }
     }
   )
+  .command(
+    "audit",
+    "Find meta rows with empty values (known keys) or unknown keys (schema drift)",
+    (y) =>
+      y
+        .option("missing", {
+          type: "boolean",
+          default: false,
+          describe:
+            "Restrict to known keys whose value is empty",
+        })
+        .option("unknown", {
+          type: "boolean",
+          default: false,
+          describe:
+            "Restrict to keys not in the schema-seeded set (added via `set --force` or raw SQL)",
+        })
+        .option("format", {
+          choices: ["table", "ids"] as const,
+          default: "table" as const,
+        }),
+    async (argv) => {
+      const metas = await db.loadMetas();
+      const entries = Object.entries(metas);
+      const filterFlag = argv.missing || argv.unknown;
+      const want = (key: string) => !filterFlag || argv[key];
+
+      if (argv.format === "table") {
+        console.log(`Audited ${entries.length} meta row(s).`);
+      }
+
+      const print = (title: string, rows: Array<[string, string]>) => {
+        if (argv.format === "ids") {
+          for (const [k] of rows) console.log(k);
+          return;
+        }
+        console.log(`\n${title}: ${rows.length}`);
+        if (rows.length === 0) return;
+        console.log(formatTable([["key", "value"], ...rows]));
+      };
+
+      if (want("missing")) {
+        const missing = entries.filter(
+          ([k, v]) => KNOWN_KEYS.has(k) && (v === null || v === undefined || v === "")
+        );
+        print("Known keys with empty values", missing);
+      }
+
+      if (want("unknown")) {
+        const unknown = entries.filter(
+          ([k]) => !KNOWN_KEYS.has(k) && !PROTECTED_KEYS.has(k)
+        );
+        print(
+          "Unknown keys (not in the schema-seeded set; `schema_version` excluded)",
+          unknown
+        );
+      }
+    }
+  )
   .parseAsync();

@@ -193,6 +193,79 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
+    "audit",
+    "Find users with no access or warn if the instance has no admin",
+    (y) =>
+      y
+        .option("no-access", {
+          type: "boolean",
+          default: false,
+          describe: "Restrict to users with no user_gallery rows (can't see anything)",
+        })
+        .option("no-admin", {
+          type: "boolean",
+          default: false,
+          describe: "Restrict to the no-admin-found warning",
+        })
+        .option("format", {
+          choices: ["table", "ids"] as const,
+          default: "table" as const,
+        }),
+    async (argv) => {
+      const users = (await db.loadUsers()) as Array<{ id: string }>;
+      const filterFlag = argv["no-access"] || argv["no-admin"];
+      const want = (key: string) => !filterFlag || argv[key];
+
+      if (argv.format === "table") {
+        console.log(`Audited ${users.length} user(s).`);
+      }
+
+      if (want("no-access")) {
+        const noAccess: Array<{ id: string }> = [];
+        for (const user of users) {
+          if (!user.id) continue;
+          const accessRows = await db.loadUserGalleryRows({ userId: user.id });
+          if (accessRows.length === 0) noAccess.push(user);
+        }
+        if (argv.format === "ids") {
+          for (const u of noAccess) console.log(u.id);
+        } else {
+          console.log(`\nUsers with no user_gallery rows: ${noAccess.length}`);
+          if (noAccess.length > 0) {
+            const rows: string[][] = [["user"]];
+            for (const u of noAccess) rows.push([u.id]);
+            console.log(formatTable(rows));
+          }
+        }
+      }
+
+      if (want("no-admin")) {
+        let anyAdmin = false;
+        for (const user of users) {
+          if (!user.id) continue;
+          const accessRows = await db.loadUserGalleryRows({
+            userId: user.id,
+            galleryId: CONST.SPECIAL_GALLERY_ALL,
+          });
+          if (accessRows.some((r) => r.access_level === CONST.ACCESS_ADMIN)) {
+            anyAdmin = true;
+            break;
+          }
+        }
+        if (argv.format === "table") {
+          console.log(
+            `\nInstance has admin: ${anyAdmin ? "yes" : "NO — no user has ACCESS_ADMIN on :all"}`
+          );
+        } else if (!anyAdmin) {
+          // ids format: emit the warning on stderr so stdout stays empty
+          // when there are no rows of concern (the no-admin case still
+          // demands attention).
+          console.error("WARNING: no user has ACCESS_ADMIN on :all");
+        }
+      }
+    }
+  )
+  .command(
     "delete <id>",
     "Delete the user and cascade their user_gallery rows",
     (y) =>

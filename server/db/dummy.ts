@@ -57,6 +57,9 @@ export default () => {
     loadPhoto,
     loadPhotosByOriginalFilename,
     loadOrphanPhotoIds,
+    loadOrphanGalleryPhotoLinks,
+    loadEmptyGalleryIds,
+    loadOrphanUserGalleryRows,
     updatePhoto,
     renamePhoto,
     deletePhoto: notImplemented,
@@ -296,6 +299,58 @@ const loadOrphanPhotoIds = async (): Promise<string[]> => {
   return Object.keys(db.photos)
     .filter((id) => !linked.has(id))
     .sort();
+};
+const loadOrphanGalleryPhotoLinks = async () => {
+  const out: Array<{
+    galleryId: string;
+    photoId: string;
+    missing: "photo" | "gallery";
+  }> = [];
+  for (const [galleryId, photoIds] of Object.entries(db.galleryPhotos) as Array<
+    [string, string[]]
+  >) {
+    const galleryMissing = !(galleryId in db.galleries);
+    for (const photoId of photoIds) {
+      if (galleryMissing) {
+        out.push({ galleryId, photoId, missing: "gallery" });
+      } else if (!(photoId in db.photos)) {
+        out.push({ galleryId, photoId, missing: "photo" });
+      }
+    }
+  }
+  return out;
+};
+const loadEmptyGalleryIds = async (): Promise<string[]> => {
+  return Object.keys(db.galleries as Record<string, unknown>)
+    .filter(
+      (id) => !((db.galleryPhotos as Record<string, string[]>)[id]?.length ?? 0)
+    )
+    .sort();
+};
+const loadOrphanUserGalleryRows = async () => {
+  // Dummy stores access as `accessControl[userId][galleryId] = level`,
+  // which is the same logical content as the sqlite3 `user_gallery`
+  // table — flatten and check each (user, gallery) pair.
+  const out: Array<{
+    userId: string;
+    galleryId: string;
+    missing: "user" | "gallery";
+  }> = [];
+  const acl = (db.accessControl as Record<string, Record<string, number>>) ??
+    {};
+  for (const [userId, perGallery] of Object.entries(acl)) {
+    for (const galleryId of Object.keys(perGallery)) {
+      if (userId !== CONST.GUEST_USER && !(userId in db.users)) {
+        out.push({ userId, galleryId, missing: "user" });
+      } else if (
+        !galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX) &&
+        !(galleryId in db.galleries)
+      ) {
+        out.push({ userId, galleryId, missing: "gallery" });
+      }
+    }
+  }
+  return out;
 };
 // Deep-merge mirrors the sqlite3 driver's per-column update semantics:
 // only keys present in `patch` are touched, nested objects merge instead

@@ -122,12 +122,11 @@ export const migrate = (db: Database): void => {
           `After migration ${m.filename}, foreign-key violations detected:\n` +
             formatFkViolations(fkIssues) +
             "\n\n" +
-            "These rows may pre-date this migration. Investigate the listed " +
-            "rows (the referenced parent row no longer exists) and remove the " +
-            "orphans before re-running. Operator scripts surface this directly " +
-            "post-merge — `./bin/photo.ts audit --orphans` finds photo rows " +
-            "with no gallery link; `./bin/gallery.ts audit --orphan-photos` " +
-            "(coming next in #337) finds the reverse case shown above."
+            "These rows may pre-date this migration. Investigate with " +
+            "`./bin/gallery.ts audit --orphan-photos` (gallery_photo rows " +
+            "pointing at a missing photo) or `./bin/photo.ts audit --orphans` " +
+            "(photos with no gallery link), then remove the orphans and " +
+            "re-run."
         );
       }
     }

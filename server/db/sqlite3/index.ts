@@ -66,6 +66,9 @@ export default () => {
     loadPhoto,
     loadPhotosByOriginalFilename,
     loadOrphanPhotoIds,
+    loadOrphanGalleryPhotoLinks,
+    loadEmptyGalleryIds,
+    loadOrphanUserGalleryRows,
     updatePhoto,
     renamePhoto,
     deletePhoto,
@@ -439,6 +442,88 @@ const loadOrphanPhotoIds = async (): Promise<string[]> => {
     )
     .all() as Array<{ id: string }>;
   return rows.map((r) => r.id);
+};
+// gallery_photo rows whose `photo_id` points at a row that no longer
+// exists. Surfaces real data corruption — exactly the dailybw FK
+// violation the migrate post-check catches.
+const loadOrphanGalleryPhotoLinks = async (): Promise<
+  Array<{ galleryId: string; photoId: string; missing: "photo" | "gallery" }>
+> => {
+  const photoMissing = db
+    .prepare(
+      "SELECT gallery_id, photo_id FROM gallery_photo " +
+        "WHERE photo_id NOT IN (SELECT id FROM photo) " +
+        "ORDER BY gallery_id ASC, photo_id ASC"
+    )
+    .all() as Array<{ gallery_id: string; photo_id: string }>;
+  const galleryMissing = db
+    .prepare(
+      "SELECT gallery_id, photo_id FROM gallery_photo " +
+        "WHERE gallery_id NOT IN (SELECT id FROM gallery) " +
+        "ORDER BY gallery_id ASC, photo_id ASC"
+    )
+    .all() as Array<{ gallery_id: string; photo_id: string }>;
+  return [
+    ...photoMissing.map((r) => ({
+      galleryId: r.gallery_id,
+      photoId: r.photo_id,
+      missing: "photo" as const,
+    })),
+    ...galleryMissing.map((r) => ({
+      galleryId: r.gallery_id,
+      photoId: r.photo_id,
+      missing: "gallery" as const,
+    })),
+  ];
+};
+// Gallery IDs with no photos linked. The `:all`/`:public`/`:private`
+// sentinels aren't gallery rows; they don't show up here.
+const loadEmptyGalleryIds = async (): Promise<string[]> => {
+  const rows = db
+    .prepare(
+      "SELECT id FROM gallery WHERE id NOT IN (SELECT gallery_id FROM gallery_photo) ORDER BY id ASC"
+    )
+    .all() as Array<{ id: string }>;
+  return rows.map((r) => r.id);
+};
+// user_gallery rows whose referenced user or gallery is gone. The
+// sentinel gallery ids (`:all`, `:public`, `:private`) are skipped on
+// the gallery side — they're never rows in `gallery`.
+const loadOrphanUserGalleryRows = async (): Promise<
+  Array<{ userId: string; galleryId: string; missing: "user" | "gallery" }>
+> => {
+  const userMissing = db
+    .prepare(
+      "SELECT user_id, gallery_id FROM user_gallery " +
+        "WHERE user_id != ? AND user_id NOT IN (SELECT id FROM user) " +
+        "ORDER BY user_id ASC, gallery_id ASC"
+    )
+    .all(CONST.GUEST_USER) as Array<{
+    user_id: string;
+    gallery_id: string;
+  }>;
+  const galleryMissing = db
+    .prepare(
+      "SELECT user_id, gallery_id FROM user_gallery " +
+        "WHERE gallery_id NOT LIKE ? AND gallery_id NOT IN (SELECT id FROM gallery) " +
+        "ORDER BY user_id ASC, gallery_id ASC"
+    )
+    .all(`${CONST.SPECIAL_GALLERY_PREFIX}%`) as Array<{
+    user_id: string;
+    gallery_id: string;
+  }>;
+  return [
+    ...userMissing.map((r) => ({
+      userId: r.user_id,
+      galleryId: r.gallery_id,
+      missing: "user" as const,
+    })),
+    ...galleryMissing.map((r) => ({
+      userId: r.user_id,
+      galleryId: r.gallery_id,
+      missing: "gallery" as const,
+    })),
+  ];
 };
 const updatePhoto = async (photoId: string, photo: PhotoInput) => {
   const { query, values } = SCHEMA.photo.buildUpdateByIdQuery(photo);
