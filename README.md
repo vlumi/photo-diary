@@ -396,8 +396,8 @@ The pipeline is intentionally split: the converter doesn't touch the DB at all, 
 
 Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- [**0.11 — Converter + operator ergonomics**](https://github.com/vlumi/photo-diary/milestone/13): reverse-geocode coordinates into a default place name (#246), `bin/meta.ts` operator script (#269), converter filename-collision policy (#272), `instance.ts` output polish (#284).
-- [**0.12 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), converter writes the photo row directly to the DB (#223), inbox subdirectories auto-link to galleries (#245), per-language place names (#247), ACL user groups (#270), ACL `:all` floor rule (#271), more built-in themes (#279), admin theme selector (#287).
+- [**0.11 — Converter + operator ergonomics**](https://github.com/vlumi/photo-diary/milestone/13): reverse-geocode coordinates into a default place name (#246), `bin/meta.ts` operator script (#269), converter filename-collision policy (#272), `instance.ts` output polish (#284), Stats Location card geotagged/not split (#336), `bin/ audit` across operator scripts (#337).
+- [**0.12 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), converter writes the photo row directly to the DB (#223), inbox subdirectories auto-link to galleries (#245), per-language place names (#247), ACL user groups (#270), ACL `:all` floor rule (#271), more built-in themes (#279), admin theme selector (#287), converter picks up JSON in inbox (#333).
 - [**0.13 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), Postgres driver alongside SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286).
 - [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283).
 
@@ -410,8 +410,7 @@ Ideas without a milestone yet — too far out to schedule, kept here so they don
 - **Range filters for continuous variables** (#264) — time, focal length, aperture, etc. Coordinate-radius dropped in favour of place-categorical filtering after #246.
 - **Non-calendar gallery view** (#280) — alternative renderer for galleries that aren't date-shaped.
 - **Content localization for photo metadata** (#281) — per-language titles/captions/place names; manual-entry friction is the real blocker.
-- **Stats Location card: geotagged vs not-geotagged split with filter affordances** (#336) — surface the missing-data slice and let the operator filter the whole Stats view to either side.
-- **`bin/ audit` across operator scripts** (#337) — `photo.ts audit` / `gallery.ts audit` / `user.ts audit` / `access.ts audit` / `meta.ts audit` to surface rows with missing properties, orphan references, and other data-completeness drift.
+- **Map modal: keep open across prev/next month/year navigation** (#321) — restores the cross-month/year geographic sweep that the inline-footer-map workflow had before the modal-isation in #313.
 
 ## Version History
 
