@@ -10,8 +10,8 @@ import TableModal from "./TableModal";
 import SummaryModal from "./SummaryModal";
 import MapModal from "../../MapModal";
 
-import type { Filters as FiltersT } from "../../../lib/filter";
-import type { StatsTopic, StatsCategory } from "../../../lib/stats";
+import filter, { type Filters as FiltersT } from "../../../lib/filter";
+import stats, { type StatsTopic, type StatsCategory } from "../../../lib/stats";
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -88,6 +88,31 @@ const LocationCount = styled.div`
   font-size: 0.9em;
   color: var(--primary-color);
 `;
+// Pair of click-to-filter chips for the mixed-completeness case. Same
+// visual idiom as the table's selectable rows (hover/selected swap
+// header-color and header-background). The two chips together also
+// communicate the geotagged-vs-not ratio at a glance.
+const ChipRow = styled.div`
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+`;
+const Chip = styled.button<{ $selected?: boolean }>`
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.85em;
+  cursor: pointer;
+  background: ${({ $selected }) =>
+    $selected ? "var(--header-background)" : "var(--primary-background)"};
+  color: ${({ $selected }) =>
+    $selected ? "var(--header-color)" : "var(--primary-color)"};
+  &:hover {
+    background: var(--header-background);
+    color: var(--header-color);
+  }
+`;
 const LocationButton = styled.button`
   display: inline-flex;
   align-items: center;
@@ -105,6 +130,70 @@ const LocationButton = styled.button`
     border-color: var(--primary-color);
   }
 `;
+
+// Location card body: "All photos geotagged" / "No photos geotagged"
+// when uniform; two click-to-filter chips otherwise. Clicking a chip
+// applies a `general / geotagged / yes|no` filter; clicking the same
+// chip again removes it (yargs-like toggle, matching how the Table
+// rows toggle filters via `applyNewFilter`).
+const renderLocationCounts = (
+  category: StatsCategory,
+  filters: FiltersT,
+  setFilters: (filters: FiltersT) => void,
+  t: ReturnType<typeof useTranslation>["t"]
+): React.ReactNode => {
+  const geo = category.geotaggedCount ?? 0;
+  const total = category.totalCount ?? 0;
+  const notGeo = Math.max(0, total - geo);
+
+  if (total === 0) return null;
+  if (notGeo === 0) {
+    return (
+      <LocationCount>
+        {t("stats-location-all-geotagged", { count: total })}
+      </LocationCount>
+    );
+  }
+  if (geo === 0) {
+    return (
+      <LocationCount>
+        {t("stats-location-none-geotagged", { count: total })}
+      </LocationCount>
+    );
+  }
+
+  const toggleFilter = (key: "yes" | "no") =>
+    setFilters(
+      filter.applyNewFilter(
+        filters,
+        "general",
+        "geotagged",
+        key,
+        stats.UNKNOWN
+      )
+    );
+  const isSelected = (key: "yes" | "no"): boolean =>
+    Boolean(filters.general?.geotagged?.[key]);
+
+  return (
+    <ChipRow>
+      <Chip
+        type="button"
+        $selected={isSelected("yes")}
+        onClick={() => toggleFilter("yes")}
+      >
+        {t("stats-location-count-geotagged", { count: geo })}
+      </Chip>
+      <Chip
+        type="button"
+        $selected={isSelected("no")}
+        onClick={() => toggleFilter("no")}
+      >
+        {t("stats-location-count-not-geotagged", { count: notGeo })}
+      </Chip>
+    </ChipRow>
+  );
+};
 
 interface Props {
   topic: StatsTopic;
@@ -156,12 +245,7 @@ const Category = ({
       </Title>
       {isLocation ? (
         <LocationBody>
-          <LocationCount>
-            {t("stats-location-geotagged", {
-              count: category.geotaggedCount ?? 0,
-              total: category.totalCount ?? 0,
-            })}
-          </LocationCount>
+          {renderLocationCounts(category, filters, setFilters, t)}
           <LocationButton type="button" onClick={openModal}>
             <BsGeoAlt aria-hidden="true" />
             {t("stats-location-see-on-map")}

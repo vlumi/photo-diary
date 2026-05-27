@@ -297,6 +297,8 @@ const PhotoModel = (photoData: unknown) => {
           return (!value && !self.author()) || value === self.author();
         case "country":
           return value === self.countryCode();
+        case "geotagged":
+          return value === "yes" ? self.hasCoordinates() : !self.hasCoordinates();
         case "year":
           return Number(value) === self.year();
         case "year-month":

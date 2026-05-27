@@ -20,6 +20,10 @@
 - `bin/photo.ts` defaults `originalFilename = id` when creating a new row so existing `{ id, taken, ... }` operator JSONs work as-is. Include `taken.instant.timestamp` in the JSON to make the converter's stub-merge path safe; without it the SOOC arrives as a separate row (the operator can clean up later via `bin/photo.ts search`).
 - Converter now inserts a minimal photo row into the DB at JPEG intake — id, originalFilename, EXIF-derived `taken`/camera/lens/exposure, file dimensions — so `bin/photo.ts <enriched.json>` becomes pure update rather than create-or-update. Opinion fields (title, country, place, author, …) stay empty for the operator's enrichment JSON. Skip-if-exists so re-imports don't clobber prior enrichment. (closes #223)
 
+### Frontend
+
+- Stats Location card splits the geotagged count into two click-to-filter chips when the gallery has a mix — `N geotagged` and `M not geotagged` chips apply a `general / geotagged / yes|no` filter to the whole Stats view (same toggle behaviour as the existing Country / Camera tables). Uniform cases collapse to a single line (`All N photos geotagged` / `No photos geotagged (of N)`); no filter affordance when there's nothing to filter on. Backed by a new `geotagged` case in `PhotoModel.matches`. (closes #336)
+
 ### Tooling
 
 - New `bin/photo-rename.ts` operator script: `--migrate` (default) renames legacy-IDed rows (and their `display/` / `thumbnail/` / `original/` files) to the `<YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext>` scheme from #272 — idempotent, safe to re-run. `--scramble` re-rolls the UUID portion of every row's id (URL-leak mitigation; old permalinks 404). `--dry-run` previews; `--yes` skips the confirmation. File renames execute first, DB updates after — on DB failure the file moves are rolled back. Inbox sidecars are intentionally left as-is — the system never looks at them by filename, and operators routinely keep custom-named JSONs in inbox/ as audit-trail artefacts. (closes #332)
