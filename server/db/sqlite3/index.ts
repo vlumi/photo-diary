@@ -64,6 +64,7 @@ export default () => {
     loadPhotos,
     createPhoto,
     loadPhoto,
+    loadPhotosByOriginalFilename,
     updatePhoto,
     deletePhoto,
   };
@@ -418,6 +419,12 @@ const loadPhoto = async (photoId: string) => {
     | undefined;
   if (!row) throw new NotFoundError();
   return SCHEMA.photo.mapRow(row, 0);
+};
+const loadPhotosByOriginalFilename = async (originalFilename: string) => {
+  const rows = db
+    .prepare(SCHEMA.photo.buildSelectQuery(["original_filename = ?"]))
+    .all(originalFilename) as PhotoRow[];
+  return rows.map((row, index) => SCHEMA.photo.mapRow(row, index));
 };
 const updatePhoto = async (photoId: string, photo: PhotoInput) => {
   const { query, values } = SCHEMA.photo.buildUpdateByIdQuery(photo);

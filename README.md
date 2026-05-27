@@ -410,6 +410,8 @@ Ideas without a milestone yet — too far out to schedule, kept here so they don
 - **Range filters for continuous variables** (#264) — time, focal length, aperture, etc. Coordinate-radius dropped in favour of place-categorical filtering after #246.
 - **Non-calendar gallery view** (#280) — alternative renderer for galleries that aren't date-shaped.
 - **Content localization for photo metadata** (#281) — per-language titles/captions/place names; manual-entry friction is the real blocker.
+- **Stats Location card: geotagged vs not-geotagged split with filter affordances** (#336) — surface the missing-data slice and let the operator filter the whole Stats view to either side.
+- **`bin/ audit` across operator scripts** (#337) — `photo.ts audit` / `gallery.ts audit` / `user.ts audit` / `access.ts audit` / `meta.ts audit` to surface rows with missing properties, orphan references, and other data-completeness drift.
 
 ## Version History
 

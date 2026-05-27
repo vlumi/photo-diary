@@ -167,6 +167,9 @@ export default {
   loadPhoto: async (photoId: string) => {
     return await db.loadPhoto(photoId);
   },
+  loadPhotosByOriginalFilename: async (originalFilename: string) => {
+    return await db.loadPhotosByOriginalFilename(originalFilename);
+  },
   updatePhoto: async (photoId: string, photo: PhotoInput) => {
     await db.updatePhoto(photoId, photo);
   },

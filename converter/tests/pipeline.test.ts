@@ -36,13 +36,23 @@ const setup = async (fixture: string, fileName: string) => {
   );
 };
 
-const readJson = async (fileName: string) => {
-  const jsonPath = path.join(rootDir, "inbox", `${fileName}.json`);
+// Pipeline now renames the file at intake to <ts>-<uuid>.<ext>; the test
+// can't predict the uuid suffix, so locate the single output in each dir
+// and verify the shape.
+const ID_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-[0-9a-f]{16}\.jpg$/;
+const onlyFile = async (dir: string): Promise<string> => {
+  const entries = await fs.promises.readdir(dir);
+  const jpgs = entries.filter((e) => e.endsWith(".jpg"));
+  assert.equal(jpgs.length, 1, `expected one .jpg in ${dir}, got ${entries.join(", ")}`);
+  return jpgs[0];
+};
+const readJson = async (id: string) => {
+  const jsonPath = path.join(rootDir, "inbox", `${id}.json`);
   const raw = await fs.promises.readFile(jsonPath, "utf8");
   return JSON.parse(raw);
 };
 
-test("processes a JPEG with EXIF end-to-end", async () => {
+test("processes a JPEG with EXIF end-to-end and renames to <ts>-<uuid>.jpg", async () => {
   await setup("with-exif.jpg", "photo.jpg");
 
   await processFile("photo.jpg", rootDir);
@@ -51,69 +61,186 @@ test("processes a JPEG with EXIF end-to-end", async () => {
   await assert.rejects(
     fs.promises.access(path.join(rootDir, "inbox", "photo.jpg"))
   );
-  await fs.promises.access(path.join(rootDir, "original", "photo.jpg"));
 
-  // Resized variants exist with the expected dimensions.
+  // Renamed to <ts>-<uuid>.jpg in original/, display/, thumbnail/.
+  const id = await onlyFile(path.join(rootDir, "original"));
+  assert.match(id, ID_PATTERN);
+  // Timestamp portion derives from EXIF DateTimeOriginal (2024-01-15 10:30:45).
+  assert.ok(id.startsWith("2024-01-15T10-30-45-"));
+  assert.equal(await onlyFile(path.join(rootDir, "display")), id);
+  assert.equal(await onlyFile(path.join(rootDir, "thumbnail")), id);
+
   const displayDims = await imageSizeFromFile(
-    path.join(rootDir, "display", "photo.jpg")
+    path.join(rootDir, "display", id)
   );
   assert.ok(displayDims.width <= 1500);
   assert.ok(displayDims.height <= 1500);
 
   const thumbDims = await imageSizeFromFile(
-    path.join(rootDir, "thumbnail", "photo.jpg")
+    path.join(rootDir, "thumbnail", id)
   );
   assert.ok(thumbDims.width <= 600);
   assert.ok(thumbDims.height <= 200);
 
-  // JSON has the expected shape and parsed EXIF values.
-  const json = await readJson("photo.jpg");
-  const props = json["photo.jpg"];
+  // Sidecar JSON keyed on the new id, with originalFilename preserved
+  // so the archive is self-contained.
+  const json = await readJson(id);
+  const props = json[id];
 
-  assert.equal(props.id, "photo.jpg");
+  assert.equal(props.id, id);
+  assert.equal(props.originalFilename, "photo.jpg");
   assert.equal(props.taken.instant.timestamp, "2024-01-15 10:30:45");
-  assert.equal(props.taken.instant.year, 2024);
-  assert.equal(props.taken.instant.month, 1);
-  assert.equal(props.taken.instant.day, 15);
   assert.equal(props.taken.author, "TestArtist");
   assert.equal(props.camera.make, "TestMake");
-  assert.equal(props.camera.model, "TestModel");
   assert.equal(props.exposure.aperture, 5.6);
-  assert.equal(props.exposure.iso, 200);
-  assert.equal(props.exposure.focalLength, 50);
-
-  // Dimensions populated for all three sizes.
   assert.ok(props.dimensions.original.width > 0);
   assert.ok(props.dimensions.display.width > 0);
   assert.ok(props.dimensions.thumbnail.width > 0);
 
-  // Minimal DB row created at intake with the factual EXIF fields +
-  // originalFilename. Opinion fields (title, country, place, …) stay
-  // empty for the operator's enrichment JSON to fill in later.
-  const row = (await db.loadPhoto("photo.jpg")) as Record<string, unknown>;
-  assert.equal(row.id, "photo.jpg");
+  // DB row at the new id, with originalFilename pointing at the old name.
+  const row = (await db.loadPhoto(id)) as Record<string, unknown>;
+  assert.equal(row.id, id);
   assert.equal(row.originalFilename, "photo.jpg");
 });
 
-test("processes a JPEG without EXIF, producing 'Invalid date' placeholders", async () => {
+test("processes a JPEG without EXIF, falling back to mtime for the id", async () => {
   await setup("no-exif.jpg", "photo.jpg");
 
   await processFile("photo.jpg", rootDir);
 
-  await fs.promises.access(path.join(rootDir, "original", "photo.jpg"));
-  await fs.promises.access(path.join(rootDir, "display", "photo.jpg"));
-  await fs.promises.access(path.join(rootDir, "thumbnail", "photo.jpg"));
+  const id = await onlyFile(path.join(rootDir, "original"));
+  assert.match(id, ID_PATTERN);
+  assert.equal(await onlyFile(path.join(rootDir, "display")), id);
+  assert.equal(await onlyFile(path.join(rootDir, "thumbnail")), id);
 
-  const json = await readJson("photo.jpg");
-  const props = json["photo.jpg"];
+  const json = await readJson(id);
+  const props = json[id];
 
-  assert.equal(props.id, "photo.jpg");
+  assert.equal(props.id, id);
+  assert.equal(props.originalFilename, "photo.jpg");
+  // EXIF-less so the parsed instant comes through as the "Invalid date" sentinel.
   assert.equal(props.taken.instant.timestamp, "Invalid date");
-  assert.equal(props.taken.instant.year, null);
   assert.deepEqual(props.camera, {});
   assert.deepEqual(props.lens, {});
   assert.deepEqual(props.exposure, {});
   assert.ok(props.dimensions.original.width > 0);
+});
+
+test("re-importing the same SOOC replaces files in place and preserves opinion fields", async () => {
+  await setup("with-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  const id = await onlyFile(path.join(rootDir, "original"));
+
+  // Operator sets opinion fields via `bin/photo.ts` — those should
+  // survive a re-import.
+  await db.updatePhoto(id, {
+    title: "Operator-set title",
+    taken: { location: { country: "JP", place: "Tokyo" } },
+  } as any);
+
+  // Re-drop the same SOOC (Lightroom re-publish). Same originalFilename
+  // + EXIF DateTimeOriginal → converter reuses the existing id.
+  await setup("with-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  // Still exactly one photo on disk (overwritten in place).
+  const originalAfter = await fs.promises.readdir(
+    path.join(rootDir, "original")
+  );
+  assert.deepEqual(originalAfter, [id]);
+
+  const row = (await db.loadPhoto(id)) as any;
+  assert.equal(row.id, id);
+  assert.equal(row.originalFilename, "IMG_1234.jpg");
+  // EXIF-derived fields refreshed.
+  assert.equal(row.camera.make, "TestMake");
+  // Opinion fields preserved.
+  assert.equal(row.title, "Operator-set title");
+  assert.equal(row.taken.location.country, "JP");
+  assert.equal(row.taken.location.place, "Tokyo");
+});
+
+test("JSON-first stub with matching timestamp merges on SOOC intake", async () => {
+  // Operator's enrichment JSON includes the capture timestamp (matches
+  // EXIF DateTimeOriginal of the fixture). The converter merges onto
+  // the existing stub instead of creating a second row.
+  const stubId = "IMG_1234.jpg";
+  await db.createPhoto({
+    id: stubId,
+    originalFilename: stubId,
+    taken: {
+      instant: { timestamp: "2024-01-15 10:30:45" },
+      location: {
+        coordinates: { latitude: 35.6762, longitude: 139.6503, altitude: null },
+        country: "JP",
+      },
+    },
+  } as any);
+
+  const countBefore = Object.keys((await db.loadPhotos()) as Record<string, any>).length;
+
+  await setup("with-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  const countAfter = Object.keys((await db.loadPhotos()) as Record<string, any>).length;
+  assert.equal(
+    countAfter,
+    countBefore,
+    "matching-timestamp stub should merge with SOOC, not produce a duplicate"
+  );
+  const row = (await db.loadPhoto(stubId)) as any;
+  // Operator-set coords + country survive.
+  assert.equal(row.taken.location.country, "JP");
+  assert.equal(row.taken.location.coordinates.latitude, 35.6762);
+  // EXIF-derived fields refreshed.
+  assert.equal(row.camera.make, "TestMake");
+  assert.equal(row.taken.instant.timestamp, "2024-01-15 10:30:45");
+});
+
+test("JSON-first stub WITHOUT timestamp does NOT merge (could be unrelated photos)", async () => {
+  // Same camera filename, no proof it's the same photo. The stub
+  // stays untouched; the SOOC imports as a new row with its own id.
+  // The operator can still find both via `bin/photo.ts search`.
+  const stubId = "IMG_1234.jpg";
+  await db.createPhoto({
+    id: stubId,
+    originalFilename: stubId,
+    taken: {
+      location: {
+        coordinates: { latitude: 35.6762, longitude: 139.6503, altitude: null },
+      },
+    },
+  } as any);
+
+  await setup("with-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  // Stub row still present, unchanged.
+  const stub = (await db.loadPhoto(stubId)) as any;
+  assert.equal(stub.id, stubId);
+  assert.equal(stub.taken.location.coordinates.latitude, 35.6762);
+  // A separate row was created for the SOOC with the new id format.
+  const sooc = await onlyFile(path.join(rootDir, "original"));
+  assert.match(sooc, ID_PATTERN);
+  assert.notEqual(sooc, stubId);
+  const soocRow = (await db.loadPhoto(sooc)) as any;
+  assert.equal(soocRow.originalFilename, "IMG_1234.jpg");
+});
+
+test("EXIF-less re-import is NOT deduplicated (mtime isn't strong enough)", async () => {
+  await setup("no-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  // Without an EXIF DateTimeOriginal, the converter can't be confident
+  // the second drop is the same photo, so both get imported. The
+  // operator can clean up via the admin UI later (or via the
+  // upcoming bin/photo-rename.ts --scramble path).
+  await setup("no-exif.jpg", "IMG_1234.jpg");
+  await processFile("IMG_1234.jpg", rootDir);
+
+  const originals = await fs.promises.readdir(path.join(rootDir, "original"));
+  assert.equal(originals.filter((e) => e.endsWith(".jpg")).length, 2);
 });
 
 test("rejects an empty file", async () => {

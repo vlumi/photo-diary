@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { init } from "../../app.js";
 import dummyFactory from "../../db/dummy.js";
 import dbFacade from "../../db/index.js";

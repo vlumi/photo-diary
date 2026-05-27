@@ -55,6 +55,7 @@ export default () => {
     loadPhotos,
     createPhoto,
     loadPhoto,
+    loadPhotosByOriginalFilename,
     updatePhoto,
     deletePhoto: notImplemented,
   };
@@ -280,11 +281,38 @@ const loadPhoto = async (photoId: string) => {
   }
   return db.photos[photoId];
 };
+const loadPhotosByOriginalFilename = async (originalFilename: string) => {
+  return Object.values(db.photos).filter(
+    (p: any) => p.originalFilename === originalFilename
+  );
+};
+// Deep-merge mirrors the sqlite3 driver's per-column update semantics:
+// only keys present in `patch` are touched, nested objects merge instead
+// of replacing wholesale. Object.assign-style shallow merge would let an
+// EXIF-refresh update wipe operator-set country/place under
+// `taken.location`.
+const deepMerge = (target: any, source: any): void => {
+  for (const key of Object.keys(source)) {
+    const val = source[key];
+    if (
+      val !== null &&
+      typeof val === "object" &&
+      !Array.isArray(val)
+    ) {
+      if (!target[key] || typeof target[key] !== "object") {
+        target[key] = {};
+      }
+      deepMerge(target[key], val);
+    } else {
+      target[key] = val;
+    }
+  }
+};
 const updatePhoto = async (photoId: string, patch: Record<string, unknown>) => {
   if (!(photoId in db.photos)) {
     throw new NotFoundError();
   }
-  Object.assign(db.photos[photoId], patch);
+  deepMerge(db.photos[photoId], patch);
 };
 
 const dbDump = JSON.stringify({

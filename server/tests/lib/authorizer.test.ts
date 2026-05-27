@@ -18,7 +18,6 @@ const {
   authorizeGalleryAdmin,
 } = authorizerFactory();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Authorize = (user: string, gallery?: any) => Promise<unknown>;
 
 const fail = (authorize: Authorize, user: string, gallery?: string) => {
