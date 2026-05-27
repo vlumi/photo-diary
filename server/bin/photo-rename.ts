@@ -26,7 +26,11 @@
  *   display/<id>.jpg
  *   thumbnail/<id>.jpg
  *   original/<id>.jpg            (may have been cleaned up to save disk)
- *   inbox/<id>.jpg.json          (converter's EXIF sidecar; pre-#333)
+ *
+ * Sidecars (`inbox/<id>.jpg.json`) are intentionally left alone — they're
+ * an audit-trail artefact post-import, the system never looks at them by
+ * filename, and the operator may have other sidecars in inbox/ under
+ * custom names that this script has no business touching.
  *
  * Missing files are skipped (no error). DB updates run after the file
  * moves; if the DB update fails, the file moves are rolled back.
@@ -43,7 +47,6 @@ import { hideBin } from "yargs/helpers";
 import db from "../db/index.js";
 
 const DIR_PHOTOS = "photos";
-const DIR_INBOX = "inbox";
 const DIR_DISPLAY = "display";
 const DIR_THUMBNAIL = "thumbnail";
 const DIR_ORIGINAL = "original";
@@ -216,13 +219,6 @@ try {
         fs.renameSync(from, to);
         moved.push({ from, to });
       }
-    }
-    // Sidecar in inbox/ (converter's per-photo EXIF JSON dump).
-    const sidecarFrom = path.join(photoRoot, DIR_INBOX, `${oldId}.json`);
-    const sidecarTo = path.join(photoRoot, DIR_INBOX, `${newId}.json`);
-    if (fileExists(sidecarFrom)) {
-      fs.renameSync(sidecarFrom, sidecarTo);
-      moved.push({ from: sidecarFrom, to: sidecarTo });
     }
   }
 
