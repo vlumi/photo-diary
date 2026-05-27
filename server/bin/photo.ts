@@ -53,17 +53,23 @@ type Lookup =
 
 const lookup = async (photo: any): Promise<Lookup> => {
   if (!photo.id) return { kind: "create" };
+
+  // Step 1: exact id match. Direct hit; safest, no ambiguity.
   try {
     await db.loadPhoto(photo.id);
     return { kind: "update", existingId: photo.id };
   } catch {
-    // fall through to originalFilename lookup
+    // fall through
   }
+
+  // Step 2: originalFilename match — but ALWAYS narrowed by
+  // taken.instant.timestamp. originalFilename alone isn't proof of
+  // identity (camera counter rollovers, multi-camera setups produce
+  // unrelated photos with the same name); silently picking "the
+  // only candidate" is the bug we're avoiding.
   const candidates = (await db.loadPhotosByOriginalFilename(photo.id)) as any[];
   if (candidates.length === 0) return { kind: "create" };
-  if (candidates.length === 1) {
-    return { kind: "update", existingId: candidates[0].id };
-  }
+
   const wantTaken = photo.taken?.instant?.timestamp;
   if (wantTaken) {
     const matches = candidates.filter(
@@ -72,21 +78,29 @@ const lookup = async (photo: any): Promise<Lookup> => {
     if (matches.length === 1) {
       return { kind: "update", existingId: matches[0].id };
     }
+    // 0 or 2+ matches at this point → fall through to ambiguous.
   }
   return { kind: "ambiguous", candidates };
 };
 
 const reportAmbiguous = (photo: any, candidates: any[]) => {
+  const wantTaken = photo.taken?.instant?.timestamp;
   console.error(
-    `Multiple photos have originalFilename "${photo.id}":`
+    `Cannot resolve "${photo.id}" unambiguously. Existing row(s) with that originalFilename:`
   );
   for (const c of candidates) {
     const taken = c.taken?.instant?.timestamp ?? "—";
     console.error(`  ${c.id}  taken=${taken}`);
   }
-  console.error(
-    "Disambiguate by including taken.instant.timestamp in the JSON."
-  );
+  if (!wantTaken) {
+    console.error(
+      "Add taken.instant.timestamp to the input JSON to confirm which row to update (or that this is a different photo)."
+    );
+  } else {
+    console.error(
+      `No row matched taken.instant.timestamp="${wantTaken}". If this is a different photo with a rolled-over filename, use the renamed id directly.`
+    );
+  }
 };
 
 const applyOverrides = (photo: any, argv: any) => {
