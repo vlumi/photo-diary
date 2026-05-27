@@ -139,6 +139,76 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
+    "audit",
+    "Find user_gallery rows whose referenced user or gallery no longer exists",
+    (y) =>
+      y
+        .option("orphan-users", {
+          type: "boolean",
+          default: false,
+          describe: "Restrict to rows referencing a deleted user",
+        })
+        .option("orphan-galleries", {
+          type: "boolean",
+          default: false,
+          describe:
+            "Restrict to rows referencing a deleted gallery (sentinel ids :all etc. excluded)",
+        })
+        .option("format", {
+          choices: ["table", "ids"] as const,
+          default: "table" as const,
+        }),
+    async (argv) => {
+      const orphans = await db.loadOrphanUserGalleryRows();
+      const filterFlag = argv["orphan-users"] || argv["orphan-galleries"];
+      const want = (kind: "user" | "gallery") => {
+        if (!filterFlag) return true;
+        if (kind === "user") return argv["orphan-users"];
+        return argv["orphan-galleries"];
+      };
+
+      if (argv.format === "table") {
+        console.log(`Audited ${orphans.length} orphan user_gallery row(s).`);
+      }
+
+      const print = (
+        kind: "user" | "gallery",
+        rows: Array<{ userId: string; galleryId: string }>
+      ) => {
+        if (argv.format === "ids") {
+          for (const r of rows) console.log(`${r.userId}\t${r.galleryId}`);
+          return;
+        }
+        console.log(`\nRows referencing a missing ${kind}: ${rows.length}`);
+        if (rows.length === 0) return;
+        const widths = [
+          Math.max("user_id".length, ...rows.map((r) => r.userId.length)),
+          Math.max("gallery_id".length, ...rows.map((r) => r.galleryId.length)),
+        ];
+        console.log(
+          `${"user_id".padEnd(widths[0])}  ${"gallery_id".padEnd(widths[1])}`
+        );
+        console.log(`${"-".repeat(widths[0])}  ${"-".repeat(widths[1])}`);
+        for (const r of rows) {
+          console.log(`${r.userId.padEnd(widths[0])}  ${r.galleryId.padEnd(widths[1])}`);
+        }
+      };
+
+      if (want("user")) {
+        print(
+          "user",
+          orphans.filter((o) => o.missing === "user")
+        );
+      }
+      if (want("gallery")) {
+        print(
+          "gallery",
+          orphans.filter((o) => o.missing === "gallery")
+        );
+      }
+    }
+  )
+  .command(
     "hide-map <user> <gallery> <state>",
     "Set the map privacy toggle for a user × gallery pair",
     (y) =>

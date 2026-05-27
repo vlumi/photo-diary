@@ -4,7 +4,8 @@
 
 ### Tooling
 
-- `bin/photo.ts audit` subcommand: surfaces rows with missing data (`--missing taken|coords|place|country|author|title|description`), orphan gallery links (`--orphans`), or shared `originalFilename` (`--duplicates`); no flag runs every check. `--format ids` emits one id per line for piping into batch fixers (`xargs -I{} ./bin/photo.ts {} --place "..."` etc.). New `db.loadOrphanPhotoIds()` driver method (sqlite3 + dummy + facade) powers the orphan check. First slice of #337 — the audit subcommand on `bin/{gallery,user,access,meta}.ts` follows in subsequent PRs.
+- `bin/photo.ts audit` subcommand: surfaces rows with missing data (`--missing taken|coords|place|country|author|title|description`), orphan gallery links (`--orphans`), or shared `originalFilename` (`--duplicates`); no flag runs every check. `--format ids` emits one id per line for piping into batch fixers (`xargs -I{} ./bin/photo.ts {} --place "..."` etc.). New `db.loadOrphanPhotoIds()` driver method (sqlite3 + dummy + facade) powers the orphan check. (part of #337)
+- `bin/gallery.ts audit`, `bin/user.ts audit`, `bin/access.ts audit`, `bin/meta.ts audit`: data-completeness checks for the rest of the operator-script surface. Gallery: `--missing title|description|icon|epoch`, `--empty`, `--orphan-photos`, `--orphan-galleries` (gallery_photo rows whose referenced photo or gallery is gone — directly surfaces the FK violations the migrate post-check otherwise blames the wrong migration for). User: `--no-access` (users with no user_gallery rows), `--no-admin` (warns if no user has ACCESS_ADMIN on `:all`). Access: `--orphan-users`, `--orphan-galleries`. Meta: `--missing` (known keys with empty values), `--unknown` (keys outside the schema-seeded set). All scripts accept `--format ids` for pipe-friendly output. Backed by new `db.loadOrphanGalleryPhotoLinks`, `loadEmptyGalleryIds`, and `loadOrphanUserGalleryRows` driver methods. (closes #337)
 
 ### Server
 

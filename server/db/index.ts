@@ -173,6 +173,19 @@ export default {
   loadOrphanPhotoIds: async (): Promise<string[]> => {
     return await db.loadOrphanPhotoIds();
   },
+  loadOrphanGalleryPhotoLinks: async (): Promise<
+    Array<{ galleryId: string; photoId: string; missing: "photo" | "gallery" }>
+  > => {
+    return await db.loadOrphanGalleryPhotoLinks();
+  },
+  loadEmptyGalleryIds: async (): Promise<string[]> => {
+    return await db.loadEmptyGalleryIds();
+  },
+  loadOrphanUserGalleryRows: async (): Promise<
+    Array<{ userId: string; galleryId: string; missing: "user" | "gallery" }>
+  > => {
+    return await db.loadOrphanUserGalleryRows();
+  },
   updatePhoto: async (photoId: string, photo: PhotoInput) => {
     await db.updatePhoto(photoId, photo);
   },
