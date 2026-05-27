@@ -411,6 +411,7 @@ Ideas without a milestone yet — too far out to schedule, kept here so they don
 - **Non-calendar gallery view** (#280) — alternative renderer for galleries that aren't date-shaped.
 - **Content localization for photo metadata** (#281) — per-language titles/captions/place names; manual-entry friction is the real blocker.
 - **Map modal: keep open across prev/next month/year navigation** (#321) — restores the cross-month/year geographic sweep that the inline-footer-map workflow had before the modal-isation in #313.
+- **Filter pills: edit value in place** (#342) — clicking an existing filter's value opens the same selector the topic-adder uses, so changing country=jp → fi takes two clicks instead of four.
 
 ## Version History
 

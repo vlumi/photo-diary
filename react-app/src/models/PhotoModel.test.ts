@@ -754,7 +754,11 @@ describe("With samples", () => {
           "camera-make": new Set([undefined]),
           lens: new Set([undefined]),
         },
-        general: { author: new Set([null]), country: new Set([null]) },
+        general: {
+          author: new Set([null]),
+          country: new Set([null]),
+          geotagged: new Set(["no"]),
+        },
         time: {
           hour: new Set([13]),
           month: new Set([1]),
@@ -782,7 +786,11 @@ describe("With samples", () => {
           "camera-make": new Set(["CMake"]),
           lens: new Set(["LMake LModel"]),
         },
-        general: { author: new Set(["Author One"]), country: new Set(["jp"]) },
+        general: {
+          author: new Set(["Author One"]),
+          country: new Set(["jp"]),
+          geotagged: new Set(["yes"]),
+        },
         time: {
           hour: new Set([14]),
           month: new Set([2]),

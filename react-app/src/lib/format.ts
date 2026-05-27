@@ -180,6 +180,9 @@ const categoryValue =
         return identity as ValueFormatter;
       case "country":
         return countryName(lang, countryData) as ValueFormatter;
+      case "geotagged":
+        return ((value: string) =>
+          t(`stats-geotagged-${value}`)) as ValueFormatter;
       case "year-month":
         return ((yearMonth: string) => {
           const [year, month] = yearMonth.split("-");

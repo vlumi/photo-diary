@@ -355,6 +355,7 @@ const PhotoModel = (photoData: unknown) => {
         general: {
           author: new Set([self.author()]),
           country: new Set([self.countryCode()]),
+          geotagged: new Set([self.hasCoordinates() ? "yes" : "no"]),
         },
         time: {
           year: new Set([self.year()]),
