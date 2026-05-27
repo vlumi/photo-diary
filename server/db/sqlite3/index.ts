@@ -65,6 +65,7 @@ export default () => {
     createPhoto,
     loadPhoto,
     loadPhotosByOriginalFilename,
+    loadOrphanPhotoIds,
     updatePhoto,
     renamePhoto,
     deletePhoto,
@@ -426,6 +427,18 @@ const loadPhotosByOriginalFilename = async (originalFilename: string) => {
     .prepare(SCHEMA.photo.buildSelectQuery(["original_filename = ?"]))
     .all(originalFilename) as PhotoRow[];
   return rows.map((row, index) => SCHEMA.photo.mapRow(row, index));
+};
+// Photo rows with no gallery_photo link — useful for `bin/photo.ts audit`.
+// The SPA doesn't surface orphan photos anywhere; they're a data-drift
+// signal the operator might want to clean up (or deliberately keep as
+// unfiled, the model allows it).
+const loadOrphanPhotoIds = async (): Promise<string[]> => {
+  const rows = db
+    .prepare(
+      "SELECT id FROM photo WHERE id NOT IN (SELECT photo_id FROM gallery_photo) ORDER BY id ASC"
+    )
+    .all() as Array<{ id: string }>;
+  return rows.map((r) => r.id);
 };
 const updatePhoto = async (photoId: string, photo: PhotoInput) => {
   const { query, values } = SCHEMA.photo.buildUpdateByIdQuery(photo);

@@ -208,6 +208,115 @@ const processJpeg = async (filePath: string, argv: any) => {
   await processPhoto({ id: fileName }, argv);
 };
 
+// ---- audit ---------------------------------------------------------------
+
+// Empty-data sentinel: NULL → "" through mapRow; "Invalid date" is the
+// explicit placeholder readExif emits for EXIF-less imports.
+const isMissing = (v: unknown): boolean =>
+  v === null || v === undefined || v === "" || v === "unknown" || v === "Invalid date";
+
+type MissingField =
+  | "taken"
+  | "coords"
+  | "place"
+  | "country"
+  | "author"
+  | "title"
+  | "description";
+
+const MISSING_PROBES: Record<MissingField, (p: any) => boolean> = {
+  taken: (p) => isMissing(p.taken?.instant?.timestamp),
+  coords: (p) =>
+    isMissing(p.taken?.location?.coordinates?.latitude) ||
+    isMissing(p.taken?.location?.coordinates?.longitude),
+  place: (p) => isMissing(p.taken?.location?.place),
+  country: (p) => isMissing(p.taken?.location?.country),
+  author: (p) => isMissing(p.taken?.author),
+  title: (p) => isMissing(p.title),
+  description: (p) => isMissing(p.description),
+};
+
+interface AuditCheck {
+  key: string;
+  title: string;
+  rows: () => Array<{ id: string; row: any; why?: string }>;
+}
+
+const buildChecks = (
+  photos: any[],
+  orphanIds: Set<string>
+): AuditCheck[] => {
+  const checks: AuditCheck[] = [];
+
+  for (const field of Object.keys(MISSING_PROBES) as MissingField[]) {
+    const probe = MISSING_PROBES[field];
+    checks.push({
+      key: `missing-${field}`,
+      title: `Photos with missing ${field}`,
+      rows: () =>
+        photos.filter(probe).map((p) => ({ id: p.id, row: p })),
+    });
+  }
+
+  checks.push({
+    key: "orphans",
+    title: "Photos with no gallery_photo link",
+    rows: () =>
+      photos
+        .filter((p) => orphanIds.has(p.id))
+        .map((p) => ({ id: p.id, row: p })),
+  });
+
+  checks.push({
+    key: "duplicates",
+    title: "Photos sharing an originalFilename",
+    rows: () => {
+      const byName = new Map<string, any[]>();
+      for (const p of photos) {
+        const name = (p.originalFilename ?? "") as string;
+        if (!name) continue;
+        if (!byName.has(name)) byName.set(name, []);
+        byName.get(name)!.push(p);
+      }
+      const out: Array<{ id: string; row: any; why?: string }> = [];
+      for (const [name, group] of byName) {
+        if (group.length <= 1) continue;
+        for (const p of group) out.push({ id: p.id, row: p, why: name });
+      }
+      return out;
+    },
+  });
+
+  return checks;
+};
+
+const printCheck = (
+  check: AuditCheck,
+  results: Array<{ id: string; row: any; why?: string }>,
+  format: "table" | "ids"
+): void => {
+  if (format === "ids") {
+    for (const r of results) console.log(r.id);
+    return;
+  }
+  console.log(`\n${check.title}: ${results.length}`);
+  if (results.length === 0) return;
+  const showWhy = results.some((r) => r.why !== undefined);
+  const header = showWhy
+    ? ["id", "originalFilename", "taken", "duplicate of"]
+    : ["id", "originalFilename", "taken"];
+  const table: string[][] = [header];
+  for (const r of results) {
+    const base = [
+      r.id ?? "",
+      r.row.originalFilename ?? "",
+      r.row.taken?.instant?.timestamp ?? "",
+    ];
+    table.push(showWhy ? [...base, r.why ?? ""] : base);
+  }
+  console.log(formatTable(table));
+};
+
 await yargs(hideBin(process.argv))
   .scriptName("photo.ts")
   .locale("en")
@@ -265,6 +374,78 @@ await yargs(hideBin(process.argv))
           default:
             logger.error(`Unrecognised extension: ${fp}`);
         }
+      }
+    }
+  )
+  .command(
+    "audit",
+    "Find photos with missing properties, orphan gallery links, or duplicate originalFilenames",
+    (y) =>
+      y
+        .option("missing", {
+          describe:
+            "Restrict to a single missing-field check (default: run every check)",
+          choices: [
+            "taken",
+            "coords",
+            "place",
+            "country",
+            "author",
+            "title",
+            "description",
+          ] as const,
+        })
+        .option("orphans", {
+          type: "boolean",
+          default: false,
+          describe: "Restrict to the orphan-gallery-link check",
+        })
+        .option("duplicates", {
+          type: "boolean",
+          default: false,
+          describe: "Restrict to the duplicate-originalFilename check",
+        })
+        .option("format", {
+          choices: ["table", "ids"] as const,
+          default: "table" as const,
+          describe:
+            "table (default, with id/originalFilename/taken) or ids (one per line, pipe-friendly)",
+        }),
+    async (argv) => {
+      const photos = (await db.loadPhotos()) as any[];
+      const orphanIds = new Set<string>(
+        (await db.loadOrphanPhotoIds()) as string[]
+      );
+
+      const all = buildChecks(photos, orphanIds);
+      const anyFilter =
+        argv.missing !== undefined || argv.orphans || argv.duplicates;
+
+      let selected: AuditCheck[];
+      if (!anyFilter) {
+        selected = all;
+      } else {
+        selected = [];
+        if (argv.missing) {
+          const key = `missing-${argv.missing}`;
+          const match = all.find((c) => c.key === key);
+          if (match) selected.push(match);
+        }
+        if (argv.orphans) {
+          const match = all.find((c) => c.key === "orphans");
+          if (match) selected.push(match);
+        }
+        if (argv.duplicates) {
+          const match = all.find((c) => c.key === "duplicates");
+          if (match) selected.push(match);
+        }
+      }
+
+      if (argv.format === "table") {
+        console.log(`Audited ${photos.length} photo(s).`);
+      }
+      for (const check of selected) {
+        printCheck(check, check.rows(), argv.format);
       }
     }
   )

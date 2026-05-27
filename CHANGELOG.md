@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Tooling
+
+- `bin/photo.ts audit` subcommand: surfaces rows with missing data (`--missing taken|coords|place|country|author|title|description`), orphan gallery links (`--orphans`), or shared `originalFilename` (`--duplicates`); no flag runs every check. `--format ids` emits one id per line for piping into batch fixers (`xargs -I{} ./bin/photo.ts {} --place "..."` etc.). New `db.loadOrphanPhotoIds()` driver method (sqlite3 + dummy + facade) powers the orphan check. First slice of #337 — the audit subcommand on `bin/{gallery,user,access,meta}.ts` follows in subsequent PRs.
+
 ### Server
 
 - New `photo.original_filename` column (schema migration `006`) records the basename the photo arrived with, backfilling existing rows to `id` so the values match pre-rename. Sets up the `(id, originalFilename, dateTimeOriginal)` lookup chain #272 needs once rename-on-import lands.

@@ -56,6 +56,7 @@ export default () => {
     createPhoto,
     loadPhoto,
     loadPhotosByOriginalFilename,
+    loadOrphanPhotoIds,
     updatePhoto,
     renamePhoto,
     deletePhoto: notImplemented,
@@ -286,6 +287,15 @@ const loadPhotosByOriginalFilename = async (originalFilename: string) => {
   return Object.values(db.photos).filter(
     (p: any) => p.originalFilename === originalFilename
   );
+};
+const loadOrphanPhotoIds = async (): Promise<string[]> => {
+  const linked = new Set<string>();
+  for (const ids of Object.values(db.galleryPhotos) as string[][]) {
+    for (const id of ids) linked.add(id);
+  }
+  return Object.keys(db.photos)
+    .filter((id) => !linked.has(id))
+    .sort();
 };
 // Deep-merge mirrors the sqlite3 driver's per-column update semantics:
 // only keys present in `patch` are touched, nested objects merge instead
