@@ -66,6 +66,7 @@ export default () => {
     loadPhoto,
     loadPhotosByOriginalFilename,
     updatePhoto,
+    renamePhoto,
     deletePhoto,
   };
 };
@@ -430,6 +431,25 @@ const updatePhoto = async (photoId: string, photo: PhotoInput) => {
   const { query, values } = SCHEMA.photo.buildUpdateByIdQuery(photo);
   if (!query || !values) return;
   db.prepare(query).run([...values, photoId]);
+};
+// Re-key a photo across photo + gallery_photo. The FK on gallery_photo
+// is RESTRICT (no ON UPDATE CASCADE), so we toggle foreign_keys off
+// for the duration of the transaction — SQLite requires this to be
+// done outside any open transaction.
+const renamePhoto = async (oldId: string, newId: string) => {
+  db.pragma("foreign_keys = OFF");
+  try {
+    const tx = db.transaction(() => {
+      db.prepare("UPDATE photo SET id = ? WHERE id = ?").run(newId, oldId);
+      db.prepare("UPDATE gallery_photo SET photo_id = ? WHERE photo_id = ?").run(
+        newId,
+        oldId
+      );
+    });
+    tx();
+  } finally {
+    db.pragma("foreign_keys = ON");
+  }
 };
 const deletePhoto = async (photoId: string) =>
   deleteById(SCHEMA.photo, photoId);

@@ -6,6 +6,7 @@
 
 - New `photo.original_filename` column (schema migration `006`) records the basename the photo arrived with, backfilling existing rows to `id` so the values match pre-rename. Sets up the `(id, originalFilename, dateTimeOriginal)` lookup chain #272 needs once rename-on-import lands.
 - New `db.loadPhotosByOriginalFilename(name)` driver method (sqlite3 + dummy) so the lookup chain and `bin/photo.ts search` can find photos by their human-recognised camera filename.
+- New `db.renamePhoto(oldId, newId)` driver method (sqlite3 + dummy) that retargets `photo.id` and `gallery_photo.photo_id` atomically within a single transaction (FK enforcement toggled off for the rewrite, since the gallery_photo FK is RESTRICT). Powers `bin/photo-rename.ts`.
 
 ### Converter
 
@@ -16,6 +17,7 @@
 
 ### Tooling
 
+- New `bin/photo-rename.ts` operator script: `--migrate` (default) renames legacy-IDed rows (and their `display/` / `thumbnail/` / `original/` + sidecar files) to the `<YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext>` scheme from #272 — idempotent, safe to re-run. `--scramble` re-rolls the UUID portion of every row's id (URL-leak mitigation; old permalinks 404). `--dry-run` previews; `--yes` skips the confirmation. File renames execute first, DB updates after — on DB failure the file moves are rolled back. (closes #332)
 - `bin/instance.ts` upgrade-mode output reorganises around the recommended path: a "Next — cycle pm2 …" heading with the command block, a single-line "Note:" caveat (down from four), a horizontal rule, then a "Rollback — ONLY if the steps above didn't work" block. New `--quiet` / `-q` flag suppresses informational output (errors and warnings still surface) for scripted re-runs; missing-key warnings now route to stderr where they belong. (closes #284)
 - New `bin/meta.ts` operator script (`list` / `get` / `set [--force]`) paralleling `bin/{user,gallery,photo,access}.ts` so the `meta` table can be read and written without `curl` against `/api/v1/meta` or raw SQL; unknown keys rejected by default, `schema_version` hard-blocked, per-instance `bin/meta.ts` symlink wired up via `bin/instance.ts`. (closes #269)
 - `bin/photo.ts` restructured into yargs subcommands: the previous bare-positional behaviour becomes the default `$0 <files..>` command, and a new `search <originalFilename>` subcommand lists photos sharing a camera filename (collision triage). The default command grows a lookup chain (`id` → `(originalFilename, taken.instant.timestamp)` → ambiguous-error on rows-exist-but-no-timestamp-match → create on no candidates) so enrichment JSONs with the SOOC filename still find rows renamed by #272 while never silently merging onto the wrong photo across a camera-counter rollover. (part of #272)
