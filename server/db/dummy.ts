@@ -57,6 +57,7 @@ export default () => {
     loadPhoto,
     loadPhotosByOriginalFilename,
     updatePhoto,
+    renamePhoto,
     deletePhoto: notImplemented,
   };
 };
@@ -313,6 +314,19 @@ const updatePhoto = async (photoId: string, patch: Record<string, unknown>) => {
     throw new NotFoundError();
   }
   deepMerge(db.photos[photoId], patch);
+};
+const renamePhoto = async (oldId: string, newId: string) => {
+  if (!(oldId in db.photos)) {
+    throw new NotFoundError();
+  }
+  db.photos[newId] = { ...db.photos[oldId], id: newId };
+  delete db.photos[oldId];
+  // gallery_photo lives in dbDump as `{ galleryId: [photoId, ...] }`.
+  for (const galleryId of Object.keys(db.galleryPhotos)) {
+    db.galleryPhotos[galleryId] = db.galleryPhotos[galleryId].map((id: string) =>
+      id === oldId ? newId : id
+    );
+  }
 };
 
 const dbDump = JSON.stringify({

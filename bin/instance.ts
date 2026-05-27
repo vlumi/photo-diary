@@ -257,7 +257,7 @@ if (inferredFromCwd) {
 // bootstrap and upgrade, and `./code/bin/instance.ts` for the rare doctor
 // re-run; a per-instance shortcut would be ambiguous about which code
 // version it points at.
-const OPERATOR_SCRIPTS = ["photo", "gallery", "user", "access", "meta"];
+const OPERATOR_SCRIPTS = ["photo", "photo-rename", "gallery", "user", "access", "meta"];
 
 // ---- run -----------------------------------------------------------------
 

@@ -173,6 +173,9 @@ export default {
   updatePhoto: async (photoId: string, photo: PhotoInput) => {
     await db.updatePhoto(photoId, photo);
   },
+  renamePhoto: async (oldId: string, newId: string) => {
+    await db.renamePhoto(oldId, newId);
+  },
   deletePhoto: async (photoId: string) => {
     await db.deletePhoto(photoId);
   },
