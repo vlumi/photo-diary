@@ -170,6 +170,9 @@ export default {
   loadPhotosByOriginalFilename: async (originalFilename: string) => {
     return await db.loadPhotosByOriginalFilename(originalFilename);
   },
+  loadOrphanPhotoIds: async (): Promise<string[]> => {
+    return await db.loadOrphanPhotoIds();
+  },
   updatePhoto: async (photoId: string, photo: PhotoInput) => {
     await db.updatePhoto(photoId, photo);
   },

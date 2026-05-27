@@ -16,6 +16,21 @@ interface Migration {
   sql: string;
 }
 
+interface FkViolation {
+  table: string;
+  rowid: number;
+  parent: string;
+  fkid: number;
+}
+
+const formatFkViolations = (issues: unknown[]): string =>
+  issues
+    .map((issue) => {
+      const v = issue as FkViolation;
+      return `  - ${v.table} rowid=${v.rowid} references missing ${v.parent}`;
+    })
+    .join("\n");
+
 const loadMigrations = (): Migration[] => {
   return fs
     .readdirSync(MIGRATIONS_DIR)
@@ -97,9 +112,22 @@ export const migrate = (db: Database): void => {
       apply();
       const fkIssues = db.pragma("foreign_key_check") as unknown[];
       if (fkIssues.length > 0) {
+        // The post-migration check fires after every migration, so a
+        // violation here may pre-date this specific one — particularly
+        // common for legacy data drift surfacing only when migrate runs.
+        // Either way, refuse to advance until the operator inspects the
+        // listed rows and removes the orphans (referenced parent row is
+        // gone) or restores them.
         throw new Error(
-          `Migration ${m.filename} left foreign-key violations: ` +
-            JSON.stringify(fkIssues)
+          `After migration ${m.filename}, foreign-key violations detected:\n` +
+            formatFkViolations(fkIssues) +
+            "\n\n" +
+            "These rows may pre-date this migration. Investigate the listed " +
+            "rows (the referenced parent row no longer exists) and remove the " +
+            "orphans before re-running. Operator scripts surface this directly " +
+            "post-merge — `./bin/photo.ts audit --orphans` finds photo rows " +
+            "with no gallery link; `./bin/gallery.ts audit --orphan-photos` " +
+            "(coming next in #337) finds the reverse case shown above."
         );
       }
     }
