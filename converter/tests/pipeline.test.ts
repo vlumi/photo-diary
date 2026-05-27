@@ -39,7 +39,7 @@ const setup = async (fixture: string, fileName: string) => {
 // Pipeline now renames the file at intake to <ts>-<uuid>.<ext>; the test
 // can't predict the uuid suffix, so locate the single output in each dir
 // and verify the shape.
-const ID_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-[0-9a-f]{8}\.jpg$/;
+const ID_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-[0-9a-f]{16}\.jpg$/;
 const onlyFile = async (dir: string): Promise<string> => {
   const entries = await fs.promises.readdir(dir);
   const jpgs = entries.filter((e) => e.endsWith(".jpg"));

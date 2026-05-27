@@ -3,11 +3,13 @@ import fs from "node:fs";
 import { randomUUID } from "node:crypto";
 import exifr from "exifr";
 
-// `<YYYY-MM-DDTHH-MM-SS>-<8-hex>.<ext>`. Timestamp from EXIF
-// DateTimeOriginal (fallback CreateDate, then file mtime). UUID
-// portion disambiguates same-second captures. `:` would be illegal
-// on Windows filesystems and ambiguous in URLs, so `T` and `-`
-// stand in throughout.
+// `<YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext>`. Timestamp from EXIF
+// DateTimeOriginal (fallback CreateDate, then file mtime). The
+// 16-hex (64-bit) UUID portion disambiguates same-second captures
+// and gives `bin/photo-rename.ts --scramble` enough entropy to
+// resist brute-force enumeration of leaked URLs. `:` would be
+// illegal on Windows filesystems and ambiguous in URLs, so `T`
+// and `-` stand in throughout.
 const formatIdTimestamp = (date: Date): string => {
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
@@ -51,7 +53,9 @@ export default async (filePath: string): Promise<GenerateIdResult> => {
   const timestamp =
     exifDate ?? (await fs.promises.stat(filePath)).mtime;
   const ext = path.extname(filePath).toLowerCase();
-  const uuid = randomUUID().slice(0, 8);
+  // randomUUID() returns `xxxxxxxx-xxxx-...`; strip dashes so we can
+  // take exactly 16 hex chars regardless of how they straddle groups.
+  const uuid = randomUUID().replace(/-/g, "").slice(0, 16);
   return {
     id: `${formatIdTimestamp(timestamp)}-${uuid}${ext}`,
     exifTimestamp: exifDate ? formatDbTimestamp(exifDate) : null,
