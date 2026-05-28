@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S npx tsx
 import path from "node:path";
 
 import readExif from "../extract-properties/read-exif.js";
