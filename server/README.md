@@ -40,6 +40,10 @@ Read at startup from a `.env` file in the **current working directory** (which i
 | `DEBUG` | | `false` | When truthy, enables verbose logger output. |
 | `STATIC_DIR` | | `<source>/build` | Path to the bundled frontend. Resolved relative to the server's source file by default; override if you build into a non-standard location. |
 | `DEFAULT_GALLERY`, `DEFAULT_THEME`, `INITIAL_GALLERY_VIEW`, `FIRST_WEEKDAY` | | — | Per-instance frontend defaults, surfaced through `/api/v1/meta` to the frontend on boot. See the top-level README's Multi-Instance section. |
+| `REVERSE_GEOCODE` | | `false` | When set (any truthy value), the converter reverse-geocodes new photos with coords at intake. Opt-in by default — coordinates are sent to Nominatim. `photo-geocode.ts` honours this flag by default; pass `--force` to bypass for one-off backfills. |
+| `REVERSE_GEOCODE_EXTRA_LANGS` | | — | Comma-separated extra languages to fetch on top of English (e.g. `ja,fi`). Each adds one 1 RPS Nominatim call per photo at intake. `photo-geocode.ts` uses the same default. |
+| `NOMINATIM_BASE_URL` | | `https://nominatim.openstreetmap.org` | Override to point at a self-hosted Nominatim. |
+| `GEOCODE_DIR` | | `<cwd>/.geocode` | Where the geocode lock file and per-`(lang, coord)` cache live. The cache key is `<lang>/<lat:.4f>:<lon:.4f>.json` (~11 m precision). |
 
 The SQLite DB file and the photo repository are **not** configured via env vars — they're fixed-by-convention at `<cwd>/db.sqlite3` and `<cwd>/photos/` respectively. See the next subsection.
 
@@ -71,7 +75,7 @@ cd /var/photo-diary/dailybw
 ./bin/<name>.ts [options]   # via the per-instance bin/ symlinks created by instance.ts
 ```
 
-The per-instance `bin/` directory (`<instance>/bin/{photo,gallery,user}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognise them as TS source and apply the server's tsconfig via realpath.
+The per-instance `bin/` directory (`<instance>/bin/{photo,photo-rename,photo-geocode,gallery,user,access,meta}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognise them as TS source and apply the server's tsconfig via realpath.
 
 #### `instance.ts <name> [--base <dir>] [--fix]`
 
@@ -156,6 +160,25 @@ Overrides apply to every photo in the invocation, so this is the natural way to 
   --gallery dailybw \
   --country jp \
   --place "Yokohama, Kanagawa"
+```
+
+#### `photo-geocode.ts [--langs en,ja] [--limit N] [--dry-run] [--force] [--yes]`
+
+Backfill daemon for reverse-geocoded location data. Walks photos whose row is missing geocoded fields for a given language and fills them in via Nominatim at the 1 RPS public-instance rate (one queue per process). Pairs with the converter's intake-time geocoding — recently shot photos already have data when the daemon runs, the daemon catches the historical archive and any newly added language.
+
+| Flag | Purpose |
+| --- | --- |
+| `--langs <list>` | Comma-separated language override. Defaults to `en` + `REVERSE_GEOCODE_EXTRA_LANGS` from `.env`. English is always included. |
+| `--limit <n>` | Cap per language (default: no cap). Useful to chunk a large backfill. |
+| `--dry-run` | Count missing rows per language and exit. No Nominatim calls, no DB writes. |
+| `--force` | Run even when `REVERSE_GEOCODE` isn't set in `.env`. Useful for one-off backfills on an instance that keeps intake-time geocoding off. |
+| `--yes` | Skip the confirmation prompt. |
+
+Order is recent-first by capture timestamp: visible photos get filled in earliest. A `${GEOCODE_DIR}/lock` file (PID inside, created with `O_EXCL`; stale-detection via `process.kill(pid, 0)`) keeps two daemon instances from racing. Safe to run alongside the server — the DB writes per photo are short — but a quiet window is the safest.
+
+```sh
+./bin/photo-geocode.ts --dry-run                    # what would be done?
+./bin/photo-geocode.ts --langs en,ja --limit 100    # chunked backfill
 ```
 
 #### `dump-exif.ts` (converter)
