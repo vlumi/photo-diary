@@ -62,6 +62,8 @@ export default () => {
     loadOrphanUserGalleryRows,
     updatePhoto,
     renamePhoto,
+    upsertGeocoded,
+    loadPhotosMissingGeocoded,
     deletePhoto: notImplemented,
   };
 };
@@ -380,6 +382,44 @@ const updatePhoto = async (photoId: string, patch: Record<string, unknown>) => {
   }
   deepMerge(db.photos[photoId], patch);
 };
+// Geocoded fields — English-canonical lives on the photo "row";
+// other languages live in db.photoLocalized keyed by (photo_id, lang).
+const upsertGeocoded = async (
+  photoId: string,
+  lang: string,
+  fields: Record<string, unknown>
+) => {
+  if (!(photoId in db.photos)) return;
+  if (lang === "en") {
+    db.photos[photoId].geocoded = db.photos[photoId].geocoded || {};
+    Object.assign(db.photos[photoId].geocoded, fields);
+    return;
+  }
+  if (!db.photoLocalized) db.photoLocalized = {};
+  const key = `${photoId}:${lang}`;
+  db.photoLocalized[key] = { ...(db.photoLocalized[key] ?? {}), ...fields };
+};
+const loadPhotosMissingGeocoded = async (
+  lang: string,
+  limit: number
+): Promise<Array<{ id: string; lat: number; lon: number }>> => {
+  const out: Array<{ id: string; lat: number; lon: number }> = [];
+  for (const [id, photo] of Object.entries(db.photos) as Array<[string, any]>) {
+    const lat = photo.taken?.location?.coordinates?.latitude;
+    const lon = photo.taken?.location?.coordinates?.longitude;
+    if (lat === null || lat === undefined) continue;
+    if (lon === null || lon === undefined) continue;
+    const hasEn = !!photo.geocoded?.place;
+    const hasLocalized =
+      lang === "en"
+        ? hasEn
+        : !!db.photoLocalized?.[`${id}:${lang}`]?.place;
+    if (!hasLocalized) out.push({ id, lat, lon });
+    if (out.length >= limit) break;
+  }
+  return out;
+};
+
 const renamePhoto = async (oldId: string, newId: string) => {
   if (!(oldId in db.photos)) {
     throw new NotFoundError();

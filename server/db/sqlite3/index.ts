@@ -13,6 +13,7 @@ import schemaFactory, {
   type GalleryRow,
   type MetaRow,
   type PhotoInput,
+  type PhotoLocalizedRow,
   type PhotoRow,
   type SessionRow,
   type User,
@@ -71,6 +72,8 @@ export default () => {
     loadOrphanUserGalleryRows,
     updatePhoto,
     renamePhoto,
+    upsertGeocoded,
+    loadPhotosMissingGeocoded,
     deletePhoto,
   };
 };
@@ -409,21 +412,59 @@ const unlinkAllGalleries = async (photoId: string) => {
   ]);
 };
 
-const loadPhotos = async () => {
+// English is the canonical reverse-geocoded language stored on the
+// photo row directly. For other languages, we load the matching
+// photo_localized row(s) for the requested ids and merge per-photo
+// in mapRow (which takes the localized row as an optional third arg).
+const loadLocalizedFor = (
+  photoIds: string[],
+  lang: string
+): Map<string, PhotoLocalizedRow> => {
+  if (photoIds.length === 0) return new Map();
+  const placeholders = photoIds.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT * FROM photo_localized
+        WHERE lang = ? AND photo_id IN (${placeholders})`
+    )
+    .all(lang, ...photoIds) as PhotoLocalizedRow[];
+  const byId = new Map<string, PhotoLocalizedRow>();
+  for (const r of rows) byId.set(r.photo_id, r);
+  return byId;
+};
+
+const loadPhotos = async (lang?: string) => {
   const rows = db.prepare(SCHEMA.photo.buildSelectQuery()).all() as PhotoRow[];
-  return rows.map((row, index) => SCHEMA.photo.mapRow(row, index));
+  const localized =
+    lang && lang !== "en"
+      ? loadLocalizedFor(
+        rows.map((r) => r.id),
+        lang
+      )
+      : new Map<string, PhotoLocalizedRow>();
+  return rows.map((row, index) =>
+    SCHEMA.photo.mapRow(row, index, localized.get(row.id))
+  );
 };
 const createPhoto = async (photo: PhotoInput) => {
   db.prepare(SCHEMA.photo.buildCreateQuery()).run(
     SCHEMA.photo.mapInsert(photo)
   );
 };
-const loadPhoto = async (photoId: string) => {
+const loadPhoto = async (photoId: string, lang?: string) => {
   const row = db.prepare(SCHEMA.photo.buildSelectByIdQuery()).get(photoId) as
     | PhotoRow
     | undefined;
   if (!row) throw new NotFoundError();
-  return SCHEMA.photo.mapRow(row, 0);
+  const localized =
+    lang && lang !== "en"
+      ? (db
+        .prepare(
+          "SELECT * FROM photo_localized WHERE photo_id = ? AND lang = ?"
+        )
+        .get(photoId, lang) as PhotoLocalizedRow | undefined)
+      : undefined;
+  return SCHEMA.photo.mapRow(row, 0, localized);
 };
 const loadPhotosByOriginalFilename = async (originalFilename: string) => {
   const rows = db
@@ -551,3 +592,100 @@ const renamePhoto = async (oldId: string, newId: string) => {
 };
 const deletePhoto = async (photoId: string) =>
   deleteById(SCHEMA.photo, photoId);
+
+// Geocoded fields for one (photo, lang) pair. English routes to the
+// photo columns directly; everything else goes to photo_localized
+// (upsert). `address` is stringified JSON; pass `null` to clear.
+export interface GeocodedFields {
+  countryCode?: string | null; // English-only meaningful (column on photo)
+  state?: string | null;
+  city?: string | null;
+  district?: string | null;
+  place?: string | null;
+  address?: string | null; // JSON
+}
+const upsertGeocoded = async (
+  photoId: string,
+  lang: string,
+  fields: GeocodedFields
+) => {
+  if (lang === "en") {
+    // Patch the photo row's English-canonical columns.
+    const updates: string[] = [];
+    const values: unknown[] = [];
+    const addField = (col: string, val: unknown) => {
+      if (val === undefined) return;
+      updates.push(`${col} = ?`);
+      values.push(val);
+    };
+    addField("geocoded_country_code", fields.countryCode);
+    addField("geocoded_state", fields.state);
+    addField("geocoded_city", fields.city);
+    addField("geocoded_district", fields.district);
+    addField("geocoded_place", fields.place);
+    addField("geocoded_address", fields.address);
+    if (updates.length === 0) return;
+    db.prepare(
+      `UPDATE photo SET ${updates.join(", ")} WHERE id = ?`
+    ).run(...values, photoId);
+    return;
+  }
+  // Non-English: upsert into photo_localized. countryCode is
+  // language-independent so we ignore it on this path.
+  db.prepare(
+    `INSERT INTO photo_localized
+       (photo_id, lang, geocoded_state, geocoded_city,
+        geocoded_district, geocoded_place, geocoded_address)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (photo_id, lang) DO UPDATE SET
+       geocoded_state    = COALESCE(excluded.geocoded_state, photo_localized.geocoded_state),
+       geocoded_city     = COALESCE(excluded.geocoded_city, photo_localized.geocoded_city),
+       geocoded_district = COALESCE(excluded.geocoded_district, photo_localized.geocoded_district),
+       geocoded_place    = COALESCE(excluded.geocoded_place, photo_localized.geocoded_place),
+       geocoded_address  = COALESCE(excluded.geocoded_address, photo_localized.geocoded_address)`
+  ).run(
+    photoId,
+    lang,
+    fields.state ?? null,
+    fields.city ?? null,
+    fields.district ?? null,
+    fields.place ?? null,
+    fields.address ?? null
+  );
+};
+
+// Daemon's "give me work" query — photos with coords that are missing
+// geocoded data for the requested language. Recent first by capture
+// timestamp; rows with no timestamp (EXIF-less imports) go to the back
+// so the visible / recently-shot photos get filled in earliest.
+const loadPhotosMissingGeocoded = async (
+  lang: string,
+  limit: number
+): Promise<Array<{ id: string; lat: number; lon: number }>> => {
+  const sql =
+    lang === "en"
+      ? `SELECT id, coord_lat, coord_lon FROM photo
+           WHERE coord_lat IS NOT NULL AND coord_lon IS NOT NULL
+             AND geocoded_place IS NULL
+           ORDER BY taken IS NULL, taken DESC, id ASC
+           LIMIT ?`
+      : `SELECT p.id, p.coord_lat, p.coord_lon FROM photo p
+           LEFT JOIN photo_localized pl
+             ON pl.photo_id = p.id AND pl.lang = ?
+           WHERE p.coord_lat IS NOT NULL AND p.coord_lon IS NOT NULL
+             AND pl.photo_id IS NULL
+           ORDER BY p.taken IS NULL, p.taken DESC, p.id ASC
+           LIMIT ?`;
+  const rows = (lang === "en"
+    ? db.prepare(sql).all(limit)
+    : db.prepare(sql).all(lang, limit)) as Array<{
+    id: string;
+    coord_lat: number;
+    coord_lon: number;
+  }>;
+  return rows.map((r) => ({
+    id: r.id,
+    lat: r.coord_lat,
+    lon: r.coord_lon,
+  }));
+};
