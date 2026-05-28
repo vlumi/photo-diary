@@ -240,6 +240,8 @@ interface AuditCheck {
   key: string;
   title: string;
   rows: () => Array<{ id: string; row: any; why?: string }>;
+  whyLabel?: string;
+  footer?: () => string | undefined;
 }
 
 const buildChecks = (
@@ -270,6 +272,7 @@ const buildChecks = (
   checks.push({
     key: "duplicates",
     title: "Photos sharing an originalFilename",
+    whyLabel: "duplicate of",
     rows: () => {
       const byName = new Map<string, any[]>();
       for (const p of photos) {
@@ -287,6 +290,46 @@ const buildChecks = (
     },
   });
 
+  // Operator-set country vs Nominatim's geocoded country. The operator
+  // value wins by convention (custom labels, region overrides) — this
+  // check just surfaces the drift so the operator can decide which is
+  // wrong. Photos still missing geocoded data are counted separately so
+  // they don't dilute the mismatch list.
+  checks.push({
+    key: "country-mismatch",
+    title: "Photos where operator country and geocoded country disagree",
+    whyLabel: "operator → geocoded",
+    rows: () => {
+      const out: Array<{ id: string; row: any; why?: string }> = [];
+      for (const p of photos) {
+        const operator = p.taken?.location?.country;
+        const geocoded = p.geocoded?.countryCode;
+        if (!operator || !geocoded) continue;
+        if (operator.toLowerCase() === geocoded.toLowerCase()) continue;
+        out.push({
+          id: p.id,
+          row: p,
+          why: `${operator} → ${geocoded}`,
+        });
+      }
+      return out;
+    },
+    footer: () => {
+      let withCoords = 0;
+      let withoutGeocoded = 0;
+      for (const p of photos) {
+        const lat = p.taken?.location?.coordinates?.latitude;
+        const lon = p.taken?.location?.coordinates?.longitude;
+        if (lat === null || lat === undefined) continue;
+        if (lon === null || lon === undefined) continue;
+        withCoords += 1;
+        if (!p.geocoded?.countryCode) withoutGeocoded += 1;
+      }
+      if (withoutGeocoded === 0) return undefined;
+      return `(${withoutGeocoded} of ${withCoords} photo(s) with coords not yet geocoded — run \`./bin/photo-geocode.ts\` first)`;
+    },
+  });
+
   return checks;
 };
 
@@ -300,21 +343,24 @@ const printCheck = (
     return;
   }
   console.log(`\n${check.title}: ${results.length}`);
-  if (results.length === 0) return;
-  const showWhy = results.some((r) => r.why !== undefined);
-  const header = showWhy
-    ? ["id", "originalFilename", "taken", "duplicate of"]
-    : ["id", "originalFilename", "taken"];
-  const table: string[][] = [header];
-  for (const r of results) {
-    const base = [
-      r.id ?? "",
-      r.row.originalFilename ?? "",
-      r.row.taken?.instant?.timestamp ?? "",
-    ];
-    table.push(showWhy ? [...base, r.why ?? ""] : base);
+  if (results.length > 0) {
+    const showWhy = results.some((r) => r.why !== undefined);
+    const header = showWhy
+      ? ["id", "originalFilename", "taken", check.whyLabel ?? "why"]
+      : ["id", "originalFilename", "taken"];
+    const table: string[][] = [header];
+    for (const r of results) {
+      const base = [
+        r.id ?? "",
+        r.row.originalFilename ?? "",
+        r.row.taken?.instant?.timestamp ?? "",
+      ];
+      table.push(showWhy ? [...base, r.why ?? ""] : base);
+    }
+    console.log(formatTable(table));
   }
-  console.log(formatTable(table));
+  const footer = check.footer?.();
+  if (footer) console.log(footer);
 };
 
 await yargs(hideBin(process.argv))
@@ -379,7 +425,7 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "audit",
-    "Find photos with missing properties, orphan gallery links, or duplicate originalFilenames",
+    "Find photos with missing properties, orphan gallery links, duplicate originalFilenames, or operator-vs-geocoded country drift",
     (y) =>
       y
         .option("missing", {
@@ -405,6 +451,12 @@ await yargs(hideBin(process.argv))
           default: false,
           describe: "Restrict to the duplicate-originalFilename check",
         })
+        .option("country-mismatch", {
+          type: "boolean",
+          default: false,
+          describe:
+            "Restrict to photos where operator country_code and geocoded_country_code disagree",
+        })
         .option("format", {
           choices: ["table", "ids"] as const,
           default: "table" as const,
@@ -418,8 +470,12 @@ await yargs(hideBin(process.argv))
       );
 
       const all = buildChecks(photos, orphanIds);
+      const countryMismatch = argv["country-mismatch"];
       const anyFilter =
-        argv.missing !== undefined || argv.orphans || argv.duplicates;
+        argv.missing !== undefined ||
+        argv.orphans ||
+        argv.duplicates ||
+        countryMismatch;
 
       let selected: AuditCheck[];
       if (!anyFilter) {
@@ -437,6 +493,10 @@ await yargs(hideBin(process.argv))
         }
         if (argv.duplicates) {
           const match = all.find((c) => c.key === "duplicates");
+          if (match) selected.push(match);
+        }
+        if (countryMismatch) {
+          const match = all.find((c) => c.key === "country-mismatch");
           if (match) selected.push(match);
         }
       }
