@@ -68,6 +68,26 @@ export interface PhotoRow {
   disp_height: number | null;
   thumb_width: number | null;
   thumb_height: number | null;
+  // English-canonical reverse-geocoded fields. Other languages live
+  // in `photo_localized`. See migration 007.
+  geocoded_country_code: string | null;
+  geocoded_state: string | null;
+  geocoded_city: string | null;
+  geocoded_district: string | null;
+  geocoded_place: string | null;
+  geocoded_address: string | null; // raw Nominatim address JSON
+}
+
+// `photo_localized` row — non-English geocoded place data per
+// (photo_id, lang) pair.
+export interface PhotoLocalizedRow {
+  photo_id: string;
+  lang: string;
+  geocoded_state: string | null;
+  geocoded_city: string | null;
+  geocoded_district: string | null;
+  geocoded_place: string | null;
+  geocoded_address: string | null;
 }
 
 // App-side shapes (what mapRow returns / mapInsert and mapToRow take).
@@ -128,6 +148,20 @@ export interface Photo {
     original: { width: number | undefined; height: number | undefined };
     display: { width: number | undefined; height: number | undefined };
     thumbnail: { width: number | undefined; height: number | undefined };
+  };
+  // Reverse-geocoded location, resolved for the requesting language
+  // (falls back to the English photo columns when no `photo_localized`
+  // row exists for that language). See migration 007 + #246.
+  geocoded: {
+    countryCode: string | undefined;
+    state: string | undefined;
+    city: string | undefined;
+    district: string | undefined;
+    place: string | undefined;
+    // Nominatim's raw `address` object as returned at fetch time
+    // (parsed from the stored JSON). Kept for future re-derivation
+    // if the state/city/district mapping changes.
+    address: Record<string, unknown> | undefined;
   };
 }
 
@@ -293,10 +327,22 @@ export default () => {
         buildDeleteQuery(SCHEMA.galleryPhoto, conditions),
     },
     photo: {
-      mapRow: (row: PhotoRow, index: number): Photo => {
+      // `localized` (optional) is the photo_localized row for the
+      // requesting language. When present, its non-null fields take
+      // precedence over the English columns on `row`. Callers that
+      // don't need localized data omit it; mapRow returns English.
+      mapRow: (
+        row: PhotoRow,
+        index: number,
+        localized?: PhotoLocalizedRow
+      ): Photo => {
         const taken = new Date(toString(row.taken).substring(0, 19));
         const normalizeCountry = (country: string | null) =>
           !country || country === "unknown" ? undefined : country;
+        const pick = (
+          loc: string | null | undefined,
+          en: string | null
+        ): string | undefined => loc ?? en ?? undefined;
 
         return {
           id: toString(row.id),
@@ -355,6 +401,28 @@ export default () => {
               height: toNumber(row.thumb_height),
             },
           },
+          geocoded: {
+            // country_code is language-independent — only ever from the
+            // photo column, never `photo_localized`.
+            countryCode: normalizeCountry(row.geocoded_country_code),
+            state: pick(localized?.geocoded_state, row.geocoded_state),
+            city: pick(localized?.geocoded_city, row.geocoded_city),
+            district: pick(
+              localized?.geocoded_district,
+              row.geocoded_district
+            ),
+            place: pick(localized?.geocoded_place, row.geocoded_place),
+            address: (() => {
+              const raw =
+                localized?.geocoded_address ?? row.geocoded_address;
+              if (!raw) return undefined;
+              try {
+                return JSON.parse(raw) as Record<string, unknown>;
+              } catch {
+                return undefined;
+              }
+            })(),
+          },
         };
       },
       mapInsert: (photo: PhotoInput): unknown[] => {
@@ -391,6 +459,13 @@ export default () => {
           map.disp_height,
           map.thumb_width,
           map.thumb_height,
+
+          map.geocoded_country_code,
+          map.geocoded_state,
+          map.geocoded_city,
+          map.geocoded_district,
+          map.geocoded_place,
+          map.geocoded_address,
         ];
       },
 
@@ -514,6 +589,24 @@ const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
       if ("height" in thumbnail) result.thumb_height = thumbnail.height;
     }
   }
+  if (photo.geocoded) {
+    const g = photo.geocoded;
+    if ("countryCode" in g) result.geocoded_country_code = g.countryCode;
+    if ("state" in g) result.geocoded_state = g.state;
+    if ("city" in g) result.geocoded_city = g.city;
+    if ("district" in g) result.geocoded_district = g.district;
+    if ("place" in g) result.geocoded_place = g.place;
+    if ("address" in g) {
+      // Address is a Nominatim raw object; store as JSON string.
+      // Pass-through if already string.
+      result.geocoded_address =
+        typeof g.address === "string"
+          ? g.address
+          : g.address === undefined
+            ? undefined
+            : JSON.stringify(g.address);
+    }
+  }
   return result;
 };
 
@@ -610,6 +703,13 @@ const SCHEMA = {
       "disp_height",
       "thumb_width",
       "thumb_height",
+
+      "geocoded_country_code",
+      "geocoded_state",
+      "geocoded_city",
+      "geocoded_district",
+      "geocoded_place",
+      "geocoded_address",
     ],
     primaryKey: ["id"],
     order: ["taken ASC", "id ASC"],

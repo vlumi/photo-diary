@@ -9,6 +9,40 @@ import extractProperties from "./extract-properties/index.js";
 import saveJson from "./extract-properties/save-json.js";
 import convertImage from "./convert-image/index.js";
 import generateId from "./generate-id.js";
+import { geocode } from "./reverse-geocode/index.js";
+
+// Reverse-geocode is opt-in: privacy trade-off, third-party API call
+// per new photo. English is always written when enabled (canonical /
+// filter-keyed language); REVERSE_GEOCODE_EXTRA_LANGS lists additional
+// languages. Each extra adds one 1-RPS Nominatim call per photo at
+// intake. Use `bin/photo-geocode.ts` (PR 2 of #246) to backfill
+// existing photos or add languages later without touching the hot path.
+const geocodeAtIntake = async (
+  photoId: string,
+  lat: number | null | undefined,
+  lon: number | null | undefined
+): Promise<void> => {
+  if (!process.env.REVERSE_GEOCODE) return;
+  if (lat === null || lat === undefined) return;
+  if (lon === null || lon === undefined) return;
+  const extra = (process.env.REVERSE_GEOCODE_EXTRA_LANGS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s && s !== "en");
+  const langs = ["en", ...extra];
+  for (const lang of langs) {
+    const result = await geocode(lat, lon, lang);
+    if (!result) continue;
+    await db.upsertGeocoded(photoId, lang, {
+      countryCode: lang === "en" ? (result.countryCode ?? null) : undefined,
+      state: result.state ?? null,
+      city: result.city ?? null,
+      district: result.district ?? null,
+      place: result.place,
+      address: JSON.stringify(result.address),
+    });
+  }
+};
 
 export default async (
   originalFilename: string,
@@ -94,6 +128,20 @@ export default async (
     await db.createPhoto(properties);
     logger.debug(`[${originalFilename}] Created DB row ${id}`);
   }
+
+  // Reverse-geocode at intake when enabled. Runs after the DB row
+  // exists so the geocoder's upsertGeocoded calls always have a
+  // target row.
+  const coords = (
+    properties as {
+      taken?: {
+        location?: {
+          coordinates?: { latitude?: number; longitude?: number };
+        };
+      };
+    }
+  ).taken?.location?.coordinates;
+  await geocodeAtIntake(id, coords?.latitude, coords?.longitude);
 
   logger.debug(`[${originalFilename}] Moving file`);
   // fs.rename overwrites on POSIX; deliberately replaces the prior

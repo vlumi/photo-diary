@@ -158,14 +158,14 @@ export default {
     return await db.unlinkAllGalleries(photoId);
   },
 
-  loadPhotos: async () => {
-    return await db.loadPhotos();
+  loadPhotos: async (lang?: string) => {
+    return await db.loadPhotos(lang);
   },
   createPhoto: async (photo: PhotoInput) => {
     await db.createPhoto(photo);
   },
-  loadPhoto: async (photoId: string) => {
-    return await db.loadPhoto(photoId);
+  loadPhoto: async (photoId: string, lang?: string) => {
+    return await db.loadPhoto(photoId, lang);
   },
   loadPhotosByOriginalFilename: async (originalFilename: string) => {
     return await db.loadPhotosByOriginalFilename(originalFilename);
@@ -191,6 +191,23 @@ export default {
   },
   renamePhoto: async (oldId: string, newId: string) => {
     await db.renamePhoto(oldId, newId);
+  },
+  upsertGeocoded: async (
+    photoId: string,
+    lang: string,
+    fields: {
+      countryCode?: string | null;
+      state?: string | null;
+      city?: string | null;
+      district?: string | null;
+      place?: string | null;
+      address?: string | null;
+    }
+  ) => {
+    await db.upsertGeocoded(photoId, lang, fields);
+  },
+  loadPhotosMissingGeocoded: async (lang: string, limit: number) => {
+    return await db.loadPhotosMissingGeocoded(lang, limit);
   },
   deletePhoto: async (photoId: string) => {
     await db.deletePhoto(photoId);

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Server
+
+- New `photo` columns (`geocoded_country_code`, `geocoded_state`, `geocoded_city`, `geocoded_district`, `geocoded_place`, `geocoded_address`) and a sibling `photo_localized` table for non-English language variants — schema migration 007. English is the canonical / filter-keyed language stored on the photo row; other languages live in `photo_localized` only when actually translated. Indexes on the three drill-down levels cover the future filter / Stats Places work. Operator-set `photo.country_code` and `photo.place` stay untouched (additive — auto-populated reverse-geocode data sits alongside, doesn't replace operator-controlled values). (part of #246)
+- `db.upsertGeocoded(photoId, lang, fields)` driver method (sqlite3 + dummy + facade) that routes English to the photo columns and other languages to `photo_localized` via an upsert. `db.loadPhotosMissingGeocoded(lang, limit)` walks photos with coords that still need geocoding for a language, ordered by `taken` DESC (recent first, NULLs at the back) so the daemon fills in the visible / recently-shot photos earliest.
+- `db.loadPhoto` / `db.loadPhotos` accept an optional `lang` parameter — when present and non-English, joins `photo_localized` and merges the localized values over the English photo columns per photo.
+
+### Converter
+
+- New `converter/reverse-geocode/` module: Nominatim client with custom `User-Agent: photo-diary/<version> (<repo-url>)`, 1 RPS queue (Nominatim public usage policy), per-`(lang, coord)` file cache at `${GEOCODE_DIR}/cache/<lang>/<lat>:<lon>.json` (coords rounded to 4 decimals ≈ 11 m precision). `NOMINATIM_BASE_URL` env points at a self-hosted Nominatim if needed; `GEOCODE_DIR` defaults to `<cwd>/.geocode/`. (part of #246)
+- Converter intake reverse-geocodes new photos with coords when `REVERSE_GEOCODE=1` is set in the instance's `.env`. English is always written (canonical / filter-keyed); `REVERSE_GEOCODE_EXTRA_LANGS=ja,fi` lists additional languages to fetch at intake. Each extra language is one extra 1 RPS Nominatim call per photo. Failures (network, no address) leave the geocoded fields empty with a log line. Opt-in by default — privacy trade-off (coords go to a third-party service). The backfill daemon (PR 2 of #246) fills in existing photos and adds languages later without touching the hot path. (part of #246)
+
 ### Tooling
 
 - `bin/photo.ts audit` subcommand: surfaces rows with missing data (`--missing taken|coords|place|country|author|title|description`), orphan gallery links (`--orphans`), or shared `originalFilename` (`--duplicates`); no flag runs every check. `--format ids` emits one id per line for piping into batch fixers (`xargs -I{} ./bin/photo.ts {} --place "..."` etc.). New `db.loadOrphanPhotoIds()` driver method (sqlite3 + dummy + facade) powers the orphan check. (part of #337)
