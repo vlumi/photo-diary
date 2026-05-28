@@ -162,23 +162,25 @@ Overrides apply to every photo in the invocation, so this is the natural way to 
   --place "Yokohama, Kanagawa"
 ```
 
-#### `photo-geocode.ts [--langs en,ja] [--limit N] [--dry-run] [--force] [--yes]`
+#### `photo-geocode.ts [--apply] [--langs en,ja] [--limit N] [--force] [--yes]`
 
 Backfill daemon for reverse-geocoded location data. Walks photos whose row is missing geocoded fields for a given language and fills them in via Nominatim at the 1 RPS public-instance rate (one queue per process). Pairs with the converter's intake-time geocoding — recently shot photos already have data when the daemon runs, the daemon catches the historical archive and any newly added language.
 
+The script defaults to a dry-run report; pass `--apply` to actually fetch and write.
+
 | Flag | Purpose |
 | --- | --- |
+| `--apply` | Actually fetch from Nominatim and write rows. Default is dry-run report only. |
 | `--langs <list>` | Comma-separated language override. Defaults to `en` + `REVERSE_GEOCODE_EXTRA_LANGS` from `.env`. English is always included. |
 | `--limit <n>` | Cap per language (default: no cap). Useful to chunk a large backfill. |
-| `--dry-run` | Count missing rows per language and exit. No Nominatim calls, no DB writes. |
 | `--force` | Run even when `REVERSE_GEOCODE` isn't set in `.env`. Useful for one-off backfills on an instance that keeps intake-time geocoding off. |
-| `--yes` | Skip the confirmation prompt. |
+| `--yes` | Skip the confirmation prompt (only meaningful with `--apply`). |
 
 Order is recent-first by capture timestamp: visible photos get filled in earliest. A `${GEOCODE_DIR}/lock` file (PID inside, created with `O_EXCL`; stale-detection via `process.kill(pid, 0)`) keeps two daemon instances from racing. Safe to run alongside the server — the DB writes per photo are short — but a quiet window is the safest.
 
 ```sh
-./bin/photo-geocode.ts --dry-run                    # what would be done?
-./bin/photo-geocode.ts --langs en,ja --limit 100    # chunked backfill
+./bin/photo-geocode.ts                              # dry-run report
+./bin/photo-geocode.ts --apply --langs en,ja        # chunked backfill, fetch + write
 ```
 
 #### `dump-exif.ts` (converter)
