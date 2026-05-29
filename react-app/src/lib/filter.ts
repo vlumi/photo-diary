@@ -9,7 +9,7 @@ const topics = (): string[] => ["general", "time", "gear", "exposure"];
 const categories = (category: string): string[] => {
   switch (category) {
     case "general":
-      return ["author", "country", "geotagged"];
+      return ["author", "country", "city", "geotagged"];
     case "time":
       return ["year", "year-month", "month", "weekday", "hour"];
 

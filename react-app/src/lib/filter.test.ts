@@ -16,6 +16,7 @@ describe("categories", () => {
     expect(filter.categories("general")).toStrictEqual([
       "author",
       "country",
+      "city",
       "geotagged",
     ]));
   test("time", () =>

@@ -33,7 +33,7 @@ describe("migrate", () => {
   test("fresh DB runs every migration and lands at the highest version", () => {
     const db = open();
     migrate(db);
-    expect(schemaVersion(db)).toBe(7);
+    expect(schemaVersion(db)).toBe(8);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "gallery",
@@ -100,7 +100,7 @@ describe("migrate", () => {
 
     migrate(db);
 
-    expect(schemaVersion(db)).toBe(7);
+    expect(schemaVersion(db)).toBe(8);
     expect(gallerPhotoFkRefs(db).sort()).toEqual(["gallery", "photo"]);
     const rows = db.prepare("SELECT * FROM gallery_photo").all();
     expect(rows).toEqual([{ gallery_id: "g1", photo_id: "p1" }]);

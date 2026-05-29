@@ -618,6 +618,7 @@ const deletePhoto = async (photoId: string) =>
 export interface GeocodedFields {
   countryCode?: string | null; // English-only meaningful (column on photo)
   state?: string | null;
+  stateCode?: string | null;
   city?: string | null;
   district?: string | null;
   place?: string | null;
@@ -639,6 +640,7 @@ const upsertGeocoded = async (
     };
     addField("geocoded_country_code", fields.countryCode);
     addField("geocoded_state", fields.state);
+    addField("geocoded_state_code", fields.stateCode);
     addField("geocoded_city", fields.city);
     addField("geocoded_district", fields.district);
     addField("geocoded_place", fields.place);

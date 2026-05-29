@@ -166,16 +166,32 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
         {}
       ) as Record<string, Record<string, Set<unknown>>>;
     const categoryValueFormatter = format.categoryValue(lang, t, countryData);
+    const formatCountryName = format.countryName(lang, countryData);
     const flattened: UniqueValues = {} as UniqueValues;
     Object.keys(accumulator).forEach((topic) => {
       const topicBag: Record<string, UniqueValueEntry[]> = {};
       Object.keys(accumulator[topic]).forEach((category) => {
+        const cityLabels =
+          category === "city"
+            ? format.buildCityLabels(
+                [...accumulator[topic][category]].filter(
+                  (v): v is string => typeof v === "string" && !!v
+                ),
+                formatCountryName
+              )
+            : null;
         topicBag[category] = [...accumulator[topic][category]]
           .map((value) => {
             if (value === "" || value === undefined || value === null) {
               return {
                 key: stats.UNKNOWN,
                 value: String(t("stats-unknown")),
+              };
+            }
+            if (cityLabels) {
+              return {
+                key: value as string,
+                value: cityLabels[value as string] ?? String(value),
               };
             }
             return {

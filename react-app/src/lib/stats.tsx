@@ -131,6 +131,7 @@ export interface SummaryPeriod {
 export interface SummaryVariety {
   authors: number;
   countries: number;
+  cities: number;
   cameras: number;
   lenses: number;
   cameraMakes: number;
@@ -154,6 +155,7 @@ export interface SummaryExtras {
   mostUsed: {
     author: PeakShape;
     country: PeakShape;
+    city: PeakShape;
     camera: PeakShape;
     lens: PeakShape;
     cameraLens: PeakShape;
@@ -459,6 +461,7 @@ const collectTopics = (
       variety: {
         authors: countDistinctNonZero(count.byAuthor),
         countries: countDistinctNonZero(count.byCountry),
+        cities: countDistinctNonZero(count.byCity),
         cameras: countDistinctNonZero(byGear.byCamera),
         lenses: countDistinctNonZero(byGear.byLens),
         cameraMakes: countDistinctNonZero(byGear.byCameraMake),
@@ -479,6 +482,7 @@ const collectTopics = (
       mostUsed: {
         author: detectPeakShape(count.byAuthor),
         country: detectPeakShape(count.byCountry),
+        city: detectPeakShape(count.byCity),
         camera: detectPeakShape(byGear.byCamera),
         lens: detectPeakShape(byGear.byLens),
         cameraLens: detectPeakShape(byGear.byCameraLens),
@@ -598,6 +602,60 @@ const collectTopics = (
       }),
     };
   };
+  const collectCity = (byCity: any, byCityCountry: any, total: any) => {
+    const cityLabels = format.buildCityLabels(
+      Object.keys(byCity),
+      format.countryName(lang, countryData)
+    );
+    const [flat, data, valueRanks] = transformData({
+      original: byCity,
+      formatter: (key: any) => cityLabels[key] ?? format.parseCityKey(key).city,
+    });
+    const values = flat.map((entry: any) => entry.value);
+    const { mean, stddev } = calculateStatistics(values);
+    return {
+      key: "city",
+      title: t("stats-category-city"),
+      valueSortable: true,
+      valueSortByLabel: true,
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "flag", align: "right", header: true },
+        { title: "city", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry: any) => {
+        const countryCode = byCityCountry?.[entry.key];
+        const label = cityLabels[entry.key] ?? format.parseCityKey(entry.key).city;
+        return {
+          key: encodeTableKey(entry.key),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          flag: (
+            <>
+              {countryCode && countryData.isValid(countryCode) ? (
+                <FlagIcon code={countryCode} />
+              ) : (
+                <></>
+              )}
+            </>
+          ),
+          city: label,
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
+          _count: entry.value,
+          _label: label,
+          standardScore: (entry.value - mean) / stddev,
+        };
+      }),
+    };
+  };
   const collectLocation = (photos: Photo[], total: number): StatsCategory => ({
     key: "location",
     title: t("stats-category-location"),
@@ -617,6 +675,11 @@ const collectTopics = (
     // location-derived). mapPhotos is already empty when hideMap.
     if (!hideMap) {
       categories.push(collectCountry(count.byCountry, total));
+      if (Object.keys(count.byCity ?? {}).length > 0) {
+        categories.push(
+          collectCity(count.byCity, count.byCityCountry, total)
+        );
+      }
       if (mapPhotos.length > 0) {
         categories.push(collectLocation(mapPhotos, total));
       }
@@ -1456,6 +1519,8 @@ const initializeStats = (uniqueValues: any): any => {
       byGear: {},
       byAuthor: {},
       byCountry: {},
+      byCity: {},
+      byCityCountry: {} as Record<string, string>,
     },
   };
   const setInitialValues = (source: any) => {
@@ -1468,6 +1533,7 @@ const initializeStats = (uniqueValues: any): any => {
     if ("general" in uniqueValues) {
       stats.count.byAuthor = setInitialValues(uniqueValues.general.author);
       stats.count.byCountry = setInitialValues(uniqueValues.general.country);
+      stats.count.byCity = setInitialValues(uniqueValues.general.city);
     }
     if ("time" in uniqueValues) {
       stats.count.byTime.byYearMonth = uniqueValues.time["year-month"]
@@ -1541,6 +1607,15 @@ const populateDistributions = (photos: any, stats: any) => {
     stats.count.byCountry[countryCode] =
       stats.count.byCountry[countryCode] || 0;
     stats.count.byCountry[countryCode]++;
+
+    const cityKey = photo.geocodedCityKey();
+    if (cityKey) {
+      stats.count.byCity[cityKey] = stats.count.byCity[cityKey] || 0;
+      stats.count.byCity[cityKey]++;
+      if (!stats.count.byCityCountry[cityKey] && photo.countryCode()) {
+        stats.count.byCityCountry[cityKey] = photo.countryCode();
+      }
+    }
 
     const author = photo.author() || UNKNOWN;
     stats.count.byAuthor[author] = stats.count.byAuthor[author] || 0;

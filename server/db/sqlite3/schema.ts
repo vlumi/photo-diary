@@ -72,6 +72,7 @@ export interface PhotoRow {
   // in `photo_localized`. See migration 007.
   geocoded_country_code: string | null;
   geocoded_state: string | null;
+  geocoded_state_code: string | null;
   geocoded_city: string | null;
   geocoded_district: string | null;
   geocoded_place: string | null;
@@ -159,6 +160,7 @@ export interface Photo {
   geocoded: {
     countryCode: string | undefined;
     state: string | undefined;
+    stateCode: string | undefined;
     city: string | undefined;
     district: string | undefined;
     place: string | undefined;
@@ -415,6 +417,7 @@ export default () => {
             // photo column, never `photo_localized`.
             countryCode: normalizeCountry(row.geocoded_country_code),
             state: pick(localized?.geocoded_state, row.geocoded_state),
+            stateCode: row.geocoded_state_code ?? undefined,
             city: pick(localized?.geocoded_city, row.geocoded_city),
             district: pick(
               localized?.geocoded_district,
@@ -472,6 +475,7 @@ export default () => {
 
           map.geocoded_country_code,
           map.geocoded_state,
+          map.geocoded_state_code,
           map.geocoded_city,
           map.geocoded_district,
           map.geocoded_place,
@@ -605,6 +609,7 @@ const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
     const g = photo.geocoded;
     if ("countryCode" in g) result.geocoded_country_code = g.countryCode;
     if ("state" in g) result.geocoded_state = g.state;
+    if ("stateCode" in g) result.geocoded_state_code = g.stateCode;
     if ("city" in g) result.geocoded_city = g.city;
     if ("district" in g) result.geocoded_district = g.district;
     if ("place" in g) result.geocoded_place = g.place;
@@ -718,6 +723,7 @@ const SCHEMA = {
 
       "geocoded_country_code",
       "geocoded_state",
+      "geocoded_state_code",
       "geocoded_city",
       "geocoded_district",
       "geocoded_place",

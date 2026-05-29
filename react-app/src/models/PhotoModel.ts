@@ -36,6 +36,7 @@ interface Location {
 interface Geocoded {
   countryCode?: string;
   state?: string;
+  stateCode?: string;
   city?: string;
   district?: string;
   place?: string;
@@ -269,6 +270,20 @@ const PhotoModel = (photoData: unknown) => {
     place: (): string | undefined => photo.taken.location?.place,
     hasGeocodedCity: (): boolean => !!photo.geocoded?.city,
     geocodedCity: (): string | undefined => photo.geocoded?.city,
+    geocodedState: (): string | undefined => photo.geocoded?.state,
+    geocodedStateCode: (): string | undefined => photo.geocoded?.stateCode,
+    // (country, stateCode||state||"", city) JSON-encoded so it can be
+    // used as a Map key, filter value, and uniqueValues entry. Returns
+    // undefined when there's no city to bucket.
+    geocodedCityKey: (): string | undefined => {
+      const city = photo.geocoded?.city;
+      if (!city) return undefined;
+      return JSON.stringify([
+        photo.geocoded?.countryCode ?? "",
+        photo.geocoded?.stateCode ?? photo.geocoded?.state ?? "",
+        city,
+      ]);
+    },
     hasGeocodedCountry: (): boolean => !!photo.geocoded?.countryCode,
     geocodedCountryCode: (): string | undefined => photo.geocoded?.countryCode,
     geocodedCountryName: (lang: string, countryData: CountryData): string =>
@@ -327,6 +342,8 @@ const PhotoModel = (photoData: unknown) => {
           return (!value && !self.author()) || value === self.author();
         case "country":
           return value === self.countryCode();
+        case "city":
+          return value === self.geocodedCityKey();
         case "geotagged":
           return value === "yes" ? self.hasCoordinates() : !self.hasCoordinates();
         case "year":
@@ -385,6 +402,7 @@ const PhotoModel = (photoData: unknown) => {
         general: {
           author: new Set([self.author()]),
           country: new Set([self.countryCode()]),
+          city: new Set(self.geocodedCityKey() ? [self.geocodedCityKey()] : []),
           geotagged: new Set([self.hasCoordinates() ? "yes" : "no"]),
         },
         time: {

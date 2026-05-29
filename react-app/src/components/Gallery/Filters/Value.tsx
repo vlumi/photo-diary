@@ -89,6 +89,22 @@ const Value = ({
         </Title>
       );
     }
+    if (category === "city") {
+      const parsed = format.parseCityKey(value);
+      const qualified = parsed.state
+        ? `${parsed.city}, ${parsed.state}`
+        : parsed.city;
+      return (
+        <Title>
+          {parsed.country && countryData.isValid(parsed.country) ? (
+            <>
+              <FlagIcon code={parsed.country} />{" "}
+            </>
+          ) : null}
+          {qualified}
+        </Title>
+      );
+    }
     return <Title>{formatCategoryValue(category)(value as never)}</Title>;
   };
 

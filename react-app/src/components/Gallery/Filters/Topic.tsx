@@ -58,7 +58,7 @@ interface Props {
 }
 
 // Mirror of Filters/index.tsx — keep in sync.
-const LOCATION_CATEGORIES = new Set(["country", "geotagged"]);
+const LOCATION_CATEGORIES = new Set(["country", "city", "geotagged"]);
 
 const Topic = ({
   topic,
