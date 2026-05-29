@@ -15,13 +15,17 @@ export default () => {
 
 const init = async () => {};
 
-const getGalleryPhotos = async (galleryId: string) => {
+const getGalleryPhotos = async (galleryId: string, lang?: string) => {
   logger.debug("Getting photos from gallery", galleryId);
-  return await db.loadGalleryPhotos(galleryId);
+  return await db.loadGalleryPhotos(galleryId, lang);
 };
-const getGalleryPhoto = async (galleryId: string, photoId: string) => {
+const getGalleryPhoto = async (
+  galleryId: string,
+  photoId: string,
+  lang?: string
+) => {
   logger.debug("Getting photo", photoId, "from gallery", galleryId);
-  return await db.loadGalleryPhoto(galleryId, photoId);
+  return await db.loadGalleryPhoto(galleryId, photoId, lang);
 };
 const linkGalleryPhoto = async (galleryId: string, photoId: string) => {
   logger.debug("Linking photo", photoId, "to gallery", galleryId);

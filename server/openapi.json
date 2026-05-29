@@ -763,6 +763,14 @@
             "schema": {
               "type": "string"
             },
+            "in": "query",
+            "name": "lang",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
             "in": "path",
             "name": "galleryId",
             "required": true
@@ -794,6 +802,14 @@
           "gallery-photos"
         ],
         "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "lang",
+            "required": false
+          },
           {
             "schema": {
               "type": "string"

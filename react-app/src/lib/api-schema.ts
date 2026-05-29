@@ -767,7 +767,9 @@ export interface paths {
         /** List photos in a gallery */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    lang?: string;
+                };
                 header?: never;
                 path: {
                     galleryId: string;
@@ -807,7 +809,9 @@ export interface paths {
         /** Get one photo's metadata in a gallery's context */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    lang?: string;
+                };
                 header?: never;
                 path: {
                     galleryId: string;
