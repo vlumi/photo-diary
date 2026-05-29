@@ -58,7 +58,7 @@ interface Props {
   beta: boolean;
 }
 
-// Mirror of Filters/index.tsx — keep in sync.
+// Mirror of Filters/index.tsx.
 const LOCATION_CATEGORIES = new Set(["country", "state", "city", "geotagged"]);
 const BETA_CATEGORIES = new Set(["state"]);
 

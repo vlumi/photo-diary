@@ -98,13 +98,9 @@ const countryName =
   (countryCode: string): string =>
     countryData.getName(countryCode, lang) || countryCode;
 
-// ISO 3166-2 subdivision code → localized name. Codes arrive as
-// `JP-13` / `US-MA`; the JSON files key by `jp13` / `usma` (lowercase,
-// no hyphen — matches CLDR's normalization). Fallback chain is
-// requested lang → en → original code. Data is repo-owned (curated
-// hand-maintained JSON, no external runtime dependency) and loaded
-// per-language via dynamic import so the main bundle ships only the
-// active language plus en (the fallback).
+// ISO 3166-2 code → localized name. JSON keys are lowercase with the
+// hyphen stripped (`jp13`, `usma`). Per-language chunks load on demand;
+// lookup falls back lang → en → original code.
 const SUBDIVISIONS: Record<string, Record<string, string>> = {};
 const SUBDIVISION_LOADERS: Record<
   string,

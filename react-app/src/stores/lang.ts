@@ -52,8 +52,6 @@ export const useLangStore = create<LangState>((set) => ({
       i18n.changeLanguage(lang);
     }
     loadCountryData(lang).then((data) => set({ countryData: data }));
-    // Subdivision names live in their own per-language chunk. Fire-and-
-    // forget — the lookup falls back to ISO code until the chunk lands.
     format.loadSubdivisions(lang);
   },
 }));
@@ -67,8 +65,7 @@ if (i18n.language !== initialLang) {
 loadCountryData(initialLang).then((data) => {
   useLangStore.setState({ countryData: data });
 });
-// Always preload `en` subdivisions (the fallback for unmapped codes /
-// unsupported UI languages) plus the active language if different.
+// `en` is the lookup fallback, so always load it.
 format.loadSubdivisions("en");
 if (initialLang !== "en") {
   format.loadSubdivisions(initialLang);

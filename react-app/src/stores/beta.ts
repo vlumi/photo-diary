@@ -1,12 +1,5 @@
 import { create } from "zustand";
 
-// Opt-in beta features. Off by default — visitors who never toggle the
-// flag see the polished surface only. Toggle lives in `UserMenu` for
-// logged-in users; the localStorage key persists across sessions.
-//
-// Single boolean for now. If multiple beta features ever land together,
-// migrate to a feature-keyed Set without changing this store's public
-// surface (consumers read `enabled`).
 const STORAGE_KEY = "beta-features";
 
 const readInitial = (): boolean => {

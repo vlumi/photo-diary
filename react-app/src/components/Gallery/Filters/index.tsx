@@ -59,10 +59,7 @@ interface Props {
   hideMap: boolean;
 }
 
-// Categories derived from photo location data — suppressed when
-// hide_map is set (cascade from user_gallery.hide_map).
 const LOCATION_CATEGORIES = new Set(["country", "state", "city", "geotagged"]);
-// Categories behind the opt-in beta flag.
 const BETA_CATEGORIES = new Set(["state"]);
 
 const Filters = ({

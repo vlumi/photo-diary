@@ -272,17 +272,12 @@ const PhotoModel = (photoData: unknown) => {
     geocodedCity: (): string | undefined => photo.geocoded?.city,
     geocodedState: (): string | undefined => photo.geocoded?.state,
     geocodedStateCode: (): string | undefined => photo.geocoded?.stateCode,
-    // ISO-code-derived localized state name; Nominatim's `state` field
-    // is unreliable enough across languages that the beta state UI
-    // surfaces use this lookup exclusively. Returns "" when no state
-    // code is set, so callers can hide the row.
+    // Derived from `stateCode` via the curated subdivision lookup, not
+    // from Nominatim's `state`. Empty when no code is set.
     geocodedStateName: (lang: string): string => {
       const code = photo.geocoded?.stateCode;
       return code ? format.subdivisionName(lang, code) : "";
     },
-    // (country, stateCode||state||"", city) JSON-encoded so it can be
-    // used as a Map key, filter value, and uniqueValues entry. Returns
-    // undefined when there's no city to bucket.
     geocodedCityKey: (): string | undefined => {
       const city = photo.geocoded?.city;
       if (!city) return undefined;
@@ -300,9 +295,6 @@ const PhotoModel = (photoData: unknown) => {
           self.geocodedCountryCode() as string
         )
         : "",
-    // City + country baseline; state is included only when the caller
-    // opts in (beta state UI), since Nominatim's state field is too
-    // patchy across languages to render unconditionally.
     hasGeocodedAddress: (): boolean =>
       !!(photo.geocoded?.city || photo.geocoded?.countryCode),
     geocodedAddress: (
