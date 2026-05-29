@@ -142,12 +142,20 @@ const Content = ({
 }: Props): React.ReactElement => {
   // Measure the actual container, not the viewport — the modal
   // Frame caps at 1400px so wide-screen landscapes would overshoot.
+  //
+  // useLayoutEffect (not useEffect) so the corrective measurement
+  // runs before the first paint. Without that, the initial render
+  // uses the full-viewport fallback (window.innerWidth/Height),
+  // paints the photo stretched to the modal's full extent, and only
+  // shrinks on the next frame when the effect runs — visible as a
+  // brief stretch-then-shrink animation when opening the modal from
+  // the Month view.
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const el = rootRef.current;
     if (!el) return;
     const update = () => {
