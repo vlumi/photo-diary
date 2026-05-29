@@ -394,6 +394,15 @@ const upsertGeocoded = async (
   if (lang === "en") {
     db.photos[photoId].geocoded = db.photos[photoId].geocoded || {};
     Object.assign(db.photos[photoId].geocoded, fields);
+    // Auto-fill operator country from geocoded when empty.
+    if (
+      fields.countryCode &&
+      !db.photos[photoId].taken?.location?.country
+    ) {
+      db.photos[photoId].taken = db.photos[photoId].taken || {};
+      db.photos[photoId].taken.location = db.photos[photoId].taken.location || {};
+      db.photos[photoId].taken.location.country = fields.countryCode;
+    }
     return;
   }
   if (!db.photoLocalized) db.photoLocalized = {};

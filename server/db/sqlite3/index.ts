@@ -647,6 +647,15 @@ const upsertGeocoded = async (
     db.prepare(
       `UPDATE photo SET ${updates.join(", ")} WHERE id = ?`
     ).run(...values, photoId);
+    // Auto-fill operator country_code from the geocoded value when
+    // the operator hasn't set one, so the country filter / Stats
+    // pick up coordinate-derived photos uniformly. Only fires when
+    // the existing operator value is null or empty.
+    if (fields.countryCode) {
+      db.prepare(
+        "UPDATE photo SET country_code = ? WHERE id = ? AND (country_code IS NULL OR country_code = '')"
+      ).run(fields.countryCode, photoId);
+    }
     return;
   }
   // Non-English: upsert into photo_localized. countryCode is
