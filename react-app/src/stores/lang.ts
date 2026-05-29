@@ -2,6 +2,7 @@ import { create } from "zustand";
 import countryData from "i18n-iso-countries";
 
 import config from "../lib/config";
+import format from "../lib/format";
 import i18n from "../lib/i18n";
 
 type CountryLocale = Parameters<typeof countryData.registerLocale>[0];
@@ -51,6 +52,9 @@ export const useLangStore = create<LangState>((set) => ({
       i18n.changeLanguage(lang);
     }
     loadCountryData(lang).then((data) => set({ countryData: data }));
+    // Subdivision names live in their own per-language chunk. Fire-and-
+    // forget — the lookup falls back to ISO code until the chunk lands.
+    format.loadSubdivisions(lang);
   },
 }));
 
@@ -63,6 +67,12 @@ if (i18n.language !== initialLang) {
 loadCountryData(initialLang).then((data) => {
   useLangStore.setState({ countryData: data });
 });
+// Always preload `en` subdivisions (the fallback for unmapped codes /
+// unsupported UI languages) plus the active language if different.
+format.loadSubdivisions("en");
+if (initialLang !== "en") {
+  format.loadSubdivisions(initialLang);
+}
 
 // If anything else changes the language out-of-band (e.g. an i18next
 // language detector plugin in the future), mirror it into the store so the

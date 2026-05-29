@@ -9,6 +9,7 @@ import FlagIcon from "../../FlagIcon";
 import MapContainer from "../../MapContainer.lazy";
 
 import format from "../../../lib/format";
+import { useBetaStore } from "../../../stores";
 
 import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo } from "../../../models/PhotoModel";
@@ -119,6 +120,7 @@ const MetadataPanel = ({
   onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
+  const beta = useBetaStore((s) => s.enabled);
   const formatExposure = format.exposure(lang, t);
 
   const renderPlace = () => {
@@ -150,7 +152,9 @@ const MetadataPanel = ({
   const renderGeocodedLocation = () => {
     if (gallery.hideMap()) return null;
     if (!photo.hasGeocodedAddress()) return null;
-    const address = photo.geocodedAddress(lang, countryData);
+    const address = photo.geocodedAddress(lang, countryData, {
+      includeState: beta,
+    });
     if (!address) return null;
     const code = photo.geocodedCountryCode();
     const flagAt = format.geocodedFlagPosition(lang);

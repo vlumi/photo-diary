@@ -11,6 +11,7 @@ import Topic from "./Topic";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import type { UniqueValues } from "../../../lib/stats";
+import { useBetaStore } from "../../../stores";
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -60,7 +61,9 @@ interface Props {
 
 // Categories derived from photo location data — suppressed when
 // hide_map is set (cascade from user_gallery.hide_map).
-const LOCATION_CATEGORIES = new Set(["country", "city", "geotagged"]);
+const LOCATION_CATEGORIES = new Set(["country", "state", "city", "geotagged"]);
+// Categories behind the opt-in beta flag.
+const BETA_CATEGORIES = new Set(["state"]);
 
 const Filters = ({
   filters,
@@ -71,6 +74,7 @@ const Filters = ({
   hideMap,
 }: Props): React.ReactElement => {
   const [topicSelector, setTopicSelector] = React.useState(false);
+  const beta = useBetaStore((s) => s.enabled);
 
   const { t } = useTranslation();
 
@@ -116,6 +120,7 @@ const Filters = ({
                     (category) => !alreadyFilteredCategory(topic, category)
                   )
                   .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
+                  .filter((category) => beta || !BETA_CATEGORIES.has(category))
                   .map((category) => (
                     <NewCategory key={`${topic}:${category}`} value={category}>
                       {t(`stats-category-${category}`)}
@@ -150,6 +155,7 @@ const Filters = ({
               lang={lang}
               countryData={countryData}
               hideMap={hideMap}
+              beta={beta}
             />
           ))}
         {renderTopicAdder()}

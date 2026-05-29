@@ -23,6 +23,8 @@ describe("generate", () => {
       count: {
         byAuthor: {},
         byCountry: {},
+        byState: {},
+        byStateCountry: {},
         byCity: {},
         byCityCountry: {},
         byExposure: {},
@@ -140,6 +142,8 @@ describe("generate", () => {
         byCountry: {
           jp: 1,
         },
+        byState: {},
+        byStateCountry: {},
         byCity: {},
         byCityCountry: {},
         byExposure: {
@@ -317,6 +321,8 @@ describe("generate", () => {
         byCountry: {
           unknown: 1,
         },
+        byState: {},
+        byStateCountry: {},
         byCity: {},
         byCityCountry: {},
         byExposure: {
@@ -538,6 +544,8 @@ describe("generate", () => {
         byCountry: {
           jp: 2,
         },
+        byState: {},
+        byStateCountry: {},
         byCity: {},
         byCityCountry: {},
         byExposure: {

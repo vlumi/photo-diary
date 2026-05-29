@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import format from "../../../lib/format";
 import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
+import { useBetaStore } from "../../../stores";
 import type {
   PeakShape,
   StatsCategory,
@@ -153,6 +154,7 @@ const SummaryModal = ({
   onClose,
 }: Props): React.ReactElement | null => {
   const { t } = useTranslation();
+  const beta = useBetaStore((s) => s.enabled);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -193,6 +195,8 @@ const SummaryModal = ({
         return (
           format.countryName(lang, countryData)(String(key)) ?? String(key)
         );
+      case "state":
+        return format.subdivisionName(lang, String(key));
       case "city": {
         const parsed = format.parseCityKey(String(key));
         return parsed.state
@@ -372,6 +376,12 @@ const SummaryModal = ({
                 [
                   ["authors", extras.variety.authors],
                   ["countries", extras.variety.countries],
+                  ...(beta
+                    ? ([["states", extras.variety.states]] as [
+                        string,
+                        number
+                      ][])
+                    : []),
                   ["cities", extras.variety.cities],
                   ["camera-makes", extras.variety.cameraMakes],
                   ["cameras", extras.variety.cameras],
@@ -410,6 +420,12 @@ const SummaryModal = ({
                 "country",
                 extras.mostUsed.country
               )}
+              {beta &&
+                renderPeakTile(
+                  "stats-summary-top-state",
+                  "state",
+                  extras.mostUsed.state
+                )}
               {renderPeakTile(
                 "stats-summary-top-city",
                 "city",

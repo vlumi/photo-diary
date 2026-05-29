@@ -10,6 +10,7 @@ import {
   useUserStore,
   useLoginModalStore,
   useChangePasswordModalStore,
+  useBetaStore,
 } from "../stores";
 
 const Root = styled.div`
@@ -77,6 +78,19 @@ const MenuItem = styled.button`
     color: var(--header-color);
   }
 `;
+const BetaToggle = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: var(--primary-color);
+  font: inherit;
+  cursor: pointer;
+  &:hover {
+    background: var(--header-background);
+    color: var(--header-color);
+  }
+`;
 
 // Profile icon in the top-right of the top menu. Anonymous (outlined) when
 // not logged in — clicking opens the login modal. Filled when logged in —
@@ -89,6 +103,8 @@ const UserMenu = (): React.ReactElement => {
   const openChangePasswordModal = useChangePasswordModalStore((s) => s.open);
   const setUser = useUserStore((s) => s.setUser);
   const queryClient = useQueryClient();
+  const betaEnabled = useBetaStore((s) => s.enabled);
+  const setBetaEnabled = useBetaStore((s) => s.setEnabled);
 
   const [isOpen, setIsOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -172,6 +188,14 @@ const UserMenu = (): React.ReactElement => {
           >
             {t("change-password-title")}
           </MenuItem>
+          <BetaToggle>
+            <input
+              type="checkbox"
+              checked={betaEnabled}
+              onChange={(e) => setBetaEnabled(e.target.checked)}
+            />
+            {t("beta-features")}
+          </BetaToggle>
           <MenuItem type="button" role="menuitem" onClick={handleLogout}>
             {t("logout")}
           </MenuItem>
