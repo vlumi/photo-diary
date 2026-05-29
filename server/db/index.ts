@@ -206,6 +206,9 @@ export default {
   ) => {
     await db.upsertGeocoded(photoId, lang, fields);
   },
+  markGeocodeNoData: async (photoId: string) => {
+    await db.markGeocodeNoData(photoId);
+  },
   loadPhotosMissingGeocoded: async (lang: string, limit: number) => {
     return await db.loadPhotosMissingGeocoded(lang, limit);
   },

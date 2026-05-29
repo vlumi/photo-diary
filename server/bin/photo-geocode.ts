@@ -6,10 +6,10 @@
  * coordinates that doesn't yet have geocoded data for each requested
  * language and fills it in via the Nominatim queue.
  *
- *   photo-geocode.ts                 # use REVERSE_GEOCODE_EXTRA_LANGS from .env
+ *   photo-geocode.ts                 # dry-run report (use REVERSE_GEOCODE_EXTRA_LANGS from .env)
+ *   photo-geocode.ts --apply         # actually fetch + write
  *   photo-geocode.ts --langs en,ja   # explicit list (en is always included)
  *   photo-geocode.ts --limit 100     # cap per language (default: no cap)
- *   photo-geocode.ts --dry-run       # report counts, no fetch / write
  *   photo-geocode.ts --force         # run even when REVERSE_GEOCODE isn't set
  *   photo-geocode.ts --yes           # skip the confirmation prompt
  *
@@ -151,7 +151,13 @@ const argv = await yargs(hideBin(process.argv))
   .scriptName("photo-geocode.ts")
   .locale("en")
   .strict()
-  .usage("Usage: $0 [--langs en,ja] [--limit N] [--dry-run] [--force] [--yes]")
+  .usage("Usage: $0 [--apply] [--langs en,ja] [--limit N] [--force] [--yes]")
+  .option("apply", {
+    type: "boolean",
+    default: false,
+    describe:
+      "Actually fetch from Nominatim and write rows. Without this, the script reports counts and exits (dry-run is the default).",
+  })
   .option("langs", {
     type: "string",
     describe:
@@ -163,11 +169,6 @@ const argv = await yargs(hideBin(process.argv))
     default: 0,
     describe: "Cap photos processed per language (0 = no cap).",
   })
-  .option("dry-run", {
-    type: "boolean",
-    default: false,
-    describe: "Report counts only; no Nominatim calls, no DB writes.",
-  })
   .option("force", {
     type: "boolean",
     default: false,
@@ -177,7 +178,7 @@ const argv = await yargs(hideBin(process.argv))
   .option("yes", {
     type: "boolean",
     default: false,
-    describe: "Skip the confirmation prompt.",
+    describe: "Skip the confirmation prompt (only meaningful with --apply).",
   })
   .parseAsync();
 
@@ -191,7 +192,7 @@ if (!process.env.REVERSE_GEOCODE && !argv.force) {
 
 const langs = parseLangs(argv.langs ?? process.env.REVERSE_GEOCODE_EXTRA_LANGS);
 const perLangLimit = argv.limit > 0 ? argv.limit : Number.MAX_SAFE_INTEGER;
-const dryRun = argv["dry-run"];
+const apply = argv.apply;
 
 // ---- plan ----------------------------------------------------------------
 
@@ -226,12 +227,12 @@ if (totalCalls > 0) {
   console.log(`Estimated minimum wall time: ~${mins}m${rem}s (1 RPS per language)`);
 }
 
-if (dryRun) {
-  console.log("\n--dry-run: nothing applied.");
-  process.exit(0);
-}
 if (totalCalls === 0) {
   console.log("\nNothing to do.");
+  process.exit(0);
+}
+if (!apply) {
+  console.log("\nDry run. Re-run with --apply to fetch and write.");
   process.exit(0);
 }
 if (!argv.yes) {
@@ -258,6 +259,12 @@ let calls = 0;
 let written = 0;
 let empty = 0;
 
+// Photos that returned no Nominatim data on this run. Address coverage
+// is language-independent — once one lang fails, the rest will too,
+// so we skip them on subsequent lang passes within this run AND flag
+// the row so future runs skip too.
+const noDataPhotos = new Set<string>();
+
 try {
   for (const lang of langs) {
     const todo = plan.get(lang)!;
@@ -265,12 +272,15 @@ try {
     let langWritten = 0;
     let langEmpty = 0;
     for (const { id, lat, lon } of todo) {
+      if (noDataPhotos.has(id)) continue;
       const result = await geocode(lat, lon, lang);
       calls += 1;
       if (!result) {
         empty += 1;
         langEmpty += 1;
-        logger.info(`[${lang}] ${id} (${lat},${lon}): no result`);
+        noDataPhotos.add(id);
+        await db.markGeocodeNoData(id);
+        logger.info(`[${lang}] ${id} (${lat},${lon}): no result, flagged`);
         continue;
       }
       await db.upsertGeocoded(id, lang, {

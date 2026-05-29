@@ -6,12 +6,12 @@
  * <YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext> scheme that #272's converter
  * produces for fresh imports.
  *
- *   photo-rename.ts                # default: --migrate (idempotent)
+ *   photo-rename.ts                # default: --migrate, dry-run report
  *   photo-rename.ts --migrate      # only rows whose id isn't on the new scheme
  *   photo-rename.ts --scramble     # re-roll the UUID portion of EVERY row's id
  *                                    (URL-leak mitigation; old permalinks 404)
  *
- *   --dry-run     print the planned renames without writing
+ *   --apply       actually rename rows + files (default is dry-run report)
  *   --yes         skip the confirmation prompt
  *
  * Runs from the per-instance directory (`/var/photo-diary/<name>/`),
@@ -88,27 +88,28 @@ const argv = await yargs(hideBin(process.argv))
   .scriptName("photo-rename.ts")
   .locale("en")
   .strict()
-  .usage("Usage: $0 [--scramble] [--dry-run] [--yes]")
+  .usage("Usage: $0 [--scramble] [--apply] [--yes]")
   .option("scramble", {
     type: "boolean",
     default: false,
     describe:
       "Re-roll the UUID portion of EVERY row's id (URL-leak mitigation). Default mode is --migrate (idempotent; only rows not yet on the new scheme).",
   })
-  .option("dry-run", {
+  .option("apply", {
     type: "boolean",
     default: false,
-    describe: "Print the planned renames without writing anything.",
+    describe:
+      "Actually rename DB rows + on-disk files. Without this, the script prints the planned renames and exits (dry-run is the default).",
   })
   .option("yes", {
     type: "boolean",
     default: false,
-    describe: "Skip the confirmation prompt.",
+    describe: "Skip the confirmation prompt (only meaningful with --apply).",
   })
   .parseAsync();
 
 const mode: "migrate" | "scramble" = argv.scramble ? "scramble" : "migrate";
-const dryRun = argv["dry-run"];
+const apply = argv.apply;
 
 const rootDir = process.cwd();
 const photoRoot = path.join(rootDir, DIR_PHOTOS);
@@ -148,7 +149,7 @@ for (const row of photos) {
 const ready = plan.filter((p): p is Extract<Plan, { newId: string }> => "newId" in p);
 const skipped = plan.filter((p): p is Extract<Plan, { skip: string }> => "skip" in p);
 
-console.log(`Mode: ${mode}${dryRun ? " (dry-run)" : ""}`);
+console.log(`Mode: ${mode}${apply ? "" : " (dry-run)"}`);
 console.log(`Photos in DB: ${photos.length}`);
 console.log(`Rows to rename: ${ready.length}`);
 if (alreadyMigrated > 0) {
@@ -175,8 +176,8 @@ if (ready.length > previewLimit) {
   console.log(`  ... and ${ready.length - previewLimit} more`);
 }
 
-if (dryRun) {
-  console.log("\n--dry-run: nothing applied. Re-run without --dry-run to execute.");
+if (!apply) {
+  console.log("\nDry run. Re-run with --apply to execute.");
   process.exit(0);
 }
 
@@ -235,7 +236,7 @@ try {
   console.error("\n✗ Error during execution, rolling back file moves:", error);
   undoMoves();
   console.error(
-    "Files restored. Re-run with --dry-run to inspect state before retrying."
+    "Files restored. Re-run (without --apply) to inspect state before retrying."
   );
   process.exit(1);
 }

@@ -335,14 +335,16 @@ describe("Photo", () => {
     "geocoded_district",
     "geocoded_place",
     "geocoded_address",
+
+    "geocode_no_data",
   ].join(",");
   test("Build create query", () =>
     expect(schema.photo.buildCreateQuery()).toBe(
-      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.photo.buildSelectByIdQuery()).toBe(
-      `SELECT ${cols} FROM photo WHERE id = ? ORDER BY taken ASC,id ASC`
+      `SELECT ${cols} FROM photo WHERE id = ? ORDER BY taken ASC,original_filename ASC,id ASC`
     ));
   // TODO: update
   test("Build update by id query: nothing", () =>
@@ -646,11 +648,11 @@ describe("Photo", () => {
     ));
   test("Build select all query", () =>
     expect(schema.photo.buildSelectQuery()).toBe(
-      `SELECT ${cols} FROM photo ORDER BY taken ASC,id ASC`
+      `SELECT ${cols} FROM photo ORDER BY taken ASC,original_filename ASC,id ASC`
     ));
   test("Build select by condition query", () =>
     expect(schema.photo.buildSelectQuery(["id = ?"])).toBe(
-      `SELECT ${cols} FROM photo WHERE id = ? ORDER BY taken ASC,id ASC`
+      `SELECT ${cols} FROM photo WHERE id = ? ORDER BY taken ASC,original_filename ASC,id ASC`
     ));
   test("Build delete all query", () =>
     expect(schema.photo.buildDeleteQuery()).toBe("DELETE FROM photo"));
