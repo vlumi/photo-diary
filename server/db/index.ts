@@ -198,6 +198,7 @@ export default {
     fields: {
       countryCode?: string | null;
       state?: string | null;
+      stateCode?: string | null;
       city?: string | null;
       district?: string | null;
       place?: string | null;

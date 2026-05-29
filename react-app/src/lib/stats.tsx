@@ -131,6 +131,7 @@ export interface SummaryPeriod {
 export interface SummaryVariety {
   authors: number;
   countries: number;
+  cities: number;
   cameras: number;
   lenses: number;
   cameraMakes: number;
@@ -154,6 +155,7 @@ export interface SummaryExtras {
   mostUsed: {
     author: PeakShape;
     country: PeakShape;
+    city: PeakShape;
     camera: PeakShape;
     lens: PeakShape;
     cameraLens: PeakShape;
@@ -459,6 +461,7 @@ const collectTopics = (
       variety: {
         authors: countDistinctNonZero(count.byAuthor),
         countries: countDistinctNonZero(count.byCountry),
+        cities: countDistinctNonZero(count.byCity),
         cameras: countDistinctNonZero(byGear.byCamera),
         lenses: countDistinctNonZero(byGear.byLens),
         cameraMakes: countDistinctNonZero(byGear.byCameraMake),
@@ -479,6 +482,7 @@ const collectTopics = (
       mostUsed: {
         author: detectPeakShape(count.byAuthor),
         country: detectPeakShape(count.byCountry),
+        city: detectPeakShape(count.byCity),
         camera: detectPeakShape(byGear.byCamera),
         lens: detectPeakShape(byGear.byLens),
         cameraLens: detectPeakShape(byGear.byCameraLens),
@@ -599,8 +603,13 @@ const collectTopics = (
     };
   };
   const collectCity = (byCity: any, byCityCountry: any, total: any) => {
+    const cityLabels = format.buildCityLabels(
+      Object.keys(byCity),
+      format.countryName(lang, countryData)
+    );
     const [flat, data, valueRanks] = transformData({
       original: byCity,
+      formatter: (key: any) => cityLabels[key] ?? format.parseCityKey(key).city,
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -622,6 +631,7 @@ const collectTopics = (
       ],
       table: flat.map((entry: any) => {
         const countryCode = byCityCountry?.[entry.key];
+        const label = cityLabels[entry.key] ?? format.parseCityKey(entry.key).city;
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -634,13 +644,13 @@ const collectTopics = (
               )}
             </>
           ),
-          city: localizeUnknownKey(entry.key),
+          city: label,
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
           )}%`,
           _count: entry.value,
-          _label: localizeUnknownKey(entry.key),
+          _label: label,
           standardScore: (entry.value - mean) / stddev,
         };
       }),
@@ -1598,12 +1608,12 @@ const populateDistributions = (photos: any, stats: any) => {
       stats.count.byCountry[countryCode] || 0;
     stats.count.byCountry[countryCode]++;
 
-    const city = photo.geocodedCity();
-    if (city) {
-      stats.count.byCity[city] = stats.count.byCity[city] || 0;
-      stats.count.byCity[city]++;
-      if (!stats.count.byCityCountry[city] && photo.countryCode()) {
-        stats.count.byCityCountry[city] = photo.countryCode();
+    const cityKey = photo.geocodedCityKey();
+    if (cityKey) {
+      stats.count.byCity[cityKey] = stats.count.byCity[cityKey] || 0;
+      stats.count.byCity[cityKey]++;
+      if (!stats.count.byCityCountry[cityKey] && photo.countryCode()) {
+        stats.count.byCityCountry[cityKey] = photo.countryCode();
       }
     }
 

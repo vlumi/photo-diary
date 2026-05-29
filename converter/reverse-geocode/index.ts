@@ -44,6 +44,7 @@ const cachePathFor = (lat: number, lon: number, lang: string): string => {
 export interface NominatimResult {
   countryCode: string | undefined;
   state: string | undefined;
+  stateCode: string | undefined;
   city: string | undefined;
   district: string | undefined;
   place: string;
@@ -84,9 +85,14 @@ const extract = (raw: NominatimResponse): NominatimResult | null => {
     const cc = a.country_code;
     return typeof cc === "string" ? cc : undefined;
   })();
+  const stateCode = (() => {
+    const v = a["ISO3166-2-lvl4"];
+    return typeof v === "string" && v ? v : undefined;
+  })();
   return {
     countryCode,
     state,
+    stateCode,
     city,
     district,
     place: raw.display_name ?? "",

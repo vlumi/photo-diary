@@ -193,6 +193,12 @@ const SummaryModal = ({
         return (
           format.countryName(lang, countryData)(String(key)) ?? String(key)
         );
+      case "city": {
+        const parsed = format.parseCityKey(String(key));
+        return parsed.state
+          ? `${parsed.city}, ${parsed.state}`
+          : parsed.city;
+      }
       case "cameraLens": {
         try {
           return (JSON.parse(String(key)) as string[]).join(" + ");
@@ -366,6 +372,7 @@ const SummaryModal = ({
                 [
                   ["authors", extras.variety.authors],
                   ["countries", extras.variety.countries],
+                  ["cities", extras.variety.cities],
                   ["camera-makes", extras.variety.cameraMakes],
                   ["cameras", extras.variety.cameras],
                   ["lenses", extras.variety.lenses],
@@ -402,6 +409,11 @@ const SummaryModal = ({
                 "stats-summary-top-country",
                 "country",
                 extras.mostUsed.country
+              )}
+              {renderPeakTile(
+                "stats-summary-top-city",
+                "city",
+                extras.mostUsed.city
               )}
               {renderPeakTile(
                 "stats-summary-top-camera",

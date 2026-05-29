@@ -191,6 +191,53 @@ const geocodedFlagPosition = (lang: string): "start" | "end" => {
   return f.order === "lts" ? "start" : "end";
 };
 
+interface CityTuple {
+  country: string;
+  state: string;
+  city: string;
+}
+const parseCityKey = (key: string): CityTuple => {
+  try {
+    const arr = JSON.parse(key) as unknown[];
+    if (Array.isArray(arr) && arr.length === 3) {
+      return {
+        country: String(arr[0] ?? ""),
+        state: String(arr[1] ?? ""),
+        city: String(arr[2] ?? ""),
+      };
+    }
+  } catch {
+    /* fall through */
+  }
+  return { country: "", state: "", city: key };
+};
+// Map of cityKey → display label. A bare city name is fine when unique;
+// when two entries share the same city, each gets a qualifier appended
+// (state if present, else country name).
+const buildCityLabels = (
+  keys: string[],
+  formatCountry: (code: string) => string
+): Record<string, string> => {
+  const parsed = keys.map((k) => ({ key: k, ...parseCityKey(k) }));
+  const byCity: Record<string, typeof parsed> = {};
+  for (const p of parsed) {
+    (byCity[p.city] ??= []).push(p);
+  }
+  const labels: Record<string, string> = {};
+  for (const group of Object.values(byCity)) {
+    if (group.length === 1) {
+      labels[group[0].key] = group[0].city;
+      continue;
+    }
+    for (const p of group) {
+      const qualifier =
+        p.state || (p.country ? formatCountry(p.country) : "");
+      labels[p.key] = qualifier ? `${p.city}, ${qualifier}` : p.city;
+    }
+  }
+  return labels;
+};
+
 const coordinates = (latitude: number, longitude: number): string => {
   return new GeoCoord(latitude, longitude).roundToSeconds().toString();
 };
@@ -351,6 +398,8 @@ export default {
   gear,
   geocodedAddress,
   geocodedFlagPosition,
+  parseCityKey,
+  buildCityLabels,
   coordinates,
 
   categoryValue,
