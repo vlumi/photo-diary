@@ -134,8 +134,14 @@ const Track = styled(motion.div)`
   height: 100%;
   touch-action: none;
 `;
+// `min-width: 0` so the slide doesn't grow to its content's
+// min-content (the photo Frame's explicit width). Without this,
+// initial render at a viewport wider than the modal's 1400 max-
+// width causes a ResizeObserver feedback loop in Content as the
+// slide stays oversized.
 const Slide = styled.div`
   flex: 0 0 33.3333%;
+  min-width: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -222,23 +228,12 @@ const Photo = ({
   // 3-slide carousel: track rests at -1/3 so the middle slide
   // (current photo) is centred in the viewport. Sliding right exposes
   // slot 0 (prev); sliding left exposes slot 2 (next).
-  //
-  // `previousPhoto` / `nextPhoto` fall back to returning the same
-  // `photo` argument at the gallery boundary. The `isFirst/LastPhoto`
-  // guards above usually keep us out of that case, but we also drop
-  // a candidate whose id matches the current photo — otherwise a
-  // swipe past the last photo would peek at the same photo on the
-  // right-hand slide.
-  const prevCandidate = !gallery.isFirstPhoto(photo)
+  const prevPhoto = !gallery.isFirstPhoto(photo)
     ? gallery.previousPhoto(year, month, day, photo)
     : undefined;
-  const prevPhoto =
-    prevCandidate && prevCandidate.id() !== photo.id() ? prevCandidate : undefined;
-  const nextCandidate = !gallery.isLastPhoto(photo)
+  const nextPhoto = !gallery.isLastPhoto(photo)
     ? gallery.nextPhoto(year, month, day, photo)
     : undefined;
-  const nextPhoto =
-    nextCandidate && nextCandidate.id() !== photo.id() ? nextCandidate : undefined;
   const TRACK_REST = "-33.3333%";
   const TRACK_PREV = "0%";
   const TRACK_NEXT = "-66.6667%";

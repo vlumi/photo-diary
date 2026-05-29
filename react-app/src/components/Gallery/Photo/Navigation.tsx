@@ -19,21 +19,11 @@ import type { Photo } from "../../../models/PhotoModel";
 // mobile Chrome it interacts badly with body scroll (the bar
 // appears to "fall off" the top of the modal). Override to a
 // regular block in the flex column.
-//
-// `min-height: 50px` pins the nav size during the photo-prop
-// transition: without it the nav's height briefly resolves to a
-// sub-50px value (~49.7px) for one frame at the navigate() commit,
-// growing the carousel viewport below it by the same delta. The
-// newly-mounted prev-slot Content then measures the expanded
-// viewport and renders the photo slightly oversized for one frame
-// before snapping back — visible as a brief height stretch of the
-// previous photo as it slides off.
 const Root = styled(SharedRoot)`
   position: relative;
   top: auto;
   left: auto;
-  flex: 0 0 50px;
-  min-height: 50px;
+  flex: 0 0 auto;
 `;
 const Group = styled.div`
   display: flex;

@@ -58,15 +58,9 @@ export const UpButton = styled(Link)`
 
 interface Props {
   children?: React.ReactNode;
-  className?: string;
 }
 
-// Forward `className` so `styled(Navigation)` overrides actually apply
-// to the inner <Root>. Without this, every per-view extension (Photo,
-// Month, Year) silently drops the override class — the photo modal
-// in particular relied on its override to lock `min-height: 50px` for
-// stable carousel sizing.
-const Navigation = ({ children, className }: Props): React.ReactElement => {
-  return <Root className={className}>{children}</Root>;
+const Navigation = ({ children }: Props): React.ReactElement => {
+  return <Root>{children}</Root>;
 };
 export default Navigation;
