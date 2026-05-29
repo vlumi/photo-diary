@@ -5,7 +5,11 @@ import collection from "./collection";
 import config from "./config";
 
 interface CountryData {
-  getName(code: string, lang: string): string | undefined;
+  getName(
+    code: string,
+    lang: string,
+    options?: { select?: "official" | "alias" | "all" }
+  ): string | undefined;
 }
 
 const identity = <T,>(_: T): T => _;
@@ -93,10 +97,16 @@ const dayOfWeek = (dow: number): string => {
   return DOW[dow % 7];
 };
 
+// `select: "alias"` prefers the common short form ("Taiwan", "Russia",
+// "South Korea") over ISO's official long form ("Taiwan, Province of
+// China", "Russian Federation", "Korea, Republic of"). Falls back to
+// official when no alias exists.
 const countryName =
   (lang: string, countryData: CountryData) =>
   (countryCode: string): string =>
-    countryData.getName(countryCode, lang) || countryCode;
+    countryData.getName(countryCode, lang, { select: "alias" }) ||
+    countryData.getName(countryCode, lang) ||
+    countryCode;
 
 // ISO 3166-2 code → localized name. JSON keys are lowercase with the
 // hyphen stripped (`jp13`, `usma`). Per-language chunks load on demand;
