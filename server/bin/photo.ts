@@ -343,6 +343,37 @@ const buildChecks = (
     },
   });
 
+  // Photos with coords and a geocoded city but no ISO 3166-2 subdivision
+  // code (`geocoded_state_code`). The state column on the row stays
+  // populated from Nominatim's localized field — what's missing is the
+  // language-neutral identifier the client now uses as the city-tuple
+  // disambiguator and the state filter / stats key.
+  checks.push({
+    key: "missing-state-code",
+    title:
+      "Photos with coords + city but no geocoded_state_code (ISO 3166-2)",
+    whyLabel: "country / state / city",
+    rows: () => {
+      const out: Array<{ id: string; row: any; why?: string }> = [];
+      for (const p of photos) {
+        const lat = p.taken?.location?.coordinates?.latitude;
+        const lon = p.taken?.location?.coordinates?.longitude;
+        if (lat === null || lat === undefined) continue;
+        if (lon === null || lon === undefined) continue;
+        if (!p.geocoded?.city) continue;
+        if (p.geocoded?.stateCode) continue;
+        const country = p.geocoded?.countryCode ?? "?";
+        const state = p.geocoded?.state ?? "";
+        out.push({
+          id: p.id,
+          row: p,
+          why: `${country} / ${state} / ${p.geocoded.city}`,
+        });
+      }
+      return out;
+    },
+  });
+
   return checks;
 };
 
@@ -470,6 +501,12 @@ await yargs(hideBin(process.argv))
           describe:
             "Restrict to photos where operator country_code and geocoded_country_code disagree",
         })
+        .option("missing-state-code", {
+          type: "boolean",
+          default: false,
+          describe:
+            "Restrict to photos with coords + city but no ISO 3166-2 geocoded_state_code",
+        })
         .option("format", {
           choices: ["table", "ids"] as const,
           default: "table" as const,
@@ -484,11 +521,13 @@ await yargs(hideBin(process.argv))
 
       const all = buildChecks(photos, orphanIds);
       const countryMismatch = argv["country-mismatch"];
+      const missingStateCode = argv["missing-state-code"];
       const anyFilter =
         argv.missing !== undefined ||
         argv.orphans ||
         argv.duplicates ||
-        countryMismatch;
+        countryMismatch ||
+        missingStateCode;
 
       let selected: AuditCheck[];
       if (!anyFilter) {
@@ -510,6 +549,10 @@ await yargs(hideBin(process.argv))
         }
         if (countryMismatch) {
           const match = all.find((c) => c.key === "country-mismatch");
+          if (match) selected.push(match);
+        }
+        if (missingStateCode) {
+          const match = all.find((c) => c.key === "missing-state-code");
           if (match) selected.push(match);
         }
       }
