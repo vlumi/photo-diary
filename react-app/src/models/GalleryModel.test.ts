@@ -1296,5 +1296,12 @@ describe("With photos", () => {
       expect(g.testing.isLastPhoto(photos["empty.jpg"])).toBe(false));
     test("1.jpg", () =>
       expect(g.testing.isLastPhoto(photos["1.jpg"])).toBe(true));
+    // Regression: id-based comparison so a re-wrapped photo of the same
+    // logical row still matches. Photo modal carousel rendered the same
+    // photo on the right of a swipe-from-last when ref equality lied.
+    test("1.jpg, re-wrapped (different ref, same id)", () => {
+      const rewrapped = { id: () => "1.jpg" } as unknown as typeof photos["1.jpg"];
+      expect(g.testing.isLastPhoto(rewrapped)).toBe(true);
+    });
   });
 });

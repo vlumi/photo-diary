@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Photo modal carousel no longer renders the current photo on the right-side slide when swiping past the last photo. `GalleryModel.isFirstPhoto` / `isLastPhoto` now compare by `id()` instead of strict reference equality, matching how `currentPhotoIndex` already works — robust to the gallery model rebuilding between renders. The Photo modal also drops a `previousPhoto` / `nextPhoto` candidate whose id matches the current photo as a belt-and-suspenders against the same-photo fallback in those model methods.
+
 ## [0.11.0] - 2026-05-28
 
 ### Server

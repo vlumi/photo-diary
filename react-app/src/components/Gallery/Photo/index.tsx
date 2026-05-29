@@ -222,12 +222,23 @@ const Photo = ({
   // 3-slide carousel: track rests at -1/3 so the middle slide
   // (current photo) is centred in the viewport. Sliding right exposes
   // slot 0 (prev); sliding left exposes slot 2 (next).
-  const prevPhoto = !gallery.isFirstPhoto(photo)
+  //
+  // `previousPhoto` / `nextPhoto` fall back to returning the same
+  // `photo` argument at the gallery boundary. The `isFirst/LastPhoto`
+  // guards above usually keep us out of that case, but we also drop
+  // a candidate whose id matches the current photo — otherwise a
+  // swipe past the last photo would peek at the same photo on the
+  // right-hand slide.
+  const prevCandidate = !gallery.isFirstPhoto(photo)
     ? gallery.previousPhoto(year, month, day, photo)
     : undefined;
-  const nextPhoto = !gallery.isLastPhoto(photo)
+  const prevPhoto =
+    prevCandidate && prevCandidate.id() !== photo.id() ? prevCandidate : undefined;
+  const nextCandidate = !gallery.isLastPhoto(photo)
     ? gallery.nextPhoto(year, month, day, photo)
     : undefined;
+  const nextPhoto =
+    nextCandidate && nextCandidate.id() !== photo.id() ? nextCandidate : undefined;
   const TRACK_REST = "-33.3333%";
   const TRACK_PREV = "0%";
   const TRACK_NEXT = "-66.6667%";

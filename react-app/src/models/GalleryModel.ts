@@ -539,7 +539,16 @@ const GalleryModel = (galleryData: unknown) => {
       }
       return firstDayPhotos[0];
     },
-    isFirstPhoto: (photo: Photo): boolean => photo === self.firstPhoto(),
+    // Compare by id, not strict reference. The photo prop reaching the
+    // caller may be a different object instance than firstPhoto() if the
+    // gallery model rebuilds (filter change, refetch), even when both
+    // represent the same logical photo. Reference inequality made the
+    // Photo modal carousel render the current photo as its own "next"
+    // slide on a swipe-left from the last photo.
+    isFirstPhoto: (photo: Photo): boolean => {
+      const first = self.firstPhoto();
+      return !!first && photo.id() === first.id();
+    },
     previousPhoto: (
       year: number,
       month: number,
@@ -589,7 +598,10 @@ const GalleryModel = (galleryData: unknown) => {
       }
       return lastDayPhotos[lastDayPhotos.length - 1];
     },
-    isLastPhoto: (photo: Photo): boolean => photo === self.lastPhoto(),
+    isLastPhoto: (photo: Photo): boolean => {
+      const last = self.lastPhoto();
+      return !!last && photo.id() === last.id();
+    },
   };
   return self;
 };
