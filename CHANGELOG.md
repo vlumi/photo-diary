@@ -9,6 +9,10 @@
 - Photo modal photo no longer animates from oversized to fit-size when opening on viewports wider than the modal's 1400 px max-width. The carousel Slide and Content Root each set `min-width: 0` so the flex-item default `min-width: auto` doesn't let those ancestors grow to the photo Frame's explicit width during initial mount; without it the over-large initial Frame triggered a ResizeObserver feedback loop that shrunk the photo by ~16 px per frame over ~7 frames. Same loop also caused a one-frame stretch of the outgoing photo at the end of the slide animation.
 - Photo modal `Content` measures container dimensions in `useLayoutEffect` instead of `useEffect`, so the corrective rect read happens before the first paint.
 
+### Tooling
+
+- `bin/photo.ts audit --country-mismatch` footer now distinguishes "still need geocoding" from "no Nominatim coverage" (the `geocode_no_data` flag set by intake / `photo-geocode.ts` when Nominatim returned no address). Previously rows flagged as no-data were still counted as "not yet geocoded" and pointed the operator at `./bin/photo-geocode.ts` — re-running the daemon found nothing to do and the audit kept nagging. The `noData` flag is also surfaced on the mapped `Photo.geocoded` so the audit (and any other consumer) can read it.
+
 ## [0.11.0] - 2026-05-28
 
 ### Server

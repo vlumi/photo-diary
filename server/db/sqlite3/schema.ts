@@ -166,6 +166,11 @@ export interface Photo {
     // (parsed from the stored JSON). Kept for future re-derivation
     // if the state/city/district mapping changes.
     address: Record<string, unknown> | undefined;
+    // Negative-result cache: true when intake or the backfill daemon
+    // found Nominatim had no address for these coordinates. Operator
+    // tools (`bin/photo.ts audit --country-mismatch` etc.) consult
+    // this to distinguish "not yet geocoded" from "no data available".
+    noData: boolean;
   };
 }
 
@@ -426,6 +431,7 @@ export default () => {
                 return undefined;
               }
             })(),
+            noData: row.geocode_no_data === 1,
           },
         };
       },

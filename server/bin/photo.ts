@@ -316,17 +316,30 @@ const buildChecks = (
     },
     footer: () => {
       let withCoords = 0;
-      let withoutGeocoded = 0;
+      let pending = 0;
+      let noData = 0;
       for (const p of photos) {
         const lat = p.taken?.location?.coordinates?.latitude;
         const lon = p.taken?.location?.coordinates?.longitude;
         if (lat === null || lat === undefined) continue;
         if (lon === null || lon === undefined) continue;
         withCoords += 1;
-        if (!p.geocoded?.countryCode) withoutGeocoded += 1;
+        if (p.geocoded?.countryCode) continue;
+        if (p.geocoded?.noData) noData += 1;
+        else pending += 1;
       }
-      if (withoutGeocoded === 0) return undefined;
-      return `(${withoutGeocoded} of ${withCoords} photo(s) with coords not yet geocoded — run \`./bin/photo-geocode.ts\` first)`;
+      const lines: string[] = [];
+      if (pending > 0) {
+        lines.push(
+          `(${pending} of ${withCoords} photo(s) with coords still need geocoding — run \`./bin/photo-geocode.ts\` first)`
+        );
+      }
+      if (noData > 0) {
+        lines.push(
+          `(${noData} of ${withCoords} photo(s) with coords have no Nominatim coverage; flagged \`geocode_no_data\`)`
+        );
+      }
+      return lines.length > 0 ? lines.join("\n") : undefined;
     },
   });
 
