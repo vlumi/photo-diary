@@ -259,6 +259,12 @@ let calls = 0;
 let written = 0;
 let empty = 0;
 
+// Photos that returned no Nominatim data on this run. Address coverage
+// is language-independent — once one lang fails, the rest will too,
+// so we skip them on subsequent lang passes within this run AND flag
+// the row so future runs skip too.
+const noDataPhotos = new Set<string>();
+
 try {
   for (const lang of langs) {
     const todo = plan.get(lang)!;
@@ -266,12 +272,15 @@ try {
     let langWritten = 0;
     let langEmpty = 0;
     for (const { id, lat, lon } of todo) {
+      if (noDataPhotos.has(id)) continue;
       const result = await geocode(lat, lon, lang);
       calls += 1;
       if (!result) {
         empty += 1;
         langEmpty += 1;
-        logger.info(`[${lang}] ${id} (${lat},${lon}): no result`);
+        noDataPhotos.add(id);
+        await db.markGeocodeNoData(id);
+        logger.info(`[${lang}] ${id} (${lat},${lon}): no result, flagged`);
         continue;
       }
       await db.upsertGeocoded(id, lang, {

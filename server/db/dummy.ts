@@ -63,6 +63,7 @@ export default () => {
     updatePhoto,
     renamePhoto,
     upsertGeocoded,
+    markGeocodeNoData,
     loadPhotosMissingGeocoded,
     deletePhoto: notImplemented,
   };
@@ -399,6 +400,10 @@ const upsertGeocoded = async (
   const key = `${photoId}:${lang}`;
   db.photoLocalized[key] = { ...(db.photoLocalized[key] ?? {}), ...fields };
 };
+const markGeocodeNoData = async (photoId: string): Promise<void> => {
+  if (!(photoId in db.photos)) return;
+  db.photos[photoId].geocodeNoData = true;
+};
 const loadPhotosMissingGeocoded = async (
   lang: string,
   limit: number
@@ -409,6 +414,7 @@ const loadPhotosMissingGeocoded = async (
     const lon = photo.taken?.location?.coordinates?.longitude;
     if (lat === null || lat === undefined) continue;
     if (lon === null || lon === undefined) continue;
+    if (photo.geocodeNoData) continue;
     const hasEn = !!photo.geocoded?.place;
     const hasLocalized =
       lang === "en"

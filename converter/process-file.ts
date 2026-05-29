@@ -32,7 +32,15 @@ const geocodeAtIntake = async (
   const langs = ["en", ...extra];
   for (const lang of langs) {
     const result = await geocode(lat, lon, lang);
-    if (!result) continue;
+    if (!result) {
+      // Nominatim has no address for these coordinates (open ocean,
+      // disputed boundaries, unmapped terrain). Flag the row so the
+      // backfill daemon skips it instead of retrying. Coverage is
+      // language-independent — one null means all langs would be null,
+      // so stop after the first failure.
+      await db.markGeocodeNoData(photoId);
+      return;
+    }
     await db.upsertGeocoded(photoId, lang, {
       countryCode: lang === "en" ? (result.countryCode ?? null) : undefined,
       state: result.state ?? null,

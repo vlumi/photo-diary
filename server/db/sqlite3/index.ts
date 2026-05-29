@@ -73,6 +73,7 @@ export default () => {
     updatePhoto,
     renamePhoto,
     upsertGeocoded,
+    markGeocodeNoData,
     loadPhotosMissingGeocoded,
     deletePhoto,
   };
@@ -654,10 +655,19 @@ const upsertGeocoded = async (
   );
 };
 
+// Flag a photo as "Nominatim has no address for these coordinates" so
+// subsequent intake / daemon runs skip it instead of retrying. Operator
+// clears `geocode_no_data` back to 0 to force a fresh attempt.
+const markGeocodeNoData = async (photoId: string): Promise<void> => {
+  db.prepare("UPDATE photo SET geocode_no_data = 1 WHERE id = ?").run(photoId);
+};
+
 // Daemon's "give me work" query — photos with coords that are missing
 // geocoded data for the requested language. Recent first by capture
 // timestamp; rows with no timestamp (EXIF-less imports) go to the back
 // so the visible / recently-shot photos get filled in earliest.
+// Rows flagged `geocode_no_data` are skipped — Nominatim has no
+// address for those coordinates and retrying would just spin.
 const loadPhotosMissingGeocoded = async (
   lang: string,
   limit: number
@@ -667,6 +677,7 @@ const loadPhotosMissingGeocoded = async (
       ? `SELECT id, coord_lat, coord_lon FROM photo
            WHERE coord_lat IS NOT NULL AND coord_lon IS NOT NULL
              AND geocoded_place IS NULL
+             AND geocode_no_data = 0
            ORDER BY taken IS NULL, taken DESC, id ASC
            LIMIT ?`
       : `SELECT p.id, p.coord_lat, p.coord_lon FROM photo p
@@ -674,6 +685,7 @@ const loadPhotosMissingGeocoded = async (
              ON pl.photo_id = p.id AND pl.lang = ?
            WHERE p.coord_lat IS NOT NULL AND p.coord_lon IS NOT NULL
              AND pl.photo_id IS NULL
+             AND p.geocode_no_data = 0
            ORDER BY p.taken IS NULL, p.taken DESC, p.id ASC
            LIMIT ?`;
   const rows = (lang === "en"

@@ -76,6 +76,10 @@ export interface PhotoRow {
   geocoded_district: string | null;
   geocoded_place: string | null;
   geocoded_address: string | null; // raw Nominatim address JSON
+  // Negative-result cache: 1 = Nominatim has no data here, intake
+  // and the backfill daemon both skip the row. Operator clears to 0
+  // to force a fresh attempt.
+  geocode_no_data: number;
 }
 
 // `photo_localized` row — non-English geocoded place data per
@@ -466,6 +470,8 @@ export default () => {
           map.geocoded_district,
           map.geocoded_place,
           map.geocoded_address,
+
+          0, // geocode_no_data: defaults to 0 (not yet attempted)
         ];
       },
 
@@ -710,6 +716,8 @@ const SCHEMA = {
       "geocoded_district",
       "geocoded_place",
       "geocoded_address",
+
+      "geocode_no_data",
     ],
     primaryKey: ["id"],
     order: ["taken ASC", "id ASC"],

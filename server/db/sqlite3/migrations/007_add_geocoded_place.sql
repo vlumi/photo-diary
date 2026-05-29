@@ -20,6 +20,13 @@ ALTER TABLE photo ADD COLUMN geocoded_district TEXT;
 ALTER TABLE photo ADD COLUMN geocoded_place TEXT;
 ALTER TABLE photo ADD COLUMN geocoded_address TEXT;
 
+-- Negative-result cache. Nominatim returns 200 with no `address` field
+-- for coordinates over open water, in disputed boundaries, or otherwise
+-- unmapped. Without a flag the daemon would retry these every run.
+-- 1 = Nominatim has no data here; intake / daemon skip the row. Clear
+-- to 0 to force a fresh attempt if you suspect coverage has improved.
+ALTER TABLE photo ADD COLUMN geocode_no_data INTEGER NOT NULL DEFAULT 0;
+
 CREATE INDEX photo_geocoded_country_idx  ON photo (geocoded_country_code);
 CREATE INDEX photo_geocoded_state_idx    ON photo (geocoded_state);
 CREATE INDEX photo_geocoded_city_idx     ON photo (geocoded_city);
