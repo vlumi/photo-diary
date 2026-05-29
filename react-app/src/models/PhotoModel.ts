@@ -267,8 +267,8 @@ const PhotoModel = (photoData: unknown) => {
         : "",
     hasPlace: (): boolean => !!photo.taken.location?.place,
     place: (): string | undefined => photo.taken.location?.place,
-    hasGeocodedPlace: (): boolean => !!photo.geocoded?.place,
-    geocodedPlace: (): string | undefined => photo.geocoded?.place,
+    hasGeocodedCity: (): boolean => !!photo.geocoded?.city,
+    geocodedCity: (): string | undefined => photo.geocoded?.city,
     hasGeocodedCountry: (): boolean => !!photo.geocoded?.countryCode,
     geocodedCountryCode: (): string | undefined => photo.geocoded?.countryCode,
     geocodedCountryName: (lang: string, countryData: CountryData): string =>
@@ -277,6 +277,15 @@ const PhotoModel = (photoData: unknown) => {
           self.geocodedCountryCode() as string
         )
         : "",
+    // Minimal city + country line; state / district aren't reliable
+    // enough to render across languages.
+    hasGeocodedAddress: (): boolean =>
+      !!(photo.geocoded?.city || photo.geocoded?.countryCode),
+    geocodedAddress: (lang: string, countryData: CountryData): string =>
+      format.geocodedAddress(lang, {
+        country: self.geocodedCountryName(lang, countryData),
+        city: photo.geocoded?.city,
+      }),
     hasCoordinates: (): boolean =>
       !!(
         photo.taken.location?.coordinates?.latitude &&

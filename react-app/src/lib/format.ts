@@ -165,6 +165,32 @@ const gear = (
   return [make, model].join(" ");
 };
 
+// Hand-assembled geocoded address: city + country only. Per-language
+// order + separator. Flag is positioned alongside the country, so the
+// caller asks geocodedFlagPosition() to decide which side to render
+// the FlagIcon on.
+interface GeocodedParts {
+  country?: string;
+  city?: string;
+}
+const ADDRESS_FORMAT: Record<string, { order: "lts" | "stl"; sep: string }> = {
+  en: { order: "stl", sep: ", " },
+  fi: { order: "stl", sep: ", " },
+  ja: { order: "lts", sep: " " },
+};
+const geocodedAddress = (lang: string, parts: GeocodedParts): string => {
+  const f = ADDRESS_FORMAT[lang] ?? ADDRESS_FORMAT.en;
+  const ordered =
+    f.order === "lts"
+      ? [parts.country, parts.city]
+      : [parts.city, parts.country];
+  return ordered.filter(Boolean).join(f.sep);
+};
+const geocodedFlagPosition = (lang: string): "start" | "end" => {
+  const f = ADDRESS_FORMAT[lang] ?? ADDRESS_FORMAT.en;
+  return f.order === "lts" ? "start" : "end";
+};
+
 const coordinates = (latitude: number, longitude: number): string => {
   return new GeoCoord(latitude, longitude).roundToSeconds().toString();
 };
@@ -320,6 +346,8 @@ export default {
 
   exposure,
   gear,
+  geocodedAddress,
+  geocodedFlagPosition,
   coordinates,
 
   categoryValue,

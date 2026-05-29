@@ -476,3 +476,33 @@ describe("categorySorter", () => {
   test("dummy", () =>
     expect(data.sort(keyValueSorter("dummy"))).toStrictEqual(data));
 });
+
+describe("geocodedAddress()", () => {
+  const helsinki = { country: "Finland", city: "Helsinki" };
+  const tokyo = { country: "日本", city: "渋谷区" };
+  test("en: city, country", () =>
+    expect(format.geocodedAddress("en", helsinki)).toBe("Helsinki, Finland"));
+  test("fi: city, country (same as en)", () =>
+    expect(format.geocodedAddress("fi", helsinki)).toBe("Helsinki, Finland"));
+  test("ja: country city", () =>
+    expect(format.geocodedAddress("ja", tokyo)).toBe("日本 渋谷区"));
+  test("missing city drops cleanly", () =>
+    expect(format.geocodedAddress("en", { country: "Finland" })).toBe(
+      "Finland"
+    ));
+  test("missing country drops cleanly", () =>
+    expect(format.geocodedAddress("en", { city: "Helsinki" })).toBe("Helsinki"));
+  test("unknown lang falls back to en", () =>
+    expect(format.geocodedAddress("xx", helsinki)).toBe("Helsinki, Finland"));
+  test("empty parts return empty string", () =>
+    expect(format.geocodedAddress("en", {})).toBe(""));
+});
+
+describe("geocodedFlagPosition()", () => {
+  test("en: end", () => expect(format.geocodedFlagPosition("en")).toBe("end"));
+  test("fi: end", () => expect(format.geocodedFlagPosition("fi")).toBe("end"));
+  test("ja: start", () =>
+    expect(format.geocodedFlagPosition("ja")).toBe("start"));
+  test("unknown lang falls back to en (end)", () =>
+    expect(format.geocodedFlagPosition("xx")).toBe("end"));
+});
