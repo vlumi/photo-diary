@@ -5,6 +5,8 @@
 ### Frontend
 
 - Photo modal carousel no longer renders the current photo on the right-side slide when swiping past the last photo. `GalleryModel.isFirstPhoto` / `isLastPhoto` now compare by `id()` instead of strict reference equality, matching how `currentPhotoIndex` already works — robust to the gallery model rebuilding between renders. The Photo modal also drops a `previousPhoto` / `nextPhoto` candidate whose id matches the current photo as a belt-and-suspenders against the same-photo fallback in those model methods.
+- Photo modal drag past a gallery edge now stays bounded. The carousel `dragConstraints` were expressed in the wrong reference frame (relative to translate-origin 0 rather than the track's resting `motion.x = -window.innerWidth`), so dragging from the last (or first) photo immediately snapped the track toward 0 and exposed the neighbouring slide. Corrected to `[-2 × innerWidth, 0]` with edge variants that lock at rest.
+- Photo modal `Navigation` row pins `min-height: 50px` to absorb a one-frame sub-pixel height jitter (~0.3 px) that styled-components introduced at the navigate() commit. Without the pin, the carousel viewport grew briefly when the photo prop changed and the newly-mounted prev-slot Content measured the expanded size — visible as a brief height stretch of the outgoing photo at the end of the slide animation.
 
 ## [0.11.0] - 2026-05-28
 

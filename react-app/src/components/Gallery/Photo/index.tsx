@@ -424,8 +424,14 @@ const Photo = ({
               drag
               dragDirectionLock
               dragConstraints={{
-                left: nextPhoto ? -window.innerWidth : 0,
-                right: prevPhoto ? window.innerWidth : 0,
+                // Constraints are absolute pixel offsets from the
+                // Track's translate origin. The Track rests at
+                // motion.x = -window.innerWidth (the -33.3333% of its
+                // 300% width that centres slot 1). Range: TRACK_NEXT
+                // (-2W) ↔ TRACK_PREV (0). At edges, lock at rest so
+                // the empty slot can't be pulled into view.
+                left: nextPhoto ? -2 * window.innerWidth : -window.innerWidth,
+                right: prevPhoto ? 0 : -window.innerWidth,
                 top: 0,
                 bottom: window.innerHeight,
               }}
