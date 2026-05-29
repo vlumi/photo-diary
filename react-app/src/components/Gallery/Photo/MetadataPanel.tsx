@@ -146,6 +146,32 @@ const MetadataPanel = ({
       </Row>
     );
   };
+  // Nominatim's `display_name` already ends in the country, so we
+  // trail just the flag, not the country name.
+  const renderGeocodedLocation = () => {
+    if (!photo.hasGeocodedPlace()) return null;
+    // Skip when both sides resolve to the same string.
+    const opPlace = photo.place();
+    const opCountry = photo.countryCode();
+    const code = photo.geocodedCountryCode();
+    const samePlace = !!opPlace && opPlace === photo.geocodedPlace();
+    const sameCountry =
+      !!opCountry && opCountry.toLowerCase() === code?.toLowerCase();
+    if (samePlace && sameCountry) return null;
+    return (
+      <Row>
+        <Part>
+          {photo.geocodedPlace()}
+          {code ? (
+            <>
+              {" "}
+              <FlagIcon code={code} />
+            </>
+          ) : null}
+        </Part>
+      </Row>
+    );
+  };
   const renderCoordinates = () => {
     if (!photo.hasCoordinates()) return null;
     return <Muted>{photo.formatCoordinates()}</Muted>;
@@ -262,6 +288,7 @@ const MetadataPanel = ({
       <Body>
         {photo.title() && <Title>{photo.title()}</Title>}
         {renderLocation()}
+        {renderGeocodedLocation()}
         {renderCoordinates()}
         {renderExposure()}
         {renderGear()}

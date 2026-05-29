@@ -120,9 +120,9 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     !!galleriesQuery.data &&
     galleriesQuery.data.some((g) => g.id() === galleryId);
   const photosQuery = useQuery({
-    queryKey: ["gallery-photos", galleryId, user?.id ?? null],
+    queryKey: ["gallery-photos", galleryId, user?.id ?? null, lang],
     queryFn: async () => {
-      const data = await galleryPhotosService.get(galleryId as string);
+      const data = await galleryPhotosService.get(galleryId as string, lang);
       return data
         .map((photo) => PhotoModel(photo))
         .filter((p): p is PhotoT => !!p);

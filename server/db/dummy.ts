@@ -184,7 +184,7 @@ const updateGallery = async () => {
 const comparePhotos = (a: any, b: any) =>
   a.taken.instant.timestamp.localeCompare(b.taken.instant.timestamp);
 
-const loadGalleryPhotos = async (galleryId: string) => {
+const loadGalleryPhotos = async (galleryId: string, _lang?: string) => {
   switch (galleryId) {
     case CONST.SPECIAL_GALLERY_ALL:
       return Object.values(db.photos).sort(comparePhotos);
@@ -214,7 +214,7 @@ const loadGalleryPhotos = async (galleryId: string) => {
 const linkGalleryPhoto = async () => {
   throw new NotImplementedError();
 };
-const loadGalleryPhoto = async (galleryId: string, photoId: string) => {
+const loadGalleryPhoto = async (galleryId: string, photoId: string, _lang?: string) => {
   const handleGalleryAll = async () => {
     return await loadPhoto(photoId);
   };

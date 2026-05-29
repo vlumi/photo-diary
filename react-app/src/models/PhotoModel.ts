@@ -31,6 +31,16 @@ interface Location {
   coordinates?: Coordinates;
 }
 
+// Reverse-geocoded from coords; distinct from operator-set
+// `country` / `place` above. Server resolves `place` per-lang.
+interface Geocoded {
+  countryCode?: string;
+  state?: string;
+  city?: string;
+  district?: string;
+  place?: string;
+}
+
 interface Taken {
   author?: string;
   instant: Instant;
@@ -59,6 +69,7 @@ export interface PhotoData {
   camera?: Gear;
   lens?: Gear;
   exposure?: Exposure;
+  geocoded?: Geocoded;
 }
 
 interface CountryData {
@@ -256,6 +267,16 @@ const PhotoModel = (photoData: unknown) => {
         : "",
     hasPlace: (): boolean => !!photo.taken.location?.place,
     place: (): string | undefined => photo.taken.location?.place,
+    hasGeocodedPlace: (): boolean => !!photo.geocoded?.place,
+    geocodedPlace: (): string | undefined => photo.geocoded?.place,
+    hasGeocodedCountry: (): boolean => !!photo.geocoded?.countryCode,
+    geocodedCountryCode: (): string | undefined => photo.geocoded?.countryCode,
+    geocodedCountryName: (lang: string, countryData: CountryData): string =>
+      self.hasGeocodedCountry() && self.geocodedCountryCode()
+        ? format.countryName(lang, countryData)(
+          self.geocodedCountryCode() as string
+        )
+        : "",
     hasCoordinates: (): boolean =>
       !!(
         photo.taken.location?.coordinates?.latitude &&

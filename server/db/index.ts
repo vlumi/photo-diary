@@ -139,14 +139,14 @@ export default {
     await db.deleteGallery(galleryId);
   },
 
-  loadGalleryPhotos: async (galleryId: string) => {
-    return await db.loadGalleryPhotos(galleryId);
+  loadGalleryPhotos: async (galleryId: string, lang?: string) => {
+    return await db.loadGalleryPhotos(galleryId, lang);
   },
   linkGalleryPhoto: async (galleryIds: string[], photoIds: string[]) => {
     return await db.linkGalleryPhoto(galleryIds, photoIds);
   },
-  loadGalleryPhoto: async (galleryId: string, photoId: string) => {
-    return await db.loadGalleryPhoto(galleryId, photoId);
+  loadGalleryPhoto: async (galleryId: string, photoId: string, lang?: string) => {
+    return await db.loadGalleryPhoto(galleryId, photoId, lang);
   },
   unlinkGalleryPhoto: async (galleryId: string, photoId: string) => {
     return await db.unlinkGalleryPhoto(galleryId, photoId);

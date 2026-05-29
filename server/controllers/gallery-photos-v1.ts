@@ -18,6 +18,11 @@ const GalleryPhotoParams = Type.Object({
   galleryId: Type.String(),
   photoId: Type.String(),
 });
+// Picks the geocoded place / state / city / district from photo_localized
+// when set; falls back to the EN canonical on the photo row.
+const LangQuery = Type.Object({
+  lang: Type.Optional(Type.String()),
+});
 // Permissive — joined photo metadata, wider than the contract.
 const PhotoItem = Type.Object({}, { additionalProperties: true });
 const GalleryPhotosListResponse = Type.Array(PhotoItem);
@@ -34,6 +39,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "List photos in a gallery",
         params: GalleryIdParam,
+        querystring: LangQuery,
         response: { 200: GalleryPhotosListResponse },
       },
     },
@@ -45,7 +51,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
-        const photos = await model.getGalleryPhotos(request.params.galleryId);
+        const photos = await model.getGalleryPhotos(
+          request.params.galleryId,
+          request.query.lang
+        );
         if (await shouldHideMap(request.user.id, request.params.galleryId)) {
           maskCoordinates(photos as Parameters<typeof maskCoordinates>[0]);
         }
@@ -69,6 +78,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Get one photo's metadata in a gallery's context",
         params: GalleryPhotoParams,
+        querystring: LangQuery,
         response: { 200: PhotoItem },
       },
     },
@@ -81,7 +91,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         );
         const photo = await model.getGalleryPhoto(
           request.params.galleryId,
-          request.params.photoId
+          request.params.photoId,
+          request.query.lang
         );
         if (await shouldHideMap(request.user.id, request.params.galleryId)) {
           maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);

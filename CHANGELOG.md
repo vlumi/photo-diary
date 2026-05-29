@@ -8,6 +8,11 @@
 - Photo modal drag past a gallery edge now stays bounded. The carousel `dragConstraints` were expressed in the wrong reference frame (relative to translate-origin 0 rather than the track's resting `motion.x = -window.innerWidth`), so dragging from the last (or first) photo immediately snapped the track toward 0 and exposed the neighbouring slide. Corrected to `[-2 × innerWidth, 0]` with edge variants that lock at rest.
 - Photo modal photo no longer animates from oversized to fit-size when opening on viewports wider than the modal's 1400 px max-width. The carousel Slide and Content Root each set `min-width: 0` so the flex-item default `min-width: auto` doesn't let those ancestors grow to the photo Frame's explicit width during initial mount; without it the over-large initial Frame triggered a ResizeObserver feedback loop that shrunk the photo by ~16 px per frame over ~7 frames. Same loop also caused a one-frame stretch of the outgoing photo at the end of the slide animation.
 - Photo modal `Content` measures container dimensions in `useLayoutEffect` instead of `useEffect`, so the corrective rect read happens before the first paint.
+- Photo modal MetadataPanel renders the reverse-geocoded place below the operator location row, in the same shape, with the country flag trailed (Nominatim's `display_name` already ends in the country, so the country name isn't repeated). Skipped when both sides agree. Layout polish lives in a separate ticket.
+
+### Server
+
+- `GET /api/v1/gallery-photos/:galleryId` and `GET /api/v1/gallery-photos/:galleryId/:photoId` accept a `?lang=<code>` query parameter. When present and non-`en`, the response merges `photo_localized` rows over the EN-canonical geocoded fields. `db.loadGalleryPhotos` / `loadGalleryPhoto` propagate the parameter. Without `?lang=`, behaviour is unchanged.
 
 ### Tooling
 

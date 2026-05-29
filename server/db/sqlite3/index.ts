@@ -319,7 +319,7 @@ const updateGallery = async (galleryId: string, gallery: GalleryInput) => {
 const deleteGallery = async (galleryId: string) =>
   deleteById(SCHEMA.gallery, galleryId);
 
-const loadGalleryPhotos = async (galleryId: string) => {
+const loadGalleryPhotos = async (galleryId: string, lang?: string) => {
   const schema = SCHEMA.photo;
   const getQuery = () => {
     switch (galleryId) {
@@ -344,7 +344,13 @@ const loadGalleryPhotos = async (galleryId: string) => {
   const rows = (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)
     ? stmt.all()
     : stmt.all(galleryId)) as PhotoRow[];
-  return rows.map((row, index) => schema.mapRow(row, index));
+  const localized =
+    lang && lang !== "en"
+      ? loadLocalizedFor(rows.map((r) => r.id), lang)
+      : new Map<string, PhotoLocalizedRow>();
+  return rows.map((row, index) =>
+    schema.mapRow(row, index, localized.get(row.id))
+  );
 };
 const linkGalleryPhoto = async (
   galleryIds: string[],
@@ -361,10 +367,14 @@ const linkGalleryPhoto = async (
   });
   insertAll();
 };
-const loadGalleryPhoto = async (galleryId: string, photoId: string) => {
+const loadGalleryPhoto = async (
+  galleryId: string,
+  photoId: string,
+  lang?: string
+) => {
   if (galleryId === CONST.SPECIAL_GALLERY_ALL) {
     // TODO: fix
-    return loadPhoto(photoId);
+    return loadPhoto(photoId, lang);
   }
   const schema = SCHEMA.photo;
   const getQuery = () => {
@@ -394,7 +404,15 @@ const loadGalleryPhoto = async (galleryId: string, photoId: string) => {
   if (rows.length === 0) {
     throw new NotFoundError();
   }
-  return schema.mapRow(rows[0], 0);
+  const localized =
+    lang && lang !== "en"
+      ? (db
+        .prepare(
+          "SELECT * FROM photo_localized WHERE photo_id = ? AND lang = ?"
+        )
+        .get(photoId, lang) as PhotoLocalizedRow | undefined)
+      : undefined;
+  return schema.mapRow(rows[0], 0, localized);
 };
 const unlinkGalleryPhoto = async (galleryId: string, photoId: string) => {
   db.prepare(SCHEMA.galleryPhoto.buildDeleteByIdQuery()).run([
