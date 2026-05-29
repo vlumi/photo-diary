@@ -135,6 +135,7 @@ const MetadataPanel = ({
     );
   };
   const renderLocation = () => {
+    if (gallery.hideMap()) return null;
     const country = renderCountry();
     const place = renderPlace();
     if (!country && !place) return null;
@@ -149,6 +150,7 @@ const MetadataPanel = ({
   // Nominatim's `display_name` already ends in the country, so we
   // trail just the flag, not the country name.
   const renderGeocodedLocation = () => {
+    if (gallery.hideMap()) return null;
     if (!photo.hasGeocodedPlace()) return null;
     // Skip when both sides resolve to the same string.
     const opPlace = photo.place();

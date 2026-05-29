@@ -327,6 +327,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
+            hideMap={gallery.hideMap()}
           />
         </Stats>
       );
@@ -341,6 +342,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
+            hideMap={gallery.hideMap()}
           />
         </Empty>
       );
@@ -355,6 +357,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
+            hideMap={gallery.hideMap()}
           />
         </Full>
       );
@@ -374,6 +377,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
+            hideMap={gallery.hideMap()}
           />
         </Year>
       );
@@ -404,6 +408,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
+            hideMap={gallery.hideMap()}
           />
         </Month>
       );
@@ -441,6 +446,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
+            hideMap={gallery.hideMap()}
           />
         </Month>
         <Photo

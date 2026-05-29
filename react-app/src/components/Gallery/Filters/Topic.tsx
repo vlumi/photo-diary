@@ -54,7 +54,11 @@ interface Props {
   uniqueValues: UniqueValues;
   lang: string;
   countryData: CountryData;
+  hideMap: boolean;
 }
+
+// Mirror of Filters/index.tsx — keep in sync.
+const LOCATION_CATEGORIES = new Set(["country", "geotagged"]);
 
 const Topic = ({
   topic,
@@ -63,6 +67,7 @@ const Topic = ({
   uniqueValues,
   lang,
   countryData,
+  hideMap,
 }: Props): React.ReactElement => {
   const [categorySelector, setCategorySelector] = React.useState<
     Record<string, boolean>
@@ -137,7 +142,10 @@ const Topic = ({
         <>
           <NewCategories defaultValue="" onChange={handleSelect}>
             <NewCategory value="">Select...</NewCategory>
-            {filter.categories(topic).map((category) => (
+            {filter
+              .categories(topic)
+              .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
+              .map((category) => (
               <NewCategoryGroup
                 key={`${topic}:${category}`}
                 label={t(`stats-category-${category}`)}
@@ -175,6 +183,7 @@ const Topic = ({
       {filter
         .categories(topic)
         .filter((category) => category in filters[topic])
+        .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
         .map((category) => (
           <Category
             key={`filter:${topic}:${category}`}
