@@ -9,6 +9,7 @@
 - Photo modal photo no longer animates from oversized to fit-size when opening on viewports wider than the modal's 1400 px max-width. The carousel Slide and Content Root each set `min-width: 0` so the flex-item default `min-width: auto` doesn't let those ancestors grow to the photo Frame's explicit width during initial mount; without it the over-large initial Frame triggered a ResizeObserver feedback loop that shrunk the photo by ~16 px per frame over ~7 frames. Same loop also caused a one-frame stretch of the outgoing photo at the end of the slide animation.
 - Photo modal `Content` measures container dimensions in `useLayoutEffect` instead of `useEffect`, so the corrective rect read happens before the first paint.
 - Photo modal MetadataPanel renders the reverse-geocoded place below the operator location row, in the same shape, with the country flag trailed (Nominatim's `display_name` already ends in the country, so the country name isn't repeated). Skipped when both sides agree. Layout polish lives in a separate ticket.
+- `hide_map` privacy toggle now suppresses every location-derived surface — Photo modal location rows (operator place / country flag and geocoded line), the Stats General topic's Country category, and the country / geotagged filter categories (both the new-filter category picker and any already-applied chips). Coordinates and map were already hidden today.
 
 ### Server
 

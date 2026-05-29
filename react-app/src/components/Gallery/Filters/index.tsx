@@ -55,7 +55,12 @@ interface Props {
   uniqueValues: UniqueValues;
   lang: string;
   countryData: CountryData;
+  hideMap: boolean;
 }
+
+// Categories derived from photo location data — suppressed when
+// hide_map is set (cascade from user_gallery.hide_map).
+const LOCATION_CATEGORIES = new Set(["country", "geotagged"]);
 
 const Filters = ({
   filters,
@@ -63,6 +68,7 @@ const Filters = ({
   uniqueValues,
   lang,
   countryData,
+  hideMap,
 }: Props): React.ReactElement => {
   const [topicSelector, setTopicSelector] = React.useState(false);
 
@@ -109,6 +115,7 @@ const Filters = ({
                   .filter(
                     (category) => !alreadyFilteredCategory(topic, category)
                   )
+                  .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
                   .map((category) => (
                     <NewCategory key={`${topic}:${category}`} value={category}>
                       {t(`stats-category-${category}`)}
@@ -142,6 +149,7 @@ const Filters = ({
               uniqueValues={uniqueValues}
               lang={lang}
               countryData={countryData}
+              hideMap={hideMap}
             />
           ))}
         {renderTopicAdder()}

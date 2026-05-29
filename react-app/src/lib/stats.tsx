@@ -236,7 +236,8 @@ const collectTopics = (
   t: TFunction,
   countryData: CountryData,
   theme: Theme,
-  mapPhotos: Photo[] = []
+  mapPhotos: Photo[] = [],
+  hideMap = false
 ): StatsTopic[] => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang, t);
@@ -611,10 +612,14 @@ const collectTopics = (
     const categories: any[] = [
       collectSummary(count),
       collectAuthor(count.byAuthor, total),
-      collectCountry(count.byCountry, total),
     ];
-    if (mapPhotos.length > 0) {
-      categories.push(collectLocation(mapPhotos, total));
+    // hide_map suppresses country and location categories (both
+    // location-derived). mapPhotos is already empty when hideMap.
+    if (!hideMap) {
+      categories.push(collectCountry(count.byCountry, total));
+      if (mapPhotos.length > 0) {
+        categories.push(collectLocation(mapPhotos, total));
+      }
     }
     return {
       key: "general",

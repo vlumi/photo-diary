@@ -69,9 +69,9 @@ const Stats = ({
   const topics = React.useMemo(
     () =>
       data
-        ? stats.collectTopics(data, lang, t, countryData, theme, mapPhotos)
+        ? stats.collectTopics(data, lang, t, countryData, theme, mapPhotos, hideMap)
         : [],
-    [data, lang, t, countryData, theme, mapPhotos]
+    [data, lang, t, countryData, theme, mapPhotos, hideMap]
   );
 
   if (!data) {
