@@ -10,8 +10,18 @@ import type { ZoomState } from "./index";
 // flex-start so the matte sits just below the Navigation bar
 // with minimal top breathing; padding-bottom keeps room at the
 // bottom for the floating info button.
+// `min-width: 0` to escape the flex-item default `min-width: auto`,
+// which would let Root grow to fit the photo Frame's explicit width.
+// Without this, opening the modal on a viewport wider than the
+// modal's 1400 max-width causes a ResizeObserver feedback loop:
+// initial render uses window-sized fallback dimensions → Frame is
+// wider than Slide → Root grows past Slide → ResizeObserver fires
+// → Content recomputes smaller → Frame shrinks → Root shrinks →
+// loop, ~16 px per frame, until it converges on 1400. Visible as
+// a multi-frame "photo opens stretched then shrinks" animation.
 const Root = styled.div`
   flex-grow: 1;
+  min-width: 0;
   position: relative;
   display: flex;
   flex-wrap: nowrap;
@@ -142,12 +152,20 @@ const Content = ({
 }: Props): React.ReactElement => {
   // Measure the actual container, not the viewport — the modal
   // Frame caps at 1400px so wide-screen landscapes would overshoot.
+  //
+  // useLayoutEffect (not useEffect) so the corrective measurement
+  // runs before the first paint. Without that, the initial render
+  // uses the full-viewport fallback (window.innerWidth/Height),
+  // paints the photo stretched to the modal's full extent, and only
+  // shrinks on the next frame when the effect runs — visible as a
+  // brief stretch-then-shrink animation when opening the modal from
+  // the Month view.
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = React.useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const el = rootRef.current;
     if (!el) return;
     const update = () => {

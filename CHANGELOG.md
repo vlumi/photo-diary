@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Photo modal carousel no longer renders the current photo on the right-side slide when swiping past the last photo. `GalleryModel.isFirstPhoto` / `isLastPhoto` now compare by `id()` instead of strict reference equality, matching how `currentPhotoIndex` already works — robust to the gallery model rebuilding between renders.
+- Photo modal drag past a gallery edge now stays bounded. The carousel `dragConstraints` were expressed in the wrong reference frame (relative to translate-origin 0 rather than the track's resting `motion.x = -window.innerWidth`), so dragging from the last (or first) photo immediately snapped the track toward 0 and exposed the neighbouring slide. Corrected to `[-2 × innerWidth, 0]` with edge variants that lock at rest.
+- Photo modal photo no longer animates from oversized to fit-size when opening on viewports wider than the modal's 1400 px max-width. The carousel Slide and Content Root each set `min-width: 0` so the flex-item default `min-width: auto` doesn't let those ancestors grow to the photo Frame's explicit width during initial mount; without it the over-large initial Frame triggered a ResizeObserver feedback loop that shrunk the photo by ~16 px per frame over ~7 frames. Same loop also caused a one-frame stretch of the outgoing photo at the end of the slide animation.
+- Photo modal `Content` measures container dimensions in `useLayoutEffect` instead of `useEffect`, so the corrective rect read happens before the first paint.
+
 ## [0.11.0] - 2026-05-28
 
 ### Server
