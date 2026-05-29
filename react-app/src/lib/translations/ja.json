@@ -137,6 +137,7 @@
     "stats-category-summary": "まとめ",
     "stats-category-author": "撮影者",
     "stats-category-country": "国",
+    "stats-category-city": "市区町村",
     "stats-category-location": "場所",
     "stats-category-geotagged": "位置情報",
     "stats-geotagged-yes": "位置情報あり",
@@ -188,6 +189,7 @@
     "stats-col-author": "撮影者",
     "stats-col-flag": "",
     "stats-col-country": "国",
+    "stats-col-city": "市区町村",
 
     "stats-col-year": "年",
     "stats-col-year-month": "Year + Month",

@@ -327,6 +327,8 @@ const PhotoModel = (photoData: unknown) => {
           return (!value && !self.author()) || value === self.author();
         case "country":
           return value === self.countryCode();
+        case "city":
+          return value === self.geocodedCity();
         case "geotagged":
           return value === "yes" ? self.hasCoordinates() : !self.hasCoordinates();
         case "year":
@@ -385,6 +387,7 @@ const PhotoModel = (photoData: unknown) => {
         general: {
           author: new Set([self.author()]),
           country: new Set([self.countryCode()]),
+          city: new Set(self.geocodedCity() ? [self.geocodedCity()] : []),
           geotagged: new Set([self.hasCoordinates() ? "yes" : "no"]),
         },
         time: {

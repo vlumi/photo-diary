@@ -10,6 +10,7 @@
 - Photo modal `Content` measures container dimensions in `useLayoutEffect` instead of `useEffect`, so the corrective rect read happens before the first paint.
 - Photo modal MetadataPanel's reverse-geocoded line is now hand-assembled per UI language from `geocoded_city` + `geocoded_country_code` only (state and district omitted — data quality across countries / languages isn't reliable enough to bucket on). Western locales (en, fi) render `City, Country 🇫🇮`; Japanese renders `🇯🇵 国 都市` (flag-at-start because the country leads in CJK address order). The flag is always positioned alongside the country name, not at a fixed end of the row.
 - `hide_map` privacy toggle now suppresses every location-derived surface — Photo modal location rows (operator place / country flag and geocoded line), the Stats General topic's Country category, and the country / geotagged filter categories (both the new-filter category picker and any already-applied chips). Coordinates and map were already hidden today.
+- New City filter category and Stats Places table (under General, gated by `hide_map`) drawn from `geocoded_city`, with each city's country flag alongside; photos without a geocoded city are omitted, not bucketed as UNKNOWN.
 
 ### Server
 

@@ -598,6 +598,54 @@ const collectTopics = (
       }),
     };
   };
+  const collectCity = (byCity: any, byCityCountry: any, total: any) => {
+    const [flat, data, valueRanks] = transformData({
+      original: byCity,
+    });
+    const values = flat.map((entry: any) => entry.value);
+    const { mean, stddev } = calculateStatistics(values);
+    return {
+      key: "city",
+      title: t("stats-category-city"),
+      valueSortable: true,
+      valueSortByLabel: true,
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "flag", align: "right", header: true },
+        { title: "city", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry: any) => {
+        const countryCode = byCityCountry?.[entry.key];
+        return {
+          key: encodeTableKey(entry.key),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          flag: (
+            <>
+              {countryCode && countryData.isValid(countryCode) ? (
+                <FlagIcon code={countryCode} />
+              ) : (
+                <></>
+              )}
+            </>
+          ),
+          city: localizeUnknownKey(entry.key),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
+          _count: entry.value,
+          _label: localizeUnknownKey(entry.key),
+          standardScore: (entry.value - mean) / stddev,
+        };
+      }),
+    };
+  };
   const collectLocation = (photos: Photo[], total: number): StatsCategory => ({
     key: "location",
     title: t("stats-category-location"),
@@ -617,6 +665,11 @@ const collectTopics = (
     // location-derived). mapPhotos is already empty when hideMap.
     if (!hideMap) {
       categories.push(collectCountry(count.byCountry, total));
+      if (Object.keys(count.byCity ?? {}).length > 0) {
+        categories.push(
+          collectCity(count.byCity, count.byCityCountry, total)
+        );
+      }
       if (mapPhotos.length > 0) {
         categories.push(collectLocation(mapPhotos, total));
       }
@@ -1456,6 +1509,8 @@ const initializeStats = (uniqueValues: any): any => {
       byGear: {},
       byAuthor: {},
       byCountry: {},
+      byCity: {},
+      byCityCountry: {} as Record<string, string>,
     },
   };
   const setInitialValues = (source: any) => {
@@ -1468,6 +1523,7 @@ const initializeStats = (uniqueValues: any): any => {
     if ("general" in uniqueValues) {
       stats.count.byAuthor = setInitialValues(uniqueValues.general.author);
       stats.count.byCountry = setInitialValues(uniqueValues.general.country);
+      stats.count.byCity = setInitialValues(uniqueValues.general.city);
     }
     if ("time" in uniqueValues) {
       stats.count.byTime.byYearMonth = uniqueValues.time["year-month"]
@@ -1541,6 +1597,15 @@ const populateDistributions = (photos: any, stats: any) => {
     stats.count.byCountry[countryCode] =
       stats.count.byCountry[countryCode] || 0;
     stats.count.byCountry[countryCode]++;
+
+    const city = photo.geocodedCity();
+    if (city) {
+      stats.count.byCity[city] = stats.count.byCity[city] || 0;
+      stats.count.byCity[city]++;
+      if (!stats.count.byCityCountry[city] && photo.countryCode()) {
+        stats.count.byCityCountry[city] = photo.countryCode();
+      }
+    }
 
     const author = photo.author() || UNKNOWN;
     stats.count.byAuthor[author] = stats.count.byAuthor[author] || 0;

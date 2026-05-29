@@ -23,6 +23,8 @@ describe("generate", () => {
       count: {
         byAuthor: {},
         byCountry: {},
+        byCity: {},
+        byCityCountry: {},
         byExposure: {},
         byGear: {},
         byTime: {
@@ -138,6 +140,8 @@ describe("generate", () => {
         byCountry: {
           jp: 1,
         },
+        byCity: {},
+        byCityCountry: {},
         byExposure: {
           byAperture: {
             2.8: 1,
@@ -313,6 +317,8 @@ describe("generate", () => {
         byCountry: {
           unknown: 1,
         },
+        byCity: {},
+        byCityCountry: {},
         byExposure: {
           byAperture: {
             unknown: 1,
@@ -532,6 +538,8 @@ describe("generate", () => {
         byCountry: {
           jp: 2,
         },
+        byCity: {},
+        byCityCountry: {},
         byExposure: {
           byAperture: {
             2.8: 2,

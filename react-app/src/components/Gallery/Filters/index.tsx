@@ -60,7 +60,7 @@ interface Props {
 
 // Categories derived from photo location data — suppressed when
 // hide_map is set (cascade from user_gallery.hide_map).
-const LOCATION_CATEGORIES = new Set(["country", "geotagged"]);
+const LOCATION_CATEGORIES = new Set(["country", "city", "geotagged"]);
 
 const Filters = ({
   filters,

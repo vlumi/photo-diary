@@ -137,6 +137,7 @@
     "stats-category-summary": "Yhteenveto",
     "stats-category-author": "Valokuvaaja",
     "stats-category-country": "Maa",
+    "stats-category-city": "Kaupunki",
     "stats-category-location": "Sijainti",
     "stats-category-geotagged": "Sijaintitieto",
     "stats-geotagged-yes": "Sijaintitieto",
@@ -188,6 +189,7 @@
     "stats-col-author": "Valokuvaaja",
     "stats-col-flag": "",
     "stats-col-country": "Maa",
+    "stats-col-city": "Kaupunki",
 
     "stats-col-year": "Vuosi",
     "stats-col-year-month": "Vuosi ja kuukausi",

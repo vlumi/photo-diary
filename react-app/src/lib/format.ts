@@ -206,6 +206,8 @@ const categoryValue =
         return identity as ValueFormatter;
       case "country":
         return countryName(lang, countryData) as ValueFormatter;
+      case "city":
+        return identity as ValueFormatter;
       case "geotagged":
         return ((value: string) =>
           t(`stats-geotagged-${value}`)) as ValueFormatter;
@@ -270,6 +272,7 @@ const categorySorter =
     switch (category) {
       case "author":
       case "country":
+      case "city":
         return collection.strSortByFieldAsc(valueField) as Comparator<
           Record<string, any>
         >;

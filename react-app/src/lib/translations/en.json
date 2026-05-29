@@ -137,6 +137,7 @@
     "stats-category-summary": "Summary",
     "stats-category-author": "Author",
     "stats-category-country": "Country",
+    "stats-category-city": "City",
     "stats-category-location": "Location",
     "stats-category-geotagged": "Geotagged",
     "stats-geotagged-yes": "Geotagged",
@@ -188,6 +189,7 @@
     "stats-col-author": "Author",
     "stats-col-flag": "",
     "stats-col-country": "Country",
+    "stats-col-city": "City",
 
     "stats-col-year": "Year",
     "stats-col-year-month": "Year + Month",

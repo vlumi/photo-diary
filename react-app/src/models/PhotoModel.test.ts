@@ -757,6 +757,7 @@ describe("With samples", () => {
         general: {
           author: new Set([null]),
           country: new Set([null]),
+          city: new Set(),
           geotagged: new Set(["no"]),
         },
         time: {
@@ -789,6 +790,7 @@ describe("With samples", () => {
         general: {
           author: new Set(["Author One"]),
           country: new Set(["jp"]),
+          city: new Set(),
           geotagged: new Set(["yes"]),
         },
         time: {
