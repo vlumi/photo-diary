@@ -720,7 +720,11 @@ const SCHEMA = {
       "geocode_no_data",
     ],
     primaryKey: ["id"],
-    order: ["taken ASC", "id ASC"],
+    // Tiebreak same-second shots by `original_filename`, which carries
+    // the camera's zero-padded sequence counter (e.g. `_2198`, `_2200`).
+    // String sort matches numeric sort within a single camera, so action-
+    // burst frames stay in shoot order. `id` (uuid) is the final tiebreak.
+    order: ["taken ASC", "original_filename ASC", "id ASC"],
     mapToRow: photoMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
 } satisfies Record<string, TableSchema>;

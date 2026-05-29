@@ -12,6 +12,7 @@
 - New `photo.original_filename` column (schema migration `006`) records the basename the photo arrived with, backfilling existing rows to `id` so the values match pre-rename. Sets up the `(id, originalFilename, dateTimeOriginal)` lookup chain #272 needs once rename-on-import lands.
 - New `db.loadPhotosByOriginalFilename(name)` driver method (sqlite3 + dummy) so the lookup chain and `bin/photo.ts search` can find photos by their human-recognised camera filename.
 - New `db.renamePhoto(oldId, newId)` driver method (sqlite3 + dummy) that retargets `photo.id` and `gallery_photo.photo_id` atomically within a single transaction (FK enforcement toggled off for the rewrite, since the gallery_photo FK is RESTRICT). Powers `bin/photo-rename.ts`.
+- Photo sort order tiebreaks same-second shots by `original_filename` before the random-uuid `id` — action-burst frames stay in shoot order under the new uniform id scheme, since LR's zero-padded camera counter (`_2198`, `_2200`, …) sorts lexicographically the same as numerically within a camera. The `id` remains the final tiebreaker.
 
 ### Converter
 
