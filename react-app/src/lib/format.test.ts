@@ -476,3 +476,45 @@ describe("categorySorter", () => {
   test("dummy", () =>
     expect(data.sort(keyValueSorter("dummy"))).toStrictEqual(data));
 });
+
+describe("geocodedAddress()", () => {
+  const helsinki = {
+    country: "Finland",
+    state: "Uusimaa",
+    city: "Helsinki",
+    district: "Eastern major district",
+  };
+  const pylkonmaki = {
+    country: "Finland",
+    state: "Central Finland",
+    city: "Pylkönmäki",
+  };
+  const fukuoka = {
+    country: "日本",
+    state: "福岡県",
+    city: "福岡市",
+    district: "城南区",
+  };
+  test("en: district, city, state, country with comma", () =>
+    expect(format.geocodedAddress("en", helsinki)).toBe(
+      "Eastern major district, Helsinki, Uusimaa, Finland"
+    ));
+  test("fi: same Western order as en", () =>
+    expect(format.geocodedAddress("fi", helsinki)).toBe(
+      "Eastern major district, Helsinki, Uusimaa, Finland"
+    ));
+  test("ja: country state city district with space", () =>
+    expect(format.geocodedAddress("ja", fukuoka)).toBe(
+      "日本 福岡県 福岡市 城南区"
+    ));
+  test("missing district drops cleanly (en)", () =>
+    expect(format.geocodedAddress("en", pylkonmaki)).toBe(
+      "Pylkönmäki, Central Finland, Finland"
+    ));
+  test("unknown lang falls back to en", () =>
+    expect(format.geocodedAddress("xx", helsinki)).toBe(
+      "Eastern major district, Helsinki, Uusimaa, Finland"
+    ));
+  test("empty parts return empty string", () =>
+    expect(format.geocodedAddress("en", {})).toBe(""));
+});

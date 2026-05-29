@@ -165,6 +165,28 @@ const gear = (
   return [make, model].join(" ");
 };
 
+// Hand-assembled address from structured geocoded fields, replacing
+// Nominatim's verbose `display_name`.
+interface GeocodedParts {
+  country?: string;
+  state?: string;
+  city?: string;
+  district?: string;
+}
+const ADDRESS_FORMAT: Record<string, { order: "lts" | "stl"; sep: string }> = {
+  en: { order: "stl", sep: ", " },
+  fi: { order: "stl", sep: ", " },
+  ja: { order: "lts", sep: " " },
+};
+const geocodedAddress = (lang: string, parts: GeocodedParts): string => {
+  const f = ADDRESS_FORMAT[lang] ?? ADDRESS_FORMAT.en;
+  const ordered =
+    f.order === "lts"
+      ? [parts.country, parts.state, parts.city, parts.district]
+      : [parts.district, parts.city, parts.state, parts.country];
+  return ordered.filter(Boolean).join(f.sep);
+};
+
 const coordinates = (latitude: number, longitude: number): string => {
   return new GeoCoord(latitude, longitude).roundToSeconds().toString();
 };
@@ -320,6 +342,7 @@ export default {
 
   exposure,
   gear,
+  geocodedAddress,
   coordinates,
 
   categoryValue,

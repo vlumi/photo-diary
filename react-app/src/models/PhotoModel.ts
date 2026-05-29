@@ -267,8 +267,21 @@ const PhotoModel = (photoData: unknown) => {
         : "",
     hasPlace: (): boolean => !!photo.taken.location?.place,
     place: (): string | undefined => photo.taken.location?.place,
-    hasGeocodedPlace: (): boolean => !!photo.geocoded?.place,
-    geocodedPlace: (): string | undefined => photo.geocoded?.place,
+    // Hand-assembled per-language address from the structured fields;
+    // Nominatim's `place` (display_name) is ignored.
+    hasGeocodedAddress: (): boolean =>
+      !!(
+        photo.geocoded?.state ||
+        photo.geocoded?.city ||
+        photo.geocoded?.district
+      ),
+    geocodedAddress: (lang: string, countryData: CountryData): string =>
+      format.geocodedAddress(lang, {
+        country: self.geocodedCountryName(lang, countryData),
+        state: photo.geocoded?.state,
+        city: photo.geocoded?.city,
+        district: photo.geocoded?.district,
+      }),
     hasGeocodedCountry: (): boolean => !!photo.geocoded?.countryCode,
     geocodedCountryCode: (): string | undefined => photo.geocoded?.countryCode,
     geocodedCountryName: (lang: string, countryData: CountryData): string =>
