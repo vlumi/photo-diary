@@ -12,6 +12,7 @@ import {
   acceptLocalizedCity,
   RULED_LANGS,
 } from "../lib/localized-script.js";
+import { lookup } from "../lib/photo-intake.js";
 import { normalizeCity } from "photo-diary-converter/reverse-geocode/normalize.js";
 
 const formatTable = (rows: string[][]): string => {
@@ -39,53 +40,6 @@ const addToGalleries = async (photoId: string, galleries: unknown) => {
   } catch (error) {
     logger.error(`Linking "${photoId}" failed:`, error);
   }
-};
-
-// Find the existing row to update for a photo whose `id` in the input JSON
-// may be the new stable id, the legacy filename-id, or just the original
-// camera filename (e.g. IMG_1234.jpg) the operator's script knows it by.
-// Chain:
-//   1. exact `id` match — current behaviour, also catches legacy rows.
-//   2. originalFilename match — finds renamed photos by their old name.
-//   3. (originalFilename, taken.instant.timestamp) — disambiguates camera
-//      counter rollovers / multi-camera duplicates.
-//   4. no match → fall through to create (preserves the pre-#223 flow).
-//   ambiguous → loud error; never silently merge unrelated photos.
-type Lookup =
-  | { kind: "update"; existingId: string }
-  | { kind: "create" }
-  | { kind: "ambiguous"; candidates: any[] };
-
-const lookup = async (photo: any): Promise<Lookup> => {
-  if (!photo.id) return { kind: "create" };
-
-  // Step 1: exact id match. Direct hit; safest, no ambiguity.
-  try {
-    await db.loadPhoto(photo.id);
-    return { kind: "update", existingId: photo.id };
-  } catch {
-    // fall through
-  }
-
-  // Step 2: originalFilename match — but ALWAYS narrowed by
-  // taken.instant.timestamp. originalFilename alone isn't proof of
-  // identity (camera counter rollovers, multi-camera setups produce
-  // unrelated photos with the same name); silently picking "the
-  // only candidate" is the bug we're avoiding.
-  const candidates = (await db.loadPhotosByOriginalFilename(photo.id)) as any[];
-  if (candidates.length === 0) return { kind: "create" };
-
-  const wantTaken = photo.taken?.instant?.timestamp;
-  if (wantTaken) {
-    const matches = candidates.filter(
-      (c) => c.taken?.instant?.timestamp === wantTaken
-    );
-    if (matches.length === 1) {
-      return { kind: "update", existingId: matches[0].id };
-    }
-    // 0 or 2+ matches at this point → fall through to ambiguous.
-  }
-  return { kind: "ambiguous", candidates };
 };
 
 const reportAmbiguous = (photo: any, candidates: any[]) => {

@@ -1,4 +1,3 @@
-import path from "node:path";
 import exifr from "exifr";
 
 import * as logger from "../lib/logger.js";
@@ -31,11 +30,9 @@ type ExifData = Record<string, unknown> & {
 };
 
 export default async (
-  fileName: string,
-  rootDir: string
+  sourcePath: string,
+  id: string
 ): Promise<Record<string, unknown>> => {
-  const filePath = path.join(rootDir, fileName);
-
   const cleanString = (s: string | undefined): string | undefined =>
     s !== undefined ? s.replace(/\0/g, "").trim() : s;
 
@@ -115,7 +112,7 @@ export default async (
   };
 
   const parseExif = (exif: ExifData) => ({
-    id: fileName,
+    id,
     taken: {
       instant: parseTimestamp(
         exif.DateTimeOriginal || exif.CreateDate || exif.ModifyDate
@@ -154,6 +151,6 @@ export default async (
     dimensions: {},
   });
 
-  const exifData = ((await exifr.parse(filePath)) ?? {}) as ExifData;
+  const exifData = ((await exifr.parse(sourcePath)) ?? {}) as ExifData;
   return parseExif(exifData);
 };

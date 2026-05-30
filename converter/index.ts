@@ -12,8 +12,17 @@ try {
   const watchDir = path.join(rootDir, DIR_INBOX);
   logger.info(`Watching ${watchDir}`);
 
-  // chokidar v4 dropped glob-pattern support for the path arg; use a filter.
-  const isJpeg = (filePath: string) => /\.jpe?g$/i.test(filePath);
+  // chokidar v4 dropped glob-pattern support. Inline filter:
+  //   - .jpg / .jpeg → SOOC intake (image pipeline).
+  //   - .json → user-supplied metadata sidecar (lookup-or-create).
+  // Subdir convention: files at `inbox/<gallery>/...` get auto-linked
+  // to that gallery on intake; files at the root don't auto-link.
+  // `._*` are macOS AppleDouble sidecars (created when copying to
+  // non-HFS volumes); they're never real intake.
+  const isAcceptable = (filePath: string) => {
+    const name = path.basename(filePath);
+    return !name.startsWith("._") && /\.(jpe?g|json)$/i.test(name);
+  };
   const watcher = chokidar.watch(watchDir, {
     persistent: true,
     ignoreInitial: false,
@@ -21,28 +30,31 @@ try {
     awaitWriteFinish: true,
     atomic: true,
     ignored: (filePath, stats) =>
-      stats !== undefined && stats.isFile() && !isJpeg(filePath),
+      stats !== undefined && stats.isFile() && !isAcceptable(filePath),
   });
 
   const fileQueue: string[] = [];
   const fileQueueProcessor = (): void => {
-    const fileName = fileQueue.shift();
-    if (fileName) {
-      processFile(fileName, rootDir)
-        .then(() => setTimeout(fileQueueProcessor, 0))
+    const relPath = fileQueue.shift();
+    if (relPath) {
+      processFile(relPath, rootDir)
         .catch((err) => {
-          logger.error("Processing failed for file", fileName, err);
-        });
+          logger.error("Processing failed for file", relPath, err);
+        })
+        .finally(() => setTimeout(fileQueueProcessor, 0));
     } else {
       setTimeout(fileQueueProcessor, 1000);
     }
   };
   setTimeout(fileQueueProcessor, 1000);
 
+  // Dedupe queue by relative path so subdir layout is preserved
+  // (`dailybw/IMG_1234.jpg` and `gallery/IMG_1234.jpg` are different
+  // intake events).
   const enqueueIfNew = (absPath: string) => {
-    const fileName = path.basename(absPath);
-    if (!fileQueue.includes(fileName)) {
-      fileQueue.push(fileName);
+    const relPath = path.relative(watchDir, absPath);
+    if (!fileQueue.includes(relPath)) {
+      fileQueue.push(relPath);
     }
   };
 
@@ -50,7 +62,7 @@ try {
     .on("add", enqueueIfNew)
     .on("change", enqueueIfNew)
     .on("unlink", (absPath) =>
-      logger.debug(`[${path.basename(absPath)}] Removed from inbox`)
+      logger.debug(`[${path.relative(watchDir, absPath)}] Removed from inbox`)
     )
     .on("error", (err) => logger.error("Error:", err));
 } catch (err) {
