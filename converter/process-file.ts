@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- intake JSON is
+   untyped operator input; narrowing via `unknown` would force defensive
+   guards at every dot-access site without buying us safety. */
 import fs from "node:fs";
 import path from "node:path";
 

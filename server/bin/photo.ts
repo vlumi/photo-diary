@@ -12,7 +12,7 @@ import {
   acceptLocalizedCity,
   RULED_LANGS,
 } from "../lib/localized-script.js";
-import { lookup, type Lookup } from "../lib/photo-intake.js";
+import { lookup } from "../lib/photo-intake.js";
 import { normalizeCity } from "photo-diary-converter/reverse-geocode/normalize.js";
 
 const formatTable = (rows: string[][]): string => {
