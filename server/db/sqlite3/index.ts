@@ -4,6 +4,7 @@ import CONST from "../../lib/constants.js";
 import { NotFoundError } from "../../lib/errors.js";
 import config from "../../lib/config/index.js";
 import logger from "../../lib/logger.js";
+import { acceptLocalizedCity } from "../../lib/localized-script.js";
 import { migrate } from "./migrate.js";
 
 import schemaFactory, {
@@ -654,14 +655,13 @@ const upsertGeocoded = async (
     }
     return;
   }
-  // For ja: Nominatim falls back to OSM's local label when there's
-  // no Japanese form, so the value can be plain Latin / Cyrillic /
-  // etc. Reject those at write time (drop the city, keep the row +
-  // raw address blob).
-  const city =
-    lang === "ja" && fields.city && !hasJapaneseScript(fields.city)
-      ? null
-      : (fields.city ?? null);
+  // Per-lang validation drops values whose script doesn't match the
+  // language (Nominatim's `?accept-language=<lang>` falls back to OSM
+  // local labels when no localized form exists). Keeps the row + raw
+  // address blob, only the city goes NULL.
+  const city = acceptLocalizedCity(fields.city, lang)
+    ? (fields.city ?? null)
+    : null;
   db.prepare(
     `INSERT INTO photo_localized
        (photo_id, lang, geocoded_city, geocoded_address)
@@ -671,9 +671,6 @@ const upsertGeocoded = async (
        geocoded_address = COALESCE(excluded.geocoded_address, photo_localized.geocoded_address)`
   ).run(photoId, lang, city, fields.address ?? null);
 };
-
-const hasJapaneseScript = (s: string): boolean =>
-  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(s);
 
 // Flag a photo as "Nominatim has no address for these coordinates" so
 // subsequent intake / daemon runs skip it instead of retrying. Operator
