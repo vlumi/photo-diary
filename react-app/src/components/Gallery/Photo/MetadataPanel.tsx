@@ -144,40 +144,29 @@ const MetadataPanel = ({
   const beta = useBetaStore((s) => s.enabled.regions);
   const formatExposure = format.exposure(lang, t);
 
-  const renderPlace = () => {
-    if (!photo.hasPlace()) return null;
-    return <Part>{photo.place()}</Part>;
+  // Operator place sits on its own row (no country / flag). Keeping
+  // place inline with the geocoded address jumbles the CJK ordering
+  // (place is most-specific, but ja geocoded reads broad → narrow,
+  // so a prepended place would jump specific → broad → narrow).
+  const renderOperatorPlace = () => {
+    if (gallery.hideMap() || !photo.hasPlace()) return null;
+    return <Row>{photo.place()}</Row>;
   };
-  const renderCountry = () => {
-    const countryCode = photo.countryCode();
-    if (!photo.hasCountry() || !countryCode) return null;
-    return (
-      <Part>
-        {photo.countryName(lang, countryData)} <FlagIcon code={countryCode} />
-      </Part>
-    );
-  };
-  const renderLocation = () => {
+  // Address row: geocoded city/state/country with locale-aware flag
+  // position. Falls back to operator country name + flag when there's
+  // no geocoded data (the prior non-geocoded photo path).
+  const renderAddress = () => {
     if (gallery.hideMap()) return null;
-    const country = renderCountry();
-    const place = renderPlace();
-    if (!country && !place) return null;
-    return (
-      <Row>
-        {place}
-        {place && country ? ", " : ""}
-        {country}
-      </Row>
-    );
-  };
-  const renderGeocodedLocation = () => {
-    if (gallery.hideMap()) return null;
-    if (!photo.hasGeocodedAddress()) return null;
-    const address = photo.geocodedAddress(lang, countryData, {
-      includeState: beta,
-    });
-    if (!address) return null;
-    const code = photo.geocodedCountryCode();
+    const geocodedAddress = photo.hasGeocodedAddress()
+      ? photo.geocodedAddress(lang, countryData, { includeState: beta })
+      : undefined;
+    const operatorCountryName =
+      !geocodedAddress && photo.hasCountry() && photo.countryCode()
+        ? photo.countryName(lang, countryData)
+        : undefined;
+    const text = geocodedAddress ?? operatorCountryName;
+    const code = photo.geocodedCountryCode() ?? photo.countryCode();
+    if (!text && !code) return null;
     const flagAt = format.geocodedFlagPosition(lang);
     return (
       <Row>
@@ -187,7 +176,7 @@ const MetadataPanel = ({
               <FlagIcon code={code} />{" "}
             </>
           ) : null}
-          {address}
+          {text}
           {code && flagAt === "end" ? (
             <>
               {" "}
@@ -197,10 +186,6 @@ const MetadataPanel = ({
         </Part>
       </Row>
     );
-  };
-  const renderCoordinates = () => {
-    if (!photo.hasCoordinates()) return null;
-    return <Muted>{photo.formatCoordinates()}</Muted>;
   };
   const renderExif = () => {
     const camera = photo.formatCamera();
@@ -327,12 +312,11 @@ const MetadataPanel = ({
       </Header>
       <Body>
         {photo.title() && <Title>{photo.title()}</Title>}
-        {renderLocation()}
-        {renderGeocodedLocation()}
-        {renderCoordinates()}
+        {renderOperatorPlace()}
+        {renderAddress()}
+        {renderMap()}
         {renderExif()}
         {renderEpochInfo()}
-        {renderMap()}
       </Body>
     </Root>
   );
