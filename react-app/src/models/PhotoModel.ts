@@ -272,9 +272,12 @@ const PhotoModel = (photoData: unknown) => {
     geocodedCity: (): string | undefined => photo.geocoded?.city,
     geocodedState: (): string | undefined => photo.geocoded?.state,
     geocodedStateCode: (): string | undefined => photo.geocoded?.stateCode,
-    // (country, stateCode||state||"", city) JSON-encoded so it can be
-    // used as a Map key, filter value, and uniqueValues entry. Returns
-    // undefined when there's no city to bucket.
+    // Derived from `stateCode` via the curated subdivision lookup, not
+    // from Nominatim's `state`. Empty when no code is set.
+    geocodedStateName: (lang: string): string => {
+      const code = photo.geocoded?.stateCode;
+      return code ? format.subdivisionName(lang, code) : "";
+    },
     geocodedCityKey: (): string | undefined => {
       const city = photo.geocoded?.city;
       if (!city) return undefined;
@@ -292,13 +295,16 @@ const PhotoModel = (photoData: unknown) => {
           self.geocodedCountryCode() as string
         )
         : "",
-    // Minimal city + country line; state / district aren't reliable
-    // enough to render across languages.
     hasGeocodedAddress: (): boolean =>
       !!(photo.geocoded?.city || photo.geocoded?.countryCode),
-    geocodedAddress: (lang: string, countryData: CountryData): string =>
+    geocodedAddress: (
+      lang: string,
+      countryData: CountryData,
+      opts?: { includeState?: boolean }
+    ): string =>
       format.geocodedAddress(lang, {
         country: self.geocodedCountryName(lang, countryData),
+        state: opts?.includeState ? self.geocodedStateName(lang) : undefined,
         city: photo.geocoded?.city,
       }),
     hasCoordinates: (): boolean =>
@@ -342,6 +348,8 @@ const PhotoModel = (photoData: unknown) => {
           return (!value && !self.author()) || value === self.author();
         case "country":
           return value === self.countryCode();
+        case "state":
+          return value === self.geocodedStateCode();
         case "city":
           return value === self.geocodedCityKey();
         case "geotagged":
@@ -402,6 +410,9 @@ const PhotoModel = (photoData: unknown) => {
         general: {
           author: new Set([self.author()]),
           country: new Set([self.countryCode()]),
+          state: new Set(
+            self.geocodedStateCode() ? [self.geocodedStateCode()] : []
+          ),
           city: new Set(self.geocodedCityKey() ? [self.geocodedCityKey()] : []),
           geotagged: new Set([self.hasCoordinates() ? "yes" : "no"]),
         },

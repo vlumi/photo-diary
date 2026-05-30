@@ -5,6 +5,7 @@ import styled from "@emotion/styled";
 import Topic from "./Topic";
 
 import stats, { type UniqueValues } from "../../../lib/stats";
+import { useBetaStore } from "../../../stores";
 
 import type { Photo } from "../../../models/PhotoModel";
 import type { Filters as FiltersT } from "../../../lib/filter";
@@ -51,6 +52,7 @@ const Stats = ({
   hideMap,
 }: Props): React.ReactElement => {
   const [data, setData] = React.useState<any>(undefined);
+  const beta = useBetaStore((s) => s.enabled.regions);
 
   const { t } = useTranslation();
 
@@ -69,9 +71,18 @@ const Stats = ({
   const topics = React.useMemo(
     () =>
       data
-        ? stats.collectTopics(data, lang, t, countryData, theme, mapPhotos, hideMap)
+        ? stats.collectTopics(
+            data,
+            lang,
+            t,
+            countryData,
+            theme,
+            mapPhotos,
+            hideMap,
+            beta
+          )
         : [],
-    [data, lang, t, countryData, theme, mapPhotos, hideMap]
+    [data, lang, t, countryData, theme, mapPhotos, hideMap, beta]
   );
 
   if (!data) {

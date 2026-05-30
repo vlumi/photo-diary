@@ -160,7 +160,10 @@ The generated `.env` covers the required keys. Optional per-instance frontend de
 ```sh
 DEFAULT_GALLERY=dailybw
 DEFAULT_THEME=grayscale
+BETA_FEATURE_REGIONS=user   # `user` (default) | `on` | `off`
 ```
+
+`BETA_FEATURE_<NAME>` locks a beta feature for this instance: `on` enables it for everyone (hides the per-browser toggle), `off` disables it for everyone, `user` (default) shows the toggle in the UserMenu so each visitor can opt in. See the [server README](server/README.md#environment-variables) for the full env table.
 
 #### Starting an instance
 

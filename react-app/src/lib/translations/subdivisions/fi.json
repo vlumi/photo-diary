@@ -1,0 +1,98 @@
+{
+  "atw": "Wien",
+  "atno": "Ala-Itävalta",
+  "ato": "Ylä-Itävalta",
+  "att": "Tiroli",
+
+  "aunsw": "Uusi Etelä-Wales",
+  "auwa": "Länsi-Australia",
+  "ausa": "Etelä-Australia",
+
+  "bebru": "Bryssel",
+  "bevlg": "Flanderi",
+  "bewal": "Vallonia",
+
+  "cabc": "Brittiläinen Kolumbia",
+  "canb": "Uusi-Brunswick",
+  "cans": "Uusi-Skotlanti",
+  "cape": "Prinssi Edwardin saari",
+  "cant": "Luoteisterritoriot",
+
+  "debe": "Berliini",
+  "deby": "Baijeri",
+  "dehh": "Hampuri",
+  "deni": "Ala-Saksi",
+  "desn": "Saksi",
+  "dehe": "Hessen",
+  "denw": "Nordrhein-Westfalen",
+  "derp": "Rheinland-Pfalz",
+  "dest": "Sachsen-Anhalt",
+  "deth": "Thüringen",
+
+  "esct": "Katalonia",
+  "espv": "Baskimaa",
+  "escn": "Kanariansaaret",
+  "esib": "Baleaarit",
+
+  "fi01": "Ahvenanmaa",
+  "fi02": "Etelä-Karjala",
+  "fi03": "Etelä-Pohjanmaa",
+  "fi04": "Etelä-Savo",
+  "fi05": "Kainuu",
+  "fi06": "Kanta-Häme",
+  "fi07": "Keski-Pohjanmaa",
+  "fi08": "Keski-Suomi",
+  "fi09": "Kymenlaakso",
+  "fi10": "Lappi",
+  "fi11": "Pirkanmaa",
+  "fi12": "Pohjanmaa",
+  "fi13": "Pohjois-Karjala",
+  "fi14": "Pohjois-Pohjanmaa",
+  "fi15": "Pohjois-Savo",
+  "fi16": "Päijät-Häme",
+  "fi17": "Satakunta",
+  "fi18": "Uusimaa",
+  "fi19": "Varsinais-Suomi",
+
+  "frbre": "Bretagne",
+  "frnor": "Normandia",
+  "frcor": "Korsika",
+
+  "gbeng": "Englanti",
+  "gbsct": "Skotlanti",
+  "gbnir": "Pohjois-Irlanti",
+
+  "it25": "Lombardia",
+  "it52": "Toscana",
+  "it82": "Sisilia",
+  "it21": "Piemonte",
+  "it23": "Valle d'Aosta",
+
+  "jp13": "Tokio",
+  "jp26": "Kioto",
+
+  "kr11": "Soul",
+
+  "nlnh": "Pohjois-Hollanti",
+  "nlzh": "Etelä-Hollanti",
+  "nlnb": "Pohjois-Brabant",
+
+  "pt11": "Lissabon",
+  "pt20": "Azorit",
+
+  "seab": "Tukholma",
+  "see": "Itä-Götanmaa",
+  "sei": "Gotlanti",
+  "seo": "Länsi-Götanmaa",
+  "ses": "Värmlanti",
+  "sew": "Taalainmaa",
+
+  "usca": "Kalifornia",
+  "ushi": "Havaiji",
+  "usnc": "Pohjois-Carolina",
+  "ussc": "Etelä-Carolina",
+  "usnd": "Pohjois-Dakota",
+  "ussd": "Etelä-Dakota",
+  "uswv": "Länsi-Virginia",
+  "usnm": "Uusi-Meksiko"
+}

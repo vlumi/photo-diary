@@ -5,7 +5,11 @@ import collection from "./collection";
 import config from "./config";
 
 interface CountryData {
-  getName(code: string, lang: string): string | undefined;
+  getName(
+    code: string,
+    lang: string,
+    options?: { select?: "official" | "alias" | "all" }
+  ): string | undefined;
 }
 
 const identity = <T,>(_: T): T => _;
@@ -93,10 +97,45 @@ const dayOfWeek = (dow: number): string => {
   return DOW[dow % 7];
 };
 
+// `select: "alias"` prefers the common short form ("Taiwan", "Russia",
+// "South Korea") over ISO's official long form ("Taiwan, Province of
+// China", "Russian Federation", "Korea, Republic of"). Falls back to
+// official when no alias exists.
 const countryName =
   (lang: string, countryData: CountryData) =>
   (countryCode: string): string =>
-    countryData.getName(countryCode, lang) || countryCode;
+    countryData.getName(countryCode, lang, { select: "alias" }) ||
+    countryData.getName(countryCode, lang) ||
+    countryCode;
+
+// ISO 3166-2 code → localized name. JSON keys are lowercase with the
+// hyphen stripped (`jp13`, `usma`). Per-language chunks load on demand;
+// lookup falls back lang → en → original code.
+const SUBDIVISIONS: Record<string, Record<string, string>> = {};
+const SUBDIVISION_LOADERS: Record<
+  string,
+  () => Promise<{ default: Record<string, string> }>
+> = {
+  en: () => import("./translations/subdivisions/en.json"),
+  fi: () => import("./translations/subdivisions/fi.json"),
+  ja: () => import("./translations/subdivisions/ja.json"),
+};
+const loadSubdivisions = async (lang: string): Promise<void> => {
+  if (SUBDIVISIONS[lang]) return;
+  const loader = SUBDIVISION_LOADERS[lang];
+  if (!loader) return;
+  const mod = await loader();
+  SUBDIVISIONS[lang] = mod.default;
+};
+const subdivisionKey = (code: string): string =>
+  code.toLowerCase().replace(/-/g, "");
+const subdivisionName = (lang: string, code: string): string => {
+  if (!code) return "";
+  const key = subdivisionKey(code);
+  return (
+    SUBDIVISIONS[lang]?.[key] ?? SUBDIVISIONS.en?.[key] ?? code
+  );
+};
 
 const exposure = (lang: string, t?: TFunction) => {
   const formatNumber = number(lang);
@@ -165,12 +204,14 @@ const gear = (
   return [make, model].join(" ");
 };
 
-// Hand-assembled geocoded address: city + country only. Per-language
-// order + separator. Flag is positioned alongside the country, so the
-// caller asks geocodedFlagPosition() to decide which side to render
-// the FlagIcon on.
+// Hand-assembled geocoded address: city + (optional) state + country.
+// Per-language order + separator. Flag is positioned alongside the
+// country, so the caller asks geocodedFlagPosition() to decide which
+// side to render the FlagIcon on. State is included only when the
+// caller passes a non-empty value — non-beta callers omit it.
 interface GeocodedParts {
   country?: string;
+  state?: string;
   city?: string;
 }
 const ADDRESS_FORMAT: Record<string, { order: "lts" | "stl"; sep: string }> = {
@@ -182,8 +223,8 @@ const geocodedAddress = (lang: string, parts: GeocodedParts): string => {
   const f = ADDRESS_FORMAT[lang] ?? ADDRESS_FORMAT.en;
   const ordered =
     f.order === "lts"
-      ? [parts.country, parts.city]
-      : [parts.city, parts.country];
+      ? [parts.country, parts.state, parts.city]
+      : [parts.city, parts.state, parts.country];
   return ordered.filter(Boolean).join(f.sep);
 };
 const geocodedFlagPosition = (lang: string): "start" | "end" => {
@@ -253,6 +294,8 @@ const categoryValue =
         return identity as ValueFormatter;
       case "country":
         return countryName(lang, countryData) as ValueFormatter;
+      case "state":
+        return ((code: string) => subdivisionName(lang, code)) as ValueFormatter;
       case "city":
         return identity as ValueFormatter;
       case "geotagged":
@@ -319,6 +362,7 @@ const categorySorter =
     switch (category) {
       case "author":
       case "country":
+      case "state":
       case "city":
         return collection.strSortByFieldAsc(valueField) as Comparator<
           Record<string, any>
@@ -393,6 +437,8 @@ export default {
   dayOfWeek,
 
   countryName,
+  subdivisionName,
+  loadSubdivisions,
 
   exposure,
   gear,

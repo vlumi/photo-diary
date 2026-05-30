@@ -186,9 +186,10 @@ const calculateRanks = <T,>(
 };
 
 /**
- * Truncate the given array `data` to at most `maxEntries` elements. The rest of the elements
- * will be summarized into a new element at the end using `summarizer`. The truncated array
- * with the summarized data is passed to `processor`
+ * Keep the first `maxEntries` items of `data` as-is and aggregate the
+ * rest into a single summarized entry appended at the end. `processor`
+ * receives the resulting array (top N + Other). If there's nothing past
+ * the cap, no summary entry is added.
  */
 const truncateAndProcess = <T, R>(
   data: T[] | undefined | null,
@@ -198,8 +199,8 @@ const truncateAndProcess = <T, R>(
 ): R => {
   if (maxEntries > 0 && data && data.length > maxEntries) {
     return processor([
-      ...data.slice(0, maxEntries - 1),
-      summarizer(data.slice(maxEntries - 1)),
+      ...data.slice(0, maxEntries),
+      summarizer(data.slice(maxEntries)),
     ]);
   }
   return processor(data ?? []);

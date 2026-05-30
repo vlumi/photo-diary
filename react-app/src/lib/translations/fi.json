@@ -23,6 +23,7 @@
     "change-password-wrong-current": "Nykyinen salasana on virheellinen",
     "change-password-failed": "Salasanan vaihto epäonnistui",
     "change-password-success": "Salasana vaihdettu",
+    "beta-feature-regions": "Aluesuodatin (beta)",
 
     "nav-galleries": "Galleriat",
     "nav-gallery-top": "Palaa alkuun",
@@ -87,6 +88,7 @@
 
     "stats-unknown": "N/A",
     "stats-other": "Muut",
+    "stats-other-beyond": "Muut ({{n}}+)",
     "stats-more_one": "+ {{count}} muu…",
     "stats-more_other": "+ {{count}} muuta…",
     "stats-modal-sort-label": "Järjestys",
@@ -107,6 +109,7 @@
     "stats-summary-busiest-hour": "Vilkkain tunti",
     "stats-summary-top-author": "Valokuvaaja",
     "stats-summary-top-country": "Maa",
+    "stats-summary-top-state": "Alue",
     "stats-summary-top-city": "Kaupunki",
     "stats-summary-top-camera": "Kamera",
     "stats-summary-top-lens": "Objektiivi",
@@ -121,6 +124,7 @@
     "stats-summary-even-meta": "~{{count}} kukin, {{n}} luokkaa",
     "stats-summary-variety-authors": "Valokuvaajat",
     "stats-summary-variety-countries": "Maat",
+    "stats-summary-variety-states": "Alueet",
     "stats-summary-variety-cities": "Kaupungit",
     "stats-summary-variety-camera-makes": "Kameramerkit",
     "stats-summary-variety-cameras": "Kamerat",
@@ -139,6 +143,7 @@
     "stats-category-summary": "Yhteenveto",
     "stats-category-author": "Valokuvaaja",
     "stats-category-country": "Maa",
+    "stats-category-state": "Alue",
     "stats-category-city": "Kaupunki",
     "stats-category-location": "Sijainti",
     "stats-category-geotagged": "Sijaintitieto",
@@ -191,6 +196,7 @@
     "stats-col-author": "Valokuvaaja",
     "stats-col-flag": "",
     "stats-col-country": "Maa",
+    "stats-col-state": "Alue",
     "stats-col-city": "Kaupunki",
 
     "stats-col-year": "Vuosi",

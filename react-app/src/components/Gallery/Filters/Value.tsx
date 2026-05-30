@@ -89,6 +89,19 @@ const Value = ({
         </Title>
       );
     }
+    if (category === "state") {
+      const country = value.slice(0, 2).toLowerCase();
+      return (
+        <Title>
+          {countryData.isValid(country) ? (
+            <>
+              <FlagIcon code={country} />{" "}
+            </>
+          ) : null}
+          {format.subdivisionName(lang, value)}
+        </Title>
+      );
+    }
     if (category === "city") {
       const parsed = format.parseCityKey(value);
       const qualified = parsed.state

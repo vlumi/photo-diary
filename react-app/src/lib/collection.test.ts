@@ -297,11 +297,12 @@ describe("truncateAndProcess()", () => {
         mockProcessor,
         summarizer
       )
-    ).toBe(1);
+    ).toBe(2);
     expect(summarizer).toBeCalled();
     expect(mockProcessor).toBeCalled();
     expect(mockProcessor.mock.calls[0][0]).toStrictEqual([
-      { key: "other", value: 3 },
+      { key: "k1", value: 1 },
+      { key: "other", value: 2 },
     ]);
   });
   test("Three", () => {
@@ -337,11 +338,12 @@ describe("truncateAndProcess()", () => {
         mockProcessor,
         summarizer
       )
-    ).toBe(1);
+    ).toBe(2);
     expect(summarizer).toBeCalled();
     expect(mockProcessor).toBeCalled();
     expect(mockProcessor.mock.calls[0][0]).toStrictEqual([
-      { key: "other", value: 6 },
+      { key: "k1", value: 1 },
+      { key: "other", value: 5 },
     ]);
   });
 });

@@ -24,14 +24,21 @@ const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
 
 // Per-instance frontend defaults from the server's `process.env`.
 // Each key is optional; the SPA falls back to `lib/config.ts`.
-const envDefaults = (): Record<string, string> => {
-  const out: Record<string, string> = {};
+const envDefaults = (): Record<string, unknown> => {
+  const out: Record<string, unknown> = {};
   const { DEFAULT_GALLERY, DEFAULT_THEME, INITIAL_GALLERY_VIEW, FIRST_WEEKDAY } =
     process.env;
   if (DEFAULT_GALLERY) out.defaultGallery = DEFAULT_GALLERY;
   if (DEFAULT_THEME) out.defaultTheme = DEFAULT_THEME;
   if (INITIAL_GALLERY_VIEW) out.initialGalleryView = INITIAL_GALLERY_VIEW;
   if (FIRST_WEEKDAY) out.firstWeekday = FIRST_WEEKDAY;
+  // `BETA_FEATURE_<NAME>=user|on|off` → betaFeatures[name] = mode.
+  const beta: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (!key.startsWith("BETA_FEATURE_") || !value) continue;
+    beta[key.slice("BETA_FEATURE_".length).toLowerCase()] = value;
+  }
+  if (Object.keys(beta).length > 0) out.betaFeatures = beta;
   return out;
 };
 

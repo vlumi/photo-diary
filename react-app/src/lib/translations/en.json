@@ -23,6 +23,7 @@
     "change-password-wrong-current": "Current password is incorrect",
     "change-password-failed": "Could not change password",
     "change-password-success": "Password changed",
+    "beta-feature-regions": "Region filter (beta)",
 
     "nav-galleries": "Galleries",
     "nav-gallery-top": "Back to top",
@@ -87,6 +88,7 @@
 
     "stats-unknown": "N/A",
     "stats-other": "Other",
+    "stats-other-beyond": "Other ({{n}}+)",
     "stats-more_one": "+ {{count}} more…",
     "stats-more_other": "+ {{count}} more…",
     "stats-modal-sort-label": "Sort",
@@ -107,6 +109,7 @@
     "stats-summary-busiest-hour": "Busiest hour",
     "stats-summary-top-author": "Photographer",
     "stats-summary-top-country": "Country",
+    "stats-summary-top-state": "Region",
     "stats-summary-top-city": "City",
     "stats-summary-top-camera": "Camera",
     "stats-summary-top-lens": "Lens",
@@ -121,6 +124,7 @@
     "stats-summary-even-meta": "~{{count}} each across {{n}} buckets",
     "stats-summary-variety-authors": "Photographers",
     "stats-summary-variety-countries": "Countries",
+    "stats-summary-variety-states": "Regions",
     "stats-summary-variety-cities": "Cities",
     "stats-summary-variety-camera-makes": "Camera makes",
     "stats-summary-variety-cameras": "Cameras",
@@ -139,6 +143,7 @@
     "stats-category-summary": "Summary",
     "stats-category-author": "Author",
     "stats-category-country": "Country",
+    "stats-category-state": "Region",
     "stats-category-city": "City",
     "stats-category-location": "Location",
     "stats-category-geotagged": "Geotagged",
@@ -191,6 +196,7 @@
     "stats-col-author": "Author",
     "stats-col-flag": "",
     "stats-col-country": "Country",
+    "stats-col-state": "Region",
     "stats-col-city": "City",
 
     "stats-col-year": "Year",

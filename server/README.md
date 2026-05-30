@@ -40,6 +40,7 @@ Read at startup from a `.env` file in the **current working directory** (which i
 | `DEBUG` | | `false` | When truthy, enables verbose logger output. |
 | `STATIC_DIR` | | `<source>/build` | Path to the bundled frontend. Resolved relative to the server's source file by default; override if you build into a non-standard location. |
 | `DEFAULT_GALLERY`, `DEFAULT_THEME`, `INITIAL_GALLERY_VIEW`, `FIRST_WEEKDAY` | | — | Per-instance frontend defaults, surfaced through `/api/v1/meta` to the frontend on boot. See the top-level README's Multi-Instance section. |
+| `BETA_FEATURE_<NAME>` | | `user` | Per-instance lock for a beta feature. `user` (default) shows the per-browser toggle in the UserMenu; `on` forces the feature on for everyone and hides the toggle; `off` forces it off. One env var per feature — e.g. `BETA_FEATURE_REGIONS=on` enables the State / region UI (filter, stats table, address-line state, Summary tile) for everyone visiting the instance. |
 | `REVERSE_GEOCODE` | | `false` | When set (any truthy value), the converter reverse-geocodes new photos with coords at intake. Opt-in by default — coordinates are sent to Nominatim. `photo-geocode.ts` honours this flag by default; pass `--force` to bypass for one-off backfills. |
 | `REVERSE_GEOCODE_EXTRA_LANGS` | | — | Comma-separated extra languages to fetch on top of English (e.g. `ja,fi`). Each adds one 1 RPS Nominatim call per photo at intake. `photo-geocode.ts` uses the same default. |
 | `NOMINATIM_BASE_URL` | | `https://nominatim.openstreetmap.org` | Override to point at a self-hosted Nominatim. |
