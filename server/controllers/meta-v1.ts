@@ -33,10 +33,16 @@ const envDefaults = (): Record<string, unknown> => {
   if (INITIAL_GALLERY_VIEW) out.initialGalleryView = INITIAL_GALLERY_VIEW;
   if (FIRST_WEEKDAY) out.firstWeekday = FIRST_WEEKDAY;
   // `BETA_FEATURE_<NAME>=user|on|off` → betaFeatures[name] = mode.
+  // `<NAME>` is upper-snake; underscores collapse to camelCase so the
+  // env value maps onto the client's `BetaFeature` keys (`regions`,
+  // `focalLengthEquiv`, …). Single-word names like REGIONS still
+  // round-trip unchanged.
+  const envToCamel = (s: string): string =>
+    s.toLowerCase().replace(/_([a-z])/g, (_, c) => c.toUpperCase());
   const beta: Record<string, string> = {};
   for (const [key, value] of Object.entries(process.env)) {
     if (!key.startsWith("BETA_FEATURE_") || !value) continue;
-    beta[key.slice("BETA_FEATURE_".length).toLowerCase()] = value;
+    beta[envToCamel(key.slice("BETA_FEATURE_".length))] = value;
   }
   if (Object.keys(beta).length > 0) out.betaFeatures = beta;
   return out;
