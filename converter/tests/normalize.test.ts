@@ -12,6 +12,11 @@ test("normalizeCity: pass-through for clean names", () => {
 test("normalizeCity: strips Municipality suffix", () => {
   assert.equal(normalizeCity("Stockholm Municipality"), "Stockholm");
   assert.equal(normalizeCity("Espoo Municipality"), "Espoo");
+  assert.equal(normalizeCity("Aabenraa Municipality"), "Aabenraa");
+});
+
+test("normalizeCity: strips Malaysian Municipal Council suffix", () => {
+  assert.equal(normalizeCity("Selayang Municipal Council"), "Selayang");
 });
 
 test("normalizeCity: strips Swedish kommun / stad suffix", () => {

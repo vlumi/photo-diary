@@ -13,6 +13,7 @@
 
 const SUFFIX_STRIPS: RegExp[] = [
   /\s+Municipality$/i, // "Stockholm Municipality"
+  /\s+Municipal Council$/i, // "Selayang Municipal Council" (Malaysia)
   /\s+kommun$/i, // "Norrtälje kommun" (Swedish)
   /\s+stad$/i, // "Malmö stad" (Swedish/Nordic; Stad also matches)
 ];
