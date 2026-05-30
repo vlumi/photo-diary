@@ -84,6 +84,11 @@
     "photo-count_other": "{{count}} kuvaa",
     "photo-metadata": "Kuvan tiedot",
     "photo-author": "Valokuvaaja",
+    "metadata-camera": "Kamera",
+    "metadata-lens": "Objektiivi",
+    "metadata-settings": "Asetukset",
+    "metadata-image": "Kuva",
+    "metadata-light": "Valo",
 
     "stats-filters": "Suodattimet",
 

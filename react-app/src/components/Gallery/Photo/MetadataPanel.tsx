@@ -26,7 +26,7 @@ const Root = styled.div`
   z-index: 9;
   right: 16px;
   bottom: 60px;
-  max-width: min(360px, calc(100% - 32px));
+  width: min(360px, calc(100% - 32px));
   max-height: calc(100% - 140px);
   display: flex;
   flex-direction: column;
@@ -68,6 +68,7 @@ const Body = styled.div`
   overflow-y: auto;
   font-size: 0.85em;
   line-height: 1.4;
+  text-align: left;
 `;
 const Title = styled.div`
   font-weight: 600;
@@ -82,6 +83,31 @@ const Muted = styled.div`
   color: rgba(255, 255, 255, 0.55);
   font-size: 0.85em;
   margin-top: 4px;
+`;
+// 2-col label-value grid. `min-width: 0` on the value cell so a
+// long value (camera body / lens name) wraps in place instead of
+// stretching the column past the panel width.
+const ExifTable = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  row-gap: 4px;
+  margin-top: 10px;
+`;
+const RowLabel = styled.div`
+  font-size: 0.7em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  padding-top: 2px;
+  text-align: right;
+`;
+const RowValue = styled.div`
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85em;
+  line-height: 1.4;
+  word-break: break-word;
+  min-width: 0;
 `;
 const Part = styled.span`
   display: inline;
@@ -176,7 +202,9 @@ const MetadataPanel = ({
     if (!photo.hasCoordinates()) return null;
     return <Muted>{photo.formatCoordinates()}</Muted>;
   };
-  const renderExposure = () => {
+  const renderExif = () => {
+    const camera = photo.formatCamera();
+    const lens = photo.formatLens();
     const focalLength = photo.focalLength();
     const aperture = photo.aperture();
     const exposureTime = photo.exposureTime();
@@ -186,32 +214,44 @@ const MetadataPanel = ({
     const aspectRatio = photo.aspectRatio();
     const exposureValue = photo.exposureValue();
     const lightValue = photo.lightValue();
-    const parts = [
-      focalLength ? `ƒ=${formatExposure.focalLength(focalLength)}㎜` : "",
+    const settingParts = [
+      focalLength ? `${formatExposure.focalLength(focalLength)}㎜` : "",
       aperture ? formatExposure.aperture(aperture) : "",
       exposureTime ? `${formatExposure.exposureTime(exposureTime)}s` : "",
       iso ? `ISO${formatExposure.iso(iso)}` : "",
+    ].filter(Boolean);
+    const imageParts = [
       resolution ? `${formatExposure.resolution(resolution)}MP` : "",
-      orientation ? `${formatExposure.orientation(orientation)}` : "",
       aspectRatio ? String(aspectRatio) : "",
+      orientation ? `${formatExposure.orientation(orientation)}` : "",
+    ].filter(Boolean);
+    const lightParts = [
       exposureValue ? `EV${formatExposure.ev(exposureValue)}` : "",
       lightValue ? `LV${formatExposure.ev(lightValue)}` : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    if (!parts) return null;
-    return <Muted>{parts}</Muted>;
-  };
-  const renderGear = () => {
-    const camera = photo.formatCamera();
-    const lens = photo.formatLens();
-    if (!camera && !lens) return null;
-    if (!camera) return <Muted>{lens}</Muted>;
-    if (!lens) return <Muted>{camera}</Muted>;
+    ].filter(Boolean);
+    const tableRows: Array<[string, string]> = [
+      ...(camera ? ([[t("metadata-camera"), camera]] as Array<[string, string]>) : []),
+      ...(lens ? ([[t("metadata-lens"), lens]] as Array<[string, string]>) : []),
+      ...(settingParts.length > 0
+        ? ([[t("metadata-settings"), settingParts.join(" · ")]] as Array<[string, string]>)
+        : []),
+      ...(imageParts.length > 0
+        ? ([[t("metadata-image"), imageParts.join(" · ")]] as Array<[string, string]>)
+        : []),
+      ...(lightParts.length > 0
+        ? ([[t("metadata-light"), lightParts.join(" · ")]] as Array<[string, string]>)
+        : []),
+    ];
+    if (tableRows.length === 0) return null;
     return (
-      <Muted>
-        <Part>{camera}</Part> + <Part>{lens}</Part>
-      </Muted>
+      <ExifTable>
+        {tableRows.map(([label, value], i) => (
+          <React.Fragment key={i}>
+            <RowLabel>{label}</RowLabel>
+            <RowValue>{value}</RowValue>
+          </React.Fragment>
+        ))}
+      </ExifTable>
     );
   };
   const renderEpochInfo = () => {
@@ -290,8 +330,7 @@ const MetadataPanel = ({
         {renderLocation()}
         {renderGeocodedLocation()}
         {renderCoordinates()}
-        {renderExposure()}
-        {renderGear()}
+        {renderExif()}
         {renderEpochInfo()}
         {renderMap()}
       </Body>

@@ -84,6 +84,11 @@
     "photo-count_other": "{{count}}枚",
     "photo-metadata": "写真情報",
     "photo-author": "撮影者",
+    "metadata-camera": "カメラ",
+    "metadata-lens": "レンズ",
+    "metadata-settings": "設定",
+    "metadata-image": "画像",
+    "metadata-light": "光量",
 
     "stats-filters": "フィルター",
 

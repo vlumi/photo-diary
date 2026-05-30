@@ -84,6 +84,11 @@
     "photo-count_other": "{{count}} photos",
     "photo-metadata": "Photo details",
     "photo-author": "Photo author",
+    "metadata-camera": "Camera",
+    "metadata-lens": "Lens",
+    "metadata-settings": "Settings",
+    "metadata-image": "Image",
+    "metadata-light": "Light",
 
     "stats-filters": "Filters",
 
