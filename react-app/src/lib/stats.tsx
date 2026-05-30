@@ -431,6 +431,14 @@ const collectTopics = (
       limit,
       label
     );
+    // Stash an unlimited variant for the modal's by-value mode —
+    // aggregating the long tail under "Other (N+)" makes the chart
+    // readable when sorted by count, but obscures the actual values
+    // when the user explicitly asks for "By value".
+    if (limit > 0 && flat.length > limit) {
+      const [fullData] = mapToChartData(flat, formatter, 0, label);
+      (data as { _fullData?: unknown })._fullData = fullData;
+    }
     return [flat, data, valueRanks];
   };
   const calculateStatistics = (values: any) => {

@@ -109,19 +109,31 @@ const Charts = ({ category, sortMode }: Props): React.ReactElement => {
   if (!category.charts) {
     return <></>;
   }
+  // By-value mode swaps in the unlimited dataset (no "Other (N+)"
+  // aggregation) when collectTopics stashed one — the user explicitly
+  // asked to see every value, not the top-N + tail bucket.
+  const pickData = (chart: ChartSpec): unknown => {
+    const data = chart.data as { _fullData?: unknown } | undefined;
+    if (sortMode === "value" && data?._fullData) {
+      return data._fullData;
+    }
+    return chart.data;
+  };
   const transform: ((data: any) => any) | null =
     sortMode === "count"
       ? sortByCountDesc
       : sortMode === "value" && category.valueSortByLabel
         ? sortByLabelAsc
         : null;
-  const charts: ChartSpec[] = transform
-    ? category.charts.map((chart) =>
-        isReorderable(chart.type)
-          ? { ...chart, data: transform(chart.data) }
-          : chart
-      )
-    : category.charts;
+  const charts: ChartSpec[] = category.charts.map((chart) => {
+    if (!isReorderable(chart.type)) return chart;
+    const data = pickData(chart);
+    return transform
+      ? { ...chart, data: transform(data) }
+      : data === chart.data
+        ? chart
+        : { ...chart, data };
+  });
   return (
     <Root>
       {charts.map((chart) => {
