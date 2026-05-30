@@ -21,6 +21,7 @@ Key features include:
   - [Multi-instance deployment](#multi-instance-deployment)
     - [Host prep](#one-time-host-prep) · [Getting the code](#getting-the-code-onto-the-host) · [Bootstrap](#bootstrapping-a-new-instance) · [Start](#starting-an-instance) · [Upgrade](#upgrading-an-instance) · [nginx](#nginx) · [Per-gallery vhost](#per-gallery-vhost-mapping) · [Day-to-day ops](#operating-an-instance)
 - [Features](#features)
+  - [Beta features](#beta-features)
 - [Photo pipeline](#photo-pipeline)
 - [Roadmap](#roadmap)
 - [Backlog](#backlog)
@@ -101,20 +102,20 @@ Directory layout:
 
 ```text
 /opt/photo-diary/                       # parent dir, owned by the deploy user (see below)
-  0.8.0/                                #   each version unpacked into its own subdir
-  0.11.0/                                #   so different instances can run different versions
+  0.11.0/                               #   each version unpacked into its own subdir
+  0.12.0/                               #   so different instances can run different versions
                                         #   and upgrades are atomic (flip a symlink)
 
 /var/photo-diary/
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
-    code -> /opt/photo-diary/0.11.0      # symlink to the code version this instance runs
+    code -> /opt/photo-diary/0.12.0      # symlink to the code version this instance runs
     db.sqlite3                          # auto-created on first server start
     photos/
       inbox/  original/  display/  thumbnail/
   travel/
     .env
-    code -> /opt/photo-diary/0.8.0      # different instance, possibly on a different version
+    code -> /opt/photo-diary/0.11.0     # different instance, possibly on a different version
     db.sqlite3
     photos/
       …
@@ -135,7 +136,7 @@ sudo install -d -o "$USER" /opt/photo-diary /var/photo-diary
 GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` (no rename step), then run `npm run setup` to install everything and build the bundled frontend:
 
 ```sh
-V=0.11.0
+V=0.12.0
 mkdir -p "/opt/photo-diary/$V"
 curl -L "https://github.com/vlumi/photo-diary/archive/refs/tags/v$V.tar.gz" \
   | tar xz -C "/opt/photo-diary/$V" --strip-components=1
@@ -150,7 +151,7 @@ Repeat this block for each new version you want to land on this host.
 The `bin/instance.ts` script handles directory creation, `.env` generation (with a fresh random `SECRET`), the `code` symlink, and the per-instance `bin/` shortcuts in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary/0.11.0/bin/instance.ts dailybw
+/opt/photo-diary/0.12.0/bin/instance.ts dailybw
 ```
 
 That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The script can be invoked from any working directory; the instance dir is derived from the name (and the `--base <dir>` flag, default `/var/photo-diary`, if you want instances under a different parent). Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
@@ -181,7 +182,7 @@ Re-run `bin/instance.ts` from the new version of the code, then **delete + start
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.11.0/bin/instance.ts dailybw          # backs up the DB, flips the symlink
+/opt/photo-diary/0.12.0/bin/instance.ts dailybw          # backs up the DB, flips the symlink
 pm2 delete dailybw dailybw-converter                    # drop cached metadata
 cd /var/photo-diary/dailybw
 ./code/server/bin/start-prod.sh                         # migration runner applies any schema bumps
@@ -382,6 +383,13 @@ The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` sn
     - Through guest user (:guest), inherited by all users
     - Inheritance may be overridden by broadening or narrowing access
 
+### Beta features
+
+Opt-in surfaces that aren't part of the default UI. Per-visitor toggle in UserMenu → "Beta features", or per-instance lock via `BETA_FEATURE_<NAME>=user|on|off` in the instance's `.env` (`user` (default) shows the toggle, `on`/`off` forces it for every visitor).
+
+- **`regions`** (`BETA_FEATURE_REGIONS`) — adds a State row to the photo metadata's address line, a State filter category, a Stats State topic, and Summary "Top State" + "States variety" tiles. Backed by curated `subdivisions/{en,fi,ja}.json` keyed by ISO 3166-2. Coverage: JP, FI, DE, MY, KR, AU, CA, US (en + ja); fi covers Finnish regions and falls back to en elsewhere.
+- **`focalLengthEquiv`** (`BETA_FEATURE_FOCAL_LENGTH_EQUIV`) — adds a 35mm-equivalent focal length filter category and a matching Stats Settings category. Uses EXIF `FocalLengthIn35mmFormat` when present; falls back to `react-app/src/lib/crop-factors.json` for known-no-EXIF bodies (X100F, 5D Mark II, 30D, GX7, FinePix F50fd). The MetadataPanel Settings row also appends `(N㎜ eq.)` next to the raw focal length when the values differ.
+
 ## Photo Pipeline
 
 End-to-end flow from a new JPG arriving on the host to it being browsable in the gallery:
@@ -399,7 +407,6 @@ The pipeline is intentionally split: the converter doesn't touch the DB at all, 
 
 Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- [**0.12 — Geocoded location surfaced**](https://github.com/vlumi/photo-diary/milestone/16): render the auto-populated `geocoded_place` per UI language in the metadata panel (#247), filter chain for geocoded state / city / district with cross-language-stable URLs (#344), Stats Places topic with drill-down by state / city / district (#345). All consumers of the data #246 lays down.
 - [**0.13 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), inbox subdirectories auto-link to galleries (#245), ACL user groups (#270), ACL `:all` floor rule (#271), more built-in themes (#279), admin theme selector (#287), converter picks up JSON in inbox (#333), per-language editing for place / title / description (#343).
 - [**0.14 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), Postgres driver alongside SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286).
 - [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283).
@@ -448,5 +455,6 @@ After the hiatus, a burst of releases that modernized the stack, formalized the 
 - **0.9** (May 2026) — Privacy hardening (collapse 403/404 distinctions to prevent gallery enumeration), JWT expiration (90 days), self-service password change, global 401 → login-modal handling, toast notifications, profile-icon `UserMenu`.
 - **0.10** (May 2026) — UI/UX polish across the calendar and Stats views. Photo view becomes a modal over Month with touch-tracking swipe and controlled zoom. Stats grows an expanded Summary, a Location card with map-in-modal, and modal-based deep dives for each category. Title bar carries a clickable breadcrumb with Up-navigation and a gallery/stats segmented control. The standalone Day view merges into Month, and seven new built-in themes ship. Server-side logout via refresh-token sessions.
 - **0.11** (May 2026) — Reverse-geocoded place hierarchy: converter intake fetches structured Nominatim data per photo (English canonical + optional extra languages), backfill daemon (`bin/photo-geocode.ts`) fills the existing archive, and `bin/photo.ts audit --country-mismatch` surfaces operator-vs-geocoded drift. Converter hardens around filename collisions (stable `<taken>-<uuid>.<ext>` rename at intake) and stub flows (writes a DB row directly, dedups on `(originalFilename, EXIF DateTimeOriginal)`). New `bin/meta.ts` operator script and `audit` subcommands across `bin/{photo,gallery,user,access,meta}.ts`. Stats Location card splits geotagged / not-geotagged with click-to-filter chips.
+- **0.12** (May 2026) — Geocoded location surfaced across the app: per-language city / state / country address line in the MetadataPanel with locale-aware flag positioning, City + State filter categories, Stats Places + State topics with the same drill-down, per-language city overlay JSON layered on top of Nominatim. Converter intake now flows JSONs + recursive subdirs (`inbox/<gallery>/...` auto-link, JPG processing in place, no mid-pipeline rename). MetadataPanel polished into a label-value table with author overlay on the photo Frame. Stats Exposure topic splits into Settings / Image / Light; By-value mode drops the "Other (N+)" aggregation. New beta-gated Focal length 35mm equivalent (`focal_35mm_equiv` column + crop-factor fallback). `bin/photo.ts audit` defaults to a counts-only summary; city subcommands consolidated under `cities <action>`.
 
-See the [Roadmap](#roadmap) for what's in flight after 0.11.
+See the [Roadmap](#roadmap) for what's in flight after 0.12.

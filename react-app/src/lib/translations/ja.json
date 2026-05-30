@@ -86,6 +86,7 @@
     "photo-metadata": "写真情報",
     "photo-author": "撮影者",
     "metadata-camera": "カメラ",
+    "metadata-focal-eq": "（{{value}}㎜換算）",
     "metadata-lens": "レンズ",
     "metadata-settings": "設定",
     "metadata-image": "画像",
@@ -221,6 +222,7 @@
     "stats-col-camera-lens": "カメラとレンズ",
 
     "stats-col-focal-length": "ミリ",
+    "stats-col-focal-length-eq": "ミリ（35mm換算）",
     "stats-col-aperture": "絞り",
     "stats-col-exposure-time": "秒",
     "stats-col-iso": "ISO",

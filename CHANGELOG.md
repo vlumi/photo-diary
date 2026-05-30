@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.12.0] - 2026-05-31
 
 ### Frontend
 
@@ -15,6 +15,10 @@
 - Per-language city overlay layered on top of the Nominatim merge. `cities/{en,fi,ja}.json` keyed by `<country>:<en_city>` (Tokio, Soul, Tukholma, Peking, Pietari, …) — overrides apply at every city display surface (metadata address line, filter chip, Stats Places, Summary Top City). Always-on (no beta gate), purely additive. Seed includes the well-known foreign exonyms for fi + ja; entries without overrides fall through to the existing merged Nominatim value.
 - `photo_localized.geocoded_city` for `lang=ja` is now ignored at the read merge if it contains no Japanese script (kanji / hiragana / katakana). Nominatim's `?accept-language=ja` falls back to local Latin forms when OSM has no Japanese label, so those values were leaking through as "ja" but were actually English / Swedish / etc. The fallback chain now skips them automatically and lands on the en canonical + city overlay.
 - New opt-in beta feature "Focal length 35mm equivalent" (UserMenu → "Beta features") surfaces a `focal-length-eq` filter category and a Stats Settings category keyed by the 35mm-equivalent value. Uses EXIF `FocalLengthIn35mmFormat` when present; falls back to `focalLength × cropFactor` for the small `react-app/src/lib/crop-factors.json` table (currently X100F, 5D Mark II, 30D, GX7, FinePix F50fd — covers ~85% of the gap in the operator's gallery). Unknown body + missing EXIF → `unknown` bucket. Always-on derivation in the model; the beta gate only controls UI visibility, so flipping it on/off doesn't touch the DB.
+- Photo modal MetadataPanel polished into a single coherent layout: author moved out of the panel onto a small bottom-left overlay on the photo Frame (only renders when set); description renders below the title; EXIF data flows into a 2-col label / value table (`CAMERA`, `LENS`, `SETTINGS`, `IMAGE`, `LIGHT`) with right-aligned headers; operator place keeps its own row separate from the geocoded address line (mixing them jumbled CJK ordering); coordinates row dropped (the embedded map carries that signal); map sits next to the address instead of after the EXIF table; epoch (age / day-index) lifts up under the description and gets its own slightly-more-prominent row at 85% white instead of the muted 55%; operator place / address / epoch rows right-align to visually separate the "where / when" context from the left-aligned title / description story block. Panel pinned to a fixed 360 px width so short content doesn't shrink the embedded map. (closes #354)
+- Stats "Exposure" topic splits into three narrower topics — Settings (aperture · shutter · ISO · focal length), Image (resolution · aspect ratio · orientation), Light (EV · LV). The previous lumped category mixed per-shot capture parameters with derived image properties under one name; the split matches how the MetadataPanel renders the same data on the photo modal.
+- Stats expanded modal in "By value" sort mode now drops the "Other (N+)" aggregation entirely and shows every actual value. `transformData` stashes an unlimited chart-data variant on the truncated default; `Charts.tsx` swaps in the full data when `sortMode === "value"`. The "Top" mode still aggregates the long tail, since that's what keeps the chart readable at a glance.
+- `EpochAge` renders a localized "0 days" string when the photo is the same day as the gallery epoch instead of emitting the raw `0days-long` key — the same-day fallback was calling `t()` without a `count` parameter so i18next couldn't resolve the plural suffix.
 
 ### Server
 
@@ -23,6 +27,9 @@
 - New `photo.geocoded_state_code` column (schema migration `008`) stores Nominatim's ISO 3166-2 subdivision code (`JP-13`, `US-MA`, …) — language-independent, so it lives on the photo row, not `photo_localized`. Migration backfills the column from the JSON in `geocoded_address` for any row that has one, so existing data picks the code up without a re-geocode run. Used client-side as the city filter's disambiguating key when the localized state name is missing (Tokyo returns no `state` but does return `ISO3166-2-lvl4`).
 - Schema migration `009` drops the now-dead Nominatim columns: `photo.geocoded_state`, `geocoded_district`, `geocoded_place`, plus the matching `photo_localized` columns. State names are derived from `geocoded_state_code` via curated subdivision JSON, district was never displayed, and the hand-assembled City+State+Country address line replaced `display_name`. Intake / daemon write paths and the city tuple key's Nominatim-state fallback all prune alongside.
 - `db.linkGalleryPhoto` is idempotent (`INSERT OR IGNORE`) — re-linking a photo already in a gallery is a no-op instead of a `UNIQUE` error. Also makes `PUT /api/v1/gallery-photos/:galleryId/:photoId` properly idempotent.
+- New `photo.focal_35mm_equiv` column (schema migration `010`) holds EXIF `FocalLengthIn35mmFormat` (the converter already extracted the value, but it was silently dropped at the write layer until now — no column existed). Schema-only — backfill of existing rows is an operator step. Used by the new Stats Settings 35mm-equiv category and the matching filter category when the beta toggle is on.
+- `meta-v1` camelizes the env-driven `BETA_FEATURE_<NAME>=user|on|off` keys so multi-word feature names like `focalLengthEquiv` round-trip cleanly. `BETA_FEATURE_FOCAL_LENGTH_EQUIV=on` now reaches `betaFeatures.focalLengthEquiv`; the previous lower-only conversion only worked for single-word names like `regions`.
+- Migration post-check error now explicitly names the FK shape ("child gallery_photo row references missing photo") and points at `bin/gallery.ts audit --orphan-photos` instead of just saying "foreign-key violations detected", so an operator hitting it doesn't have to dig through the migration log to figure out what to fix.
 
 ### Converter
 
@@ -399,7 +406,6 @@
 
 ## Initial commit - 2020-07-04
 
-[Unreleased]: https://github.com/vlumi/photo-diary/compare/v0.7.4...HEAD
 [0.7.4]: https://github.com/vlumi/photo-diary/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/vlumi/photo-diary/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/vlumi/photo-diary/compare/v0.7.1...v0.7.2

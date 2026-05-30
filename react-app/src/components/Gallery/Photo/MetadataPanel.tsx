@@ -209,6 +209,7 @@ const MetadataPanel = ({
     const camera = photo.formatCamera();
     const lens = photo.formatLens();
     const focalLength = photo.focalLength();
+    const focalLengthEq = photo.focalLength35mmEquiv();
     const aperture = photo.aperture();
     const exposureTime = photo.exposureTime();
     const iso = photo.iso();
@@ -217,8 +218,13 @@ const MetadataPanel = ({
     const aspectRatio = photo.aspectRatio();
     const exposureValue = photo.exposureValue();
     const lightValue = photo.lightValue();
+    const focalStr = focalLength
+      ? focalLengthEq && focalLengthEq !== focalLength
+        ? `${formatExposure.focalLength(focalLength)}㎜ ${t("metadata-focal-eq", { value: formatExposure.focalLength(focalLengthEq) })}`
+        : `${formatExposure.focalLength(focalLength)}㎜`
+      : "";
     const settingParts = [
-      focalLength ? `${formatExposure.focalLength(focalLength)}㎜` : "",
+      focalStr,
       aperture ? formatExposure.aperture(aperture) : "",
       exposureTime ? `${formatExposure.exposureTime(exposureTime)}s` : "",
       iso ? `ISO${formatExposure.iso(iso)}` : "",
