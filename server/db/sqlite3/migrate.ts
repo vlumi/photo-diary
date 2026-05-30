@@ -115,18 +115,24 @@ export const migrate = (db: Database): void => {
         // The post-migration check fires after every migration, so a
         // violation here may pre-date this specific one — particularly
         // common for legacy data drift surfacing only when migrate runs.
-        // Either way, refuse to advance until the operator inspects the
-        // listed rows and removes the orphans (referenced parent row is
-        // gone) or restores them.
+        // The migration's SQL has already committed; refuse to advance
+        // the server (and let the operator see the diagnostics) until
+        // they remove the orphan row or restore the missing parent.
+        //
+        // FK violations are exclusively "child row references parent
+        // that doesn't exist" — e.g. gallery_photo.photo_id pointing
+        // at a deleted photo. They do NOT include photos that simply
+        // aren't linked to any gallery yet (that's an allowed state).
         throw new Error(
           `After migration ${m.filename}, foreign-key violations detected:\n` +
             formatFkViolations(fkIssues) +
             "\n\n" +
-            "These rows may pre-date this migration. Investigate with " +
-            "`./bin/gallery.ts audit --orphan-photos` (gallery_photo rows " +
-            "pointing at a missing photo) or `./bin/photo.ts audit --orphans` " +
-            "(photos with no gallery link), then remove the orphans and " +
-            "re-run."
+            "Each entry is a gallery_photo row pointing at a photo.id " +
+            "that no longer exists (most often a deleted photo whose " +
+            "gallery link wasn't cleaned up). Inspect with " +
+            "`./bin/gallery.ts audit --orphan-photos`, then either " +
+            "DELETE the orphan rows from gallery_photo or restore the " +
+            "missing photos, and restart."
         );
       }
     }
