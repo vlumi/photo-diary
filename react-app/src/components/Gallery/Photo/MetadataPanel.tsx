@@ -86,11 +86,6 @@ const Muted = styled.div`
 const Part = styled.span`
   display: inline;
 `;
-const Copyright = styled.div`
-  font-size: 0.75em;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 10px;
-`;
 const MapBox = styled.div`
   margin-top: 10px;
   height: 160px;
@@ -299,9 +294,6 @@ const MetadataPanel = ({
         {renderGear()}
         {renderEpochInfo()}
         {renderMap()}
-        <Copyright>
-          Photo Copyright © {photo.author()}. All rights reserved.
-        </Copyright>
       </Body>
     </Root>
   );

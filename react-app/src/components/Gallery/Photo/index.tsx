@@ -106,6 +106,27 @@ const InfoButton = styled(FloatingButton)`
   bottom: 16px;
   right: 16px;
 `;
+// Author overlay anchored to the bottom-left so it doesn't collide
+// with the InfoButton (bottom-right) or the MetadataPanel (anchored
+// above the InfoButton). pointer-events: none so the photo
+// underneath still accepts clicks / drags.
+const AuthorOverlay = styled.div`
+  position: absolute;
+  z-index: 9;
+  left: 16px;
+  bottom: 16px;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 0.75em;
+  letter-spacing: 0.02em;
+  max-width: calc(100% - 80px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
 // Flex column that gives Content a stable parent size. Without this
 // Content's flex-grow has no flex parent and the ResizeObserver feeds
 // back into itself, shrinking the photo to nothing.
@@ -413,6 +434,11 @@ const Photo = ({
         >
           <BsInfoCircleFill />
         </InfoButton>
+        {photo.author() && (
+          <AuthorOverlay aria-label={t("photo-author")}>
+            © {photo.author()}
+          </AuthorOverlay>
+        )}
         {zoom.scale === 1 ? (
           <CarouselViewport>
             <Track

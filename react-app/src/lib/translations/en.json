@@ -83,6 +83,7 @@
     "photo-count_one": "{{count}} photo",
     "photo-count_other": "{{count}} photos",
     "photo-metadata": "Photo details",
+    "photo-author": "Photo author",
 
     "stats-filters": "Filters",
 

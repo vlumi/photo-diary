@@ -83,6 +83,7 @@
     "photo-count_one": "{{count}} kuva",
     "photo-count_other": "{{count}} kuvaa",
     "photo-metadata": "Kuvan tiedot",
+    "photo-author": "Valokuvaaja",
 
     "stats-filters": "Suodattimet",
 
