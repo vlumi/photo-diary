@@ -1,12 +1,56 @@
 {
+  "at:Vienna": "Wien",
+
+  "be:Antwerp": "Antwerpen",
+  "be:Brussels": "Bryssel",
+
   "cn:Beijing": "Peking",
+
+  "cz:Prague": "Praha",
+
+  "de:Berlin": "Berliini",
+  "de:Cologne": "Köln",
+  "de:Hamburg": "Hampuri",
+  "de:Munich": "München",
+
   "dk:Copenhagen": "Kööpenhamina",
+
+  "es:Seville": "Sevilla",
+
+  "fr:Paris": "Pariisi",
+
+  "gb:London": "Lontoo",
+
+  "gr:Athens": "Ateena",
+
+  "it:Florence": "Firenze",
+  "it:Naples": "Napoli",
+  "it:Rome": "Rooma",
+  "it:Venice": "Venetsia",
+
   "jp:Kyoto": "Kioto",
   "jp:Tokyo": "Tokio",
   "jp:Yokohama": "Jokohama",
+
   "kr:Seoul": "Soul",
+
+  "lv:Riga": "Riika",
+
+  "nl:The Hague": "Haag",
+
+  "pl:Warsaw": "Varsova",
+
+  "pt:Lisbon": "Lissabon",
+
+  "ro:Bucharest": "Bukarest",
+
+  "rs:Belgrade": "Belgrad",
+
   "ru:Moscow": "Moskova",
   "ru:Saint Petersburg": "Pietari",
+
   "se:Gothenburg": "Göteborg",
-  "se:Stockholm": "Tukholma"
+  "se:Stockholm": "Tukholma",
+
+  "ua:Kyiv": "Kiova"
 }
