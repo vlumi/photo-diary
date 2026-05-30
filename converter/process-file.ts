@@ -105,11 +105,14 @@ const processJpeg = async (
   const hrstart = process.hrtime();
   logger.debug(`[${relPath}] Processing`);
 
-  // Rename to a stable id at intake: <YYYY-MM-DDTHH-MM-SS>-<short-uuid>.<ext>
-  // from EXIF DateTimeOriginal (fallback mtime). The rest of the pipeline
-  // operates on this id; the original camera filename is preserved on the
-  // DB row's originalFilename so enrichment JSONs and `bin/photo.ts search`
-  // can still find the photo by the human-recognised name.
+  // Generate a stable id: <YYYY-MM-DDTHH-MM-SS>-<short-uuid>.<ext> from
+  // EXIF DateTimeOriginal (fallback mtime). Display / thumbnail / DB row
+  // / final `original/` archive all use this id; the source file keeps
+  // its original camera filename in inbox until the final atomic move
+  // (so a crash mid-pipeline leaves the file in place for the watcher
+  // to retry on restart, not as an id-named orphan). The camera filename
+  // is preserved on the DB row's originalFilename for enrichment JSON
+  // matching + `bin/photo.ts search`.
   const generated = await generateId(originalPath);
   const exifTimestamp = generated.exifTimestamp;
 
@@ -134,15 +137,11 @@ const processJpeg = async (
     }
   }
 
-  const newInboxPath = path.join(rootDir, DIR_INBOX, id);
-  await fs.promises.rename(originalPath, newInboxPath);
-  logger.debug(`[${relPath}] Renamed inbox file to ${id}`);
-
   await Promise.all(
-    TARGETS.map((target) => convertImage(id, rootDir, target))
+    TARGETS.map((target) => convertImage(originalPath, id, rootDir, target))
   );
 
-  const properties = await extractProperties(id, rootDir);
+  const properties = await extractProperties(originalPath, id, rootDir);
   properties.originalFilename = originalFilename;
 
   if (isReimport) {
@@ -168,10 +167,14 @@ const processJpeg = async (
 
   await linkToGallery(id, galleryId);
 
+  // Final atomic step: source-in-inbox → original/<id>. If anything
+  // above this point threw, the file is still at its original inbox
+  // path and the watcher will re-queue it on restart (no orphaned
+  // id-named intermediate files left behind).
   // fs.rename overwrites on POSIX; deliberately replaces the prior
   // original/<id>.jpg when re-importing.
   await fs.promises.rename(
-    newInboxPath,
+    originalPath,
     path.join(rootDir, DIR_ORIGINAL, id)
   );
 

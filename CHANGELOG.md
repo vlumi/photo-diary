@@ -29,6 +29,7 @@
 - Drop the `save-json` step that wrote `inbox/<id>.json` after each JPG intake. The DB is the source of truth; the sidecar JSON had no production consumer. Pre-existing sidecars from before this change get re-processed once at startup (contents == EXIF, so it's a harmless no-op write) and archived alongside the photo.
 - JSON sidecar intake now triggers reverse-geocoding (when `REVERSE_GEOCODE=1`) for the created / updated photo — previously only the JPG path called Nominatim, so coords-via-sidecar photos never got geocoded.
 - Watcher ignores macOS AppleDouble (`._*`) sidecars, and the file queue no longer stalls on a single failing intake (the error catch wasn't re-triggering the queue processor).
+- JPG processing no longer renames the file to `inbox/<id>` mid-pipeline. The source file stays at its original inbox path (e.g. `inbox/<gallery>/foo.jpg`) until the final atomic move to `original/<id>`. A crash mid-pipeline leaves the file in place under its real camera filename, so a restart's `ignoreInitial: false` sweep re-processes it cleanly with the right `originalFilename` instead of picking up an id-shaped orphan and treating the id as the original camera name.
 
 ### Tooling
 

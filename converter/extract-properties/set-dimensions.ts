@@ -7,12 +7,11 @@ type Dimensions = { width: number; height: number };
 type Properties = { dimensions?: Record<string, Dimensions> } & Record<string, unknown>;
 
 export default async (
-  fileName: string,
+  sourcePath: string,
+  id: string,
   rootDir: string,
   properties: Properties
 ): Promise<Properties> => {
-  const inboxFilePath = path.join(rootDir, "inbox", fileName);
-
   const addFileDimensions = async (
     target: string,
     filePath: string
@@ -28,11 +27,11 @@ export default async (
     }
   };
 
-  await addFileDimensions(DIR_ORIGINAL, inboxFilePath);
+  await addFileDimensions(DIR_ORIGINAL, sourcePath);
   for (const target of TARGETS) {
     await addFileDimensions(
       target.directory,
-      path.join(rootDir, target.directory, fileName)
+      path.join(rootDir, target.directory, id)
     );
   }
   return properties;
