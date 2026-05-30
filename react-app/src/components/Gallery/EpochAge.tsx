@@ -43,7 +43,7 @@ const EpochAge = ({
     }
   }
   if (parts.length === 0) {
-    return "0" + String(t(`days-${format}`));
+    return String(t(`days-${format}`, { count: 0 }));
   }
 
   return (
