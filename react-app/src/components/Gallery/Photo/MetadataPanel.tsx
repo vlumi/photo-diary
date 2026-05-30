@@ -80,14 +80,27 @@ const Description = styled.div`
   margin-bottom: 8px;
   line-height: 1.4;
 `;
+// Place + address: right-aligned to separate the contextual "where"
+// from the left-aligned title / description story block above.
 const Row = styled.div`
   color: rgba(255, 255, 255, 0.8);
   margin-top: 4px;
+  text-align: right;
 `;
 const Muted = styled.div`
   color: rgba(255, 255, 255, 0.55);
   font-size: 0.85em;
   margin-top: 4px;
+`;
+// Epoch (age / day-index) is high-signal info — given its own
+// row right under the description, slightly more prominent than
+// the muted EXIF rows, right-aligned to sit with the other "where
+// / when" context.
+const Epoch = styled.div`
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 4px;
+  margin-bottom: 4px;
+  text-align: right;
 `;
 // 2-col label-value grid. `min-width: 0` on the value cell so a
 // long value (camera body / lens name) wraps in place instead of
@@ -249,7 +262,7 @@ const MetadataPanel = ({
     switch (gallery.epochType()) {
       case "birthday":
         return (
-          <Muted>
+          <Epoch>
             <EpochAge
               gallery={gallery}
               year={year}
@@ -258,11 +271,11 @@ const MetadataPanel = ({
               format="long"
               separator=" "
             />
-          </Muted>
+          </Epoch>
         );
       case "1-index":
         return (
-          <Muted>
+          <Epoch>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -271,11 +284,11 @@ const MetadataPanel = ({
               lang={lang}
               format="long"
             />
-          </Muted>
+          </Epoch>
         );
       case "0-index":
         return (
-          <Muted>
+          <Epoch>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -285,7 +298,7 @@ const MetadataPanel = ({
               format="long"
               start={0}
             />
-          </Muted>
+          </Epoch>
         );
       default:
         return null;
@@ -320,11 +333,11 @@ const MetadataPanel = ({
         {photo.description() && (
           <Description>{photo.description()}</Description>
         )}
+        {renderEpochInfo()}
         {renderOperatorPlace()}
         {renderAddress()}
         {renderMap()}
         {renderExif()}
-        {renderEpochInfo()}
       </Body>
     </Root>
   );
