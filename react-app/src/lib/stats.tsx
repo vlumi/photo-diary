@@ -674,14 +674,30 @@ const collectTopics = (
       }),
     };
   };
-  const collectCity = (byCity: any, byCityCountry: any, total: any) => {
+  const collectCity = (
+    byCity: any,
+    byCityCountry: any,
+    byCityLocalized: any,
+    total: any
+  ) => {
     const cityLabels = format.buildCityLabels(
       Object.keys(byCity),
-      format.countryName(lang, countryData)
+      lang,
+      format.countryName(lang, countryData),
+      byCityLocalized
     );
+    const fallbackLabel = (key: string): string => {
+      const parsed = format.parseCityKey(key);
+      return format.cityName(
+        lang,
+        parsed.country,
+        parsed.city,
+        byCityLocalized?.[key] ?? parsed.city
+      );
+    };
     const [flat, data, valueRanks] = transformData({
       original: byCity,
-      formatter: (key: any) => cityLabels[key] ?? format.parseCityKey(key).city,
+      formatter: (key: any) => cityLabels[key] ?? fallbackLabel(key),
       limit: 20,
     });
     const values = flat.map((entry: any) => entry.value);
@@ -704,7 +720,7 @@ const collectTopics = (
       ],
       table: flat.map((entry: any) => {
         const countryCode = byCityCountry?.[entry.key];
-        const label = cityLabels[entry.key] ?? format.parseCityKey(entry.key).city;
+        const label = cityLabels[entry.key] ?? fallbackLabel(entry.key);
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -755,7 +771,12 @@ const collectTopics = (
       }
       if (Object.keys(count.byCity ?? {}).length > 0) {
         categories.push(
-          collectCity(count.byCity, count.byCityCountry, total)
+          collectCity(
+            count.byCity,
+            count.byCityCountry,
+            count.byCityLocalized,
+            total
+          )
         );
       }
       if (mapPhotos.length > 0) {
@@ -1601,6 +1622,7 @@ const initializeStats = (uniqueValues: any): any => {
       byStateCountry: {} as Record<string, string>,
       byCity: {},
       byCityCountry: {} as Record<string, string>,
+      byCityLocalized: {} as Record<string, string>,
     },
   };
   const setInitialValues = (source: any) => {
@@ -1704,6 +1726,9 @@ const populateDistributions = (photos: any, stats: any) => {
       stats.count.byCity[cityKey]++;
       if (!stats.count.byCityCountry[cityKey] && photo.countryCode()) {
         stats.count.byCityCountry[cityKey] = photo.countryCode();
+      }
+      if (!stats.count.byCityLocalized[cityKey] && photo.geocodedCity()) {
+        stats.count.byCityLocalized[cityKey] = photo.geocodedCity() as string;
       }
     }
 

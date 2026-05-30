@@ -104,9 +104,15 @@ const Value = ({
     }
     if (category === "city") {
       const parsed = format.parseCityKey(value);
+      const cityLabel = format.cityName(
+        lang,
+        parsed.country,
+        parsed.city,
+        parsed.city
+      );
       const qualified = parsed.state
-        ? `${parsed.city}, ${parsed.state}`
-        : parsed.city;
+        ? `${cityLabel}, ${parsed.state}`
+        : cityLabel;
       return (
         <Title>
           {parsed.country && countryData.isValid(parsed.country) ? (

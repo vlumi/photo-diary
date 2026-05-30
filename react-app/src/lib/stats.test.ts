@@ -27,6 +27,7 @@ describe("generate", () => {
         byStateCountry: {},
         byCity: {},
         byCityCountry: {},
+        byCityLocalized: {},
         byExposure: {},
         byGear: {},
         byTime: {
@@ -146,6 +147,7 @@ describe("generate", () => {
         byStateCountry: {},
         byCity: {},
         byCityCountry: {},
+        byCityLocalized: {},
         byExposure: {
           byAperture: {
             2.8: 1,
@@ -325,6 +327,7 @@ describe("generate", () => {
         byStateCountry: {},
         byCity: {},
         byCityCountry: {},
+        byCityLocalized: {},
         byExposure: {
           byAperture: {
             unknown: 1,
@@ -548,6 +551,7 @@ describe("generate", () => {
         byStateCountry: {},
         byCity: {},
         byCityCountry: {},
+        byCityLocalized: {},
         byExposure: {
           byAperture: {
             2.8: 2,

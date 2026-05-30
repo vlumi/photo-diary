@@ -595,6 +595,63 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
+    "audit-cities",
+    "List unique (country, city) pairs in the gallery and whether each lang has an override in react-app/src/lib/translations/cities/. Helps target the per-language overlay against actual data.",
+    (y) =>
+      y.option("lang", {
+        type: "array",
+        string: true,
+        default: ["fi", "ja"],
+        describe: "Languages to check overrides for (default: fi, ja)",
+      }),
+    async (argv) => {
+      const photos = (await db.loadPhotos()) as any[];
+      const pairs = new Map<string, { country: string; cityEn: string }>();
+      for (const p of photos) {
+        const cc = p.geocoded?.countryCode as string | undefined;
+        const cityEn = (p.geocoded?.cityEn ?? p.geocoded?.city) as
+          | string
+          | undefined;
+        if (!cc || !cityEn) continue;
+        const key = `${cc.toLowerCase()}:${cityEn}`;
+        if (!pairs.has(key)) pairs.set(key, { country: cc, cityEn });
+      }
+      const overlayDir = path.resolve(
+        path.dirname(new URL(import.meta.url).pathname),
+        "../../react-app/src/lib/translations/cities"
+      );
+      const overlays: Record<string, Record<string, string>> = {};
+      for (const lang of argv.lang as string[]) {
+        const file = path.join(overlayDir, `${lang}.json`);
+        overlays[lang] = fs.existsSync(file)
+          ? (JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, string>)
+          : {};
+      }
+      const header = ["country", "city (en)", ...(argv.lang as string[])];
+      const rows: string[][] = [header];
+      const missing: string[] = [];
+      for (const key of [...pairs.keys()].sort()) {
+        const { country, cityEn } = pairs.get(key)!;
+        const cells = [country, cityEn];
+        let anyMissing = false;
+        for (const lang of argv.lang as string[]) {
+          const v = overlays[lang]?.[key];
+          if (v) cells.push(v);
+          else {
+            cells.push("—");
+            anyMissing = true;
+          }
+        }
+        rows.push(cells);
+        if (anyMissing) missing.push(key);
+      }
+      console.log(formatTable(rows));
+      console.log(
+        `\n${pairs.size} unique (country, city) pair(s); ${missing.length} missing at least one override.`
+      );
+    }
+  )
+  .command(
     "normalize-cities",
     "Strip admin cruft from `photo.geocoded_city` (e.g. \"Stockholm Municipality\" → \"Stockholm\") using the current normalization rules. Dry-run by default; pass --apply to write.",
     (y) =>

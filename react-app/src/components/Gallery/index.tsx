@@ -184,13 +184,24 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     Object.keys(accumulator).forEach((topic) => {
       const topicBag: Record<string, UniqueValueEntry[]> = {};
       Object.keys(accumulator[topic]).forEach((category) => {
+        const cityLocalizedByKey: Record<string, string> =
+          category === "city"
+            ? photos.reduce<Record<string, string>>((acc, photo) => {
+                const k = photo.geocodedCityKey();
+                const v = photo.geocodedCity();
+                if (k && v && !acc[k]) acc[k] = v;
+                return acc;
+              }, {})
+            : {};
         const cityLabels =
           category === "city"
             ? format.buildCityLabels(
                 [...accumulator[topic][category]].filter(
                   (v): v is string => typeof v === "string" && !!v
                 ),
-                formatCountryName
+                lang,
+                formatCountryName,
+                cityLocalizedByKey
               )
             : null;
         topicBag[category] = [...accumulator[topic][category]]

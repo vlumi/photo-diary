@@ -12,6 +12,7 @@
 - `hide_map` privacy toggle now suppresses every location-derived surface — Photo modal location rows (operator place / country flag and geocoded line), the Stats General topic's Country category, and the country / geotagged filter categories (both the new-filter category picker and any already-applied chips). Coordinates and map were already hidden today.
 - New City filter category and Stats Places table (under General, gated by `hide_map`) drawn from `geocoded_city`, with each city's country flag alongside; cities are keyed by `(country, state||stateCode, city)` so same-named cities (Springfield IL vs MO, Cambridge UK vs MA) stay distinct, and the displayed label only adds a state / country qualifier when there's a collision in the current dataset. Photos without a geocoded city are omitted entirely (no UNKNOWN bucket). Summary KPIs gain a Cities variety count and a Top City tile.
 - New opt-in beta surface (UserMenu → "Beta features") adds a State row to the address line, a State filter category, a Stats State table, and Summary "Top State" + "States variety" tiles. State names come from curated `subdivisions/{en,fi,ja}.json` keyed by ISO 3166-2 (`geocoded_state_code`), dynamic-imported per language. Initial coverage: JP, FI, DE, MY, KR, AU, CA, US (en + ja); fi covers Finnish regions and falls back to en elsewhere.
+- Per-language city overlay layered on top of the Nominatim merge. `cities/{en,fi,ja}.json` keyed by `<country>:<en_city>` (Tokio, Soul, Tukholma, Peking, Pietari, …) — overrides apply at every city display surface (metadata address line, filter chip, Stats Places, Summary Top City). Always-on (no beta gate), purely additive. Seed includes the well-known foreign exonyms for fi + ja; entries without overrides fall through to the existing merged Nominatim value.
 
 ### Server
 
@@ -24,6 +25,7 @@
 
 - `bin/photo.ts audit --country-mismatch` footer now distinguishes "still need geocoding" from "no Nominatim coverage" (the `geocode_no_data` flag set by intake / `photo-geocode.ts` when Nominatim returned no address). Previously rows flagged as no-data were still counted as "not yet geocoded" and pointed the operator at `./bin/photo-geocode.ts` — re-running the daemon found nothing to do and the audit kept nagging. The `noData` flag is also surfaced on the mapped `Photo.geocoded` so the audit (and any other consumer) can read it.
 - `bin/photo.ts normalize-cities` rewrites `photo.geocoded_city` through `normalizeCity()` to strip admin cruft like "Stockholm Municipality" → "Stockholm". Dry-run by default; `--apply` writes. Intake (converter + daemon) applies the same normalization going forward, so the tool only needs re-running after rule changes.
+- `bin/photo.ts audit-cities` lists unique `(country, en_city)` pairs in the gallery and shows which languages have an override in `react-app/src/lib/translations/cities/`. Helps target the per-language overlay against actual data instead of guessing.
 
 ## [0.11.0] - 2026-05-28
 
