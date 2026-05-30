@@ -190,6 +190,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
                 [...accumulator[topic][category]].filter(
                   (v): v is string => typeof v === "string" && !!v
                 ),
+                lang,
                 formatCountryName
               )
             : null;

@@ -677,11 +677,16 @@ const collectTopics = (
   const collectCity = (byCity: any, byCityCountry: any, total: any) => {
     const cityLabels = format.buildCityLabels(
       Object.keys(byCity),
+      lang,
       format.countryName(lang, countryData)
     );
+    const fallbackLabel = (key: string): string => {
+      const parsed = format.parseCityKey(key);
+      return format.cityName(lang, parsed.country, parsed.city, parsed.city);
+    };
     const [flat, data, valueRanks] = transformData({
       original: byCity,
-      formatter: (key: any) => cityLabels[key] ?? format.parseCityKey(key).city,
+      formatter: (key: any) => cityLabels[key] ?? fallbackLabel(key),
       limit: 20,
     });
     const values = flat.map((entry: any) => entry.value);
@@ -704,7 +709,7 @@ const collectTopics = (
       ],
       table: flat.map((entry: any) => {
         const countryCode = byCityCountry?.[entry.key];
-        const label = cityLabels[entry.key] ?? format.parseCityKey(entry.key).city;
+        const label = cityLabels[entry.key] ?? fallbackLabel(entry.key);
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),

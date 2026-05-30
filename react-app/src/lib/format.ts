@@ -108,6 +108,39 @@ const countryName =
     countryData.getName(countryCode, lang) ||
     countryCode;
 
+// `<country>:<en-city>` → localized name. Per-language chunks load
+// on demand. Lookup is case-insensitive on the city portion;
+// fallback chain is lang → en → raw input. Used for foreign
+// exonyms (Tukholma, Soul, Peking) and any place where the en
+// canonical doesn't match the locale's natural form.
+const CITIES: Record<string, Record<string, string>> = {};
+const CITY_LOADERS: Record<
+  string,
+  () => Promise<{ default: Record<string, string> }>
+> = {
+  en: () => import("./translations/cities/en.json"),
+  fi: () => import("./translations/cities/fi.json"),
+  ja: () => import("./translations/cities/ja.json"),
+};
+const loadCities = async (lang: string): Promise<void> => {
+  if (CITIES[lang]) return;
+  const loader = CITY_LOADERS[lang];
+  if (!loader) return;
+  const mod = await loader();
+  CITIES[lang] = mod.default;
+};
+const cityName = (
+  lang: string,
+  countryCode: string | undefined,
+  cityEn: string | undefined,
+  fallback?: string
+): string => {
+  const fb = fallback ?? cityEn ?? "";
+  if (!countryCode || !cityEn) return fb;
+  const key = `${countryCode.toLowerCase()}:${cityEn}`;
+  return CITIES[lang]?.[key] ?? CITIES.en?.[key] ?? fb;
+};
+
 // ISO 3166-2 code → localized name. JSON keys are lowercase with the
 // hyphen stripped (`jp13`, `usma`). Per-language chunks load on demand;
 // lookup falls back lang → en → original code.
@@ -252,28 +285,37 @@ const parseCityKey = (key: string): CityTuple => {
   }
   return { country: "", state: "", city: key };
 };
-// Map of cityKey → display label. A bare city name is fine when unique;
-// when two entries share the same city, each gets a qualifier appended
-// (state if present, else country name).
+// Map of cityKey → display label. The base label runs through the
+// per-language overlay (so en "Tokyo" displays as fi "Tokio"); when
+// two entries share the same city name, each gets a qualifier
+// appended (state if present, else country name).
 const buildCityLabels = (
   keys: string[],
+  lang: string,
   formatCountry: (code: string) => string
 ): Record<string, string> => {
-  const parsed = keys.map((k) => ({ key: k, ...parseCityKey(k) }));
-  const byCity: Record<string, typeof parsed> = {};
-  for (const p of parsed) {
-    (byCity[p.city] ??= []).push(p);
+  const parsed = keys.map((k) => ({
+    key: k,
+    ...parseCityKey(k),
+  }));
+  const localized = parsed.map((p) => ({
+    ...p,
+    display: cityName(lang, p.country, p.city, p.city),
+  }));
+  const byDisplay: Record<string, typeof localized> = {};
+  for (const p of localized) {
+    (byDisplay[p.display] ??= []).push(p);
   }
   const labels: Record<string, string> = {};
-  for (const group of Object.values(byCity)) {
+  for (const group of Object.values(byDisplay)) {
     if (group.length === 1) {
-      labels[group[0].key] = group[0].city;
+      labels[group[0].key] = group[0].display;
       continue;
     }
     for (const p of group) {
       const qualifier =
         p.state || (p.country ? formatCountry(p.country) : "");
-      labels[p.key] = qualifier ? `${p.city}, ${qualifier}` : p.city;
+      labels[p.key] = qualifier ? `${p.display}, ${qualifier}` : p.display;
     }
   }
   return labels;
@@ -439,6 +481,8 @@ export default {
   countryName,
   subdivisionName,
   loadSubdivisions,
+  cityName,
+  loadCities,
 
   exposure,
   gear,

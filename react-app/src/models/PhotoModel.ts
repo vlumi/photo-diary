@@ -37,6 +37,7 @@ interface Geocoded {
   countryCode?: string;
   stateCode?: string;
   city?: string;
+  cityEn?: string;
 }
 
 interface Taken {
@@ -267,6 +268,8 @@ const PhotoModel = (photoData: unknown) => {
     place: (): string | undefined => photo.taken.location?.place,
     hasGeocodedCity: (): boolean => !!photo.geocoded?.city,
     geocodedCity: (): string | undefined => photo.geocoded?.city,
+    geocodedCityEn: (): string | undefined =>
+      photo.geocoded?.cityEn ?? photo.geocoded?.city,
     geocodedStateCode: (): string | undefined => photo.geocoded?.stateCode,
     // Derived from `stateCode` via the curated subdivision lookup, not
     // from Nominatim's `state`. Empty when no code is set.
@@ -275,12 +278,12 @@ const PhotoModel = (photoData: unknown) => {
       return code ? format.subdivisionName(lang, code) : "";
     },
     geocodedCityKey: (): string | undefined => {
-      const city = photo.geocoded?.city;
-      if (!city) return undefined;
+      const cityEn = photo.geocoded?.cityEn ?? photo.geocoded?.city;
+      if (!cityEn) return undefined;
       return JSON.stringify([
         photo.geocoded?.countryCode ?? "",
         photo.geocoded?.stateCode ?? "",
-        city,
+        cityEn,
       ]);
     },
     hasGeocodedCountry: (): boolean => !!photo.geocoded?.countryCode,
@@ -301,7 +304,12 @@ const PhotoModel = (photoData: unknown) => {
       format.geocodedAddress(lang, {
         country: self.geocodedCountryName(lang, countryData),
         state: opts?.includeState ? self.geocodedStateName(lang) : undefined,
-        city: photo.geocoded?.city,
+        city: format.cityName(
+          lang,
+          photo.geocoded?.countryCode,
+          photo.geocoded?.cityEn,
+          photo.geocoded?.city
+        ),
       }),
     hasCoordinates: (): boolean =>
       !!(

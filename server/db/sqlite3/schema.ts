@@ -153,6 +153,10 @@ export interface Photo {
     countryCode: string | undefined;
     stateCode: string | undefined;
     city: string | undefined;
+    // EN-canonical city (photo-row value, never the localized
+    // merge). Used as the language-stable key for the city overlay
+    // + filter / grouping tuple. Always set when `city` is set.
+    cityEn: string | undefined;
     address: Record<string, unknown> | undefined;
     noData: boolean;
   };
@@ -400,6 +404,7 @@ export default () => {
             countryCode: normalizeCountry(row.geocoded_country_code),
             stateCode: row.geocoded_state_code ?? undefined,
             city: pick(localized?.geocoded_city, row.geocoded_city),
+            cityEn: row.geocoded_city ?? undefined,
             address: (() => {
               const raw =
                 localized?.geocoded_address ?? row.geocoded_address;

@@ -53,6 +53,7 @@ export const useLangStore = create<LangState>((set) => ({
     }
     loadCountryData(lang).then((data) => set({ countryData: data }));
     format.loadSubdivisions(lang);
+    format.loadCities(lang);
   },
 }));
 
@@ -67,8 +68,10 @@ loadCountryData(initialLang).then((data) => {
 });
 // `en` is the lookup fallback, so always load it.
 format.loadSubdivisions("en");
+format.loadCities("en");
 if (initialLang !== "en") {
   format.loadSubdivisions(initialLang);
+  format.loadCities(initialLang);
 }
 
 // If anything else changes the language out-of-band (e.g. an i18next
