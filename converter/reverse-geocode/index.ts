@@ -3,6 +3,9 @@ import path from "node:path";
 
 import { readPackageVersion } from "../lib/version.js";
 import * as logger from "../lib/logger.js";
+import { normalizeCity } from "./normalize.js";
+
+export { normalizeCity };
 
 // Per Nominatim's usage policy:
 //   - Public instance: absolute maximum 1 request per second.
@@ -64,12 +67,14 @@ const extract = (raw: NominatimResponse): NominatimResult | null => {
   };
   // Nominatim's `city` is country-specific — fall through synonyms
   // so the column gets populated whatever the locale calls it.
-  const city =
+  // Normalized to strip admin cruft like "Stockholm Municipality".
+  const city = normalizeCity(
     get("city") ??
-    get("town") ??
-    get("village") ??
-    get("municipality") ??
-    get("hamlet");
+      get("town") ??
+      get("village") ??
+      get("municipality") ??
+      get("hamlet")
+  );
   const countryCode = (() => {
     const cc = a.country_code;
     return typeof cc === "string" ? cc : undefined;
