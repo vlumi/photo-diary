@@ -86,15 +86,8 @@ const findUniqueIntakePath = async (
 
 const linkToGallery = async (photoId: string, galleryId: string | null) => {
   if (!galleryId) return;
-  try {
-    await db.loadGalleryPhoto(galleryId, photoId);
-    logger.debug(`[${photoId}] Already linked to gallery "${galleryId}"`);
-    return;
-  } catch {
-    // NotFoundError — fall through to link.
-  }
   await db.linkGalleryPhoto([galleryId], [photoId]);
-  logger.info(`[${photoId}] Linked to gallery "${galleryId}"`);
+  logger.info(`[${photoId}] Ensured link to gallery "${galleryId}"`);
 };
 
 const processJpeg = async (

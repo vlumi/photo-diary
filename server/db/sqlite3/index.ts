@@ -359,7 +359,9 @@ const linkGalleryPhoto = async (
   galleryIds: string[],
   photoIds: string[]
 ) => {
-  const stmt = db.prepare(SCHEMA.galleryPhoto.buildCreateQuery());
+  const stmt = db.prepare(
+    SCHEMA.galleryPhoto.buildCreateQuery().replace("INSERT", "INSERT OR IGNORE")
+  );
   const insertAll = db.transaction(() => {
     photoIds.forEach((photoId) => {
       galleryIds.forEach((galleryId) => {

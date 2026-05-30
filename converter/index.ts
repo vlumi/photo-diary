@@ -38,10 +38,10 @@ try {
     const relPath = fileQueue.shift();
     if (relPath) {
       processFile(relPath, rootDir)
-        .then(() => setTimeout(fileQueueProcessor, 0))
         .catch((err) => {
           logger.error("Processing failed for file", relPath, err);
-        });
+        })
+        .finally(() => setTimeout(fileQueueProcessor, 0));
     } else {
       setTimeout(fileQueueProcessor, 1000);
     }
