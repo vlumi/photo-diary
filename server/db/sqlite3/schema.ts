@@ -1,4 +1,5 @@
 import { NotImplementedError } from "../../lib/errors.js";
+import { acceptLocalizedCity } from "../../lib/localized-script.js";
 
 // Raw DB row shapes (one per table). Mirror the SELECT column list exactly.
 export interface MetaRow {
@@ -340,24 +341,16 @@ export default () => {
           loc: string | null | undefined,
           en: string | null
         ): string | undefined => loc ?? en ?? undefined;
-        // For ja: Nominatim's `?accept-language=ja` falls back to the
-        // local form when OSM has no Japanese label, so ja-flagged
-        // rows can contain plain ASCII names. Skip those at the merge
-        // (treat as missing) and let the en column + city overlay
-        // take over.
+        // Per-lang validation rejects values whose script doesn't
+        // match the language (Nominatim falls back to local OSM
+        // labels when no localized form exists). Falls through to en.
         const pickLocalizedCity = (
           loc: string | null | undefined,
           en: string | null
-        ): string | undefined => {
-          if (
-            localized?.lang === "ja" &&
-            loc &&
-            !/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(loc)
-          ) {
-            return en ?? undefined;
-          }
-          return pick(loc, en);
-        };
+        ): string | undefined =>
+          acceptLocalizedCity(loc, localized?.lang ?? "")
+            ? pick(loc, en)
+            : en ?? undefined;
 
         return {
           id: toString(row.id),

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 
 import CONST from "../lib/constants.js";
 import { NotFoundError, NotImplementedError } from "../lib/errors.js";
+import { acceptLocalizedCity } from "../lib/localized-script.js";
 
 const notImplemented = async (): Promise<never> => {
   throw new NotImplementedError();
@@ -411,9 +412,8 @@ const upsertGeocoded = async (
   const key = `${photoId}:${lang}`;
   const merged = { ...(db.photoLocalized[key] ?? {}), ...fields };
   if (
-    lang === "ja" &&
     typeof merged.city === "string" &&
-    !/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(merged.city)
+    !acceptLocalizedCity(merged.city, lang)
   ) {
     merged.city = null;
   }
