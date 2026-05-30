@@ -86,6 +86,7 @@
     "photo-metadata": "Kuvan tiedot",
     "photo-author": "Valokuvaaja",
     "metadata-camera": "Kamera",
+    "metadata-focal-eq": "({{value}}㎜ vast.)",
     "metadata-lens": "Objektiivi",
     "metadata-settings": "Asetukset",
     "metadata-image": "Kuva",
@@ -221,6 +222,7 @@
     "stats-col-camera-lens": "Kamera ja objektiivi",
 
     "stats-col-focal-length": "Millimetriä",
+    "stats-col-focal-length-eq": "Millimetriä (35mm vast.)",
     "stats-col-aperture": "Aukko",
     "stats-col-exposure-time": "Sekuntia",
     "stats-col-iso": "ISO",
