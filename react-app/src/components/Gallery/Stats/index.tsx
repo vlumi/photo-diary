@@ -52,7 +52,7 @@ const Stats = ({
   hideMap,
 }: Props): React.ReactElement => {
   const [data, setData] = React.useState<any>(undefined);
-  const beta = useBetaStore((s) => s.enabled);
+  const beta = useBetaStore((s) => s.enabled.regions);
 
   const { t } = useTranslation();
 

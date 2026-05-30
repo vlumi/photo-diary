@@ -12,6 +12,7 @@ import {
   useChangePasswordModalStore,
   useBetaStore,
 } from "../stores";
+import { BETA_FEATURES } from "../stores/beta";
 
 const Root = styled.div`
   position: relative;
@@ -103,8 +104,12 @@ const UserMenu = (): React.ReactElement => {
   const openChangePasswordModal = useChangePasswordModalStore((s) => s.open);
   const setUser = useUserStore((s) => s.setUser);
   const queryClient = useQueryClient();
-  const betaEnabled = useBetaStore((s) => s.enabled);
-  const setBetaEnabled = useBetaStore((s) => s.setEnabled);
+  const betaModes = useBetaStore((s) => s.modes);
+  const betaStored = useBetaStore((s) => s.stored);
+  const setBetaStored = useBetaStore((s) => s.setStored);
+  const userBetaFeatures = BETA_FEATURES.filter(
+    (f) => betaModes[f] === "user"
+  );
 
   const [isOpen, setIsOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -188,14 +193,16 @@ const UserMenu = (): React.ReactElement => {
           >
             {t("change-password-title")}
           </MenuItem>
-          <BetaToggle>
-            <input
-              type="checkbox"
-              checked={betaEnabled}
-              onChange={(e) => setBetaEnabled(e.target.checked)}
-            />
-            {t("beta-features")}
-          </BetaToggle>
+          {userBetaFeatures.map((f) => (
+            <BetaToggle key={f}>
+              <input
+                type="checkbox"
+                checked={betaStored[f]}
+                onChange={(e) => setBetaStored(f, e.target.checked)}
+              />
+              {t(`beta-feature-${f}`)}
+            </BetaToggle>
+          ))}
           <MenuItem type="button" role="menuitem" onClick={handleLogout}>
             {t("logout")}
           </MenuItem>

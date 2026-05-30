@@ -23,7 +23,7 @@
     "change-password-wrong-current": "現在のパスワードが正しくありません",
     "change-password-failed": "パスワードを変更できませんでした",
     "change-password-success": "パスワードを変更しました",
-    "beta-features": "ベータ機能",
+    "beta-feature-regions": "地域フィルター（ベータ）",
 
     "nav-galleries": "ギャラリー",
     "nav-gallery-top": "トップへ",

@@ -71,7 +71,7 @@ const Filters = ({
   hideMap,
 }: Props): React.ReactElement => {
   const [topicSelector, setTopicSelector] = React.useState(false);
-  const beta = useBetaStore((s) => s.enabled);
+  const beta = useBetaStore((s) => s.enabled.regions);
 
   const { t } = useTranslation();
 

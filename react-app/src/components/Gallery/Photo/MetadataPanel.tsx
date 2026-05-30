@@ -120,7 +120,7 @@ const MetadataPanel = ({
   onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
-  const beta = useBetaStore((s) => s.enabled);
+  const beta = useBetaStore((s) => s.enabled.regions);
   const formatExposure = format.exposure(lang, t);
 
   const renderPlace = () => {

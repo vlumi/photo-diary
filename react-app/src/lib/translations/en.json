@@ -23,7 +23,7 @@
     "change-password-wrong-current": "Current password is incorrect",
     "change-password-failed": "Could not change password",
     "change-password-success": "Password changed",
-    "beta-features": "Beta features",
+    "beta-feature-regions": "Region filter (beta)",
 
     "nav-galleries": "Galleries",
     "nav-gallery-top": "Back to top",

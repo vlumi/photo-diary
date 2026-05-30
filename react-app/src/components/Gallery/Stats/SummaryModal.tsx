@@ -154,7 +154,7 @@ const SummaryModal = ({
   onClose,
 }: Props): React.ReactElement | null => {
   const { t } = useTranslation();
-  const beta = useBetaStore((s) => s.enabled);
+  const beta = useBetaStore((s) => s.enabled.regions);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
