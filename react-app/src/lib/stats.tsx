@@ -234,6 +234,11 @@ const decodeTableRowKey = (key: string | undefined): string | undefined => {
   return value;
 };
 
+interface BetaEnabled {
+  regions?: boolean;
+  focalLengthEquiv?: boolean;
+}
+
 const collectTopics = (
   data: any,
   lang: string,
@@ -242,7 +247,7 @@ const collectTopics = (
   theme: Theme,
   mapPhotos: Photo[] = [],
   hideMap = false,
-  beta = false
+  betaEnabled: BetaEnabled = {}
 ): StatsTopic[] => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang, t);
@@ -772,7 +777,7 @@ const collectTopics = (
     // location-derived). mapPhotos is already empty when hideMap.
     if (!hideMap) {
       categories.push(collectCountry(count.byCountry, total));
-      if (beta && Object.keys(count.byState ?? {}).length > 0) {
+      if (betaEnabled.regions && Object.keys(count.byState ?? {}).length > 0) {
         categories.push(
           collectState(count.byState, count.byStateCountry, total)
         );
@@ -1267,6 +1272,48 @@ const collectTopics = (
       }),
     };
   };
+  const collectFocalLength35mmEquiv = (
+    byFocalLength35mmEquiv: any,
+    total: any
+  ) => {
+    const [flat, data, valueRanks] = transformData({
+      original: byFocalLength35mmEquiv,
+      formatter: formatExposure.focalLength,
+      comparator: collection.numSortByFieldAsc("key"),
+    });
+    const values = flat.map((entry: any) => entry.value);
+    const { mean, stddev } = calculateStatistics(values);
+    return {
+      key: "focal-length-eq",
+      title: t("stats-category-focal-length-eq"),
+      valueSortable: true,
+      charts: [
+        { type: "doughnut", data, options: chartOptions.doughnut },
+        { type: "horizontal-bar", data, options: chartOptions.bar },
+      ],
+      tableColumns: [
+        { title: "rank", align: "right", header: true },
+        { title: "focal-length-eq", align: "left" },
+        { title: "count", align: "right" },
+        { title: "share", align: "right" },
+      ],
+      table: flat.map((entry: any) => {
+        return {
+          key: encodeTableKey(entry.key),
+          rank: formatNumber.default(valueRanks[entry.value] + 1),
+          "focal-length-eq": formatExposure.focalLength(
+            localizeUnknownKey(entry.key) as any
+          ),
+          count: formatNumber.default(entry.value),
+          share: `${formatNumber.oneDecimal(
+            format.share(entry.value, total)
+          )}%`,
+          _count: entry.value,
+          standardScore: (entry.value - mean) / stddev,
+        };
+      }),
+    };
+  };
   const collectAperture = (byAperture: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byAperture,
@@ -1563,15 +1610,26 @@ const collectTopics = (
   const collectSettings = () => {
     const total = data.count.total;
     const byExposure = data.count.byExposure;
+    const categories: any[] = [
+      collectFocalLength(byExposure.byFocalLength, total),
+    ];
+    if (betaEnabled.focalLengthEquiv) {
+      categories.push(
+        collectFocalLength35mmEquiv(
+          byExposure.byFocalLength35mmEquiv,
+          total
+        )
+      );
+    }
+    categories.push(
+      collectAperture(byExposure.byAperture, total),
+      collectExposureTime(byExposure.byExposureTime, total),
+      collectIso(byExposure.byIso, total)
+    );
     return {
       key: "settings",
       title: t("stats-topic-settings"),
-      categories: [
-        collectFocalLength(byExposure.byFocalLength, total),
-        collectAperture(byExposure.byAperture, total),
-        collectExposureTime(byExposure.byExposureTime, total),
-        collectIso(byExposure.byIso, total),
-      ],
+      categories,
     };
   };
   const collectImage = () => {
@@ -1696,6 +1754,9 @@ const initializeStats = (uniqueValues: any): any => {
     if ("exposure" in uniqueValues) {
       stats.count.byExposure.byFocalLength = setInitialValues(
         uniqueValues.exposure["focal-length"]
+      );
+      stats.count.byExposure.byFocalLength35mmEquiv = setInitialValues(
+        uniqueValues.exposure["focal-length-eq"]
       );
       stats.count.byExposure.byAperture = setInitialValues(
         uniqueValues.exposure.aperture
@@ -1886,6 +1947,12 @@ const updateExposureDistribution = (byExposure: any, photo: any) => {
   byExposure.byFocalLength[focalLength] =
     byExposure.byFocalLength[focalLength] || 0;
   byExposure.byFocalLength[focalLength]++;
+
+  const focalLengthEq = Number(photo.focalLength35mmEquiv()) || UNKNOWN;
+  byExposure.byFocalLength35mmEquiv = byExposure.byFocalLength35mmEquiv || {};
+  byExposure.byFocalLength35mmEquiv[focalLengthEq] =
+    byExposure.byFocalLength35mmEquiv[focalLengthEq] || 0;
+  byExposure.byFocalLength35mmEquiv[focalLengthEq]++;
 
   const aperture = Number(photo.aperture()) || UNKNOWN;
   byExposure.byAperture = byExposure.byAperture || {};

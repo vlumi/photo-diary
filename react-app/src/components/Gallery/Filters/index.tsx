@@ -60,7 +60,12 @@ interface Props {
 }
 
 const LOCATION_CATEGORIES = new Set(["country", "state", "city", "geotagged"]);
-const BETA_CATEGORIES = new Set(["state"]);
+// Category → which beta toggle gates it. Filter chip / dropdown only
+// renders when the corresponding `enabled[BetaFeature]` is true.
+const BETA_CATEGORIES: Record<string, "regions" | "focalLengthEquiv"> = {
+  state: "regions",
+  "focal-length-eq": "focalLengthEquiv",
+};
 
 const Filters = ({
   filters,
@@ -71,7 +76,11 @@ const Filters = ({
   hideMap,
 }: Props): React.ReactElement => {
   const [topicSelector, setTopicSelector] = React.useState(false);
-  const beta = useBetaStore((s) => s.enabled.regions);
+  const enabled = useBetaStore((s) => s.enabled);
+  const isBetaAllowed = (category: string): boolean => {
+    const required = BETA_CATEGORIES[category];
+    return !required || enabled[required];
+  };
 
   const { t } = useTranslation();
 
@@ -117,7 +126,7 @@ const Filters = ({
                     (category) => !alreadyFilteredCategory(topic, category)
                   )
                   .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
-                  .filter((category) => beta || !BETA_CATEGORIES.has(category))
+                  .filter(isBetaAllowed)
                   .map((category) => (
                     <NewCategory key={`${topic}:${category}`} value={category}>
                       {t(`stats-category-${category}`)}
@@ -152,7 +161,7 @@ const Filters = ({
               lang={lang}
               countryData={countryData}
               hideMap={hideMap}
-              beta={beta}
+              enabled={enabled}
             />
           ))}
         {renderTopicAdder()}
