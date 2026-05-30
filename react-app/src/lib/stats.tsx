@@ -422,7 +422,7 @@ const collectTopics = (
     const label =
       otherLabel ??
       (limit > 0
-        ? t("stats-other-beyond", { n: limit })
+        ? t("stats-other-beyond", { n: limit + 1 })
         : t("stats-other"));
     const flat = collection.foldToArray(original, comparator);
     const [data, valueRanks] = mapToChartData(
@@ -1150,7 +1150,7 @@ const collectTopics = (
       original: byCameraLens,
       formatter: (cameraLens: any) => JSON.parse(cameraLens).join(" + "),
       limit: 20,
-      otherLabel: JSON.stringify([t("stats-other-beyond", { n: 20 })]),
+      otherLabel: JSON.stringify([t("stats-other-beyond", { n: 21 })]),
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
