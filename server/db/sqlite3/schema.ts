@@ -60,6 +60,7 @@ export interface PhotoRow {
   lens_model: string;
   lens_serial: string;
   focal: number | null;
+  focal_35mm_equiv: number | null;
   fstop: number | null;
   exposure_time: number | null;
   iso: number | null;
@@ -137,6 +138,7 @@ export interface Photo {
   lens: { make: string; model: string; serial: string };
   exposure: {
     focalLength: number | undefined;
+    focalLength35mmEquiv: number | undefined;
     aperture: number | undefined;
     exposureTime: number | undefined;
     iso: number | undefined;
@@ -391,6 +393,7 @@ export default () => {
           },
           exposure: {
             focalLength: toNumber(row.focal),
+            focalLength35mmEquiv: toNumber(row.focal_35mm_equiv),
             aperture: toNumber(row.fstop),
             exposureTime: toNumber(row.exposure_time),
             iso: toNumber(row.iso),
@@ -454,6 +457,7 @@ export default () => {
           map.lens_serial,
 
           map.focal,
+          map.focal_35mm_equiv,
           map.fstop,
           map.exposure_time,
           map.iso,
@@ -571,6 +575,8 @@ const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
   if (photo.exposure) {
     const exposure = photo.exposure;
     if ("focalLength" in exposure) result.focal = exposure.focalLength;
+    if ("focalLength35mmEquiv" in exposure)
+      result.focal_35mm_equiv = exposure.focalLength35mmEquiv;
     if ("aperture" in exposure) result.fstop = exposure.aperture;
     if ("exposureTime" in exposure)
       result.exposure_time = exposure.exposureTime;
@@ -696,6 +702,7 @@ const SCHEMA = {
       "lens_serial",
 
       "focal",
+      "focal_35mm_equiv",
       "fstop",
       "exposure_time",
       "iso",
