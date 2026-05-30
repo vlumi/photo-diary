@@ -164,6 +164,9 @@ describe("generate", () => {
           byFocalLength: {
             23: 1,
           },
+          byFocalLength35mmEquiv: {
+            unknown: 1,
+          },
           byIso: {
             100: 1,
           },
@@ -342,6 +345,9 @@ describe("generate", () => {
             unknown: 1,
           },
           byFocalLength: {
+            unknown: 1,
+          },
+          byFocalLength35mmEquiv: {
             unknown: 1,
           },
           byIso: {
@@ -567,6 +573,9 @@ describe("generate", () => {
           },
           byFocalLength: {
             23: 2,
+          },
+          byFocalLength35mmEquiv: {
+            unknown: 2,
           },
           byIso: {
             100: 2,
@@ -895,6 +904,9 @@ describe("collectTopics", () => {
             },
             byFocalLength: {
               23: 2,
+            },
+            byFocalLength35mmEquiv: {
+              unknown: 2,
             },
             byIso: {
               100: 2,

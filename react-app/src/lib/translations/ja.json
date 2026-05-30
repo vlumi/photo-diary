@@ -24,6 +24,7 @@
     "change-password-failed": "パスワードを変更できませんでした",
     "change-password-success": "パスワードを変更しました",
     "beta-feature-regions": "地域フィルター（ベータ）",
+    "beta-feature-focalLengthEquiv": "焦点距離 35mm換算（ベータ）",
 
     "nav-galleries": "ギャラリー",
     "nav-gallery-top": "トップへ",
@@ -176,6 +177,7 @@
     "stats-topic-image": "画像",
     "stats-topic-light": "光量",
     "stats-category-focal-length": "焦点距離",
+    "stats-category-focal-length-eq": "焦点距離（35mm換算）",
     "stats-category-aperture": "絞り",
     "stats-category-exposure-time": "シャッター速度",
     "stats-category-iso": "感度",

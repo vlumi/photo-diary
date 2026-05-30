@@ -7,6 +7,7 @@ import Category from "./Category";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import stats, { type UniqueValues } from "../../../lib/stats";
+import type { BetaFeature } from "../../../stores/beta";
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -55,12 +56,15 @@ interface Props {
   lang: string;
   countryData: CountryData;
   hideMap: boolean;
-  beta: boolean;
+  enabled: Record<BetaFeature, boolean>;
 }
 
 // Mirror of Filters/index.tsx.
 const LOCATION_CATEGORIES = new Set(["country", "state", "city", "geotagged"]);
-const BETA_CATEGORIES = new Set(["state"]);
+const BETA_CATEGORIES: Record<string, BetaFeature> = {
+  state: "regions",
+  "focal-length-eq": "focalLengthEquiv",
+};
 
 const Topic = ({
   topic,
@@ -70,8 +74,12 @@ const Topic = ({
   lang,
   countryData,
   hideMap,
-  beta,
+  enabled,
 }: Props): React.ReactElement => {
+  const isBetaAllowed = (category: string): boolean => {
+    const required = BETA_CATEGORIES[category];
+    return !required || enabled[required];
+  };
   const [categorySelector, setCategorySelector] = React.useState<
     Record<string, boolean>
   >({});
@@ -148,7 +156,7 @@ const Topic = ({
             {filter
               .categories(topic)
               .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
-              .filter((category) => beta || !BETA_CATEGORIES.has(category))
+              .filter(isBetaAllowed)
               .map((category) => (
               <NewCategoryGroup
                 key={`${topic}:${category}`}
@@ -188,7 +196,7 @@ const Topic = ({
         .categories(topic)
         .filter((category) => category in filters[topic])
         .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
-        .filter((category) => beta || !BETA_CATEGORIES.has(category))
+        .filter(isBetaAllowed)
         .map((category) => (
           <Category
             key={`filter:${topic}:${category}`}

@@ -22,7 +22,7 @@ const categories = (category: string): string[] => {
     case "gear":
       return ["camera-make", "camera", "lens", "camera-lens"];
     case "settings":
-      return ["focal-length", "aperture", "exposure-time", "iso"];
+      return ["focal-length", "focal-length-eq", "aperture", "exposure-time", "iso"];
     case "image":
       return ["resolution", "aspect-ratio", "orientation"];
     case "light":

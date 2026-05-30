@@ -318,6 +318,7 @@ describe("Photo", () => {
     "lens_serial",
 
     "focal",
+    "focal_35mm_equiv",
     "fstop",
     "exposure_time",
     "iso",
@@ -338,7 +339,7 @@ describe("Photo", () => {
   ].join(",");
   test("Build create query", () =>
     expect(schema.photo.buildCreateQuery()).toBe(
-      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.photo.buildSelectByIdQuery()).toBe(
@@ -410,6 +411,7 @@ describe("Photo", () => {
         },
         exposure: {
           focalLength: 50,
+          focalLength35mmEquiv: 75,
           aperture: 1.0,
           exposureTime: 0.1,
           iso: 100,
@@ -435,7 +437,7 @@ describe("Photo", () => {
         " title=?, description=?, author=?," +
         " taken=?, country_code=?, place=?, coord_lat=?, coord_lon=?, coord_alt=?," +
         " camera_make=?, camera_model=?, camera_serial=?, lens_make=?, lens_model=?, lens_serial=?," +
-        " focal=?, fstop=?, exposure_time=?, iso=?," +
+        " focal=?, focal_35mm_equiv=?, fstop=?, exposure_time=?, iso=?," +
         " orig_width=?, orig_height=?, disp_width=?, disp_height=?, thumb_width=?, thumb_height=?" +
         " WHERE id = ?",
       values: [
@@ -458,6 +460,7 @@ describe("Photo", () => {
         "new lens_serial",
 
         50,
+        75,
         1.0,
         0.1,
         100,
@@ -510,6 +513,7 @@ describe("Photo", () => {
         },
         exposure: {
           focalLength: undefined,
+          focalLength35mmEquiv: undefined,
           aperture: undefined,
           exposureTime: undefined,
           iso: undefined,
@@ -535,7 +539,7 @@ describe("Photo", () => {
         " title=?, description=?, author=?," +
         " taken=?, country_code=?, place=?, coord_lat=?, coord_lon=?, coord_alt=?," +
         " camera_make=?, camera_model=?, camera_serial=?, lens_make=?, lens_model=?, lens_serial=?," +
-        " focal=?, fstop=?, exposure_time=?, iso=?," +
+        " focal=?, focal_35mm_equiv=?, fstop=?, exposure_time=?, iso=?," +
         " orig_width=?, orig_height=?, disp_width=?, disp_height=?, thumb_width=?, thumb_height=?" +
         " WHERE id = ?",
       values: [
@@ -557,6 +561,7 @@ describe("Photo", () => {
         undefined,
         undefined,
 
+        undefined,
         undefined,
         undefined,
         undefined,
@@ -605,6 +610,7 @@ describe("Photo", () => {
         },
         exposure: {
           focalLength: 50,
+          focalLength35mmEquiv: 75,
           aperture: 1.0,
           exposureTime: 0.1,
           iso: 100,
@@ -617,7 +623,7 @@ describe("Photo", () => {
         " author=?," +
         " taken=?, coord_lat=?, coord_lon=?, coord_alt=?," +
         " camera_make=?, camera_model=?, camera_serial=?, lens_make=?, lens_model=?, lens_serial=?," +
-        " focal=?, fstop=?, exposure_time=?, iso=?" +
+        " focal=?, focal_35mm_equiv=?, fstop=?, exposure_time=?, iso=?" +
         " WHERE id = ?",
       values: [
         "new author",
@@ -635,6 +641,7 @@ describe("Photo", () => {
         "new lens_serial",
 
         50,
+        75,
         1.0,
         0.1,
         100,

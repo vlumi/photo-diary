@@ -24,6 +24,7 @@
     "change-password-failed": "Could not change password",
     "change-password-success": "Password changed",
     "beta-feature-regions": "Region filter (beta)",
+    "beta-feature-focalLengthEquiv": "Focal length 35mm equivalent (beta)",
 
     "nav-galleries": "Galleries",
     "nav-gallery-top": "Back to top",
@@ -176,6 +177,7 @@
     "stats-topic-image": "Image",
     "stats-topic-light": "Light",
     "stats-category-focal-length": "Focal Length",
+    "stats-category-focal-length-eq": "Focal Length (35mm eq.)",
     "stats-category-aperture": "Aperture",
     "stats-category-exposure-time": "Shutter Speed",
     "stats-category-iso": "Sensitivity",

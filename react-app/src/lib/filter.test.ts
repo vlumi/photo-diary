@@ -40,6 +40,7 @@ describe("categories", () => {
   test("settings", () =>
     expect(filter.categories("settings")).toStrictEqual([
       "focal-length",
+      "focal-length-eq",
       "aperture",
       "exposure-time",
       "iso",

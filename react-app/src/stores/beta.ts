@@ -3,9 +3,9 @@ import { create } from "zustand";
 const STORAGE_KEY = "beta-features";
 
 export type BetaMode = "user" | "on" | "off";
-export type BetaFeature = "regions";
+export type BetaFeature = "regions" | "focalLengthEquiv";
 
-export const BETA_FEATURES: BetaFeature[] = ["regions"];
+export const BETA_FEATURES: BetaFeature[] = ["regions", "focalLengthEquiv"];
 
 const defaultStored = (): Record<BetaFeature, boolean> =>
   Object.fromEntries(BETA_FEATURES.map((f) => [f, false])) as Record<

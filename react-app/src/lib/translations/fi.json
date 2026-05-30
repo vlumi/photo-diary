@@ -24,6 +24,7 @@
     "change-password-failed": "Salasanan vaihto epäonnistui",
     "change-password-success": "Salasana vaihdettu",
     "beta-feature-regions": "Aluesuodatin (beta)",
+    "beta-feature-focalLengthEquiv": "Polttoväli 35mm-vastaava (beta)",
 
     "nav-galleries": "Galleriat",
     "nav-gallery-top": "Palaa alkuun",
@@ -176,6 +177,7 @@
     "stats-topic-image": "Kuva",
     "stats-topic-light": "Valo",
     "stats-category-focal-length": "Polttoväli",
+    "stats-category-focal-length-eq": "Polttoväli (35mm vast.)",
     "stats-category-aperture": "Aukko",
     "stats-category-exposure-time": "Valotusaika",
     "stats-category-iso": "Herkkyys",

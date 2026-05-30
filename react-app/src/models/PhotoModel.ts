@@ -1,4 +1,5 @@
 import format from "../lib/format";
+import cropFactors from "../lib/crop-factors.json";
 
 interface Dimensions {
   width: number;
@@ -53,6 +54,7 @@ interface Gear {
 
 interface Exposure {
   focalLength?: number;
+  focalLength35mmEquiv?: number;
   aperture?: number;
   exposureTime?: number;
   iso?: number;
@@ -162,6 +164,23 @@ const PhotoModel = (photoData: unknown) => {
       photo.dimensions.display.width / photo.dimensions.display.height,
 
     focalLength: (): number | undefined => photo.exposure?.focalLength,
+    // EXIF `FocalLengthIn35mmFormat` when present; otherwise derived via
+    // `crop-factors.json` for bodies the operator's seed knows (X100F /
+    // 5D Mk II / GX7 / 30D / FinePix F50fd as of writing). Unknown body +
+    // missing EXIF → undefined, so the field can be filtered or charted
+    // without faking values for photos we can't place on the scale.
+    focalLength35mmEquiv: (): number | undefined => {
+      const explicit = photo.exposure?.focalLength35mmEquiv;
+      if (explicit) return explicit;
+      const focal = photo.exposure?.focalLength;
+      if (!focal) return undefined;
+      const make = photo.camera?.make;
+      const model = photo.camera?.model;
+      if (!make || !model) return undefined;
+      const factor = (cropFactors as Record<string, number>)[`${make} ${model}`];
+      if (factor === undefined) return undefined;
+      return Math.round(focal * factor);
+    },
     aperture: (): number | undefined => photo.exposure?.aperture,
     exposureTime: (): number | undefined => photo.exposure?.exposureTime,
     iso: (): number | undefined => photo.exposure?.iso,
@@ -387,6 +406,10 @@ const PhotoModel = (photoData: unknown) => {
         }
         case "focal-length":
           return [value, Number(value)].includes(self.focalLength() as never);
+        case "focal-length-eq":
+          return [value, Number(value)].includes(
+            self.focalLength35mmEquiv() as never
+          );
         case "aperture":
           return [value, Number(value)].includes(self.aperture() as never);
         case "exposure-time":
@@ -437,6 +460,7 @@ const PhotoModel = (photoData: unknown) => {
         },
         exposure: {
           "focal-length": new Set([self.focalLength()]),
+          "focal-length-eq": new Set([self.focalLength35mmEquiv()]),
           aperture: new Set([self.aperture()]),
           "exposure-time": new Set([self.exposureTime()]),
           iso: new Set([self.iso()]),
