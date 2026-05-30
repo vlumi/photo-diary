@@ -24,17 +24,19 @@ const PREFIX_STRIPS: RegExp[] = [
 // Explicit overrides — applied before pattern strips. Use for
 // possessive-form Swedish names (where a generic regex would mangle
 // the trailing 's'), anglicized exonyms, and any name whose pattern
-// can't be generalized safely.
+// can't be generalized safely. Lookup is case-insensitive.
 const OVERRIDES: Record<string, string> = {
   "Göteborgs Stad": "Gothenburg",
-  "Göteborgs stad": "Gothenburg",
 };
+const OVERRIDES_LC: Record<string, string> = Object.fromEntries(
+  Object.entries(OVERRIDES).map(([k, v]) => [k.toLowerCase(), v])
+);
 
 export const normalizeCity = <T extends string | null | undefined>(
   raw: T
 ): T => {
   if (!raw) return raw;
-  const override = OVERRIDES[raw];
+  const override = OVERRIDES_LC[raw.toLowerCase()];
   if (override !== undefined) return override as T;
   let s: string = raw;
   for (const pattern of PREFIX_STRIPS) {
