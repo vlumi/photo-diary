@@ -25,7 +25,7 @@
 ### Converter
 
 - Watcher accepts `.json` files alongside `.jpg`, and reads `inbox/` recursively. Subdir convention: files at `inbox/<gallery>/...` auto-link to that gallery on intake; files at the root are processed without an auto-link (operator links later). Unknown gallery name → file is left in place with an error logged. JSON sidecars are processed via the same lookup-or-create path as `bin/photo.ts`, archived to `original/<id>.intake.json` (or `.1.json`, `.2.json`, … if prior intakes exist). End state: one rsync drop of SOOC + JSON straight into `inbox/<gallery>/` replaces the previous "send to inbox + scp to import/ + ssh trigger of put_to_galleries.sh" routine.
-- Drop the `save-json` step that wrote `inbox/<id>.json` after each JPG intake. The DB is the source of truth; the sidecar JSON had no production consumer. Pre-existing sidecar files matching the `<YYYY-MM-DDTHH-MM-SS>-<16hex>.jpg.json` pattern are detected by name and skipped at intake so they're not re-processed as intake JSONs.
+- Drop the `save-json` step that wrote `inbox/<id>.json` after each JPG intake. The DB is the source of truth; the sidecar JSON had no production consumer. Pre-existing sidecars from before this change get re-processed once at startup (contents == EXIF, so it's a harmless no-op write) and archived alongside the photo.
 
 ### Tooling
 

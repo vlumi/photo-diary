@@ -316,20 +316,6 @@ test("multiple intake JSONs for the same photo archive with counter suffix", asy
   await fs.promises.access(path.join(rootDir, "original", `${id}.intake.2.json`));
 });
 
-test("legacy saveJson sidecar (id-pattern filename) is skipped", async () => {
-  // Filename matches the converter's old `<id>.json` pattern — a
-  // leftover from when saveJson wrote sidecars next to the SOOC.
-  const legacy = "2024-01-15T10-30-45-abcdef0123456789.jpg.json";
-  await setupJson(legacy, {
-    "fake-id.jpg": { id: "fake-id.jpg" },
-  });
-
-  await processFile(legacy, rootDir);
-
-  // File stays in inbox, untouched. Not archived to original/.
-  await fs.promises.access(path.join(rootDir, "inbox", legacy));
-});
-
 test("root-level intake JSON is processed without gallery link", async () => {
   // Import a SOOC so there's a photo to update.
   await setup("with-exif.jpg", "IMG_GHI.jpg");
