@@ -88,6 +88,7 @@
 
     "stats-unknown": "未定",
     "stats-other": "他",
+    "stats-other-beyond": "他（上位{{n}}件以外）",
     "stats-more_one": "+他 {{count}}件…",
     "stats-more_other": "+他 {{count}}件…",
     "stats-modal-sort-label": "並び替え",

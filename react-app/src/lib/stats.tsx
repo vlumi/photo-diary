@@ -354,7 +354,17 @@ const collectTopics = (
     const valueRanks = collection.calculateRanks(foldedData, (_: any) =>
       Number(_.value)
     );
+    const truncated =
+      maxEntries > 0 && foldedData && foldedData.length > maxEntries;
     const doMap = (data: any) => {
+      // Color rank is computed on the truncated data so "Other" gets
+      // a gradient slot proportional to its aggregated value (instead
+      // of falling out of `valueRanks` and rendering as undefined).
+      // The original `valueRanks` is still returned for the table's
+      // overall-rank column.
+      const colorRanks = collection.calculateRanks(data, (_: any) =>
+        Number(_.value)
+      );
       const colorGradients = color.colorGradient(
         theme.get("header-background"),
         theme.get("header-color"),
@@ -362,7 +372,7 @@ const collectTopics = (
       );
       const colors = data
         .map((_: any) => Number(_.value))
-        .map((value: any) => colorGradients[valueRanks[value]]);
+        .map((value: any) => colorGradients[colorRanks[value]]);
       return [
         {
           labels: data
@@ -379,6 +389,7 @@ const collectTopics = (
               categoryPercentage: 1,
             },
           ],
+          _otherIndex: truncated ? data.length - 1 : undefined,
         },
         valueRanks,
       ];
@@ -400,7 +411,7 @@ const collectTopics = (
     comparator = collection.numSortByFieldDesc("value"),
     formatter = format.identity,
     limit = 0,
-    otherLabel = t("stats-other"),
+    otherLabel,
   }: {
     original: any;
     comparator?: any;
@@ -408,12 +419,17 @@ const collectTopics = (
     limit?: number;
     otherLabel?: any;
   }): any => {
+    const label =
+      otherLabel ??
+      (limit > 0
+        ? t("stats-other-beyond", { n: limit })
+        : t("stats-other"));
     const flat = collection.foldToArray(original, comparator);
     const [data, valueRanks] = mapToChartData(
       flat,
       formatter,
       limit,
-      otherLabel
+      label
     );
     return [flat, data, valueRanks];
   };
@@ -1134,7 +1150,7 @@ const collectTopics = (
       original: byCameraLens,
       formatter: (cameraLens: any) => JSON.parse(cameraLens).join(" + "),
       limit: 20,
-      otherLabel: JSON.stringify([t("stats-other")]),
+      otherLabel: JSON.stringify([t("stats-other-beyond", { n: 20 })]),
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);

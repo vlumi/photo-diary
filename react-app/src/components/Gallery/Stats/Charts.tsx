@@ -53,8 +53,11 @@ const applyOrder = (data: any, order: number[]): any => {
     return data;
   }
   const reorder = <T,>(arr: T[]): T[] => order.map((i) => arr[i]);
+  const otherIndex = data._otherIndex as number | undefined;
   return {
     ...data,
+    _otherIndex:
+      otherIndex !== undefined ? order.indexOf(otherIndex) : undefined,
     labels: data.labels ? reorder(data.labels) : data.labels,
     datasets: data.datasets.map((ds: any) => ({
       ...ds,
@@ -66,12 +69,24 @@ const applyOrder = (data: any, order: number[]): any => {
   };
 };
 
+// "Other" is pinned to the end regardless of sort mode — it
+// aggregates the long tail and ranking it like an individual
+// entry buries it among real values.
+const withOtherLast = (data: any, sortedIndices: number[]): number[] => {
+  const otherIndex = data._otherIndex as number | undefined;
+  if (otherIndex === undefined) return sortedIndices;
+  const filtered = sortedIndices.filter((i) => i !== otherIndex);
+  filtered.push(otherIndex);
+  return filtered;
+};
+
 const sortByCountDesc = (data: any): any => {
   if (!data?.datasets?.[0]?.data) return data;
   const counts: number[] = data.datasets[0].data.map((v: unknown) => Number(v));
-  const order = counts
-    .map((_, i) => i)
-    .sort((a, b) => counts[b] - counts[a]);
+  const order = withOtherLast(
+    data,
+    counts.map((_, i) => i).sort((a, b) => counts[b] - counts[a])
+  );
   return applyOrder(data, order);
 };
 
@@ -83,9 +98,10 @@ const sortByCountDesc = (data: any): any => {
 const sortByLabelAsc = (data: any): any => {
   if (!data?.labels) return data;
   const labels: string[] = data.labels;
-  const order = labels
-    .map((_, i) => i)
-    .sort((a, b) => labels[a].localeCompare(labels[b]));
+  const order = withOtherLast(
+    data,
+    labels.map((_, i) => i).sort((a, b) => labels[a].localeCompare(labels[b]))
+  );
   return applyOrder(data, order);
 };
 

@@ -88,6 +88,7 @@
 
     "stats-unknown": "N/A",
     "stats-other": "Muut",
+    "stats-other-beyond": "Muut (top {{n}}:n ulkopuolella)",
     "stats-more_one": "+ {{count}} muu…",
     "stats-more_other": "+ {{count}} muuta…",
     "stats-modal-sort-label": "Järjestys",
