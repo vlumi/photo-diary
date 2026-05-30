@@ -66,6 +66,8 @@ export default () => {
     markGeocodeNoData,
     loadPhotosMissingGeocoded,
     deletePhoto: notImplemented,
+    loadPhotoLocalized,
+    clearLocalizedCity,
   };
 };
 
@@ -407,7 +409,15 @@ const upsertGeocoded = async (
   }
   if (!db.photoLocalized) db.photoLocalized = {};
   const key = `${photoId}:${lang}`;
-  db.photoLocalized[key] = { ...(db.photoLocalized[key] ?? {}), ...fields };
+  const merged = { ...(db.photoLocalized[key] ?? {}), ...fields };
+  if (
+    lang === "ja" &&
+    typeof merged.city === "string" &&
+    !/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(merged.city)
+  ) {
+    merged.city = null;
+  }
+  db.photoLocalized[key] = merged;
 };
 const markGeocodeNoData = async (photoId: string): Promise<void> => {
   if (!(photoId in db.photos)) return;
@@ -433,6 +443,33 @@ const loadPhotosMissingGeocoded = async (
     if (out.length >= limit) break;
   }
   return out;
+};
+
+const loadPhotoLocalized = async (
+  lang: string
+): Promise<Array<{ photo_id: string; geocoded_city: string | null }>> => {
+  const out: Array<{ photo_id: string; geocoded_city: string | null }> = [];
+  if (!db.photoLocalized) return out;
+  const suffix = `:${lang}`;
+  for (const [key, row] of Object.entries(db.photoLocalized) as Array<
+    [string, any]
+  >) {
+    if (!key.endsWith(suffix)) continue;
+    out.push({
+      photo_id: key.slice(0, -suffix.length),
+      geocoded_city: row?.city ?? null,
+    });
+  }
+  return out;
+};
+
+const clearLocalizedCity = async (
+  photoId: string,
+  lang: string
+): Promise<void> => {
+  if (!db.photoLocalized) return;
+  const row = db.photoLocalized[`${photoId}:${lang}`];
+  if (row) row.city = null;
 };
 
 const renamePhoto = async (oldId: string, newId: string) => {
