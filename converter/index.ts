@@ -12,8 +12,12 @@ try {
   const watchDir = path.join(rootDir, DIR_INBOX);
   logger.info(`Watching ${watchDir}`);
 
-  // chokidar v4 dropped glob-pattern support for the path arg; use a filter.
-  const isJpeg = (filePath: string) => /\.jpe?g$/i.test(filePath);
+  // chokidar v4 dropped glob-pattern support. Inline filter:
+  //   - .jpg / .jpeg → SOOC intake (image pipeline).
+  //   - .json → user-supplied metadata sidecar (lookup-or-create).
+  // Subdir convention: files at `inbox/<gallery>/...` get auto-linked
+  // to that gallery on intake; files at the root don't auto-link.
+  const isAcceptable = (filePath: string) => /\.(jpe?g|json)$/i.test(filePath);
   const watcher = chokidar.watch(watchDir, {
     persistent: true,
     ignoreInitial: false,
@@ -21,17 +25,17 @@ try {
     awaitWriteFinish: true,
     atomic: true,
     ignored: (filePath, stats) =>
-      stats !== undefined && stats.isFile() && !isJpeg(filePath),
+      stats !== undefined && stats.isFile() && !isAcceptable(filePath),
   });
 
   const fileQueue: string[] = [];
   const fileQueueProcessor = (): void => {
-    const fileName = fileQueue.shift();
-    if (fileName) {
-      processFile(fileName, rootDir)
+    const relPath = fileQueue.shift();
+    if (relPath) {
+      processFile(relPath, rootDir)
         .then(() => setTimeout(fileQueueProcessor, 0))
         .catch((err) => {
-          logger.error("Processing failed for file", fileName, err);
+          logger.error("Processing failed for file", relPath, err);
         });
     } else {
       setTimeout(fileQueueProcessor, 1000);
@@ -39,10 +43,13 @@ try {
   };
   setTimeout(fileQueueProcessor, 1000);
 
+  // Dedupe queue by relative path so subdir layout is preserved
+  // (`dailybw/IMG_1234.jpg` and `gallery/IMG_1234.jpg` are different
+  // intake events).
   const enqueueIfNew = (absPath: string) => {
-    const fileName = path.basename(absPath);
-    if (!fileQueue.includes(fileName)) {
-      fileQueue.push(fileName);
+    const relPath = path.relative(watchDir, absPath);
+    if (!fileQueue.includes(relPath)) {
+      fileQueue.push(relPath);
     }
   };
 
@@ -50,7 +57,7 @@ try {
     .on("add", enqueueIfNew)
     .on("change", enqueueIfNew)
     .on("unlink", (absPath) =>
-      logger.debug(`[${path.basename(absPath)}] Removed from inbox`)
+      logger.debug(`[${path.relative(watchDir, absPath)}] Removed from inbox`)
     )
     .on("error", (err) => logger.error("Error:", err));
 } catch (err) {

@@ -214,8 +214,19 @@ const loadGalleryPhotos = async (galleryId: string, _lang?: string) => {
     }
   }
 };
-const linkGalleryPhoto = async () => {
-  throw new NotImplementedError();
+const linkGalleryPhoto = async (
+  galleryIds: string[],
+  photoIds: string[]
+) => {
+  for (const galleryId of galleryIds) {
+    const existing = ((db.galleryPhotos as Record<string, string[]>)[
+      galleryId
+    ] ?? []) as string[];
+    for (const photoId of photoIds) {
+      if (!existing.includes(photoId)) existing.push(photoId);
+    }
+    (db.galleryPhotos as Record<string, string[]>)[galleryId] = existing;
+  }
 };
 const loadGalleryPhoto = async (galleryId: string, photoId: string, _lang?: string) => {
   const handleGalleryAll = async () => {

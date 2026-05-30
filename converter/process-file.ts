@@ -2,11 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 import db from "photo-diary-server/db/index.js";
+import { lookup } from "photo-diary-server/lib/photo-intake.js";
 
 import { DIR_INBOX, DIR_ORIGINAL, TARGETS } from "./lib/constants.js";
 import * as logger from "./lib/logger.js";
 import extractProperties from "./extract-properties/index.js";
-import saveJson from "./extract-properties/save-json.js";
 import convertImage from "./convert-image/index.js";
 import generateId from "./generate-id.js";
 import { geocode } from "./reverse-geocode/index.js";
@@ -15,8 +15,8 @@ import { geocode } from "./reverse-geocode/index.js";
 // per new photo. English is always written when enabled (canonical /
 // filter-keyed language); REVERSE_GEOCODE_EXTRA_LANGS lists additional
 // languages. Each extra adds one 1-RPS Nominatim call per photo at
-// intake. Use `bin/photo-geocode.ts` (PR 2 of #246) to backfill
-// existing photos or add languages later without touching the hot path.
+// intake. Use `bin/photo-geocode.ts` to backfill existing photos or
+// add languages later without touching the hot path.
 const geocodeAtIntake = async (
   photoId: string,
   lat: number | null | undefined,
@@ -33,11 +33,6 @@ const geocodeAtIntake = async (
   for (const lang of langs) {
     const result = await geocode(lat, lon, lang);
     if (!result) {
-      // Nominatim has no address for these coordinates (open ocean,
-      // disputed boundaries, unmapped terrain). Flag the row so the
-      // backfill daemon skips it instead of retrying. Coverage is
-      // language-independent — one null means all langs would be null,
-      // so stop after the first failure.
       await db.markGeocodeNoData(photoId);
       return;
     }
@@ -50,48 +45,78 @@ const geocodeAtIntake = async (
   }
 };
 
-export default async (
-  originalFilename: string,
-  rootDir: string
+// Derive a gallery id from the path's first segment when the file
+// arrived under `inbox/<gallery>/...`. Returns null for files in the
+// inbox root.
+const deriveGallery = (relPath: string): string | null => {
+  const parts = relPath.split(path.sep);
+  return parts.length > 1 ? parts[0] : null;
+};
+
+const validateGallery = async (galleryId: string): Promise<boolean> => {
+  try {
+    await db.loadGallery(galleryId);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Return a non-existing path of the form `<base>.json` or
+// `<base>.<n>.json` (n=1,2,…) so subsequent intake JSONs for the
+// same photo don't overwrite the prior archive — keeps the audit
+// trail intact when the operator re-publishes / updates metadata.
+const findUniqueIntakePath = async (
+  rootDir: string,
+  id: string
+): Promise<string> => {
+  const base = path.join(rootDir, DIR_ORIGINAL, `${id}.intake`);
+  for (let n = 0; ; n++) {
+    const candidate = n === 0 ? `${base}.json` : `${base}.${n}.json`;
+    try {
+      await fs.promises.access(candidate);
+    } catch {
+      return candidate;
+    }
+  }
+};
+
+const linkToGallery = async (photoId: string, galleryId: string | null) => {
+  if (!galleryId) return;
+  try {
+    await db.linkGalleryPhoto([galleryId], [photoId]);
+    logger.info(`[${photoId}] Linked to gallery "${galleryId}"`);
+  } catch (err) {
+    logger.error(`[${photoId}] Linking to "${galleryId}" failed:`, err);
+  }
+};
+
+const processJpeg = async (
+  relPath: string,
+  rootDir: string,
+  galleryId: string | null
 ): Promise<void> => {
-  const originalPath = path.join(rootDir, DIR_INBOX, originalFilename);
+  const originalFilename = path.basename(relPath);
+  const originalPath = path.join(rootDir, DIR_INBOX, relPath);
   const stat = await fs.promises.stat(originalPath);
   if (stat.size === 0) {
-    throw `[${originalFilename}] Skipping empty file`;
+    throw `[${relPath}] Skipping empty file`;
   }
 
   const hrstart = process.hrtime();
-  logger.debug(`[${originalFilename}] Processing`);
+  logger.debug(`[${relPath}] Processing`);
 
   // Rename to a stable id at intake: <YYYY-MM-DDTHH-MM-SS>-<short-uuid>.<ext>
   // from EXIF DateTimeOriginal (fallback mtime). The rest of the pipeline
-  // operates on this id; the original camera filename is preserved on
-  // the DB row's originalFilename so enrichment JSONs and `bin/photo.ts
-  // search` can still find the photo by the human-recognised name.
+  // operates on this id; the original camera filename is preserved on the
+  // DB row's originalFilename so enrichment JSONs and `bin/photo.ts search`
+  // can still find the photo by the human-recognised name.
   const generated = await generateId(originalPath);
   const exifTimestamp = generated.exifTimestamp;
 
-  // Reuse-existing-row detection: a row whose originalFilename AND
-  // taken.instant.timestamp both match the incoming SOOC's EXIF
-  // DateTimeOriginal. Covers two operator flows:
-  //
-  //   1. Lightroom re-export — operator edits an existing photo,
-  //      re-publishes, drops the new SOOC. Same shot, same EXIF;
-  //      overwrite display/thumbnail/original/sidecar in place,
-  //      refresh the row's EXIF-derived columns.
-  //   2. JSON-first stub — operator's enrichment JSON (with the
-  //      photo's capture timestamp) arrived before the SOOC; the
-  //      timestamp match links them on intake.
-  //
-  // Opinion columns (title, country, place, author, description)
-  // stay — `photoMapToRow` only writes keys present in the input
-  // properties, so unmentioned columns aren't touched.
-  //
-  // Without a timestamp match, we never merge: two same-named files
-  // could be unrelated photos (counter rollover, multi-camera setups),
-  // and matching on originalFilename alone would silently merge them.
-  // EXIF-less SOOCs and stubs without `taken.instant.timestamp`
-  // therefore always import as new rows.
+  // Dedup: a row whose originalFilename AND taken.instant.timestamp both
+  // match the incoming SOOC's EXIF DateTimeOriginal. Covers LR re-export
+  // (overwrite in place) and JSON-first stub (timestamp links them).
   let id = generated.id;
   let isReimport = false;
   if (exifTimestamp) {
@@ -105,14 +130,14 @@ export default async (
       id = matched.id;
       isReimport = true;
       logger.info(
-        `[${originalFilename}] Reusing existing id ${id} (originalFilename + taken match); opinion fields preserved`
+        `[${relPath}] Reusing existing id ${id} (originalFilename + taken match); opinion fields preserved`
       );
     }
   }
 
   const newInboxPath = path.join(rootDir, DIR_INBOX, id);
   await fs.promises.rename(originalPath, newInboxPath);
-  logger.debug(`[${originalFilename}] Renamed inbox file to ${id}`);
+  logger.debug(`[${relPath}] Renamed inbox file to ${id}`);
 
   await Promise.all(
     TARGETS.map((target) => convertImage(id, rootDir, target))
@@ -120,24 +145,17 @@ export default async (
 
   const properties = await extractProperties(id, rootDir);
   properties.originalFilename = originalFilename;
-  await saveJson(id, rootDir, properties);
 
   if (isReimport) {
-    // Refresh EXIF-derived fields. `photoMapToRow` only writes keys
-    // present in `properties`, so opinion columns (title, country,
-    // place, author, description) keep their prior values.
     const update = { ...properties };
     delete update.id;
     await db.updatePhoto(id, update);
-    logger.debug(`[${originalFilename}] Refreshed DB row ${id}`);
+    logger.debug(`[${relPath}] Refreshed DB row ${id}`);
   } else {
     await db.createPhoto(properties);
-    logger.debug(`[${originalFilename}] Created DB row ${id}`);
+    logger.debug(`[${relPath}] Created DB row ${id}`);
   }
 
-  // Reverse-geocode at intake when enabled. Runs after the DB row
-  // exists so the geocoder's upsertGeocoded calls always have a
-  // target row.
   const coords = (
     properties as {
       taken?: {
@@ -149,7 +167,8 @@ export default async (
   ).taken?.location?.coordinates;
   await geocodeAtIntake(id, coords?.latitude, coords?.longitude);
 
-  logger.debug(`[${originalFilename}] Moving file`);
+  await linkToGallery(id, galleryId);
+
   // fs.rename overwrites on POSIX; deliberately replaces the prior
   // original/<id>.jpg when re-importing.
   await fs.promises.rename(
@@ -160,5 +179,112 @@ export default async (
   const hrend = process.hrtime(hrstart);
   const elapsedSeconds =
     Math.round(hrend[0] * 1000 + hrend[1] / 1000000) / 1000;
-  logger.info(`[${originalFilename}] Processed as ${id}, elapsed ${elapsedSeconds}s`);
+  logger.info(`[${relPath}] Processed as ${id}, elapsed ${elapsedSeconds}s`);
+};
+
+const processJsonSidecar = async (
+  relPath: string,
+  rootDir: string,
+  galleryId: string | null
+): Promise<void> => {
+  const filePath = path.join(rootDir, DIR_INBOX, relPath);
+  logger.debug(`[${relPath}] Processing JSON sidecar`);
+
+  const raw = await fs.promises.readFile(filePath, "utf-8");
+  let data: any;
+  try {
+    data = JSON.parse(raw);
+  } catch (err) {
+    throw `[${relPath}] JSON parse error: ${(err as Error).message}`;
+  }
+  // Accept a single photo object or an array; tolerate keyed objects
+  // (matching `bin/photo.ts processJson`).
+  const photos: any[] = Array.isArray(data)
+    ? data
+    : "id" in data
+      ? [data]
+      : (Object.values(data) as any[]);
+
+  let resultId: string | null = null;
+  for (const photo of photos) {
+    if (!photo.id) {
+      logger.error(`[${relPath}] Skipping entry with no id`);
+      continue;
+    }
+    const r = await lookup(photo);
+    if (r.kind === "ambiguous") {
+      logger.error(
+        `[${relPath}] "${photo.id}" matched multiple existing rows; skipping. Resolve via bin/photo.ts.`
+      );
+      continue;
+    }
+    if (r.kind === "update") {
+      const update = { ...photo };
+      delete update.id;
+      await db.updatePhoto(r.existingId, update);
+      logger.info(`[${relPath}] Updated "${r.existingId}"`);
+      resultId = resultId ?? r.existingId;
+      await linkToGallery(r.existingId, galleryId);
+    } else {
+      const create = { ...photo };
+      if (!create.originalFilename) create.originalFilename = create.id;
+      await db.createPhoto(create);
+      logger.info(`[${relPath}] Created "${create.id}"`);
+      resultId = resultId ?? create.id;
+      await linkToGallery(create.id, galleryId);
+    }
+  }
+
+  // Move the sidecar out of inbox so it isn't re-processed on restart.
+  // Naming: `original/<id>.intake.json`, falling back to `.1.json`,
+  // `.2.json`, … if prior intake JSONs for the same photo are already
+  // there — keeps audit trail intact across re-publishes.
+  if (resultId) {
+    await fs.promises.rename(
+      filePath,
+      await findUniqueIntakePath(rootDir, resultId)
+    );
+  } else {
+    logger.error(
+      `[${relPath}] No entries processed; leaving file in place for operator review`
+    );
+  }
+};
+
+export default async (
+  relPath: string,
+  rootDir: string
+): Promise<void> => {
+  const galleryId = deriveGallery(relPath);
+  if (galleryId && !(await validateGallery(galleryId))) {
+    logger.error(
+      `[${relPath}] Subdir "${galleryId}" doesn't match any gallery; leaving file in place. Rename or move out of inbox to retry.`
+    );
+    return;
+  }
+
+  if (/\.jpe?g$/i.test(relPath)) {
+    await processJpeg(relPath, rootDir, galleryId);
+    return;
+  }
+
+  if (/\.json$/i.test(relPath)) {
+    // Orphan from the old `saveJson` pipeline that left
+    // `inbox/<id>.json` files behind (where `<id>` is the
+    // `<YYYY-MM-DDTHH-MM-SS>-<16hex>.jpg` pattern from
+    // `generate-id.ts`). Skip rather than re-process as intake.
+    const basename = path.basename(relPath);
+    if (
+      /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-[0-9a-f]{16}\.jpe?g\.json$/i.test(
+        basename
+      )
+    ) {
+      logger.debug(`[${relPath}] Skipping legacy saveJson sidecar`);
+      return;
+    }
+    await processJsonSidecar(relPath, rootDir, galleryId);
+    return;
+  }
+
+  logger.debug(`[${relPath}] Unsupported extension, ignoring`);
 };
