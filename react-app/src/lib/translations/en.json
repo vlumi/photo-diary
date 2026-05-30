@@ -88,7 +88,7 @@
 
     "stats-unknown": "N/A",
     "stats-other": "Other",
-    "stats-other-beyond": "Other (beyond top {{n}})",
+    "stats-other-beyond": "Other (top {{n}}+)",
     "stats-more_one": "+ {{count}} more…",
     "stats-more_other": "+ {{count}} more…",
     "stats-modal-sort-label": "Sort",
