@@ -72,8 +72,13 @@ const Body = styled.div`
 `;
 const Title = styled.div`
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   line-height: 1.3;
+`;
+const Description = styled.div`
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 8px;
+  line-height: 1.4;
 `;
 const Row = styled.div`
   color: rgba(255, 255, 255, 0.8);
@@ -312,6 +317,9 @@ const MetadataPanel = ({
       </Header>
       <Body>
         {photo.title() && <Title>{photo.title()}</Title>}
+        {photo.description() && (
+          <Description>{photo.description()}</Description>
+        )}
         {renderOperatorPlace()}
         {renderAddress()}
         {renderMap()}
