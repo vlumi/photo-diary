@@ -674,15 +674,26 @@ const collectTopics = (
       }),
     };
   };
-  const collectCity = (byCity: any, byCityCountry: any, total: any) => {
+  const collectCity = (
+    byCity: any,
+    byCityCountry: any,
+    byCityLocalized: any,
+    total: any
+  ) => {
     const cityLabels = format.buildCityLabels(
       Object.keys(byCity),
       lang,
-      format.countryName(lang, countryData)
+      format.countryName(lang, countryData),
+      byCityLocalized
     );
     const fallbackLabel = (key: string): string => {
       const parsed = format.parseCityKey(key);
-      return format.cityName(lang, parsed.country, parsed.city, parsed.city);
+      return format.cityName(
+        lang,
+        parsed.country,
+        parsed.city,
+        byCityLocalized?.[key] ?? parsed.city
+      );
     };
     const [flat, data, valueRanks] = transformData({
       original: byCity,
@@ -760,7 +771,12 @@ const collectTopics = (
       }
       if (Object.keys(count.byCity ?? {}).length > 0) {
         categories.push(
-          collectCity(count.byCity, count.byCityCountry, total)
+          collectCity(
+            count.byCity,
+            count.byCityCountry,
+            count.byCityLocalized,
+            total
+          )
         );
       }
       if (mapPhotos.length > 0) {
@@ -1606,6 +1622,7 @@ const initializeStats = (uniqueValues: any): any => {
       byStateCountry: {} as Record<string, string>,
       byCity: {},
       byCityCountry: {} as Record<string, string>,
+      byCityLocalized: {} as Record<string, string>,
     },
   };
   const setInitialValues = (source: any) => {
@@ -1709,6 +1726,9 @@ const populateDistributions = (photos: any, stats: any) => {
       stats.count.byCity[cityKey]++;
       if (!stats.count.byCityCountry[cityKey] && photo.countryCode()) {
         stats.count.byCityCountry[cityKey] = photo.countryCode();
+      }
+      if (!stats.count.byCityLocalized[cityKey] && photo.geocodedCity()) {
+        stats.count.byCityLocalized[cityKey] = photo.geocodedCity() as string;
       }
     }
 

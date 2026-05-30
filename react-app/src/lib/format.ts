@@ -285,14 +285,16 @@ const parseCityKey = (key: string): CityTuple => {
   }
   return { country: "", state: "", city: key };
 };
-// Map of cityKey → display label. The base label runs through the
-// per-language overlay (so en "Tokyo" displays as fi "Tokio"); when
-// two entries share the same city name, each gets a qualifier
-// appended (state if present, else country name).
+// Map of cityKey → display label. Display priority is overlay
+// (cities/<lang>.json) → Nominatim-merged value supplied by
+// `localizedByKey` → en canonical from the tuple. When two entries
+// share the same display name, each gets a qualifier appended
+// (state if present, else country name).
 const buildCityLabels = (
   keys: string[],
   lang: string,
-  formatCountry: (code: string) => string
+  formatCountry: (code: string) => string,
+  localizedByKey: Record<string, string> = {}
 ): Record<string, string> => {
   const parsed = keys.map((k) => ({
     key: k,
@@ -300,7 +302,12 @@ const buildCityLabels = (
   }));
   const localized = parsed.map((p) => ({
     ...p,
-    display: cityName(lang, p.country, p.city, p.city),
+    display: cityName(
+      lang,
+      p.country,
+      p.city,
+      localizedByKey[p.key] ?? p.city
+    ),
   }));
   const byDisplay: Record<string, typeof localized> = {};
   for (const p of localized) {
