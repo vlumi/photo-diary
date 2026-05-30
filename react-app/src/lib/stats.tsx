@@ -1552,22 +1552,42 @@ const collectTopics = (
       }),
     };
   };
-  const collectExposure = () => {
+  const collectSettings = () => {
     const total = data.count.total;
     const byExposure = data.count.byExposure;
     return {
-      key: "exposure",
-      title: t("stats-topic-exposure"),
+      key: "settings",
+      title: t("stats-topic-settings"),
       categories: [
         collectFocalLength(byExposure.byFocalLength, total),
         collectAperture(byExposure.byAperture, total),
         collectExposureTime(byExposure.byExposureTime, total),
         collectIso(byExposure.byIso, total),
+      ],
+    };
+  };
+  const collectImage = () => {
+    const total = data.count.total;
+    const byExposure = data.count.byExposure;
+    return {
+      key: "image",
+      title: t("stats-topic-image"),
+      categories: [
+        collectResolution(byExposure.byResolution, total),
+        collectAspectRatio(byExposure.byAspectRatio, total),
+        collectOrientation(byExposure.byOrientation, total),
+      ],
+    };
+  };
+  const collectLight = () => {
+    const total = data.count.total;
+    const byExposure = data.count.byExposure;
+    return {
+      key: "light",
+      title: t("stats-topic-light"),
+      categories: [
         collectExposureValue(byExposure.byExposureValue, total),
         collectLightValue(byExposure.byLightValue, total),
-        collectResolution(byExposure.byResolution, total),
-        collectOrientation(byExposure.byOrientation, total),
-        collectAspectRatio(byExposure.byAspectRatio, total),
       ],
     };
   };
@@ -1576,7 +1596,9 @@ const collectTopics = (
     collectGeneral(),
     collectTime(),
     collectGear(),
-    collectExposure(),
+    collectSettings(),
+    collectImage(),
+    collectLight(),
   ];
   // Internal carriers widen chart.type/table cells; runtime matches.
   return topics as unknown as StatsTopic[];

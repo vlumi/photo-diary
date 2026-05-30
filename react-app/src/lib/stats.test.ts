@@ -1199,7 +1199,7 @@ describe("collectTopics", () => {
       mockCountryData,
       mockTheme
     );
-    expect(topics.length).toBe(4);
+    expect(topics.length).toBe(6);
     expect(topics[0].key).toBe("general");
     expect(topics[0].title).toBe("stats-topic-general");
     expect(topics[0].categories.length).toBe(3);
@@ -1266,9 +1266,15 @@ describe("collectTopics", () => {
     expect(topics[2].key).toBe("gear");
     expect(topics[2].title).toBe("stats-topic-gear");
     expect(topics[2].categories.length).toBe(4);
-    expect(topics[3].key).toBe("exposure");
-    expect(topics[3].title).toBe("stats-topic-exposure");
-    expect(topics[3].categories.length).toBe(9);
+    expect(topics[3].key).toBe("settings");
+    expect(topics[3].title).toBe("stats-topic-settings");
+    expect(topics[3].categories.length).toBe(4);
+    expect(topics[4].key).toBe("image");
+    expect(topics[4].title).toBe("stats-topic-image");
+    expect(topics[4].categories.length).toBe(3);
+    expect(topics[5].key).toBe("light");
+    expect(topics[5].title).toBe("stats-topic-light");
+    expect(topics[5].categories.length).toBe(2);
   });
 
   test("With map photos appends location category to general", () => {
