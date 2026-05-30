@@ -17,7 +17,12 @@ try {
   //   - .json → user-supplied metadata sidecar (lookup-or-create).
   // Subdir convention: files at `inbox/<gallery>/...` get auto-linked
   // to that gallery on intake; files at the root don't auto-link.
-  const isAcceptable = (filePath: string) => /\.(jpe?g|json)$/i.test(filePath);
+  // `._*` are macOS AppleDouble sidecars (created when copying to
+  // non-HFS volumes); they're never real intake.
+  const isAcceptable = (filePath: string) => {
+    const name = path.basename(filePath);
+    return !name.startsWith("._") && /\.(jpe?g|json)$/i.test(name);
+  };
   const watcher = chokidar.watch(watchDir, {
     persistent: true,
     ignoreInitial: false,

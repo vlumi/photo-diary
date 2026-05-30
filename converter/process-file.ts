@@ -87,11 +87,14 @@ const findUniqueIntakePath = async (
 const linkToGallery = async (photoId: string, galleryId: string | null) => {
   if (!galleryId) return;
   try {
-    await db.linkGalleryPhoto([galleryId], [photoId]);
-    logger.info(`[${photoId}] Linked to gallery "${galleryId}"`);
-  } catch (err) {
-    logger.error(`[${photoId}] Linking to "${galleryId}" failed:`, err);
+    await db.loadGalleryPhoto(galleryId, photoId);
+    logger.debug(`[${photoId}] Already linked to gallery "${galleryId}"`);
+    return;
+  } catch {
+    // NotFoundError — fall through to link.
   }
+  await db.linkGalleryPhoto([galleryId], [photoId]);
+  logger.info(`[${photoId}] Linked to gallery "${galleryId}"`);
 };
 
 const processJpeg = async (
@@ -221,21 +224,22 @@ const processJsonSidecar = async (
       );
       continue;
     }
+    const targetId = r.kind === "update" ? r.existingId : photo.id;
     if (r.kind === "update") {
       const update = { ...photo };
       delete update.id;
-      await db.updatePhoto(r.existingId, update);
-      logger.info(`[${relPath}] Updated "${r.existingId}"`);
-      resultId = resultId ?? r.existingId;
-      await linkToGallery(r.existingId, galleryId);
+      await db.updatePhoto(targetId, update);
+      logger.info(`[${relPath}] Updated "${targetId}"`);
     } else {
       const create = { ...photo };
       if (!create.originalFilename) create.originalFilename = create.id;
       await db.createPhoto(create);
-      logger.info(`[${relPath}] Created "${create.id}"`);
-      resultId = resultId ?? create.id;
-      await linkToGallery(create.id, galleryId);
+      logger.info(`[${relPath}] Created "${targetId}"`);
     }
+    resultId = resultId ?? targetId;
+    const coords = photo.taken?.location?.coordinates;
+    await geocodeAtIntake(targetId, coords?.latitude, coords?.longitude);
+    await linkToGallery(targetId, galleryId);
   }
 
   // Move the sidecar out of inbox so it isn't re-processed on restart.
