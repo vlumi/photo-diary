@@ -424,11 +424,11 @@ const loadPhotosMissingGeocoded = async (
     if (lat === null || lat === undefined) continue;
     if (lon === null || lon === undefined) continue;
     if (photo.geocodeNoData) continue;
-    const hasEn = !!photo.geocoded?.place;
+    const hasEn = !!photo.geocoded?.city;
     const hasLocalized =
       lang === "en"
         ? hasEn
-        : !!db.photoLocalized?.[`${id}:${lang}`]?.place;
+        : !!db.photoLocalized?.[`${id}:${lang}`]?.city;
     if (!hasLocalized) out.push({ id, lat, lon });
     if (out.length >= limit) break;
   }

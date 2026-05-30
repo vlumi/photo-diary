@@ -39,20 +39,19 @@ const cachePathFor = (lat: number, lon: number, lang: string): string => {
 };
 
 // One-line summary fields extracted from Nominatim's structured response,
-// matching what the schema stores (state / city / district / place /
-// country_code / raw address JSON).
+// Mirrors the schema columns we still persist. State / district /
+// display_name are no longer surfaced from the structured fields —
+// state name is derived client-side from `stateCode` via the curated
+// subdivision JSON files. The raw `address` blob is kept verbatim
+// for replay / re-derivation.
 export interface NominatimResult {
   countryCode: string | undefined;
-  state: string | undefined;
   stateCode: string | undefined;
   city: string | undefined;
-  district: string | undefined;
-  place: string;
   address: Record<string, unknown>;
 }
 
 interface NominatimResponse {
-  display_name?: string;
   address?: Record<string, unknown>;
 }
 
@@ -63,24 +62,14 @@ const extract = (raw: NominatimResponse): NominatimResult | null => {
     const v = a[key];
     return typeof v === "string" && v ? v : undefined;
   };
-  // Fallback chains per level — Nominatim's address fields are
-  // country-specific and we want sensible coverage across conventions.
-  const state =
-    get("state") ?? get("province") ?? get("region") ?? get("state_district");
+  // Nominatim's `city` is country-specific — fall through synonyms
+  // so the column gets populated whatever the locale calls it.
   const city =
     get("city") ??
     get("town") ??
     get("village") ??
     get("municipality") ??
     get("hamlet");
-  const district =
-    get("borough") ??
-    get("city_district") ??
-    get("suburb") ??
-    get("quarter") ??
-    get("neighbourhood") ??
-    get("district") ??
-    get("subdistrict");
   const countryCode = (() => {
     const cc = a.country_code;
     return typeof cc === "string" ? cc : undefined;
@@ -89,15 +78,7 @@ const extract = (raw: NominatimResponse): NominatimResult | null => {
     const v = a["ISO3166-2-lvl4"];
     return typeof v === "string" && v ? v : undefined;
   })();
-  return {
-    countryCode,
-    state,
-    stateCode,
-    city,
-    district,
-    place: raw.display_name ?? "",
-    address: a,
-  };
+  return { countryCode, stateCode, city, address: a };
 };
 
 // Tiny serial queue — every fetch waits at least MIN_INTERVAL_MS after the

@@ -616,12 +616,9 @@ const deletePhoto = async (photoId: string) =>
 // photo columns directly; everything else goes to photo_localized
 // (upsert). `address` is stringified JSON; pass `null` to clear.
 export interface GeocodedFields {
-  countryCode?: string | null; // English-only meaningful (column on photo)
-  state?: string | null;
-  stateCode?: string | null;
+  countryCode?: string | null; // language-independent (photo column)
+  stateCode?: string | null; // language-independent (photo column)
   city?: string | null;
-  district?: string | null;
-  place?: string | null;
   address?: string | null; // JSON
 }
 const upsertGeocoded = async (
@@ -630,7 +627,6 @@ const upsertGeocoded = async (
   fields: GeocodedFields
 ) => {
   if (lang === "en") {
-    // Patch the photo row's English-canonical columns.
     const updates: string[] = [];
     const values: unknown[] = [];
     const addField = (col: string, val: unknown) => {
@@ -639,11 +635,8 @@ const upsertGeocoded = async (
       values.push(val);
     };
     addField("geocoded_country_code", fields.countryCode);
-    addField("geocoded_state", fields.state);
     addField("geocoded_state_code", fields.stateCode);
     addField("geocoded_city", fields.city);
-    addField("geocoded_district", fields.district);
-    addField("geocoded_place", fields.place);
     addField("geocoded_address", fields.address);
     if (updates.length === 0) return;
     db.prepare(
@@ -651,8 +644,7 @@ const upsertGeocoded = async (
     ).run(...values, photoId);
     // Auto-fill operator country_code from the geocoded value when
     // the operator hasn't set one, so the country filter / Stats
-    // pick up coordinate-derived photos uniformly. Only fires when
-    // the existing operator value is null or empty.
+    // pick up coordinate-derived photos uniformly.
     if (fields.countryCode) {
       db.prepare(
         "UPDATE photo SET country_code = ? WHERE id = ? AND (country_code IS NULL OR country_code = '')"
@@ -660,28 +652,14 @@ const upsertGeocoded = async (
     }
     return;
   }
-  // Non-English: upsert into photo_localized. countryCode is
-  // language-independent so we ignore it on this path.
   db.prepare(
     `INSERT INTO photo_localized
-       (photo_id, lang, geocoded_state, geocoded_city,
-        geocoded_district, geocoded_place, geocoded_address)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+       (photo_id, lang, geocoded_city, geocoded_address)
+     VALUES (?, ?, ?, ?)
      ON CONFLICT (photo_id, lang) DO UPDATE SET
-       geocoded_state    = COALESCE(excluded.geocoded_state, photo_localized.geocoded_state),
-       geocoded_city     = COALESCE(excluded.geocoded_city, photo_localized.geocoded_city),
-       geocoded_district = COALESCE(excluded.geocoded_district, photo_localized.geocoded_district),
-       geocoded_place    = COALESCE(excluded.geocoded_place, photo_localized.geocoded_place),
-       geocoded_address  = COALESCE(excluded.geocoded_address, photo_localized.geocoded_address)`
-  ).run(
-    photoId,
-    lang,
-    fields.state ?? null,
-    fields.city ?? null,
-    fields.district ?? null,
-    fields.place ?? null,
-    fields.address ?? null
-  );
+       geocoded_city    = COALESCE(excluded.geocoded_city, photo_localized.geocoded_city),
+       geocoded_address = COALESCE(excluded.geocoded_address, photo_localized.geocoded_address)`
+  ).run(photoId, lang, fields.city ?? null, fields.address ?? null);
 };
 
 // Flag a photo as "Nominatim has no address for these coordinates" so
@@ -705,7 +683,7 @@ const loadPhotosMissingGeocoded = async (
     lang === "en"
       ? `SELECT id, coord_lat, coord_lon FROM photo
            WHERE coord_lat IS NOT NULL AND coord_lon IS NOT NULL
-             AND geocoded_place IS NULL
+             AND geocoded_city IS NULL
              AND geocode_no_data = 0
            ORDER BY taken IS NULL, taken DESC, id ASC
            LIMIT ?`

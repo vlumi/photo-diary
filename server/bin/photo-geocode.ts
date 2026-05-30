@@ -285,16 +285,13 @@ try {
       }
       await db.upsertGeocoded(id, lang, {
         countryCode: lang === "en" ? (result.countryCode ?? null) : undefined,
-        state: result.state ?? null,
         stateCode: lang === "en" ? (result.stateCode ?? null) : undefined,
         city: result.city ?? null,
-        district: result.district ?? null,
-        place: result.place,
         address: JSON.stringify(result.address),
       });
       written += 1;
       langWritten += 1;
-      logger.info(`[${lang}] ${id}: ${result.place}`);
+      logger.info(`[${lang}] ${id}: ${result.city ?? "?"}`);
     }
     logger.info(
       `[${lang}] done: ${langWritten} written, ${langEmpty} empty`

@@ -71,27 +71,18 @@ export interface PhotoRow {
   // English-canonical reverse-geocoded fields. Other languages live
   // in `photo_localized`. See migration 007.
   geocoded_country_code: string | null;
-  geocoded_state: string | null;
   geocoded_state_code: string | null;
   geocoded_city: string | null;
-  geocoded_district: string | null;
-  geocoded_place: string | null;
   geocoded_address: string | null; // raw Nominatim address JSON
   // Negative-result cache: 1 = Nominatim has no data here, intake
-  // and the backfill daemon both skip the row. Operator clears to 0
-  // to force a fresh attempt.
+  // and the backfill daemon both skip the row.
   geocode_no_data: number;
 }
 
-// `photo_localized` row — non-English geocoded place data per
-// (photo_id, lang) pair.
 export interface PhotoLocalizedRow {
   photo_id: string;
   lang: string;
-  geocoded_state: string | null;
   geocoded_city: string | null;
-  geocoded_district: string | null;
-  geocoded_place: string | null;
   geocoded_address: string | null;
 }
 
@@ -154,24 +145,15 @@ export interface Photo {
     display: { width: number | undefined; height: number | undefined };
     thumbnail: { width: number | undefined; height: number | undefined };
   };
-  // Reverse-geocoded location, resolved for the requesting language
-  // (falls back to the English photo columns when no `photo_localized`
-  // row exists for that language). See migration 007 + #246.
+  // Reverse-geocoded location. Country / state come from language-
+  // independent ISO codes; city is the only field that varies by
+  // language (merged from `photo_localized` when present). The raw
+  // Nominatim address blob is kept for re-derivation.
   geocoded: {
     countryCode: string | undefined;
-    state: string | undefined;
     stateCode: string | undefined;
     city: string | undefined;
-    district: string | undefined;
-    place: string | undefined;
-    // Nominatim's raw `address` object as returned at fetch time
-    // (parsed from the stored JSON). Kept for future re-derivation
-    // if the state/city/district mapping changes.
     address: Record<string, unknown> | undefined;
-    // Negative-result cache: true when intake or the backfill daemon
-    // found Nominatim had no address for these coordinates. Operator
-    // tools (`bin/photo.ts audit --country-mismatch` etc.) consult
-    // this to distinguish "not yet geocoded" from "no data available".
     noData: boolean;
   };
 }
@@ -416,14 +398,8 @@ export default () => {
             // country_code is language-independent — only ever from the
             // photo column, never `photo_localized`.
             countryCode: normalizeCountry(row.geocoded_country_code),
-            state: pick(localized?.geocoded_state, row.geocoded_state),
             stateCode: row.geocoded_state_code ?? undefined,
             city: pick(localized?.geocoded_city, row.geocoded_city),
-            district: pick(
-              localized?.geocoded_district,
-              row.geocoded_district
-            ),
-            place: pick(localized?.geocoded_place, row.geocoded_place),
             address: (() => {
               const raw =
                 localized?.geocoded_address ?? row.geocoded_address;
@@ -474,11 +450,8 @@ export default () => {
           map.thumb_height,
 
           map.geocoded_country_code,
-          map.geocoded_state,
           map.geocoded_state_code,
           map.geocoded_city,
-          map.geocoded_district,
-          map.geocoded_place,
           map.geocoded_address,
 
           0, // geocode_no_data: defaults to 0 (not yet attempted)
@@ -608,11 +581,8 @@ const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
   if (photo.geocoded) {
     const g = photo.geocoded;
     if ("countryCode" in g) result.geocoded_country_code = g.countryCode;
-    if ("state" in g) result.geocoded_state = g.state;
     if ("stateCode" in g) result.geocoded_state_code = g.stateCode;
     if ("city" in g) result.geocoded_city = g.city;
-    if ("district" in g) result.geocoded_district = g.district;
-    if ("place" in g) result.geocoded_place = g.place;
     if ("address" in g) {
       // Address is a Nominatim raw object; store as JSON string.
       // Pass-through if already string.
@@ -722,11 +692,8 @@ const SCHEMA = {
       "thumb_height",
 
       "geocoded_country_code",
-      "geocoded_state",
       "geocoded_state_code",
       "geocoded_city",
-      "geocoded_district",
-      "geocoded_place",
       "geocoded_address",
 
       "geocode_no_data",

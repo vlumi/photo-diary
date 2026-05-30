@@ -35,11 +35,8 @@ interface Location {
 // `country` / `place` above. Server resolves `place` per-lang.
 interface Geocoded {
   countryCode?: string;
-  state?: string;
   stateCode?: string;
   city?: string;
-  district?: string;
-  place?: string;
 }
 
 interface Taken {
@@ -270,7 +267,6 @@ const PhotoModel = (photoData: unknown) => {
     place: (): string | undefined => photo.taken.location?.place,
     hasGeocodedCity: (): boolean => !!photo.geocoded?.city,
     geocodedCity: (): string | undefined => photo.geocoded?.city,
-    geocodedState: (): string | undefined => photo.geocoded?.state,
     geocodedStateCode: (): string | undefined => photo.geocoded?.stateCode,
     // Derived from `stateCode` via the curated subdivision lookup, not
     // from Nominatim's `state`. Empty when no code is set.
@@ -283,7 +279,7 @@ const PhotoModel = (photoData: unknown) => {
       if (!city) return undefined;
       return JSON.stringify([
         photo.geocoded?.countryCode ?? "",
-        photo.geocoded?.stateCode ?? photo.geocoded?.state ?? "",
+        photo.geocoded?.stateCode ?? "",
         city,
       ]);
     },
