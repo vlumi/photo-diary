@@ -76,6 +76,8 @@ export default () => {
     markGeocodeNoData,
     loadPhotosMissingGeocoded,
     deletePhoto,
+    loadPhotoLocalized,
+    clearLocalizedCity,
   };
 };
 
@@ -652,6 +654,14 @@ const upsertGeocoded = async (
     }
     return;
   }
+  // For ja: Nominatim falls back to OSM's local label when there's
+  // no Japanese form, so the value can be plain Latin / Cyrillic /
+  // etc. Reject those at write time (drop the city, keep the row +
+  // raw address blob).
+  const city =
+    lang === "ja" && fields.city && !hasJapaneseScript(fields.city)
+      ? null
+      : (fields.city ?? null);
   db.prepare(
     `INSERT INTO photo_localized
        (photo_id, lang, geocoded_city, geocoded_address)
@@ -659,8 +669,11 @@ const upsertGeocoded = async (
      ON CONFLICT (photo_id, lang) DO UPDATE SET
        geocoded_city    = COALESCE(excluded.geocoded_city, photo_localized.geocoded_city),
        geocoded_address = COALESCE(excluded.geocoded_address, photo_localized.geocoded_address)`
-  ).run(photoId, lang, fields.city ?? null, fields.address ?? null);
+  ).run(photoId, lang, city, fields.address ?? null);
 };
+
+const hasJapaneseScript = (s: string): boolean =>
+  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(s);
 
 // Flag a photo as "Nominatim has no address for these coordinates" so
 // subsequent intake / daemon runs skip it instead of retrying. Operator
@@ -707,4 +720,23 @@ const loadPhotosMissingGeocoded = async (
     lat: r.coord_lat,
     lon: r.coord_lon,
   }));
+};
+
+const loadPhotoLocalized = async (
+  lang: string
+): Promise<Array<{ photo_id: string; geocoded_city: string | null }>> => {
+  return db
+    .prepare(
+      "SELECT photo_id, geocoded_city FROM photo_localized WHERE lang = ?"
+    )
+    .all(lang) as Array<{ photo_id: string; geocoded_city: string | null }>;
+};
+
+const clearLocalizedCity = async (
+  photoId: string,
+  lang: string
+): Promise<void> => {
+  db.prepare(
+    "UPDATE photo_localized SET geocoded_city = NULL WHERE photo_id = ? AND lang = ?"
+  ).run(photoId, lang);
 };

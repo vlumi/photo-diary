@@ -340,6 +340,24 @@ export default () => {
           loc: string | null | undefined,
           en: string | null
         ): string | undefined => loc ?? en ?? undefined;
+        // For ja: Nominatim's `?accept-language=ja` falls back to the
+        // local form when OSM has no Japanese label, so ja-flagged
+        // rows can contain plain ASCII names. Skip those at the merge
+        // (treat as missing) and let the en column + city overlay
+        // take over.
+        const pickLocalizedCity = (
+          loc: string | null | undefined,
+          en: string | null
+        ): string | undefined => {
+          if (
+            localized?.lang === "ja" &&
+            loc &&
+            !/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(loc)
+          ) {
+            return en ?? undefined;
+          }
+          return pick(loc, en);
+        };
 
         return {
           id: toString(row.id),
@@ -403,7 +421,7 @@ export default () => {
             // photo column, never `photo_localized`.
             countryCode: normalizeCountry(row.geocoded_country_code),
             stateCode: row.geocoded_state_code ?? undefined,
-            city: pick(localized?.geocoded_city, row.geocoded_city),
+            city: pickLocalizedCity(localized?.geocoded_city, row.geocoded_city),
             cityEn: row.geocoded_city ?? undefined,
             address: (() => {
               const raw =

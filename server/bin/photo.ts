@@ -652,6 +652,42 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
+    "cleanup-localized-cities",
+    "Clear photo_localized.geocoded_city where Nominatim returned a value that doesn't actually match the target language's script. Currently only `ja`: clears rows whose city has no Japanese characters (typically Nominatim fell back to en or local Latin form). Sets the column to NULL — keeps the row + raw geocoded_address blob, so the daemon won't re-fetch and re-introduce the bad value. Dry-run by default; --apply to write.",
+    (y) =>
+      y.option("apply", {
+        type: "boolean",
+        default: false,
+        describe: "Clear the matching values (default: dry-run, just print)",
+      }),
+    async (argv) => {
+      const rows = (await db.loadPhotoLocalized("ja")) as Array<{
+        photo_id: string;
+        geocoded_city: string | null;
+      }>;
+      const isJapanese = (s: string) =>
+        /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(s);
+      const offenders = rows.filter(
+        (r) => r.geocoded_city && !isJapanese(r.geocoded_city)
+      );
+      if (offenders.length === 0) {
+        console.log("No ja photo_localized rows need cleanup.");
+        return;
+      }
+      const table: string[][] = [["photo_id", "stored ja value"]];
+      for (const o of offenders) table.push([o.photo_id, o.geocoded_city ?? ""]);
+      console.log(formatTable(table));
+      console.log(
+        `\n${offenders.length} row(s) ${argv.apply ? "cleared" : "would be cleared (dry-run, pass --apply to write)"}.`
+      );
+      if (argv.apply) {
+        for (const o of offenders) {
+          await db.clearLocalizedCity(o.photo_id, "ja");
+        }
+      }
+    }
+  )
+  .command(
     "normalize-cities",
     "Strip admin cruft from `photo.geocoded_city` (e.g. \"Stockholm Municipality\" → \"Stockholm\") using the current normalization rules. Dry-run by default; pass --apply to write.",
     (y) =>

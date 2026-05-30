@@ -213,6 +213,12 @@ export default {
   deletePhoto: async (photoId: string) => {
     await db.deletePhoto(photoId);
   },
+  loadPhotoLocalized: async (lang: string) => {
+    return await db.loadPhotoLocalized(lang);
+  },
+  clearLocalizedCity: async (photoId: string, lang: string) => {
+    await db.clearLocalizedCity(photoId, lang);
+  },
 };
 
 // Re-export shared types so models can use them without reaching into the driver.
