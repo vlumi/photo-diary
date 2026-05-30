@@ -26,7 +26,7 @@ const Root = styled.div`
   z-index: 9;
   right: 16px;
   bottom: 60px;
-  max-width: min(360px, calc(100% - 32px));
+  width: min(360px, calc(100% - 32px));
   max-height: calc(100% - 140px);
   display: flex;
   flex-direction: column;
@@ -68,28 +68,67 @@ const Body = styled.div`
   overflow-y: auto;
   font-size: 0.85em;
   line-height: 1.4;
+  text-align: left;
 `;
 const Title = styled.div`
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   line-height: 1.3;
 `;
+const Description = styled.div`
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 8px;
+  line-height: 1.4;
+`;
+// Place + address: right-aligned to separate the contextual "where"
+// from the left-aligned title / description story block above.
 const Row = styled.div`
   color: rgba(255, 255, 255, 0.8);
   margin-top: 4px;
+  text-align: right;
 `;
 const Muted = styled.div`
   color: rgba(255, 255, 255, 0.55);
   font-size: 0.85em;
   margin-top: 4px;
 `;
+// Epoch (age / day-index) is high-signal info — given its own
+// row right under the description, slightly more prominent than
+// the muted EXIF rows, right-aligned to sit with the other "where
+// / when" context.
+const Epoch = styled.div`
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 4px;
+  margin-bottom: 4px;
+  text-align: right;
+`;
+// 2-col label-value grid. `min-width: 0` on the value cell so a
+// long value (camera body / lens name) wraps in place instead of
+// stretching the column past the panel width.
+const ExifTable = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  row-gap: 4px;
+  margin-top: 10px;
+`;
+const RowLabel = styled.div`
+  font-size: 0.7em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  padding-top: 2px;
+  text-align: right;
+`;
+const RowValue = styled.div`
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85em;
+  line-height: 1.4;
+  word-break: break-word;
+  min-width: 0;
+`;
 const Part = styled.span`
   display: inline;
-`;
-const Copyright = styled.div`
-  font-size: 0.75em;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 10px;
 `;
 const MapBox = styled.div`
   margin-top: 10px;
@@ -123,40 +162,29 @@ const MetadataPanel = ({
   const beta = useBetaStore((s) => s.enabled.regions);
   const formatExposure = format.exposure(lang, t);
 
-  const renderPlace = () => {
-    if (!photo.hasPlace()) return null;
-    return <Part>{photo.place()}</Part>;
+  // Operator place sits on its own row (no country / flag). Keeping
+  // place inline with the geocoded address jumbles the CJK ordering
+  // (place is most-specific, but ja geocoded reads broad → narrow,
+  // so a prepended place would jump specific → broad → narrow).
+  const renderOperatorPlace = () => {
+    if (gallery.hideMap() || !photo.hasPlace()) return null;
+    return <Row>{photo.place()}</Row>;
   };
-  const renderCountry = () => {
-    const countryCode = photo.countryCode();
-    if (!photo.hasCountry() || !countryCode) return null;
-    return (
-      <Part>
-        {photo.countryName(lang, countryData)} <FlagIcon code={countryCode} />
-      </Part>
-    );
-  };
-  const renderLocation = () => {
+  // Address row: geocoded city/state/country with locale-aware flag
+  // position. Falls back to operator country name + flag when there's
+  // no geocoded data (the prior non-geocoded photo path).
+  const renderAddress = () => {
     if (gallery.hideMap()) return null;
-    const country = renderCountry();
-    const place = renderPlace();
-    if (!country && !place) return null;
-    return (
-      <Row>
-        {place}
-        {place && country ? ", " : ""}
-        {country}
-      </Row>
-    );
-  };
-  const renderGeocodedLocation = () => {
-    if (gallery.hideMap()) return null;
-    if (!photo.hasGeocodedAddress()) return null;
-    const address = photo.geocodedAddress(lang, countryData, {
-      includeState: beta,
-    });
-    if (!address) return null;
-    const code = photo.geocodedCountryCode();
+    const geocodedAddress = photo.hasGeocodedAddress()
+      ? photo.geocodedAddress(lang, countryData, { includeState: beta })
+      : undefined;
+    const operatorCountryName =
+      !geocodedAddress && photo.hasCountry() && photo.countryCode()
+        ? photo.countryName(lang, countryData)
+        : undefined;
+    const text = geocodedAddress ?? operatorCountryName;
+    const code = photo.geocodedCountryCode() ?? photo.countryCode();
+    if (!text && !code) return null;
     const flagAt = format.geocodedFlagPosition(lang);
     return (
       <Row>
@@ -166,7 +194,7 @@ const MetadataPanel = ({
               <FlagIcon code={code} />{" "}
             </>
           ) : null}
-          {address}
+          {text}
           {code && flagAt === "end" ? (
             <>
               {" "}
@@ -177,11 +205,9 @@ const MetadataPanel = ({
       </Row>
     );
   };
-  const renderCoordinates = () => {
-    if (!photo.hasCoordinates()) return null;
-    return <Muted>{photo.formatCoordinates()}</Muted>;
-  };
-  const renderExposure = () => {
+  const renderExif = () => {
+    const camera = photo.formatCamera();
+    const lens = photo.formatLens();
     const focalLength = photo.focalLength();
     const aperture = photo.aperture();
     const exposureTime = photo.exposureTime();
@@ -191,32 +217,44 @@ const MetadataPanel = ({
     const aspectRatio = photo.aspectRatio();
     const exposureValue = photo.exposureValue();
     const lightValue = photo.lightValue();
-    const parts = [
-      focalLength ? `ƒ=${formatExposure.focalLength(focalLength)}㎜` : "",
+    const settingParts = [
+      focalLength ? `${formatExposure.focalLength(focalLength)}㎜` : "",
       aperture ? formatExposure.aperture(aperture) : "",
       exposureTime ? `${formatExposure.exposureTime(exposureTime)}s` : "",
       iso ? `ISO${formatExposure.iso(iso)}` : "",
+    ].filter(Boolean);
+    const imageParts = [
       resolution ? `${formatExposure.resolution(resolution)}MP` : "",
-      orientation ? `${formatExposure.orientation(orientation)}` : "",
       aspectRatio ? String(aspectRatio) : "",
+      orientation ? `${formatExposure.orientation(orientation)}` : "",
+    ].filter(Boolean);
+    const lightParts = [
       exposureValue ? `EV${formatExposure.ev(exposureValue)}` : "",
       lightValue ? `LV${formatExposure.ev(lightValue)}` : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    if (!parts) return null;
-    return <Muted>{parts}</Muted>;
-  };
-  const renderGear = () => {
-    const camera = photo.formatCamera();
-    const lens = photo.formatLens();
-    if (!camera && !lens) return null;
-    if (!camera) return <Muted>{lens}</Muted>;
-    if (!lens) return <Muted>{camera}</Muted>;
+    ].filter(Boolean);
+    const tableRows: Array<[string, string]> = [
+      ...(camera ? ([[t("metadata-camera"), camera]] as Array<[string, string]>) : []),
+      ...(lens ? ([[t("metadata-lens"), lens]] as Array<[string, string]>) : []),
+      ...(settingParts.length > 0
+        ? ([[t("metadata-settings"), settingParts.join(" · ")]] as Array<[string, string]>)
+        : []),
+      ...(imageParts.length > 0
+        ? ([[t("metadata-image"), imageParts.join(" · ")]] as Array<[string, string]>)
+        : []),
+      ...(lightParts.length > 0
+        ? ([[t("metadata-light"), lightParts.join(" · ")]] as Array<[string, string]>)
+        : []),
+    ];
+    if (tableRows.length === 0) return null;
     return (
-      <Muted>
-        <Part>{camera}</Part> + <Part>{lens}</Part>
-      </Muted>
+      <ExifTable>
+        {tableRows.map(([label, value], i) => (
+          <React.Fragment key={i}>
+            <RowLabel>{label}</RowLabel>
+            <RowValue>{value}</RowValue>
+          </React.Fragment>
+        ))}
+      </ExifTable>
     );
   };
   const renderEpochInfo = () => {
@@ -224,7 +262,7 @@ const MetadataPanel = ({
     switch (gallery.epochType()) {
       case "birthday":
         return (
-          <Muted>
+          <Epoch>
             <EpochAge
               gallery={gallery}
               year={year}
@@ -233,11 +271,11 @@ const MetadataPanel = ({
               format="long"
               separator=" "
             />
-          </Muted>
+          </Epoch>
         );
       case "1-index":
         return (
-          <Muted>
+          <Epoch>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -246,11 +284,11 @@ const MetadataPanel = ({
               lang={lang}
               format="long"
             />
-          </Muted>
+          </Epoch>
         );
       case "0-index":
         return (
-          <Muted>
+          <Epoch>
             <EpochDayIndex
               gallery={gallery}
               year={year}
@@ -260,7 +298,7 @@ const MetadataPanel = ({
               format="long"
               start={0}
             />
-          </Muted>
+          </Epoch>
         );
       default:
         return null;
@@ -292,16 +330,14 @@ const MetadataPanel = ({
       </Header>
       <Body>
         {photo.title() && <Title>{photo.title()}</Title>}
-        {renderLocation()}
-        {renderGeocodedLocation()}
-        {renderCoordinates()}
-        {renderExposure()}
-        {renderGear()}
+        {photo.description() && (
+          <Description>{photo.description()}</Description>
+        )}
         {renderEpochInfo()}
+        {renderOperatorPlace()}
+        {renderAddress()}
         {renderMap()}
-        <Copyright>
-          Photo Copyright © {photo.author()}. All rights reserved.
-        </Copyright>
+        {renderExif()}
       </Body>
     </Root>
   );

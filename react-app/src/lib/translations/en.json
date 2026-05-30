@@ -83,6 +83,12 @@
     "photo-count_one": "{{count}} photo",
     "photo-count_other": "{{count}} photos",
     "photo-metadata": "Photo details",
+    "photo-author": "Photo author",
+    "metadata-camera": "Camera",
+    "metadata-lens": "Lens",
+    "metadata-settings": "Settings",
+    "metadata-image": "Image",
+    "metadata-light": "Light",
 
     "stats-filters": "Filters",
 
@@ -166,7 +172,9 @@
     "stats-category-camera": "Camera",
     "stats-category-lens": "Lens",
     "stats-category-camera-lens": "Camera + Lens",
-    "stats-topic-exposure": "Exposure",
+    "stats-topic-settings": "Settings",
+    "stats-topic-image": "Image",
+    "stats-topic-light": "Light",
     "stats-category-focal-length": "Focal Length",
     "stats-category-aperture": "Aperture",
     "stats-category-exposure-time": "Shutter Speed",

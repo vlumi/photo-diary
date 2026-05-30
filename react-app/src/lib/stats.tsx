@@ -431,6 +431,14 @@ const collectTopics = (
       limit,
       label
     );
+    // Stash an unlimited variant for the modal's by-value mode —
+    // aggregating the long tail under "Other (N+)" makes the chart
+    // readable when sorted by count, but obscures the actual values
+    // when the user explicitly asks for "By value".
+    if (limit > 0 && flat.length > limit) {
+      const [fullData] = mapToChartData(flat, formatter, 0, label);
+      (data as { _fullData?: unknown })._fullData = fullData;
+    }
     return [flat, data, valueRanks];
   };
   const calculateStatistics = (values: any) => {
@@ -1552,22 +1560,42 @@ const collectTopics = (
       }),
     };
   };
-  const collectExposure = () => {
+  const collectSettings = () => {
     const total = data.count.total;
     const byExposure = data.count.byExposure;
     return {
-      key: "exposure",
-      title: t("stats-topic-exposure"),
+      key: "settings",
+      title: t("stats-topic-settings"),
       categories: [
         collectFocalLength(byExposure.byFocalLength, total),
         collectAperture(byExposure.byAperture, total),
         collectExposureTime(byExposure.byExposureTime, total),
         collectIso(byExposure.byIso, total),
+      ],
+    };
+  };
+  const collectImage = () => {
+    const total = data.count.total;
+    const byExposure = data.count.byExposure;
+    return {
+      key: "image",
+      title: t("stats-topic-image"),
+      categories: [
+        collectResolution(byExposure.byResolution, total),
+        collectAspectRatio(byExposure.byAspectRatio, total),
+        collectOrientation(byExposure.byOrientation, total),
+      ],
+    };
+  };
+  const collectLight = () => {
+    const total = data.count.total;
+    const byExposure = data.count.byExposure;
+    return {
+      key: "light",
+      title: t("stats-topic-light"),
+      categories: [
         collectExposureValue(byExposure.byExposureValue, total),
         collectLightValue(byExposure.byLightValue, total),
-        collectResolution(byExposure.byResolution, total),
-        collectOrientation(byExposure.byOrientation, total),
-        collectAspectRatio(byExposure.byAspectRatio, total),
       ],
     };
   };
@@ -1576,7 +1604,9 @@ const collectTopics = (
     collectGeneral(),
     collectTime(),
     collectGear(),
-    collectExposure(),
+    collectSettings(),
+    collectImage(),
+    collectLight(),
   ];
   // Internal carriers widen chart.type/table cells; runtime matches.
   return topics as unknown as StatsTopic[];

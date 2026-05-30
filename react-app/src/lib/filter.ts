@@ -4,7 +4,14 @@ interface Matchable {
 type FilterFn = (photo: Matchable) => boolean;
 export type Filters = Record<string, Record<string, Record<string, FilterFn>>>;
 
-const topics = (): string[] => ["general", "time", "gear", "exposure"];
+const topics = (): string[] => [
+  "general",
+  "time",
+  "gear",
+  "settings",
+  "image",
+  "light",
+];
 
 const categories = (category: string): string[] => {
   switch (category) {
@@ -12,21 +19,14 @@ const categories = (category: string): string[] => {
       return ["author", "country", "state", "city", "geotagged"];
     case "time":
       return ["year", "year-month", "month", "weekday", "hour"];
-
     case "gear":
       return ["camera-make", "camera", "lens", "camera-lens"];
-    case "exposure":
-      return [
-        "focal-length",
-        "aperture",
-        "exposure-time",
-        "iso",
-        "ev",
-        "lv",
-        "resolution",
-        "orientation",
-        "aspect-ratio",
-      ];
+    case "settings":
+      return ["focal-length", "aperture", "exposure-time", "iso"];
+    case "image":
+      return ["resolution", "aspect-ratio", "orientation"];
+    case "light":
+      return ["ev", "lv"];
     default:
       return [];
   }

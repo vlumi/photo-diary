@@ -83,6 +83,12 @@
     "photo-count_one": "{{count}} kuva",
     "photo-count_other": "{{count}} kuvaa",
     "photo-metadata": "Kuvan tiedot",
+    "photo-author": "Valokuvaaja",
+    "metadata-camera": "Kamera",
+    "metadata-lens": "Objektiivi",
+    "metadata-settings": "Asetukset",
+    "metadata-image": "Kuva",
+    "metadata-light": "Valo",
 
     "stats-filters": "Suodattimet",
 
@@ -166,7 +172,9 @@
     "stats-category-camera": "Kamera",
     "stats-category-lens": "Objektiivi",
     "stats-category-camera-lens": "Kamera + Objektiivi",
-    "stats-topic-exposure": "Valotus",
+    "stats-topic-settings": "Asetukset",
+    "stats-topic-image": "Kuva",
+    "stats-topic-light": "Valo",
     "stats-category-focal-length": "Polttoväli",
     "stats-category-aperture": "Aukko",
     "stats-category-exposure-time": "Valotusaika",
