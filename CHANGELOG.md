@@ -21,11 +21,14 @@
 - `db.upsertGeocoded` auto-fills `photo.country_code` from the geocoded value when the operator hasn't set one. Going forward only — no migration backfills existing rows. Keeps the operator-side country filter and Stats topic uniform across photos with coords, regardless of whether the operator manually assigned a country.
 - New `photo.geocoded_state_code` column (schema migration `008`) stores Nominatim's ISO 3166-2 subdivision code (`JP-13`, `US-MA`, …) — language-independent, so it lives on the photo row, not `photo_localized`. Migration backfills the column from the JSON in `geocoded_address` for any row that has one, so existing data picks the code up without a re-geocode run. Used client-side as the city filter's disambiguating key when the localized state name is missing (Tokyo returns no `state` but does return `ISO3166-2-lvl4`).
 - Schema migration `009` drops the now-dead Nominatim columns: `photo.geocoded_state`, `geocoded_district`, `geocoded_place`, plus the matching `photo_localized` columns. State names are derived from `geocoded_state_code` via curated subdivision JSON, district was never displayed, and the hand-assembled City+State+Country address line replaced `display_name`. Intake / daemon write paths and the city tuple key's Nominatim-state fallback all prune alongside.
+- `db.linkGalleryPhoto` is idempotent (`INSERT OR IGNORE`) — re-linking a photo already in a gallery is a no-op instead of a `UNIQUE` error. Also makes `PUT /api/v1/gallery-photos/:galleryId/:photoId` properly idempotent.
 
 ### Converter
 
 - Watcher accepts `.json` files alongside `.jpg`, and reads `inbox/` recursively. Subdir convention: files at `inbox/<gallery>/...` auto-link to that gallery on intake; files at the root are processed without an auto-link (operator links later). Unknown gallery name → file is left in place with an error logged. JSON sidecars are processed via the same lookup-or-create path as `bin/photo.ts`, archived to `original/<id>.intake.json` (or `.1.json`, `.2.json`, … if prior intakes exist). End state: one rsync drop of SOOC + JSON straight into `inbox/<gallery>/` replaces the previous "send to inbox + scp to import/ + ssh trigger of put_to_galleries.sh" routine.
 - Drop the `save-json` step that wrote `inbox/<id>.json` after each JPG intake. The DB is the source of truth; the sidecar JSON had no production consumer. Pre-existing sidecars from before this change get re-processed once at startup (contents == EXIF, so it's a harmless no-op write) and archived alongside the photo.
+- JSON sidecar intake now triggers reverse-geocoding (when `REVERSE_GEOCODE=1`) for the created / updated photo — previously only the JPG path called Nominatim, so coords-via-sidecar photos never got geocoded.
+- Watcher ignores macOS AppleDouble (`._*`) sidecars, and the file queue no longer stalls on a single failing intake (the error catch wasn't re-triggering the queue processor).
 
 ### Tooling
 
