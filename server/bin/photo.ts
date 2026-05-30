@@ -339,14 +339,15 @@ const buildChecks = (
 const printCheck = (
   check: AuditCheck,
   results: Array<{ id: string; row: any; why?: string }>,
-  format: "table" | "ids"
+  format: "table" | "ids",
+  detail: boolean
 ): void => {
   if (format === "ids") {
     for (const r of results) console.log(r.id);
     return;
   }
   console.log(`\n${check.title}: ${results.length}`);
-  if (results.length > 0) {
+  if (detail && results.length > 0) {
     const showWhy = results.some((r) => r.why !== undefined);
     const header = showWhy
       ? ["id", "originalFilename", "taken", check.whyLabel ?? "why"]
@@ -428,12 +429,12 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "audit",
-    "Find photos with missing properties, orphan gallery links, duplicate originalFilenames, or operator-vs-geocoded country drift",
+    "Find photos with missing properties, orphan gallery links, duplicate originalFilenames, or operator-vs-geocoded country drift. Default: counts-only summary across every check. Pass --detail or any restricting flag to surface the item rows.",
     (y) =>
       y
         .option("missing", {
           describe:
-            "Restrict to a single missing-field check (default: run every check)",
+            "Restrict to a single missing-field check + show rows (default: counts only across every check). `state-code` reports only photos that have coords + city but no ISO 3166-2 code.",
           choices: [
             "taken",
             "coords",
@@ -442,35 +443,37 @@ await yargs(hideBin(process.argv))
             "author",
             "title",
             "description",
+            "state-code",
           ] as const,
         })
         .option("orphans", {
           type: "boolean",
           default: false,
-          describe: "Restrict to the orphan-gallery-link check",
+          describe: "Restrict to the orphan-gallery-link check + show rows",
         })
         .option("duplicates", {
           type: "boolean",
           default: false,
-          describe: "Restrict to the duplicate-originalFilename check",
+          describe:
+            "Restrict to the duplicate-originalFilename check + show rows",
         })
         .option("country-mismatch", {
           type: "boolean",
           default: false,
           describe:
-            "Restrict to photos where operator country_code and geocoded_country_code disagree",
+            "Restrict to photos where operator country_code and geocoded_country_code disagree + show rows",
         })
-        .option("missing-state-code", {
+        .option("detail", {
           type: "boolean",
           default: false,
           describe:
-            "Restrict to photos with coords + city but no ISO 3166-2 geocoded_state_code",
+            "Show row tables for every check (the pre-0.12 default behaviour)",
         })
         .option("format", {
           choices: ["table", "ids"] as const,
           default: "table" as const,
           describe:
-            "table (default, with id/originalFilename/taken) or ids (one per line, pipe-friendly)",
+            "table (default, with id/originalFilename/taken) or ids (one per line, pipe-friendly — always emits all matching ids regardless of --detail)",
         }),
     async (argv) => {
       const photos = (await db.loadPhotos()) as any[];
@@ -480,13 +483,11 @@ await yargs(hideBin(process.argv))
 
       const all = buildChecks(photos, orphanIds);
       const countryMismatch = argv["country-mismatch"];
-      const missingStateCode = argv["missing-state-code"];
       const anyFilter =
         argv.missing !== undefined ||
         argv.orphans ||
         argv.duplicates ||
-        countryMismatch ||
-        missingStateCode;
+        countryMismatch;
 
       let selected: AuditCheck[];
       if (!anyFilter) {
@@ -510,17 +511,21 @@ await yargs(hideBin(process.argv))
           const match = all.find((c) => c.key === "country-mismatch");
           if (match) selected.push(match);
         }
-        if (missingStateCode) {
-          const match = all.find((c) => c.key === "missing-state-code");
-          if (match) selected.push(match);
-        }
       }
+
+      // Item rows surface when the operator either narrowed to a
+      // specific check or asked for --detail explicitly. The bare
+      // `audit` invocation now reads as a one-screen summary across
+      // every check — most checks return 0 once a gallery is settled,
+      // and the wall-of-rows default was noise for the common case.
+      // ids format ignores this — pipe-friendly mode always emits.
+      const detail = argv.format === "ids" || argv.detail || anyFilter;
 
       if (argv.format === "table") {
         console.log(`Audited ${photos.length} photo(s).`);
       }
       for (const check of selected) {
-        printCheck(check, check.rows(), argv.format);
+        printCheck(check, check.rows(), argv.format, detail);
       }
     }
   )
@@ -553,148 +558,167 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
-    "audit-cities",
-    "List unique (country, city) pairs in the gallery and whether each lang has an override in react-app/src/lib/translations/cities/. Helps target the per-language overlay against actual data.",
-    (y) =>
-      y.option("lang", {
-        type: "array",
-        string: true,
-        default: ["fi", "ja"],
-        describe: "Languages to check overrides for (default: fi, ja)",
-      }),
-    async (argv) => {
-      const photos = (await db.loadPhotos()) as any[];
-      const pairs = new Map<string, { country: string; cityEn: string }>();
-      for (const p of photos) {
-        const cc = p.geocoded?.countryCode as string | undefined;
-        const cityEn = (p.geocoded?.cityEn ?? p.geocoded?.city) as
-          | string
-          | undefined;
-        if (!cc || !cityEn) continue;
-        const key = `${cc.toLowerCase()}:${cityEn}`;
-        if (!pairs.has(key)) pairs.set(key, { country: cc, cityEn });
-      }
-      const overlayDir = path.resolve(
-        path.dirname(new URL(import.meta.url).pathname),
-        "../../react-app/src/lib/translations/cities"
-      );
-      const overlays: Record<string, Record<string, string>> = {};
-      for (const lang of argv.lang as string[]) {
-        const file = path.join(overlayDir, `${lang}.json`);
-        overlays[lang] = fs.existsSync(file)
-          ? (JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, string>)
-          : {};
-      }
-      const header = ["country", "city (en)", ...(argv.lang as string[])];
-      const rows: string[][] = [header];
-      const missing: string[] = [];
-      for (const key of [...pairs.keys()].sort()) {
-        const { country, cityEn } = pairs.get(key)!;
-        const cells = [country, cityEn];
-        let anyMissing = false;
-        for (const lang of argv.lang as string[]) {
-          const v = overlays[lang]?.[key];
-          if (v) cells.push(v);
-          else {
-            cells.push("—");
-            anyMissing = true;
-          }
-        }
-        rows.push(cells);
-        if (anyMissing) missing.push(key);
-      }
-      console.log(formatTable(rows));
-      console.log(
-        `\n${pairs.size} unique (country, city) pair(s); ${missing.length} missing at least one override.`
-      );
-    }
-  )
-  .command(
-    "cleanup-localized-cities",
-    "Clear photo_localized.geocoded_city values that don't match their language's script rule (see server/lib/localized-script.ts). Sets the column to NULL — keeps the row + raw geocoded_address blob, so the daemon won't re-fetch and re-introduce the bad value. Dry-run by default; --apply to write.",
+    "cities",
+    "Manage geocoded city data — audit per-language overlay coverage, normalize, or clean bad localized values.",
     (y) =>
       y
-        .option("apply", {
-          type: "boolean",
-          default: false,
-          describe: "Clear the matching values (default: dry-run, just print)",
-        })
-        .option("lang", {
-          type: "array",
-          string: true,
-          describe: `Languages to check (default: all configured: ${RULED_LANGS.join(", ")})`,
-        }),
-    async (argv) => {
-      const langs = (argv.lang as string[] | undefined) ?? RULED_LANGS;
-      type Offender = { lang: string; photo_id: string; value: string };
-      const offenders: Offender[] = [];
-      for (const lang of langs) {
-        const rows = (await db.loadPhotoLocalized(lang)) as Array<{
-          photo_id: string;
-          geocoded_city: string | null;
-        }>;
-        for (const r of rows) {
-          if (r.geocoded_city && !acceptLocalizedCity(r.geocoded_city, lang)) {
-            offenders.push({
-              lang,
-              photo_id: r.photo_id,
-              value: r.geocoded_city,
-            });
+        .command(
+          "audit",
+          "List unique (country, city) pairs in the gallery and whether each lang has an override in react-app/src/lib/translations/cities/. Helps target the per-language overlay against actual data.",
+          (y) =>
+            y.option("lang", {
+              type: "array",
+              string: true,
+              default: ["fi", "ja"],
+              describe: "Languages to check overrides for (default: fi, ja)",
+            }),
+          async (argv) => {
+            const photos = (await db.loadPhotos()) as any[];
+            const pairs = new Map<string, { country: string; cityEn: string }>();
+            for (const p of photos) {
+              const cc = p.geocoded?.countryCode as string | undefined;
+              const cityEn = (p.geocoded?.cityEn ?? p.geocoded?.city) as
+                | string
+                | undefined;
+              if (!cc || !cityEn) continue;
+              const key = `${cc.toLowerCase()}:${cityEn}`;
+              if (!pairs.has(key)) pairs.set(key, { country: cc, cityEn });
+            }
+            const overlayDir = path.resolve(
+              path.dirname(new URL(import.meta.url).pathname),
+              "../../react-app/src/lib/translations/cities"
+            );
+            const overlays: Record<string, Record<string, string>> = {};
+            for (const lang of argv.lang as string[]) {
+              const file = path.join(overlayDir, `${lang}.json`);
+              overlays[lang] = fs.existsSync(file)
+                ? (JSON.parse(fs.readFileSync(file, "utf8")) as Record<
+                    string,
+                    string
+                  >)
+                : {};
+            }
+            const header = ["country", "city (en)", ...(argv.lang as string[])];
+            const rows: string[][] = [header];
+            const missing: string[] = [];
+            for (const key of [...pairs.keys()].sort()) {
+              const { country, cityEn } = pairs.get(key)!;
+              const cells = [country, cityEn];
+              let anyMissing = false;
+              for (const lang of argv.lang as string[]) {
+                const v = overlays[lang]?.[key];
+                if (v) cells.push(v);
+                else {
+                  cells.push("—");
+                  anyMissing = true;
+                }
+              }
+              rows.push(cells);
+              if (anyMissing) missing.push(key);
+            }
+            console.log(formatTable(rows));
+            console.log(
+              `\n${pairs.size} unique (country, city) pair(s); ${missing.length} missing at least one override.`
+            );
           }
-        }
-      }
-      if (offenders.length === 0) {
-        console.log("No photo_localized rows need cleanup.");
-        return;
-      }
-      const table: string[][] = [["lang", "photo_id", "stored value"]];
-      for (const o of offenders) table.push([o.lang, o.photo_id, o.value]);
-      console.log(formatTable(table));
-      console.log(
-        `\n${offenders.length} row(s) ${argv.apply ? "cleared" : "would be cleared (dry-run, pass --apply to write)"}.`
-      );
-      if (argv.apply) {
-        for (const o of offenders) {
-          await db.clearLocalizedCity(o.photo_id, o.lang);
-        }
-      }
-    }
-  )
-  .command(
-    "normalize-cities",
-    "Strip admin cruft from `photo.geocoded_city` (e.g. \"Stockholm Municipality\" → \"Stockholm\") using the current normalization rules. Dry-run by default; pass --apply to write.",
-    (y) =>
-      y.option("apply", {
-        type: "boolean",
-        default: false,
-        describe: "Write the normalized values back to the DB (default: dry-run, just print)",
-      }),
-    async (argv) => {
-      const photos = (await db.loadPhotos()) as any[];
-      const changes: Array<{ id: string; raw: string; normalized: string }> = [];
-      for (const photo of photos) {
-        const raw = photo.geocoded?.city as string | undefined;
-        if (!raw) continue;
-        const normalized = normalizeCity(raw);
-        if (normalized === raw) continue;
-        changes.push({ id: photo.id, raw, normalized });
-      }
-      if (changes.length === 0) {
-        console.log("No cities need normalization.");
-        return;
-      }
-      const table: string[][] = [["id", "raw", "normalized"]];
-      for (const c of changes) table.push([c.id, c.raw, c.normalized]);
-      console.log(formatTable(table));
-      console.log(
-        `\n${changes.length} photo(s) ${argv.apply ? "updated" : "would be updated (dry-run, pass --apply to write)"}.`
-      );
-      if (argv.apply) {
-        for (const c of changes) {
-          await db.upsertGeocoded(c.id, "en", { city: c.normalized });
-        }
-      }
-    }
+        )
+        .command(
+          "normalize",
+          "Strip admin cruft from `photo.geocoded_city` (e.g. \"Stockholm Municipality\" → \"Stockholm\") using the current normalization rules. Dry-run by default; pass --apply to write.",
+          (y) =>
+            y.option("apply", {
+              type: "boolean",
+              default: false,
+              describe:
+                "Write the normalized values back to the DB (default: dry-run, just print)",
+            }),
+          async (argv) => {
+            const photos = (await db.loadPhotos()) as any[];
+            const changes: Array<{ id: string; raw: string; normalized: string }> =
+              [];
+            for (const photo of photos) {
+              const raw = photo.geocoded?.city as string | undefined;
+              if (!raw) continue;
+              const normalized = normalizeCity(raw);
+              if (normalized === raw) continue;
+              changes.push({ id: photo.id, raw, normalized });
+            }
+            if (changes.length === 0) {
+              console.log("No cities need normalization.");
+              return;
+            }
+            const table: string[][] = [["id", "raw", "normalized"]];
+            for (const c of changes) table.push([c.id, c.raw, c.normalized]);
+            console.log(formatTable(table));
+            console.log(
+              `\n${changes.length} photo(s) ${argv.apply ? "updated" : "would be updated (dry-run, pass --apply to write)"}.`
+            );
+            if (argv.apply) {
+              for (const c of changes) {
+                await db.upsertGeocoded(c.id, "en", { city: c.normalized });
+              }
+            }
+          }
+        )
+        .command(
+          "clean-localized",
+          "Clear photo_localized.geocoded_city values that don't match their language's script rule (see server/lib/localized-script.ts). Sets the column to NULL — keeps the row + raw geocoded_address blob, so the daemon won't re-fetch and re-introduce the bad value. Dry-run by default; --apply to write.",
+          (y) =>
+            y
+              .option("apply", {
+                type: "boolean",
+                default: false,
+                describe:
+                  "Clear the matching values (default: dry-run, just print)",
+              })
+              .option("lang", {
+                type: "array",
+                string: true,
+                describe: `Languages to check (default: all configured: ${RULED_LANGS.join(", ")})`,
+              }),
+          async (argv) => {
+            const langs = (argv.lang as string[] | undefined) ?? RULED_LANGS;
+            type Offender = { lang: string; photo_id: string; value: string };
+            const offenders: Offender[] = [];
+            for (const lang of langs) {
+              const rows = (await db.loadPhotoLocalized(lang)) as Array<{
+                photo_id: string;
+                geocoded_city: string | null;
+              }>;
+              for (const r of rows) {
+                if (
+                  r.geocoded_city &&
+                  !acceptLocalizedCity(r.geocoded_city, lang)
+                ) {
+                  offenders.push({
+                    lang,
+                    photo_id: r.photo_id,
+                    value: r.geocoded_city,
+                  });
+                }
+              }
+            }
+            if (offenders.length === 0) {
+              console.log("No photo_localized rows need cleanup.");
+              return;
+            }
+            const table: string[][] = [["lang", "photo_id", "stored value"]];
+            for (const o of offenders) table.push([o.lang, o.photo_id, o.value]);
+            console.log(formatTable(table));
+            console.log(
+              `\n${offenders.length} row(s) ${argv.apply ? "cleared" : "would be cleared (dry-run, pass --apply to write)"}.`
+            );
+            if (argv.apply) {
+              for (const o of offenders) {
+                await db.clearLocalizedCity(o.photo_id, o.lang);
+              }
+            }
+          }
+        )
+        .demandCommand(
+          1,
+          "Choose an action: audit, normalize, or clean-localized"
+        )
   )
   .demandCommand(1, "Specify a subcommand or pass at least one file")
   .parseAsync();
