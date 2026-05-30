@@ -611,6 +611,7 @@ const collectTopics = (
     const [flat, data, valueRanks] = transformData({
       original: byState,
       formatter: (code: any) => format.subdivisionName(lang, code),
+      limit: 20,
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -665,6 +666,7 @@ const collectTopics = (
     const [flat, data, valueRanks] = transformData({
       original: byCity,
       formatter: (key: any) => cityLabels[key] ?? format.parseCityKey(key).city,
+      limit: 20,
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
