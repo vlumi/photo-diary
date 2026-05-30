@@ -14,6 +14,21 @@ test("normalizeCity: strips Municipality suffix", () => {
   assert.equal(normalizeCity("Espoo Municipality"), "Espoo");
 });
 
+test("normalizeCity: strips Swedish kommun / stad suffix", () => {
+  assert.equal(normalizeCity("Norrtälje kommun"), "Norrtälje");
+  assert.equal(normalizeCity("Malmö stad"), "Malmö");
+  assert.equal(normalizeCity("Borås kommun"), "Borås");
+});
+
+test("normalizeCity: strips Stadtgebiet prefix (German)", () => {
+  assert.equal(normalizeCity("Stadtgebiet Bremen"), "Bremen");
+});
+
+test("normalizeCity: anglicizes Göteborgs Stad via override", () => {
+  assert.equal(normalizeCity("Göteborgs Stad"), "Gothenburg");
+  assert.equal(normalizeCity("Göteborgs stad"), "Gothenburg");
+});
+
 test("normalizeCity: handles null / undefined / empty", () => {
   assert.equal(normalizeCity(undefined), undefined);
   assert.equal(normalizeCity(null), null);
