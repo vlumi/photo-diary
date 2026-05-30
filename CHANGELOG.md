@@ -23,6 +23,7 @@
 ### Tooling
 
 - `bin/photo.ts audit --country-mismatch` footer now distinguishes "still need geocoding" from "no Nominatim coverage" (the `geocode_no_data` flag set by intake / `photo-geocode.ts` when Nominatim returned no address). Previously rows flagged as no-data were still counted as "not yet geocoded" and pointed the operator at `./bin/photo-geocode.ts` — re-running the daemon found nothing to do and the audit kept nagging. The `noData` flag is also surfaced on the mapped `Photo.geocoded` so the audit (and any other consumer) can read it.
+- `bin/photo.ts normalize-cities` rewrites `photo.geocoded_city` through `normalizeCity()` to strip admin cruft like "Stockholm Municipality" → "Stockholm". Dry-run by default; `--apply` writes. Intake (converter + daemon) applies the same normalization going forward, so the tool only needs re-running after rule changes.
 
 ## [0.11.0] - 2026-05-28
 

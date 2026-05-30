@@ -8,6 +8,7 @@ import { hideBin } from "yargs/helpers";
 
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
+import { normalizeCity } from "photo-diary-converter/reverse-geocode/normalize.js";
 
 const formatTable = (rows: string[][]): string => {
   if (rows.length <= 1) return rows[0]?.join("  ") ?? "";
@@ -591,6 +592,42 @@ await yargs(hideBin(process.argv))
         ]);
       }
       console.log(formatTable(table));
+    }
+  )
+  .command(
+    "normalize-cities",
+    "Strip admin cruft from `photo.geocoded_city` (e.g. \"Stockholm Municipality\" → \"Stockholm\") using the current normalization rules. Dry-run by default; pass --apply to write.",
+    (y) =>
+      y.option("apply", {
+        type: "boolean",
+        default: false,
+        describe: "Write the normalized values back to the DB (default: dry-run, just print)",
+      }),
+    async (argv) => {
+      const photos = (await db.loadPhotos()) as any[];
+      const changes: Array<{ id: string; raw: string; normalized: string }> = [];
+      for (const photo of photos) {
+        const raw = photo.geocoded?.city as string | undefined;
+        if (!raw) continue;
+        const normalized = normalizeCity(raw);
+        if (normalized === raw) continue;
+        changes.push({ id: photo.id, raw, normalized });
+      }
+      if (changes.length === 0) {
+        console.log("No cities need normalization.");
+        return;
+      }
+      const table: string[][] = [["id", "raw", "normalized"]];
+      for (const c of changes) table.push([c.id, c.raw, c.normalized]);
+      console.log(formatTable(table));
+      console.log(
+        `\n${changes.length} photo(s) ${argv.apply ? "updated" : "would be updated (dry-run, pass --apply to write)"}.`
+      );
+      if (argv.apply) {
+        for (const c of changes) {
+          await db.upsertGeocoded(c.id, "en", { city: c.normalized });
+        }
+      }
     }
   )
   .demandCommand(1, "Specify a subcommand or pass at least one file")
