@@ -330,18 +330,15 @@ describe("Photo", () => {
     "thumb_height",
 
     "geocoded_country_code",
-    "geocoded_state",
     "geocoded_state_code",
     "geocoded_city",
-    "geocoded_district",
-    "geocoded_place",
     "geocoded_address",
 
     "geocode_no_data",
   ].join(",");
   test("Build create query", () =>
     expect(schema.photo.buildCreateQuery()).toBe(
-      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.photo.buildSelectByIdQuery()).toBe(

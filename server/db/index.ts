@@ -197,11 +197,8 @@ export default {
     lang: string,
     fields: {
       countryCode?: string | null;
-      state?: string | null;
       stateCode?: string | null;
       city?: string | null;
-      district?: string | null;
-      place?: string | null;
       address?: string | null;
     }
   ) => {

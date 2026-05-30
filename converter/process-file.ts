@@ -43,11 +43,8 @@ const geocodeAtIntake = async (
     }
     await db.upsertGeocoded(photoId, lang, {
       countryCode: lang === "en" ? (result.countryCode ?? null) : undefined,
-      state: result.state ?? null,
       stateCode: lang === "en" ? (result.stateCode ?? null) : undefined,
       city: result.city ?? null,
-      district: result.district ?? null,
-      place: result.place,
       address: JSON.stringify(result.address),
     });
   }
