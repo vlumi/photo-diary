@@ -196,24 +196,37 @@ const THEMES: Record<ThemeName, Theme> = {
   },
 };
 
+export type ThemeCategory = "coloured" | "neutral" | "dark" | "statement";
+
+export const THEME_CATEGORIES: ThemeCategory[] = [
+  "coloured",
+  "neutral",
+  "dark",
+  "statement",
+];
+
 interface ThemeManifestEntry {
   id: ThemeName;
   displayName: string;
+  category: ThemeCategory;
 }
 
+// Ordered by category (see THEME_CATEGORIES), then alphabetically by
+// displayName within each category. The picker renders one <optgroup>
+// per category in this order.
 const MANIFEST: ThemeManifestEntry[] = [
-  { id: "blue", displayName: "Blue" },
-  { id: "red", displayName: "Red" },
-  { id: "grayscale", displayName: "Grayscale" },
-  { id: "contrast", displayName: "High Contrast" },
-  { id: "alert", displayName: "Alert" },
-  { id: "dark", displayName: "Dark" },
-  { id: "amoled", displayName: "AMOLED" },
-  { id: "forest", displayName: "Forest" },
-  { id: "silver", displayName: "Silver" },
-  { id: "showcase", displayName: "Showcase" },
-  { id: "teal", displayName: "Teal" },
-  { id: "paper", displayName: "Paper" },
+  { id: "blue", displayName: "Blue", category: "coloured" },
+  { id: "forest", displayName: "Forest", category: "coloured" },
+  { id: "red", displayName: "Red", category: "coloured" },
+  { id: "teal", displayName: "Teal", category: "coloured" },
+  { id: "grayscale", displayName: "Grayscale", category: "neutral" },
+  { id: "contrast", displayName: "High Contrast", category: "neutral" },
+  { id: "paper", displayName: "Paper", category: "neutral" },
+  { id: "silver", displayName: "Silver", category: "neutral" },
+  { id: "amoled", displayName: "AMOLED", category: "dark" },
+  { id: "dark", displayName: "Dark", category: "dark" },
+  { id: "showcase", displayName: "Showcase", category: "dark" },
+  { id: "alert", displayName: "Alert", category: "statement" },
 ];
 
 const isThemeName = (name: string): name is ThemeName => name in THEMES;

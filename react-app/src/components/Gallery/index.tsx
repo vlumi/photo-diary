@@ -39,6 +39,7 @@ import {
   useFiltersStore,
   useScrollStore,
   useBetaStore,
+  useThemePreferenceStore,
 } from "../../stores";
 import type { BetaFeature, BetaMode } from "../../stores/beta";
 import { BETA_FEATURES } from "../../stores/beta";
@@ -82,6 +83,8 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
   const setScroll = useScrollStore((s) => s.set);
+  const themePreference = useThemePreferenceStore((s) => s.preference);
+  const loadThemePreference = useThemePreferenceStore((s) => s.load);
 
   const { t } = useTranslation();
   const location = useLocation();
@@ -248,9 +251,18 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     return selectedGallery.withPhotos(filteredPhotos);
   }, [selectedGallery, photos, filters]);
 
+  // Load the persisted user preference once, against the current
+  // manifest so a stale localStorage entry can't survive a theme
+  // rename or removal.
+  React.useEffect(() => {
+    loadThemePreference(new Set(theme.manifest.map((entry) => entry.id)));
+  }, [loadThemePreference]);
+
+  // Theme resolution priority: user preference → gallery theme → instance default.
   const selectedThemeName = selectedGallery?.theme();
-  const activeTheme =
-    selectedGallery && selectedGallery.hasTheme() && selectedThemeName
+  const activeTheme = themePreference
+    ? theme.setTheme(themePreference)
+    : selectedGallery && selectedGallery.hasTheme() && selectedThemeName
       ? theme.setTheme(selectedThemeName)
       : theme.setTheme(config.DEFAULT_THEME);
 
