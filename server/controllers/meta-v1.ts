@@ -51,6 +51,16 @@ const envDefaults = (): Record<string, unknown> => {
 const KeyParam = Type.Object({ key: Type.String() });
 // Open shape — meta keys vary per deploy.
 const MetaResponse = Type.Object({}, { additionalProperties: true });
+// POST body: user-facing key (without the `instance_` prefix the row
+// is stored under) + value. PUT body is just the value — the key
+// comes from the URL.
+const MetaCreateBody = Type.Object({
+  key: Type.String({ minLength: 1 }),
+  value: Type.String(),
+});
+const MetaUpdateBody = Type.Object({
+  value: Type.String(),
+});
 const TAGS = ["meta"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -82,14 +92,17 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Create a meta entry (admin)",
+        body: MetaCreateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const meta = {};
-      // TODO: validate and set content from request.body
-      return await model.createMeta(meta);
+      await model.createMeta({
+        key: `instance_${request.body.key}`,
+        value: request.body.value,
+      });
+      reply.status(201).send();
     }
   );
 
@@ -123,14 +136,17 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Update one meta entry by key (admin)",
         params: KeyParam,
+        body: MetaUpdateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const meta = {};
-      // TODO: validate and set content from request.body
-      return await model.updateMeta(meta);
+      await model.updateMeta(
+        `instance_${request.params.key}`,
+        request.body.value
+      );
+      reply.status(204).send();
     }
   );
 
@@ -149,7 +165,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      await model.deleteMeta(request.params.key);
+      await model.deleteMeta(`instance_${request.params.key}`);
       reply.status(204).send();
     }
   );

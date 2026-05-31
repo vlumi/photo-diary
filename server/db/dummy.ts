@@ -20,7 +20,7 @@ export default () => {
     createMeta,
     loadMeta,
     updateMeta,
-    deleteMeta: notImplemented,
+    deleteMeta,
 
     loadUsers,
     createUser,
@@ -116,8 +116,10 @@ const deleteUserSessions = async (userId: string) => {
 const loadMetas = async () => {
   return Object.values(db.meta);
 };
-const createMeta = async () => {
-  throw new NotImplementedError();
+// Dummy meta rows match the sqlite3 `mapRow` shape: single-key
+// record `{ [key]: value }` rather than `{ key, value }`.
+const createMeta = async (meta: { key: string; value: string }) => {
+  db.meta[meta.key] = { [meta.key]: meta.value };
 };
 const loadMeta = async (key: string) => {
   if (!(key in db.meta)) {
@@ -125,8 +127,17 @@ const loadMeta = async (key: string) => {
   }
   return db.meta[key];
 };
-const updateMeta = async () => {
-  throw new NotImplementedError();
+const updateMeta = async (key: string, patch: { value?: string }) => {
+  if (!(key in db.meta)) {
+    throw new NotFoundError();
+  }
+  if (patch.value !== undefined) db.meta[key] = { [key]: patch.value };
+};
+const deleteMeta = async (key: string) => {
+  if (!(key in db.meta)) {
+    throw new NotFoundError();
+  }
+  delete db.meta[key];
 };
 
 const loadUsers = async () => {
