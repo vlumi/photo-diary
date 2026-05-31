@@ -407,7 +407,7 @@ The pipeline is intentionally split: the converter doesn't touch the DB at all, 
 
 Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- [**0.13 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), inbox subdirectories auto-link to galleries (#245), ACL user groups (#270), ACL `:all` floor rule (#271), more built-in themes (#279), admin theme selector (#287), converter picks up JSON in inbox (#333), per-language editing for place / title / description (#343).
+- [**0.13 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), ACL user groups (#270), ACL `:all` floor rule (#271), more built-in themes (#279), admin theme selector (#287), per-language editing for place / title / description (#343).
 - [**0.14 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), Postgres driver alongside SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286).
 - [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283).
 
