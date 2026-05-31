@@ -89,6 +89,7 @@ describe("As admin", () => {
       .delete("/api/v1/meta/schema_version")
       .set("Authorization", `Bearer ${token}`)
       .expect(400));
+  test("Get with unknown key → 400", () => getMeta("schema_version", 400));
   test("Update existing meta", async () => {
     await api
       .put("/api/v1/meta/name")

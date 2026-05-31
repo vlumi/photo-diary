@@ -91,7 +91,13 @@
         "parameters": [
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "name",
+                "description",
+                "cdn",
+                "image"
+              ]
             },
             "in": "path",
             "name": "key",

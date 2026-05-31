@@ -81,7 +81,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: string;
+                    key: "name" | "description" | "cdn" | "image";
                 };
                 cookie?: never;
             };

@@ -56,7 +56,6 @@ const envDefaults = (): Record<string, unknown> => {
 // internals stay off-limits. Operators who need an experimental key
 // reach for `./bin/meta.ts set --force`.
 const MetaKeyEnum = StringEnum(KNOWN_META_KEYS_PUBLIC);
-const KeyParam = Type.Object({ key: Type.String() });
 const KnownKeyParam = Type.Object({ key: MetaKeyEnum });
 // Open shape — meta keys vary per deploy.
 const MetaResponse = Type.Object({}, { additionalProperties: true });
@@ -123,7 +122,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Get one meta entry by key",
-        params: KeyParam,
+        params: KnownKeyParam,
         response: { 200: MetaResponse },
       },
     },
