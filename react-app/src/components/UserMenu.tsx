@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
-import theme from "../lib/theme";
+import theme, { THEME_CATEGORIES, type ThemeCategory } from "../lib/theme";
 import token from "../lib/token";
 import tokenService from "../services/tokens";
 import {
@@ -219,11 +219,24 @@ const UserMenu = (): React.ReactElement => {
               }
             >
               <option value="">{t("theme-follow-default")}</option>
-              {theme.manifest.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {entry.displayName}
-                </option>
-              ))}
+              {THEME_CATEGORIES.map((category: ThemeCategory) => {
+                const entries = theme.manifest.filter(
+                  (entry) => entry.category === category
+                );
+                if (entries.length === 0) return null;
+                return (
+                  <optgroup
+                    key={category}
+                    label={String(t(`theme-group-${category}`))}
+                  >
+                    {entries.map((entry) => (
+                      <option key={entry.id} value={entry.id}>
+                        {entry.displayName}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
             </ThemeSelect>
           </ThemeRow>
           {userBetaFeatures.map((f) => (

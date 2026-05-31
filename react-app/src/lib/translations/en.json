@@ -27,6 +27,10 @@
     "beta-feature-focalLengthEquiv": "Focal length 35mm equivalent (beta)",
     "theme-label": "Theme",
     "theme-follow-default": "Follow gallery default",
+    "theme-group-coloured": "Coloured",
+    "theme-group-neutral": "Neutral",
+    "theme-group-dark": "Dark",
+    "theme-group-statement": "Statement",
 
     "nav-galleries": "Galleries",
     "nav-gallery-top": "Back to top",

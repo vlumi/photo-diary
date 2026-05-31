@@ -27,6 +27,10 @@
     "beta-feature-focalLengthEquiv": "焦点距離 35mm換算（ベータ）",
     "theme-label": "テーマ",
     "theme-follow-default": "ギャラリーの既定に従う",
+    "theme-group-coloured": "カラー",
+    "theme-group-neutral": "ニュートラル",
+    "theme-group-dark": "ダーク",
+    "theme-group-statement": "強調",
 
     "nav-galleries": "ギャラリー",
     "nav-gallery-top": "トップへ",

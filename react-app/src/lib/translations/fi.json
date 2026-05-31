@@ -27,6 +27,10 @@
     "beta-feature-focalLengthEquiv": "Polttoväli 35mm-vastaava (beta)",
     "theme-label": "Teema",
     "theme-follow-default": "Käytä gallerian oletusta",
+    "theme-group-coloured": "Värilliset",
+    "theme-group-neutral": "Neutraalit",
+    "theme-group-dark": "Tummat",
+    "theme-group-statement": "Korostavat",
 
     "nav-galleries": "Galleriat",
     "nav-gallery-top": "Palaa alkuun",
