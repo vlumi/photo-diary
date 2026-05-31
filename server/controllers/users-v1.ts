@@ -18,6 +18,13 @@ const init = async () => {
 const UserIdParam = Type.Object({ userId: Type.String() });
 const UserSummary = Type.Object({ id: Type.String() });
 const UsersListResponse = Type.Array(UserSummary);
+const UserCreateBody = Type.Object({
+  id: Type.String({ minLength: 1 }),
+  password: Type.String({ minLength: 1 }),
+});
+const UserUpdateBody = Type.Object({
+  password: Type.String({ minLength: 1 }),
+});
 const ChangePasswordBody = Type.Object({
   currentPassword: Type.String({ minLength: 1 }),
   newPassword: Type.String({ minLength: 1 }),
@@ -63,14 +70,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Create a user (admin)",
+        body: UserCreateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const user = {};
-      // TODO: validate and set content from request.body
-      return await model.createUser(user);
+      await model.createUser(request.body);
+      reply.status(201).send();
     }
   );
 
@@ -103,14 +110,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Update a user by id (admin)",
         params: UserIdParam,
+        body: UserUpdateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const user = {};
-      // TODO: validate and set content from request.body
-      return await model.updateUser(user);
+      await model.updateUser(request.params.userId, request.body);
+      reply.status(204).send();
     }
   );
 

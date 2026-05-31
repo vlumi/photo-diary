@@ -254,4 +254,96 @@ describe("PUT /users/self/password", () => {
   });
 });
 
+describe("Mutations as guest", () => {
+  test("Create rejected", () =>
+    api
+      .post("/api/v1/users")
+      .send({ id: "newuser", password: "secret" })
+      .expect(403));
+  test("Update rejected", () =>
+    api
+      .put("/api/v1/users/admin")
+      .send({ password: "reset" })
+      .expect(403));
+  test("Delete rejected", () => api.delete("/api/v1/users/admin").expect(403));
+});
+
+describe("Mutations as gallery1Admin", () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await loginUser(api, "gallery1Admin");
+  });
+  test("Create rejected", () =>
+    api
+      .post("/api/v1/users")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ id: "newuser", password: "secret" })
+      .expect(403));
+  test("Update rejected", () =>
+    api
+      .put("/api/v1/users/admin")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ password: "reset" })
+      .expect(403));
+  test("Delete rejected", () =>
+    api
+      .delete("/api/v1/users/admin")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(403));
+});
+
+describe("Mutations as admin", () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await loginUser(api, "admin");
+  });
+
+  test("Create user", async () => {
+    await api
+      .post("/api/v1/users")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ id: "freshuser", password: "freshpass" })
+      .expect(201);
+    // Login as the new user proves the password hash + secret were stored.
+    await api
+      .post("/api/v1/tokens")
+      .send({ id: "freshuser", password: "freshpass" })
+      .expect(200);
+  });
+  test("Update user password (admin reset)", async () => {
+    await api
+      .put("/api/v1/users/plainUser")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ password: "reset-pass" })
+      .expect(204);
+    await api
+      .post("/api/v1/tokens")
+      .send({ id: "plainUser", password: "reset-pass" })
+      .expect(200);
+    await api
+      .post("/api/v1/tokens")
+      .send({ id: "plainUser", password: "foobar" })
+      .expect(401);
+  });
+  test("Delete user", async () => {
+    await api
+      .delete("/api/v1/users/plainUser")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204);
+    await getUser(token, "plainUser", 404);
+  });
+  test("Create with invalid body → 400", () =>
+    api
+      .post("/api/v1/users")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ id: "" })
+      .expect(400));
+  test("Update with invalid body → 400", () =>
+    api
+      .put("/api/v1/users/admin")
+      .set("Authorization", `Bearer ${token}`)
+      .send({})
+      .expect(400));
+});
+
 afterAll(() => {});

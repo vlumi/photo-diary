@@ -26,7 +26,7 @@ export default () => {
     createUser,
     loadUser,
     updateUser,
-    deleteUser: notImplemented,
+    deleteUser,
 
     createSession,
     loadSession,
@@ -35,9 +35,9 @@ export default () => {
     deleteUserSessions,
 
     resolveAccessLevel,
-    loadUserGalleryRows: notImplemented,
+    loadUserGalleryRows,
     upsertUserGallery: notImplemented,
-    deleteUserGallery: notImplemented,
+    deleteUserGallery,
     resolveHideMap,
 
     loadGalleries,
@@ -143,8 +143,12 @@ const deleteMeta = async (key: string) => {
 const loadUsers = async () => {
   return Object.values(db.users);
 };
-const createUser = async () => {
-  throw new NotImplementedError();
+const createUser = async (user: {
+  id: string;
+  password: string;
+  secret: string;
+}) => {
+  db.users[user.id] = { ...user };
 };
 const loadUser = async (id: string) => {
   if (!(id in db.users)) {
@@ -157,6 +161,44 @@ const updateUser = async (userId: string, patch: Record<string, unknown>) => {
     throw new NotFoundError();
   }
   Object.assign(db.users[userId], patch);
+};
+const deleteUser = async (id: string) => {
+  if (!(id in db.users)) {
+    throw new NotFoundError();
+  }
+  delete db.users[id];
+};
+
+const loadUserGalleryRows = async (
+  filter: { userId?: string; galleryId?: string } = {}
+) => {
+  const acl = (db.accessControl as Record<string, Record<string, number>>) ?? {};
+  const out: Array<{
+    user_id: string;
+    gallery_id: string;
+    access_level: number;
+    hide_map: number | null;
+  }> = [];
+  for (const [userId, perGallery] of Object.entries(acl)) {
+    if (filter.userId && filter.userId !== userId) continue;
+    for (const [galleryId, level] of Object.entries(perGallery)) {
+      if (filter.galleryId && filter.galleryId !== galleryId) continue;
+      out.push({
+        user_id: userId,
+        gallery_id: galleryId,
+        access_level: level,
+        hide_map: null,
+      });
+    }
+  }
+  return out;
+};
+const deleteUserGallery = async (userId: string, galleryId: string) => {
+  const acl = db.accessControl as Record<string, Record<string, number>>;
+  if (acl?.[userId]) {
+    delete acl[userId][galleryId];
+    if (Object.keys(acl[userId]).length === 0) delete acl[userId];
+  }
 };
 
 const resolveAccessLevel = async (
