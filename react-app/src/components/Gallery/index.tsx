@@ -26,6 +26,7 @@ import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
 import collection from "../../lib/collection";
 import config from "../../lib/config";
 import format from "../../lib/format";
+import { galleriesForHost } from "../../lib/host-scope";
 import stats, {
   type UniqueValues,
   type UniqueValueEntry,
@@ -260,19 +261,29 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
   if (!meta || !galleries || !countryData) {
     return <div>{t("loading")}</div>;
   }
+  // Host-scope: galleries whose `hostname` regex matches the current
+  // domain. Empty = primary host (unscoped); non-empty = the only
+  // galleries reachable from this hostname.
+  const scopedGalleries = galleriesForHost(galleries, window.location.hostname);
+  const isHostScoped = scopedGalleries.length > 0;
+  // Off-scope URL on a scoped host: redirect to the first in-scope
+  // gallery rather than render the unreachable view.
+  if (
+    galleryId &&
+    isHostScoped &&
+    !scopedGalleries.some((gallery) => gallery.id() === galleryId)
+  ) {
+    return <Navigate to={scopedGalleries[0].path()} replace />;
+  }
+  // On a scoped host, narrow `galleries` to the scope set so the
+  // breadcrumb dropdown and landing picker can't navigate outside.
+  const visibleGalleries = isHostScoped ? scopedGalleries : galleries;
   if (!galleryId) {
-    if (galleries.length === 1) {
-      return <Navigate to={galleries[0].path()} replace />;
-    }
-
-    const galleriesMatchingHostname = galleries.filter((gallery) =>
-      gallery.matchesHostname(window.location.hostname)
-    );
-    if (galleriesMatchingHostname.length === 1) {
-      return <Navigate to={galleriesMatchingHostname[0].path()} replace />;
+    if (visibleGalleries.length === 1) {
+      return <Navigate to={visibleGalleries[0].path()} replace />;
     }
     if (config.DEFAULT_GALLERY) {
-      const targetGallery = galleries.find(
+      const targetGallery = visibleGalleries.find(
         (gallery) => gallery.id() === config.DEFAULT_GALLERY
       );
       if (targetGallery) {
@@ -280,7 +291,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
       }
     }
 
-    if (galleries.length === 0) {
+    if (visibleGalleries.length === 0) {
       return <i>{t("empty")}</i>;
     }
 
@@ -316,7 +327,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
         </h2>
         {description}
         <div id="content">
-          <ListBody galleries={galleries} />
+          <ListBody galleries={visibleGalleries} />
         </div>
       </>
     );
@@ -333,7 +344,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
           <Global styles={globalStyles(activeTheme)} />
           <Empty gallery={emptyGallery}>
             <Title
-              galleries={galleries}
+              galleries={visibleGalleries}
               gallery={emptyGallery}
               context={context}
             />
@@ -360,7 +371,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
           theme={activeTheme}
           hideMap={gallery.hideMap()}
         >
-          <Title galleries={galleries} gallery={gallery} context={context} />
+          <Title galleries={visibleGalleries} gallery={gallery} context={context} />
           <Filters
             filters={filters}
             setFilters={setFilters}
@@ -375,7 +386,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     if (!gallery.includesPhotos()) {
       return (
         <Empty gallery={gallery}>
-          <Title galleries={galleries} gallery={gallery} context={context} />
+          <Title galleries={visibleGalleries} gallery={gallery} context={context} />
           <Filters
             filters={filters}
             setFilters={setFilters}
@@ -390,7 +401,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     if (!year) {
       return (
         <Full gallery={gallery}>
-          <Title galleries={galleries} gallery={gallery} context={context} />
+          <Title galleries={visibleGalleries} gallery={gallery} context={context} />
           <Filters
             filters={filters}
             setFilters={setFilters}
@@ -406,7 +417,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
       return (
         <Year gallery={gallery} year={year} theme={activeTheme}>
           <Title
-            galleries={galleries}
+            galleries={visibleGalleries}
             gallery={gallery}
             context={context}
             year={year}
@@ -435,7 +446,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
           countryData={countryData}
         >
           <Title
-            galleries={galleries}
+            galleries={visibleGalleries}
             gallery={gallery}
             context={context}
             year={year}
@@ -483,7 +494,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
           modalActive
         >
           <Title
-            galleries={galleries}
+            galleries={visibleGalleries}
             gallery={gallery}
             context={context}
             year={year}
