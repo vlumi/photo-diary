@@ -54,31 +54,12 @@
                 ],
                 "properties": {
                   "key": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "enum": [
-                          "name"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "description"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "cdn"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "image"
-                        ]
-                      }
+                    "type": "string",
+                    "enum": [
+                      "name",
+                      "description",
+                      "cdn",
+                      "image"
                     ]
                   },
                   "value": {
@@ -158,31 +139,12 @@
         "parameters": [
           {
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "enum": [
-                    "name"
-                  ]
-                },
-                {
-                  "type": "string",
-                  "enum": [
-                    "description"
-                  ]
-                },
-                {
-                  "type": "string",
-                  "enum": [
-                    "cdn"
-                  ]
-                },
-                {
-                  "type": "string",
-                  "enum": [
-                    "image"
-                  ]
-                }
+              "type": "string",
+              "enum": [
+                "name",
+                "description",
+                "cdn",
+                "image"
               ]
             },
             "in": "path",
@@ -209,31 +171,12 @@
         "parameters": [
           {
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "enum": [
-                    "name"
-                  ]
-                },
-                {
-                  "type": "string",
-                  "enum": [
-                    "description"
-                  ]
-                },
-                {
-                  "type": "string",
-                  "enum": [
-                    "cdn"
-                  ]
-                },
-                {
-                  "type": "string",
-                  "enum": [
-                    "image"
-                  ]
-                }
+              "type": "string",
+              "enum": [
+                "name",
+                "description",
+                "cdn",
+                "image"
               ]
             },
             "in": "path",
@@ -1397,25 +1340,11 @@
                 ],
                 "properties": {
                   "accessLevel": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "enum": [
-                          "none"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "view"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "admin"
-                        ]
-                      }
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "view",
+                      "admin"
                     ]
                   },
                   "hideMap": {

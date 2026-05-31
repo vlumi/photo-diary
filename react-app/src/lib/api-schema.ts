@@ -43,7 +43,15 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        key: "name" | "description" | "cdn" | "image";
+                        value: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -98,11 +106,17 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: string;
+                    key: "name" | "description" | "cdn" | "image";
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        value: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -120,7 +134,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: string;
+                    key: "name" | "description" | "cdn" | "image";
                 };
                 cookie?: never;
             };
@@ -348,7 +362,14 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        id: string;
+                        password: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -403,7 +424,13 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        password: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -529,7 +556,21 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        id: string;
+                        title?: string;
+                        description?: string;
+                        icon?: string;
+                        epoch?: string;
+                        epochType?: string;
+                        theme?: string;
+                        initialView?: string;
+                        hostname?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -591,7 +632,20 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        title?: string;
+                        description?: string;
+                        icon?: string;
+                        epoch?: string;
+                        epochType?: string;
+                        theme?: string;
+                        initialView?: string;
+                        hostname?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -664,7 +718,34 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        id: string;
+                        title?: string;
+                        description?: string;
+                        taken?: {
+                            author?: string;
+                            location?: {
+                                country?: string;
+                                place?: string;
+                            };
+                        };
+                        camera?: {
+                            make?: string;
+                            model?: string;
+                        };
+                        lens?: {
+                            make?: string;
+                            model?: string;
+                        };
+                        exposure?: {
+                            focalLength?: number;
+                            aperture?: number;
+                        };
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -719,7 +800,33 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        title?: string;
+                        description?: string;
+                        taken?: {
+                            author?: string;
+                            location?: {
+                                country?: string;
+                                place?: string;
+                            };
+                        };
+                        camera?: {
+                            make?: string;
+                            model?: string;
+                        };
+                        lens?: {
+                            make?: string;
+                            model?: string;
+                        };
+                        exposure?: {
+                            focalLength?: number;
+                            aperture?: number;
+                        };
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -865,6 +972,116 @@ export interface paths {
                 path: {
                     galleryId: string;
                     photoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/user-gallery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List user_gallery ACL rows (admin) */
+        get: {
+            parameters: {
+                query?: {
+                    userId?: string;
+                    galleryId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            user_id: string;
+                            gallery_id: string;
+                            access_level: number;
+                            hide_map: number | null;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/user-gallery/{userId}/{galleryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Upsert a user_gallery ACL row (admin) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                    galleryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        accessLevel: "none" | "view" | "admin";
+                        hideMap?: boolean | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        /** Delete a user_gallery ACL row (admin) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                    galleryId: string;
                 };
                 cookie?: never;
             };

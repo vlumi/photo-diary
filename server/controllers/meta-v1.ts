@@ -3,6 +3,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import { KNOWN_META_KEYS_PUBLIC } from "../lib/meta-keys.js";
+import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/meta.js";
 
 const authorizer = authorizerFactory();
@@ -54,9 +55,7 @@ const envDefaults = (): Record<string, unknown> => {
 // prefix the row gets stored under). `schema_version` and other
 // internals stay off-limits. Operators who need an experimental key
 // reach for `./bin/meta.ts set --force`.
-const MetaKeyEnum = Type.Union(
-  KNOWN_META_KEYS_PUBLIC.map((k) => Type.Literal(k))
-);
+const MetaKeyEnum = StringEnum(KNOWN_META_KEYS_PUBLIC);
 const KeyParam = Type.Object({ key: Type.String() });
 const KnownKeyParam = Type.Object({ key: MetaKeyEnum });
 // Open shape — meta keys vary per deploy.

@@ -3,6 +3,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import CONST from "../lib/constants.js";
 import authorizerFactory from "../lib/authorizer.js";
+import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/user-gallery.js";
 
 const authorizer = authorizerFactory();
@@ -30,11 +31,7 @@ const RowsResponse = Type.Array(RowResponse);
 // `none|view|admin` maps to the numeric ACCESS_* constants. `hideMap`
 // is the privacy override on this specific (user, gallery) pair —
 // `null` means "inherit from the next outer level".
-const AccessLevelLiteral = Type.Union([
-  Type.Literal("none"),
-  Type.Literal("view"),
-  Type.Literal("admin"),
-]);
+const AccessLevelLiteral = StringEnum(["none", "view", "admin"] as const);
 const UpsertBody = Type.Object(
   {
     accessLevel: AccessLevelLiteral,
