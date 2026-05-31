@@ -455,7 +455,19 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     }
     const photo = gallery.photo(year, month, day, photoId);
     if (!photo) {
-      return <div>{t("loading")}</div>;
+      // The URL points at an id this gallery doesn't have. Try the
+      // param as an `originalFilename` (camera filename) — covers
+      // pre-rename bookmarks and "shared the file name not the URL"
+      // from the operator's archive. If we find a match anywhere in
+      // the gallery, redirect to its canonical URL. Otherwise drop
+      // back to the month view rather than spinning on "Loading".
+      const byOriginal = gallery
+        .photos()
+        .find((p) => p.originalFilename() === photoId);
+      if (byOriginal) {
+        return <Navigate to={byOriginal.path(gallery)} replace />;
+      }
+      return <Navigate to={gallery.path(year, month)} replace />;
     }
     // Photo URLs mount Month + Photo together so the modal overlays
     // a real Month underneath (closing returns there without remount).

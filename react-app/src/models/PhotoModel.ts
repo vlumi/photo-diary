@@ -63,6 +63,7 @@ interface Exposure {
 export interface PhotoData {
   id: string;
   index: number;
+  originalFilename?: string;
   title?: string;
   description?: string;
   taken: Taken;
@@ -119,6 +120,7 @@ const PhotoModel = (photoData: unknown) => {
   const self = {
     id: (): string => photo.id,
     index: (): number => photo.index,
+    originalFilename: (): string | undefined => photo.originalFilename,
     title: (): string | undefined => photo.title,
     description: (): string | undefined => photo.description,
     author: (): string | undefined => photo.taken.author,
