@@ -78,3 +78,21 @@ export const requirePhotoInScope = async (
   }
   throw new NotFoundError();
 };
+
+// Collect the set of photo ids linked to any in-scope gallery. Used by
+// list endpoints that want to narrow a global photo set to the
+// host-scoped view. Returns `null` when unscoped — caller should
+// shortcut "no narrowing needed."
+export const collectScopePhotoIds = async (
+  request: FastifyRequest
+): Promise<Set<string> | null> => {
+  if (!isScoped(request)) return null;
+  const ids = new Set<string>();
+  for (const galleryId of request.galleryScope!) {
+    const photos = (await dbFacade.loadGalleryPhotos(galleryId)) as Array<{
+      id: string;
+    }>;
+    for (const photo of photos) ids.add(photo.id);
+  }
+  return ids;
+};

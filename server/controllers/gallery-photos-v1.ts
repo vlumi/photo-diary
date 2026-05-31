@@ -3,6 +3,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import { AccessError, NotFoundError } from "../lib/errors.js";
+import { requireScopeMatches } from "../lib/host-scope.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/gallery-photo.js";
 
@@ -45,8 +46,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request) => {
       // Both "no access" and "no such gallery" → empty array, so
-      // gallery existence can't be enumerated. See galleries-v1.ts.
+      // gallery existence can't be enumerated. On a scoped host an
+      // off-scope gallery joins the same bucket. See galleries-v1.ts.
       try {
+        requireScopeMatches(request, request.params.galleryId);
         await authorizer.authorizeGalleryView(
           request.user.id,
           request.params.galleryId
@@ -84,7 +87,9 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request) => {
       // Uniform 404 for both "no access" and "no such photo".
+      // Off-scope gallery on a scoped host → same 404.
       try {
+        requireScopeMatches(request, request.params.galleryId);
         await authorizer.authorizeGalleryView(
           request.user.id,
           request.params.galleryId
@@ -121,6 +126,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
         request.params.galleryId
@@ -147,6 +153,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
         request.params.galleryId

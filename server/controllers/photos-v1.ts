@@ -4,6 +4,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import CONST from "../lib/constants.js";
 import authorizerFactory from "../lib/authorizer.js";
 import {
+  collectScopePhotoIds,
   requirePhotoInScope,
   requireUnscoped,
 } from "../lib/host-scope.js";
@@ -108,7 +109,21 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         >[0]
         );
       }
-      return photos;
+      // On a scoped host, narrow to photos linked to an in-scope
+      // gallery. Photos in multiple galleries pass if at least one
+      // link is in scope.
+      const inScopeIds = await collectScopePhotoIds(request);
+      if (!inScopeIds) return photos;
+      if (Array.isArray(photos)) {
+        return (photos as Array<{ id: string }>).filter((p) =>
+          inScopeIds.has(p.id)
+        );
+      }
+      return Object.fromEntries(
+        Object.entries(photos as Record<string, unknown>).filter(([id]) =>
+          inScopeIds.has(id)
+        )
+      );
     }
   );
 
@@ -148,6 +163,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
+      await requirePhotoInScope(request, request.params.photoId);
       await authorizer.authorizeView(request.user.id);
       const photo = await model.getPhoto(request.params.photoId);
       if (await shouldHideMap(request.user.id, CONST.SPECIAL_GALLERY_ALL)) {
