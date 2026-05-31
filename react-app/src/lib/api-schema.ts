@@ -564,9 +564,12 @@ export interface paths {
                         description?: string;
                         icon?: string;
                         epoch?: string;
-                        epochType?: string;
-                        theme?: string;
-                        initialView?: string;
+                        /** @enum {string} */
+                        epochType?: "birthday" | "1-index" | "0-index";
+                        /** @enum {string} */
+                        theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper";
+                        /** @enum {string} */
+                        initialView?: "year" | "month" | "day" | "photo";
                         hostname?: string;
                     };
                 };
@@ -639,9 +642,12 @@ export interface paths {
                         description?: string;
                         icon?: string;
                         epoch?: string;
-                        epochType?: string;
-                        theme?: string;
-                        initialView?: string;
+                        /** @enum {string} */
+                        epochType?: "birthday" | "1-index" | "0-index";
+                        /** @enum {string} */
+                        theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper";
+                        /** @enum {string} */
+                        initialView?: "year" | "month" | "day" | "photo";
                         hostname?: string;
                     };
                 };

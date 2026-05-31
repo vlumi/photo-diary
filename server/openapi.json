@@ -675,13 +675,38 @@
                     "type": "string"
                   },
                   "epochType": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "birthday",
+                      "1-index",
+                      "0-index"
+                    ]
                   },
                   "theme": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "blue",
+                      "red",
+                      "grayscale",
+                      "contrast",
+                      "alert",
+                      "dark",
+                      "amoled",
+                      "forest",
+                      "silver",
+                      "showcase",
+                      "teal",
+                      "paper"
+                    ]
                   },
                   "initialView": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "year",
+                      "month",
+                      "day",
+                      "photo"
+                    ]
                   },
                   "hostname": {
                     "type": "string"
@@ -770,13 +795,38 @@
                     "type": "string"
                   },
                   "epochType": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "birthday",
+                      "1-index",
+                      "0-index"
+                    ]
                   },
                   "theme": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "blue",
+                      "red",
+                      "grayscale",
+                      "contrast",
+                      "alert",
+                      "dark",
+                      "amoled",
+                      "forest",
+                      "silver",
+                      "showcase",
+                      "teal",
+                      "paper"
+                    ]
                   },
                   "initialView": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "year",
+                      "month",
+                      "day",
+                      "photo"
+                    ]
                   },
                   "hostname": {
                     "type": "string"

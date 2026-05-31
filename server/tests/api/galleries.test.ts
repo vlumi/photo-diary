@@ -595,6 +595,30 @@ describe("Mutations as admin", () => {
       .send("not even json")
       .set("Content-Type", "application/json")
       .expect(400));
+  test("Update with unknown theme → 400", () =>
+    api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ theme: "bw" })
+      .expect(400));
+  test("Update with unknown initialView → 400", () =>
+    api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ initialView: "decade" })
+      .expect(400));
+  test("Update with unknown epochType → 400", () =>
+    api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ epochType: "lunar" })
+      .expect(400));
+  test("Update with known enums accepted", () =>
+    api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ theme: "grayscale", initialView: "year", epochType: "birthday" })
+      .expect(204));
 });
 
 afterAll(() => {});

@@ -3,7 +3,13 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import { AccessError, NotFoundError } from "../lib/errors.js";
+import {
+  GALLERY_EPOCH_TYPES,
+  GALLERY_INITIAL_VIEWS,
+  GALLERY_THEMES,
+} from "../lib/gallery-fields.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
+import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
 
 const authorizer = authorizerFactory();
@@ -33,9 +39,9 @@ const GalleryFields = {
   description: Type.Optional(Type.String()),
   icon: Type.Optional(Type.String()),
   epoch: Type.Optional(Type.String()),
-  epochType: Type.Optional(Type.String()),
-  theme: Type.Optional(Type.String()),
-  initialView: Type.Optional(Type.String()),
+  epochType: Type.Optional(StringEnum(GALLERY_EPOCH_TYPES)),
+  theme: Type.Optional(StringEnum(GALLERY_THEMES)),
+  initialView: Type.Optional(StringEnum(GALLERY_INITIAL_VIEWS)),
   hostname: Type.Optional(Type.String()),
 };
 const GalleryCreateBody = Type.Object({
