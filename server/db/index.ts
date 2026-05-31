@@ -113,8 +113,8 @@ export default {
   },
   // Resolve the privacy cascade for (userId, galleryId): gallery-first
   // walk matching the access cascade — `requested → :public → :all` for
-  // non-special galleries (skipping :public for :public/:private/:all
-  // requests), with user-beats-guest at each gallery level. Returns the
+  // non-special galleries (skipping :public for :public/:all requests),
+  // with user-beats-guest at each gallery level. Returns the
   // first non-null `hide_map` encountered; undefined when nothing matches.
   resolveHideMap: async (
     userId: string,

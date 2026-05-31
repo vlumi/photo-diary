@@ -18,7 +18,6 @@ const STATS_UNKNOWN = "[unknown]";
 const SPECIAL_GALLERY_PREFIX = ":";
 const SPECIAL_GALLERY_ALL = `${SPECIAL_GALLERY_PREFIX}all`;
 const SPECIAL_GALLERY_PUBLIC = `${SPECIAL_GALLERY_PREFIX}public`;
-const SPECIAL_GALLERY_PRIVATE = `${SPECIAL_GALLERY_PREFIX}private`;
 const SPECIAL_GALLERIES = {
   [SPECIAL_GALLERY_ALL]: {
     id: SPECIAL_GALLERY_ALL,
@@ -39,16 +38,6 @@ const SPECIAL_GALLERIES = {
     epoch_type: undefined,
     theme: undefined,
     initialView: undefined,
-  },
-  [SPECIAL_GALLERY_PRIVATE]: {
-    id: SPECIAL_GALLERY_PRIVATE,
-    title: "Private",
-    description: "Photos not in any galleries.",
-    icon: undefined,
-    epoch: undefined,
-    epoch_type: undefined,
-    theme: "alert",
-    initialView: "month",
   },
 };
 const isSpecialGallery = (galleryId: string): boolean =>
@@ -73,7 +62,6 @@ export default {
 
   SPECIAL_GALLERY_PREFIX,
   SPECIAL_GALLERY_ALL,
-  SPECIAL_GALLERY_PRIVATE,
   SPECIAL_GALLERY_PUBLIC,
   SPECIAL_GALLERIES,
   isSpecialGallery,

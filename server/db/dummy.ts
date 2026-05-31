@@ -279,14 +279,6 @@ const loadGalleryPhotos = async (galleryId: string, _lang?: string) => {
       return [...new Set(Object.values(db.galleryPhotos).flat() as string[])]
         .map((photoId: string) => db.photos[photoId])
         .sort(comparePhotos);
-    case CONST.SPECIAL_GALLERY_PRIVATE: {
-      const galleriesPhotos = Object.values(db.galleryPhotos).flat();
-      const photos = Object.keys(db.photos)
-        .filter((photoId: string) => !galleriesPhotos.includes(photoId))
-        .map((photoId: string) => db.photos[photoId])
-        .sort(comparePhotos);
-      return photos;
-    }
     default: {
       if (!(galleryId in db.galleries)) {
         throw new NotFoundError();
@@ -315,18 +307,6 @@ const linkGalleryPhoto = async (
 const loadGalleryPhoto = async (galleryId: string, photoId: string, _lang?: string) => {
   const handleGalleryAll = async () => {
     return await loadPhoto(photoId);
-  };
-  const handleGalleryPrivate = async () => {
-    const galleriesPhotos = Object.values(db.galleryPhotos).flat();
-    const photos = Object.keys(db.photos)
-      .filter((id: string) => id === photoId)
-      .filter((id: string) => !galleriesPhotos.includes(id))
-      .map((id: string) => db.photos[id])
-      .sort(comparePhotos);
-    if (photos.length === 0) {
-      throw new NotFoundError();
-    }
-    return photos[0];
   };
   const handleGalleryPublic = async () => {
     const galleriesPhotos = Object.values(db.galleryPhotos).flat();
@@ -358,8 +338,6 @@ const loadGalleryPhoto = async (galleryId: string, photoId: string, _lang?: stri
       return await handleGalleryAll();
     case CONST.SPECIAL_GALLERY_PUBLIC:
       return await handleGalleryPublic();
-    case CONST.SPECIAL_GALLERY_PRIVATE:
-      return await handleGalleryPrivate();
     default:
       return await handleGallery();
   }

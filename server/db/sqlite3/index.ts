@@ -170,7 +170,7 @@ const deleteUserSessions = async (userId: string): Promise<void> => {
 // Resolve the access level for (userId, galleryId) under the user-first
 // cascade: user's rows are consulted in gallery-specificity order first, then
 // :guest's rows. For a non-special gallery request the gallery steps are
-// `gallery → :public → :all`; for `:public`/`:private`/`:all` requests the
+// `gallery → :public → :all`; for `:public`/`:all` requests the
 // :public step is dropped. NULL `access_level` rows are filtered out so
 // privacy-only rows (`hide_map` set without an access grant) don't poison
 // the resolution and force a deny.
@@ -258,7 +258,7 @@ const deleteUserGallery = async (
 // Resolve the privacy cascade for (userId, galleryId). Same user-first
 // ordering as the access cascade: user's rows first in gallery-specificity
 // order, then :guest's. For a non-special gallery the gallery steps are
-// `gallery → :public → :all`; for `:public`/`:private`/`:all` the :public
+// `gallery → :public → :all`; for `:public`/`:all` the :public
 // step is dropped (those aren't subsets of :public).
 //
 // Priority for a non-special gallery request:
@@ -332,10 +332,6 @@ const loadGalleryPhotos = async (galleryId: string, lang?: string) => {
         return schema.buildSelectQuery([
           "id IN (SELECT photo_id FROM gallery_photo)",
         ]);
-      case CONST.SPECIAL_GALLERY_PRIVATE:
-        return schema.buildSelectQuery([
-          "id NOT IN (SELECT photo_id FROM gallery_photo)",
-        ]);
       default:
         return schema.buildSelectQuery([
           "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
@@ -387,11 +383,6 @@ const loadGalleryPhoto = async (
       case CONST.SPECIAL_GALLERY_PUBLIC:
         return schema.buildSelectQuery([
           "id IN (SELECT photo_id FROM gallery_photo)",
-          "AND id = ?",
-        ]);
-      case CONST.SPECIAL_GALLERY_PRIVATE:
-        return schema.buildSelectQuery([
-          "id NOT IN (SELECT photo_id FROM gallery_photo)",
           "AND id = ?",
         ]);
       default:
@@ -541,8 +532,8 @@ const loadOrphanGalleryPhotoLinks = async (): Promise<
     })),
   ];
 };
-// Gallery IDs with no photos linked. The `:all`/`:public`/`:private`
-// sentinels aren't gallery rows; they don't show up here.
+// Gallery IDs with no photos linked. The `:all`/`:public` sentinels
+// aren't gallery rows; they don't show up here.
 const loadEmptyGalleryIds = async (): Promise<string[]> => {
   const rows = db
     .prepare(
@@ -552,8 +543,8 @@ const loadEmptyGalleryIds = async (): Promise<string[]> => {
   return rows.map((r) => r.id);
 };
 // user_gallery rows whose referenced user or gallery is gone. The
-// sentinel gallery ids (`:all`, `:public`, `:private`) are skipped on
-// the gallery side — they're never rows in `gallery`.
+// sentinel gallery ids (`:all`, `:public`) are skipped on the gallery
+// side — they're never rows in `gallery`.
 const loadOrphanUserGalleryRows = async (): Promise<
   Array<{ userId: string; galleryId: string; missing: "user" | "gallery" }>
 > => {
