@@ -9,10 +9,10 @@ import {
   LoginError,
   TokenExpiredError,
 } from "../lib/errors.js";
+import { SALT_ROUNDS } from "../lib/bcrypt-rounds.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
-const SALT_ROUNDS = 10;
 const REFRESH_SECRET_BYTES = 32;
 
 const encodeSecret = (secret: string): Uint8Array =>

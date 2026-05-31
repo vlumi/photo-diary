@@ -32,10 +32,9 @@ import bcrypt from "bcrypt";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
+import { SALT_ROUNDS } from "../lib/bcrypt-rounds.js";
 import CONST from "../lib/constants.js";
 import db from "../db/index.js";
-
-const SALT_ROUNDS = 10;
 
 const confirm = async (prompt: string): Promise<boolean> => {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
