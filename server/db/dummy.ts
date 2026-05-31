@@ -5,10 +5,6 @@ import CONST from "../lib/constants.js";
 import { NotFoundError, NotImplementedError } from "../lib/errors.js";
 import { acceptLocalizedCity } from "../lib/localized-script.js";
 
-const notImplemented = async (): Promise<never> => {
-  throw new NotImplementedError();
-};
-
 /**
  * Dummy DB, with all DB values hard-coded.
  */
@@ -20,13 +16,13 @@ export default () => {
     createMeta,
     loadMeta,
     updateMeta,
-    deleteMeta: notImplemented,
+    deleteMeta,
 
     loadUsers,
     createUser,
     loadUser,
     updateUser,
-    deleteUser: notImplemented,
+    deleteUser,
 
     createSession,
     loadSession,
@@ -35,16 +31,16 @@ export default () => {
     deleteUserSessions,
 
     resolveAccessLevel,
-    loadUserGalleryRows: notImplemented,
-    upsertUserGallery: notImplemented,
-    deleteUserGallery: notImplemented,
+    loadUserGalleryRows,
+    upsertUserGallery,
+    deleteUserGallery,
     resolveHideMap,
 
     loadGalleries,
     createGallery,
     loadGallery,
     updateGallery,
-    deleteGallery: notImplemented,
+    deleteGallery,
 
     loadGalleryPhotos,
     linkGalleryPhoto,
@@ -66,7 +62,7 @@ export default () => {
     upsertGeocoded,
     markGeocodeNoData,
     loadPhotosMissingGeocoded,
-    deletePhoto: notImplemented,
+    deletePhoto,
     loadPhotoLocalized,
     clearLocalizedCity,
   };
@@ -116,8 +112,15 @@ const deleteUserSessions = async (userId: string) => {
 const loadMetas = async () => {
   return Object.values(db.meta);
 };
-const createMeta = async () => {
-  throw new NotImplementedError();
+// Dummy meta rows match the sqlite3 `mapRow` shape: single-key
+// record `{ [key]: value }` rather than `{ key, value }`. Mirrors
+// sqlite3's UNIQUE-constraint behaviour — INSERT on a duplicate
+// key throws.
+const createMeta = async (meta: { key: string; value: string }) => {
+  if (meta.key in db.meta) {
+    throw new Error(`UNIQUE constraint failed: meta.key (${meta.key})`);
+  }
+  db.meta[meta.key] = { [meta.key]: meta.value };
 };
 const loadMeta = async (key: string) => {
   if (!(key in db.meta)) {
@@ -125,15 +128,28 @@ const loadMeta = async (key: string) => {
   }
   return db.meta[key];
 };
-const updateMeta = async () => {
-  throw new NotImplementedError();
+const updateMeta = async (key: string, patch: { value?: string }) => {
+  if (!(key in db.meta)) {
+    throw new NotFoundError();
+  }
+  if (patch.value !== undefined) db.meta[key] = { [key]: patch.value };
+};
+const deleteMeta = async (key: string) => {
+  if (!(key in db.meta)) {
+    throw new NotFoundError();
+  }
+  delete db.meta[key];
 };
 
 const loadUsers = async () => {
   return Object.values(db.users);
 };
-const createUser = async () => {
-  throw new NotImplementedError();
+const createUser = async (user: {
+  id: string;
+  password: string;
+  secret: string;
+}) => {
+  db.users[user.id] = { ...user };
 };
 const loadUser = async (id: string) => {
   if (!(id in db.users)) {
@@ -146,6 +162,62 @@ const updateUser = async (userId: string, patch: Record<string, unknown>) => {
     throw new NotFoundError();
   }
   Object.assign(db.users[userId], patch);
+};
+const deleteUser = async (id: string) => {
+  if (!(id in db.users)) {
+    throw new NotFoundError();
+  }
+  delete db.users[id];
+};
+
+const loadUserGalleryRows = async (
+  filter: { userId?: string; galleryId?: string } = {}
+) => {
+  const acl = (db.accessControl as Record<string, Record<string, number>>) ?? {};
+  const out: Array<{
+    user_id: string;
+    gallery_id: string;
+    access_level: number;
+    hide_map: number | null;
+  }> = [];
+  for (const [userId, perGallery] of Object.entries(acl)) {
+    if (filter.userId && filter.userId !== userId) continue;
+    for (const [galleryId, level] of Object.entries(perGallery)) {
+      if (filter.galleryId && filter.galleryId !== galleryId) continue;
+      out.push({
+        user_id: userId,
+        gallery_id: galleryId,
+        access_level: level,
+        hide_map: null,
+      });
+    }
+  }
+  return out;
+};
+const deleteUserGallery = async (userId: string, galleryId: string) => {
+  const acl = db.accessControl as Record<string, Record<string, number>>;
+  if (acl?.[userId]) {
+    delete acl[userId][galleryId];
+    if (Object.keys(acl[userId]).length === 0) delete acl[userId];
+  }
+};
+const upsertUserGallery = async (row: {
+  user_id: string;
+  gallery_id: string;
+  access_level?: number | null;
+  hide_map?: number | null;
+}) => {
+  const acl = (db.accessControl ??= {}) as Record<
+    string,
+    Record<string, number>
+  >;
+  acl[row.user_id] ??= {};
+  if (row.access_level !== undefined && row.access_level !== null) {
+    acl[row.user_id][row.gallery_id] = row.access_level;
+  }
+  // Dummy doesn't track `hide_map` separately; the access cascade
+  // queries it via `resolveHideMap`, which in the dummy just returns
+  // `false`. Real schema persists the column.
 };
 
 const resolveAccessLevel = async (
@@ -171,8 +243,8 @@ const resolveHideMap = async (
 const loadGalleries = async () => {
   return Object.values(db.galleries).sort();
 };
-const createGallery = async () => {
-  throw new NotImplementedError();
+const createGallery = async (gallery: { id: string }) => {
+  db.galleries[gallery.id] = { ...gallery };
 };
 const loadGallery = async (galleryId: string) => {
   if (!(galleryId in db.galleries)) {
@@ -180,8 +252,20 @@ const loadGallery = async (galleryId: string) => {
   }
   return db.galleries[galleryId];
 };
-const updateGallery = async () => {
-  throw new NotImplementedError();
+const updateGallery = async (
+  galleryId: string,
+  patch: Record<string, unknown>
+) => {
+  if (!(galleryId in db.galleries)) {
+    throw new NotFoundError();
+  }
+  Object.assign(db.galleries[galleryId], patch);
+};
+const deleteGallery = async (galleryId: string) => {
+  if (!(galleryId in db.galleries)) {
+    throw new NotFoundError();
+  }
+  delete db.galleries[galleryId];
 };
 
 const comparePhotos = (a: any, b: any) =>
@@ -283,11 +367,16 @@ const loadGalleryPhoto = async (galleryId: string, photoId: string, _lang?: stri
 const unlinkGalleryPhoto = async () => {
   throw new NotImplementedError();
 };
-const unlinkAllPhotos = async () => {
-  throw new NotImplementedError();
+const unlinkAllPhotos = async (galleryId: string) => {
+  delete (db.galleryPhotos as Record<string, string[]>)[galleryId];
 };
-const unlinkAllGalleries = async () => {
-  throw new NotImplementedError();
+const unlinkAllGalleries = async (photoId: string) => {
+  const galleryPhotos = db.galleryPhotos as Record<string, string[]>;
+  for (const galleryId of Object.keys(galleryPhotos)) {
+    galleryPhotos[galleryId] = galleryPhotos[galleryId].filter(
+      (id) => id !== photoId
+    );
+  }
 };
 
 const loadPhotos = async () => {
@@ -396,6 +485,12 @@ const updatePhoto = async (photoId: string, patch: Record<string, unknown>) => {
     throw new NotFoundError();
   }
   deepMerge(db.photos[photoId], patch);
+};
+const deletePhoto = async (photoId: string) => {
+  if (!(photoId in db.photos)) {
+    throw new NotFoundError();
+  }
+  delete db.photos[photoId];
 };
 // Geocoded fields — English-canonical lives on the photo "row";
 // other languages live in db.photoLocalized keyed by (photo_id, lang).

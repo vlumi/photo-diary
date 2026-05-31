@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Server
+
+- Mutation endpoints (`POST` / `PUT` / `DELETE`) implemented across `/api/v1/{meta,users,galleries,photos}` — every one was throwing `ERROR_NOT_IMPLEMENTED` until now. Body shapes validated via TypeBox on the route, so malformed input returns 400 with field-level detail. Admin-gated; gallery `PUT` / `DELETE` uses gallery-admin scope (existing semantics), the rest require global admin. `POST` returns 201, `PUT` / `DELETE` return 204. The Swagger UI at `/api/v1/docs` now documents the new bodies.
+- Photo mutations (`POST` / `PUT`) are deliberately locked to the override fields `bin/photo.ts` already exposes — title, description, `taken.author`, `taken.location.{country,place}`, `camera.{make,model}`, `lens.{make,model}`, `exposure.{focalLength,aperture}`. EXIF-derived fields (timestamps, coordinates, dimensions, ISO, shutter, focal-length-35mm-equiv, serials) and Nominatim-derived `geocoded.*` reject with 400 — those columns are owned by the converter / `photo-geocode.ts` daemon.
+- Fastify's default `removeAdditional: 'all'` (silently strips unknown body properties) is replaced with `removeAdditional: false` so routes that opt in to `additionalProperties: false` actually reject the writes instead of accepting + dropping. Routes that need pass-through still declare `additionalProperties: true` explicitly.
+- `models/user.ts` absorbs the bcrypt-hash + secret-rotation + cascade logic that `bin/user.ts` had inline, so the CLI and API share the same path. User `DELETE` cascades `user_gallery` rows + active sessions; gallery `DELETE` cascades `gallery_photo` links + `user_gallery` rows (the FKs are RESTRICT and would otherwise refuse); photo `DELETE` cascades `gallery_photo` links.
+- Meta `key` is locked to a schema-seeded enum (`name | description | cdn | image`). `schema_version` and other internals can't be written via the API; operators who need an experimental key reach for `./bin/meta.ts set --force`. `server/lib/meta-keys.ts` is the single source of truth shared by the CLI and the API.
+- New `/api/v1/user-gallery` resource: `GET /` (with optional `userId` / `galleryId` filters), `PUT /:userId/:galleryId` body `{ accessLevel: "none|view|admin", hideMap?: boolean|null }`, `DELETE /:userId/:galleryId`. Admin-only — same plumbing the `bin/access.ts` CLI uses, exposed over HTTP for the admin UI.
+
 ## [0.12.1] - 2026-05-31
 
 ### Frontend

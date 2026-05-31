@@ -26,10 +26,3 @@ test("getAll()", async () => {
   expect(calledUrl()).toContain("/api/v1/meta");
 });
 
-test("get()", async () => {
-  const metaEntry = { name: "Dummy instance" };
-  globalThis.fetch = mockFetch(metaEntry) as unknown as typeof fetch;
-
-  await expect(meta.get("name")).resolves.toStrictEqual(metaEntry);
-  expect(calledUrl()).toContain("/api/v1/meta/name");
-});

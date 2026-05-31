@@ -27,7 +27,7 @@ const SPECIAL_GALLERIES = {
     icon: undefined,
     epoch: undefined,
     epoch_type: undefined,
-    theme: "bw",
+    theme: undefined,
     initialView: "year",
   },
   [SPECIAL_GALLERY_PUBLIC]: {

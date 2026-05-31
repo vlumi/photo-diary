@@ -42,6 +42,34 @@
         "tags": [
           "meta"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "key",
+                  "value"
+                ],
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "enum": [
+                      "name",
+                      "description",
+                      "cdn",
+                      "image"
+                    ]
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearer": []
@@ -63,7 +91,13 @@
         "parameters": [
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "name",
+                "description",
+                "cdn",
+                "image"
+              ]
             },
             "in": "path",
             "name": "key",
@@ -90,10 +124,34 @@
         "tags": [
           "meta"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "value"
+                ],
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "parameters": [
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "name",
+                "description",
+                "cdn",
+                "image"
+              ]
             },
             "in": "path",
             "name": "key",
@@ -119,7 +177,13 @@
         "parameters": [
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "name",
+                "description",
+                "cdn",
+                "image"
+              ]
             },
             "in": "path",
             "name": "key",
@@ -348,6 +412,30 @@
         "tags": [
           "users"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "password"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearer": []
@@ -392,6 +480,25 @@
         "tags": [
           "users"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "password"
+                ],
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
         "parameters": [
           {
             "schema": {
@@ -541,6 +648,74 @@
         "tags": [
           "galleries"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "epoch": {
+                    "type": "string"
+                  },
+                  "epochType": {
+                    "type": "string",
+                    "enum": [
+                      "birthday",
+                      "1-index",
+                      "0-index"
+                    ]
+                  },
+                  "theme": {
+                    "type": "string",
+                    "enum": [
+                      "blue",
+                      "red",
+                      "grayscale",
+                      "contrast",
+                      "alert",
+                      "dark",
+                      "amoled",
+                      "forest",
+                      "silver",
+                      "showcase",
+                      "teal",
+                      "paper"
+                    ]
+                  },
+                  "initialView": {
+                    "type": "string",
+                    "enum": [
+                      "year",
+                      "month",
+                      "day",
+                      "photo"
+                    ]
+                  },
+                  "hostname": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearer": []
@@ -600,6 +775,67 @@
         "tags": [
           "galleries"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "epoch": {
+                    "type": "string"
+                  },
+                  "epochType": {
+                    "type": "string",
+                    "enum": [
+                      "birthday",
+                      "1-index",
+                      "0-index"
+                    ]
+                  },
+                  "theme": {
+                    "type": "string",
+                    "enum": [
+                      "blue",
+                      "red",
+                      "grayscale",
+                      "contrast",
+                      "alert",
+                      "dark",
+                      "amoled",
+                      "forest",
+                      "silver",
+                      "showcase",
+                      "teal",
+                      "paper"
+                    ]
+                  },
+                  "initialView": {
+                    "type": "string",
+                    "enum": [
+                      "year",
+                      "month",
+                      "day",
+                      "photo"
+                    ]
+                  },
+                  "hostname": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "parameters": [
           {
             "schema": {
@@ -665,6 +901,89 @@
         "tags": [
           "photos"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "taken": {
+                    "type": "object",
+                    "properties": {
+                      "author": {
+                        "type": "string"
+                      },
+                      "location": {
+                        "type": "object",
+                        "properties": {
+                          "country": {
+                            "type": "string"
+                          },
+                          "place": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "camera": {
+                    "type": "object",
+                    "properties": {
+                      "make": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "lens": {
+                    "type": "object",
+                    "properties": {
+                      "make": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "exposure": {
+                    "type": "object",
+                    "properties": {
+                      "focalLength": {
+                        "type": "number"
+                      },
+                      "aperture": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearer": []
@@ -704,6 +1023,82 @@
         "tags": [
           "photos"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "taken": {
+                    "type": "object",
+                    "properties": {
+                      "author": {
+                        "type": "string"
+                      },
+                      "location": {
+                        "type": "object",
+                        "properties": {
+                          "country": {
+                            "type": "string"
+                          },
+                          "place": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "camera": {
+                    "type": "object",
+                    "properties": {
+                      "make": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "lens": {
+                    "type": "object",
+                    "properties": {
+                      "make": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "exposure": {
+                    "type": "object",
+                    "properties": {
+                      "focalLength": {
+                        "type": "number"
+                      },
+                      "aperture": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "parameters": [
           {
             "schema": {
@@ -896,6 +1291,183 @@
             },
             "in": "path",
             "name": "photoId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/user-gallery": {
+      "get": {
+        "summary": "List user_gallery ACL rows (admin)",
+        "tags": [
+          "user-gallery"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "userId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "galleryId",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "user_id",
+                      "gallery_id",
+                      "access_level",
+                      "hide_map"
+                    ],
+                    "properties": {
+                      "user_id": {
+                        "type": "string"
+                      },
+                      "gallery_id": {
+                        "type": "string"
+                      },
+                      "access_level": {
+                        "type": "number"
+                      },
+                      "hide_map": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/user-gallery/{userId}/{galleryId}": {
+      "put": {
+        "summary": "Upsert a user_gallery ACL row (admin)",
+        "tags": [
+          "user-gallery"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "accessLevel"
+                ],
+                "properties": {
+                  "accessLevel": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "view",
+                      "admin"
+                    ]
+                  },
+                  "hideMap": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "galleryId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a user_gallery ACL row (admin)",
+        "tags": [
+          "user-gallery"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "galleryId",
             "required": true
           }
         ],

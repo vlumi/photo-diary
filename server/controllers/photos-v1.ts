@@ -16,6 +16,72 @@ const init = async () => {
 const PhotoIdParam = Type.Object({ photoId: Type.String() });
 // No response schemas here — these routes aren't consumed by the
 // SPA (which uses `/api/v1/gallery-photos/:galleryId`).
+//
+// Body shape is restricted to the override fields `bin/photo.ts`
+// already exposes (title, description, author, country, place, gear,
+// focal, aperture). EXIF-derived fields (timestamps, coordinates,
+// dimensions, ISO, shutter, the 35mm-equiv, serials) and Nominatim-
+// derived `geocoded.*` are intentionally NOT writable — they're
+// owned by the converter / photo-geocode daemon. `additionalProperties:
+// false` at each nested level rejects unknown writes with 400.
+const PhotoOverridesFields = {
+  title: Type.Optional(Type.String()),
+  description: Type.Optional(Type.String()),
+  taken: Type.Optional(
+    Type.Object(
+      {
+        author: Type.Optional(Type.String()),
+        location: Type.Optional(
+          Type.Object(
+            {
+              country: Type.Optional(Type.String()),
+              place: Type.Optional(Type.String()),
+            },
+            { additionalProperties: false }
+          )
+        ),
+      },
+      { additionalProperties: false }
+    )
+  ),
+  camera: Type.Optional(
+    Type.Object(
+      {
+        make: Type.Optional(Type.String()),
+        model: Type.Optional(Type.String()),
+      },
+      { additionalProperties: false }
+    )
+  ),
+  lens: Type.Optional(
+    Type.Object(
+      {
+        make: Type.Optional(Type.String()),
+        model: Type.Optional(Type.String()),
+      },
+      { additionalProperties: false }
+    )
+  ),
+  exposure: Type.Optional(
+    Type.Object(
+      {
+        focalLength: Type.Optional(Type.Number()),
+        aperture: Type.Optional(Type.Number()),
+      },
+      { additionalProperties: false }
+    )
+  ),
+};
+const PhotoCreateBody = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    ...PhotoOverridesFields,
+  },
+  { additionalProperties: false }
+);
+const PhotoUpdateBody = Type.Object(PhotoOverridesFields, {
+  additionalProperties: false,
+});
 const TAGS = ["photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -51,14 +117,16 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Create a photo (admin)",
+        body: PhotoCreateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const photo = {};
-      // TODO: validate and set content from request.body
-      return await model.createPhoto(photo);
+      await model.createPhoto(
+        request.body as { id: string } & Record<string, unknown>
+      );
+      reply.status(201).send();
     }
   );
 
@@ -94,14 +162,17 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Update one photo (admin)",
         params: PhotoIdParam,
+        body: PhotoUpdateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const photo = {};
-      // TODO: validate and set content from request.body
-      return await model.updatePhoto(photo);
+      await model.updatePhoto(
+        request.params.photoId,
+        request.body as Record<string, unknown>
+      );
+      reply.status(204).send();
     }
   );
 

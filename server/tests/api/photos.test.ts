@@ -369,4 +369,103 @@ describe("hide_map cascade applied to GET /photos and /photos/:id (regression #2
   });
 });
 
+describe("Mutations as guest", () => {
+  test("Create rejected", () =>
+    api.post("/api/v1/photos").send({ id: "new.jpg" }).expect(403));
+  test("Update rejected", () =>
+    api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .send({ title: "x" })
+      .expect(403));
+  test("Delete rejected", () =>
+    api.delete("/api/v1/photos/gallery1photo.jpg").expect(403));
+});
+
+describe("Mutations as gallery1Admin", () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await loginUser(api, "gallery1Admin");
+  });
+  test("Create rejected (global admin only)", () =>
+    api
+      .post("/api/v1/photos")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ id: "new.jpg" })
+      .expect(403));
+  test("Update rejected (global admin only)", () =>
+    api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "x" })
+      .expect(403));
+  test("Delete rejected (global admin only)", () =>
+    api
+      .delete("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(403));
+});
+
+describe("Mutations as admin", () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await loginUser(api, "admin");
+  });
+  test("Create photo", async () => {
+    await api
+      .post("/api/v1/photos")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ id: "fresh.jpg", title: "Fresh photo" })
+      .expect(201);
+    await getPhoto(token, "fresh.jpg");
+  });
+  test("Update photo", async () => {
+    await api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "renamed" })
+      .expect(204);
+    const result = await getPhoto(token, "gallery1photo.jpg");
+    expect(result.body.title).toBe("renamed");
+  });
+  test("Delete photo", async () => {
+    await api
+      .delete("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204);
+    await getPhoto(token, "gallery1photo.jpg", 404);
+  });
+  test("Create with missing id → 400", () =>
+    api
+      .post("/api/v1/photos")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "no id" })
+      .expect(400));
+  test("Update rejects EXIF-managed field (taken.instant.timestamp)", () =>
+    api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ taken: { instant: { timestamp: "1999-01-01 00:00:00" } } })
+      .expect(400));
+  test("Update rejects EXIF-managed field (taken.location.coordinates)", () =>
+    api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        taken: { location: { coordinates: { latitude: 0, longitude: 0 } } },
+      })
+      .expect(400));
+  test("Update rejects Nominatim-managed field (geocoded)", () =>
+    api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ geocoded: { city: "Spoofed" } })
+      .expect(400));
+  test("Update rejects EXIF-managed field (exposure.iso)", () =>
+    api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ exposure: { iso: 100 } })
+      .expect(400));
+});
+
 afterAll(() => {});

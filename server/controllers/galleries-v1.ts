@@ -3,7 +3,13 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import { AccessError, NotFoundError } from "../lib/errors.js";
+import {
+  GALLERY_EPOCH_TYPES,
+  GALLERY_INITIAL_VIEWS,
+  GALLERY_THEMES,
+} from "../lib/gallery-fields.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
+import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
 
 const authorizer = authorizerFactory();
@@ -25,6 +31,24 @@ const GalleryItemResponse = Type.Object(
   { id: Type.String(), hideMap: Type.Boolean() },
   { additionalProperties: true }
 );
+// camelCase to match the Gallery model shape (`epochType`, `initialView`).
+// All non-id fields optional; PUT body drops `id` since it comes from
+// the URL.
+const GalleryFields = {
+  title: Type.Optional(Type.String()),
+  description: Type.Optional(Type.String()),
+  icon: Type.Optional(Type.String()),
+  epoch: Type.Optional(Type.String()),
+  epochType: Type.Optional(StringEnum(GALLERY_EPOCH_TYPES)),
+  theme: Type.Optional(StringEnum(GALLERY_THEMES)),
+  initialView: Type.Optional(StringEnum(GALLERY_INITIAL_VIEWS)),
+  hostname: Type.Optional(Type.String()),
+};
+const GalleryCreateBody = Type.Object({
+  id: Type.String({ minLength: 1 }),
+  ...GalleryFields,
+});
+const GalleryUpdateBody = Type.Object(GalleryFields);
 const TAGS = ["galleries"];
 
 const annotateWithHideMap = async (
@@ -83,14 +107,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Create a gallery (admin)",
+        body: GalleryCreateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const gallery = {};
-      // TODO: validate and set content from request.body
-      return await model.createGallery(gallery);
+      await model.createGallery(request.body);
+      reply.status(201).send();
     }
   );
 
@@ -147,17 +171,17 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Update gallery properties (admin)",
         params: GalleryIdParam,
+        body: GalleryUpdateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
         request.params.galleryId
       );
-      const gallery = {};
-      // TODO: validate and set content from request.body
-      return await model.updateGallery(gallery);
+      await model.updateGallery(request.params.galleryId, request.body);
+      reply.status(204).send();
     }
   );
 

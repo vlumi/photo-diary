@@ -2,6 +2,8 @@ import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
+import { KNOWN_META_KEYS_PUBLIC } from "../lib/meta-keys.js";
+import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/meta.js";
 
 const authorizer = authorizerFactory();
@@ -48,9 +50,24 @@ const envDefaults = (): Record<string, unknown> => {
   return out;
 };
 
-const KeyParam = Type.Object({ key: Type.String() });
+// Mutation routes lock `key` to the schema-seeded public-facing set
+// (matches `bin/meta.ts`'s default key list, minus the `instance_`
+// prefix the row gets stored under). `schema_version` and other
+// internals stay off-limits. Operators who need an experimental key
+// reach for `./bin/meta.ts set --force`.
+const MetaKeyEnum = StringEnum(KNOWN_META_KEYS_PUBLIC);
+const KnownKeyParam = Type.Object({ key: MetaKeyEnum });
 // Open shape — meta keys vary per deploy.
 const MetaResponse = Type.Object({}, { additionalProperties: true });
+// POST body: user-facing key + value. PUT body is just the value —
+// the key comes from the URL.
+const MetaCreateBody = Type.Object({
+  key: MetaKeyEnum,
+  value: Type.String(),
+});
+const MetaUpdateBody = Type.Object({
+  value: Type.String(),
+});
 const TAGS = ["meta"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -82,14 +99,17 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Create a meta entry (admin)",
+        body: MetaCreateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const meta = {};
-      // TODO: validate and set content from request.body
-      return await model.createMeta(meta);
+      await model.createMeta({
+        key: `instance_${request.body.key}`,
+        value: request.body.value,
+      });
+      reply.status(201).send();
     }
   );
 
@@ -102,7 +122,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Get one meta entry by key",
-        params: KeyParam,
+        params: KnownKeyParam,
         response: { 200: MetaResponse },
       },
     },
@@ -122,15 +142,18 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Update one meta entry by key (admin)",
-        params: KeyParam,
+        params: KnownKeyParam,
+        body: MetaUpdateBody,
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const meta = {};
-      // TODO: validate and set content from request.body
-      return await model.updateMeta(meta);
+      await model.updateMeta(
+        `instance_${request.params.key}`,
+        request.body.value
+      );
+      reply.status(204).send();
     }
   );
 
@@ -143,13 +166,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Delete one meta entry by key (admin)",
-        params: KeyParam,
+        params: KnownKeyParam,
         security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {
       await authorizer.authorizeAdmin(request.user.id);
-      await model.deleteMeta(request.params.key);
+      await model.deleteMeta(`instance_${request.params.key}`);
       reply.status(204).send();
     }
   );

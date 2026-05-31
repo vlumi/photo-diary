@@ -1,10 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import bcrypt from "bcrypt";
 
-import { NotImplementedError, ValidationError } from "../lib/errors.js";
+import { ValidationError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
+
+const SALT_ROUNDS = 10;
 
 export default () => {
   return {
@@ -26,17 +27,35 @@ const getUsers = async () => {
 const getUser = async (id: string) => {
   return await db.loadUser(id);
 };
-const createUser = async (user: Record<string, any>) => {
-  logger.debug("Creating user", user);
-  throw new NotImplementedError();
+const createUser = async (user: { id: string; password: string }) => {
+  logger.debug("Creating user", { id: user.id });
+  const password = await bcrypt.hash(user.password, SALT_ROUNDS);
+  await db.createUser({ id: user.id, password, secret: randomUUID() });
 };
-const updateUser = async (user: Record<string, any>) => {
-  logger.debug("Updating user", user);
-  throw new NotImplementedError();
+// Admin-driven password reset for another user. Rotates `secret` so
+// any existing JWTs (and the user's own active sessions) are
+// invalidated — same semantics as `bin/user.ts passwd` without
+// `--keep-secret`.
+const updateUser = async (userId: string, patch: { password: string }) => {
+  logger.debug("Updating user", { id: userId });
+  const password = await bcrypt.hash(patch.password, SALT_ROUNDS);
+  const secret = randomBytes(32).toString("hex");
+  await db.updateUser(userId, { password, secret });
+  await db.deleteUserSessions(userId);
 };
+// Cascades to user_gallery rows so we don't orphan ACL entries.
+// Matches the `bin/user.ts delete` cleanup.
 const deleteUser = async (id: string) => {
   logger.debug("Deleting user", id);
-  throw new NotImplementedError();
+  const accessRows = (await db.loadUserGalleryRows({ userId: id })) as Array<{
+    user_id: string;
+    gallery_id: string;
+  }>;
+  for (const row of accessRows) {
+    await db.deleteUserGallery(row.user_id, row.gallery_id);
+  }
+  await db.deleteUserSessions(id);
+  await db.deleteUser(id);
 };
 
 // Verifies the current password so a stolen session can't lock the real
@@ -60,7 +79,7 @@ const changePassword = async (
     // would trip the SPA's session-expired handler and force re-login.
     throw new ValidationError("Current password is incorrect");
   }
-  const newHash = await bcrypt.hash(newPassword, 10);
+  const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
   const newSecret = randomBytes(32).toString("hex");
   await db.updateUser(userId, { password: newHash, secret: newSecret });
   logger.debug(`Password rotated for "${userId}"`);
