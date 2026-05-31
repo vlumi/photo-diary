@@ -252,15 +252,92 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
     ).toBe(true);
   });
 
-  test("Public read GET /galleries/:id (off scope) is unaffected", async () => {
-    // Hostname binds the admin boundary, not the read boundary. With
-    // gallery3 publicly viewable, a request from a scoped host still
-    // gets the same payload it would from anywhere else.
+  test("GET /galleries narrows the list to the scoped gallery", async () => {
+    const auth = await adminAuth();
+    const result = await withHost(
+      api.get("/api/v1/galleries"),
+      "gallery1.example.com"
+    )
+      .set("Authorization", auth)
+      .expect(200);
+    expect(
+      (result.body as Array<{ id: string }>).map((g) => g.id)
+    ).toStrictEqual(["gallery1"]);
+  });
+
+  test("GET /galleries/:id (off scope) returns the empty placeholder", async () => {
+    // Same shape as "no access" / "no such gallery" — off-scope joins
+    // the same bucket so a scoped host can't enumerate other galleries
+    // via the API.
     const result = await withHost(
       api.get("/api/v1/galleries/gallery3"),
       "gallery1.example.com"
     ).expect(200);
-    expect((result.body as { id: string }).id).toBe("gallery3");
+    expect(result.body).toStrictEqual({ id: "gallery3", hideMap: false });
+  });
+
+  test("GET /gallery-photos/:gallery (off scope) → empty array", async () => {
+    const result = await withHost(
+      api.get("/api/v1/gallery-photos/gallery3"),
+      "gallery1.example.com"
+    ).expect(200);
+    expect(result.body).toStrictEqual([]);
+  });
+
+  test("GET /gallery-photos/:gallery/:photo (off scope) → 404", async () => {
+    await withHost(
+      api.get("/api/v1/gallery-photos/gallery3/gallery3photo.jpg"),
+      "gallery1.example.com"
+    ).expect(404);
+  });
+
+  test("GET /photos narrows to in-scope photos", async () => {
+    const auth = await adminAuth();
+    const result = await withHost(
+      api.get("/api/v1/photos"),
+      "gallery1.example.com"
+    )
+      .set("Authorization", auth)
+      .expect(200);
+    // gallery1's fixture photos are gallery1photo.jpg + gallery12photo.jpg
+    // (the latter also lives in gallery2). gallery2photo.jpg /
+    // gallery3photo.jpg / orphanphoto.jpg are out.
+    const ids = Array.isArray(result.body)
+      ? (result.body as Array<{ id: string }>).map((p) => p.id).sort()
+      : Object.keys(result.body as Record<string, unknown>).sort();
+    expect(ids).toStrictEqual(["gallery12photo.jpg", "gallery1photo.jpg"]);
+  });
+
+  test("GET /photos/:id (in scope) → 200", async () => {
+    const auth = await adminAuth();
+    await withHost(
+      api.get("/api/v1/photos/gallery1photo.jpg"),
+      "gallery1.example.com"
+    )
+      .set("Authorization", auth)
+      .expect(200);
+  });
+
+  test("GET /photos/:id (off scope) → 404", async () => {
+    const auth = await adminAuth();
+    await withHost(
+      api.get("/api/v1/photos/gallery2photo.jpg"),
+      "gallery1.example.com"
+    )
+      .set("Authorization", auth)
+      .expect(404);
+  });
+
+  test("Photo in multiple galleries readable if any link is in scope", async () => {
+    // gallery12photo.jpg lives in both gallery1 and gallery2. From
+    // gallery1.example.com (scope=[gallery1]) it's still readable.
+    const auth = await adminAuth();
+    await withHost(
+      api.get("/api/v1/photos/gallery12photo.jpg"),
+      "gallery1.example.com"
+    )
+      .set("Authorization", auth)
+      .expect(200);
   });
 });
 
