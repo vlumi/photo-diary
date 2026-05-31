@@ -2,7 +2,7 @@ import { init } from "../../app.js";
 import { _resetLoginRateLimitForTests } from "../../controllers/tokens-v1.js";
 import { createApi, loginUser, loginUserPair } from "./helper.js";
 
-const { api, close } = createApi();
+const { api } = createApi();
 
 beforeEach(async () => {
   await init();
@@ -12,7 +12,6 @@ beforeEach(async () => {
   _resetLoginRateLimitForTests();
 });
 
-afterAll(close);
 
 describe("Login", () => {
   test("Non-existing user", async () => {

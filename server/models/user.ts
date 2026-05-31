@@ -1,11 +1,10 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import bcrypt from "bcrypt";
 
+import { SALT_ROUNDS } from "../lib/bcrypt-rounds.js";
 import { ValidationError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
-
-const SALT_ROUNDS = 10;
 
 export default () => {
   return {

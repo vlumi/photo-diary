@@ -4,14 +4,13 @@ import { createApi, loginUser } from "./helper.js";
 
 const db = dummyFactory();
 
-const { api, close } = createApi();
+const { api } = createApi();
 
 beforeEach(async () => {
   await db.init();
   await init();
 });
 
-afterAll(close);
 
 const getGalleryPhoto = async (token: string | undefined, galleryId: string, photoId: string, status = 200) =>
   api
@@ -896,4 +895,3 @@ describe("As publicUser", () => {
   });
 });
 
-afterAll(() => {});

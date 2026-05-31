@@ -5,14 +5,13 @@ import { createApi, loginUser } from "./helper.js";
 
 const db = dummyFactory();
 
-const { api, close } = createApi();
+const { api } = createApi();
 
 beforeEach(async () => {
   await db.init();
   await init();
 });
 
-afterAll(close);
 
 const getPhotos = async (token: string | undefined, status = 200) =>
   api.get("/api/v1/photos").set("Authorization", `Bearer ${token}`).expect(status);
@@ -468,4 +467,3 @@ describe("Mutations as admin", () => {
       .expect(400));
 });
 
-afterAll(() => {});
