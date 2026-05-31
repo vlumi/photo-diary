@@ -12,8 +12,8 @@ import Database from "better-sqlite3";
 //   5. (':guest',  ':public')
 //   6. (':guest',  ':all')
 //
-// For a :public, :private, or :all request, the :public fall-through is
-// skipped — those aren't subsets of :public.
+// For a :public or :all request, the :public fall-through is skipped
+// — those aren't subsets of :public.
 
 const setupDb = (rows: Array<[string, string, number | null]>) => {
   const db = new Database(":memory:");
@@ -167,16 +167,8 @@ describe("hide_map ACL cascade", () => {
       [":guest", ":public", 1],
     ]);
     expect(resolve(db, ":guest", "dailybw")).toBe(1);
-    // :all wins when the request is :private (no :public fall-through)
-    expect(resolve(db, ":guest", ":private")).toBe(0);
     // :all wins when the request is :all itself
     expect(resolve(db, ":guest", ":all")).toBe(0);
-  });
-
-  test(":private request skips the :public fall-through", () => {
-    const db = setupDb([[":guest", ":public", 1]]);
-    // :public being hidden shouldn't affect :private (they're disjoint sets)
-    expect(resolve(db, ":guest", ":private")).toBeUndefined();
   });
 
   test("(user, :public) beats (:guest, :public) at the same gallery level", () => {

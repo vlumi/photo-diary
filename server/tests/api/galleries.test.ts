@@ -91,13 +91,6 @@ const expectGalleryPublic = (result: { body: Record<string, any> }) => {
   expect(photos[2].id).toBe("gallery2photo.jpg");
   expect(photos[3].id).toBe("gallery3photo.jpg");
 };
-const expectGalleryPrivate = (result: { body: Record<string, any> }) => {
-  expect(result.body.id).toBe(":private");
-  const photos = result.body.photos;
-  expect(photos).toBeDefined();
-  expect(Object.keys(photos).length).toBe(1);
-  expect(photos[0].id).toBe("orphanphoto.jpg");
-};
 
 describe("As guest", () => {
   test("List galleries", async () => {
@@ -122,9 +115,6 @@ describe("As guest", () => {
   });
   test("Get :public", async () => {
     await expectGalleryUnavailable(undefined, ":public");
-  });
-  test("Get :private", async () => {
-    await expectGalleryUnavailable(undefined, ":private");
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(undefined, "invalid");
@@ -161,9 +151,6 @@ describe("As blocked user", () => {
   test("Get :public", async () => {
     await expectGalleryUnavailable(token, ":public");
   });
-  test("Get :private", async () => {
-    await expectGalleryUnavailable(token, ":private");
-  });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
   });
@@ -194,9 +181,6 @@ describe("As simple user", () => {
   });
   test("Get :public", async () => {
     await expectGalleryUnavailable(token, ":public");
-  });
-  test("Get :private", async () => {
-    await expectGalleryUnavailable(token, ":private");
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
@@ -232,9 +216,6 @@ describe("As publicUser", () => {
     const result = await getGallery(token, ":public");
     expectGalleryPublic(result);
   });
-  test("Get :private", async () => {
-    await expectGalleryUnavailable(token, ":private");
-  });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
   });
@@ -248,7 +229,7 @@ describe("As admin", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(6);
+    expect(result.body.length).toBe(5);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -269,10 +250,6 @@ describe("As admin", () => {
   test("Get :public", async () => {
     const result = await getGallery(token, ":public");
     expectGalleryPublic(result);
-  });
-  test("Get :private", async () => {
-    const result = await getGallery(token, ":private");
-    expectGalleryPrivate(result);
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
@@ -287,7 +264,7 @@ describe("As gallery1Admin", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(6);
+    expect(result.body.length).toBe(5);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -308,10 +285,6 @@ describe("As gallery1Admin", () => {
   test("Get :public", async () => {
     const result = await getGallery(token, ":public");
     expectGalleryPublic(result);
-  });
-  test("Get :private", async () => {
-    const result = await getGallery(token, ":private");
-    expectGalleryPrivate(result);
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
@@ -345,9 +318,6 @@ describe("As gallery2Admin", () => {
   test("Get :public", async () => {
     await expectGalleryUnavailable(token, ":public");
   });
-  test("Get :private", async () => {
-    await expectGalleryUnavailable(token, ":private");
-  });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
   });
@@ -361,7 +331,7 @@ describe("As plainUser", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(6);
+    expect(result.body.length).toBe(5);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -382,10 +352,6 @@ describe("As plainUser", () => {
   test("Get :public", async () => {
     const result = await getGallery(token, ":public");
     expectGalleryPublic(result);
-  });
-  test("Get :private", async () => {
-    const result = await getGallery(token, ":private");
-    expectGalleryPrivate(result);
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
@@ -419,9 +385,6 @@ describe("As gallery1User", () => {
   test("Get :public", async () => {
     await expectGalleryUnavailable(token, ":public");
   });
-  test("Get :private", async () => {
-    await expectGalleryUnavailable(token, ":private");
-  });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
   });
@@ -453,9 +416,6 @@ describe("As gallery12User", () => {
   });
   test("Get :public", async () => {
     await expectGalleryUnavailable(token, ":public");
-  });
-  test("Get :private", async () => {
-    await expectGalleryUnavailable(token, ":private");
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
