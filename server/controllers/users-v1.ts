@@ -4,6 +4,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import CONST from "../lib/constants.js";
 import { AccessError } from "../lib/errors.js";
 import authorizerFactory from "../lib/authorizer.js";
+import { requireUnscoped } from "../lib/host-scope.js";
 import modelFactory from "../models/user.js";
 import tokenFactory from "../models/token.js";
 
@@ -54,6 +55,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       const cleanUser = (user: { id: string }) => ({ id: user.id });
       const users = (await model.getUsers()) as Array<{ id: string }>;
@@ -75,6 +77,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.createUser(request.body);
       reply.status(201).send();
@@ -115,6 +118,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.updateUser(request.params.userId, request.body);
       reply.status(204).send();
@@ -135,6 +139,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.deleteUser(request.params.userId);
       reply.status(204).send();

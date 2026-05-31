@@ -8,6 +8,10 @@ import {
   GALLERY_INITIAL_VIEWS,
   GALLERY_THEMES,
 } from "../lib/gallery-fields.js";
+import {
+  requireScopeMatches,
+  requireUnscoped,
+} from "../lib/host-scope.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
@@ -112,6 +116,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.createGallery(request.body);
       reply.status(201).send();
@@ -176,6 +181,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
         request.params.galleryId
@@ -199,6 +205,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
         request.params.galleryId

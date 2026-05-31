@@ -3,6 +3,10 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import CONST from "../lib/constants.js";
 import authorizerFactory from "../lib/authorizer.js";
+import {
+  requirePhotoInScope,
+  requireUnscoped,
+} from "../lib/host-scope.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/photo.js";
 
@@ -122,6 +126,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.createPhoto(
         request.body as { id: string } & Record<string, unknown>
@@ -167,6 +172,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      await requirePhotoInScope(request, request.params.photoId);
       await authorizer.authorizeAdmin(request.user.id);
       await model.updatePhoto(
         request.params.photoId,
@@ -190,6 +196,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      await requirePhotoInScope(request, request.params.photoId);
       await authorizer.authorizeAdmin(request.user.id);
       await model.deletePhoto(request.params.photoId);
       reply.status(204).send();
