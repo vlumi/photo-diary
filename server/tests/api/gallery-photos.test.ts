@@ -103,19 +103,6 @@ describe("As guest", () => {
       await api.get("/api/v1/gallery-photos/:public/orphanphoto.jpg").expect(404);
     });
   });
-  describe("Gallery :private", () => {
-    test("Get gallery1photo.jpg", async () => {
-      await api
-        .get("/api/v1/gallery-photos/:private/gallery1photo.jpg")
-        .expect(404);
-    });
-    test("Get orphanphoto.jpg", async () => {
-      await api.get("/api/v1/gallery-photos/:private/orphanphoto.jpg").expect(404);
-    });
-    test("Get invalid.jpg", async () => {
-      await api.get("/api/v1/gallery-photos/:private/orphanphoto.jpg").expect(404);
-    });
-  });
   describe("Invalid gallery", () => {
     test("Get orphanphoto.jpg", async () => {
       await api.get("/api/v1/gallery-photos/gallery2/orphanphoto.jpg").expect(404);
@@ -242,23 +229,6 @@ describe("As admin", () => {
     });
     test("Get invalid.jpg", async () => {
       await getGalleryPhoto(token, ":public", "invalid.jpg", 404);
-    });
-  });
-  describe("Gallery :private", () => {
-    test("Get gallery1photo.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "gallery2photo.jpg", 404);
-    });
-    test("Get orphanphoto.jpg", async () => {
-      const result = await getGalleryPhoto(
-        token,
-        ":private",
-        "orphanphoto.jpg"
-      );
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("orphanphoto.jpg");
-    });
-    test("Get invalid.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "invalid.jpg", 404);
     });
   });
   describe("Invalid gallery", () => {
@@ -389,23 +359,6 @@ describe("As gallery1Admin", () => {
       await getGalleryPhoto(token, ":public", "invalid.jpg", 404);
     });
   });
-  describe("Gallery :private", () => {
-    test("Get gallery1photo.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "gallery2photo.jpg", 404);
-    });
-    test("Get orphanphoto.jpg", async () => {
-      const result = await getGalleryPhoto(
-        token,
-        ":private",
-        "orphanphoto.jpg"
-      );
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("orphanphoto.jpg");
-    });
-    test("Get invalid.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "invalid.jpg", 404);
-    });
-  });
   describe("Invalid gallery", () => {
     test("Get orphanphoto.jpg", async () => {
       await getGalleryPhoto(token, "invalid", "orphanphoto.jpg", 404);
@@ -494,17 +447,6 @@ describe("As gallery2Admin", () => {
     });
     test("Get invalid.jpg", async () => {
       await getGalleryPhoto(token, ":public", "invalid.jpg", 404);
-    });
-  });
-  describe("Gallery :private", () => {
-    test("Get gallery1photo.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "gallery1photo.jpg", 404);
-    });
-    test("Get orphanphoto.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "orphanphoto.jpg", 404);
-    });
-    test("Get invalid.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "invalid.jpg", 404);
     });
   });
   describe("Invalid gallery", () => {
@@ -635,23 +577,6 @@ describe("As plainUser", () => {
       await getGalleryPhoto(token, ":public", "invalid.jpg", 404);
     });
   });
-  describe("Gallery :private", () => {
-    test("Get gallery1photo.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "gallery2photo.jpg", 404);
-    });
-    test("Get orphanphoto.jpg", async () => {
-      const result = await getGalleryPhoto(
-        token,
-        ":private",
-        "orphanphoto.jpg"
-      );
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("orphanphoto.jpg");
-    });
-    test("Get invalid.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "invalid.jpg", 404);
-    });
-  });
   describe("Invalid gallery", () => {
     test("Get orphanphoto.jpg", async () => {
       await getGalleryPhoto(token, "invalid", "orphanphoto.jpg", 404);
@@ -740,17 +665,6 @@ describe("As gallery1User", () => {
     });
     test("Get invalid.jpg", async () => {
       await getGalleryPhoto(token, ":public", "invalid.jpg", 404);
-    });
-  });
-  describe("Gallery :private", () => {
-    test("Get gallery1photo.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "gallery1photo.jpg", 404);
-    });
-    test("Get orphanphoto.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "orphanphoto.jpg", 404);
-    });
-    test("Get invalid.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "invalid.jpg", 404);
     });
   });
   describe("Invalid gallery", () => {
@@ -853,17 +767,6 @@ describe("As gallery12User", () => {
     });
     test("Get invalid.jpg", async () => {
       await getGalleryPhoto(token, ":public", "invalid.jpg", 404);
-    });
-  });
-  describe("Gallery :private", () => {
-    test("Get gallery1photo.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "gallery1photo.jpg", 404);
-    });
-    test("Get orphanphoto.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "orphanphoto.jpg", 404);
-    });
-    test("Get invalid.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "invalid.jpg", 404);
     });
   });
   describe("Invalid gallery", () => {
@@ -984,17 +887,6 @@ describe("As publicUser", () => {
     });
     test("Get invalid.jpg", async () => {
       await getGalleryPhoto(token, ":public", "invalid.jpg", 404);
-    });
-  });
-  describe("Gallery :private", () => {
-    test("Get gallery1photo.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "gallery1photo.jpg", 404);
-    });
-    test("Get orphanphoto.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "orphanphoto.jpg", 404);
-    });
-    test("Get invalid.jpg", async () => {
-      await getGalleryPhoto(token, ":private", "invalid.jpg", 404);
     });
   });
   describe("Invalid gallery", () => {

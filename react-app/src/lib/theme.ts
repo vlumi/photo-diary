@@ -97,8 +97,10 @@ const THEMES: Record<ThemeName, Theme> = {
     ...FRAME_LIGHT,
     filter: "none",
   },
-  // Loud red-on-yellow surface used as a visibility flag for the
-  // `:private` gallery. Not a generic style — see project memory.
+  // Loud red-on-yellow surface intended as a visibility flag — apply
+  // to a gallery the operator wants to mark as draft, sensitive, or
+  // otherwise unsafe to confuse with regular content. Not for default
+  // use.
   alert: {
     "primary-color": "#f00",
     "primary-background": "#ff6",
