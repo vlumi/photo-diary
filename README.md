@@ -339,8 +339,7 @@ The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` sn
   - Special galleries for more abstract concepts
     - :all includes all photos
     - :public includes all photos added to galleries
-    - :private includes photos not added to any galleries
-  - Hostname-based default gallery selection
+  - Hostname-based default gallery selection — and `Host`-bound admin/read scope: a request to a hostname matching one or more `gallery.hostname` patterns is narrowed to that set, both reads and admin writes (cross-gallery work is unreachable from a virtual host)
 - SPA view
   - Fast transition between views
     - Pre-load current gallery
@@ -407,7 +406,7 @@ The pipeline is intentionally split: the converter doesn't touch the DB at all, 
 
 Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- [**0.13 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), mutation API (#222), ACL user groups (#270), ACL `:all` floor rule (#271), more built-in themes (#279), admin theme selector (#287), per-language editing for place / title / description (#343).
+- [**0.13 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), retire `:private` pseudo-gallery (#385), virtual-host scope (#386), landing-page redirects (#387), test-flakiness audit (#390), ACL user groups (#270), ACL `:all` floor rule (#271), theme selector UI (#287) and additional themes (#279), per-language editing for place / title / description (#343). Mutation API (#222) shipped.
 - [**0.14 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), Postgres driver alongside SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286).
 - [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283).
 

@@ -208,7 +208,7 @@ Gallery-level access is also hierarchical, with increasing scope:
 
 1. Specific gallery
 2. Virtual gallery ":public", matching all galleries and their photos
-3. Virtual gallery ":all", matching all photos, including those in ":private"
+3. Virtual gallery ":all", matching every photo (including orphans not linked to any gallery)
 
 ### RESTful resources
 
