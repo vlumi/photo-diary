@@ -1306,6 +1306,197 @@
           }
         }
       }
+    },
+    "/api/v1/user-gallery": {
+      "get": {
+        "summary": "List user_gallery ACL rows (admin)",
+        "tags": [
+          "user-gallery"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "userId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "galleryId",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "user_id",
+                      "gallery_id",
+                      "access_level",
+                      "hide_map"
+                    ],
+                    "properties": {
+                      "user_id": {
+                        "type": "string"
+                      },
+                      "gallery_id": {
+                        "type": "string"
+                      },
+                      "access_level": {
+                        "type": "number"
+                      },
+                      "hide_map": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/user-gallery/{userId}/{galleryId}": {
+      "put": {
+        "summary": "Upsert a user_gallery ACL row (admin)",
+        "tags": [
+          "user-gallery"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "accessLevel"
+                ],
+                "properties": {
+                  "accessLevel": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "none"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "view"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "admin"
+                        ]
+                      }
+                    ]
+                  },
+                  "hideMap": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "galleryId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a user_gallery ACL row (admin)",
+        "tags": [
+          "user-gallery"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "galleryId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "tags": [

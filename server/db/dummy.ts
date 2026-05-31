@@ -5,10 +5,6 @@ import CONST from "../lib/constants.js";
 import { NotFoundError, NotImplementedError } from "../lib/errors.js";
 import { acceptLocalizedCity } from "../lib/localized-script.js";
 
-const notImplemented = async (): Promise<never> => {
-  throw new NotImplementedError();
-};
-
 /**
  * Dummy DB, with all DB values hard-coded.
  */
@@ -36,7 +32,7 @@ export default () => {
 
     resolveAccessLevel,
     loadUserGalleryRows,
-    upsertUserGallery: notImplemented,
+    upsertUserGallery,
     deleteUserGallery,
     resolveHideMap,
 
@@ -204,6 +200,24 @@ const deleteUserGallery = async (userId: string, galleryId: string) => {
     delete acl[userId][galleryId];
     if (Object.keys(acl[userId]).length === 0) delete acl[userId];
   }
+};
+const upsertUserGallery = async (row: {
+  user_id: string;
+  gallery_id: string;
+  access_level?: number | null;
+  hide_map?: number | null;
+}) => {
+  const acl = (db.accessControl ??= {}) as Record<
+    string,
+    Record<string, number>
+  >;
+  acl[row.user_id] ??= {};
+  if (row.access_level !== undefined && row.access_level !== null) {
+    acl[row.user_id][row.gallery_id] = row.access_level;
+  }
+  // Dummy doesn't track `hide_map` separately; the access cascade
+  // queries it via `resolveHideMap`, which in the dummy just returns
+  // `false`. Real schema persists the column.
 };
 
 const resolveAccessLevel = async (

@@ -18,6 +18,7 @@ import usersV1 from "./controllers/users-v1.js";
 import galleriesV1 from "./controllers/galleries-v1.js";
 import photosV1 from "./controllers/photos-v1.js";
 import galleryPhotosV1 from "./controllers/gallery-photos-v1.js";
+import userGalleryV1 from "./controllers/user-gallery-v1.js";
 
 import middleware from "./lib/middleware/index.js";
 import { NotFoundError } from "./lib/errors.js";
@@ -157,6 +158,9 @@ await app.register(photosV1.plugin, { prefix: "/api/v1/photos" });
 await app.register(galleryPhotosV1.plugin, {
   prefix: "/api/v1/gallery-photos",
 });
+await app.register(userGalleryV1.plugin, {
+  prefix: "/api/v1/user-gallery",
+});
 
 // Double-duty 404 handler: serve index.html for SPA routes
 // (`/g`, `/g/*`) so React Router can resolve deep links; everything
@@ -176,6 +180,7 @@ export const init = async () => {
   await galleriesV1.init();
   await photosV1.init();
   await galleryPhotosV1.init();
+  await userGalleryV1.init();
   await app.ready();
   logger.debug("Initialize app done");
 };
