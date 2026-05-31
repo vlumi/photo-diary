@@ -44,7 +44,7 @@ export default () => {
     createGallery,
     loadGallery,
     updateGallery,
-    deleteGallery: notImplemented,
+    deleteGallery,
 
     loadGalleryPhotos,
     linkGalleryPhoto,
@@ -224,8 +224,8 @@ const resolveHideMap = async (
 const loadGalleries = async () => {
   return Object.values(db.galleries).sort();
 };
-const createGallery = async () => {
-  throw new NotImplementedError();
+const createGallery = async (gallery: { id: string }) => {
+  db.galleries[gallery.id] = { ...gallery };
 };
 const loadGallery = async (galleryId: string) => {
   if (!(galleryId in db.galleries)) {
@@ -233,8 +233,20 @@ const loadGallery = async (galleryId: string) => {
   }
   return db.galleries[galleryId];
 };
-const updateGallery = async () => {
-  throw new NotImplementedError();
+const updateGallery = async (
+  galleryId: string,
+  patch: Record<string, unknown>
+) => {
+  if (!(galleryId in db.galleries)) {
+    throw new NotFoundError();
+  }
+  Object.assign(db.galleries[galleryId], patch);
+};
+const deleteGallery = async (galleryId: string) => {
+  if (!(galleryId in db.galleries)) {
+    throw new NotFoundError();
+  }
+  delete db.galleries[galleryId];
 };
 
 const comparePhotos = (a: any, b: any) =>
@@ -336,8 +348,8 @@ const loadGalleryPhoto = async (galleryId: string, photoId: string, _lang?: stri
 const unlinkGalleryPhoto = async () => {
   throw new NotImplementedError();
 };
-const unlinkAllPhotos = async () => {
-  throw new NotImplementedError();
+const unlinkAllPhotos = async (galleryId: string) => {
+  delete (db.galleryPhotos as Record<string, string[]>)[galleryId];
 };
 const unlinkAllGalleries = async () => {
   throw new NotImplementedError();

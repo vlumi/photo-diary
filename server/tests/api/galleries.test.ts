@@ -500,4 +500,101 @@ describe("hide_map cascade applied to GET /galleries/:id", () => {
   });
 });
 
+describe("Mutations as guest", () => {
+  test("Create rejected", () =>
+    api
+      .post("/api/v1/galleries")
+      .send({ id: "newgal", title: "x" })
+      .expect(403));
+  test("Update rejected", () =>
+    api.put("/api/v1/galleries/gallery1").send({ title: "x" }).expect(403));
+  test("Delete rejected", () =>
+    api.delete("/api/v1/galleries/gallery1").expect(403));
+});
+
+describe("Mutations as gallery1Admin", () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await loginUser(api, "gallery1Admin");
+  });
+  test("Create rejected (admin-only)", () =>
+    api
+      .post("/api/v1/galleries")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ id: "newgal", title: "x" })
+      .expect(403));
+  test("Update own gallery", () =>
+    api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "renamed" })
+      .expect(204));
+  test("Update other gallery rejected", () =>
+    api
+      .put("/api/v1/galleries/gallery2")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "renamed" })
+      .expect(403));
+  test("Delete own gallery", () =>
+    api
+      .delete("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204));
+  test("Delete other gallery rejected", () =>
+    api
+      .delete("/api/v1/galleries/gallery2")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(403));
+});
+
+describe("Mutations as admin", () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await loginUser(api, "admin");
+  });
+  test("Create new gallery", async () => {
+    await api
+      .post("/api/v1/galleries")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        id: "freshgal",
+        title: "Fresh",
+        description: "Fresh gallery for the test",
+      })
+      .expect(201);
+    // GET it back from the public list (admin sees all).
+    const result = await api
+      .get("/api/v1/galleries")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(result.body.some((g: { id: string }) => g.id === "freshgal")).toBe(
+      true
+    );
+  });
+  test("Update gallery", () =>
+    api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "renamed" })
+      .expect(204));
+  test("Delete gallery", () =>
+    api
+      .delete("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204));
+  test("Create with invalid body → 400", () =>
+    api
+      .post("/api/v1/galleries")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ id: "" })
+      .expect(400));
+  test("Update with invalid body → 400", () =>
+    api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send("not even json")
+      .set("Content-Type", "application/json")
+      .expect(400));
+});
+
 afterAll(() => {});

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import CONST from "../lib/constants.js";
-import { NotImplementedError } from "../lib/errors.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -22,9 +21,9 @@ const getGalleries = async () => {
   const galleries = await db.loadGalleries();
   return [...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)];
 };
-const createGallery = async (gallery: Record<string, any>) => {
-  logger.debug("Creating gallery", gallery);
-  throw new NotImplementedError();
+const createGallery = async (gallery: { id: string } & Record<string, any>) => {
+  logger.debug("Creating gallery", { id: gallery.id });
+  await db.createGallery(gallery);
 };
 const getGallery = async (galleryId: string) => {
   logger.debug("Getting gallery", galleryId);
@@ -45,11 +44,25 @@ const getGallery = async (galleryId: string) => {
   const gallery = await db.loadGallery(galleryId);
   return await loadGalleryPhotos(gallery);
 };
-const updateGallery = async (gallery: Record<string, any>) => {
-  logger.debug("Updating gallery", gallery);
-  throw new NotImplementedError();
+const updateGallery = async (
+  galleryId: string,
+  patch: Record<string, any>
+) => {
+  logger.debug("Updating gallery", { id: galleryId });
+  await db.updateGallery(galleryId, patch);
 };
+// Cascade: unlink every gallery_photo link and every user_gallery row
+// for this gallery before deleting it. Without this the FK RESTRICTs
+// would refuse the delete.
 const deleteGallery = async (galleryId: string) => {
   logger.debug("Deleting gallery", galleryId);
-  throw new NotImplementedError();
+  await db.unlinkAllPhotos(galleryId);
+  const accessRows = (await db.loadUserGalleryRows({ galleryId })) as Array<{
+    user_id: string;
+    gallery_id: string;
+  }>;
+  for (const row of accessRows) {
+    await db.deleteUserGallery(row.user_id, row.gallery_id);
+  }
+  await db.deleteGallery(galleryId);
 };
