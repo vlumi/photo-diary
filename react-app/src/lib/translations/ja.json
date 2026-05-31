@@ -25,6 +25,8 @@
     "change-password-success": "パスワードを変更しました",
     "beta-feature-regions": "地域フィルター（ベータ）",
     "beta-feature-focalLengthEquiv": "焦点距離 35mm換算（ベータ）",
+    "theme-label": "テーマ",
+    "theme-follow-default": "ギャラリーの既定に従う",
 
     "nav-galleries": "ギャラリー",
     "nav-gallery-top": "トップへ",

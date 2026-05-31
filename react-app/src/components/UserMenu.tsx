@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
+import theme from "../lib/theme";
 import token from "../lib/token";
 import tokenService from "../services/tokens";
 import {
@@ -11,6 +12,7 @@ import {
   useLoginModalStore,
   useChangePasswordModalStore,
   useBetaStore,
+  useThemePreferenceStore,
 } from "../stores";
 import { BETA_FEATURES } from "../stores/beta";
 
@@ -92,6 +94,19 @@ const BetaToggle = styled.label`
     color: var(--header-color);
   }
 `;
+const ThemeRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: var(--primary-color);
+  font: inherit;
+`;
+const ThemeSelect = styled.select`
+  flex: 1;
+  font: inherit;
+  padding: 2px 4px;
+`;
 
 // Profile icon in the top-right of the top menu. Anonymous (outlined) when
 // not logged in — clicking opens the login modal. Filled when logged in —
@@ -110,6 +125,8 @@ const UserMenu = (): React.ReactElement => {
   const userBetaFeatures = BETA_FEATURES.filter(
     (f) => betaModes[f] === "user"
   );
+  const themePreference = useThemePreferenceStore((s) => s.preference);
+  const setThemePreference = useThemePreferenceStore((s) => s.setPreference);
 
   const [isOpen, setIsOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -193,6 +210,22 @@ const UserMenu = (): React.ReactElement => {
           >
             {t("change-password-title")}
           </MenuItem>
+          <ThemeRow>
+            <span>{t("theme-label")}</span>
+            <ThemeSelect
+              value={themePreference ?? ""}
+              onChange={(e) =>
+                setThemePreference(e.target.value === "" ? null : e.target.value)
+              }
+            >
+              <option value="">{t("theme-follow-default")}</option>
+              {theme.manifest.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.displayName}
+                </option>
+              ))}
+            </ThemeSelect>
+          </ThemeRow>
           {userBetaFeatures.map((f) => (
             <BetaToggle key={f}>
               <input

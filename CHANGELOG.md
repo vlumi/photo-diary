@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- User-side theme picker in the UserMenu dropdown — pick from any of the built-in themes or keep "Follow gallery default" (the unset state). The choice is persisted per-browser in localStorage and overrides the gallery's `theme` + the instance default for that user. Resolution priority is user preference → gallery theme → instance default.
+
 ### Server
 
 - Virtual-host scope: requests reaching the server with a `Host` header matching a gallery's `hostname` pattern are now narrowed to that gallery (or to the set of galleries when multiple match) for both writes and reads. Cross-gallery admin operations (user CRUD, gallery CRUD, instance meta mutations) 404 from a scoped host. `PUT /galleries/:id`, `PUT/DELETE /photos/:id`, and `user-gallery` mutations are accepted only when the target gallery is in scope. Reads are scoped too: `GET /galleries` returns only in-scope galleries; `GET /galleries/:id` for an off-scope id returns the same empty placeholder as a non-existent gallery (privacy-collapse); `GET /gallery-photos/:gallery/*` 404s off-scope; `GET /photos` filters to photos linked to an in-scope gallery (photos in multiple galleries are visible if any link is in scope). Instance meta (`GET /meta`) stays unscoped — it's SPA boot data. The SPA mirrors the scope client-side: the breadcrumb gallery dropdown filters to the bound galleries, and an off-scope URL redirects in.

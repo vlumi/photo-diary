@@ -25,6 +25,8 @@
     "change-password-success": "Salasana vaihdettu",
     "beta-feature-regions": "Aluesuodatin (beta)",
     "beta-feature-focalLengthEquiv": "Polttoväli 35mm-vastaava (beta)",
+    "theme-label": "Teema",
+    "theme-follow-default": "Käytä gallerian oletusta",
 
     "nav-galleries": "Galleriat",
     "nav-gallery-top": "Palaa alkuun",
