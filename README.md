@@ -422,6 +422,7 @@ Ideas without a milestone yet — too far out to schedule, kept here so they don
 - **Content localization for photo metadata** (#281) — per-language titles/captions/place names; manual-entry friction is the real blocker.
 - **Map modal: keep open across prev/next month/year navigation** (#321) — restores the cross-month/year geographic sweep that the inline-footer-map workflow had before the modal-isation in #313.
 - **Filter pills: edit value in place** (#342) — clicking an existing filter's value opens the same selector the topic-adder uses, so changing country=jp → fi takes two clicks instead of four.
+- **Stats: category evolution over time** (#383) — second axis on the existing Stats categories (orientation, focal length, camera, shutter, etc.) so you can see how the distribution has shifted across years, not just its current shape.
 
 ## Version History
 
