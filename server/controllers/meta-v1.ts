@@ -2,6 +2,7 @@ import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
+import { requireUnscoped } from "../lib/host-scope.js";
 import { KNOWN_META_KEYS_PUBLIC } from "../lib/meta-keys.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/meta.js";
@@ -104,6 +105,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.createMeta({
         key: `instance_${request.body.key}`,
@@ -148,6 +150,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.updateMeta(
         `instance_${request.params.key}`,
@@ -171,6 +174,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.deleteMeta(`instance_${request.params.key}`);
       reply.status(204).send();

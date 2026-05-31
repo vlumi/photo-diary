@@ -8,6 +8,10 @@ import {
   GALLERY_INITIAL_VIEWS,
   GALLERY_THEMES,
 } from "../lib/gallery-fields.js";
+import {
+  requireScopeMatches,
+  requireUnscoped,
+} from "../lib/host-scope.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
@@ -76,7 +80,18 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      const galleries = (await model.getGalleries()) as Array<{ id: string }>;
+      const allGalleries = (await model.getGalleries()) as Array<{
+        id: string;
+      }>;
+      // On a scoped host the list is narrowed to galleries reachable
+      // from that hostname before any access check — even cross-gallery
+      // viewers shouldn't enumerate the rest of the instance via this
+      // entry point.
+      const scope = request.galleryScope ?? [];
+      const galleries =
+        scope.length > 0
+          ? allGalleries.filter((gallery) => scope.includes(gallery.id))
+          : allGalleries;
       try {
         await authorizer.authorizeAdmin(request.user.id);
         return await annotateWithHideMap(request.user.id, galleries);
@@ -112,6 +127,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.createGallery(request.body);
       reply.status(201).send();
@@ -133,8 +149,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request) => {
       // Same empty payload for "no access" and "no such gallery" so
-      // a walk of IDs can't enumerate which exist.
+      // a walk of IDs can't enumerate which exist. On a scoped host
+      // an off-scope id falls into the same bucket — the gallery is
+      // unreachable from this hostname.
       try {
+        requireScopeMatches(request, request.params.galleryId);
         await authorizer.authorizeGalleryView(
           request.user.id,
           request.params.galleryId
@@ -176,6 +195,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
         request.params.galleryId
@@ -199,6 +219,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeGalleryAdmin(
         request.user.id,
         request.params.galleryId

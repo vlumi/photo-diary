@@ -136,7 +136,7 @@ Creates or updates a single gallery row. The ID is positional and required; ever
 | `--epoch_type <type>` | One of the supported epoch types — see [models/GalleryModel.ts](../react-app/src/models/GalleryModel.ts). |
 | `--theme <name>` | One of `blue`, `red`, `grayscale`, `bw`, `alert` (see [themes.css](../react-app/src/lib/theme.ts)). |
 | `--initial_view <view>` | One of `year`, `month`, `day`, `photo` — where the gallery lands when entered. |
-| `--hostname <regex>` | Hostname regex (e.g. `^travel\.` ) that this gallery should be the default for. Lets a single instance serve multiple vhosts (see the nginx section in the top-level README). |
+| `--hostname <regex>` | Hostname regex (e.g. `^travel\.` ) that this gallery should be the default for. Lets a single instance serve multiple vhosts (see the nginx section in the top-level README). Also binds the **virtual-host scope** — requests reaching the server with a `Host` header matching this pattern are narrowed to this gallery (or to the set of galleries, if several match) for both reads and writes. Cross-gallery admin operations (user CRUD, gallery CRUD, instance meta) are unreachable. Off-scope reads collapse to the same empty placeholder shape that a non-existent gallery returns, so the hostname can't enumerate galleries beyond its scope. Instance meta (`GET /meta`) stays unscoped — it's SPA boot data. The SPA filters the breadcrumb dropdown to the matched set and redirects off-scope URLs. Global-admin work happens from the primary host (no `hostname` match). |
 
 #### `photo.ts [options] [json-or-jpg-files…]`
 

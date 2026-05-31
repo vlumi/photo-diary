@@ -3,6 +3,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import CONST from "../lib/constants.js";
 import authorizerFactory from "../lib/authorizer.js";
+import { requireScopeMatches } from "../lib/host-scope.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/user-gallery.js";
 
@@ -70,16 +71,21 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const rows = await model.getUserGalleryRows({
+      const rows = (await model.getUserGalleryRows({
         userId: request.query.userId,
         galleryId: request.query.galleryId,
-      });
-      return rows as Array<{
+      })) as Array<{
         user_id: string;
         gallery_id: string;
         access_level: number;
         hide_map: number | null;
       }>;
+      // On a scoped host, narrow to the scoped galleries. Rows for any
+      // other gallery are simply not visible from this hostname.
+      const scope = request.galleryScope ?? [];
+      return scope.length > 0
+        ? rows.filter((row) => scope.includes(row.gallery_id))
+        : rows;
     }
   );
 
@@ -98,6 +104,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeAdmin(request.user.id);
       const { accessLevel, hideMap } = request.body;
       await model.upsertUserGallery({
@@ -126,6 +133,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeAdmin(request.user.id);
       await model.deleteUserGallery(
         request.params.userId,

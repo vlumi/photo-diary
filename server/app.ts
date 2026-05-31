@@ -141,6 +141,7 @@ await app.register(fastifyStatic, {
 });
 
 app.addHook("onRequest", middleware.tokenFilter);
+app.addHook("onRequest", middleware.hostScopeFilter);
 /* istanbul ignore next */
 if (config.ENV !== "test") {
   app.addHook("onResponse", middleware.requestLogger);
