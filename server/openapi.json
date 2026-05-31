@@ -54,8 +54,32 @@
                 ],
                 "properties": {
                   "key": {
-                    "type": "string",
-                    "minLength": 1
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "name"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "description"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "cdn"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "image"
+                        ]
+                      }
+                    ]
                   },
                   "value": {
                     "type": "string"
@@ -134,7 +158,32 @@
         "parameters": [
           {
             "schema": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "name"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "description"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "cdn"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "image"
+                  ]
+                }
+              ]
             },
             "in": "path",
             "name": "key",
@@ -160,7 +209,32 @@
         "parameters": [
           {
             "schema": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "name"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "description"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "cdn"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "image"
+                  ]
+                }
+              ]
             },
             "in": "path",
             "name": "key",

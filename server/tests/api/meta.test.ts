@@ -45,7 +45,7 @@ describe("As guest", () => {
   test("Create rejected", () =>
     api
       .post("/api/v1/meta")
-      .send({ key: "newkey", value: "newvalue" })
+      .send({ key: "name", value: "v" })
       .expect(403));
   test("Update rejected", () =>
     api.put("/api/v1/meta/name").send({ value: "renamed" }).expect(403));
@@ -58,15 +58,37 @@ describe("As admin", () => {
     token = await loginUser(api, "admin");
   });
 
-  test("Create new meta", async () => {
+  test("Create after delete", async () => {
+    // The dummy seeds all four known keys; clear one so POST creates.
+    await api
+      .delete("/api/v1/meta/cdn")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204);
     await api
       .post("/api/v1/meta")
       .set("Authorization", `Bearer ${token}`)
-      .send({ key: "newkey", value: "newvalue" })
+      .send({ key: "cdn", value: "https://cdn.example" })
       .expect(201);
-    const result = await getMeta("newkey");
-    expectMeta(result, "newkey", "newvalue");
+    const result = await getMeta("cdn");
+    expectMeta(result, "cdn", "https://cdn.example");
   });
+  test("Create with unknown key → 400", () =>
+    api
+      .post("/api/v1/meta")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ key: "schema_version", value: "999" })
+      .expect(400));
+  test("Update with unknown key → 400", () =>
+    api
+      .put("/api/v1/meta/schema_version")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ value: "999" })
+      .expect(400));
+  test("Delete with unknown key → 400", () =>
+    api
+      .delete("/api/v1/meta/schema_version")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400));
   test("Update existing meta", async () => {
     await api
       .put("/api/v1/meta/name")
@@ -87,7 +109,7 @@ describe("As admin", () => {
     api
       .post("/api/v1/meta")
       .set("Authorization", `Bearer ${token}`)
-      .send({ key: "", value: "v" })
+      .send({ value: "v" })
       .expect(400));
   test("Update with invalid body → 400", () =>
     api
@@ -106,7 +128,7 @@ describe("As non-admin", () => {
     api
       .post("/api/v1/meta")
       .set("Authorization", `Bearer ${token}`)
-      .send({ key: "newkey", value: "newvalue" })
+      .send({ key: "name", value: "v" })
       .expect(403));
   test("Update rejected", () =>
     api

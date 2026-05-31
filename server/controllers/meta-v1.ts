@@ -2,6 +2,7 @@ import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
+import { KNOWN_META_KEYS_PUBLIC } from "../lib/meta-keys.js";
 import modelFactory from "../models/meta.js";
 
 const authorizer = authorizerFactory();
@@ -48,14 +49,22 @@ const envDefaults = (): Record<string, unknown> => {
   return out;
 };
 
+// Mutation routes lock `key` to the schema-seeded public-facing set
+// (matches `bin/meta.ts`'s default key list, minus the `instance_`
+// prefix the row gets stored under). `schema_version` and other
+// internals stay off-limits. Operators who need an experimental key
+// reach for `./bin/meta.ts set --force`.
+const MetaKeyEnum = Type.Union(
+  KNOWN_META_KEYS_PUBLIC.map((k) => Type.Literal(k))
+);
 const KeyParam = Type.Object({ key: Type.String() });
+const KnownKeyParam = Type.Object({ key: MetaKeyEnum });
 // Open shape — meta keys vary per deploy.
 const MetaResponse = Type.Object({}, { additionalProperties: true });
-// POST body: user-facing key (without the `instance_` prefix the row
-// is stored under) + value. PUT body is just the value — the key
-// comes from the URL.
+// POST body: user-facing key + value. PUT body is just the value —
+// the key comes from the URL.
 const MetaCreateBody = Type.Object({
-  key: Type.String({ minLength: 1 }),
+  key: MetaKeyEnum,
   value: Type.String(),
 });
 const MetaUpdateBody = Type.Object({
@@ -135,7 +144,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Update one meta entry by key (admin)",
-        params: KeyParam,
+        params: KnownKeyParam,
         body: MetaUpdateBody,
         security: [{ bearer: [] }],
       },
@@ -159,7 +168,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Delete one meta entry by key (admin)",
-        params: KeyParam,
+        params: KnownKeyParam,
         security: [{ bearer: [] }],
       },
     },

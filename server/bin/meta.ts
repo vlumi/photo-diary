@@ -22,14 +22,13 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import db from "../db/index.js";
+import {
+  KNOWN_META_KEYS_INTERNAL,
+  PROTECTED_META_KEYS,
+} from "../lib/meta-keys.js";
 
-const KNOWN_KEYS = new Set([
-  "instance_name",
-  "instance_description",
-  "instance_cdn",
-  "instance_image",
-]);
-const PROTECTED_KEYS = new Set(["schema_version"]);
+const KNOWN_KEYS = new Set<string>(KNOWN_META_KEYS_INTERNAL);
+const PROTECTED_KEYS = new Set<string>(PROTECTED_META_KEYS);
 
 const formatTable = (rows: string[][]): string => {
   if (rows.length <= 1) return rows[0]?.join("  ") ?? "";

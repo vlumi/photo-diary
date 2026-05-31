@@ -117,8 +117,13 @@ const loadMetas = async () => {
   return Object.values(db.meta);
 };
 // Dummy meta rows match the sqlite3 `mapRow` shape: single-key
-// record `{ [key]: value }` rather than `{ key, value }`.
+// record `{ [key]: value }` rather than `{ key, value }`. Mirrors
+// sqlite3's UNIQUE-constraint behaviour — INSERT on a duplicate
+// key throws.
 const createMeta = async (meta: { key: string; value: string }) => {
+  if (meta.key in db.meta) {
+    throw new Error(`UNIQUE constraint failed: meta.key (${meta.key})`);
+  }
   db.meta[meta.key] = { [meta.key]: meta.value };
 };
 const loadMeta = async (key: string) => {
