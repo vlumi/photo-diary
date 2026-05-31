@@ -66,7 +66,7 @@ export default () => {
     upsertGeocoded,
     markGeocodeNoData,
     loadPhotosMissingGeocoded,
-    deletePhoto: notImplemented,
+    deletePhoto,
     loadPhotoLocalized,
     clearLocalizedCity,
   };
@@ -351,8 +351,13 @@ const unlinkGalleryPhoto = async () => {
 const unlinkAllPhotos = async (galleryId: string) => {
   delete (db.galleryPhotos as Record<string, string[]>)[galleryId];
 };
-const unlinkAllGalleries = async () => {
-  throw new NotImplementedError();
+const unlinkAllGalleries = async (photoId: string) => {
+  const galleryPhotos = db.galleryPhotos as Record<string, string[]>;
+  for (const galleryId of Object.keys(galleryPhotos)) {
+    galleryPhotos[galleryId] = galleryPhotos[galleryId].filter(
+      (id) => id !== photoId
+    );
+  }
 };
 
 const loadPhotos = async () => {
@@ -461,6 +466,12 @@ const updatePhoto = async (photoId: string, patch: Record<string, unknown>) => {
     throw new NotFoundError();
   }
   deepMerge(db.photos[photoId], patch);
+};
+const deletePhoto = async (photoId: string) => {
+  if (!(photoId in db.photos)) {
+    throw new NotFoundError();
+  }
+  delete db.photos[photoId];
 };
 // Geocoded fields — English-canonical lives on the photo "row";
 // other languages live in db.photoLocalized keyed by (photo_id, lang).

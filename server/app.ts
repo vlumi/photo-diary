@@ -28,6 +28,14 @@ export const app = Fastify({
   // Match the lenient trailing-slash behaviour the SPA's client URLs
   // were built against.
   routerOptions: { ignoreTrailingSlash: true },
+  // Fastify defaults to `removeAdditional: 'all'`, which silently
+  // strips properties not in the schema. We want the opposite —
+  // routes that opt in to `additionalProperties: false` (the photo
+  // mutation endpoints, which lock writes to operator-controlled
+  // fields) reject unknown writes with 400 instead of accepting +
+  // dropping them. Routes that need pass-through still declare
+  // `additionalProperties: true` explicitly.
+  ajv: { customOptions: { removeAdditional: false } },
   logger:
     config.ENV === "test"
       ? false
