@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.12.1] - 2026-05-31
+
+### Frontend
+
+- Photo modal URL with an unknown id no longer spins on "Loading" — the router now redirects to the gallery's month view when the id doesn't resolve. As a bonus, if the URL param matches a photo's `originalFilename` anywhere in the gallery, redirects to that photo's canonical URL (pre-rename bookmarks + "shared the camera filename not the URL" links now resolve).
+
 ## [0.12.0] - 2026-05-31
 
 ### Frontend
