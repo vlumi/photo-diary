@@ -1,16 +1,14 @@
 import supertest, { type Agent } from "supertest";
 import { app } from "../../app.js";
 
-// Pass Fastify's underlying http.Server to supertest. supertest binds an
-// ephemeral port on first request and tears it down via `close()`. Routes
-// are registered at module load, so `app.server` already knows the full
-// pipeline — `init()` only needs to finish before the first request fires
-// (handled by each test file's `beforeEach`).
+// Pass Fastify's underlying http.Server to supertest. supertest binds
+// an ephemeral port on first request; the listener lives for the
+// whole test run. Routes are registered at module load, so `app.server`
+// already knows the full pipeline — `init()` only needs to finish
+// before the first request fires (handled by each file's `beforeEach`).
 export const createApi = () => {
-  const server = app.server;
-  const api = supertest(server);
-  const close = () => new Promise<void>((resolve) => server.close(() => resolve()));
-  return { api, close };
+  const api = supertest(app.server);
+  return { api };
 };
 
 export const loginUser = async (api: Agent, id: string): Promise<string> => {

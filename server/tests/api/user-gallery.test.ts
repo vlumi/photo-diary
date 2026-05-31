@@ -4,14 +4,13 @@ import { createApi, loginUser } from "./helper.js";
 
 const db = dummyFactory();
 
-const { api, close } = createApi();
+const { api } = createApi();
 
 beforeEach(async () => {
   await db.init();
   await init();
 });
 
-afterAll(close);
 
 describe("As guest", () => {
   test("List rejected", () => api.get("/api/v1/user-gallery").expect(403));
@@ -137,4 +136,3 @@ describe("As admin", () => {
       .expect(400));
 });
 
-afterAll(() => {});

@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import type { Agent } from "supertest";
 
 import { init } from "../../app.js";
@@ -7,7 +7,7 @@ import dbFacade from "../../db/index.js";
 import { createApi, loginUser } from "./helper.js";
 
 const db = dummyFactory();
-const { api, close } = createApi();
+const { api } = createApi();
 
 beforeEach(async () => {
   await db.init();
@@ -22,7 +22,6 @@ beforeEach(async () => {
   await init();
 });
 
-afterAll(close);
 
 // Supertest re-uses the underlying http.Server's port; the Host header is
 // what Fastify's `request.hostname` reads, so this is the lever for scope
