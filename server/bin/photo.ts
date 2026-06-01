@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import yargs from "yargs";
+import yargs, { type Argv } from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import logger from "../lib/logger.js";
@@ -12,7 +12,6 @@ import {
   acceptLocalizedCity,
   RULED_LANGS,
 } from "../lib/localized-script.js";
-import { lookup } from "../lib/photo-intake.js";
 import { normalizeCity } from "photo-diary-converter/reverse-geocode/normalize.js";
 
 const formatTable = (rows: string[][]): string => {
@@ -30,7 +29,7 @@ const formatTable = (rows: string[][]): string => {
     .join("\n");
 };
 
-const addToGalleries = async (photoId: string, galleries: unknown) => {
+const setGalleries = async (photoId: string, galleries: unknown) => {
   if (!galleries) return;
   const list = typeof galleries === "string" ? [galleries] : (galleries as string[]);
   try {
@@ -42,130 +41,95 @@ const addToGalleries = async (photoId: string, galleries: unknown) => {
   }
 };
 
-const reportAmbiguous = (photo: any, candidates: any[]) => {
-  const wantTaken = photo.taken?.instant?.timestamp;
-  console.error(
-    `Cannot resolve "${photo.id}" unambiguously. Existing row(s) with that originalFilename:`
-  );
-  for (const c of candidates) {
-    const taken = c.taken?.instant?.timestamp ?? "—";
-    console.error(`  ${c.id}  taken=${taken}`);
-  }
-  if (!wantTaken) {
-    console.error(
-      "Add taken.instant.timestamp to the input JSON to confirm which row to update (or that this is a different photo)."
-    );
-  } else {
-    console.error(
-      `No row matched taken.instant.timestamp="${wantTaken}". If this is a different photo with a rolled-over filename, use the renamed id directly.`
-    );
-  }
-};
+const overrideOptionKeys = [
+  "title",
+  "description",
+  "country",
+  "author",
+  "place",
+  "camera-make",
+  "camera-model",
+  "lens-make",
+  "lens-model",
+  "focal",
+  "aperture",
+] as const;
 
-const applyOverrides = (photo: any, argv: any) => {
-  if ("title" in argv) photo.title = argv.title;
-  if ("description" in argv) photo.description = argv.description;
+const buildPatchFromArgv = (argv: any): any => {
+  const patch: any = {};
+  if ("title" in argv) patch.title = argv.title;
+  if ("description" in argv) patch.description = argv.description;
   if ("author" in argv) {
-    photo.taken = photo.taken || {};
-    photo.taken.author = argv.author;
+    patch.taken = patch.taken || {};
+    patch.taken.author = argv.author;
   }
   if ("country" in argv) {
-    photo.taken = photo.taken || {};
-    photo.taken.location = photo.taken.location || {};
-    photo.taken.location.country = argv.country;
+    patch.taken = patch.taken || {};
+    patch.taken.location = patch.taken.location || {};
+    patch.taken.location.country = argv.country;
   }
   if ("place" in argv) {
-    photo.taken = photo.taken || {};
-    photo.taken.location = photo.taken.location || {};
-    photo.taken.location.place = argv.place;
+    patch.taken = patch.taken || {};
+    patch.taken.location = patch.taken.location || {};
+    patch.taken.location.place = argv.place;
   }
   if ("camera-make" in argv) {
-    photo.camera = photo.camera || {};
-    photo.camera.make = argv["camera-make"];
+    patch.camera = patch.camera || {};
+    patch.camera.make = argv["camera-make"];
   }
   if ("camera-model" in argv) {
-    photo.camera = photo.camera || {};
-    photo.camera.model = argv["camera-model"];
+    patch.camera = patch.camera || {};
+    patch.camera.model = argv["camera-model"];
   }
   if ("lens-make" in argv) {
-    photo.lens = photo.lens || {};
-    photo.lens.make = argv["lens-make"];
+    patch.lens = patch.lens || {};
+    patch.lens.make = argv["lens-make"];
   }
   if ("lens-model" in argv) {
-    photo.lens = photo.lens || {};
-    photo.lens.model = argv["lens-model"];
+    patch.lens = patch.lens || {};
+    patch.lens.model = argv["lens-model"];
   }
   if ("focal" in argv) {
-    photo.exposure = photo.exposure || {};
-    photo.exposure.focalLength = argv.focal;
+    patch.exposure = patch.exposure || {};
+    patch.exposure.focalLength = argv.focal;
   }
   if ("aperture" in argv) {
-    photo.exposure = photo.exposure || {};
-    photo.exposure.aperture = argv.aperture;
+    patch.exposure = patch.exposure || {};
+    patch.exposure.aperture = argv.aperture;
   }
+  return patch;
 };
 
-const processPhoto = async (photo: any, argv: any) => {
-  if (!photo.id) {
-    logger.error("Photo JSON has no id; skipping");
-    return;
-  }
-  applyOverrides(photo, argv);
-
-  const r = await lookup(photo);
-  if (r.kind === "ambiguous") {
-    reportAmbiguous(photo, r.candidates);
-    process.exitCode = 1;
-    return;
-  }
-  if (r.kind === "update") {
-    const update = { ...photo };
-    delete update.id;
-    try {
-      await db.updatePhoto(r.existingId, update);
-      logger.info(`Updated "${r.existingId}"`);
-      await addToGalleries(r.existingId, argv.gallery);
-    } catch (error) {
-      logger.error(`Update of "${r.existingId}" failed:`, error);
-    }
-    return;
-  }
-  // create — default originalFilename to the input id so the converter's
-  // `loadPhotosByOriginalFilename` finds this row when the SOOC eventually
-  // arrives (JSON-first stub flow). The operator's existing
-  // `{ id, taken: { location: { coordinates }}}` JSONs keep working without
-  // having to also send originalFilename explicitly.
-  const create = { ...photo };
-  if (!create.originalFilename) create.originalFilename = create.id;
-  try {
-    await db.createPhoto(create);
-    logger.info(`Created "${create.id}"`);
-    await addToGalleries(create.id, argv.gallery);
-  } catch (error) {
-    logger.error(`Creating "${create.id}" failed:`, error);
-  }
-};
-
-const processJson = async (filePath: string, argv: any) => {
-  try {
-    const json = await fs.promises.readFile(filePath, { encoding: "utf-8" });
-    const data = JSON.parse(json);
-    if (Array.isArray(data)) {
-      for (const photo of data) await processPhoto(photo, argv);
-    } else if (!("id" in data)) {
-      for (const photo of Object.values(data)) await processPhoto(photo, argv);
-    } else {
-      await processPhoto(data, argv);
-    }
-  } catch (error) {
-    logger.error("Failed:", error);
-  }
-};
-
-const processJpeg = async (filePath: string, argv: any) => {
-  const fileName = path.basename(filePath);
-  await processPhoto({ id: fileName }, argv);
-};
+const applyOverrideOptions = (y: Argv) =>
+  y
+    .group(["title", "description", "country"], "Properties")
+    .option("title", { type: "string", describe: "Title" })
+    .option("description", { type: "string", describe: "Description" })
+    .option("country", {
+      type: "string",
+      describe: "Two-letter country code (ISO 3166-1 alpha-2)",
+    })
+    .group(
+      [
+        "author",
+        "place",
+        "camera-make",
+        "camera-model",
+        "lens-make",
+        "lens-model",
+        "focal",
+        "aperture",
+      ],
+      "Overrides"
+    )
+    .option("author", { type: "string", describe: "Author" })
+    .option("place", { type: "string", describe: "Free-form place description" })
+    .option("camera-make", { type: "string", describe: "Camera make" })
+    .option("camera-model", { type: "string", describe: "Camera model" })
+    .option("lens-make", { type: "string", describe: "Lens make" })
+    .option("lens-model", { type: "string", describe: "Lens model" })
+    .option("focal", { type: "number", describe: "Focal length" })
+    .option("aperture", { type: "number", describe: "Aperture value (f-number)" });
 
 // ---- audit ---------------------------------------------------------------
 
@@ -372,59 +336,85 @@ await yargs(hideBin(process.argv))
   .locale("en")
   .strict()
   .command(
-    "$0 <files..>",
-    "Add or update photos from JSON / JPEG files",
+    "show <id>",
+    "Print a photo row as pretty JSON",
     (y) =>
       y
-        .positional("files", { describe: "JSON or JPEG paths", type: "string", array: true })
-        .option("gallery", {
-          describe: "Link the photo(s) to one or more galleries (repeat for multiple)",
-          type: "array",
-          string: true,
-        })
-        .group(["title", "description", "country"], "Properties")
-        .option("title", { type: "string", describe: "Title" })
-        .option("description", { type: "string", describe: "Description" })
-        .option("country", {
+        .positional("id", {
+          describe: "Photo id",
           type: "string",
-          describe: "Two-letter country code (ISO 3166-1 alpha-2)",
+          demandOption: true,
         })
-        .group(
-          [
-            "author",
-            "place",
-            "camera-make",
-            "camera-model",
-            "lens-make",
-            "lens-model",
-            "focal",
-            "aperture",
-          ],
-          "Overrides"
-        )
-        .option("author", { type: "string", describe: "Author" })
-        .option("place", { type: "string", describe: "Free-form place description" })
-        .option("camera-make", { type: "string", describe: "Camera make" })
-        .option("camera-model", { type: "string", describe: "Camera model" })
-        .option("lens-make", { type: "string", describe: "Lens make" })
-        .option("lens-model", { type: "string", describe: "Lens model" })
-        .option("focal", { type: "number", describe: "Focal length" })
-        .option("aperture", { type: "number", describe: "Aperture value (f-number)" }),
+        .option("lang", {
+          type: "string",
+          describe:
+            "Apply per-language overlay for localized fields (default: en, the canonical row)",
+        }),
     async (argv) => {
-      for (const filePath of argv.files ?? []) {
-        const fp = String(filePath);
-        logger.debug(`Processing "${fp}"`);
-        switch (path.extname(fp)) {
-          case ".json":
-            await processJson(fp, argv);
-            break;
-          case ".jpg":
-            await processJpeg(fp, argv);
-            break;
-          default:
-            logger.error(`Unrecognised extension: ${fp}`);
-        }
+      const photo = await db.loadPhoto(argv.id, argv.lang).catch(() => null);
+      if (!photo) {
+        console.error(`✗ Photo "${argv.id}" doesn't exist.`);
+        process.exit(1);
       }
+      console.log(JSON.stringify(photo, null, 2));
+    }
+  )
+  .command(
+    "update <id>",
+    "Modify operator-set fields on an existing photo. Pass only the flags you want to change; the rest of the row stays as-is.",
+    (y) =>
+      applyOverrideOptions(
+        y.positional("id", {
+          describe: "Photo id",
+          type: "string",
+          demandOption: true,
+        })
+      ).option("gallery", {
+        describe:
+          "Replace gallery membership (repeat for multiple). Without this flag, gallery links stay as-is.",
+        type: "array",
+        string: true,
+      }),
+    async (argv) => {
+      const id = argv.id as string;
+      const existing = await db.loadPhoto(id).catch(() => null);
+      if (!existing) {
+        console.error(`✗ Photo "${id}" doesn't exist.`);
+        process.exit(1);
+      }
+      const patch = buildPatchFromArgv(argv);
+      const anyField = Object.keys(patch).length > 0;
+      const anyGallery = argv.gallery !== undefined;
+      if (!anyField && !anyGallery) {
+        console.error(
+          `(nothing to do — pass at least one of: --${overrideOptionKeys.join(", --")}, --gallery)`
+        );
+        process.exit(1);
+      }
+      if (anyField) {
+        await db.updatePhoto(id, patch);
+        console.log(`✓ Updated "${id}".`);
+      }
+      await setGalleries(id, argv.gallery);
+    }
+  )
+  .command(
+    "delete <id>",
+    "Delete a photo row. Files on disk (photos/{original,display,thumbnail}/<id>.*) are NOT touched.",
+    (y) =>
+      y.positional("id", {
+        describe: "Photo id",
+        type: "string",
+        demandOption: true,
+      }),
+    async (argv) => {
+      const existing = await db.loadPhoto(argv.id).catch(() => null);
+      if (!existing) {
+        console.error(`✗ Photo "${argv.id}" doesn't exist.`);
+        process.exit(1);
+      }
+      await db.deletePhoto(argv.id);
+      console.log(`✓ Deleted "${argv.id}".`);
     }
   )
   .command(
@@ -720,5 +710,5 @@ await yargs(hideBin(process.argv))
           "Choose an action: audit, normalize, or clean-localized"
         )
   )
-  .demandCommand(1, "Specify a subcommand or pass at least one file")
+  .demandCommand(1, "Specify a subcommand")
   .parseAsync();

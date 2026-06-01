@@ -21,6 +21,7 @@
 
 ### Tooling
 
+- `bin/photo.ts` restructured around by-id operations: new `show <id>` / `update <id>` / `delete <id>` subcommands replace the file-driven default. `update` accepts the same property / override flags as the old default (title, description, country, place, author, `camera-{make,model}`, `lens-{make,model}`, focal, aperture) plus `--gallery` for membership; only the flags passed apply, the rest of the row stays untouched. The `<files..>` positional and its JSON / JPEG ingest paths are gone — the converter's recursive `inbox/<gallery>/` watcher (#272, #223) handles intake end-to-end, and `bin/photo-geocode.ts` fills place / country / city / state from coordinates, so the operator-facing role of the old default was reduced to enrichment-on-existing-rows. `audit` / `search` / `cities` unchanged.
 - `bin/gallery.ts` now uses explicit subcommands (`list`, `create`, `update`, `delete`, `audit`) — typing `gallery.ts list` no longer silently creates a gallery called "list."
 
 ## [0.12.1] - 2026-05-31

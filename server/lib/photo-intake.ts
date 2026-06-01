@@ -3,9 +3,8 @@ import db from "../db/index.js";
 
 // Find the existing row to update for a photo whose `id` in the input
 // JSON may be the stable id, the legacy filename-id, or just the
-// original camera filename (e.g. IMG_1234.jpg). Used by both
-// `bin/photo.ts` (CLI intake) and the converter's JSON-sidecar
-// pipeline.
+// original camera filename (e.g. IMG_1234.jpg). Used by the converter's
+// JSON-sidecar pipeline.
 //
 // Chain:
 //   1. exact `id` match — direct hit; also catches legacy rows.

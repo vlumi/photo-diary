@@ -124,8 +124,8 @@ test("re-importing the same SOOC replaces files in place and preserves opinion f
 
   const id = await onlyFile(path.join(rootDir, "original"));
 
-  // Operator sets opinion fields via `bin/photo.ts` — those should
-  // survive a re-import.
+  // Operator sets opinion fields via `bin/photo.ts update` — those
+  // should survive a re-import.
   await db.updatePhoto(id, {
     title: "Operator-set title",
     taken: { location: { country: "JP", place: "Tokyo" } },
@@ -323,7 +323,8 @@ test("root-level intake JSON is processed without gallery link", async () => {
   const id = await onlyFile(path.join(rootDir, "original"));
 
   // Operator drops an intake JSON at the inbox root (no gallery
-  // auto-link; they'll link later via bin/photo.ts or admin UI).
+  // auto-link; they'll link later via bin/photo.ts update --gallery
+  // or the admin UI).
   await setupJson("new_IMG_GHI.json", {
     id: "IMG_GHI.jpg",
     taken: {
