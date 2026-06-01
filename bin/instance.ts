@@ -263,6 +263,7 @@ const OPERATOR_SCRIPTS = [
   "photo-geocode",
   "gallery",
   "user",
+  "group",
   "access",
   "meta",
 ];
