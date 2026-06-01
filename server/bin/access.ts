@@ -2,24 +2,20 @@
 /* eslint-disable no-console -- interactive CLI tool; console output is the UI */
 
 /**
- * Manage `user_gallery` rows — access level (level / unset subcommands) and
- * the privacy cascade's `hide_map` toggle (hide-map subcommand). Avoids the
- * previous "edit the DB directly with sqlite3" recipe.
+ * Manage `user_gallery` rows — per-gallery access grants (grant /
+ * revoke) and the privacy cascade's `hide_map` toggle (hide-map).
  *
  * Subcommands:
  *
  *   access.ts list [--user <id>] [--gallery <id>]
- *   access.ts level <user> <gallery> <none|view|admin>
- *   access.ts unset <user> <gallery> [--yes]
+ *   access.ts grant <user> <gallery> [--admin]
+ *   access.ts revoke <user> <gallery> [--yes]
  *   access.ts hide-map <user> <gallery> <hide|show|default>
+ *   access.ts audit [...]
  *
- * `:guest` (the sentinel user) and `:all` (the sentinel gallery) are accepted
- * directly as the positional arguments — the operator doesn't have to quote
- * anything.
- *
- * `level … none` and `unset` differ: `level … none` writes a row with
- * access_level=0 and stops the cascade at that row; `unset` deletes the row
- * entirely and lets the cascade fall through to less-specific rows.
+ * `:guest` is accepted as the user. Pseudo-galleries (`:all`,
+ * `:public`) are rejected — the model has no use for them. Global
+ * admin is set via `bin/user.ts make-admin <user>`.
  */
 
 import { createInterface } from "node:readline/promises";
@@ -31,30 +27,48 @@ import CONST from "../lib/constants.js";
 import db from "../db/index.js";
 import type { UserGalleryRow } from "../db/index.js";
 
-const LEVEL_VALUES = {
-  none: CONST.ACCESS_NONE,
-  view: CONST.ACCESS_VIEW,
-  admin: CONST.ACCESS_ADMIN,
-} as const;
-type LevelName = keyof typeof LEVEL_VALUES;
-const levelName = (value: number | null): string => {
-  if (value === null) return "—";
-  if (value === CONST.ACCESS_ADMIN) return "admin";
-  if (value === CONST.ACCESS_VIEW) return "view";
-  if (value === CONST.ACCESS_NONE) return "none";
-  return String(value);
+const REJECTED_GALLERIES = new Set([
+  CONST.SPECIAL_GALLERY_ALL,
+  CONST.SPECIAL_GALLERY_PUBLIC,
+]);
+
+const checkGalleryId = (galleryId: string) => {
+  if (REJECTED_GALLERIES.has(galleryId)) {
+    console.error(
+      `✗ ${galleryId} is not a real gallery. ` +
+        "For global admin, use `bin/user.ts make-admin <user>`."
+    );
+    process.exit(1);
+  }
 };
-const hideMapName = (value: number | null): string => {
+
+const accessLabel = (isAdmin: number): string =>
+  isAdmin ? "admin" : "view";
+const hideMapLabel = (value: number | null): string => {
   if (value === null) return "—";
   return value === 1 ? "hide" : "show";
 };
 
-const formatRows = (rows: UserGalleryRow[]): string => {
-  if (rows.length === 0) return "(no rows)";
+const formatRows = (
+  rows: UserGalleryRow[],
+  globalAdmins: Set<string>
+): string => {
+  const annotatedGlobals = [...globalAdmins].sort().map(
+    (id) => `${id}\t(global admin)`
+  );
+  if (rows.length === 0 && annotatedGlobals.length === 0) return "(no rows)";
   const header = ["user", "gallery", "access", "hide_map"];
   const lines: string[][] = [header];
   for (const r of rows) {
-    lines.push([r.user_id, r.gallery_id, levelName(r.access_level), hideMapName(r.hide_map)]);
+    const annotated = globalAdmins.has(r.user_id)
+      ? `${r.user_id} (global admin)`
+      : r.user_id;
+    lines.push([annotated, r.gallery_id, accessLabel(r.is_admin), hideMapLabel(r.hide_map)]);
+  }
+  // Surface global admins with no per-gallery rows on their own line.
+  for (const id of globalAdmins) {
+    if (rows.some((r) => r.user_id === id)) continue;
+    lines.push([`${id} (global admin)`, "—", "—", "—"]);
   }
   const widths = header.map((_, col) => Math.max(...lines.map((l) => l[col].length)));
   return lines
@@ -63,6 +77,16 @@ const formatRows = (rows: UserGalleryRow[]): string => {
       return i === 0 ? `${padded}\n${widths.map((w) => "-".repeat(w)).join("  ")}` : padded;
     })
     .join("\n");
+};
+
+const loadGlobalAdmins = async (filter?: string): Promise<Set<string>> => {
+  const users = (await db.loadUsers()) as Array<{ id: string; is_admin?: number | boolean }>;
+  return new Set(
+    users
+      .filter((u) => !!u.is_admin)
+      .map((u) => u.id)
+      .filter((id) => !filter || id === filter)
+  );
 };
 
 const confirm = async (prompt: string): Promise<boolean> => {
@@ -79,68 +103,70 @@ await yargs(hideBin(process.argv))
   .scriptName("access.ts")
   .locale("en")
   .strict()
-  .demandCommand(1, "Specify a subcommand: list, grant, revoke, or hide-map")
+  .demandCommand(1, "Specify a subcommand: list, grant, revoke, hide-map, or audit")
   .command(
     "list",
-    "Print existing user_gallery rows (optionally filtered)",
+    "Print existing user_gallery rows (optionally filtered) plus global admins",
     (y) =>
       y
         .option("user", { describe: "Filter to one user ID (e.g. :guest)", type: "string" })
-        .option("gallery", { describe: "Filter to one gallery ID (e.g. :all)", type: "string" }),
+        .option("gallery", { describe: "Filter to one gallery ID", type: "string" }),
     async (argv) => {
       const rows = await db.loadUserGalleryRows({
         userId: argv.user,
         galleryId: argv.gallery,
       });
-      console.log(formatRows(rows));
+      // When filtering by gallery alone, the global-admin list isn't
+      // gallery-scoped — only surface it when the gallery filter isn't set.
+      const globals = argv.gallery
+        ? new Set<string>()
+        : await loadGlobalAdmins(argv.user);
+      console.log(formatRows(rows, globals));
     }
   )
   .command(
-    "level <user> <gallery> <level>",
-    "Set the access level on a user × gallery row (use 'none' for explicit deny)",
+    "grant <user> <gallery>",
+    "Grant a user view (or admin with --admin) on a gallery. Idempotent — re-running with a different --admin toggles it.",
     (y) =>
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
-        .positional("gallery", { describe: "Gallery ID (or :all)", type: "string", demandOption: true })
-        .positional("level", {
-          describe:
-            "Access level — 'none' explicitly denies at this row (cascade stops here)",
-          choices: ["none", "view", "admin"] as const,
-          demandOption: true,
-        }),
+        .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
+        .option("admin", { describe: "Grant gallery-admin instead of view", type: "boolean", default: false }),
     async (argv) => {
-      const level = LEVEL_VALUES[argv.level as LevelName];
+      checkGalleryId(argv.gallery);
       await db.upsertUserGallery({
         user_id: argv.user,
         gallery_id: argv.gallery,
-        access_level: level,
+        is_admin: !!argv.admin,
       });
-      console.log(`✓ Set access to ${argv.level}: (${argv.user}, ${argv.gallery})`);
+      const label = argv.admin ? "admin" : "view";
+      console.log(`✓ Granted ${label}: (${argv.user}, ${argv.gallery})`);
     }
   )
   .command(
-    "unset <user> <gallery>",
-    "Delete the row entirely (cascade falls through to less-specific rows)",
+    "revoke <user> <gallery>",
+    "Delete the user_gallery row (revokes all access at this scope)",
     (y) =>
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
-        .positional("gallery", { describe: "Gallery ID (or :all)", type: "string", demandOption: true })
+        .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
         .option("yes", { describe: "Skip the confirmation prompt", type: "boolean", default: false }),
     async (argv) => {
+      checkGalleryId(argv.gallery);
       if (!argv.yes) {
-        const ok = await confirm(`Delete user_gallery row (${argv.user}, ${argv.gallery})?`);
+        const ok = await confirm(`Revoke (${argv.user}, ${argv.gallery})?`);
         if (!ok) {
           console.log("Aborted.");
           return;
         }
       }
       await db.deleteUserGallery(argv.user, argv.gallery);
-      console.log(`✓ Unset: (${argv.user}, ${argv.gallery})`);
+      console.log(`✓ Revoked: (${argv.user}, ${argv.gallery})`);
     }
   )
   .command(
     "audit",
-    "Find user_gallery rows whose referenced user or gallery no longer exists",
+    "Find user_gallery rows whose referenced user or gallery no longer exists; report global-admin count",
     (y) =>
       y
         .option("orphan-users", {
@@ -151,8 +177,7 @@ await yargs(hideBin(process.argv))
         .option("orphan-galleries", {
           type: "boolean",
           default: false,
-          describe:
-            "Restrict to rows referencing a deleted gallery (sentinel ids :all etc. excluded)",
+          describe: "Restrict to rows referencing a deleted gallery",
         })
         .option("format", {
           choices: ["table", "ids"] as const,
@@ -168,7 +193,11 @@ await yargs(hideBin(process.argv))
       };
 
       if (argv.format === "table") {
-        console.log(`Audited ${orphans.length} orphan user_gallery row(s).`);
+        const globalAdmins = await loadGlobalAdmins();
+        console.log(
+          `Audited ${orphans.length} orphan user_gallery row(s). ` +
+            `Global admins: ${globalAdmins.size}${globalAdmins.size > 0 ? " (" + [...globalAdmins].join(", ") + ")" : ""}`
+        );
       }
 
       const print = (
@@ -214,14 +243,15 @@ await yargs(hideBin(process.argv))
     (y) =>
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
-        .positional("gallery", { describe: "Gallery ID (or :all)", type: "string", demandOption: true })
+        .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
         .positional("state", {
           describe:
-            "hide = hide the map; show = show the map; default = clear override (inherit from less-specific row)",
+            "hide = hide the map; show = show the map; default = clear override (inherit)",
           choices: ["hide", "show", "default"] as const,
           demandOption: true,
         }),
     async (argv) => {
+      checkGalleryId(argv.gallery);
       const value = argv.state === "hide" ? 1 : argv.state === "show" ? 0 : null;
       await db.upsertUserGallery({
         user_id: argv.user,
