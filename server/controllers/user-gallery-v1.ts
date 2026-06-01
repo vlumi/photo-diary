@@ -1,10 +1,8 @@
 import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
-import CONST from "../lib/constants.js";
 import authorizerFactory from "../lib/authorizer.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
-import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/user-gallery.js";
 
 const authorizer = authorizerFactory();
@@ -25,33 +23,21 @@ const RowParams = Type.Object({
 const RowResponse = Type.Object({
   user_id: Type.String(),
   gallery_id: Type.String(),
-  access_level: Type.Number(),
+  is_admin: Type.Number(),
   hide_map: Type.Union([Type.Number(), Type.Null()]),
 });
 const RowsResponse = Type.Array(RowResponse);
-// `none|view|admin` maps to the numeric ACCESS_* constants. `hideMap`
+// `isAdmin = true` upgrades a row to gallery admin. `hideMap`
 // is the privacy override on this specific (user, gallery) pair —
-// `null` means "inherit from the next outer level".
-const AccessLevelLiteral = StringEnum(["none", "view", "admin"] as const);
+// `null` means "inherit from the next outer level."
 const UpsertBody = Type.Object(
   {
-    accessLevel: AccessLevelLiteral,
+    isAdmin: Type.Boolean(),
     hideMap: Type.Optional(Type.Union([Type.Boolean(), Type.Null()])),
   },
   { additionalProperties: false }
 );
 const TAGS = ["user-gallery"];
-
-const accessLevelToNumber = (level: "none" | "view" | "admin"): number => {
-  switch (level) {
-    case "none":
-      return CONST.ACCESS_NONE;
-    case "view":
-      return CONST.ACCESS_VIEW;
-    case "admin":
-      return CONST.ACCESS_ADMIN;
-  }
-};
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   /**
@@ -77,7 +63,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       })) as Array<{
         user_id: string;
         gallery_id: string;
-        access_level: number;
+        is_admin: number;
         hide_map: number | null;
       }>;
       // On a scoped host, narrow to the scoped galleries. Rows for any
@@ -106,11 +92,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request, reply) => {
       requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeAdmin(request.user.id);
-      const { accessLevel, hideMap } = request.body;
+      const { isAdmin, hideMap } = request.body;
       await model.upsertUserGallery({
         user_id: request.params.userId,
         gallery_id: request.params.galleryId,
-        access_level: accessLevelToNumber(accessLevel),
+        is_admin: isAdmin,
         hide_map:
           hideMap === undefined ? undefined : hideMap === null ? null : hideMap ? 1 : 0,
       });
