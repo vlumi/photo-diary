@@ -348,6 +348,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
+                            isAdmin: boolean;
                         }[];
                     };
                 };
@@ -367,6 +368,7 @@ export interface paths {
                     "application/json": {
                         id: string;
                         password: string;
+                        isAdmin?: boolean;
                     };
                 };
             };
@@ -427,7 +429,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        password: string;
+                        password?: string;
+                        isAdmin?: boolean;
                     };
                 };
             };
@@ -1026,7 +1029,7 @@ export interface paths {
                         "application/json": {
                             user_id: string;
                             gallery_id: string;
-                            access_level: number;
+                            is_admin: number;
                             hide_map: number | null;
                         }[];
                     };
@@ -1063,8 +1066,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** @enum {string} */
-                        accessLevel: "none" | "view" | "admin";
+                        isAdmin: boolean;
                         hideMap?: boolean | null;
                     };
                 };

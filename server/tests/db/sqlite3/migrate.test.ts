@@ -33,7 +33,7 @@ describe("migrate", () => {
   test("fresh DB runs every migration and lands at the highest version", () => {
     const db = open();
     migrate(db);
-    expect(schemaVersion(db)).toBe(11);
+    expect(schemaVersion(db)).toBe(12);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "gallery",
@@ -52,7 +52,9 @@ describe("migrate", () => {
       db.pragma("table_info(user_gallery)") as { name: string }[]
     ).map((r) => r.name);
     expect(userGalleryCols).toContain("hide_map");
-    expect(userGalleryCols).toContain("access_level");
+    // Migration 012 swapped access_level INTEGER for is_admin INTEGER.
+    expect(userGalleryCols).toContain("is_admin");
+    expect(userGalleryCols).not.toContain("access_level");
     expect(userGalleryCols).not.toContain("level");
   });
 
@@ -77,6 +79,7 @@ describe("migrate", () => {
       CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);
       INSERT INTO meta VALUES ('schema_version', '1');
       CREATE TABLE gallery (id TEXT PRIMARY KEY);
+      CREATE TABLE user (id TEXT PRIMARY KEY, password TEXT, secret TEXT);
       CREATE TABLE acl (
         user_id TEXT,
         gallery_id TEXT,
@@ -100,7 +103,7 @@ describe("migrate", () => {
 
     migrate(db);
 
-    expect(schemaVersion(db)).toBe(11);
+    expect(schemaVersion(db)).toBe(12);
     expect(gallerPhotoFkRefs(db).sort()).toEqual(["gallery", "photo"]);
     const rows = db.prepare("SELECT * FROM gallery_photo").all();
     expect(rows).toEqual([{ gallery_id: "g1", photo_id: "p1" }]);

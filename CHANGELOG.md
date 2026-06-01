@@ -2,16 +2,9 @@
 
 ## [Unreleased]
 
-### Tooling
-
-- `bin/gallery.ts` now uses explicit subcommands (`list`, `create`, `update`, `delete`, `audit`) — typing `gallery.ts list` no longer silently creates a gallery called "list."
-
-### Frontend
-
-- User-side theme picker in the UserMenu dropdown — pick from any of the built-in themes or keep "Follow gallery default" (the unset state). The choice is persisted per-browser in localStorage and overrides the gallery's `theme` + the instance default for that user. Resolution priority is user preference → gallery theme → instance default.
-
 ### Server
 
+- ACL simplification — collapses the access model to one global `user.is_admin` flag plus per-(user, gallery) rows where `is_admin` upgrades a row from view to gallery admin. Pseudo-galleries (`:all`, `:public`) lose their cascade role; the `access_level` enum (`none|view|admin`) is replaced by a boolean; explicit-deny rows (NONE) are dropped. Resolution becomes three clauses: global admin bypass → MAX over matching (user / :guest) positive grants → deny. Migration 012 promotes `(user, :all, admin)` rows to `user.is_admin = 1`, fans `:public` grants out to per-gallery rows, drops the pseudo-gallery and NONE rows, and rebuilds `user_gallery` with the new column. `bin/user.ts` gains `make-admin` / `revoke-admin`; `bin/access.ts` switches from `level <user> <gallery> <view|admin|none>` to `grant <user> <gallery> [--admin]` + `revoke <user> <gallery>`. `GET /api/v1/users` exposes `isAdmin` on each row; `/api/v1/user-gallery` body uses `isAdmin: boolean` instead of `accessLevel`. `/api/v1/photos` collapses into admin-only (the old global-view tier had no real meaning under the new model).
 - Virtual-host scope: requests reaching the server with a `Host` header matching a gallery's `hostname` pattern are now narrowed to that gallery (or to the set of galleries when multiple match) for both writes and reads. Cross-gallery admin operations (user CRUD, gallery CRUD, instance meta mutations) 404 from a scoped host. `PUT /galleries/:id`, `PUT/DELETE /photos/:id`, and `user-gallery` mutations are accepted only when the target gallery is in scope. Reads are scoped too: `GET /galleries` returns only in-scope galleries; `GET /galleries/:id` for an off-scope id returns the same empty placeholder as a non-existent gallery (privacy-collapse); `GET /gallery-photos/:gallery/*` 404s off-scope; `GET /photos` filters to photos linked to an in-scope gallery (photos in multiple galleries are visible if any link is in scope). Instance meta (`GET /meta`) stays unscoped — it's SPA boot data. The SPA mirrors the scope client-side: the breadcrumb gallery dropdown filters to the bound galleries, and an off-scope URL redirects in.
 - Retired the `:private` pseudo-gallery. Its sole role (browsable view of orphan photos) moves to the admin UI's orphan filter; the alert theme stays as a generic operator-applied visibility flag. Migration 011 drops any `user_gallery` rows pointing at `:private`.
 - Mutation endpoints (`POST` / `PUT` / `DELETE`) implemented across `/api/v1/{meta,users,galleries,photos}` — every one was throwing `ERROR_NOT_IMPLEMENTED` until now. Body shapes validated via TypeBox on the route, so malformed input returns 400 with field-level detail. Admin-gated; gallery `PUT` / `DELETE` uses gallery-admin scope (existing semantics), the rest require global admin. `POST` returns 201, `PUT` / `DELETE` return 204. The Swagger UI at `/api/v1/docs` now documents the new bodies.
@@ -20,6 +13,14 @@
 - `models/user.ts` absorbs the bcrypt-hash + secret-rotation + cascade logic that `bin/user.ts` had inline, so the CLI and API share the same path. User `DELETE` cascades `user_gallery` rows + active sessions; gallery `DELETE` cascades `gallery_photo` links + `user_gallery` rows (the FKs are RESTRICT and would otherwise refuse); photo `DELETE` cascades `gallery_photo` links.
 - Meta `key` is locked to a schema-seeded enum (`name | description | cdn | image`). `schema_version` and other internals can't be written via the API; operators who need an experimental key reach for `./bin/meta.ts set --force`. `server/lib/meta-keys.ts` is the single source of truth shared by the CLI and the API.
 - New `/api/v1/user-gallery` resource: `GET /` (with optional `userId` / `galleryId` filters), `PUT /:userId/:galleryId` body `{ accessLevel: "none|view|admin", hideMap?: boolean|null }`, `DELETE /:userId/:galleryId`. Admin-only — same plumbing the `bin/access.ts` CLI uses, exposed over HTTP for the admin UI.
+
+### Frontend
+
+- User-side theme picker in the UserMenu dropdown — pick from any of the built-in themes or keep "Follow gallery default" (the unset state). The choice is persisted per-browser in localStorage and overrides the gallery's `theme` + the instance default for that user. Resolution priority is user preference → gallery theme → instance default.
+
+### Tooling
+
+- `bin/gallery.ts` now uses explicit subcommands (`list`, `create`, `update`, `delete`, `audit`) — typing `gallery.ts list` no longer silently creates a gallery called "list."
 
 ## [0.12.1] - 2026-05-31
 
