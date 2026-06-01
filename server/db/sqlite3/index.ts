@@ -22,7 +22,6 @@ import schemaFactory, {
   type SessionRow,
   type User,
   type UserGalleryRow,
-  type UserGroupRow,
   type UserRow,
 } from "./schema.js";
 
