@@ -2,6 +2,8 @@ import config from "../lib/config/index.js";
 import type {
   Gallery,
   GalleryInput,
+  Group,
+  GroupGalleryRow,
   MetaRow,
   Photo,
   PhotoInput,
@@ -114,16 +116,68 @@ export default {
   deleteUserGallery: async (userId: string, galleryId: string): Promise<void> => {
     await db.deleteUserGallery(userId, galleryId);
   },
-  // Resolve privacy for (userId, galleryId):
-  //   user.is_admin → 0 (show, bypass).
-  //   first non-null hide_map from (user, gallery), (:guest, gallery)
-  //     with the user row winning the tie.
-  //   undefined when nothing matches (treated as show downstream).
+  // Resolve privacy for (userId, galleryId): user.is_admin → 0 (show);
+  // else user row → group rows (privacy-first MAX within layer) →
+  // :guest row → undefined.
   resolveHideMap: async (
     userId: string,
     galleryId: string
   ): Promise<number | undefined> => {
     return await db.resolveHideMap(userId, galleryId);
+  },
+
+  // Groups
+  loadGroups: async (): Promise<Group[]> => {
+    return await db.loadGroups();
+  },
+  loadGroup: async (groupId: string): Promise<Group> => {
+    return await db.loadGroup(groupId);
+  },
+  createGroup: async (group: Group): Promise<void> => {
+    await db.createGroup(group);
+  },
+  updateGroup: async (
+    groupId: string,
+    patch: Partial<Group>
+  ): Promise<void> => {
+    await db.updateGroup(groupId, patch);
+  },
+  deleteGroup: async (groupId: string): Promise<void> => {
+    await db.deleteGroup(groupId);
+  },
+  loadGroupMembers: async (groupId: string): Promise<string[]> => {
+    return await db.loadGroupMembers(groupId);
+  },
+  loadUserGroups: async (userId: string): Promise<string[]> => {
+    return await db.loadUserGroups(userId);
+  },
+  addUserGroup: async (userId: string, groupId: string): Promise<void> => {
+    await db.addUserGroup(userId, groupId);
+  },
+  removeUserGroup: async (
+    userId: string,
+    groupId: string
+  ): Promise<void> => {
+    await db.removeUserGroup(userId, groupId);
+  },
+  loadGroupGalleryRows: async (
+    filter: { groupId?: string; galleryId?: string } = {}
+  ): Promise<GroupGalleryRow[]> => {
+    return await db.loadGroupGalleryRows(filter);
+  },
+  upsertGroupGallery: async (row: {
+    group_id: string;
+    gallery_id: string;
+    is_admin?: boolean;
+    hide_map?: number | null;
+  }): Promise<void> => {
+    await db.upsertGroupGallery(row);
+  },
+  deleteGroupGallery: async (
+    groupId: string,
+    galleryId: string
+  ): Promise<void> => {
+    await db.deleteGroupGallery(groupId, galleryId);
   },
 
   loadGalleries: async () => {
@@ -228,6 +282,8 @@ export default {
 export type {
   Gallery,
   GalleryInput,
+  Group,
+  GroupGalleryRow,
   MetaRow,
   Photo,
   PhotoInput,

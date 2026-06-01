@@ -36,6 +36,19 @@ export default () => {
     deleteUserGallery,
     resolveHideMap,
 
+    loadGroups,
+    loadGroup,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    loadGroupMembers,
+    loadUserGroups,
+    addUserGroup,
+    removeUserGroup,
+    loadGroupGalleryRows,
+    upsertGroupGallery,
+    deleteGroupGallery,
+
     loadGalleries,
     createGallery,
     loadGallery,
@@ -218,6 +231,17 @@ const upsertUserGallery = async (row: {
   acl[row.user_id][row.gallery_id] = existing;
 };
 
+const groupRowsFor = (userId: string, galleryId: string): AclEntry[] => {
+  const memberships = (db.userGroups as Record<string, string[]>)[userId] ?? [];
+  const groupAcl = (db.groupAccessControl as AclMap) ?? {};
+  const out: AclEntry[] = [];
+  for (const groupId of memberships) {
+    const row = groupAcl[groupId]?.[galleryId];
+    if (row) out.push(row);
+  }
+  return out;
+};
+
 const resolveAccessLevel = async (
   userId: string,
   galleryId: string
@@ -227,8 +251,14 @@ const resolveAccessLevel = async (
   const acl = db.accessControl as AclMap;
   const userRow = acl[userId]?.[galleryId];
   const guestRow = acl[":guest"]?.[galleryId];
-  if (!userRow && !guestRow) return { hasAccess: false, isAdmin: false };
-  const isAdmin = !!(userRow?.is_admin || guestRow?.is_admin);
+  const groupRows = groupRowsFor(userId, galleryId);
+  if (!userRow && !guestRow && groupRows.length === 0) {
+    return { hasAccess: false, isAdmin: false };
+  }
+  const isAdmin =
+    !!userRow?.is_admin ||
+    !!guestRow?.is_admin ||
+    groupRows.some((r) => r.is_admin);
   return { hasAccess: true, isAdmin };
 };
 const resolveHideMap = async (
@@ -242,11 +272,132 @@ const resolveHideMap = async (
   if (userRow?.hide_map !== null && userRow?.hide_map !== undefined) {
     return userRow.hide_map;
   }
+  // Group layer: privacy-first MAX (any "1" hides) over rows the user
+  // inherits via group membership.
+  const groupValues = groupRowsFor(userId, galleryId)
+    .map((r) => r.hide_map)
+    .filter((v): v is number => v === 0 || v === 1);
+  if (groupValues.length > 0) return Math.max(...groupValues);
   const guestRow = acl[":guest"]?.[galleryId];
   if (guestRow?.hide_map !== null && guestRow?.hide_map !== undefined) {
     return guestRow.hide_map;
   }
   return undefined;
+};
+
+// Groups
+type GroupShape = { id: string; title: string; description: string };
+const groupRow = (input: {
+  id: string;
+  title?: string;
+  description?: string;
+}): GroupShape => ({
+  id: input.id,
+  title: input.title ?? "",
+  description: input.description ?? "",
+});
+const loadGroups = async () => {
+  const groups = (db.groups as Record<string, GroupShape>) ?? {};
+  return Object.values(groups)
+    .map(groupRow)
+    .sort((a, b) => a.id.localeCompare(b.id));
+};
+const loadGroup = async (groupId: string) => {
+  const groups = (db.groups ??= {}) as Record<string, GroupShape>;
+  if (!(groupId in groups)) throw new NotFoundError();
+  return groupRow(groups[groupId]);
+};
+const createGroup = async (group: {
+  id: string;
+  title?: string;
+  description?: string;
+}) => {
+  const groups = (db.groups ??= {}) as Record<string, GroupShape>;
+  groups[group.id] = groupRow(group);
+};
+const updateGroup = async (
+  groupId: string,
+  patch: Record<string, unknown>
+) => {
+  const groups = (db.groups ??= {}) as Record<string, Record<string, unknown>>;
+  if (!(groupId in groups)) throw new NotFoundError();
+  Object.assign(groups[groupId], patch);
+};
+const deleteGroup = async (groupId: string) => {
+  const groups = (db.groups ??= {}) as Record<string, unknown>;
+  delete groups[groupId];
+  // Cascade — same as sqlite FK ON DELETE CASCADE.
+  const userGroups = (db.userGroups ??= {}) as Record<string, string[]>;
+  for (const userId of Object.keys(userGroups)) {
+    userGroups[userId] = userGroups[userId].filter((g) => g !== groupId);
+    if (userGroups[userId].length === 0) delete userGroups[userId];
+  }
+  const groupAcl = (db.groupAccessControl ??= {}) as AclMap;
+  delete groupAcl[groupId];
+};
+const loadGroupMembers = async (groupId: string): Promise<string[]> => {
+  const userGroups = (db.userGroups ??= {}) as Record<string, string[]>;
+  return Object.keys(userGroups)
+    .filter((u) => userGroups[u].includes(groupId))
+    .sort();
+};
+const loadUserGroups = async (userId: string): Promise<string[]> => {
+  const userGroups = (db.userGroups ??= {}) as Record<string, string[]>;
+  return [...(userGroups[userId] ?? [])].sort();
+};
+const addUserGroup = async (userId: string, groupId: string) => {
+  const userGroups = (db.userGroups ??= {}) as Record<string, string[]>;
+  userGroups[userId] ??= [];
+  if (!userGroups[userId].includes(groupId)) userGroups[userId].push(groupId);
+};
+const removeUserGroup = async (userId: string, groupId: string) => {
+  const userGroups = (db.userGroups ??= {}) as Record<string, string[]>;
+  if (!userGroups[userId]) return;
+  userGroups[userId] = userGroups[userId].filter((g) => g !== groupId);
+  if (userGroups[userId].length === 0) delete userGroups[userId];
+};
+const loadGroupGalleryRows = async (
+  filter: { groupId?: string; galleryId?: string } = {}
+) => {
+  const acl = (db.groupAccessControl ??= {}) as AclMap;
+  const out: Array<{
+    group_id: string;
+    gallery_id: string;
+    is_admin: number;
+    hide_map: number | null;
+  }> = [];
+  for (const [groupId, perGallery] of Object.entries(acl)) {
+    if (filter.groupId && filter.groupId !== groupId) continue;
+    for (const [galleryId, entry] of Object.entries(perGallery)) {
+      if (filter.galleryId && filter.galleryId !== galleryId) continue;
+      out.push({
+        group_id: groupId,
+        gallery_id: galleryId,
+        is_admin: entry.is_admin ? 1 : 0,
+        hide_map: entry.hide_map ?? null,
+      });
+    }
+  }
+  return out;
+};
+const upsertGroupGallery = async (row: {
+  group_id: string;
+  gallery_id: string;
+  is_admin?: boolean;
+  hide_map?: number | null;
+}) => {
+  const acl = (db.groupAccessControl ??= {}) as AclMap;
+  acl[row.group_id] ??= {};
+  const existing = acl[row.group_id][row.gallery_id] ?? { is_admin: false };
+  if ("is_admin" in row) existing.is_admin = !!row.is_admin;
+  if ("hide_map" in row) existing.hide_map = row.hide_map;
+  acl[row.group_id][row.gallery_id] = existing;
+};
+const deleteGroupGallery = async (groupId: string, galleryId: string) => {
+  const acl = (db.groupAccessControl ??= {}) as AclMap;
+  if (!acl[groupId]) return;
+  delete acl[groupId][galleryId];
+  if (Object.keys(acl[groupId]).length === 0) delete acl[groupId];
 };
 
 const loadGalleries = async () => {
@@ -682,6 +833,11 @@ const dbDump = JSON.stringify({
       gallery3: { is_admin: false },
     },
   },
+  // Empty by default; tests that exercise groups seed via the model
+  // calls. Keeps the dummy state predictable for the broader suite.
+  groups: {},
+  userGroups: {},
+  groupAccessControl: {},
   galleries: {
     gallery1: {
       id: "gallery1",

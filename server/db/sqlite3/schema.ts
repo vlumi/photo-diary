@@ -28,6 +28,21 @@ export interface UserGalleryRow {
   // next outer level (gallery override → instance default).
   hide_map: number | null;
 }
+export interface GroupRow {
+  id: string;
+  title: string;
+  description: string;
+}
+export interface UserGroupRow {
+  user_id: string;
+  group_id: string;
+}
+export interface GroupGalleryRow {
+  group_id: string;
+  gallery_id: string;
+  is_admin: number;
+  hide_map: number | null;
+}
 export interface GalleryRow {
   id: string;
   title: string;
@@ -96,6 +111,7 @@ export type User = UserRow;
 // `(galleryId, isAdmin)` — row presence in the underlying table already
 // implies VIEW; isAdmin upgrades to gallery admin.
 export type UserGalleryAccess = [galleryId: string, isAdmin: number];
+export type Group = GroupRow;
 export interface Gallery {
   id: string;
   title: string;
@@ -279,6 +295,54 @@ export default () => {
         buildSelectQuery(SCHEMA.userGallery, conditions),
       buildDeleteQuery: (conditions?: Conditions) =>
         buildDeleteQuery(SCHEMA.userGallery, conditions),
+    },
+    group: {
+      mapRow: (row: GroupRow): Group => ({
+        id: toString(row.id),
+        title: toString(row.title),
+        description: toString(row.description),
+      }),
+      mapInsert: (group: Group): unknown[] => [
+        group.id,
+        group.title,
+        group.description,
+      ],
+      buildCreateQuery: () => buildCreateQuery(SCHEMA.group),
+      buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.group),
+      buildUpdateByIdQuery: (data: Partial<Group>) =>
+        buildUpdateByIdQuery(SCHEMA.group, data),
+      buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.group),
+      buildSelectQuery: (conditions?: Conditions) =>
+        buildSelectQuery(SCHEMA.group, conditions),
+      buildDeleteQuery: (conditions?: Conditions) =>
+        buildDeleteQuery(SCHEMA.group, conditions),
+    },
+    userGroup: {
+      mapRow: (row: UserGroupRow): UserGroupRow => row,
+      mapInsert: (row: UserGroupRow): unknown[] => [row.user_id, row.group_id],
+      buildCreateQuery: () => buildCreateQuery(SCHEMA.userGroup),
+      buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.userGroup),
+      buildUpdateByIdQuery: () => ({ query: undefined, values: undefined }),
+      buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.userGroup),
+      buildSelectQuery: (conditions?: Conditions) =>
+        buildSelectQuery(SCHEMA.userGroup, conditions),
+      buildDeleteQuery: (conditions?: Conditions) =>
+        buildDeleteQuery(SCHEMA.userGroup, conditions),
+    },
+    groupGallery: {
+      mapRow: (row: GroupGalleryRow): GroupGalleryRow => row,
+      mapInsert: (): unknown[] => {
+        throw new NotImplementedError();
+      },
+      buildCreateQuery: () => buildCreateQuery(SCHEMA.groupGallery),
+      buildSelectByIdQuery: () => buildSelectByIdQuery(SCHEMA.groupGallery),
+      buildUpdateByIdQuery: (data: Partial<GroupGalleryRow>) =>
+        buildUpdateByIdQuery(SCHEMA.groupGallery, data),
+      buildDeleteByIdQuery: () => buildDeleteByIdQuery(SCHEMA.groupGallery),
+      buildSelectQuery: (conditions?: Conditions) =>
+        buildSelectQuery(SCHEMA.groupGallery, conditions),
+      buildDeleteQuery: (conditions?: Conditions) =>
+        buildDeleteQuery(SCHEMA.groupGallery, conditions),
     },
     gallery: {
       mapRow: (row: GalleryRow): Gallery => ({
@@ -530,6 +594,20 @@ const userGalleryMapToRow = (
   if ("hide_map" in userGallery) result.hide_map = userGallery.hide_map;
   return result;
 };
+const groupMapToRow = (group: Partial<GroupRow>): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  if ("title" in group) result.title = group.title;
+  if ("description" in group) result.description = group.description;
+  return result;
+};
+const groupGalleryMapToRow = (
+  row: Partial<GroupGalleryRow>
+): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  if ("is_admin" in row) result.is_admin = row.is_admin ? 1 : 0;
+  if ("hide_map" in row) result.hide_map = row.hide_map;
+  return result;
+};
 const galleryMapToRow = (
   gallery: GalleryInput
 ): Record<string, unknown> => {
@@ -661,6 +739,27 @@ const SCHEMA = {
     primaryKey: ["user_id", "gallery_id"],
     order: ["user_id ASC", "gallery_id ASC"],
     mapToRow: userGalleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
+  },
+  group: {
+    table: '"group"',
+    columns: ["id", "title", "description"],
+    primaryKey: ["id"],
+    order: ["id ASC"],
+    mapToRow: groupMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
+  },
+  userGroup: {
+    table: "user_group",
+    columns: ["user_id", "group_id"],
+    primaryKey: ["user_id", "group_id"],
+    order: ["user_id ASC", "group_id ASC"],
+    mapToRow: (): Record<string, unknown> => ({}),
+  },
+  groupGallery: {
+    table: "group_gallery",
+    columns: ["group_id", "gallery_id", "is_admin", "hide_map"],
+    primaryKey: ["group_id", "gallery_id"],
+    order: ["group_id ASC", "gallery_id ASC"],
+    mapToRow: groupGalleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
   gallery: {
     table: "gallery",
