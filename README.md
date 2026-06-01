@@ -35,7 +35,7 @@ Photo Diary is split into independent modules, each handling its own sub-system:
 - [server](server) — Fastify + SQLite backend. Exposes `/api/v1` (with an OpenAPI doc at `/api/v1/docs`) and serves the bundled frontend.
 - [converter](converter) — back-end worker that pre-processes new photos (EXIF extraction, thumbnail/display renditions via sharp).
 
-The three pieces communicate via the shared filesystem and SQLite DB rather than over a network — the converter writes to `photos/{display,thumbnail}/` and `inbox/*.json`, the operator (or a future admin UI) registers those JSONs into the DB via `bin/photo.ts`, and the server reads the DB to serve the API. Per-instance state (database, photo files, `.env`) lives in a single instance directory outside the repo; see [Setup](#setup) below.
+The three pieces communicate via the shared filesystem and SQLite DB rather than over a network — the converter writes `photos/{display,thumbnail}/` renditions and inserts the photo row into the DB on intake, processing operator JSON sidecars through the same pipeline; the server reads the DB to serve the API; `bin/photo.ts update <id>` is the operator hook for after-the-fact enrichment. Per-instance state (database, photo files, `.env`) lives in a single instance directory outside the repo; see [Setup](#setup) below.
 
 ## Setup
 
@@ -393,14 +393,11 @@ Opt-in surfaces that aren't part of the default UI. Per-visitor toggle in UserMe
 
 End-to-end flow from a new JPG arriving on the host to it being browsable in the gallery:
 
-1. **Drop into `inbox/`.** Copy/move a JPG (or other supported format) into the instance's `photos/inbox/` directory. The converter watches this path (via chokidar) and picks the file up immediately.
-2. **Converter processes the file.** [converter](converter) reads the EXIF, generates display- and thumbnail-sized renditions (via sharp), and writes them to `photos/display/<name>.jpg` and `photos/thumbnail/<name>.jpg`. The extracted EXIF lands as a sibling JSON in `photos/inbox/<name>.json`. The original JPG is moved to `photos/original/<name>.jpg`. Result: the photo is on disk in three sizes, plus a JSON metadata file ready for ingestion.
-3. **Register in the DB.** Run `./bin/photo.ts photos/inbox/*.json --gallery <id>` from the instance dir. This reads each JSON, inserts a `photo` row with all the extracted EXIF (timestamp, camera, lens, geo, dimensions), and links the photo to the named gallery(ies) via `gallery_photo`. After this step the photo appears in the gallery on next page load.
-4. **(Optional) clean up.** The `inbox/*.json` files have served their purpose once ingested. They're harmless to leave but you can move/delete them to keep the inbox tidy.
-
-The pipeline is intentionally split: the converter doesn't touch the DB at all, and the server doesn't read from the inbox. That lets you bulk-process a backlog of photos with the converter, eyeball the JSON sidecars, and then register them in batches via `./bin/photo.ts` with overrides applied if needed (e.g. `--country jp --place "Yokohama, Kanagawa"` for a whole trip).
-
-`./bin/photo.ts` also accepts JPG paths directly instead of JSON: in that mode it registers a bare `photo` row with no EXIF data (just the filename as the ID), useful when the metadata isn't worth recovering.
+1. **Drop into `inbox/<gallery>/`.** Copy/move a JPG into the instance's `photos/inbox/<gallery>/` directory (or just `photos/inbox/` if you'd rather link to a gallery later). The converter watches this path (via chokidar) recursively and picks the file up immediately.
+2. **Converter processes the file.** [converter](converter) reads the EXIF, generates display- and thumbnail-sized renditions (via sharp), writes them to `photos/{display,thumbnail}/<id>.jpg`, moves the original to `photos/original/<id>.jpg`, and **inserts the photo row into the DB** (id, originalFilename, EXIF-derived timestamp / camera / lens / exposure, dimensions). When the file came in under `inbox/<gallery>/`, it's auto-linked to that gallery in `gallery_photo` on intake. After this step the photo appears in the gallery on next page load.
+3. **Geocoding fills place / country / city.** If the photo had EXIF coordinates, the converter (and the `bin/photo-geocode.ts` backfill daemon) resolves them through Nominatim and stores the result on `photo.geocoded_*` and `photo_localized.*` for the operator's extra languages.
+4. **(Optional) operator enrichment via JSON sidecar.** Drop a `<name>.json` alongside (or anywhere under) `inbox/` with the fields you want to overlay onto an existing row — title, description, operator-set country / place, etc. The converter matches it back to the row by id / originalFilename + timestamp and applies the overlay. The sidecar is archived under `photos/original/<id>.intake.json` after processing.
+5. **(Optional) operator enrichment via CLI.** For one-off corrections, `./bin/photo.ts update <id> --title "…" --place "…"` applies the same overrides directly. `./bin/photo.ts show <id>` prints the current row; `./bin/photo.ts delete <id>` removes one. See `./bin/photo.ts --help`.
 
 ## Roadmap
 

@@ -111,8 +111,8 @@ const processJpeg = async (
   // its original camera filename in inbox until the final atomic move
   // (so a crash mid-pipeline leaves the file in place for the watcher
   // to retry on restart, not as an id-named orphan). The camera filename
-  // is preserved on the DB row's originalFilename for enrichment JSON
-  // matching + `bin/photo.ts search`.
+  // is preserved on the DB row's originalFilename for `bin/photo.ts
+  // search` collision triage.
   const generated = await generateId(originalPath);
   const exifTimestamp = generated.exifTimestamp;
 
@@ -199,8 +199,8 @@ const processJsonSidecar = async (
   } catch (err) {
     throw `[${relPath}] JSON parse error: ${(err as Error).message}`;
   }
-  // Accept a single photo object or an array; tolerate keyed objects
-  // (matching `bin/photo.ts processJson`).
+  // Accept a single photo object, an array, or a keyed object (operator
+  // sidecars used all three shapes historically).
   const photos: any[] = Array.isArray(data)
     ? data
     : "id" in data
@@ -216,7 +216,7 @@ const processJsonSidecar = async (
     const r = await lookup(photo);
     if (r.kind === "ambiguous") {
       logger.error(
-        `[${relPath}] "${photo.id}" matched multiple existing rows; skipping. Resolve via bin/photo.ts.`
+        `[${relPath}] "${photo.id}" matched multiple existing rows; skipping. Resolve via bin/photo.ts search + bin/photo.ts update.`
       );
       continue;
     }

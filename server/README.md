@@ -138,29 +138,38 @@ Creates or updates a single gallery row. The ID is positional and required; ever
 | `--initial_view <view>` | One of `year`, `month`, `day`, `photo` — where the gallery lands when entered. |
 | `--hostname <regex>` | Hostname regex (e.g. `^travel\.` ) that this gallery should be the default for. Lets a single instance serve multiple vhosts (see the nginx section in the top-level README). Also binds the **virtual-host scope** — requests reaching the server with a `Host` header matching this pattern are narrowed to this gallery (or to the set of galleries, if several match) for both reads and writes. Cross-gallery admin operations (user CRUD, gallery CRUD, instance meta) are unreachable. Off-scope reads collapse to the same empty placeholder shape that a non-existent gallery returns, so the hostname can't enumerate galleries beyond its scope. Instance meta (`GET /meta`) stays unscoped — it's SPA boot data. The SPA filters the breadcrumb dropdown to the matched set and redirects off-scope URLs. Global-admin work happens from the primary host (no `hostname` match). |
 
-#### `photo.ts [options] [json-or-jpg-files…]`
+#### `photo.ts <command>`
 
-Registers photos in the DB and (optionally) links them to one or more galleries. Accepts either JSON sidecars produced by the converter or bare JPG paths (the bare-JPG mode stores just the filename as the photo ID, no EXIF).
+Operator-side photo management. Intake (creating new rows from inbox files) is the converter's job; this tool reads, modifies, and deletes existing rows.
+
+| Subcommand | Purpose |
+| --- | --- |
+| `show <id>` | Pretty-print the photo row as JSON. `--lang <code>` applies the per-language overlay. |
+| `update <id>` | Modify operator-set fields on an existing row. Same property / override flags as before — see below. |
+| `delete <id>` | Remove the photo row. Files on disk under `photos/{original,display,thumbnail}/` are not touched. |
+| `audit` | Find missing fields, orphan gallery links, duplicate `originalFilename`s, operator-vs-geocoded country drift. Counts-only by default; `--detail` or any restricting flag surfaces rows. `--format ids` is pipe-friendly. |
+| `search <originalFilename>` | List rows sharing a camera filename (collision triage). |
+| `cities <audit\|normalize\|clean-localized>` | Geocoded city hygiene — see `--help`. |
+
+`update <id>` flags:
 
 | Flag | Purpose |
 | --- | --- |
-| `--gallery <id>` | Gallery to link the photo(s) to. Repeat for multiple. |
-| `--title <s>` | Override the photo's title. |
-| `--description <s>` | Override the description. |
-| `--country <cc>` | Override the country (ISO 3166-1 alpha-2). |
-| `--place <s>` | Override the free-form place description. |
-| `--author <s>` | Override the author. |
-| `--camera-make`, `--camera-model`, `--lens-make`, `--lens-model` | Override gear strings (useful when EXIF is missing or wrong). |
-| `--focal <mm>` | Override focal length. |
-| `--aperture <f>` | Override aperture (f-number). |
+| `--gallery <id>` | Replace gallery membership (repeat for multiple). Without this flag, links stay as-is. |
+| `--title <s>` | Title. |
+| `--description <s>` | Description. |
+| `--country <cc>` | Country (ISO 3166-1 alpha-2). |
+| `--place <s>` | Free-form place description. |
+| `--author <s>` | Author. |
+| `--camera-make`, `--camera-model`, `--lens-make`, `--lens-model` | Gear strings (useful when EXIF is missing or wrong). |
+| `--focal <mm>` | Focal length. |
+| `--aperture <f>` | Aperture (f-number). |
 
-Overrides apply to every photo in the invocation, so this is the natural way to tag a whole trip:
+Only the flags you pass apply; the rest of the row stays as it was. Combine with `audit --format ids` to bulk-fix a category:
 
 ```sh
-./bin/photo.ts photos/inbox/*.json \
-  --gallery dailybw \
-  --country jp \
-  --place "Yokohama, Kanagawa"
+./bin/photo.ts audit --missing place --format ids \
+  | xargs -I{} ./bin/photo.ts update {} --place "Yokohama, Kanagawa"
 ```
 
 #### `photo-geocode.ts [--apply] [--langs en,ja] [--limit N] [--force] [--yes]`

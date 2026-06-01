@@ -9,7 +9,7 @@
 // real place names (e.g. "Lake District", or Swedish names ending
 // in 's' like Borås). Add patterns / overrides only when the cruft
 // is observed in actual data; rerun
-// `bin/photo.ts normalize-cities --apply` to backfill.
+// `bin/photo.ts cities normalize --apply` to backfill.
 
 const SUFFIX_STRIPS: RegExp[] = [
   /\s+Municipality$/i, // "Stockholm Municipality"
