@@ -10,6 +10,7 @@ export interface UserRow {
   id: string;
   password: string;
   secret: string;
+  is_admin: number;
 }
 export interface SessionRow {
   id: string;
@@ -21,7 +22,8 @@ export interface SessionRow {
 export interface UserGalleryRow {
   user_id: string;
   gallery_id: string;
-  access_level: number;
+  // Row presence alone grants VIEW; is_admin=1 upgrades that row to gallery admin.
+  is_admin: number;
   // Privacy toggle: 1 = hide map/coordinates, 0 = show; NULL inherits the
   // next outer level (gallery override → instance default).
   hide_map: number | null;
@@ -91,7 +93,9 @@ export interface PhotoLocalizedRow {
 // App-side shapes (what mapRow returns / mapInsert and mapToRow take).
 export type Meta = Record<string, string>;
 export type User = UserRow;
-export type UserGalleryAccess = [galleryId: string, accessLevel: number];
+// `(galleryId, isAdmin)` — row presence in the underlying table already
+// implies VIEW; isAdmin upgrades to gallery admin.
+export type UserGalleryAccess = [galleryId: string, isAdmin: number];
 export interface Gallery {
   id: string;
   title: string;
@@ -210,11 +214,13 @@ export default () => {
         id: toString(row.id),
         password: toString(row.password),
         secret: toString(row.secret),
+        is_admin: Number(row.is_admin ?? 0),
       }),
       mapInsert: (user: User): unknown[] => [
         user.id,
         user.password,
         user.secret,
+        user.is_admin ? 1 : 0,
       ],
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.user),
@@ -258,7 +264,7 @@ export default () => {
     userGallery: {
       mapRow: (row: UserGalleryRow): UserGalleryAccess => [
         row.gallery_id,
-        row.access_level,
+        row.is_admin,
       ],
       mapInsert: (): unknown[] => {
         throw new NotImplementedError();
@@ -505,6 +511,7 @@ const userMapToRow = (user: Partial<User>): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
   if ("password" in user) result.password = user.password;
   if ("secret" in user) result.secret = user.secret;
+  if ("is_admin" in user) result.is_admin = user.is_admin ? 1 : 0;
   return result;
 };
 const sessionMapToRow = (
@@ -519,7 +526,8 @@ const userGalleryMapToRow = (
   userGallery: Partial<UserGalleryRow>
 ): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
-  if ("access_level" in userGallery) result.access_level = userGallery.access_level;
+  if ("is_admin" in userGallery) result.is_admin = userGallery.is_admin ? 1 : 0;
+  if ("hide_map" in userGallery) result.hide_map = userGallery.hide_map;
   return result;
 };
 const galleryMapToRow = (
@@ -629,7 +637,7 @@ const SCHEMA = {
   },
   user: {
     table: "user",
-    columns: ["id", "password", "secret"],
+    columns: ["id", "password", "secret", "is_admin"],
     primaryKey: ["id"],
     order: ["id ASC"],
     mapToRow: userMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
@@ -649,7 +657,7 @@ const SCHEMA = {
   },
   userGallery: {
     table: "user_gallery",
-    columns: ["user_id", "gallery_id", "access_level", "hide_map"],
+    columns: ["user_id", "gallery_id", "is_admin", "hide_map"],
     primaryKey: ["user_id", "gallery_id"],
     order: ["user_id ASC", "gallery_id ASC"],
     mapToRow: userGalleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,

@@ -87,12 +87,15 @@ export default {
     await db.deleteUserSessions(userId);
   },
 
-  // Resolve the effective access_level for (userId, galleryId) under the
-  // user-first cascade. Returns undefined when no row applies.
+  // Resolve effective access for (userId, galleryId):
+  //   user.is_admin → global admin (bypass).
+  //   matching user_gallery row (user or :guest, this gallery) → access;
+  //     is_admin flag on the winning row distinguishes gallery admin from view.
+  //   no match → deny.
   resolveAccessLevel: async (
     userId: string,
     galleryId: string
-  ): Promise<number | undefined> => {
+  ): Promise<{ hasAccess: boolean; isAdmin: boolean }> => {
     return await db.resolveAccessLevel(userId, galleryId);
   },
   loadUserGalleryRows: async (
@@ -103,7 +106,7 @@ export default {
   upsertUserGallery: async (row: {
     user_id: string;
     gallery_id: string;
-    access_level?: number | null;
+    is_admin?: boolean;
     hide_map?: number | null;
   }): Promise<void> => {
     await db.upsertUserGallery(row);
@@ -111,11 +114,11 @@ export default {
   deleteUserGallery: async (userId: string, galleryId: string): Promise<void> => {
     await db.deleteUserGallery(userId, galleryId);
   },
-  // Resolve the privacy cascade for (userId, galleryId): gallery-first
-  // walk matching the access cascade — `requested → :public → :all` for
-  // non-special galleries (skipping :public for :public/:all requests),
-  // with user-beats-guest at each gallery level. Returns the
-  // first non-null `hide_map` encountered; undefined when nothing matches.
+  // Resolve privacy for (userId, galleryId):
+  //   user.is_admin → 0 (show, bypass).
+  //   first non-null hide_map from (user, gallery), (:guest, gallery)
+  //     with the user row winning the tie.
+  //   undefined when nothing matches (treated as show downstream).
   resolveHideMap: async (
     userId: string,
     galleryId: string

@@ -211,7 +211,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       "gallery1.example.com"
     )
       .set("Authorization", auth)
-      .send({ accessLevel: "view" })
+      .send({ isAdmin: false })
       .expect(204);
   });
 
@@ -222,7 +222,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       "gallery1.example.com"
     )
       .set("Authorization", auth)
-      .send({ accessLevel: "view" })
+      .send({ isAdmin: false })
       .expect(404);
   });
 

@@ -45,10 +45,12 @@ describe("As admin", () => {
     expect(admin).toBeDefined();
     expect(admin.id).toBe("admin");
     expect(admin.password).not.toBeDefined();
-    users.forEach((user: { id: string; password?: string }) => {
+    users.forEach((user: { id: string; isAdmin?: boolean; password?: string }) => {
       expect(user).toBeDefined();
-      expect(Object.keys(user).length).toBe(1);
+      // Two visible fields now: id + isAdmin. Password not exposed.
+      expect(Object.keys(user).length).toBe(2);
       expect(user.id).toBeDefined();
+      expect(typeof user.isAdmin).toBe("boolean");
       expect(user.password).not.toBeDefined();
     });
   });
@@ -341,7 +343,7 @@ describe("Mutations as admin", () => {
     api
       .put("/api/v1/users/admin")
       .set("Authorization", `Bearer ${token}`)
-      .send({})
+      .send({ password: null })
       .expect(400));
 });
 

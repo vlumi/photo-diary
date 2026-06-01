@@ -3,14 +3,14 @@ import schemaFactory from "../../../db/sqlite3/schema.js";
 const schema = schemaFactory();
 
 describe("User", () => {
-  const cols = ["id", "password", "secret"].join(",");
+  const cols = ["id", "password", "secret", "is_admin"].join(",");
   test("Build create query", () =>
     expect(schema.user.buildCreateQuery()).toBe(
-      `INSERT INTO user (${cols}) VALUES (?,?,?)`
+      `INSERT INTO user (${cols}) VALUES (?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.user.buildSelectByIdQuery()).toBe(
-      "SELECT id,password,secret FROM user WHERE id = ? ORDER BY id ASC"
+      `SELECT ${cols} FROM user WHERE id = ? ORDER BY id ASC`
     ));
   test("Build update by id query: nothing", () =>
     expect(schema.user.buildUpdateByIdQuery({})).toStrictEqual({
@@ -56,11 +56,11 @@ describe("User", () => {
     ));
   test("Build select all query", () =>
     expect(schema.user.buildSelectQuery()).toBe(
-      "SELECT id,password,secret FROM user ORDER BY id ASC"
+      `SELECT ${cols} FROM user ORDER BY id ASC`
     ));
   test("Build select by condition query", () =>
     expect(schema.user.buildSelectQuery(["id = ?"])).toBe(
-      "SELECT id,password,secret FROM user WHERE id = ? ORDER BY id ASC"
+      `SELECT ${cols} FROM user WHERE id = ? ORDER BY id ASC`
     ));
   test("Build delete all query", () =>
     expect(schema.user.buildDeleteQuery()).toBe("DELETE FROM user"));
@@ -71,7 +71,7 @@ describe("User", () => {
 });
 
 describe("UserGallery", () => {
-  const cols = ["user_id", "gallery_id", "access_level", "hide_map"].join(",");
+  const cols = ["user_id", "gallery_id", "is_admin", "hide_map"].join(",");
   test("Build create query", () =>
     expect(schema.userGallery.buildCreateQuery()).toBe(
       `INSERT INTO user_gallery (${cols}) VALUES (?,?,?,?)`
@@ -106,25 +106,25 @@ describe("UserGallery", () => {
         gallery_id: "bar",
       })
     ).toStrictEqual({ query: undefined, values: undefined }));
-  test("Build update by id query: access_level", () =>
+  test("Build update by id query: is_admin", () =>
     expect(
-      schema.userGallery.buildUpdateByIdQuery({ access_level: 2 })
+      schema.userGallery.buildUpdateByIdQuery({ is_admin: 1 })
     ).toStrictEqual({
       query:
-        "UPDATE user_gallery SET access_level=? WHERE user_id = ? AND gallery_id = ?",
-      values: [2],
+        "UPDATE user_gallery SET is_admin=? WHERE user_id = ? AND gallery_id = ?",
+      values: [1],
     }));
   test("Build update by id query: all", () =>
     expect(
       schema.userGallery.buildUpdateByIdQuery({
         user_id: "foo",
         gallery_id: "bar",
-        access_level: 2,
+        is_admin: 1,
       })
     ).toStrictEqual({
       query:
-        "UPDATE user_gallery SET access_level=? WHERE user_id = ? AND gallery_id = ?",
-      values: [2],
+        "UPDATE user_gallery SET is_admin=? WHERE user_id = ? AND gallery_id = ?",
+      values: [1],
     }));
   test("Build delete by id query", () =>
     expect(schema.userGallery.buildDeleteByIdQuery()).toBe(

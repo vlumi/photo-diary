@@ -43,10 +43,6 @@ const SPECIAL_GALLERIES = {
 const isSpecialGallery = (galleryId: string): boolean =>
   galleryId in SPECIAL_GALLERIES;
 
-const ACCESS_ADMIN = 2;
-const ACCESS_VIEW = 1;
-const ACCESS_NONE = 0;
-
 export default {
   DEFAULT_ENV,
   DEFAULT_DEBUG,
@@ -65,8 +61,4 @@ export default {
   SPECIAL_GALLERY_PUBLIC,
   SPECIAL_GALLERIES,
   isSpecialGallery,
-
-  ACCESS_ADMIN,
-  ACCESS_VIEW,
-  ACCESS_NONE,
 };

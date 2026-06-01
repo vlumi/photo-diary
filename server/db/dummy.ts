@@ -170,32 +170,35 @@ const deleteUser = async (id: string) => {
   delete db.users[id];
 };
 
+type AclEntry = { is_admin: boolean; hide_map?: number | null };
+type AclMap = Record<string, Record<string, AclEntry>>;
+
 const loadUserGalleryRows = async (
   filter: { userId?: string; galleryId?: string } = {}
 ) => {
-  const acl = (db.accessControl as Record<string, Record<string, number>>) ?? {};
+  const acl = (db.accessControl as AclMap) ?? {};
   const out: Array<{
     user_id: string;
     gallery_id: string;
-    access_level: number;
+    is_admin: number;
     hide_map: number | null;
   }> = [];
   for (const [userId, perGallery] of Object.entries(acl)) {
     if (filter.userId && filter.userId !== userId) continue;
-    for (const [galleryId, level] of Object.entries(perGallery)) {
+    for (const [galleryId, entry] of Object.entries(perGallery)) {
       if (filter.galleryId && filter.galleryId !== galleryId) continue;
       out.push({
         user_id: userId,
         gallery_id: galleryId,
-        access_level: level,
-        hide_map: null,
+        is_admin: entry.is_admin ? 1 : 0,
+        hide_map: entry.hide_map ?? null,
       });
     }
   }
   return out;
 };
 const deleteUserGallery = async (userId: string, galleryId: string) => {
-  const acl = db.accessControl as Record<string, Record<string, number>>;
+  const acl = db.accessControl as AclMap;
   if (acl?.[userId]) {
     delete acl[userId][galleryId];
     if (Object.keys(acl[userId]).length === 0) delete acl[userId];
@@ -204,39 +207,45 @@ const deleteUserGallery = async (userId: string, galleryId: string) => {
 const upsertUserGallery = async (row: {
   user_id: string;
   gallery_id: string;
-  access_level?: number | null;
+  is_admin?: boolean;
   hide_map?: number | null;
 }) => {
-  const acl = (db.accessControl ??= {}) as Record<
-    string,
-    Record<string, number>
-  >;
+  const acl = (db.accessControl ??= {}) as AclMap;
   acl[row.user_id] ??= {};
-  if (row.access_level !== undefined && row.access_level !== null) {
-    acl[row.user_id][row.gallery_id] = row.access_level;
-  }
-  // Dummy doesn't track `hide_map` separately; the access cascade
-  // queries it via `resolveHideMap`, which in the dummy just returns
-  // `false`. Real schema persists the column.
+  const existing = acl[row.user_id][row.gallery_id] ?? { is_admin: false };
+  if ("is_admin" in row) existing.is_admin = !!row.is_admin;
+  if ("hide_map" in row) existing.hide_map = row.hide_map;
+  acl[row.user_id][row.gallery_id] = existing;
 };
 
 const resolveAccessLevel = async (
   userId: string,
   galleryId: string
-): Promise<number | undefined> => {
-  const isSpecial = galleryId.startsWith(":");
-  const galleries = isSpecial ? [galleryId, ":all"] : [galleryId, ":public", ":all"];
-  const userRows = (db.accessControl[userId] ?? {}) as Record<string, number>;
-  for (const g of galleries) if (g in userRows) return userRows[g];
-  const guestRows = (db.accessControl[":guest"] ?? {}) as Record<string, number>;
-  for (const g of galleries) if (g in guestRows) return guestRows[g];
-  return undefined;
+): Promise<{ hasAccess: boolean; isAdmin: boolean }> => {
+  const user = db.users[userId] as { is_admin?: boolean } | undefined;
+  if (user?.is_admin) return { hasAccess: true, isAdmin: true };
+  const acl = db.accessControl as AclMap;
+  const userRow = acl[userId]?.[galleryId];
+  const guestRow = acl[":guest"]?.[galleryId];
+  if (!userRow && !guestRow) return { hasAccess: false, isAdmin: false };
+  const isAdmin = !!(userRow?.is_admin || guestRow?.is_admin);
+  return { hasAccess: true, isAdmin };
 };
 const resolveHideMap = async (
-  _userId: string,
-  _galleryId: string
+  userId: string,
+  galleryId: string
 ): Promise<number | undefined> => {
-  // Dummy ACL data carries only access levels, no privacy overrides.
+  const user = db.users[userId] as { is_admin?: boolean } | undefined;
+  if (user?.is_admin) return 0;
+  const acl = db.accessControl as AclMap;
+  const userRow = acl[userId]?.[galleryId];
+  if (userRow?.hide_map !== null && userRow?.hide_map !== undefined) {
+    return userRow.hide_map;
+  }
+  const guestRow = acl[":guest"]?.[galleryId];
+  if (guestRow?.hide_map !== null && guestRow?.hide_map !== undefined) {
+    return guestRow.hide_map;
+  }
   return undefined;
 };
 
@@ -585,79 +594,92 @@ const dbDump = JSON.stringify({
       id: "admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
+      is_admin: true,
     },
     gallery1Admin: {
       id: "gallery1Admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
+      is_admin: false,
     },
     gallery2Admin: {
       id: "gallery2Admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
+      is_admin: false,
     },
     gallery1User: {
       id: "gallery1User",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
+      is_admin: false,
     },
     gallery12User: {
       id: "gallery12User",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
+      is_admin: false,
     },
     plainUser: {
       id: "plainUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
+      is_admin: false,
     },
     publicUser: {
       id: "publicUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
+      is_admin: false,
     },
     simpleUser: {
       id: "simpleUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
+      is_admin: false,
     },
     blockedUser: {
       id: "blockedUser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
+      is_admin: false,
     },
   },
+  // Per-(user, gallery) positive grants. Row presence = VIEW; is_admin
+  // upgrades to gallery admin. The new model has no NONE rows — revoke
+  // is "delete the row." `admin` user is global admin (is_admin flag on
+  // the user table), so no rows here.
   accessControl: {
-    admin: {
-      [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_ADMIN,
-    },
     gallery1Admin: {
-      [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
-      gallery1: CONST.ACCESS_ADMIN,
+      gallery1: { is_admin: true },
     },
     gallery2Admin: {
-      gallery2: CONST.ACCESS_ADMIN,
+      gallery2: { is_admin: true },
     },
     gallery1User: {
-      gallery1: CONST.ACCESS_VIEW,
+      gallery1: { is_admin: false },
     },
     gallery12User: {
-      gallery1: CONST.ACCESS_VIEW,
-      gallery2: CONST.ACCESS_VIEW,
-      gallery3: CONST.ACCESS_NONE,
+      gallery1: { is_admin: false },
+      gallery2: { is_admin: false },
     },
+    // plainUser and publicUser previously used the `:all` / `:public`
+    // wildcard rows. The post-#394 equivalent is explicit per-gallery
+    // grants on every real gallery in the fixture.
     plainUser: {
-      [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_VIEW,
+      gallery1: { is_admin: false },
+      gallery2: { is_admin: false },
+      gallery3: { is_admin: false },
     },
     publicUser: {
-      [CONST.SPECIAL_GALLERY_PUBLIC]: CONST.ACCESS_VIEW,
+      gallery1: { is_admin: false },
+      gallery2: { is_admin: false },
+      gallery3: { is_admin: false },
     },
     simpleUser: {},
-    blockedUser: {
-      [CONST.SPECIAL_GALLERY_ALL]: CONST.ACCESS_NONE,
-    },
+    blockedUser: {},
     ":guest": {
-      gallery3: CONST.ACCESS_VIEW,
+      gallery3: { is_admin: false },
     },
   },
   galleries: {

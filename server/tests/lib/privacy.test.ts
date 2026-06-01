@@ -1,36 +1,54 @@
 import Database from "better-sqlite3";
 
-// Tests the hide_map cascade resolution against a fresh in-memory SQLite,
-// bypassing the dummy driver (which doesn't model user_gallery rows). Mirrors
-// the access cascade's user-first ordering (see resolveAccessLevel).
+// Tests the post-#394 hide_map cascade resolution against a fresh
+// in-memory SQLite, bypassing the dummy driver. The new model is:
 //
-// Cascade priority for a non-special gallery request:
-//   1. (user_id,   gallery_id)
-//   2. (user_id,   ':public')
-//   3. (user_id,   ':all')
-//   4. (':guest',  gallery_id)
-//   5. (':guest',  ':public')
-//   6. (':guest',  ':all')
+//   1. user.is_admin = true → 0 (show, bypass)
+//   2. first non-null hide_map from (user, gallery), (:guest, gallery),
+//      with the user row beating :guest on a tie
+//   3. else → undefined (defaults to show downstream)
 //
-// For a :public or :all request, the :public fall-through is skipped
-// — those aren't subsets of :public.
+// No pseudo-gallery wildcards (`:all` / `:public`) — those lost their
+// cascade role in #394.
 
-const setupDb = (rows: Array<[string, string, number | null]>) => {
+interface SeedRow {
+  user_id: string;
+  gallery_id: string;
+  hide_map: number | null;
+}
+
+const setupDb = (
+  rows: SeedRow[],
+  globalAdmins: string[] = []
+) => {
   const db = new Database(":memory:");
   db.exec(`
+    CREATE TABLE user (
+      id TEXT PRIMARY KEY,
+      is_admin INTEGER NOT NULL DEFAULT 0
+    );
     CREATE TABLE user_gallery (
       user_id TEXT,
       gallery_id TEXT,
-      access_level INTEGER,
+      is_admin INTEGER NOT NULL DEFAULT 0,
       hide_map INTEGER,
       PRIMARY KEY(user_id, gallery_id)
     );
   `);
-  const insert = db.prepare(
-    "INSERT INTO user_gallery (user_id, gallery_id, access_level, hide_map) VALUES (?, ?, 1, ?)"
+  const insertUser = db.prepare(
+    "INSERT OR IGNORE INTO user (id, is_admin) VALUES (?, ?)"
   );
-  for (const [user_id, gallery_id, hide_map] of rows) {
-    insert.run(user_id, gallery_id, hide_map);
+  for (const id of globalAdmins) insertUser.run(id, 1);
+  // Make sure every (user_id) appearing in seed rows has a user row,
+  // because resolveHideMap looks the user up to check is_admin.
+  for (const r of rows) {
+    if (r.user_id !== ":guest") insertUser.run(r.user_id, 0);
+  }
+  const insertGrant = db.prepare(
+    "INSERT INTO user_gallery (user_id, gallery_id, is_admin, hide_map) VALUES (?, ?, 0, ?)"
+  );
+  for (const r of rows) {
+    insertGrant.run(r.user_id, r.gallery_id, r.hide_map);
   }
   return db;
 };
@@ -40,156 +58,74 @@ const resolve = (
   userId: string,
   galleryId: string
 ): number | undefined => {
-  const isSpecial = galleryId.startsWith(":");
-  const galleryWhere = isSpecial
-    ? "gallery_id IN (?, ':all')"
-    : "gallery_id IN (?, ':public', ':all')";
-  const galleryOrder = isSpecial
-    ? "CASE WHEN gallery_id = ? THEN 0 ELSE 1 END"
-    : "CASE WHEN gallery_id = ? THEN 0 WHEN gallery_id = ':public' THEN 1 ELSE 2 END";
+  const userRow = db
+    .prepare("SELECT is_admin FROM user WHERE id = ?")
+    .get(userId) as { is_admin: number } | undefined;
+  if (userRow && userRow.is_admin) return 0;
   const row = db
     .prepare(
       `SELECT hide_map FROM user_gallery
-       WHERE (user_id = ? OR user_id = ':guest')
-         AND ${galleryWhere}
+       WHERE user_id IN (?, ':guest')
+         AND gallery_id = ?
          AND hide_map IS NOT NULL
-       ORDER BY
-         CASE WHEN user_id = ? THEN 0 ELSE 1 END,
-         ${galleryOrder}
+       ORDER BY CASE WHEN user_id = ? THEN 0 ELSE 1 END
        LIMIT 1`
     )
-    .get(userId, galleryId, userId, galleryId) as
-    | { hide_map: number }
-    | undefined;
+    .get(userId, galleryId, userId) as { hide_map: number } | undefined;
   return row?.hide_map;
 };
 
-describe("hide_map ACL cascade", () => {
+describe("hide_map cascade (post-#394)", () => {
   test("no rows → undefined (defaults to show)", () => {
     const db = setupDb([]);
     expect(resolve(db, "alice", "dailybw")).toBeUndefined();
   });
 
-  test("(:guest, :all) = 1 → global hide applies to logged-in users too", () => {
-    const db = setupDb([[":guest", ":all", 1]]);
-    expect(resolve(db, "alice", "dailybw")).toBe(1);
+  test("global admin → 0 (show, bypass) regardless of :guest hide", () => {
+    const db = setupDb(
+      [{ user_id: ":guest", gallery_id: "dailybw", hide_map: 1 }],
+      ["alice"]
+    );
+    expect(resolve(db, "alice", "dailybw")).toBe(0);
     expect(resolve(db, ":guest", "dailybw")).toBe(1);
   });
 
-  test("(:guest, gallery) > (:guest, :all) — more specific gallery wins", () => {
+  test("(:guest, gallery) hides for non-admin user without own row", () => {
     const db = setupDb([
-      [":guest", ":all", 1],
-      [":guest", "dailybw", 0],
+      { user_id: ":guest", gallery_id: "dailybw", hide_map: 1 },
     ]);
-    expect(resolve(db, "alice", "dailybw")).toBe(0);
-    expect(resolve(db, "alice", "travel")).toBe(1);
-  });
-
-  test("(user, :all) > (:guest, gallery) — user-first: any user row beats any :guest row", () => {
-    const db = setupDb([
-      [":guest", "dailybw", 1],
-      ["alice", ":all", 0],
-    ]);
-    // User-first: (alice, :all) wins for alice on any gallery, even when
-    // (:guest, dailybw) is more gallery-specific. A user's explicit preference
-    // shouldn't be overridden by a :guest default at a more-specific gallery.
-    expect(resolve(db, "alice", "dailybw")).toBe(0);
-    // bob has no rows, falls back to (:guest, dailybw)
-    expect(resolve(db, "bob", "dailybw")).toBe(1);
-    // alice's :all also applies to travel (no gallery-specific row anywhere)
-    expect(resolve(db, "alice", "travel")).toBe(0);
-  });
-
-  test("(user, gallery) > (user, :all) — within user, gallery-specific wins", () => {
-    const db = setupDb([
-      ["alice", ":all", 0],
-      ["alice", "dailybw", 1],
-    ]);
-    // alice has a per-gallery hide and a global show; the per-gallery one wins
-    expect(resolve(db, "alice", "dailybw")).toBe(1);
-    expect(resolve(db, "alice", "travel")).toBe(0);
-  });
-
-  test("(user, gallery) > (user, :all) — most specific dominates", () => {
-    const db = setupDb([
-      ["alice", ":all", 1],
-      ["alice", "dailybw", 0],
-    ]);
-    expect(resolve(db, "alice", "dailybw")).toBe(0);
-    expect(resolve(db, "alice", "travel")).toBe(1);
-  });
-
-  test("null hide_map at a level → falls through to the next level", () => {
-    const db = setupDb([
-      ["alice", "dailybw", null],
-      [":guest", "dailybw", 1],
-    ]);
-    // alice's own row says "no opinion"; falls through to gallery-level
     expect(resolve(db, "alice", "dailybw")).toBe(1);
   });
 
-  test("logged-in user without any rows uses :guest's defaults", () => {
-    const db = setupDb([[":guest", ":all", 1]]);
-    expect(resolve(db, "newuser", "anygallery")).toBe(1);
-  });
-
-  test(":guest user uses :guest's rows (no special handling)", () => {
+  test("(user, gallery) overrides (:guest, gallery)", () => {
     const db = setupDb([
-      [":guest", ":all", 1],
-      [":guest", "dailybw", 0],
-    ]);
-    expect(resolve(db, ":guest", "dailybw")).toBe(0);
-    expect(resolve(db, ":guest", "other")).toBe(1);
-  });
-
-  test(":public is in the fall-through for non-special gallery requests", () => {
-    const db = setupDb([[":guest", ":public", 1]]);
-    // Specific gallery → falls through :public → hide
-    expect(resolve(db, ":guest", "dailybw")).toBe(1);
-    expect(resolve(db, "alice", "dailybw")).toBe(1);
-    // :public request → matches directly
-    expect(resolve(db, ":guest", ":public")).toBe(1);
-  });
-
-  test("specific (:guest, gallery) beats (:guest, :public)", () => {
-    const db = setupDb([
-      [":guest", ":public", 1],
-      [":guest", "dailybw", 0],
-    ]);
-    expect(resolve(db, ":guest", "dailybw")).toBe(0);
-    // Other galleries still get the :public-level hide
-    expect(resolve(db, ":guest", "travel")).toBe(1);
-  });
-
-  test("(:guest, :public) beats (:guest, :all)", () => {
-    const db = setupDb([
-      [":guest", ":all", 0],
-      [":guest", ":public", 1],
-    ]);
-    expect(resolve(db, ":guest", "dailybw")).toBe(1);
-    // :all wins when the request is :all itself
-    expect(resolve(db, ":guest", ":all")).toBe(0);
-  });
-
-  test("(user, :public) beats (:guest, :public) at the same gallery level", () => {
-    const db = setupDb([
-      [":guest", ":public", 1],
-      ["alice", ":public", 0],
+      { user_id: ":guest", gallery_id: "dailybw", hide_map: 1 },
+      { user_id: "alice", gallery_id: "dailybw", hide_map: 0 },
     ]);
     expect(resolve(db, "alice", "dailybw")).toBe(0);
     expect(resolve(db, "bob", "dailybw")).toBe(1);
   });
 
-  test("(user, :all) beats (:guest, :public) — the motivating user-first case", () => {
-    // The scenario that motivated the user-first switch: an admin with a
-    // global show preference shouldn't see hidden maps just because :guest
-    // has hide set at a more-gallery-specific :public level.
+  test("null user.hide_map falls through to :guest's value", () => {
     const db = setupDb([
-      [":guest", ":public", 1],
-      ["admin", ":all", 0],
+      { user_id: "alice", gallery_id: "dailybw", hide_map: null },
+      { user_id: ":guest", gallery_id: "dailybw", hide_map: 1 },
     ]);
-    expect(resolve(db, "admin", "dailybw")).toBe(0);
-    expect(resolve(db, "admin", "travel")).toBe(0);
-    expect(resolve(db, ":guest", "dailybw")).toBe(1);
+    expect(resolve(db, "alice", "dailybw")).toBe(1);
+  });
+
+  test("no row at all → undefined (defaults to show)", () => {
+    const db = setupDb([
+      { user_id: ":guest", gallery_id: "other-gallery", hide_map: 1 },
+    ]);
+    expect(resolve(db, "alice", "dailybw")).toBeUndefined();
+  });
+
+  test(":guest user uses :guest's own rows", () => {
+    const db = setupDb([
+      { user_id: ":guest", gallery_id: "dailybw", hide_map: 0 },
+    ]);
+    expect(resolve(db, ":guest", "dailybw")).toBe(0);
+    expect(resolve(db, ":guest", "other")).toBeUndefined();
   });
 });

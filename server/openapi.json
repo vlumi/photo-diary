@@ -393,11 +393,15 @@
                   "items": {
                     "type": "object",
                     "required": [
-                      "id"
+                      "id",
+                      "isAdmin"
                     ],
                     "properties": {
                       "id": {
                         "type": "string"
+                      },
+                      "isAdmin": {
+                        "type": "boolean"
                       }
                     }
                   }
@@ -430,6 +434,9 @@
                   "password": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "isAdmin": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -486,13 +493,13 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "password"
-                ],
                 "properties": {
                   "password": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "isAdmin": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -1347,7 +1354,7 @@
                     "required": [
                       "user_id",
                       "gallery_id",
-                      "access_level",
+                      "is_admin",
                       "hide_map"
                     ],
                     "properties": {
@@ -1357,7 +1364,7 @@
                       "gallery_id": {
                         "type": "string"
                       },
-                      "access_level": {
+                      "is_admin": {
                         "type": "number"
                       },
                       "hide_map": {
@@ -1392,16 +1399,11 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "accessLevel"
+                  "isAdmin"
                 ],
                 "properties": {
-                  "accessLevel": {
-                    "type": "string",
-                    "enum": [
-                      "none",
-                      "view",
-                      "admin"
-                    ]
+                  "isAdmin": {
+                    "type": "boolean"
                   },
                   "hideMap": {
                     "anyOf": [

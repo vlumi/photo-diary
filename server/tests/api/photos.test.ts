@@ -160,42 +160,29 @@ describe("As gallery1Admin", () => {
     token = await loginUser(api, "gallery1Admin");
   });
 
+  // /photos and /photos/:id are admin-only post-#394 (the old "global
+  // view" tier collapsed into is_admin). gallery1Admin has only a
+  // per-gallery grant → 403 across the board.
   test("List photos", async () => {
-    const result = await getPhotos(token);
-    expect(Object.keys(result.body).length).toBe(5);
-    expectPhoto(result, "gallery1photo.jpg");
-    expectPhoto(result, "gallery12photo.jpg");
-    expectPhoto(result, "gallery2photo.jpg");
-    expectPhoto(result, "gallery3photo.jpg");
-    expectPhoto(result, "orphanphoto.jpg");
+    await getPhotos(token, 403);
   });
   test("Get gallery1photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery1photo.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("gallery1photo.jpg");
+    await getPhoto(token, "gallery1photo.jpg", 403);
   });
   test("Get gallery12photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery12photo.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("gallery12photo.jpg");
+    await getPhoto(token, "gallery12photo.jpg", 403);
   });
   test("Get gallery2photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery2photo.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("gallery2photo.jpg");
+    await getPhoto(token, "gallery2photo.jpg", 403);
   });
   test("Get gallery3photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery3photo.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("gallery3photo.jpg");
+    await getPhoto(token, "gallery3photo.jpg", 403);
   });
   test("Get orphanphoto.jpg", async () => {
-    const result = await getPhoto(token, "orphanphoto.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("orphanphoto.jpg");
+    await getPhoto(token, "orphanphoto.jpg", 403);
   });
   test("Get invalid", async () => {
-    await getPhoto(token, "invalid.jpg", 404);
+    await getPhoto(token, "invalid.jpg", 403);
   });
 });
 
@@ -234,42 +221,29 @@ describe("As plainUser", () => {
     token = await loginUser(api, "plainUser");
   });
 
+  // plainUser previously had `:all VIEW`, granting access to the
+  // cross-gallery `/photos` endpoints. Under #394 these are admin-only;
+  // plainUser's per-gallery grants don't reach them.
   test("List photos", async () => {
-    const result = await getPhotos(token);
-    expect(Object.keys(result.body).length).toBe(5);
-    expectPhoto(result, "gallery1photo.jpg");
-    expectPhoto(result, "gallery12photo.jpg");
-    expectPhoto(result, "gallery2photo.jpg");
-    expectPhoto(result, "gallery3photo.jpg");
-    expectPhoto(result, "orphanphoto.jpg");
+    await getPhotos(token, 403);
   });
   test("Get gallery1photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery1photo.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("gallery1photo.jpg");
+    await getPhoto(token, "gallery1photo.jpg", 403);
   });
   test("Get gallery12photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery12photo.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("gallery12photo.jpg");
+    await getPhoto(token, "gallery12photo.jpg", 403);
   });
   test("Get gallery2photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery2photo.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("gallery2photo.jpg");
+    await getPhoto(token, "gallery2photo.jpg", 403);
   });
   test("Get gallery3photo.jpg", async () => {
-    const result = await getPhoto(token, "gallery3photo.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("gallery3photo.jpg");
+    await getPhoto(token, "gallery3photo.jpg", 403);
   });
   test("Get orphanphoto.jpg", async () => {
-    const result = await getPhoto(token, "orphanphoto.jpg");
-    expect(result.body.id).toBeDefined();
-    expect(result.body.id).toBe("orphanphoto.jpg");
+    await getPhoto(token, "orphanphoto.jpg", 403);
   });
   test("Get invalid", async () => {
-    await getPhoto(token, "invalid.jpg", 404);
+    await getPhoto(token, "invalid.jpg", 403);
   });
 });
 

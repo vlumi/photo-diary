@@ -17,14 +17,19 @@ const init = async () => {
 };
 
 const UserIdParam = Type.Object({ userId: Type.String() });
-const UserSummary = Type.Object({ id: Type.String() });
+const UserSummary = Type.Object({
+  id: Type.String(),
+  isAdmin: Type.Boolean(),
+});
 const UsersListResponse = Type.Array(UserSummary);
 const UserCreateBody = Type.Object({
   id: Type.String({ minLength: 1 }),
   password: Type.String({ minLength: 1 }),
+  isAdmin: Type.Optional(Type.Boolean()),
 });
 const UserUpdateBody = Type.Object({
-  password: Type.String({ minLength: 1 }),
+  password: Type.Optional(Type.String({ minLength: 1 })),
+  isAdmin: Type.Optional(Type.Boolean()),
 });
 const ChangePasswordBody = Type.Object({
   currentPassword: Type.String({ minLength: 1 }),
@@ -57,9 +62,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request) => {
       requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
-      const cleanUser = (user: { id: string }) => ({ id: user.id });
-      const users = (await model.getUsers()) as Array<{ id: string }>;
-      return users.map(cleanUser);
+      const users = (await model.getUsers()) as Array<{
+        id: string;
+        is_admin?: number | boolean;
+      }>;
+      return users.map((user) => ({ id: user.id, isAdmin: !!user.is_admin }));
     }
   );
 

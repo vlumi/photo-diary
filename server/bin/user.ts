@@ -33,7 +33,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { SALT_ROUNDS } from "../lib/bcrypt-rounds.js";
-import CONST from "../lib/constants.js";
 import db from "../db/index.js";
 
 const confirm = async (prompt: string): Promise<boolean> => {
@@ -124,24 +123,58 @@ await yargs(hideBin(process.argv))
   .scriptName("user.ts")
   .locale("en")
   .strict()
-  .demandCommand(1, "Specify a subcommand: list, passwd, or delete")
+  .demandCommand(1, "Specify a subcommand: list, passwd, make-admin, revoke-admin, delete, or audit")
   .command(
     "list",
-    "Print every user as a table with their admin flag",
+    "Print every user as a table with their global-admin flag",
     (y) => y,
     async () => {
-      const users = (await db.loadUsers()) as Array<{ id: string }>;
+      const users = (await db.loadUsers()) as Array<{
+        id: string;
+        is_admin?: number | boolean;
+      }>;
       const rows: string[][] = [["user", "admin"]];
       for (const user of users) {
         if (!user.id) continue;
-        const accessRows = await db.loadUserGalleryRows({
-          userId: user.id,
-          galleryId: CONST.SPECIAL_GALLERY_ALL,
-        });
-        const isAdmin = accessRows.some((r) => r.access_level === CONST.ACCESS_ADMIN);
-        rows.push([user.id, isAdmin ? "yes" : "no"]);
+        rows.push([user.id, user.is_admin ? "yes" : "no"]);
       }
       console.log(rows.length === 1 ? "(no users)" : formatTable(rows));
+    }
+  )
+  .command(
+    "make-admin <id>",
+    "Promote a user to global admin (bypasses all access checks)",
+    (y) =>
+      y.positional("id", { describe: "User ID", type: "string", demandOption: true }),
+    async (argv) => {
+      const existing = await db
+        .loadUser(argv.id)
+        .then((u) => u as { id: string })
+        .catch(() => null);
+      if (!existing) {
+        console.error(`✗ User "${argv.id}" doesn't exist.`);
+        process.exit(1);
+      }
+      await db.updateUser(argv.id, { is_admin: 1 });
+      console.log(`✓ "${argv.id}" is now a global admin.`);
+    }
+  )
+  .command(
+    "revoke-admin <id>",
+    "Revoke a user's global-admin flag (does not change per-gallery grants)",
+    (y) =>
+      y.positional("id", { describe: "User ID", type: "string", demandOption: true }),
+    async (argv) => {
+      const existing = await db
+        .loadUser(argv.id)
+        .then((u) => u as { id: string })
+        .catch(() => null);
+      if (!existing) {
+        console.error(`✗ User "${argv.id}" doesn't exist.`);
+        process.exit(1);
+      }
+      await db.updateUser(argv.id, { is_admin: 0 });
+      console.log(`✓ Revoked global-admin from "${argv.id}".`);
     }
   )
   .command(
@@ -186,7 +219,12 @@ await yargs(hideBin(process.argv))
             : `✓ Updated password for "${argv.id}"; existing sessions invalidated (secret rotated).`
         );
       } else {
-        await db.createUser({ id: argv.id, password: hash, secret: randomUUID() });
+        await db.createUser({
+          id: argv.id,
+          password: hash,
+          secret: randomUUID(),
+          is_admin: 0,
+        });
         console.log(`✓ Created user "${argv.id}".`);
       }
     }
@@ -211,7 +249,10 @@ await yargs(hideBin(process.argv))
           default: "table" as const,
         }),
     async (argv) => {
-      const users = (await db.loadUsers()) as Array<{ id: string }>;
+      const users = (await db.loadUsers()) as Array<{
+        id: string;
+        is_admin?: number | boolean;
+      }>;
       const filterFlag = argv["no-access"] || argv["no-admin"];
       const want = (key: string) => !filterFlag || argv[key];
 
@@ -239,27 +280,17 @@ await yargs(hideBin(process.argv))
       }
 
       if (want("no-admin")) {
-        let anyAdmin = false;
-        for (const user of users) {
-          if (!user.id) continue;
-          const accessRows = await db.loadUserGalleryRows({
-            userId: user.id,
-            galleryId: CONST.SPECIAL_GALLERY_ALL,
-          });
-          if (accessRows.some((r) => r.access_level === CONST.ACCESS_ADMIN)) {
-            anyAdmin = true;
-            break;
-          }
-        }
+        const anyAdmin = (users as Array<{ is_admin?: number | boolean }>).some(
+          (u) => !!u.is_admin
+        );
         if (argv.format === "table") {
           console.log(
-            `\nInstance has admin: ${anyAdmin ? "yes" : "NO — no user has ACCESS_ADMIN on :all"}`
+            `\nInstance has global admin: ${anyAdmin ? "yes" : "NO — no user.is_admin = true"}`
           );
         } else if (!anyAdmin) {
           // ids format: emit the warning on stderr so stdout stays empty
-          // when there are no rows of concern (the no-admin case still
-          // demands attention).
-          console.error("WARNING: no user has ACCESS_ADMIN on :all");
+          // when there are no rows of concern.
+          console.error("WARNING: no user has is_admin = true");
         }
       }
     }

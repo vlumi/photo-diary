@@ -127,11 +127,10 @@ describe("As blocked user", () => {
   });
 
   test("List galleries", async () => {
-    // blockedUser has `:all=NONE`, which under the user-first cascade shadows
-    // every :guest grant (including `:guest, gallery3, VIEW`). Logged in as
-    // blockedUser, the visible list is empty.
+    // blockedUser has no user_gallery rows. Falls through to :guest's
+    // grants under the post-#394 model — :guest sees gallery3.
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(0);
+    expect(result.body.length).toBe(1);
   });
   test("Get gallery1", async () => {
     await expectGalleryUnavailable(token, "gallery1");
@@ -139,9 +138,9 @@ describe("As blocked user", () => {
   test("Get gallery2", async () => {
     await expectGalleryUnavailable(token, "gallery2");
   });
-  test("Get gallery3 (anonymous, not as blockedUser)", async () => {
-    // Anonymous request — :guest has gallery3=VIEW, so this still works.
-    const result = await api.get("/api/v1/galleries/gallery3").expect(200);
+  test("Get gallery3", async () => {
+    // blockedUser inherits :guest's gallery3 view under the new model.
+    const result = await getGallery(token, "gallery3");
     expectGallery3(result);
   });
   test("Get :all", async () => {
@@ -193,8 +192,9 @@ describe("As publicUser", () => {
   });
 
   test("List galleries", async () => {
+    // Fanned-out grants on gallery1/2/3; no pseudo-galleries.
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(4);
+    expect(result.body.length).toBe(3);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -212,8 +212,8 @@ describe("As publicUser", () => {
     await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
-    const result = await getGallery(token, ":public");
-    expectGalleryPublic(result);
+    // :public is no longer ACL-accessible for non-admins under #394.
+    await expectGalleryUnavailable(token, ":public");
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
@@ -262,28 +262,26 @@ describe("As gallery1Admin", () => {
   });
 
   test("List galleries", async () => {
+    // Own gallery1 grant + gallery3 via :guest fall-through.
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(5);
+    expect(result.body.length).toBe(2);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
     expectGallery1(result);
   });
   test("Get gallery2", async () => {
-    const result = await getGallery(token, "gallery2");
-    expectGallery2(result);
+    await expectGalleryUnavailable(token, "gallery2");
   });
   test("Get gallery3", async () => {
     const result = await getGallery(token, "gallery3");
     expectGallery3(result);
   });
   test("Get :all", async () => {
-    const result = await getGallery(token, ":all");
-    expectGalleryAll(result);
+    await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
-    const result = await getGallery(token, ":public");
-    expectGalleryPublic(result);
+    await expectGalleryUnavailable(token, ":public");
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
@@ -329,8 +327,9 @@ describe("As plainUser", () => {
   });
 
   test("List galleries", async () => {
+    // Fanned-out grants on gallery1/2/3; no pseudo-galleries.
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(5);
+    expect(result.body.length).toBe(3);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -345,12 +344,10 @@ describe("As plainUser", () => {
     expectGallery3(result);
   });
   test("Get :all", async () => {
-    const result = await getGallery(token, ":all");
-    expectGalleryAll(result);
+    await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
-    const result = await getGallery(token, ":public");
-    expectGalleryPublic(result);
+    await expectGalleryUnavailable(token, ":public");
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
@@ -396,8 +393,9 @@ describe("As gallery12User", () => {
   });
 
   test("List galleries", async () => {
+    // gallery1, gallery2 (own grants) + gallery3 (via :guest fallthrough).
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(2);
+    expect(result.body.length).toBe(3);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -408,7 +406,9 @@ describe("As gallery12User", () => {
     expectGallery2(result);
   });
   test("Get gallery3", async () => {
-    await expectGalleryUnavailable(token, "gallery3");
+    // Inherits gallery3 view from :guest.
+    const result = await getGallery(token, "gallery3");
+    expectGallery3(result);
   });
   test("Get :all", async () => {
     await expectGalleryUnavailable(token, ":all");
