@@ -19,6 +19,8 @@ import galleriesV1 from "./controllers/galleries-v1.js";
 import photosV1 from "./controllers/photos-v1.js";
 import galleryPhotosV1 from "./controllers/gallery-photos-v1.js";
 import userGalleryV1 from "./controllers/user-gallery-v1.js";
+import groupsV1 from "./controllers/groups-v1.js";
+import groupGalleryV1 from "./controllers/group-gallery-v1.js";
 
 import middleware from "./lib/middleware/index.js";
 import { NotFoundError } from "./lib/errors.js";
@@ -86,6 +88,11 @@ await app.register(fastifySwagger, {
       {
         name: "gallery-photos",
         description: "Photo metadata scoped to one gallery",
+      },
+      { name: "groups", description: "User groups (admin)" },
+      {
+        name: "group-gallery",
+        description: "Group-level gallery grants (admin)",
       },
     ],
     components: {
@@ -162,6 +169,10 @@ await app.register(galleryPhotosV1.plugin, {
 await app.register(userGalleryV1.plugin, {
   prefix: "/api/v1/user-gallery",
 });
+await app.register(groupsV1.plugin, { prefix: "/api/v1/groups" });
+await app.register(groupGalleryV1.plugin, {
+  prefix: "/api/v1/group-gallery",
+});
 
 // Double-duty 404 handler: serve index.html for SPA routes
 // (`/g`, `/g/*`) so React Router can resolve deep links; everything
@@ -182,6 +193,8 @@ export const init = async () => {
   await photosV1.init();
   await galleryPhotosV1.init();
   await userGalleryV1.init();
+  await groupsV1.init();
+  await groupGalleryV1.init();
   await app.ready();
   logger.debug("Initialize app done");
 };

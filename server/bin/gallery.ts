@@ -59,7 +59,10 @@ await yargs(hideBin(process.argv))
   .scriptName("gallery.ts")
   .locale("en")
   .strict()
-  .demandCommand(1, "Specify a subcommand: list, create, update, delete, or audit")
+  .demandCommand(
+    1,
+    "Specify a subcommand: list, create, update, delete, access, or audit"
+  )
   .command(
     "list",
     "Print every gallery as a table",
@@ -168,8 +171,62 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
+    "access [gallery]",
+    "Print who has access to a gallery (user_gallery + group_gallery rows). Omit <gallery> to dump every gallery's access table.",
+    (y) =>
+      y.positional("gallery", {
+        describe: "Gallery ID (omit to scan every gallery)",
+        type: "string",
+      }),
+    async (argv) => {
+      const targets = argv.gallery
+        ? [argv.gallery]
+        : (
+          (await db.loadGalleries()) as Array<{ id: string }>
+        ).map((g) => g.id);
+      let printed = false;
+      for (const galleryId of targets) {
+        const users = (await db.loadUserGalleryRows({ galleryId })) as Array<{
+          user_id: string;
+          gallery_id: string;
+          is_admin: number;
+          hide_map: number | null;
+        }>;
+        const groups = (await db.loadGroupGalleryRows({ galleryId })) as Array<{
+          group_id: string;
+          gallery_id: string;
+          is_admin: number;
+          hide_map: number | null;
+        }>;
+        if (users.length === 0 && groups.length === 0) continue;
+        if (printed) console.log();
+        printed = true;
+        console.log(`gallery: ${galleryId}`);
+        const lines: string[][] = [["type", "id", "access", "hide_map"]];
+        for (const r of users) {
+          lines.push([
+            "user",
+            r.user_id,
+            r.is_admin ? "admin" : "view",
+            r.hide_map === null ? "—" : r.hide_map === 1 ? "hide" : "show",
+          ]);
+        }
+        for (const r of groups) {
+          lines.push([
+            "group",
+            r.group_id,
+            r.is_admin ? "admin" : "view",
+            r.hide_map === null ? "—" : r.hide_map === 1 ? "hide" : "show",
+          ]);
+        }
+        console.log(formatTable(lines));
+      }
+      if (!printed) console.log("(no access rows)");
+    }
+  )
+  .command(
     "audit",
-    "Find galleries with missing properties, empty galleries, or orphan gallery_photo rows",
+    "Find galleries with missing properties, empty galleries, or orphan gallery_photo / user_gallery / group_gallery rows",
     (y) =>
       y
         .option("missing", {
@@ -194,6 +251,12 @@ await yargs(hideBin(process.argv))
           describe:
             "Restrict to gallery_photo rows whose referenced gallery no longer exists",
         })
+        .option("orphan-access", {
+          type: "boolean",
+          default: false,
+          describe:
+            "Restrict to user_gallery / group_gallery rows whose gallery is gone",
+        })
         .option("format", {
           choices: ["table", "ids"] as const,
           default: "table" as const,
@@ -209,7 +272,8 @@ await yargs(hideBin(process.argv))
         argv.missing !== undefined ||
         argv.empty ||
         argv["orphan-photos"] ||
-        argv["orphan-galleries"];
+        argv["orphan-galleries"] ||
+        argv["orphan-access"];
 
       const want = (key: string) => !filterFlag || argv[key];
       const wantMissing = (field: string) =>
@@ -264,6 +328,23 @@ await yargs(hideBin(process.argv))
         }
         printList(
           "gallery_photo rows referencing a missing gallery",
+          rows
+        );
+      }
+
+      if (want("orphan-access")) {
+        const galleryIds = new Set<string>(galleries.map((g: any) => g.id));
+        const orphanUserRows = (await db.loadUserGalleryRows({})).filter(
+          (r) => !galleryIds.has(r.gallery_id)
+        );
+        const orphanGroupRows = (await db.loadGroupGalleryRows({})).filter(
+          (r) => !galleryIds.has(r.gallery_id)
+        );
+        const rows: string[][] = [["type", "id", "gallery_id"]];
+        for (const r of orphanUserRows) rows.push(["user", r.user_id, r.gallery_id]);
+        for (const r of orphanGroupRows) rows.push(["group", r.group_id, r.gallery_id]);
+        printList(
+          "user_gallery / group_gallery rows referencing a missing gallery",
           rows
         );
       }

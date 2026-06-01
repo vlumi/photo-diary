@@ -2,27 +2,28 @@
 /* eslint-disable no-console -- interactive CLI tool; console output is the UI */
 
 /**
- * Manage local user accounts.
+ * Manage local user accounts and what each user can access.
  *
- * Subcommands:
- *
- *   user.ts list
+ * Identity:
+ *   user.ts list                        # every user + global-admin flag
  *   user.ts passwd <id> [password] [--keep-secret]
- *   user.ts delete <id> [--yes]
+ *   user.ts make-admin <id>             # set user.is_admin = 1
+ *   user.ts revoke-admin <id>           # set user.is_admin = 0
+ *   user.ts delete <id> [--yes]         # cascade user_gallery + sessions
  *
- * `passwd` upserts the user — creates if missing, updates the password if
- * present. Omit `[password]` to be prompted interactively without echo
- * (preferred — avoids leaving the password in shell history or `ps`). When
- * scripting, pass the password as the positional. By default the user's
- * `secret` is rotated too, which invalidates every existing JWT for them
- * (correct for "password lost / leaked" cases). Pass `--keep-secret` to opt
- * out and keep sessions alive across the change.
+ * Access:
+ *   user.ts grant <user> <gallery> [--admin]   # upsert user_gallery row
+ *   user.ts revoke <user> <gallery> [--yes]    # delete user_gallery row
+ *   user.ts hide-map <user> <gallery> <hide|show|default>
+ *   user.ts grants [<user>]             # direct user_gallery rows
+ *   user.ts access [<user>]             # effective access (resolves direct
+ *                                       # + group memberships + :guest)
  *
- * `delete` cascades to the user's `user_gallery` rows (access + hide_map).
- * Confirmation prompt unless `--yes` is given.
+ *   user.ts audit                       # no-access / no-admin / orphan
+ *                                       # user_gallery rows
  *
- * Access level changes are managed via `bin/access.ts level …`; this script
- * doesn't touch `user_gallery` access at all (except to cascade-delete).
+ * Group-side ACL lives in `bin/group.ts`; per-gallery access slice in
+ * `bin/gallery.ts access <gallery>`.
  */
 
 import { randomUUID } from "node:crypto";
@@ -119,11 +120,94 @@ const formatTable = (rows: string[][]): string => {
     .join("\n");
 };
 
+const REJECTED_GALLERY_IDS = new Set([":all", ":public"]);
+const requireRealGalleryId = (galleryId: string) => {
+  if (REJECTED_GALLERY_IDS.has(galleryId)) {
+    console.error(
+      `✗ ${galleryId} is not a real gallery. For global admin, use \`make-admin\`.`
+    );
+    process.exit(1);
+  }
+};
+
+const hideMapLabel = (value: number | null): string => {
+  if (value === null) return "—";
+  return value === 1 ? "hide" : "show";
+};
+const accessLabel = (isAdmin: number | boolean): string =>
+  isAdmin ? "admin" : "view";
+
+// Effective per-gallery access for one user: walks direct user_gallery
+// rows, group_gallery rows for every group the user is in, and the
+// :guest fallback. Returns one entry per gallery the user can reach,
+// with the resolved level and the contributing sources for tracing.
+const effectiveAccessFor = async (
+  userId: string
+): Promise<
+  Array<{ gallery_id: string; is_admin: boolean; sources: string[] }>
+> => {
+  const user = (await db
+    .loadUser(userId)
+    .catch(() => null)) as { id: string; is_admin?: number | boolean } | null;
+  if (!user) return [];
+  const galleries = (await db.loadGalleries()) as Array<{ id: string }>;
+  if (user.is_admin) {
+    return galleries.map((g) => ({
+      gallery_id: g.id,
+      is_admin: true,
+      sources: ["is_admin"],
+    }));
+  }
+  const userGroups = await db.loadUserGroups(userId);
+  const out: Array<{
+    gallery_id: string;
+    is_admin: boolean;
+    sources: string[];
+  }> = [];
+  for (const g of galleries) {
+    const sources: string[] = [];
+    let level = false;
+    const direct = await db.loadUserGalleryRows({
+      userId,
+      galleryId: g.id,
+    });
+    if (direct.length > 0) {
+      sources.push("direct");
+      if (direct[0].is_admin) level = true;
+    }
+    for (const groupId of userGroups) {
+      const gr = await db.loadGroupGalleryRows({
+        groupId,
+        galleryId: g.id,
+      });
+      if (gr.length > 0) {
+        sources.push(`group:${groupId}`);
+        if (gr[0].is_admin) level = true;
+      }
+    }
+    const guest = await db.loadUserGalleryRows({
+      userId: ":guest",
+      galleryId: g.id,
+    });
+    if (guest.length > 0) {
+      sources.push(":guest");
+      if (guest[0].is_admin) level = true;
+    }
+    if (sources.length > 0) {
+      out.push({ gallery_id: g.id, is_admin: level, sources });
+    }
+  }
+  return out;
+};
+
 await yargs(hideBin(process.argv))
   .scriptName("user.ts")
   .locale("en")
   .strict()
-  .demandCommand(1, "Specify a subcommand: list, passwd, make-admin, revoke-admin, delete, or audit")
+  .demandCommand(
+    1,
+    "Specify a subcommand: list, passwd, make-admin, revoke-admin, delete, grant, revoke, hide-map, grants, access, or audit"
+  )
   .command(
     "list",
     "Print every user as a table with their global-admin flag",
@@ -230,8 +314,146 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
+    "grant <user> <gallery>",
+    "Grant a user view (or admin with --admin) on a gallery. Idempotent — re-running with a different --admin toggles it.",
+    (y) =>
+      y
+        .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
+        .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
+        .option("admin", { describe: "Grant gallery-admin instead of view", type: "boolean", default: false }),
+    async (argv) => {
+      requireRealGalleryId(argv.gallery);
+      await db.upsertUserGallery({
+        user_id: argv.user,
+        gallery_id: argv.gallery,
+        is_admin: !!argv.admin,
+      });
+      console.log(
+        `✓ Granted ${argv.admin ? "admin" : "view"} to user (${argv.user}, ${argv.gallery})`
+      );
+    }
+  )
+  .command(
+    "revoke <user> <gallery>",
+    "Delete the user_gallery row (revokes all access at this scope)",
+    (y) =>
+      y
+        .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
+        .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
+        .option("yes", { describe: "Skip the confirmation prompt", type: "boolean", default: false }),
+    async (argv) => {
+      requireRealGalleryId(argv.gallery);
+      if (!argv.yes) {
+        const ok = await confirm(`Revoke user (${argv.user}, ${argv.gallery})?`);
+        if (!ok) {
+          console.log("Aborted.");
+          return;
+        }
+      }
+      await db.deleteUserGallery(argv.user, argv.gallery);
+      console.log(`✓ Revoked user (${argv.user}, ${argv.gallery})`);
+    }
+  )
+  .command(
+    "hide-map <user> <gallery> <state>",
+    "Set the map privacy toggle for a user × gallery pair",
+    (y) =>
+      y
+        .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
+        .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
+        .positional("state", {
+          describe:
+            "hide = hide the map; show = show the map; default = clear override (inherit)",
+          choices: ["hide", "show", "default"] as const,
+          demandOption: true,
+        }),
+    async (argv) => {
+      requireRealGalleryId(argv.gallery);
+      const value = argv.state === "hide" ? 1 : argv.state === "show" ? 0 : null;
+      await db.upsertUserGallery({
+        user_id: argv.user,
+        gallery_id: argv.gallery,
+        hide_map: value,
+      });
+      const label = value === 1 ? "hide" : value === 0 ? "show" : "default (cleared)";
+      console.log(`✓ hide_map set to ${label} for user (${argv.user}, ${argv.gallery})`);
+    }
+  )
+  .command(
+    "grants [user]",
+    "Print direct user_gallery rows (optionally filtered to one user) plus global admins",
+    (y) =>
+      y
+        .positional("user", { describe: "User ID (or :guest)", type: "string" })
+        .option("gallery", { describe: "Filter to one gallery ID", type: "string" }),
+    async (argv) => {
+      const rows = await db.loadUserGalleryRows({
+        userId: argv.user,
+        galleryId: argv.gallery,
+      });
+      const adminFlag = (await db.loadUsers()) as Array<{
+        id: string;
+        is_admin?: number | boolean;
+      }>;
+      const globals = new Set(
+        adminFlag
+          .filter((u) => !!u.is_admin && (!argv.user || u.id === argv.user))
+          .map((u) => u.id)
+      );
+      const showGlobals = !argv.gallery;
+      if (rows.length === 0 && (!showGlobals || globals.size === 0)) {
+        console.log("(no rows)");
+        return;
+      }
+      const lines: string[][] = [["user", "gallery", "access", "hide_map"]];
+      for (const r of rows) {
+        const annotated = globals.has(r.user_id)
+          ? `${r.user_id} (global admin)`
+          : r.user_id;
+        lines.push([
+          annotated,
+          r.gallery_id,
+          accessLabel(r.is_admin),
+          hideMapLabel(r.hide_map),
+        ]);
+      }
+      if (showGlobals) {
+        for (const id of globals) {
+          if (rows.some((r) => r.user_id === id)) continue;
+          lines.push([`${id} (global admin)`, "—", "—", "—"]);
+        }
+      }
+      console.log(formatTable(lines));
+    }
+  )
+  .command(
+    "access [user]",
+    "Print effective access for a user (direct + inherited via groups + :guest), with the contributing sources",
+    (y) =>
+      y.positional("user", { describe: "User ID (omit to scan every user)", type: "string" }),
+    async (argv) => {
+      const targets: string[] = argv.user
+        ? [argv.user]
+        : ((await db.loadUsers()) as Array<{ id: string }>).map((u) => u.id);
+      let printed = false;
+      for (const userId of targets) {
+        const rows = await effectiveAccessFor(userId);
+        if (rows.length === 0) continue;
+        if (printed) console.log();
+        printed = true;
+        console.log(`user: ${userId}`);
+        const lines: string[][] = [["gallery", "access", "sources"]];
+        for (const r of rows) {
+          lines.push([r.gallery_id, accessLabel(r.is_admin), r.sources.join(", ")]);
+        }
+        console.log(formatTable(lines));
+      }
+      if (!printed) console.log("(no effective access)");
+    }
+  )
+  .command(
     "audit",
-    "Find users with no access or warn if the instance has no admin",
+    "Find users with no access, warn if the instance has no admin, or report user_gallery rows whose user is gone",
     (y) =>
       y
         .option("no-access", {
@@ -244,6 +466,11 @@ await yargs(hideBin(process.argv))
           default: false,
           describe: "Restrict to the no-admin-found warning",
         })
+        .option("orphan-grants", {
+          type: "boolean",
+          default: false,
+          describe: "Restrict to user_gallery rows whose user_id is gone",
+        })
         .option("format", {
           choices: ["table", "ids"] as const,
           default: "table" as const,
@@ -253,7 +480,8 @@ await yargs(hideBin(process.argv))
         id: string;
         is_admin?: number | boolean;
       }>;
-      const filterFlag = argv["no-access"] || argv["no-admin"];
+      const filterFlag =
+        argv["no-access"] || argv["no-admin"] || argv["orphan-grants"];
       const want = (key: string) => !filterFlag || argv[key];
 
       if (argv.format === "table") {
@@ -291,6 +519,25 @@ await yargs(hideBin(process.argv))
           // ids format: emit the warning on stderr so stdout stays empty
           // when there are no rows of concern.
           console.error("WARNING: no user has is_admin = true");
+        }
+      }
+
+      if (want("orphan-grants")) {
+        // user_gallery rows whose user_id no longer maps to a user row.
+        // :guest is a virtual user that's never in the user table; skip it.
+        const knownUsers = new Set(users.map((u) => u.id));
+        const orphans = (await db.loadOrphanUserGalleryRows()).filter(
+          (o) => o.missing === "user" && !knownUsers.has(o.userId)
+        );
+        if (argv.format === "ids") {
+          for (const o of orphans) console.log(`${o.userId}\t${o.galleryId}`);
+        } else {
+          console.log(`\nuser_gallery rows for a missing user: ${orphans.length}`);
+          if (orphans.length > 0) {
+            const rows: string[][] = [["user_id", "gallery_id"]];
+            for (const o of orphans) rows.push([o.userId, o.galleryId]);
+            console.log(formatTable(rows));
+          }
         }
       }
     }
