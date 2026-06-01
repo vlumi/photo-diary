@@ -125,43 +125,69 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
-    "grant <user> <gallery>",
-    "Grant a user view (or admin with --admin) on a gallery. Idempotent — re-running with a different --admin toggles it.",
+    "grant <principal> <gallery>",
+    "Grant view (or admin with --admin) on a gallery. Principal is a user id by default; pass --group to target a group instead. Idempotent — re-running with a different --admin toggles it.",
     (y) =>
       y
-        .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
+        .positional("principal", {
+          describe: "User ID (or :guest), or group ID with --group",
+          type: "string",
+          demandOption: true,
+        })
         .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
-        .option("admin", { describe: "Grant gallery-admin instead of view", type: "boolean", default: false }),
+        .option("admin", { describe: "Grant gallery-admin instead of view", type: "boolean", default: false })
+        .option("group", { describe: "Treat <principal> as a group ID", type: "boolean", default: false }),
     async (argv) => {
       checkGalleryId(argv.gallery);
-      await db.upsertUserGallery({
-        user_id: argv.user,
-        gallery_id: argv.gallery,
-        is_admin: !!argv.admin,
-      });
+      const target = argv.group ? "group" : "user";
+      if (argv.group) {
+        await db.upsertGroupGallery({
+          group_id: argv.principal,
+          gallery_id: argv.gallery,
+          is_admin: !!argv.admin,
+        });
+      } else {
+        await db.upsertUserGallery({
+          user_id: argv.principal,
+          gallery_id: argv.gallery,
+          is_admin: !!argv.admin,
+        });
+      }
       const label = argv.admin ? "admin" : "view";
-      console.log(`✓ Granted ${label}: (${argv.user}, ${argv.gallery})`);
+      console.log(`✓ Granted ${label} to ${target} (${argv.principal}, ${argv.gallery})`);
     }
   )
   .command(
-    "revoke <user> <gallery>",
-    "Delete the user_gallery row (revokes all access at this scope)",
+    "revoke <principal> <gallery>",
+    "Delete the access row (user_gallery or group_gallery with --group)",
     (y) =>
       y
-        .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
+        .positional("principal", {
+          describe: "User ID (or :guest), or group ID with --group",
+          type: "string",
+          demandOption: true,
+        })
         .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
+        .option("group", { describe: "Treat <principal> as a group ID", type: "boolean", default: false })
         .option("yes", { describe: "Skip the confirmation prompt", type: "boolean", default: false }),
     async (argv) => {
       checkGalleryId(argv.gallery);
+      const target = argv.group ? "group" : "user";
       if (!argv.yes) {
-        const ok = await confirm(`Revoke (${argv.user}, ${argv.gallery})?`);
+        const ok = await confirm(
+          `Revoke ${target} (${argv.principal}, ${argv.gallery})?`
+        );
         if (!ok) {
           console.log("Aborted.");
           return;
         }
       }
-      await db.deleteUserGallery(argv.user, argv.gallery);
-      console.log(`✓ Revoked: (${argv.user}, ${argv.gallery})`);
+      if (argv.group) {
+        await db.deleteGroupGallery(argv.principal, argv.gallery);
+      } else {
+        await db.deleteUserGallery(argv.principal, argv.gallery);
+      }
+      console.log(`✓ Revoked ${target} (${argv.principal}, ${argv.gallery})`);
     }
   )
   .command(
@@ -238,28 +264,42 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
-    "hide-map <user> <gallery> <state>",
-    "Set the map privacy toggle for a user × gallery pair",
+    "hide-map <principal> <gallery> <state>",
+    "Set the map privacy toggle for a user × gallery (or group × gallery with --group)",
     (y) =>
       y
-        .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
+        .positional("principal", {
+          describe: "User ID (or :guest), or group ID with --group",
+          type: "string",
+          demandOption: true,
+        })
         .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
         .positional("state", {
           describe:
             "hide = hide the map; show = show the map; default = clear override (inherit)",
           choices: ["hide", "show", "default"] as const,
           demandOption: true,
-        }),
+        })
+        .option("group", { describe: "Treat <principal> as a group ID", type: "boolean", default: false }),
     async (argv) => {
       checkGalleryId(argv.gallery);
       const value = argv.state === "hide" ? 1 : argv.state === "show" ? 0 : null;
-      await db.upsertUserGallery({
-        user_id: argv.user,
-        gallery_id: argv.gallery,
-        hide_map: value,
-      });
+      if (argv.group) {
+        await db.upsertGroupGallery({
+          group_id: argv.principal,
+          gallery_id: argv.gallery,
+          hide_map: value,
+        });
+      } else {
+        await db.upsertUserGallery({
+          user_id: argv.principal,
+          gallery_id: argv.gallery,
+          hide_map: value,
+        });
+      }
       const label = value === 1 ? "hide" : value === 0 ? "show" : "default (cleared)";
-      console.log(`✓ hide_map set to ${label}: (${argv.user}, ${argv.gallery})`);
+      const target = argv.group ? "group" : "user";
+      console.log(`✓ hide_map set to ${label} for ${target} (${argv.principal}, ${argv.gallery})`);
     }
   )
   .parseAsync();
