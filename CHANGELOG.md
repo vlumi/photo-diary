@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Tooling
+
+- `bin/gallery.ts` now uses explicit subcommands (`list`, `create`, `update`, `delete`, `audit`) — typing `gallery.ts list` no longer silently creates a gallery called "list."
+
 ### Frontend
 
 - User-side theme picker in the UserMenu dropdown — pick from any of the built-in themes or keep "Follow gallery default" (the unset state). The choice is persisted per-browser in localStorage and overrides the gallery's `theme` + the instance default for that user. Resolution priority is user preference → gallery theme → instance default.
