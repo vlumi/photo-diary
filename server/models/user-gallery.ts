@@ -22,7 +22,7 @@ const getUserGalleryRows = async (filter: {
 const upsertUserGallery = async (row: {
   user_id: string;
   gallery_id: string;
-  access_level?: number | null;
+  is_admin?: boolean;
   hide_map?: number | null;
 }) => {
   logger.debug("Upserting user_gallery", row);

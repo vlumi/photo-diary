@@ -26,21 +26,40 @@ const getUsers = async () => {
 const getUser = async (id: string) => {
   return await db.loadUser(id);
 };
-const createUser = async (user: { id: string; password: string }) => {
-  logger.debug("Creating user", { id: user.id });
+const createUser = async (user: {
+  id: string;
+  password: string;
+  isAdmin?: boolean;
+}) => {
+  logger.debug("Creating user", { id: user.id, isAdmin: !!user.isAdmin });
   const password = await bcrypt.hash(user.password, SALT_ROUNDS);
-  await db.createUser({ id: user.id, password, secret: randomUUID() });
+  await db.createUser({
+    id: user.id,
+    password,
+    secret: randomUUID(),
+    is_admin: user.isAdmin ? 1 : 0,
+  });
 };
-// Admin-driven password reset for another user. Rotates `secret` so
-// any existing JWTs (and the user's own active sessions) are
-// invalidated — same semantics as `bin/user.ts passwd` without
-// `--keep-secret`.
-const updateUser = async (userId: string, patch: { password: string }) => {
-  logger.debug("Updating user", { id: userId });
-  const password = await bcrypt.hash(patch.password, SALT_ROUNDS);
-  const secret = randomBytes(32).toString("hex");
-  await db.updateUser(userId, { password, secret });
-  await db.deleteUserSessions(userId);
+// Admin-driven user update. Password rotation invalidates `secret`
+// (and active sessions) — same semantics as `bin/user.ts passwd`.
+// Toggling `isAdmin` is a separate concern that doesn't rotate the
+// secret; only password change does.
+const updateUser = async (
+  userId: string,
+  patch: { password?: string; isAdmin?: boolean }
+) => {
+  logger.debug("Updating user", { id: userId, hasPassword: !!patch.password });
+  const update: Record<string, unknown> = {};
+  if (patch.password) {
+    update.password = await bcrypt.hash(patch.password, SALT_ROUNDS);
+    update.secret = randomBytes(32).toString("hex");
+  }
+  if (patch.isAdmin !== undefined) {
+    update.is_admin = patch.isAdmin ? 1 : 0;
+  }
+  if (Object.keys(update).length === 0) return;
+  await db.updateUser(userId, update);
+  if (update.password) await db.deleteUserSessions(userId);
 };
 // Cascades to user_gallery rows so we don't orphan ACL entries.
 // Matches the `bin/user.ts delete` cleanup.

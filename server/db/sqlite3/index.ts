@@ -167,39 +167,34 @@ const deleteUserSessions = async (userId: string): Promise<void> => {
   db.prepare("DELETE FROM session WHERE user_id = ?").run(userId);
 };
 
-// Resolve the access level for (userId, galleryId) under the user-first
-// cascade: user's rows are consulted in gallery-specificity order first, then
-// :guest's rows. For a non-special gallery request the gallery steps are
-// `gallery → :public → :all`; for `:public`/`:all` requests the
-// :public step is dropped. NULL `access_level` rows are filtered out so
-// privacy-only rows (`hide_map` set without an access grant) don't poison
-// the resolution and force a deny.
+// Resolve access for (userId, galleryId) under the post-#394 model:
+//   1. user.is_admin = true                       → global admin (bypass).
+//   2. row exists in user_gallery for user-or-:guest on this gallery:
+//        is_admin = 1                             → gallery admin.
+//        otherwise (row present)                  → view.
+//   3. else                                       → deny.
+// Group rows (#270) will slot in at step 2 as an additional row source.
 const resolveAccessLevel = async (
   userId: string,
   galleryId: string
-): Promise<number | undefined> => {
-  const isSpecial = galleryId.startsWith(":");
-  const galleryWhere = isSpecial
-    ? "gallery_id IN (?, ':all')"
-    : "gallery_id IN (?, ':public', ':all')";
-  const galleryOrder = isSpecial
-    ? "CASE WHEN gallery_id = ? THEN 0 ELSE 1 END"
-    : "CASE WHEN gallery_id = ? THEN 0 WHEN gallery_id = ':public' THEN 1 ELSE 2 END";
-  const row = db
+): Promise<{ hasAccess: boolean; isAdmin: boolean }> => {
+  const userRow = db
+    .prepare("SELECT is_admin FROM user WHERE id = ?")
+    .get(userId) as { is_admin: number } | undefined;
+  if (userRow && userRow.is_admin) {
+    return { hasAccess: true, isAdmin: true };
+  }
+  const grantRow = db
     .prepare(
-      `SELECT access_level FROM user_gallery
-       WHERE (user_id = ? OR user_id = ':guest')
-         AND ${galleryWhere}
-         AND access_level IS NOT NULL
-       ORDER BY
-         CASE WHEN user_id = ? THEN 0 ELSE 1 END,
-         ${galleryOrder}
-       LIMIT 1`
+      `SELECT MAX(is_admin) AS is_admin
+       FROM user_gallery
+       WHERE user_id IN (?, ':guest') AND gallery_id = ?`
     )
-    .get(userId, galleryId, userId, galleryId) as
-    | { access_level: number }
-    | undefined;
-  return row?.access_level;
+    .get(userId, galleryId) as { is_admin: number | null } | undefined;
+  if (grantRow?.is_admin === null || grantRow?.is_admin === undefined) {
+    return { hasAccess: false, isAdmin: false };
+  }
+  return { hasAccess: true, isAdmin: !!grantRow.is_admin };
 };
 
 const loadUserGalleryRows = async (
@@ -224,7 +219,7 @@ const upsertUserGallery = async (
   row: {
     user_id: string;
     gallery_id: string;
-    access_level?: number | null;
+    is_admin?: boolean;
     hide_map?: number | null;
   }
 ): Promise<void> => {
@@ -232,16 +227,16 @@ const upsertUserGallery = async (
   // conflict). Done with SQLite's INSERT ON CONFLICT DO UPDATE so a single
   // statement handles both the create and the partial-update path.
   const sets: string[] = [];
-  if ("access_level" in row) sets.push("access_level = excluded.access_level");
+  if ("is_admin" in row) sets.push("is_admin = excluded.is_admin");
   if ("hide_map" in row) sets.push("hide_map = excluded.hide_map");
   const query =
-    "INSERT INTO user_gallery (user_id, gallery_id, access_level, hide_map) " +
+    "INSERT INTO user_gallery (user_id, gallery_id, is_admin, hide_map) " +
     "VALUES (?, ?, ?, ?) " +
     `ON CONFLICT(user_id, gallery_id) DO UPDATE SET ${sets.join(", ")}`;
   db.prepare(query).run(
     row.user_id,
     row.gallery_id,
-    row.access_level ?? null,
+    row.is_admin ? 1 : 0,
     row.hide_map ?? null
   );
 };
@@ -255,44 +250,29 @@ const deleteUserGallery = async (
     galleryId,
   ]);
 };
-// Resolve the privacy cascade for (userId, galleryId). Same user-first
-// ordering as the access cascade: user's rows first in gallery-specificity
-// order, then :guest's. For a non-special gallery the gallery steps are
-// `gallery → :public → :all`; for `:public`/`:all` the :public
-// step is dropped (those aren't subsets of :public).
-//
-// Priority for a non-special gallery request:
-//   (user, gallery) > (user, :public) > (user, :all)
-//                   > (:guest, gallery) > (:guest, :public) > (:guest, :all)
-//
-// Rows with null `hide_map` are skipped so a less-specific row's non-null
-// value can win. Returns undefined when no row at any level has a non-null
-// `hide_map`.
+// Resolve the privacy cascade for (userId, galleryId).
+//   1. user.is_admin = true                       → 0 (show, bypass).
+//   2. first non-null hide_map from (user, gallery), (:guest, gallery)
+//      with the user's row beating :guest          → that value.
+//   3. else                                       → undefined (default show).
 const resolveHideMap = async (
   userId: string,
   galleryId: string
 ): Promise<number | undefined> => {
-  const isSpecial = galleryId.startsWith(":");
-  const galleryWhere = isSpecial
-    ? "gallery_id IN (?, ':all')"
-    : "gallery_id IN (?, ':public', ':all')";
-  const galleryOrder = isSpecial
-    ? "CASE WHEN gallery_id = ? THEN 0 ELSE 1 END"
-    : "CASE WHEN gallery_id = ? THEN 0 WHEN gallery_id = ':public' THEN 1 ELSE 2 END";
+  const userRow = db
+    .prepare("SELECT is_admin FROM user WHERE id = ?")
+    .get(userId) as { is_admin: number } | undefined;
+  if (userRow && userRow.is_admin) return 0;
   const row = db
     .prepare(
       `SELECT hide_map FROM user_gallery
-       WHERE (user_id = ? OR user_id = ':guest')
-         AND ${galleryWhere}
+       WHERE user_id IN (?, ':guest')
+         AND gallery_id = ?
          AND hide_map IS NOT NULL
-       ORDER BY
-         CASE WHEN user_id = ? THEN 0 ELSE 1 END,
-         ${galleryOrder}
+       ORDER BY CASE WHEN user_id = ? THEN 0 ELSE 1 END
        LIMIT 1`
     )
-    .get(userId, galleryId, userId, galleryId) as
-    | { hide_map: number }
-    | undefined;
+    .get(userId, galleryId, userId) as { hide_map: number } | undefined;
   return row?.hide_map;
 };
 
