@@ -2,18 +2,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console -- interactive CLI tool; console output is the UI */
 
 /**
- * Manage gallery rows.
+ * Manage gallery rows. Subcommands:
  *
- *   gallery.ts <id> [--title …] [--description …] [--epoch …] …
- *   gallery.ts audit [--missing …] [--empty] [--orphan-photos] [--orphan-galleries] [--format table|ids]
+ *   gallery.ts list
+ *   gallery.ts create <id> [--title …] [--description …] …
+ *   gallery.ts update <id> [--title …] [--description …] …
+ *   gallery.ts delete <id>
+ *   gallery.ts audit [--missing …] [--empty] [--orphan-photos] …
  *
- * The default command upserts a gallery (create on first call, partial
- * update on subsequent calls). The `audit` subcommand finds data drift —
- * galleries with missing properties, galleries with no photos, and
- * gallery_photo rows whose referenced photo or gallery no longer exists
- * (the latter directly catches the dailybw-style FK violation the
- * migrate post-check would otherwise surface only after attempting an
- * upgrade).
+ * Each subcommand is explicit — no default command, so a typo can't
+ * silently create a gallery. `audit` finds data drift: galleries with
+ * missing properties, galleries with no photos, and gallery_photo rows
+ * whose referenced photo or gallery no longer exists.
  */
 
 import yargs from "yargs";
@@ -39,65 +39,132 @@ const formatTable = (rows: string[][]): string => {
 const isMissing = (v: unknown): boolean =>
   v === null || v === undefined || v === "";
 
+const fieldOptions = (y: any) =>
+  y
+    .option("title", { describe: "Display title", type: "string" })
+    .option("description", { describe: "Long description", type: "string" })
+    .option("epoch", { describe: "Anchor date (YYYY-MM-DD)", type: "string" })
+    .option("epoch_type", { describe: "Epoch type — see models/GalleryModel.ts", type: "string" })
+    .option("theme", { describe: "Theme name", type: "string" })
+    .option("initial_view", {
+      describe: "Initial view: year, month, day, or photo",
+      type: "string",
+    })
+    .option("hostname", {
+      describe: "Regex for hostnames that default to this gallery",
+      type: "string",
+    });
+
 await yargs(hideBin(process.argv))
   .scriptName("gallery.ts")
   .locale("en")
-  .usage("Usage: $0 <id> [options] | $0 audit [...]")
   .strict()
+  .demandCommand(1, "Specify a subcommand: list, create, update, delete, or audit")
   .command(
-    "$0 <id>",
-    "Create or update a gallery",
+    "list",
+    "Print every gallery as a table",
+    (y) => y,
+    async () => {
+      const galleries = (await db.loadGalleries()) as Array<{
+        id: string;
+        title?: string;
+        hostname?: string;
+      }>;
+      const rows: string[][] = [["id", "title", "hostname"]];
+      for (const g of galleries) {
+        rows.push([g.id, g.title ?? "", g.hostname ?? ""]);
+      }
+      console.log(rows.length === 1 ? "(no galleries)" : formatTable(rows));
+    }
+  )
+  .command(
+    "create <id>",
+    "Create a new gallery (fails if id already exists)",
     (y) =>
-      y
-        .positional("id", {
+      fieldOptions(
+        y.positional("id", {
           describe: "Gallery ID (used in URLs and ACL references)",
           type: "string",
           demandOption: true,
         })
-        .option("title", { describe: "Display title", type: "string" })
-        .option("description", { describe: "Long description", type: "string" })
-        .option("epoch", { describe: "Anchor date (YYYY-MM-DD)", type: "string" })
-        .option("epoch_type", { describe: "Epoch type — see models/GalleryModel.ts", type: "string" })
-        .option("theme", { describe: "Theme name", type: "string" })
-        .option("initial_view", {
-          describe: "Initial view: year, month, day, or photo",
-          type: "string",
-        })
-        .option("hostname", {
-          describe: "Regex for hostnames that default to this gallery",
-          type: "string",
-        }),
+      ),
     async (argv) => {
       const galleryId = argv.id as string;
       const existing = await db
         .loadGallery(galleryId)
         .then((g) => g as { id: string })
         .catch(() => null);
-
       if (existing) {
-        const updates: Record<string, string> = {};
-        if ("title" in argv) updates.title = argv.title as string;
-        if ("description" in argv) updates.description = argv.description as string;
-        if ("epoch" in argv) updates.epoch = argv.epoch as string;
-        if ("epoch_type" in argv) updates.epoch_type = argv.epoch_type as string;
-        if ("theme" in argv) updates.theme = argv.theme as string;
-        if ("initial_view" in argv) updates.initial_view = argv.initial_view as string;
-        if ("hostname" in argv) updates.hostname = argv.hostname as string;
-        await db.updateGallery(existing.id, updates);
-        console.log(`✓ Updated gallery "${galleryId}".`);
-      } else {
-        await db.createGallery({
-          id: galleryId,
-          title: argv.title as string | undefined,
-          description: argv.description as string | undefined,
-          epoch: argv.epoch as string | undefined,
-          epochType: argv.epoch_type as string | undefined,
-          theme: argv.theme as string | undefined,
-          initialView: argv.initial_view as string | undefined,
-          hostname: argv.hostname as string | undefined,
-        });
-        console.log(`✓ Created gallery "${galleryId}".`);
+        console.error(`✗ Gallery "${galleryId}" already exists. Use \`update\` to modify it.`);
+        process.exit(1);
       }
+      await db.createGallery({
+        id: galleryId,
+        title: argv.title as string | undefined,
+        description: argv.description as string | undefined,
+        epoch: argv.epoch as string | undefined,
+        epochType: argv.epoch_type as string | undefined,
+        theme: argv.theme as string | undefined,
+        initialView: argv.initial_view as string | undefined,
+        hostname: argv.hostname as string | undefined,
+      });
+      console.log(`✓ Created gallery "${galleryId}".`);
+    }
+  )
+  .command(
+    "update <id>",
+    "Update an existing gallery (fails if id is missing)",
+    (y) =>
+      fieldOptions(
+        y.positional("id", {
+          describe: "Gallery ID",
+          type: "string",
+          demandOption: true,
+        })
+      ),
+    async (argv) => {
+      const galleryId = argv.id as string;
+      const existing = await db
+        .loadGallery(galleryId)
+        .then((g) => g as { id: string })
+        .catch(() => null);
+      if (!existing) {
+        console.error(`✗ Gallery "${galleryId}" doesn't exist. Use \`create\` first.`);
+        process.exit(1);
+      }
+      const updates: Record<string, string> = {};
+      if ("title" in argv) updates.title = argv.title as string;
+      if ("description" in argv) updates.description = argv.description as string;
+      if ("epoch" in argv) updates.epoch = argv.epoch as string;
+      if ("epoch_type" in argv) updates.epoch_type = argv.epoch_type as string;
+      if ("theme" in argv) updates.theme = argv.theme as string;
+      if ("initial_view" in argv) updates.initial_view = argv.initial_view as string;
+      if ("hostname" in argv) updates.hostname = argv.hostname as string;
+      await db.updateGallery(galleryId, updates);
+      console.log(`✓ Updated gallery "${galleryId}".`);
+    }
+  )
+  .command(
+    "delete <id>",
+    "Delete a gallery (cascades gallery_photo and user_gallery rows)",
+    (y) =>
+      y.positional("id", {
+        describe: "Gallery ID",
+        type: "string",
+        demandOption: true,
+      }),
+    async (argv) => {
+      const galleryId = argv.id as string;
+      const existing = await db
+        .loadGallery(galleryId)
+        .then((g) => g as { id: string })
+        .catch(() => null);
+      if (!existing) {
+        console.error(`✗ Gallery "${galleryId}" doesn't exist.`);
+        process.exit(1);
+      }
+      await db.deleteGallery(galleryId);
+      console.log(`✓ Deleted gallery "${galleryId}".`);
     }
   )
   .command(
