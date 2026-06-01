@@ -264,7 +264,6 @@ const OPERATOR_SCRIPTS = [
   "gallery",
   "user",
   "group",
-  "access",
   "meta",
 ];
 
@@ -380,6 +379,26 @@ if (createdShortcuts.length > 0) {
       `bin/ shortcuts: ${createdShortcuts.join(", ")}`
   );
 }
+// Sweep stale shortcuts — scripts that used to exist but no longer do
+// (e.g., `bin/access.ts` after the ACL refactor moved its surface into
+// user/group/gallery.ts). Only removes symlinks, never plain files.
+const expectedShortcuts = new Set(OPERATOR_SCRIPTS.map((s) => `${s}.ts`));
+const removedShortcuts: string[] = [];
+for (const entry of fs.readdirSync(instanceBinDir)) {
+  if (!entry.endsWith(".ts") || expectedShortcuts.has(entry)) continue;
+  const full = path.join(instanceBinDir, entry);
+  try {
+    if (fs.lstatSync(full).isSymbolicLink()) {
+      fs.unlinkSync(full);
+      removedShortcuts.push(entry);
+    }
+  } catch {
+    // ignore — file might have raced
+  }
+}
+if (removedShortcuts.length > 0) {
+  log(`✓ Removed stale bin/ shortcuts: ${removedShortcuts.join(", ")}`);
+}
 
 // 6. Directories report (doctor)
 log();
@@ -398,8 +417,8 @@ if (mode === "new") {
   log("  ./code/server/bin/start-prod.sh");
   log("  ./code/converter/bin/start-prod.sh");
   log("  ./bin/user.ts passwd <username> <password>");
-  log(`  ./bin/gallery.ts ${instanceName} --title "${instanceName}"`);
-  log("  ./bin/access.ts level <username> :all admin");
+  log(`  ./bin/gallery.ts create ${instanceName} --title "${instanceName}"`);
+  log("  ./bin/user.ts make-admin <username>");
 } else if (mode === "upgrade") {
   log("Upgrade prepared. Next — cycle pm2 to pick up the new version:");
   log();
