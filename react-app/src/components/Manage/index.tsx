@@ -4,7 +4,8 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill, BsChevronRight } from "react-icons/bs";
 
-import { useUserStore } from "../../stores";
+import useKeyPress from "../../lib/keypress";
+import { useLastGalleryPathStore, useUserStore } from "../../stores";
 
 const Root = styled.div`
   padding: 0 5px;
@@ -52,6 +53,34 @@ const CrumbLink = styled.a`
     text-decoration: underline;
   }
 `;
+const ContextGroup = styled.div`
+  flex: 0 0 auto;
+  display: inline-flex;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  overflow: hidden;
+`;
+const ContextButton = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: ${({ $active }) =>
+    $active ? "var(--header-background)" : "transparent"};
+  color: ${({ $active }) =>
+    $active ? "var(--header-color)" : "var(--inactive-color)"};
+  border: none;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: bold;
+  cursor: ${({ $active }) => ($active ? "default" : "pointer")};
+  & + & {
+    border-left: 1px solid var(--inactive-color);
+  }
+  &:hover {
+    color: ${({ $active }) =>
+      $active ? "var(--header-color)" : "var(--primary-color)"};
+  }
+`;
 const NoticeBody = styled.div`
   padding: 16px;
   font-style: italic;
@@ -68,6 +97,7 @@ const Manage = (): React.ReactElement => {
   const navigate = useNavigate();
   const params = useParams();
   const user = useUserStore((s) => s.user);
+  const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
   const galleryId = params.galleryId;
 
   const body = !user ? (
@@ -77,6 +107,67 @@ const Manage = (): React.ReactElement => {
   ) : (
     <Outlet />
   );
+
+  // When the URL targets a specific gallery, render the same
+  // Gallery / Stats / Manage segmented control the public gallery
+  // shows in its title bar — switching modes is one click in either
+  // direction. Gallery jumps to the most recently visited path for
+  // this gallery (year / month / day / photo) when remembered.
+  const goToGallery = () => {
+    if (!galleryId) {
+      navigate("/g");
+      return;
+    }
+    const remembered = lookupGalleryPath(galleryId);
+    navigate(remembered ?? `/g/${galleryId}`);
+  };
+  const goToStats = () => {
+    if (!galleryId) return;
+    navigate(`/s/${galleryId}`);
+  };
+  // Mirror Title.tsx's pill shortcuts. 1 / 2 / 3 match pill
+  // position; g / s are kept for muscle memory. `m` is
+  // intentionally skipped — already bound to the map toggle in
+  // the gallery view, and 3 is the alternative for Manage.
+  useKeyPress("g", goToGallery);
+  useKeyPress("s", goToStats);
+  useKeyPress("1", goToGallery);
+  useKeyPress("2", goToStats);
+
+  const renderContextSwitch = () => {
+    if (!galleryId) return null;
+    return (
+      <ContextGroup
+        role="group"
+        aria-label={String(t("nav-context-group"))}
+      >
+        <ContextButton
+          type="button"
+          $active={false}
+          onClick={goToGallery}
+          title={`${t("nav-gallery")} (1 · g)`}
+        >
+          {t("nav-gallery")}
+        </ContextButton>
+        <ContextButton
+          type="button"
+          $active={false}
+          onClick={goToStats}
+          title={`${t("nav-stats")} (2 · s)`}
+        >
+          {t("nav-stats")}
+        </ContextButton>
+        <ContextButton
+          type="button"
+          $active={true}
+          aria-pressed
+          title={`${t("nav-manage")} (3)`}
+        >
+          {t("nav-manage")}
+        </ContextButton>
+      </ContextGroup>
+    );
+  };
 
   return (
     <Root>
@@ -110,6 +201,7 @@ const Manage = (): React.ReactElement => {
             </>
           )}
         </Crumbs>
+        {renderContextSwitch()}
       </Header>
       {body}
     </Root>
