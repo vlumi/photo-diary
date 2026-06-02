@@ -69,28 +69,6 @@ const expectGallery3 = (result: { body: Record<string, any> }) => {
   expect(Object.keys(photos).length).toBe(1);
   expect(photos[0].id).toBe("gallery3photo.jpg");
 };
-const expectGalleryAll = (result: { body: Record<string, any> }) => {
-  expect(result.body.id).toBe(":all");
-  const photos = result.body.photos;
-  expect(photos).toBeDefined();
-  expect(Object.keys(photos).length).toBe(5);
-  expect(photos[0].id).toBe("gallery1photo.jpg");
-  expect(photos[1].id).toBe("gallery12photo.jpg");
-  expect(photos[2].id).toBe("gallery2photo.jpg");
-  expect(photos[3].id).toBe("gallery3photo.jpg");
-  expect(photos[4].id).toBe("orphanphoto.jpg");
-};
-const expectGalleryPublic = (result: { body: Record<string, any> }) => {
-  expect(result.body.id).toBe(":public");
-  const photos = result.body.photos;
-  expect(photos).toBeDefined();
-  expect(Object.keys(photos).length).toBe(4);
-  expect(photos[0].id).toBe("gallery1photo.jpg");
-  expect(photos[1].id).toBe("gallery12photo.jpg");
-  expect(photos[2].id).toBe("gallery2photo.jpg");
-  expect(photos[3].id).toBe("gallery3photo.jpg");
-};
-
 describe("As guest", () => {
   test("List galleries", async () => {
     const result = await api
@@ -228,7 +206,7 @@ describe("As admin", () => {
 
   test("List galleries", async () => {
     const result = await getGalleries(token);
-    expect(result.body.length).toBe(5);
+    expect(result.body.length).toBe(3);
   });
   test("Get gallery1", async () => {
     const result = await getGallery(token, "gallery1");
@@ -242,13 +220,11 @@ describe("As admin", () => {
     const result = await getGallery(token, "gallery3");
     expectGallery3(result);
   });
-  test("Get :all", async () => {
-    const result = await getGallery(token, ":all");
-    expectGalleryAll(result);
+  test("Get :all (no pseudo-gallery)", async () => {
+    await expectGalleryUnavailable(token, ":all");
   });
-  test("Get :public", async () => {
-    const result = await getGallery(token, ":public");
-    expectGalleryPublic(result);
+  test("Get :public (no pseudo-gallery)", async () => {
+    await expectGalleryUnavailable(token, ":public");
   });
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");

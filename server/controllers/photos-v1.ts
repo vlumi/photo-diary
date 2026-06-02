@@ -1,14 +1,12 @@
 import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
-import CONST from "../lib/constants.js";
 import authorizerFactory from "../lib/authorizer.js";
 import {
   collectScopePhotoIds,
   requirePhotoInScope,
   requireUnscoped,
 } from "../lib/host-scope.js";
-import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/photo.js";
 
 const authorizer = authorizerFactory();
@@ -99,16 +97,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request) => {
       await authorizer.authorizeView(request.user.id);
       const photos = await model.getPhotos();
-      // No per-gallery scope — use the :all-level preference.
-      // `Object.values` works for both driver shapes (sqlite array,
-      // dummy dict).
-      if (await shouldHideMap(request.user.id, CONST.SPECIAL_GALLERY_ALL)) {
-        maskCoordinates(
-        Object.values(photos as Record<string, unknown>) as Parameters<
-          typeof maskCoordinates
-        >[0]
-        );
-      }
+      // hide_map is a per-(user, gallery) preference. The cross-gallery
+      // list has no gallery scope to resolve against, so coordinates
+      // pass through; per-gallery views still apply the cascade. The
+      // admin photo grid (#10) will reshape this endpoint with proper
+      // filtering and per-link masking.
       // On a scoped host, narrow to photos linked to an in-scope
       // gallery. Photos in multiple galleries pass if at least one
       // link is in scope.
@@ -166,9 +159,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       await requirePhotoInScope(request, request.params.photoId);
       await authorizer.authorizeView(request.user.id);
       const photo = await model.getPhoto(request.params.photoId);
-      if (await shouldHideMap(request.user.id, CONST.SPECIAL_GALLERY_ALL)) {
-        maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
-      }
       return photo;
     }
   );

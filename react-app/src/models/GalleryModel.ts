@@ -80,7 +80,6 @@ const GalleryModel = (galleryData: unknown) => {
       return GalleryModel({ ...(galleryData as object), photos });
     },
     id: (): string => gallery.id,
-    isSpecial: (): boolean => gallery.id.startsWith(":"),
     title: (
       year?: number,
       month?: number,
@@ -147,7 +146,7 @@ const GalleryModel = (galleryData: unknown) => {
         }
       }
     },
-    statsPath: (): string => ["", "g", gallery.id, "stats"].join("/"),
+    statsPath: (): string => ["", "s", gallery.id].join("/"),
     includesPhotos: (): boolean => photos.length > 0,
     includesYear: (year: number): boolean =>
       !!photosByYmd && String(year) in photosByYmd,

@@ -432,23 +432,12 @@ const comparePhotos = (a: any, b: any) =>
   a.taken.instant.timestamp.localeCompare(b.taken.instant.timestamp);
 
 const loadGalleryPhotos = async (galleryId: string, _lang?: string) => {
-  switch (galleryId) {
-    case CONST.SPECIAL_GALLERY_ALL:
-      return Object.values(db.photos).sort(comparePhotos);
-    case CONST.SPECIAL_GALLERY_PUBLIC:
-      return [...new Set(Object.values(db.galleryPhotos).flat() as string[])]
-        .map((photoId: string) => db.photos[photoId])
-        .sort(comparePhotos);
-    default: {
-      if (!(galleryId in db.galleries)) {
-        throw new NotFoundError();
-      }
-      const photos = db.galleryPhotos[galleryId]
-        .map((photoId: string) => db.photos[photoId])
-        .sort(comparePhotos);
-      return photos;
-    }
+  if (!(galleryId in db.galleries)) {
+    throw new NotFoundError();
   }
+  return db.galleryPhotos[galleryId]
+    .map((photoId: string) => db.photos[photoId])
+    .sort(comparePhotos);
 };
 const linkGalleryPhoto = async (
   galleryIds: string[],
@@ -465,42 +454,16 @@ const linkGalleryPhoto = async (
   }
 };
 const loadGalleryPhoto = async (galleryId: string, photoId: string, _lang?: string) => {
-  const handleGalleryAll = async () => {
-    return await loadPhoto(photoId);
-  };
-  const handleGalleryPublic = async () => {
-    const galleriesPhotos = Object.values(db.galleryPhotos).flat();
-    const photos = Object.keys(db.photos)
-      .filter((id: string) => id === photoId)
-      .filter((id: string) => galleriesPhotos.includes(id))
-      .map((id: string) => db.photos[id])
-      .sort(comparePhotos);
-    if (photos.length === 0) {
-      throw new NotFoundError();
-    }
-    return photos[0];
-  };
-  const handleGallery = async () => {
-    if (!(galleryId in db.galleries)) {
-      throw new NotFoundError();
-    }
-    const photos = db.galleryPhotos[galleryId]
-      .filter((id: string) => id === photoId)
-      .map((id: string) => db.photos[id]);
-    if (photos.length === 0) {
-      throw new NotFoundError();
-    }
-    return photos[0];
-  };
-
-  switch (galleryId) {
-    case CONST.SPECIAL_GALLERY_ALL:
-      return await handleGalleryAll();
-    case CONST.SPECIAL_GALLERY_PUBLIC:
-      return await handleGalleryPublic();
-    default:
-      return await handleGallery();
+  if (!(galleryId in db.galleries)) {
+    throw new NotFoundError();
   }
+  const photos = db.galleryPhotos[galleryId]
+    .filter((id: string) => id === photoId)
+    .map((id: string) => db.photos[id]);
+  if (photos.length === 0) {
+    throw new NotFoundError();
+  }
+  return photos[0];
 };
 const unlinkGalleryPhoto = async () => {
   throw new NotImplementedError();
@@ -586,10 +549,7 @@ const loadOrphanUserGalleryRows = async () => {
     for (const galleryId of Object.keys(perGallery)) {
       if (userId !== CONST.GUEST_USER && !(userId in db.users)) {
         out.push({ userId, galleryId, missing: "user" });
-      } else if (
-        !galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX) &&
-        !(galleryId in db.galleries)
-      ) {
+      } else if (!(galleryId in db.galleries)) {
         out.push({ userId, galleryId, missing: "gallery" });
       }
     }

@@ -26,8 +26,8 @@ beforeAll(() => {
       hostname: "^gallery.*",
       initialView: "month",
     }),
-    ":all": GalleryModel({
-      id: ":all",
+    "all_photos": GalleryModel({
+      id: "all_photos",
       title: "all photos",
       description: "all photos description",
       icon: undefined,
@@ -37,8 +37,8 @@ beforeAll(() => {
       hostname: undefined,
       initialView: "year",
     }),
-    ":public": GalleryModel({
-      id: ":all",
+    photo_view: GalleryModel({
+      id: "all_photos",
       title: "all photos",
       description: "all photos description",
       icon: undefined,
@@ -49,7 +49,7 @@ beforeAll(() => {
       initialView: "photo",
     }),
     daily: GalleryModel({
-      id: ":all",
+      id: "all_photos",
       title: "all photos",
       description: "all photos description",
       icon: undefined,
@@ -60,7 +60,7 @@ beforeAll(() => {
       initialView: "day",
     }),
     badInitial: GalleryModel({
-      id: ":all",
+      id: "all_photos",
       title: "all photos",
       description: "all photos description",
       icon: undefined,
@@ -98,33 +98,28 @@ describe("Without photos", () => {
   describe("id", () => {
     test("empty", () => expect(samples.empty.id()).toBe("empty"));
     test("testing", () => expect(samples.testing.id()).toBe("testing"));
-    test(":all", () => expect(samples[":all"].id()).toBe(":all"));
-  });
-  describe("isSpecial", () => {
-    test("empty", () => expect(samples.empty.isSpecial()).toBe(false));
-    test("testing", () => expect(samples.testing.isSpecial()).toBe(false));
-    test(":all", () => expect(samples[":all"].isSpecial()).toBe(true));
+    test("all_photos", () => expect(samples["all_photos"].id()).toBe("all_photos"));
   });
   describe("title", () => {
     test("empty", () => expect(samples.empty.title()).toBe(""));
     test("testing", () =>
       expect(samples.testing.title()).toBe("gallery testing"));
-    test(":all", () => expect(samples[":all"].title()).toBe("all photos"));
+    test("all_photos", () => expect(samples["all_photos"].title()).toBe("all photos"));
   });
   describe("title(year)", () => {
     test("empty", () => expect(samples.empty.title(2020)).toBe("2020 — "));
     test("testing", () =>
       expect(samples.testing.title(2020)).toBe("2020 — gallery testing"));
-    test(":all", () =>
-      expect(samples[":all"].title(2020)).toBe("2020 — all photos"));
+    test("all_photos", () =>
+      expect(samples["all_photos"].title(2020)).toBe("2020 — all photos"));
   });
   describe("title(year, month)", () => {
     test("empty", () =>
       expect(samples.empty.title(2020, 5)).toBe("2020-05 — "));
     test("testing", () =>
       expect(samples.testing.title(2020, 5)).toBe("2020-05 — gallery testing"));
-    test(":all", () =>
-      expect(samples[":all"].title(2020, 5)).toBe("2020-05 — all photos"));
+    test("all_photos", () =>
+      expect(samples["all_photos"].title(2020, 5)).toBe("2020-05 — all photos"));
   });
   describe("title(year, month, day)", () => {
     test("empty", () =>
@@ -133,8 +128,8 @@ describe("Without photos", () => {
       expect(samples.testing.title(2020, 5, 27)).toBe(
         "2020-05-27 — gallery testing"
       ));
-    test(":all", () =>
-      expect(samples[":all"].title(2020, 5, 27)).toBe(
+    test("all_photos", () =>
+      expect(samples["all_photos"].title(2020, 5, 27)).toBe(
         "2020-05-27 — all photos"
       ));
   });
@@ -144,23 +139,23 @@ describe("Without photos", () => {
       expect(samples.testing.description()).toBe(
         "testing gallery description"
       ));
-    test(":all", () =>
-      expect(samples[":all"].description()).toBe("all photos description"));
+    test("all_photos", () =>
+      expect(samples["all_photos"].description()).toBe("all photos description"));
   });
   describe("hasIcon", () => {
     test("empty", () => expect(samples.empty.hasIcon()).toBe(false));
     test("testing", () => expect(samples.testing.hasIcon()).toBe(true));
-    test(":all", () => expect(samples[":all"].hasIcon()).toBe(false));
+    test("all_photos", () => expect(samples["all_photos"].hasIcon()).toBe(false));
   });
   describe("icon", () => {
     test("empty", () => expect(samples.empty.icon()).toBe(""));
     test("testing", () => expect(samples.testing.icon()).toBe("icon.jpg"));
-    test(":all", () => expect(samples[":all"].icon()).toBe(""));
+    test("all_photos", () => expect(samples["all_photos"].icon()).toBe(""));
   });
   describe("hasEpoch", () => {
     test("empty", () => expect(samples.empty.hasEpoch()).toBe(false));
     test("testing", () => expect(samples.testing.hasEpoch()).toBe(true));
-    test(":all", () => expect(samples[":all"].hasEpoch()).toBe(false));
+    test("all_photos", () => expect(samples["all_photos"].hasEpoch()).toBe(false));
   });
   describe("epoch", () => {
     test("empty", () => expect(samples.empty.epoch()).toBeUndefined());
@@ -168,28 +163,28 @@ describe("Without photos", () => {
       expect(samples.testing.epoch().toISOString()).toBe(
         "2020-02-04T00:00:00.000Z"
       ));
-    test(":all", () => expect(samples[":all"].epoch()).toBeUndefined());
+    test("all_photos", () => expect(samples["all_photos"].epoch()).toBeUndefined());
   });
   describe("epochYmd", () => {
     test("empty", () => expect(samples.empty.epochYmd()).toBeUndefined());
     test("testing", () =>
       expect(samples.testing.epochYmd()).toStrictEqual([2020, 2, 4]));
-    test(":all", () => expect(samples[":all"].epochYmd()).toBeUndefined());
+    test("all_photos", () => expect(samples["all_photos"].epochYmd()).toBeUndefined());
   });
   describe("epochType", () => {
     test("empty", () => expect(samples.empty.epochType()).toBeUndefined());
     test("testing", () => expect(samples.testing.epochType()).toBe("birthday"));
-    test(":all", () => expect(samples[":all"].epochType()).toBeUndefined());
+    test("all_photos", () => expect(samples["all_photos"].epochType()).toBeUndefined());
   });
   describe("hasTheme", () => {
     test("empty", () => expect(samples.empty.hasTheme()).toBe(false));
     test("testing", () => expect(samples.testing.hasTheme()).toBe(true));
-    test(":all", () => expect(samples[":all"].hasTheme()).toBe(true));
+    test("all_photos", () => expect(samples["all_photos"].hasTheme()).toBe(true));
   });
   describe("theme", () => {
     test("empty", () => expect(samples.empty.theme()).toBeUndefined());
     test("testing", () => expect(samples.testing.theme()).toBe("blue"));
-    test(":all", () => expect(samples[":all"].theme()).toBe("red"));
+    test("all_photos", () => expect(samples["all_photos"].theme()).toBe("red"));
   });
   describe("matchesHostname gallery.example.com", () => {
     test("empty", () =>
@@ -198,8 +193,8 @@ describe("Without photos", () => {
       expect(samples.testing.matchesHostname("gallery.example.com")).toBe(
         true
       ));
-    test(":all", () =>
-      expect(samples[":all"].matchesHostname("gallery.example.com")).toBe(
+    test("all_photos", () =>
+      expect(samples["all_photos"].matchesHostname("gallery.example.com")).toBe(
         false
       ));
   });
@@ -210,93 +205,93 @@ describe("Without photos", () => {
       expect(samples.testing.matchesHostname("unknown.example.com")).toBe(
         false
       ));
-    test(":all", () =>
-      expect(samples[":all"].matchesHostname("unknown.example.com")).toBe(
+    test("all_photos", () =>
+      expect(samples["all_photos"].matchesHostname("unknown.example.com")).toBe(
         false
       ));
   });
   describe("path", () => {
     test("empty", () => expect(samples.empty.path()).toBe("/g/empty"));
     test("testing", () => expect(samples.testing.path()).toBe("/g/testing"));
-    test(":all", () => expect(samples[":all"].path()).toBe("/g/:all"));
+    test("all_photos", () => expect(samples["all_photos"].path()).toBe("/g/all_photos"));
   });
   describe("path(year)", () => {
     test("empty", () => expect(samples.empty.path(2020)).toBe("/g/empty/2020"));
     test("testing", () =>
       expect(samples.testing.path(2020)).toBe("/g/testing/2020"));
-    test(":all", () => expect(samples[":all"].path(2020)).toBe("/g/:all/2020"));
+    test("all_photos", () => expect(samples["all_photos"].path(2020)).toBe("/g/all_photos/2020"));
   });
   describe("path(year, month)", () => {
     test("empty", () =>
       expect(samples.empty.path(2020, 5)).toBe("/g/empty/2020/05"));
     test("testing", () =>
       expect(samples.testing.path(2020, 5)).toBe("/g/testing/2020/05"));
-    test(":all", () =>
-      expect(samples[":all"].path(2020, 5)).toBe("/g/:all/2020/05"));
+    test("all_photos", () =>
+      expect(samples["all_photos"].path(2020, 5)).toBe("/g/all_photos/2020/05"));
   });
   describe("path(year, month, day)", () => {
     test("empty", () =>
       expect(samples.empty.path(2020, 5, 27)).toBe("/g/empty/2020/05/27"));
     test("testing", () =>
       expect(samples.testing.path(2020, 5, 27)).toBe("/g/testing/2020/05/27"));
-    test(":all", () =>
-      expect(samples[":all"].path(2020, 5, 27)).toBe("/g/:all/2020/05/27"));
+    test("all_photos", () =>
+      expect(samples["all_photos"].path(2020, 5, 27)).toBe("/g/all_photos/2020/05/27"));
   });
   describe("lastPath", () => {
     test("empty", () => expect(samples.empty.lastPath()).toBe("/g/empty"));
     test("testing", () =>
       expect(samples.testing.lastPath()).toBe("/g/testing"));
-    test(":all", () => expect(samples[":all"].lastPath()).toBe("/g/:all"));
+    test("all_photos", () => expect(samples["all_photos"].lastPath()).toBe("/g/all_photos"));
   });
   describe("statsPath", () => {
     test("empty", () =>
-      expect(samples.empty.statsPath()).toBe("/g/empty/stats"));
+      expect(samples.empty.statsPath()).toBe("/s/empty"));
     test("testing", () =>
-      expect(samples.testing.statsPath()).toBe("/g/testing/stats"));
-    test(":all", () =>
-      expect(samples[":all"].statsPath()).toBe("/g/:all/stats"));
+      expect(samples.testing.statsPath()).toBe("/s/testing"));
+    test("all_photos", () =>
+      expect(samples["all_photos"].statsPath()).toBe("/s/all_photos"));
   });
   describe("includesPhotos", () => {
     test("empty", () => expect(samples.empty.includesPhotos()).toBe(false));
     test("testing", () => expect(samples.testing.includesPhotos()).toBe(false));
-    test(":all", () => expect(samples[":all"].includesPhotos()).toBe(false));
+    test("all_photos", () => expect(samples["all_photos"].includesPhotos()).toBe(false));
   });
   describe("includesYear", () => {
     test("empty", () => expect(samples.empty.includesYear(2020)).toBe(false));
     test("testing", () =>
       expect(samples.testing.includesYear(2020)).toBe(false));
-    test(":all", () => expect(samples[":all"].includesYear(2020)).toBe(false));
+    test("all_photos", () => expect(samples["all_photos"].includesYear(2020)).toBe(false));
   });
   describe("includesMonth", () => {
     test("empty", () =>
       expect(samples.empty.includesMonth(2020, 5)).toBe(false));
     test("testing", () =>
       expect(samples.testing.includesMonth(2020, 5)).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].includesMonth(2020, 5)).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].includesMonth(2020, 5)).toBe(false));
   });
   describe("includesDay", () => {
     test("empty", () =>
       expect(samples.empty.includesDay(2020, 5, 27)).toBe(false));
     test("testing", () =>
       expect(samples.testing.includesDay(2020, 5, 27)).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].includesDay(2020, 5, 27)).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].includesDay(2020, 5, 27)).toBe(false));
   });
   describe("includesPhoto", () => {
     test("empty", () =>
       expect(samples.empty.includesPhoto(2020, 5, 27, {})).toBe(false));
     test("testing", () =>
       expect(samples.testing.includesPhoto(2020, 5, 27, {})).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].includesPhoto(2020, 5, 27, {})).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].includesPhoto(2020, 5, 27, {})).toBe(false));
   });
   describe("countPhotos", () => {
     test("empty", () => expect(samples.empty.countPhotos(2020, 5, 27)).toBe(0));
     test("testing", () =>
       expect(samples.testing.countPhotos(2020, 5, 27)).toBe(0));
-    test(":all", () =>
-      expect(samples[":all"].countPhotos(2020, 5, 27)).toBe(0));
+    test("all_photos", () =>
+      expect(samples["all_photos"].countPhotos(2020, 5, 27)).toBe(0));
   });
   describe("maxDayCount", () => {
     test("empty 2020-05-27", () =>
@@ -309,23 +304,23 @@ describe("Without photos", () => {
   describe("photos", () => {
     test("empty", () => expect(samples.empty.photos()).toStrictEqual([]));
     test("testing", () => expect(samples.testing.photos()).toStrictEqual([]));
-    test(":all", () => expect(samples[":all"].photos()).toStrictEqual([]));
+    test("all_photos", () => expect(samples["all_photos"].photos()).toStrictEqual([]));
   });
   describe("photos(year, month, day)", () => {
     test("empty", () =>
       expect(samples.empty.photos(2020, 5, 27)).toStrictEqual([]));
     test("testing", () =>
       expect(samples.testing.photos(2020, 5, 27)).toStrictEqual([]));
-    test(":all", () =>
-      expect(samples[":all"].photos(2020, 5, 27)).toStrictEqual([]));
+    test("all_photos", () =>
+      expect(samples["all_photos"].photos(2020, 5, 27)).toStrictEqual([]));
   });
   describe("photo", () => {
     test("empty", () =>
       expect(samples.empty.photo(2020, 5, 27, "1.jpg")).toBeUndefined());
     test("testing", () =>
       expect(samples.testing.photo(2020, 5, 27, "1.jpg")).toBeUndefined());
-    test(":all", () =>
-      expect(samples[":all"].photo(2020, 5, 27, "1.jpg")).toBeUndefined());
+    test("all_photos", () =>
+      expect(samples["all_photos"].photo(2020, 5, 27, "1.jpg")).toBeUndefined());
   });
   describe("Mappers", () => {
     let mock: any;
@@ -341,8 +336,8 @@ describe("Without photos", () => {
         expect(samples.testing.mapYears(mock)).toBeUndefined();
         expect(mock).not.toHaveBeenCalled();
       });
-      test(":all", () => {
-        expect(samples[":all"].mapYears(mock)).toBeUndefined();
+      test("all_photos", () => {
+        expect(samples["all_photos"].mapYears(mock)).toBeUndefined();
         expect(mock).not.toHaveBeenCalled();
       });
     });
@@ -355,8 +350,8 @@ describe("Without photos", () => {
         expect(samples.testing.flatMapYears(mock)).toStrictEqual([]);
         expect(mock).not.toHaveBeenCalled();
       });
-      test(":all", () => {
-        expect(samples[":all"].flatMapYears(mock)).toStrictEqual([]);
+      test("all_photos", () => {
+        expect(samples["all_photos"].flatMapYears(mock)).toStrictEqual([]);
         expect(mock).not.toHaveBeenCalled();
       });
     });
@@ -369,8 +364,8 @@ describe("Without photos", () => {
         expect(samples.testing.mapMonths(mock)).toBeUndefined();
         expect(mock).not.toHaveBeenCalled();
       });
-      test(":all", () => {
-        expect(samples[":all"].mapMonths(mock)).toBeUndefined();
+      test("all_photos", () => {
+        expect(samples["all_photos"].mapMonths(mock)).toBeUndefined();
         expect(mock).not.toHaveBeenCalled();
       });
     });
@@ -383,8 +378,8 @@ describe("Without photos", () => {
         expect(samples.testing.flatMapMonths(mock)).toStrictEqual([]);
         expect(mock).not.toHaveBeenCalled();
       });
-      test(":all", () => {
-        expect(samples[":all"].flatMapMonths(mock)).toStrictEqual([]);
+      test("all_photos", () => {
+        expect(samples["all_photos"].flatMapMonths(mock)).toStrictEqual([]);
         expect(mock).not.toHaveBeenCalled();
       });
     });
@@ -397,8 +392,8 @@ describe("Without photos", () => {
         expect(samples.testing.mapDays(mock)).toBeUndefined();
         expect(mock).not.toHaveBeenCalled();
       });
-      test(":all", () => {
-        expect(samples[":all"].mapDays(mock)).toBeUndefined();
+      test("all_photos", () => {
+        expect(samples["all_photos"].mapDays(mock)).toBeUndefined();
         expect(mock).not.toHaveBeenCalled();
       });
     });
@@ -411,8 +406,8 @@ describe("Without photos", () => {
         expect(samples.testing.flatMapDays(mock)).toStrictEqual([]);
         expect(mock).not.toHaveBeenCalled();
       });
-      test(":all", () => {
-        expect(samples[":all"].flatMapDays(mock)).toStrictEqual([]);
+      test("all_photos", () => {
+        expect(samples["all_photos"].flatMapDays(mock)).toStrictEqual([]);
         expect(mock).not.toHaveBeenCalled();
       });
     });
@@ -420,7 +415,7 @@ describe("Without photos", () => {
   describe("firstYear", () => {
     test("empty", () => expect(samples.empty.firstYear()).toBeUndefined());
     test("testing", () => expect(samples.testing.firstYear()).toBeUndefined());
-    test(":all", () => expect(samples[":all"].firstYear()).toBeUndefined());
+    test("all_photos", () => expect(samples["all_photos"].firstYear()).toBeUndefined());
   });
   describe("firstMonth", () => {
     test("empty", () =>
@@ -430,8 +425,8 @@ describe("Without photos", () => {
         undefined,
         undefined,
       ]));
-    test(":all", () =>
-      expect(samples[":all"].firstMonth()).toStrictEqual([
+    test("all_photos", () =>
+      expect(samples["all_photos"].firstMonth()).toStrictEqual([
         undefined,
         undefined,
       ]));
@@ -449,8 +444,8 @@ describe("Without photos", () => {
         undefined,
         undefined,
       ]));
-    test(":all", () =>
-      expect(samples[":all"].firstDay()).toStrictEqual([
+    test("all_photos", () =>
+      expect(samples["all_photos"].firstDay()).toStrictEqual([
         undefined,
         undefined,
         undefined,
@@ -459,7 +454,7 @@ describe("Without photos", () => {
   describe("lastYear", () => {
     test("empty", () => expect(samples.empty.lastYear()).toBeUndefined());
     test("testing", () => expect(samples.testing.lastYear()).toBeUndefined());
-    test(":all", () => expect(samples[":all"].lastYear()).toBeUndefined());
+    test("all_photos", () => expect(samples["all_photos"].lastYear()).toBeUndefined());
   });
   describe("lastMonth", () => {
     test("empty", () =>
@@ -469,8 +464,8 @@ describe("Without photos", () => {
         undefined,
         undefined,
       ]));
-    test(":all", () =>
-      expect(samples[":all"].lastMonth()).toStrictEqual([
+    test("all_photos", () =>
+      expect(samples["all_photos"].lastMonth()).toStrictEqual([
         undefined,
         undefined,
       ]));
@@ -488,8 +483,8 @@ describe("Without photos", () => {
         undefined,
         undefined,
       ]));
-    test(":all", () =>
-      expect(samples[":all"].lastDay()).toStrictEqual([
+    test("all_photos", () =>
+      expect(samples["all_photos"].lastDay()).toStrictEqual([
         undefined,
         undefined,
         undefined,
@@ -499,105 +494,105 @@ describe("Without photos", () => {
     test("empty", () => expect(samples.empty.isFirstYear(2020)).toBe(false));
     test("testing", () =>
       expect(samples.testing.isFirstYear(2020)).toBe(false));
-    test(":all", () => expect(samples[":all"].isFirstYear(2020)).toBe(false));
+    test("all_photos", () => expect(samples["all_photos"].isFirstYear(2020)).toBe(false));
   });
   describe("isBeforeFirstYear", () => {
     test("empty", () =>
       expect(samples.empty.isBeforeFirstYear(2020)).toBe(true));
     test("testing", () =>
       expect(samples.testing.isBeforeFirstYear(2020)).toBe(true));
-    test(":all", () =>
-      expect(samples[":all"].isBeforeFirstYear(2020)).toBe(true));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isBeforeFirstYear(2020)).toBe(true));
   });
   describe("isFirstMonth", () => {
     test("empty", () =>
       expect(samples.empty.isFirstMonth(2020, 5)).toBe(false));
     test("testing", () =>
       expect(samples.testing.isFirstMonth(2020, 5)).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].isFirstMonth(2020, 5)).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isFirstMonth(2020, 5)).toBe(false));
   });
   describe("isBeforeFirstMonth", () => {
     test("empty", () =>
       expect(samples.empty.isBeforeFirstMonth(2020, 5)).toBe(true));
     test("testing", () =>
       expect(samples.testing.isBeforeFirstMonth(2020, 5)).toBe(true));
-    test(":all", () =>
-      expect(samples[":all"].isBeforeFirstMonth(2020, 5)).toBe(true));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isBeforeFirstMonth(2020, 5)).toBe(true));
   });
   describe("isFirstDay", () => {
     test("empty", () =>
       expect(samples.empty.isFirstDay(2020, 5, 27)).toBe(false));
     test("testing", () =>
       expect(samples.testing.isFirstDay(2020, 5, 27)).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].isFirstDay(2020, 5, 27)).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isFirstDay(2020, 5, 27)).toBe(false));
   });
   describe("isBeforeFirstDay", () => {
     test("empty", () =>
       expect(samples.empty.isBeforeFirstDay(2020, 5, 27)).toBe(true));
     test("testing", () =>
       expect(samples.testing.isBeforeFirstDay(2020, 5, 27)).toBe(true));
-    test(":all", () =>
-      expect(samples[":all"].isBeforeFirstDay(2020, 5, 27)).toBe(true));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isBeforeFirstDay(2020, 5, 27)).toBe(true));
   });
   describe("isLastYear", () => {
     test("empty", () => expect(samples.empty.isLastYear(2020)).toBe(false));
     test("testing", () => expect(samples.testing.isLastYear(2020)).toBe(false));
-    test(":all", () => expect(samples[":all"].isLastYear(2020)).toBe(false));
+    test("all_photos", () => expect(samples["all_photos"].isLastYear(2020)).toBe(false));
   });
   describe("isAfterLasttYear", () => {
     test("empty", () =>
       expect(samples.empty.isAfterLasttYear(2020)).toBe(false));
     test("testing", () =>
       expect(samples.testing.isAfterLasttYear(2020)).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].isAfterLasttYear(2020)).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isAfterLasttYear(2020)).toBe(false));
   });
   describe("isLastMonth", () => {
     test("empty", () => expect(samples.empty.isLastMonth(2020, 5)).toBe(false));
     test("testing", () =>
       expect(samples.testing.isLastMonth(2020, 5)).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].isLastMonth(2020, 5)).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isLastMonth(2020, 5)).toBe(false));
   });
   describe("isAfterLastMonth", () => {
     test("empty", () =>
       expect(samples.empty.isAfterLastMonth(2020, 5)).toBe(false));
     test("testing", () =>
       expect(samples.testing.isAfterLastMonth(2020, 5)).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].isAfterLastMonth(2020, 5)).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isAfterLastMonth(2020, 5)).toBe(false));
   });
   describe("isLastDay", () => {
     test("empty", () =>
       expect(samples.empty.isLastDay(2020, 5, 27)).toBe(false));
     test("testing", () =>
       expect(samples.testing.isLastDay(2020, 5, 27)).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].isLastDay(2020, 5, 27)).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isLastDay(2020, 5, 27)).toBe(false));
   });
   describe("isAfterLastDay", () => {
     test("empty", () =>
       expect(samples.empty.isAfterLastDay(2020, 5, 27)).toBe(false));
     test("testing", () =>
       expect(samples.testing.isAfterLastDay(2020, 5, 27)).toBe(false));
-    test(":all", () =>
-      expect(samples[":all"].isAfterLastDay(2020, 5, 27)).toBe(false));
+    test("all_photos", () =>
+      expect(samples["all_photos"].isAfterLastDay(2020, 5, 27)).toBe(false));
   });
   describe("previousYear", () => {
     test("empty", () => expect(samples.empty.previousYear(2020)).toBe(2019));
     test("testing", () =>
       expect(samples.testing.previousYear(2020)).toBe(2019));
-    test(":all", () => expect(samples[":all"].previousYear(2020)).toBe(2019));
+    test("all_photos", () => expect(samples["all_photos"].previousYear(2020)).toBe(2019));
   });
   describe("previousMonth", () => {
     test("empty", () =>
       expect(samples.empty.previousMonth(2020, 5)).toStrictEqual([2020, 4]));
     test("testing", () =>
       expect(samples.testing.previousMonth(2020, 5)).toStrictEqual([2020, 4]));
-    test(":all", () =>
-      expect(samples[":all"].previousMonth(2020, 5)).toStrictEqual([2020, 4]));
+    test("all_photos", () =>
+      expect(samples["all_photos"].previousMonth(2020, 5)).toStrictEqual([2020, 4]));
   });
   describe("previousDay", () => {
     test("empty", () =>
@@ -612,8 +607,8 @@ describe("Without photos", () => {
         5,
         26,
       ]));
-    test(":all", () =>
-      expect(samples[":all"].previousDay(2020, 5, 27)).toStrictEqual([
+    test("all_photos", () =>
+      expect(samples["all_photos"].previousDay(2020, 5, 27)).toStrictEqual([
         2020,
         5,
         26,
@@ -622,15 +617,15 @@ describe("Without photos", () => {
   describe("nextYear", () => {
     test("empty", () => expect(samples.empty.nextYear(2020)).toBe(2021));
     test("testing", () => expect(samples.testing.nextYear(2020)).toBe(2021));
-    test(":all", () => expect(samples[":all"].nextYear(2020)).toBe(2021));
+    test("all_photos", () => expect(samples["all_photos"].nextYear(2020)).toBe(2021));
   });
   describe("nextMonth", () => {
     test("empty", () =>
       expect(samples.empty.nextMonth(2020, 5)).toStrictEqual([2020, 6]));
     test("testing", () =>
       expect(samples.testing.nextMonth(2020, 5)).toStrictEqual([2020, 6]));
-    test(":all", () =>
-      expect(samples[":all"].nextMonth(2020, 5)).toStrictEqual([2020, 6]));
+    test("all_photos", () =>
+      expect(samples["all_photos"].nextMonth(2020, 5)).toStrictEqual([2020, 6]));
   });
   describe("nextDay", () => {
     test("empty", () =>
@@ -641,8 +636,8 @@ describe("Without photos", () => {
         5,
         28,
       ]));
-    test(":all", () =>
-      expect(samples[":all"].nextDay(2020, 5, 27)).toStrictEqual([
+    test("all_photos", () =>
+      expect(samples["all_photos"].nextDay(2020, 5, 27)).toStrictEqual([
         2020,
         5,
         28,
@@ -653,44 +648,44 @@ describe("Without photos", () => {
       expect(samples.empty.currentPhotoIndex(2020, 5, 27, {})).toBe(-1));
     test("testing", () =>
       expect(samples.testing.currentPhotoIndex(2020, 5, 27, {})).toBe(-1));
-    test(":all", () =>
-      expect(samples[":all"].currentPhotoIndex(2020, 5, 27, {})).toBe(-1));
+    test("all_photos", () =>
+      expect(samples["all_photos"].currentPhotoIndex(2020, 5, 27, {})).toBe(-1));
   });
   describe("firstPhoto", () => {
     test("empty", () => expect(samples.empty.firstPhoto()).toBeUndefined());
     test("testing", () => expect(samples.testing.firstPhoto()).toBeUndefined());
-    test(":all", () => expect(samples[":all"].firstPhoto()).toBeUndefined());
+    test("all_photos", () => expect(samples["all_photos"].firstPhoto()).toBeUndefined());
   });
   describe("isFirstPhoto", () => {
     test("empty", () => expect(samples.empty.isFirstPhoto({})).toBe(false));
     test("testing", () => expect(samples.testing.isFirstPhoto({})).toBe(false));
-    test(":all", () => expect(samples[":all"].isFirstPhoto({})).toBe(false));
+    test("all_photos", () => expect(samples["all_photos"].isFirstPhoto({})).toBe(false));
   });
   describe("previousPhoto", () => {
     test("empty", () =>
       expect(samples.empty.previousPhoto(2020, 5, 27, {})).toStrictEqual({}));
     test("testing", () =>
       expect(samples.testing.previousPhoto(2020, 5, 27, {})).toStrictEqual({}));
-    test(":all", () =>
-      expect(samples[":all"].previousPhoto(2020, 5, 27, {})).toStrictEqual({}));
+    test("all_photos", () =>
+      expect(samples["all_photos"].previousPhoto(2020, 5, 27, {})).toStrictEqual({}));
   });
   describe("nextPhoto", () => {
     test("empty", () =>
       expect(samples.empty.nextPhoto(2020, 5, 27, {})).toStrictEqual({}));
     test("testing", () =>
       expect(samples.testing.nextPhoto(2020, 5, 27, {})).toStrictEqual({}));
-    test(":all", () =>
-      expect(samples[":all"].nextPhoto(2020, 5, 27, {})).toStrictEqual({}));
+    test("all_photos", () =>
+      expect(samples["all_photos"].nextPhoto(2020, 5, 27, {})).toStrictEqual({}));
   });
   describe("lastPhoto", () => {
     test("empty", () => expect(samples.empty.lastPhoto()).toBeUndefined());
     test("testing", () => expect(samples.testing.lastPhoto()).toBeUndefined());
-    test(":all", () => expect(samples[":all"].lastPhoto()).toBeUndefined());
+    test("all_photos", () => expect(samples["all_photos"].lastPhoto()).toBeUndefined());
   });
   describe("isLastPhoto", () => {
     test("empty", () => expect(samples.empty.isLastPhoto({})).toBe(false));
     test("testing", () => expect(samples.testing.isLastPhoto({})).toBe(false));
-    test(":all", () => expect(samples[":all"].isLastPhoto({})).toBe(false));
+    test("all_photos", () => expect(samples["all_photos"].isLastPhoto({})).toBe(false));
   });
 });
 describe("With photos", () => {
@@ -821,8 +816,8 @@ describe("With photos", () => {
         photos["empty.jpg"],
         photos["1.jpg"],
       ]),
-      all: samples[":all"].withPhotos([photos["empty.jpg"], photos["1.jpg"]]),
-      public: samples[":public"].withPhotos([
+      all: samples["all_photos"].withPhotos([photos["empty.jpg"], photos["1.jpg"]]),
+      public: samples.photo_view.withPhotos([
         photos["empty.jpg"],
         photos["1.jpg"],
       ]),
@@ -855,12 +850,12 @@ describe("With photos", () => {
     test("empty", () => expect(g.empty.lastPath()).toBe("/g/empty/2020/05"));
     test("testing", () =>
       expect(g.testing.lastPath()).toBe("/g/testing/2020/05"));
-    test("all", () => expect(g.all.lastPath()).toBe("/g/:all/2020"));
+    test("all", () => expect(g.all.lastPath()).toBe("/g/all_photos/2020"));
     test("public", () =>
-      expect(g.public.lastPath()).toBe("/g/:all/2020/05/27/1.jpg"));
-    test("daily", () => expect(g.daily.lastPath()).toBe("/g/:all/2020/05/27"));
+      expect(g.public.lastPath()).toBe("/g/all_photos/2020/05/27/1.jpg"));
+    test("daily", () => expect(g.daily.lastPath()).toBe("/g/all_photos/2020/05/27"));
     test("badInitial", () =>
-      expect(g.badInitial.lastPath()).toBe("/g/:all/2020/05"));
+      expect(g.badInitial.lastPath()).toBe("/g/all_photos/2020/05"));
   });
   describe("includesPhotos", () => {
     test("testing", () => expect(g.testing.includesPhotos()).toBe(true));

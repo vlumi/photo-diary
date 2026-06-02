@@ -445,25 +445,12 @@ const deleteGallery = async (galleryId: string) =>
 
 const loadGalleryPhotos = async (galleryId: string, lang?: string) => {
   const schema = SCHEMA.photo;
-  const getQuery = () => {
-    switch (galleryId) {
-      case CONST.SPECIAL_GALLERY_ALL:
-        return schema.buildSelectQuery();
-      case CONST.SPECIAL_GALLERY_PUBLIC:
-        return schema.buildSelectQuery([
-          "id IN (SELECT photo_id FROM gallery_photo)",
-        ]);
-      default:
-        return schema.buildSelectQuery([
-          "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
-        ]);
-    }
-  };
-
-  const stmt = db.prepare(getQuery());
-  const rows = (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)
-    ? stmt.all()
-    : stmt.all(galleryId)) as PhotoRow[];
+  const stmt = db.prepare(
+    schema.buildSelectQuery([
+      "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
+    ])
+  );
+  const rows = stmt.all(galleryId) as PhotoRow[];
   const localized =
     lang && lang !== "en"
       ? loadLocalizedFor(rows.map((r) => r.id), lang)
@@ -494,30 +481,14 @@ const loadGalleryPhoto = async (
   photoId: string,
   lang?: string
 ) => {
-  if (galleryId === CONST.SPECIAL_GALLERY_ALL) {
-    // TODO: fix
-    return loadPhoto(photoId, lang);
-  }
   const schema = SCHEMA.photo;
-  const getQuery = () => {
-    switch (galleryId) {
-      case CONST.SPECIAL_GALLERY_PUBLIC:
-        return schema.buildSelectQuery([
-          "id IN (SELECT photo_id FROM gallery_photo)",
-          "AND id = ?",
-        ]);
-      default:
-        return schema.buildSelectQuery([
-          "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
-          "AND id = ?",
-        ]);
-    }
-  };
-
-  const stmt = db.prepare(getQuery());
-  const rows = (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)
-    ? stmt.all(photoId)
-    : stmt.all(galleryId, photoId)) as PhotoRow[];
+  const stmt = db.prepare(
+    schema.buildSelectQuery([
+      "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
+      "AND id = ?",
+    ])
+  );
+  const rows = stmt.all(galleryId, photoId) as PhotoRow[];
   if (rows.length === 0) {
     throw new NotFoundError();
   }
@@ -663,9 +634,7 @@ const loadEmptyGalleryIds = async (): Promise<string[]> => {
     .all() as Array<{ id: string }>;
   return rows.map((r) => r.id);
 };
-// user_gallery rows whose referenced user or gallery is gone. The
-// sentinel gallery ids (`:all`, `:public`) are skipped on the gallery
-// side — they're never rows in `gallery`.
+// user_gallery rows whose referenced user or gallery is gone.
 const loadOrphanUserGalleryRows = async (): Promise<
   Array<{ userId: string; galleryId: string; missing: "user" | "gallery" }>
 > => {
@@ -682,10 +651,10 @@ const loadOrphanUserGalleryRows = async (): Promise<
   const galleryMissing = db
     .prepare(
       "SELECT user_id, gallery_id FROM user_gallery " +
-        "WHERE gallery_id NOT LIKE ? AND gallery_id NOT IN (SELECT id FROM gallery) " +
+        "WHERE gallery_id NOT IN (SELECT id FROM gallery) " +
         "ORDER BY user_id ASC, gallery_id ASC"
     )
-    .all(`${CONST.SPECIAL_GALLERY_PREFIX}%`) as Array<{
+    .all() as Array<{
     user_id: string;
     gallery_id: string;
   }>;

@@ -15,34 +15,6 @@ const GUEST_USER = ":guest";
 
 const STATS_UNKNOWN = "[unknown]";
 
-const SPECIAL_GALLERY_PREFIX = ":";
-const SPECIAL_GALLERY_ALL = `${SPECIAL_GALLERY_PREFIX}all`;
-const SPECIAL_GALLERY_PUBLIC = `${SPECIAL_GALLERY_PREFIX}public`;
-const SPECIAL_GALLERIES = {
-  [SPECIAL_GALLERY_ALL]: {
-    id: SPECIAL_GALLERY_ALL,
-    title: "All",
-    description: "All photos.",
-    icon: undefined,
-    epoch: undefined,
-    epoch_type: undefined,
-    theme: undefined,
-    initialView: "year",
-  },
-  [SPECIAL_GALLERY_PUBLIC]: {
-    id: SPECIAL_GALLERY_PUBLIC,
-    title: "Public",
-    description: "All photos in galleries.",
-    icon: undefined,
-    epoch: undefined,
-    epoch_type: undefined,
-    theme: undefined,
-    initialView: undefined,
-  },
-};
-const isSpecialGallery = (galleryId: string): boolean =>
-  galleryId in SPECIAL_GALLERIES;
-
 export default {
   DEFAULT_ENV,
   DEFAULT_DEBUG,
@@ -55,10 +27,4 @@ export default {
   GUEST_USER,
 
   STATS_UNKNOWN,
-
-  SPECIAL_GALLERY_PREFIX,
-  SPECIAL_GALLERY_ALL,
-  SPECIAL_GALLERY_PUBLIC,
-  SPECIAL_GALLERIES,
-  isSpecialGallery,
 };
