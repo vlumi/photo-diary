@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import CONST from "../lib/constants.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -18,8 +17,7 @@ const init = async () => {};
 
 const getGalleries = async () => {
   logger.debug("Getting all galleries");
-  const galleries = await db.loadGalleries();
-  return [...galleries, ...Object.values(CONST.SPECIAL_GALLERIES)];
+  return await db.loadGalleries();
 };
 const createGallery = async (gallery: { id: string } & Record<string, any>) => {
   logger.debug("Creating gallery", { id: gallery.id });
@@ -27,22 +25,12 @@ const createGallery = async (gallery: { id: string } & Record<string, any>) => {
 };
 const getGallery = async (galleryId: string) => {
   logger.debug("Getting gallery", galleryId);
-  const loadGalleryPhotos = async (gallery: Record<string, any>) => {
-    const galleryPhotos = await db.loadGalleryPhotos(galleryId);
-    return {
-      ...gallery,
-      photos: galleryPhotos,
-    };
-  };
-  if (galleryId.startsWith(CONST.SPECIAL_GALLERY_PREFIX)) {
-    return await loadGalleryPhotos(
-      CONST.SPECIAL_GALLERIES[
-        galleryId as keyof typeof CONST.SPECIAL_GALLERIES
-      ]
-    );
-  }
   const gallery = await db.loadGallery(galleryId);
-  return await loadGalleryPhotos(gallery);
+  const galleryPhotos = await db.loadGalleryPhotos(galleryId);
+  return {
+    ...gallery,
+    photos: galleryPhotos,
+  };
 };
 const updateGallery = async (
   galleryId: string,

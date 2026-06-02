@@ -49,7 +49,7 @@ const GalleryFields = {
   hostname: Type.Optional(Type.String()),
 };
 const GalleryCreateBody = Type.Object({
-  id: Type.String({ minLength: 1 }),
+  id: Type.String({ minLength: 1, pattern: "^[^:].*$" }),
   ...GalleryFields,
 });
 const GalleryUpdateBody = Type.Object(GalleryFields);

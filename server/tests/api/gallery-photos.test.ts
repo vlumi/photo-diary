@@ -170,64 +170,14 @@ describe("As admin", () => {
       await getGalleryPhoto(token, "gallery2", "orphanphoto.jpg", 404);
     });
   });
-  describe("Gallery :all", () => {
+  describe("Gallery :all (no pseudo-gallery)", () => {
     test("Get gallery1photo.jpg", async () => {
-      const result = await getGalleryPhoto(token, ":all", "gallery1photo.jpg");
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("gallery1photo.jpg");
-    });
-    test("Get gallery12photo.jpg", async () => {
-      const result = await getGalleryPhoto(token, ":all", "gallery12photo.jpg");
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("gallery12photo.jpg");
-    });
-    test("Get gallery2photo.jpg", async () => {
-      const result = await getGalleryPhoto(token, ":all", "gallery2photo.jpg");
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("gallery2photo.jpg");
-    });
-    test("Get orphanphoto.jpg", async () => {
-      const result = await getGalleryPhoto(token, ":all", "orphanphoto.jpg");
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("orphanphoto.jpg");
-    });
-    test("Get invalid.jpg", async () => {
-      await getGalleryPhoto(token, ":all", "invalid.jpg", 404);
+      await getGalleryPhoto(token, ":all", "gallery1photo.jpg", 404);
     });
   });
-  describe("Gallery :public", () => {
+  describe("Gallery :public (no pseudo-gallery)", () => {
     test("Get gallery1photo.jpg", async () => {
-      const result = await getGalleryPhoto(
-        token,
-        ":public",
-        "gallery1photo.jpg"
-      );
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("gallery1photo.jpg");
-    });
-    test("Get gallery12photo.jpg", async () => {
-      const result = await getGalleryPhoto(
-        token,
-        ":public",
-        "gallery12photo.jpg"
-      );
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("gallery12photo.jpg");
-    });
-    test("Get gallery2photo.jpg", async () => {
-      const result = await getGalleryPhoto(
-        token,
-        ":public",
-        "gallery2photo.jpg"
-      );
-      expect(result.body.id).toBeDefined();
-      expect(result.body.id).toBe("gallery2photo.jpg");
-    });
-    test("Get orphanphoto.jpg", async () => {
-      await getGalleryPhoto(token, ":public", "orphanphoto.jpg", 404);
-    });
-    test("Get invalid.jpg", async () => {
-      await getGalleryPhoto(token, ":public", "invalid.jpg", 404);
+      await getGalleryPhoto(token, ":public", "gallery1photo.jpg", 404);
     });
   });
   describe("Invalid gallery", () => {

@@ -37,10 +37,9 @@ import { hideBin } from "yargs/helpers";
 
 import db from "../db/index.js";
 
-const REJECTED_GALLERY_IDS = new Set([":all", ":public"]);
 const requireRealGalleryId = (galleryId: string) => {
-  if (REJECTED_GALLERY_IDS.has(galleryId)) {
-    console.error(`✗ ${galleryId} is not a real gallery.`);
+  if (galleryId.startsWith(":")) {
+    console.error(`✗ ${galleryId} is not a real gallery (":"-prefix is reserved).`);
     process.exit(1);
   }
 };

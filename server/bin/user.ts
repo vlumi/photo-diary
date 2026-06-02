@@ -120,11 +120,10 @@ const formatTable = (rows: string[][]): string => {
     .join("\n");
 };
 
-const REJECTED_GALLERY_IDS = new Set([":all", ":public"]);
 const requireRealGalleryId = (galleryId: string) => {
-  if (REJECTED_GALLERY_IDS.has(galleryId)) {
+  if (galleryId.startsWith(":")) {
     console.error(
-      `✗ ${galleryId} is not a real gallery. For global admin, use \`make-admin\`.`
+      `✗ ${galleryId} is not a real gallery (":"-prefix is reserved). For global admin, use \`make-admin\`.`
     );
     process.exit(1);
   }

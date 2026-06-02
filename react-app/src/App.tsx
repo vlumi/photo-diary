@@ -53,7 +53,7 @@ const App = (): React.ReactElement => {
           ) : (
             <Routes>
               <Route
-                path="/g/:galleryId/stats"
+                path="/s/:galleryId"
                 element={<Gallery isStats={true} />}
               />
               <Route

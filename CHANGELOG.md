@@ -17,6 +17,7 @@
 
 ### Frontend
 
+- Stats moves to a dedicated `/s/<gallery>` URL root, parallel to `/g/<gallery>` (public viewing) and the upcoming `/m/` (management, #10). The Gallery / Stats title-bar toggle stays; the only change is the URL prefix it switches to. No redirect from the old `/g/<gallery>/stats` — bookmarks for stats pages are uncommon enough to break pre-1.0. Drops the leftover `:all` / `:public` plumbing: `SPECIAL_GALLERIES` map, `isSpecialGallery` / `isSpecial()` helpers, and the `REJECTED_GALLERY_IDS` lists in `bin/user.ts` / `bin/group.ts` are gone; gallery IDs now reject the `:` prefix via the same general rule that group IDs use. `GET /galleries` no longer returns `:all` / `:public` shadow entries; cross-gallery views are an admin concern (#10 PR 1). The `hide_map` regression test for `/photos` and `/photos/:id` retires alongside — those endpoints are admin-only post-#394 and admins bypass hide_map. (part of #404)
 - User-side theme picker in the UserMenu dropdown — pick from any of the built-in themes or keep "Follow gallery default" (the unset state). The choice is persisted per-browser in localStorage and overrides the gallery's `theme` + the instance default for that user. Resolution priority is user preference → gallery theme → instance default.
 
 ### Tooling
