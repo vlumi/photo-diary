@@ -20,6 +20,7 @@
 
 - Admin UI shell — `/m/*` (global) + `/m/g/<gallery>/*` (gallery-scoped) routes with placeholder sub-pages, a `Manage` tab in the title-bar context group, and a `Manage` entry in the UserMenu, all gated on `user.isAdmin`. (part of #10)
 - Admin Photos page (read-only) — `/m/photos` (cross-gallery) and `/m/g/<gallery>/photos` (gallery-scoped) render a paginated thumbnail grid with a faceted filter sidebar (gallery membership chips, date range, audit chips, free-text); filter state is URL-parameterised so a narrowed view is shareable. (part of #10)
+- Admin breadcrumb expands to `Home → Manage → Galleries → <id> → <subpage>` with every intermediate segment as a link, so cross-scope navigation between `/m/g/<id>/...` and the cross-gallery pages is one click. (part of #10)
 - Stats moves to `/s/<gallery>`, parallel to `/g/<gallery>` (viewing) and the upcoming `/m/` (management, #10); the `:all` / `:public` plumbing retires alongside. (part of #404)
 - User-side theme picker in the UserMenu — pick a built-in theme or "Follow gallery default"; persisted per-browser, overrides the gallery and instance defaults. (closes #287)
 

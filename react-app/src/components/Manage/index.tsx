@@ -1,5 +1,10 @@
 import React from "react";
-import { Outlet, useNavigate, useParams } from "react-router-dom";
+import {
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill, BsChevronRight } from "react-icons/bs";
@@ -92,13 +97,80 @@ const NoticeBody = styled.div`
 // have the Home link out), then either the matched sub-route via
 // <Outlet> or a permission-denied notice. Server-side endpoints gate
 // data access; the UI just surfaces that.
+// Parse a /m/... pathname into the trail of breadcrumb steps the
+// header renders. Each step is either { kind: 'link', path, label }
+// (clickable) or { kind: 'leaf', label } (current location).
+type Crumb =
+  | { kind: "link"; path: string; label: string }
+  | { kind: "leaf"; label: string };
+
+const buildCrumbs = (
+  pathname: string,
+  t: (key: string) => string
+): Crumb[] => {
+  const parts = pathname.split("/").filter(Boolean);
+  // parts[0] === "m"
+  const tail = parts.slice(1);
+  const out: Crumb[] = [];
+  const pushLinkOrLeaf = (
+    isLast: boolean,
+    path: string,
+    label: string
+  ): void => {
+    out.push(isLast ? { kind: "leaf", label } : { kind: "link", path, label });
+  };
+
+  if (tail.length === 0) {
+    // /m
+    out.push({ kind: "leaf", label: t("manage-root") });
+    return out;
+  }
+
+  out.push({ kind: "link", path: "/m", label: t("manage-root") });
+
+  if (tail[0] === "g") {
+    // /m/g/<id>[/sub]
+    out.push({ kind: "link", path: "/m/galleries", label: t("manage-page-galleries-title") });
+    const galleryId = tail[1];
+    if (!galleryId) return out;
+    const sub = tail[2];
+    pushLinkOrLeaf(!sub, `/m/g/${galleryId}`, galleryId);
+    if (sub === "photos") {
+      out.push({ kind: "leaf", label: t("manage-page-gallery-photos-title") });
+    } else if (sub === "access") {
+      out.push({ kind: "leaf", label: t("manage-page-gallery-access-title") });
+    } else if (sub) {
+      out.push({ kind: "leaf", label: sub });
+    }
+    return out;
+  }
+
+  // /m/<page>
+  const page = tail[0];
+  if (page === "photos") {
+    out.push({ kind: "leaf", label: t("manage-page-photos-title") });
+  } else if (page === "galleries") {
+    out.push({ kind: "leaf", label: t("manage-page-galleries-title") });
+  } else if (page === "users") {
+    out.push({ kind: "leaf", label: t("manage-page-users-title") });
+  } else {
+    out.push({ kind: "leaf", label: page });
+  }
+  return out;
+};
+
 const Manage = (): React.ReactElement => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const params = useParams();
   const user = useUserStore((s) => s.user);
   const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
   const galleryId = params.galleryId;
+  const crumbs = React.useMemo(
+    () => buildCrumbs(location.pathname, t),
+    [location.pathname, t]
+  );
 
   const body = !user ? (
     <NoticeBody>{t("manage-not-logged-in")}</NoticeBody>
@@ -181,25 +253,27 @@ const Manage = (): React.ReactElement => {
           >
             <BsFillHouseFill aria-hidden />
           </HomeLink>
-          <Separator />
-          <Crumb>
-            <CrumbLink
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/m");
-              }}
-              role="link"
-              tabIndex={0}
-            >
-              {t("manage-root")}
-            </CrumbLink>
-          </Crumb>
-          {galleryId && (
-            <>
+          {crumbs.map((c, i) => (
+            <React.Fragment key={`${i}-${c.label}`}>
               <Separator />
-              <Crumb>{galleryId}</Crumb>
-            </>
-          )}
+              <Crumb>
+                {c.kind === "link" ? (
+                  <CrumbLink
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate(c.path);
+                    }}
+                    role="link"
+                    tabIndex={0}
+                  >
+                    {c.label}
+                  </CrumbLink>
+                ) : (
+                  c.label
+                )}
+              </Crumb>
+            </React.Fragment>
+          ))}
         </Crumbs>
         {renderContextSwitch()}
       </Header>
