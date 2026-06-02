@@ -59,4 +59,51 @@ const list = async (
     })
   ) as Promise<PhotosPage>;
 
-export default { list };
+// Wide-open photo type from the server — same shape the public
+// /gallery-photos uses. Operator-set fields are nested under
+// `taken.location`, `taken.author`, `camera`, `lens`, `exposure`.
+export type PhotoRow = Record<string, unknown> & { id: string };
+
+const get = async (id: string): Promise<PhotoRow> =>
+  unwrap(
+    api.GET("/api/v1/photos/{photoId}", {
+      params: { path: { photoId: id } },
+    })
+  ) as Promise<PhotoRow>;
+
+// PhotoUpdateBody on the server only accepts the override fields
+// `bin/photo.ts update` exposes. EXIF-derived columns reject with 400.
+export interface PhotoUpdatePatch {
+  title?: string;
+  description?: string;
+  taken?: {
+    author?: string;
+    location?: {
+      country?: string;
+      place?: string;
+    };
+  };
+  camera?: {
+    make?: string;
+    model?: string;
+  };
+  lens?: {
+    make?: string;
+    model?: string;
+  };
+  exposure?: {
+    focalLength?: number;
+    aperture?: number;
+  };
+}
+
+const update = async (id: string, patch: PhotoUpdatePatch): Promise<void> => {
+  await unwrap(
+    api.PUT("/api/v1/photos/{photoId}", {
+      params: { path: { photoId: id } },
+      body: patch,
+    })
+  );
+};
+
+export default { list, get, update };

@@ -1,5 +1,10 @@
 import React from "react";
-import { useSearchParams } from "react-router-dom";
+import {
+  Outlet,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -99,12 +104,21 @@ const Grid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 8px;
 `;
-const Tile = styled.div`
+const Tile = styled.button`
   display: flex;
   flex-direction: column;
   background: var(--tile-background);
+  border: 1px solid transparent;
   border-radius: 2px;
+  padding: 0;
   overflow: hidden;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  &:hover,
+  &:focus-visible {
+    border-color: var(--primary-color);
+  }
 `;
 // Square wrap reserves the box before the image loads, so the grid
 // doesn't reflow as thumbs come in. Portrait and landscape captures
@@ -244,6 +258,19 @@ const PAGE_SIZE = 100;
 const Photos = ({ galleryId }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  // The drawer mounts at /m/photos/:photoId and /m/g/<g>/photos/:photoId
+  // via a nested <Outlet>; this Photos page is the parent.
+  const openPhoto = (id: string) => {
+    // pathname is /m/photos[/<oldId>] or /m/g/<g>/photos[/<oldId>];
+    // normalise to ".../photos" and append the new id, preserving
+    // the filter query.
+    const base = location.pathname.endsWith("/photos")
+      ? location.pathname
+      : location.pathname.replace(/\/[^/]+$/, "");
+    navigate({ pathname: `${base}/${id}`, search: location.search });
+  };
 
   const filter = React.useMemo(
     () => filterFromSearchParams(searchParams, galleryId),
@@ -435,7 +462,12 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
             {photos.map((p) => {
               const label = dateLabel(p);
               return (
-                <Tile key={p.id} title={p.id}>
+                <Tile
+                  key={p.id}
+                  type="button"
+                  title={p.id}
+                  onClick={() => openPhoto(p.id)}
+                >
                   <ThumbWrap>
                     <Thumb
                       src={`${config.PHOTO_ROOT_URL}thumbnail/${p.id}`}
@@ -476,6 +508,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     <Root>
       {renderSidebar()}
       <Body>{renderBody()}</Body>
+      <Outlet />
     </Root>
   );
 };

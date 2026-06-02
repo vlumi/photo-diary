@@ -217,6 +217,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Get one photo by id",
         params: PhotoIdParam,
+        response: { 200: PhotoItem },
       },
     },
     async (request) => {

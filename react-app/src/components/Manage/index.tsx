@@ -129,14 +129,22 @@ const buildCrumbs = (
   out.push({ kind: "link", path: "/m", label: t("manage-root") });
 
   if (tail[0] === "g") {
-    // /m/g/<id>[/sub]
+    // /m/g/<id>[/sub[/photoId]]
     out.push({ kind: "link", path: "/m/galleries", label: t("manage-page-galleries-title") });
     const galleryId = tail[1];
     if (!galleryId) return out;
     const sub = tail[2];
     pushLinkOrLeaf(!sub, `/m/g/${galleryId}`, galleryId);
     if (sub === "photos") {
-      out.push({ kind: "leaf", label: t("manage-page-gallery-photos-title") });
+      const photoId = tail[3];
+      pushLinkOrLeaf(
+        !photoId,
+        `/m/g/${galleryId}/photos`,
+        t("manage-page-gallery-photos-title")
+      );
+      if (photoId) {
+        out.push({ kind: "leaf", label: photoId });
+      }
     } else if (sub === "access") {
       out.push({ kind: "leaf", label: t("manage-page-gallery-access-title") });
     } else if (sub) {
@@ -145,10 +153,12 @@ const buildCrumbs = (
     return out;
   }
 
-  // /m/<page>
+  // /m/<page>[/<photoId>]
   const page = tail[0];
   if (page === "photos") {
-    out.push({ kind: "leaf", label: t("manage-page-photos-title") });
+    const photoId = tail[1];
+    pushLinkOrLeaf(!photoId, "/m/photos", t("manage-page-photos-title"));
+    if (photoId) out.push({ kind: "leaf", label: photoId });
   } else if (page === "galleries") {
     out.push({ kind: "leaf", label: t("manage-page-galleries-title") });
   } else if (page === "users") {

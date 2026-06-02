@@ -17,6 +17,7 @@ import Manage from "./components/Manage";
 import ManagePlaceholder from "./components/Manage/Placeholder";
 import ManagePhotos from "./components/Manage/Photos";
 import ManageGalleryPhotos from "./components/Manage/GalleryPhotos";
+import ManagePhotoDrawer from "./components/Manage/PhotoDrawer";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -97,7 +98,9 @@ const App = (): React.ReactElement => {
                     />
                   }
                 />
-                <Route path="photos" element={<ManagePhotos />} />
+                <Route path="photos" element={<ManagePhotos />}>
+                  <Route path=":photoId" element={<ManagePhotoDrawer />} />
+                </Route>
                 <Route path="g/:galleryId">
                   <Route
                     index
@@ -108,7 +111,9 @@ const App = (): React.ReactElement => {
                       />
                     }
                   />
-                  <Route path="photos" element={<ManageGalleryPhotos />} />
+                  <Route path="photos" element={<ManageGalleryPhotos />}>
+                    <Route path=":photoId" element={<ManagePhotoDrawer />} />
+                  </Route>
                   <Route
                     path="access"
                     element={
