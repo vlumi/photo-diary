@@ -44,61 +44,64 @@ const HomeLink = styled.a`
   color: inherit;
   text-decoration: none;
 `;
-const Placeholder = styled.div`
+const CrumbLink = styled.a`
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+const NoticeBody = styled.div`
   padding: 16px;
   font-style: italic;
   color: var(--inactive-color);
 `;
 
-// Top-level frame for /m/* and /m/g/<gallery>/* admin routes. Renders a
-// minimal header (breadcrumb + home link), then an <Outlet> for the
-// page-specific sub-routes. Access gating: any logged-in user can hit
-// the route, but if `user.isAdmin` isn't set the page renders a
-// "permission denied" placeholder rather than redirecting away — the
-// admin-only API endpoints already gate the data, and the UI just
-// surfaces that. Per-gallery admin (#10 PR 3+) lands when the gallery
-// data flow is wired.
+// Top-level frame for /m/* and /m/g/<gallery>/* admin routes. Renders
+// a minimal breadcrumb header on every render (so non-admins still
+// have the Home link out), then either the matched sub-route via
+// <Outlet> or a permission-denied notice. Server-side endpoints gate
+// data access; the UI just surfaces that.
 const Manage = (): React.ReactElement => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const params = useParams();
   const user = useUserStore((s) => s.user);
-
-  if (!user) {
-    return (
-      <Root>
-        <Placeholder>{t("manage-not-logged-in")}</Placeholder>
-      </Root>
-    );
-  }
-  if (!user.isAdmin()) {
-    return (
-      <Root>
-        <Placeholder>{t("manage-not-admin")}</Placeholder>
-      </Root>
-    );
-  }
-
   const galleryId = params.galleryId;
+
+  const body = !user ? (
+    <NoticeBody>{t("manage-not-logged-in")}</NoticeBody>
+  ) : !user.isAdmin() ? (
+    <NoticeBody>{t("manage-not-admin")}</NoticeBody>
+  ) : (
+    <Outlet />
+  );
+
   return (
     <Root>
       <Header>
         <Crumbs aria-label={String(t("manage-nav-group"))}>
-          <HomeLink onClick={() => navigate("/")} title={String(t("home"))}>
+          <HomeLink
+            onClick={() => navigate("/")}
+            title={String(t("home"))}
+            role="link"
+            tabIndex={0}
+          >
             <BsFillHouseFill aria-hidden />
           </HomeLink>
           <Separator />
           <Crumb>
-            <a
-              href="#"
+            <CrumbLink
               onClick={(e) => {
                 e.preventDefault();
                 navigate("/m");
               }}
-              style={{ color: "inherit", textDecoration: "none" }}
+              role="link"
+              tabIndex={0}
             >
               {t("manage-root")}
-            </a>
+            </CrumbLink>
           </Crumb>
           {galleryId && (
             <>
@@ -108,7 +111,7 @@ const Manage = (): React.ReactElement => {
           )}
         </Crumbs>
       </Header>
-      <Outlet />
+      {body}
     </Root>
   );
 };
