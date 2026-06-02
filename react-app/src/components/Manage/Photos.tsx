@@ -308,6 +308,8 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   };
   useKeyPress("ArrowLeft", () => goToPage(page - 1));
   useKeyPress("ArrowRight", () => goToPage(page + 1));
+  useKeyPress("Home", () => goToPage(1));
+  useKeyPress("End", () => goToPage(pageCount));
 
   const renderSidebar = () => (
     <Sidebar>
