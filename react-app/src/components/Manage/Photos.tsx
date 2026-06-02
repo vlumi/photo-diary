@@ -110,19 +110,24 @@ const Tile = styled.div`
 // doesn't reflow as thumbs come in. Portrait and landscape captures
 // of the same aspect ratio occupy equal area inside the square
 // (a 3:2 landscape and a 2:3 portrait both at 100% × 67% / 67% × 100%).
+//
+// `position: relative` so the absolutely-positioned <img> below
+// resolves against this box.
 const ThumbWrap = styled.div`
+  position: relative;
   aspect-ratio: 1 / 1;
   background: var(--tile-background);
 `;
-// Explicit width/height 100% on the img — combined with
-// object-fit: contain — forces the rendered box to fill the wrap
-// regardless of intrinsic dimensions, then contains the image
-// content inside. This keeps the visible box stable from initial
-// render through load AND prevents portraits from overflowing
-// because of unresolved percentage heights (which `max-height:
-// 100%` alone can hit when the wrap derives its height from
-// aspect-ratio).
+// Absolute + inset: 0 sidesteps a Chromium quirk where `height:
+// 100%` on a replaced element (img/video) doesn't resolve when the
+// parent's height comes from `aspect-ratio` rather than an explicit
+// dimension. Chrome falls back to the img's intrinsic ratio and
+// portraits overflow vertically; Firefox honours the percentage and
+// renders correctly. Absolute positioning forces the box to the
+// wrap's resolved rect in both engines.
 const Thumb = styled.img`
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
