@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill, BsChevronRight } from "react-icons/bs";
 
+import useKeyPress from "../../lib/keypress";
 import { useLastGalleryPathStore, useUserStore } from "../../stores";
 
 const Root = styled.div`
@@ -112,13 +113,26 @@ const Manage = (): React.ReactElement => {
   // shows in its title bar — switching modes is one click in either
   // direction. Gallery jumps to the most recently visited path for
   // this gallery (year / month / day / photo) when remembered.
+  const goToGallery = () => {
+    if (!galleryId) {
+      navigate("/g");
+      return;
+    }
+    const remembered = lookupGalleryPath(galleryId);
+    navigate(remembered ?? `/g/${galleryId}`);
+  };
+  const goToStats = () => {
+    if (!galleryId) return;
+    navigate(`/s/${galleryId}`);
+  };
+  // Mirror Title.tsx's `g` / `s` shortcuts so an admin can leave
+  // manage mode with a single keystroke. `m` is intentionally
+  // skipped — already bound to the map toggle in the gallery view.
+  useKeyPress("g", goToGallery);
+  useKeyPress("s", goToStats);
+
   const renderContextSwitch = () => {
     if (!galleryId) return null;
-    const goToGallery = () => {
-      const remembered = lookupGalleryPath(galleryId);
-      navigate(remembered ?? `/g/${galleryId}`);
-    };
-    const goToStats = () => navigate(`/s/${galleryId}`);
     return (
       <ContextGroup
         role="group"

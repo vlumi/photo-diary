@@ -106,19 +106,23 @@ const Tile = styled.div`
   border-radius: 2px;
   overflow: hidden;
 `;
+// Square so landscape and portrait shots get roughly the same visible
+// image area (a 3:2 landscape and a 2:3 portrait both fill 2/3 of a
+// square). Explicit aspect-ratio reserves the box before the image
+// loads, so the grid doesn't reflow as thumbs come in.
 const ThumbWrap = styled.div`
-  aspect-ratio: 3 / 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio: 1 / 1;
   background: var(--tile-background);
 `;
-// Letterbox / pillarbox via object-fit: contain so portrait shots and
-// wide panoramas both keep their full frame visible; the tile
-// background fills the bars.
+// Fill the wrap box with the <img> element itself (width/height 100%)
+// and let object-fit contain handle letterbox / pillarbox + centering
+// of the actual image content. This keeps the rendered box size
+// constant from initial render through image load.
 const Thumb = styled.img`
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
   display: block;
 `;
 const TileMeta = styled.div`
