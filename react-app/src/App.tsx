@@ -47,8 +47,8 @@ const App = (): React.ReactElement => {
       <Notifications />
       <LoginModal />
       <ChangePasswordModal />
-      <TopMenu />
       <Router>
+        <TopMenu />
         <ScrollToPosition>
           {!countryDataReady ? (
             <div>{t("loading")}</div>
