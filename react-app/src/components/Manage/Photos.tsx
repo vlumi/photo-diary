@@ -106,18 +106,22 @@ const Tile = styled.div`
   border-radius: 2px;
   overflow: hidden;
 `;
-// 3:2 wrap matches a typical landscape capture, so landscapes fill
-// the tile edge-to-edge (adjacent tiles touch up to the grid gap).
-// Portraits pillarbox in the middle — visibly smaller than
-// landscapes, no longer dominating. Wrap reserves the box before
-// the image loads so the grid doesn't reflow as thumbs come in.
+// Square wrap reserves the box before the image loads, so the grid
+// doesn't reflow as thumbs come in. Portrait and landscape captures
+// of the same aspect ratio occupy equal area inside the square
+// (a 3:2 landscape and a 2:3 portrait both at 100% × 67% / 67% × 100%).
 const ThumbWrap = styled.div`
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 1 / 1;
   background: var(--tile-background);
 `;
-// Filling the wrap with width/height 100% + object-fit contain
-// keeps the rendered box size constant from initial render through
-// load.
+// Explicit width/height 100% on the img — combined with
+// object-fit: contain — forces the rendered box to fill the wrap
+// regardless of intrinsic dimensions, then contains the image
+// content inside. This keeps the visible box stable from initial
+// render through load AND prevents portraits from overflowing
+// because of unresolved percentage heights (which `max-height:
+// 100%` alone can hit when the wrap derives its height from
+// aspect-ratio).
 const Thumb = styled.img`
   width: 100%;
   height: 100%;
