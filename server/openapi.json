@@ -894,9 +894,217 @@
     },
     "/api/v1/photos": {
       "get": {
-        "summary": "List all photos",
+        "summary": "List photos with optional filters; returns a paginated page of the matching set sorted newest-first by capture timestamp",
         "tags": [
           "photos"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "in": "query",
+            "name": "gallery",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "orphan",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "dateFrom",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "dateTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "taken"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "coords"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "place"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "country"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "author"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "title"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "description"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "state-code"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "taken"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "coords"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "place"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "country"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "author"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "title"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "description"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "state-code"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "in": "query",
+            "name": "missing",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "duplicates",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "countryMismatch",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
         ],
         "responses": {
           "200": {

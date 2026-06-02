@@ -301,9 +301,9 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
     // gallery1's fixture photos are gallery1photo.jpg + gallery12photo.jpg
     // (the latter also lives in gallery2). gallery2photo.jpg /
     // gallery3photo.jpg / orphanphoto.jpg are out.
-    const ids = Array.isArray(result.body)
-      ? (result.body as Array<{ id: string }>).map((p) => p.id).sort()
-      : Object.keys(result.body as Record<string, unknown>).sort();
+    const ids = (result.body.photos as Array<{ id: string }>)
+      .map((p) => p.id)
+      .sort();
     expect(ids).toStrictEqual(["gallery12photo.jpg", "gallery1photo.jpg"]);
   });
 

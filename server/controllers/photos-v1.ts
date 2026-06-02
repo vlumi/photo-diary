@@ -8,6 +8,10 @@ import {
   requireUnscoped,
 } from "../lib/host-scope.js";
 import modelFactory from "../models/photo.js";
+import type {
+  MissingField,
+  PhotoFilter,
+} from "../lib/photo-filter.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -85,6 +89,48 @@ const PhotoCreateBody = Type.Object(
 const PhotoUpdateBody = Type.Object(PhotoOverridesFields, {
   additionalProperties: false,
 });
+
+const MISSING_VALUES = [
+  "taken",
+  "coords",
+  "place",
+  "country",
+  "author",
+  "title",
+  "description",
+  "state-code",
+] as const satisfies readonly MissingField[];
+const stringOrArray = (s: typeof Type.String) =>
+  Type.Union([s(), Type.Array(s())]);
+
+// Filters mirror the `bin/photo.ts audit` predicate set + gallery
+// membership + date range + free-text search. All fields are optional;
+// repeated query params (`?gallery=g1&gallery=g2`) accumulate into
+// arrays (Fastify default). Pagination defaults to page 1 / 100.
+const PhotosQuery = Type.Object(
+  {
+    gallery: Type.Optional(stringOrArray(Type.String)),
+    orphan: Type.Optional(Type.Boolean()),
+    dateFrom: Type.Optional(Type.String()),
+    dateTo: Type.Optional(Type.String()),
+    missing: Type.Optional(
+      Type.Union([
+        Type.Union(MISSING_VALUES.map((v) => Type.Literal(v))),
+        Type.Array(Type.Union(MISSING_VALUES.map((v) => Type.Literal(v)))),
+      ])
+    ),
+    duplicates: Type.Optional(Type.Boolean()),
+    countryMismatch: Type.Optional(Type.Boolean()),
+    q: Type.Optional(Type.String()),
+    page: Type.Optional(Type.Integer({ minimum: 1 })),
+    pageSize: Type.Optional(Type.Integer({ minimum: 1, maximum: 500 })),
+  },
+  { additionalProperties: false }
+);
+
+const toArray = <T>(v: T | T[] | undefined): T[] | undefined =>
+  v === undefined ? undefined : Array.isArray(v) ? v : [v];
+
 const TAGS = ["photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -93,30 +139,38 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.get(
     "/",
-    { schema: { tags: TAGS, summary: "List all photos" } },
+    {
+      schema: {
+        tags: TAGS,
+        summary:
+          "List photos with optional filters; returns a paginated page of the matching set sorted newest-first by capture timestamp",
+        querystring: PhotosQuery,
+        security: [{ bearer: [] }],
+      },
+    },
     async (request) => {
       await authorizer.authorizeView(request.user.id);
-      const photos = await model.getPhotos();
-      // hide_map is a per-(user, gallery) preference. The cross-gallery
-      // list has no gallery scope to resolve against, so coordinates
-      // pass through; per-gallery views still apply the cascade. The
-      // admin photo grid (#10) will reshape this endpoint with proper
-      // filtering and per-link masking.
+      const q = request.query;
+      const filter: PhotoFilter = {
+        galleryIds: toArray(q.gallery),
+        orphan: q.orphan,
+        dateFrom: q.dateFrom,
+        dateTo: q.dateTo,
+        missing: toArray(q.missing) as MissingField[] | undefined,
+        duplicates: q.duplicates,
+        countryMismatch: q.countryMismatch,
+        q: q.q,
+      };
       // On a scoped host, narrow to photos linked to an in-scope
-      // gallery. Photos in multiple galleries pass if at least one
-      // link is in scope.
-      const inScopeIds = await collectScopePhotoIds(request);
-      if (!inScopeIds) return photos;
-      if (Array.isArray(photos)) {
-        return (photos as Array<{ id: string }>).filter((p) =>
-          inScopeIds.has(p.id)
-        );
-      }
-      return Object.fromEntries(
-        Object.entries(photos as Record<string, unknown>).filter(([id]) =>
-          inScopeIds.has(id)
-        )
-      );
+      // gallery. The set passes into the model so pagination still
+      // yields the right window size.
+      const restrictToIds = await collectScopePhotoIds(request);
+      return await model.listPhotos({
+        filter,
+        page: q.page,
+        pageSize: q.pageSize,
+        restrictToIds: restrictToIds ?? undefined,
+      });
     }
   );
 

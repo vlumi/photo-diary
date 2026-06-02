@@ -699,10 +699,21 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List all photos */
+        /** List photos with optional filters; returns a paginated page of the matching set sorted newest-first by capture timestamp */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    gallery?: string | string[];
+                    orphan?: boolean;
+                    dateFrom?: string;
+                    dateTo?: string;
+                    missing?: ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code") | ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code")[];
+                    duplicates?: boolean;
+                    countryMismatch?: boolean;
+                    q?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
