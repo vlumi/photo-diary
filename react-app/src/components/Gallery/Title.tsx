@@ -288,23 +288,32 @@ const Title = ({
   });
   useKeyPress("g", () => switchTo("gallery"));
   useKeyPress("s", () => switchTo("stats"));
+  // 1 / 2 / 3 match pill position; the letter shortcuts above are
+  // kept for muscle memory. Manage has no letter (m is the map
+  // toggle) so 3 is its only single-keystroke route.
+  useKeyPress("1", () => switchTo("gallery"));
+  useKeyPress("2", () => switchTo("stats"));
+  useKeyPress("3", () => {
+    if (showManage) switchTo("manage");
+  });
 
   const renderContext = () => {
     const contexts = showManage
       ? ["gallery", "stats", "manage"]
       : ["gallery", "stats"];
-    const shortcutFor: Record<string, string | undefined> = {
-      gallery: "g",
-      stats: "s",
+    const shortcutFor: Record<string, string> = {
+      gallery: "1 · g",
+      stats: "2 · s",
+      manage: "3",
     };
     return (
       <ContextGroup
         role="group"
         aria-label={String(t("nav-context-group"))}
       >
-        {contexts.map((c) => {
+        {contexts.map((c, i) => {
           const active = c === context;
-          const shortcut = shortcutFor[c];
+          const shortcut = shortcutFor[c] ?? String(i + 1);
           return (
             <ContextButton
               key={c}
@@ -312,7 +321,7 @@ const Title = ({
               $active={active}
               aria-pressed={active}
               onClick={() => switchTo(c)}
-              title={shortcut ? `${t(`nav-${c}`)} (${shortcut})` : String(t(`nav-${c}`))}
+              title={`${t(`nav-${c}`)} (${shortcut})`}
             >
               {t(`nav-${c}`)}
             </ContextButton>

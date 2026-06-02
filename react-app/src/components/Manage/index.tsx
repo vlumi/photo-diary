@@ -125,11 +125,14 @@ const Manage = (): React.ReactElement => {
     if (!galleryId) return;
     navigate(`/s/${galleryId}`);
   };
-  // Mirror Title.tsx's `g` / `s` shortcuts so an admin can leave
-  // manage mode with a single keystroke. `m` is intentionally
-  // skipped — already bound to the map toggle in the gallery view.
+  // Mirror Title.tsx's pill shortcuts. 1 / 2 / 3 match pill
+  // position; g / s are kept for muscle memory. `m` is
+  // intentionally skipped — already bound to the map toggle in
+  // the gallery view, and 3 is the alternative for Manage.
   useKeyPress("g", goToGallery);
   useKeyPress("s", goToStats);
+  useKeyPress("1", goToGallery);
+  useKeyPress("2", goToStats);
 
   const renderContextSwitch = () => {
     if (!galleryId) return null;
@@ -142,7 +145,7 @@ const Manage = (): React.ReactElement => {
           type="button"
           $active={false}
           onClick={goToGallery}
-          title={`${t("nav-gallery")} (g)`}
+          title={`${t("nav-gallery")} (1 · g)`}
         >
           {t("nav-gallery")}
         </ContextButton>
@@ -150,7 +153,7 @@ const Manage = (): React.ReactElement => {
           type="button"
           $active={false}
           onClick={goToStats}
-          title={`${t("nav-stats")} (s)`}
+          title={`${t("nav-stats")} (2 · s)`}
         >
           {t("nav-stats")}
         </ContextButton>
@@ -158,6 +161,7 @@ const Manage = (): React.ReactElement => {
           type="button"
           $active={true}
           aria-pressed
+          title={`${t("nav-manage")} (3)`}
         >
           {t("nav-manage")}
         </ContextButton>
