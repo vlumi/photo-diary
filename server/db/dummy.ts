@@ -61,6 +61,7 @@ export default () => {
     unlinkGalleryPhoto,
     unlinkAllPhotos,
     unlinkAllGalleries,
+    loadAllGalleryPhotoLinks,
 
     loadPhotos,
     createPhoto,
@@ -478,6 +479,16 @@ const unlinkAllGalleries = async (photoId: string) => {
       (id) => id !== photoId
     );
   }
+};
+const loadAllGalleryPhotoLinks = async (): Promise<
+  Array<{ galleryId: string; photoId: string }>
+> => {
+  const out: Array<{ galleryId: string; photoId: string }> = [];
+  const galleryPhotos = (db.galleryPhotos ?? {}) as Record<string, string[]>;
+  for (const [galleryId, photoIds] of Object.entries(galleryPhotos)) {
+    for (const photoId of photoIds) out.push({ galleryId, photoId });
+  }
+  return out;
 };
 
 const loadPhotos = async () => {

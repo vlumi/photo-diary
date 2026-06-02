@@ -133,31 +133,9 @@ const applyOverrideOptions = (y: Argv) =>
 
 // ---- audit ---------------------------------------------------------------
 
-// Empty-data sentinel: NULL → "" through mapRow; "Invalid date" is the
-// explicit placeholder readExif emits for EXIF-less imports.
-const isMissing = (v: unknown): boolean =>
-  v === null || v === undefined || v === "" || v === "unknown" || v === "Invalid date";
-
-type MissingField =
-  | "taken"
-  | "coords"
-  | "place"
-  | "country"
-  | "author"
-  | "title"
-  | "description";
-
-const MISSING_PROBES: Record<MissingField, (p: any) => boolean> = {
-  taken: (p) => isMissing(p.taken?.instant?.timestamp),
-  coords: (p) =>
-    isMissing(p.taken?.location?.coordinates?.latitude) ||
-    isMissing(p.taken?.location?.coordinates?.longitude),
-  place: (p) => isMissing(p.taken?.location?.place),
-  country: (p) => isMissing(p.taken?.location?.country),
-  author: (p) => isMissing(p.taken?.author),
-  title: (p) => isMissing(p.title),
-  description: (p) => isMissing(p.description),
-};
+// Predicates live in server/lib/photo-filter.ts so the CLI and the
+// admin photos endpoint share the same definitions.
+import { MISSING_PREDICATES, type MissingField } from "../lib/photo-filter.js";
 
 interface AuditCheck {
   key: string;
@@ -167,14 +145,24 @@ interface AuditCheck {
   footer?: () => string | undefined;
 }
 
+const FIELDS_FOR_CLI: MissingField[] = [
+  "taken",
+  "coords",
+  "place",
+  "country",
+  "author",
+  "title",
+  "description",
+];
+
 const buildChecks = (
   photos: any[],
   orphanIds: Set<string>
 ): AuditCheck[] => {
   const checks: AuditCheck[] = [];
 
-  for (const field of Object.keys(MISSING_PROBES) as MissingField[]) {
-    const probe = MISSING_PROBES[field];
+  for (const field of FIELDS_FOR_CLI) {
+    const probe = MISSING_PREDICATES[field];
     checks.push({
       key: `missing-${field}`,
       title: `Photos with missing ${field}`,
@@ -277,14 +265,10 @@ const buildChecks = (
       "Photos with coords + city but no geocoded_state_code (ISO 3166-2)",
     whyLabel: "country / state / city",
     rows: () => {
+      const probe = MISSING_PREDICATES["state-code"];
       const out: Array<{ id: string; row: any; why?: string }> = [];
       for (const p of photos) {
-        const lat = p.taken?.location?.coordinates?.latitude;
-        const lon = p.taken?.location?.coordinates?.longitude;
-        if (lat === null || lat === undefined) continue;
-        if (lon === null || lon === undefined) continue;
-        if (!p.geocoded?.city) continue;
-        if (p.geocoded?.stateCode) continue;
+        if (!probe(p)) continue;
         const country = p.geocoded?.countryCode ?? "?";
         const state = p.geocoded?.state ?? "";
         out.push({

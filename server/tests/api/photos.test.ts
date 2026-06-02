@@ -21,9 +21,13 @@ const getPhoto = async (token: string | undefined, photoId: string, status = 200
     .set("Authorization", `Bearer ${token}`)
     .expect(status);
 
-const expectPhoto = (result: { body: Record<string, { id: string }> }, photo: string) => {
-  expect(result.body[photo]).toBeDefined();
-  expect(result.body[photo].id).toBe(photo);
+const expectPhoto = (
+  result: { body: { photos: Array<{ id: string }> } },
+  photo: string
+) => {
+  const match = result.body.photos.find((p) => p.id === photo);
+  expect(match).toBeDefined();
+  expect(match?.id).toBe(photo);
 };
 
 describe("As guest", () => {
@@ -116,7 +120,10 @@ describe("As admin", () => {
 
   test("List photos", async () => {
     const result = await getPhotos(token);
-    expect(Object.keys(result.body).length).toBe(5);
+    expect(result.body.photos.length).toBe(5);
+    expect(result.body.total).toBe(5);
+    expect(result.body.page).toBe(1);
+    expect(result.body.pageSize).toBe(100);
     expectPhoto(result, "gallery1photo.jpg");
     expectPhoto(result, "gallery12photo.jpg");
     expectPhoto(result, "gallery2photo.jpg");
@@ -401,5 +408,113 @@ describe("Mutations as admin", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({ exposure: { iso: 100 } })
       .expect(400));
+});
+
+describe("List photos: filters + pagination", () => {
+  let token: string | undefined = undefined;
+  beforeAll(async () => {
+    token = await loginUser(api, "admin");
+  });
+
+  const ids = (body: { photos: Array<{ id: string }> }) =>
+    body.photos.map((p) => p.id);
+
+  test("Newest-first by capture timestamp", async () => {
+    const result = await getPhotos(token);
+    // Fixture timestamps (desc): orphan 2020-08, gallery3 2020-07-05,
+    // gallery2 2020-07-05, gallery12 2020-07-04, gallery1 2018-05-04.
+    expect(ids(result.body)).toStrictEqual([
+      "orphanphoto.jpg",
+      "gallery3photo.jpg",
+      "gallery2photo.jpg",
+      "gallery12photo.jpg",
+      "gallery1photo.jpg",
+    ]);
+  });
+
+  test("gallery=gallery1 narrows to that gallery's photos", async () => {
+    const result = await api
+      .get("/api/v1/photos")
+      .query({ gallery: "gallery1" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(ids(result.body).sort()).toStrictEqual([
+      "gallery12photo.jpg",
+      "gallery1photo.jpg",
+    ]);
+  });
+
+  test("orphan=true returns only the orphan", async () => {
+    const result = await api
+      .get("/api/v1/photos")
+      .query({ orphan: true })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(ids(result.body)).toStrictEqual(["orphanphoto.jpg"]);
+  });
+
+  test("missing=coords returns rows without lat/lon", async () => {
+    const result = await api
+      .get("/api/v1/photos")
+      .query({ missing: "coords" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    // gallery1photo has coords; the other four don't.
+    expect(ids(result.body).sort()).toStrictEqual([
+      "gallery12photo.jpg",
+      "gallery2photo.jpg",
+      "gallery3photo.jpg",
+      "orphanphoto.jpg",
+    ]);
+  });
+
+  test("missing=country returns the empty-country rows", async () => {
+    const result = await api
+      .get("/api/v1/photos")
+      .query({ missing: "country" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    // Every fixture has a country, so this filter matches nothing.
+    expect(result.body.photos.length).toBe(0);
+    expect(result.body.total).toBe(0);
+  });
+
+  test("dateFrom / dateTo narrow to the range", async () => {
+    const result = await api
+      .get("/api/v1/photos")
+      .query({ dateFrom: "2020-07-01", dateTo: "2020-07-31" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(ids(result.body).sort()).toStrictEqual([
+      "gallery12photo.jpg",
+      "gallery2photo.jpg",
+      "gallery3photo.jpg",
+    ]);
+  });
+
+  test("Pagination: pageSize=2 + page=2 returns the next two", async () => {
+    const result = await api
+      .get("/api/v1/photos")
+      .query({ pageSize: 2, page: 2 })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    // Newest-first order: 0=orphan, 1=gallery3, 2=gallery2, 3=gallery12, 4=gallery1
+    // page 2 (pageSize 2) → indices 2 + 3.
+    expect(ids(result.body)).toStrictEqual([
+      "gallery2photo.jpg",
+      "gallery12photo.jpg",
+    ]);
+    expect(result.body.total).toBe(5);
+    expect(result.body.page).toBe(2);
+    expect(result.body.pageSize).toBe(2);
+  });
+
+  test("Unknown query param is rejected (additionalProperties: false via TypeBox)", async () => {
+    await api
+      .get("/api/v1/photos")
+      .query({ bogus: "x" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400);
+  });
 });
 

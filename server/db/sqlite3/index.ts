@@ -77,6 +77,7 @@ export default () => {
     unlinkGalleryPhoto,
     unlinkAllPhotos,
     unlinkAllGalleries,
+    loadAllGalleryPhotoLinks,
     loadGalleryPhoto,
 
     loadPhotos,
@@ -475,6 +476,14 @@ const linkGalleryPhoto = async (
     });
   });
   insertAll();
+};
+const loadAllGalleryPhotoLinks = async (): Promise<
+  Array<{ galleryId: string; photoId: string }>
+> => {
+  const rows = db
+    .prepare("SELECT gallery_id, photo_id FROM gallery_photo")
+    .all() as Array<{ gallery_id: string; photo_id: string }>;
+  return rows.map((r) => ({ galleryId: r.gallery_id, photoId: r.photo_id }));
 };
 const loadGalleryPhoto = async (
   galleryId: string,
