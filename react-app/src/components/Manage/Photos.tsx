@@ -9,6 +9,7 @@ import photosService, {
   type PhotoFilter,
 } from "../../services/photos";
 import galleriesService from "../../services/galleries";
+import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 
 const Root = styled.div`
@@ -99,27 +100,32 @@ const Grid = styled.div`
   gap: 8px;
 `;
 const Tile = styled.div`
-  position: relative;
-  aspect-ratio: 3 / 2;
+  display: flex;
+  flex-direction: column;
   background: var(--tile-background);
-  overflow: hidden;
   border-radius: 2px;
+  overflow: hidden;
 `;
+const ThumbWrap = styled.div`
+  aspect-ratio: 3 / 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tile-background);
+`;
+// Letterbox / pillarbox via object-fit: contain so portrait shots and
+// wide panoramas both keep their full frame visible; the tile
+// background fills the bars.
 const Thumb = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
   display: block;
 `;
 const TileMeta = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
   padding: 2px 4px;
   font-size: 0.7em;
-  color: var(--header-color);
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+  color: var(--inactive-color);
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -149,6 +155,22 @@ const PagerButton = styled.button`
     cursor: default;
   }
 `;
+
+// Compact date label that fits a 120px tile. Prefers
+// `taken.instant.timestamp`'s date portion; falls back to parsing the
+// converter's `<YYYY-MM-DDTHH-MM-SS>-<uuid>` filename. Empty when no
+// signal is available — the tile id remains accessible via the
+// `title` attribute on hover.
+const dateLabel = (p: Record<string, unknown> & { id: string }): string => {
+  const taken = (p.taken as { instant?: { timestamp?: string } } | undefined)
+    ?.instant?.timestamp;
+  if (typeof taken === "string" && taken.length >= 10) {
+    return taken.slice(0, 10);
+  }
+  const match = p.id.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+  if (match) return `${match[1]}-${match[2]}-${match[3]}`;
+  return "";
+};
 
 const MISSING_FIELDS: MissingField[] = [
   "taken",
@@ -265,6 +287,15 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     setSearchParam(name, isOn ? null : "1");
   };
 
+  const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const goToPage = (target: number) => {
+    if (target < 1 || target > pageCount) return;
+    setSearchParam("page", target > 1 ? String(target) : null);
+  };
+  useKeyPress("ArrowLeft", () => goToPage(page - 1));
+  useKeyPress("ArrowRight", () => goToPage(page + 1));
+
   const renderSidebar = () => (
     <Sidebar>
       <FilterGroup>
@@ -366,8 +397,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     if (isError || !data) {
       return <EmptyState>{t("manage-photos-load-error")}</EmptyState>;
     }
-    const { photos, total } = data;
-    const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const { photos } = data;
     return (
       <>
         <ResultSummary>
@@ -387,16 +417,21 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           <EmptyState>{t("manage-photos-empty")}</EmptyState>
         ) : (
           <Grid>
-            {photos.map((p) => (
-              <Tile key={p.id} title={p.id}>
-                <Thumb
-                  src={`${config.PHOTO_ROOT_URL}thumbnail/${p.id}`}
-                  alt={p.id}
-                  loading="lazy"
-                />
-                <TileMeta>{p.id}</TileMeta>
-              </Tile>
-            ))}
+            {photos.map((p) => {
+              const label = dateLabel(p);
+              return (
+                <Tile key={p.id} title={p.id}>
+                  <ThumbWrap>
+                    <Thumb
+                      src={`${config.PHOTO_ROOT_URL}thumbnail/${p.id}`}
+                      alt={p.id}
+                      loading="lazy"
+                    />
+                  </ThumbWrap>
+                  {label && <TileMeta>{label}</TileMeta>}
+                </Tile>
+              );
+            })}
           </Grid>
         )}
         {pageCount > 1 && (
@@ -404,9 +439,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
             <PagerButton
               type="button"
               disabled={page <= 1}
-              onClick={() =>
-                setSearchParam("page", page > 2 ? String(page - 1) : null)
-              }
+              onClick={() => goToPage(page - 1)}
             >
               {t("manage-photos-prev-page")}
             </PagerButton>
@@ -414,7 +447,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
             <PagerButton
               type="button"
               disabled={page >= pageCount}
-              onClick={() => setSearchParam("page", String(page + 1))}
+              onClick={() => goToPage(page + 1)}
             >
               {t("manage-photos-next-page")}
             </PagerButton>

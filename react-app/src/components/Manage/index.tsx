@@ -4,7 +4,7 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill, BsChevronRight } from "react-icons/bs";
 
-import { useUserStore } from "../../stores";
+import { useLastGalleryPathStore, useUserStore } from "../../stores";
 
 const Root = styled.div`
   padding: 0 5px;
@@ -52,6 +52,34 @@ const CrumbLink = styled.a`
     text-decoration: underline;
   }
 `;
+const ContextGroup = styled.div`
+  flex: 0 0 auto;
+  display: inline-flex;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  overflow: hidden;
+`;
+const ContextButton = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: ${({ $active }) =>
+    $active ? "var(--header-background)" : "transparent"};
+  color: ${({ $active }) =>
+    $active ? "var(--header-color)" : "var(--inactive-color)"};
+  border: none;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: bold;
+  cursor: ${({ $active }) => ($active ? "default" : "pointer")};
+  & + & {
+    border-left: 1px solid var(--inactive-color);
+  }
+  &:hover {
+    color: ${({ $active }) =>
+      $active ? "var(--header-color)" : "var(--primary-color)"};
+  }
+`;
 const NoticeBody = styled.div`
   padding: 16px;
   font-style: italic;
@@ -68,6 +96,7 @@ const Manage = (): React.ReactElement => {
   const navigate = useNavigate();
   const params = useParams();
   const user = useUserStore((s) => s.user);
+  const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
   const galleryId = params.galleryId;
 
   const body = !user ? (
@@ -77,6 +106,50 @@ const Manage = (): React.ReactElement => {
   ) : (
     <Outlet />
   );
+
+  // When the URL targets a specific gallery, render the same
+  // Gallery / Stats / Manage segmented control the public gallery
+  // shows in its title bar — switching modes is one click in either
+  // direction. Gallery jumps to the most recently visited path for
+  // this gallery (year / month / day / photo) when remembered.
+  const renderContextSwitch = () => {
+    if (!galleryId) return null;
+    const goToGallery = () => {
+      const remembered = lookupGalleryPath(galleryId);
+      navigate(remembered ?? `/g/${galleryId}`);
+    };
+    const goToStats = () => navigate(`/s/${galleryId}`);
+    return (
+      <ContextGroup
+        role="group"
+        aria-label={String(t("nav-context-group"))}
+      >
+        <ContextButton
+          type="button"
+          $active={false}
+          onClick={goToGallery}
+          title={`${t("nav-gallery")} (g)`}
+        >
+          {t("nav-gallery")}
+        </ContextButton>
+        <ContextButton
+          type="button"
+          $active={false}
+          onClick={goToStats}
+          title={`${t("nav-stats")} (s)`}
+        >
+          {t("nav-stats")}
+        </ContextButton>
+        <ContextButton
+          type="button"
+          $active={true}
+          aria-pressed
+        >
+          {t("nav-manage")}
+        </ContextButton>
+      </ContextGroup>
+    );
+  };
 
   return (
     <Root>
@@ -110,6 +183,7 @@ const Manage = (): React.ReactElement => {
             </>
           )}
         </Crumbs>
+        {renderContextSwitch()}
       </Header>
       {body}
     </Root>
