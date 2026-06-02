@@ -131,6 +131,15 @@ const PhotosQuery = Type.Object(
 const toArray = <T>(v: T | T[] | undefined): T[] | undefined =>
   v === undefined ? undefined : Array.isArray(v) ? v : [v];
 
+// Permissive — joined photo metadata, wider than any tight contract.
+const PhotoItem = Type.Object({}, { additionalProperties: true });
+const PhotosListResponse = Type.Object({
+  photos: Type.Array(PhotoItem),
+  page: Type.Integer(),
+  pageSize: Type.Integer(),
+  total: Type.Integer(),
+});
+
 const TAGS = ["photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -145,6 +154,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary:
           "List photos with optional filters; returns a paginated page of the matching set sorted newest-first by capture timestamp",
         querystring: PhotosQuery,
+        response: { 200: PhotosListResponse },
         security: [{ bearer: [] }],
       },
     },

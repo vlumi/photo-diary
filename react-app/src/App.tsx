@@ -15,6 +15,8 @@ import TopMenu from "./components/TopMenu";
 import Gallery from "./components/Gallery";
 import Manage from "./components/Manage";
 import ManagePlaceholder from "./components/Manage/Placeholder";
+import ManagePhotos from "./components/Manage/Photos";
+import ManageGalleryPhotos from "./components/Manage/GalleryPhotos";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -95,15 +97,7 @@ const App = (): React.ReactElement => {
                     />
                   }
                 />
-                <Route
-                  path="photos"
-                  element={
-                    <ManagePlaceholder
-                      titleKey="manage-page-photos-title"
-                      blurbKey="manage-page-photos-blurb"
-                    />
-                  }
-                />
+                <Route path="photos" element={<ManagePhotos />} />
                 <Route path="g/:galleryId">
                   <Route
                     index
@@ -114,15 +108,7 @@ const App = (): React.ReactElement => {
                       />
                     }
                   />
-                  <Route
-                    path="photos"
-                    element={
-                      <ManagePlaceholder
-                        titleKey="manage-page-gallery-photos-title"
-                        blurbKey="manage-page-gallery-photos-blurb"
-                      />
-                    }
-                  />
+                  <Route path="photos" element={<ManageGalleryPhotos />} />
                   <Route
                     path="access"
                     element={

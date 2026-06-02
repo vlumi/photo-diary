@@ -1,0 +1,435 @@
+import React from "react";
+import { useSearchParams } from "react-router-dom";
+import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+
+import photosService, {
+  type MissingField,
+  type PhotoFilter,
+} from "../../services/photos";
+import galleriesService from "../../services/galleries";
+import config from "../../lib/config";
+
+const Root = styled.div`
+  display: flex;
+  gap: 16px;
+  padding: 16px 8px;
+  align-items: flex-start;
+  @media (max-width: 700px) {
+    flex-direction: column;
+  }
+`;
+const Sidebar = styled.aside`
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  @media (max-width: 700px) {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+`;
+const Body = styled.section`
+  flex: 1 1 auto;
+  min-width: 0;
+`;
+const FilterGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+const FilterTitle = styled.h3`
+  margin: 0 0 4px;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  color: var(--inactive-color);
+  letter-spacing: 0.05em;
+`;
+const Chip = styled.button<{ $active: boolean }>`
+  display: inline-block;
+  margin: 0 4px 4px 0;
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--inactive-color);
+  background: ${({ $active }) =>
+    $active ? "var(--header-background)" : "transparent"};
+  color: ${({ $active }) =>
+    $active ? "var(--header-color)" : "var(--primary-color)"};
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+  &:hover {
+    border-color: var(--primary-color);
+  }
+`;
+const ChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+`;
+const TextInput = styled.input`
+  font: inherit;
+  padding: 4px 6px;
+  background: var(--primary-background);
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+`;
+const DateRow = styled.div`
+  display: flex;
+  gap: 6px;
+  & > input {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+`;
+const ResultSummary = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+  color: var(--inactive-color);
+`;
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+`;
+const Tile = styled.div`
+  position: relative;
+  aspect-ratio: 3 / 2;
+  background: var(--tile-background);
+  overflow: hidden;
+  border-radius: 2px;
+`;
+const Thumb = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+`;
+const TileMeta = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2px 4px;
+  font-size: 0.7em;
+  color: var(--header-color);
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+const EmptyState = styled.div`
+  padding: 32px 8px;
+  text-align: center;
+  color: var(--inactive-color);
+  font-style: italic;
+`;
+const Pager = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+`;
+const PagerButton = styled.button`
+  padding: 4px 10px;
+  border: 1px solid var(--inactive-color);
+  background: transparent;
+  color: var(--primary-color);
+  font: inherit;
+  cursor: pointer;
+  &:disabled {
+    color: var(--inactive-color);
+    cursor: default;
+  }
+`;
+
+const MISSING_FIELDS: MissingField[] = [
+  "taken",
+  "coords",
+  "place",
+  "country",
+  "author",
+  "title",
+  "description",
+  "state-code",
+];
+
+// Parse the searchParams into a typed PhotoFilter. Filters that aren't
+// present in the URL collapse to undefined / false / [].
+const filterFromSearchParams = (
+  searchParams: URLSearchParams,
+  galleryId: string | undefined
+): PhotoFilter => {
+  const filter: PhotoFilter = {};
+  if (galleryId) {
+    filter.galleryIds = [galleryId];
+  } else {
+    const galleries = searchParams.getAll("gallery");
+    if (galleries.length > 0) filter.galleryIds = galleries;
+  }
+  if (searchParams.get("orphan") === "1") filter.orphan = true;
+  const dateFrom = searchParams.get("dateFrom");
+  if (dateFrom) filter.dateFrom = dateFrom;
+  const dateTo = searchParams.get("dateTo");
+  if (dateTo) filter.dateTo = dateTo;
+  const missing = searchParams
+    .getAll("missing")
+    .filter((m): m is MissingField => MISSING_FIELDS.includes(m as MissingField));
+  if (missing.length > 0) filter.missing = missing;
+  if (searchParams.get("duplicates") === "1") filter.duplicates = true;
+  if (searchParams.get("countryMismatch") === "1") filter.countryMismatch = true;
+  const q = searchParams.get("q");
+  if (q) filter.q = q;
+  return filter;
+};
+
+const pageFromSearchParams = (searchParams: URLSearchParams): number => {
+  const raw = searchParams.get("page");
+  if (!raw) return 1;
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+};
+
+interface Props {
+  // When set, the photos list is locked to this gallery and the
+  // gallery-membership facet hides. Cross-gallery view (`/m/photos`)
+  // passes undefined.
+  galleryId?: string;
+}
+
+const PAGE_SIZE = 100;
+
+const Photos = ({ galleryId }: Props): React.ReactElement => {
+  const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const filter = React.useMemo(
+    () => filterFromSearchParams(searchParams, galleryId),
+    [searchParams, galleryId]
+  );
+  const page = pageFromSearchParams(searchParams);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["manage-photos", filter, page, PAGE_SIZE],
+    queryFn: () => photosService.list(filter, page, PAGE_SIZE),
+  });
+
+  // Galleries list for the gallery-membership facet. Skipped in
+  // gallery-scoped mode where the gallery is fixed.
+  const galleriesQuery = useQuery({
+    queryKey: ["galleries"],
+    queryFn: galleriesService.getAll,
+    enabled: !galleryId,
+  });
+  const galleries = (galleriesQuery.data as Array<{ id: string; title?: string }> | undefined) ?? [];
+
+  const setSearchParam = (
+    name: string,
+    value: string | string[] | null
+  ) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete(name);
+      if (value === null) {
+        // Pure delete.
+      } else if (Array.isArray(value)) {
+        for (const v of value) next.append(name, v);
+      } else {
+        next.set(name, value);
+      }
+      // Any filter change drops the page back to 1 — the previous
+      // pagination doesn't necessarily correspond to results in the
+      // narrowed set.
+      if (name !== "page") next.delete("page");
+      return next;
+    });
+  };
+
+  const toggleArrayParam = (name: string, value: string) => {
+    const current = searchParams.getAll(name);
+    const next = current.includes(value)
+      ? current.filter((v) => v !== value)
+      : [...current, value];
+    setSearchParam(name, next.length > 0 ? next : null);
+  };
+
+  const toggleBoolParam = (name: string) => {
+    const isOn = searchParams.get(name) === "1";
+    setSearchParam(name, isOn ? null : "1");
+  };
+
+  const renderSidebar = () => (
+    <Sidebar>
+      <FilterGroup>
+        <FilterTitle>{t("manage-photos-filter-search")}</FilterTitle>
+        <TextInput
+          type="search"
+          placeholder={String(t("manage-photos-filter-search-placeholder"))}
+          value={searchParams.get("q") ?? ""}
+          onChange={(e) =>
+            setSearchParam("q", e.target.value.length > 0 ? e.target.value : null)
+          }
+        />
+      </FilterGroup>
+      <FilterGroup>
+        <FilterTitle>{t("manage-photos-filter-date")}</FilterTitle>
+        <DateRow>
+          <TextInput
+            type="date"
+            value={searchParams.get("dateFrom") ?? ""}
+            onChange={(e) =>
+              setSearchParam("dateFrom", e.target.value || null)
+            }
+          />
+          <TextInput
+            type="date"
+            value={searchParams.get("dateTo") ?? ""}
+            onChange={(e) =>
+              setSearchParam("dateTo", e.target.value || null)
+            }
+          />
+        </DateRow>
+      </FilterGroup>
+      {!galleryId && (
+        <FilterGroup>
+          <FilterTitle>{t("manage-photos-filter-gallery")}</FilterTitle>
+          <ChipRow>
+            <Chip
+              type="button"
+              $active={searchParams.get("orphan") === "1"}
+              onClick={() => toggleBoolParam("orphan")}
+            >
+              {t("manage-photos-filter-orphan")}
+            </Chip>
+            {galleries.map((g) => {
+              const active = searchParams.getAll("gallery").includes(g.id);
+              return (
+                <Chip
+                  key={g.id}
+                  type="button"
+                  $active={active}
+                  onClick={() => toggleArrayParam("gallery", g.id)}
+                >
+                  {g.title || g.id}
+                </Chip>
+              );
+            })}
+          </ChipRow>
+        </FilterGroup>
+      )}
+      <FilterGroup>
+        <FilterTitle>{t("manage-photos-filter-audit")}</FilterTitle>
+        <ChipRow>
+          <Chip
+            type="button"
+            $active={searchParams.get("duplicates") === "1"}
+            onClick={() => toggleBoolParam("duplicates")}
+          >
+            {t("manage-photos-filter-duplicates")}
+          </Chip>
+          <Chip
+            type="button"
+            $active={searchParams.get("countryMismatch") === "1"}
+            onClick={() => toggleBoolParam("countryMismatch")}
+          >
+            {t("manage-photos-filter-country-mismatch")}
+          </Chip>
+          {MISSING_FIELDS.map((field) => {
+            const active = searchParams.getAll("missing").includes(field);
+            return (
+              <Chip
+                key={field}
+                type="button"
+                $active={active}
+                onClick={() => toggleArrayParam("missing", field)}
+              >
+                {t(`manage-photos-filter-missing-${field}`)}
+              </Chip>
+            );
+          })}
+        </ChipRow>
+      </FilterGroup>
+    </Sidebar>
+  );
+
+  const renderBody = () => {
+    if (isLoading) {
+      return <EmptyState>{t("loading")}</EmptyState>;
+    }
+    if (isError || !data) {
+      return <EmptyState>{t("manage-photos-load-error")}</EmptyState>;
+    }
+    const { photos, total } = data;
+    const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    return (
+      <>
+        <ResultSummary>
+          <span>
+            {t("manage-photos-result-count", { count: total })}
+          </span>
+          {pageCount > 1 && (
+            <span>
+              {t("manage-photos-result-page", {
+                page,
+                pageCount,
+              })}
+            </span>
+          )}
+        </ResultSummary>
+        {photos.length === 0 ? (
+          <EmptyState>{t("manage-photos-empty")}</EmptyState>
+        ) : (
+          <Grid>
+            {photos.map((p) => (
+              <Tile key={p.id} title={p.id}>
+                <Thumb
+                  src={`${config.PHOTO_ROOT_URL}thumbnail/${p.id}`}
+                  alt={p.id}
+                  loading="lazy"
+                />
+                <TileMeta>{p.id}</TileMeta>
+              </Tile>
+            ))}
+          </Grid>
+        )}
+        {pageCount > 1 && (
+          <Pager>
+            <PagerButton
+              type="button"
+              disabled={page <= 1}
+              onClick={() =>
+                setSearchParam("page", page > 2 ? String(page - 1) : null)
+              }
+            >
+              {t("manage-photos-prev-page")}
+            </PagerButton>
+            <span>{page} / {pageCount}</span>
+            <PagerButton
+              type="button"
+              disabled={page >= pageCount}
+              onClick={() => setSearchParam("page", String(page + 1))}
+            >
+              {t("manage-photos-next-page")}
+            </PagerButton>
+          </Pager>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <Root>
+      {renderSidebar()}
+      <Body>{renderBody()}</Body>
+    </Root>
+  );
+};
+
+export default Photos;
