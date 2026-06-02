@@ -13,6 +13,8 @@ import "./App.css";
 import ScrollToPosition from "./components/ScrollToPosition";
 import TopMenu from "./components/TopMenu";
 import Gallery from "./components/Gallery";
+import Manage from "./components/Manage";
+import ManagePlaceholder from "./components/Manage/Placeholder";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -65,6 +67,73 @@ const App = (): React.ReactElement => {
                 element={<Gallery />}
               />
               <Route path="/g" element={<Gallery />} />
+              <Route path="/m" element={<Manage />}>
+                <Route
+                  index
+                  element={
+                    <ManagePlaceholder
+                      titleKey="manage-page-dashboard-title"
+                      blurbKey="manage-page-dashboard-blurb"
+                    />
+                  }
+                />
+                <Route
+                  path="users"
+                  element={
+                    <ManagePlaceholder
+                      titleKey="manage-page-users-title"
+                      blurbKey="manage-page-users-blurb"
+                    />
+                  }
+                />
+                <Route
+                  path="galleries"
+                  element={
+                    <ManagePlaceholder
+                      titleKey="manage-page-galleries-title"
+                      blurbKey="manage-page-galleries-blurb"
+                    />
+                  }
+                />
+                <Route
+                  path="photos"
+                  element={
+                    <ManagePlaceholder
+                      titleKey="manage-page-photos-title"
+                      blurbKey="manage-page-photos-blurb"
+                    />
+                  }
+                />
+                <Route path="g/:galleryId">
+                  <Route
+                    index
+                    element={
+                      <ManagePlaceholder
+                        titleKey="manage-page-gallery-dashboard-title"
+                        blurbKey="manage-page-gallery-dashboard-blurb"
+                      />
+                    }
+                  />
+                  <Route
+                    path="photos"
+                    element={
+                      <ManagePlaceholder
+                        titleKey="manage-page-gallery-photos-title"
+                        blurbKey="manage-page-gallery-photos-blurb"
+                      />
+                    }
+                  />
+                  <Route
+                    path="access"
+                    element={
+                      <ManagePlaceholder
+                        titleKey="manage-page-gallery-access-title"
+                        blurbKey="manage-page-gallery-access-blurb"
+                      />
+                    }
+                  />
+                </Route>
+              </Route>
               <Route path="/" element={<Navigate to="/g" replace />} />
             </Routes>
           )}

@@ -18,6 +18,7 @@
 
 ### Frontend
 
+- Admin UI shell — `/m/*` (global) + `/m/g/<gallery>/*` (gallery-scoped) routes with placeholder sub-pages, a `Manage` tab in the title-bar context group, and a `Manage` entry in the UserMenu, all gated on `user.isAdmin`. (part of #10)
 - Stats moves to `/s/<gallery>`, parallel to `/g/<gallery>` (viewing) and the upcoming `/m/` (management, #10); the `:all` / `:public` plumbing retires alongside. (part of #404)
 - User-side theme picker in the UserMenu — pick a built-in theme or "Follow gallery default"; persisted per-browser, overrides the gallery and instance defaults. (closes #287)
 

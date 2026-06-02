@@ -8,7 +8,7 @@ import Link from "./Link";
 import MapModal from "../MapModal";
 
 import useKeyPress from "../../lib/keypress";
-import { useLastGalleryPathStore } from "../../stores";
+import { useLastGalleryPathStore, useUserStore } from "../../stores";
 import type { Gallery } from "../../models/GalleryModel";
 import type { Photo } from "../../models/PhotoModel";
 
@@ -171,6 +171,8 @@ const Title = ({
   const [mapOpen, setMapOpen] = React.useState(false);
 
   const { t } = useTranslation();
+  const user = useUserStore((s) => s.user);
+  const showManage = !!user?.isAdmin();
 
   // Remember the most recent Gallery URL per gallery id, so flipping to
   // Statistics and back returns to the same year/month/day (or photo)
@@ -220,6 +222,8 @@ const Title = ({
         return gallery.path(year, month, day);
       case "stats":
         return gallery.statsPath();
+      case "manage":
+        return `/m/g/${gallery.id()}/photos`;
     }
   };
 
@@ -286,14 +290,21 @@ const Title = ({
   useKeyPress("s", () => switchTo("stats"));
 
   const renderContext = () => {
+    const contexts = showManage
+      ? ["gallery", "stats", "manage"]
+      : ["gallery", "stats"];
+    const shortcutFor: Record<string, string | undefined> = {
+      gallery: "g",
+      stats: "s",
+    };
     return (
       <ContextGroup
         role="group"
         aria-label={String(t("nav-context-group"))}
       >
-        {["gallery", "stats"].map((c) => {
+        {contexts.map((c) => {
           const active = c === context;
-          const shortcut = c === "gallery" ? "g" : "s";
+          const shortcut = shortcutFor[c];
           return (
             <ContextButton
               key={c}
@@ -301,7 +312,7 @@ const Title = ({
               $active={active}
               aria-pressed={active}
               onClick={() => switchTo(c)}
-              title={`${t(`nav-${c}`)} (${shortcut})`}
+              title={shortcut ? `${t(`nav-${c}`)} (${shortcut})` : String(t(`nav-${c}`))}
             >
               {t(`nav-${c}`)}
             </ContextButton>
