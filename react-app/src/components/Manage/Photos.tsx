@@ -3,6 +3,7 @@ import {
   Outlet,
   useLocation,
   useNavigate,
+  useParams,
   useSearchParams,
 } from "react-router-dom";
 import styled from "@emotion/styled";
@@ -17,10 +18,16 @@ import galleriesService from "../../services/galleries";
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 
-const Root = styled.div`
+// Right padding reserves space for the floating PhotoDrawer (528px
+// wide on desktop) so tiles in the grid don't hide underneath when
+// the drawer is open. Same `min(520px, 100%)` cap the drawer uses,
+// plus a small breathing gap.
+const Root = styled.div<{ $drawerOpen: boolean }>`
   display: flex;
   gap: 16px;
   padding: 16px 8px;
+  padding-right: ${({ $drawerOpen }) =>
+    $drawerOpen ? "calc(min(520px, 100%) + 16px)" : "8px"};
   align-items: flex-start;
   @media (max-width: 700px) {
     flex-direction: column;
@@ -504,8 +511,13 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     );
   };
 
+  // useParams() inside the parent <Photos> route picks up the
+  // child :photoId param when the drawer is mounted.
+  const params = useParams();
+  const drawerOpen = !!params.photoId;
+
   return (
-    <Root>
+    <Root $drawerOpen={drawerOpen}>
       {renderSidebar()}
       <Body>{renderBody()}</Body>
       <Outlet />

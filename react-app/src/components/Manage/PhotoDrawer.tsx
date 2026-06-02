@@ -12,24 +12,24 @@ import photosService, {
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 
-const Backdrop = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1100;
-  display: flex;
-  justify-content: flex-end;
-  box-sizing: border-box;
-`;
+// Floating side panel pinned to the right; the grid behind stays
+// interactive so an operator can click a different tile and the
+// drawer reloads with that photo's data. No backdrop — close requires
+// Esc, Cancel, or the close button.
 const Drawer = styled.div`
+  position: fixed;
+  top: 0;
+  right: 0;
   width: min(520px, 100%);
   height: 100dvh;
   background: var(--primary-background);
   color: var(--primary-color);
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
+  z-index: 1100;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-sizing: border-box;
 `;
 const Header = styled.div`
   display: flex;
@@ -600,35 +600,33 @@ const PhotoDrawer = (): React.ReactElement => {
   };
 
   return (
-    <Backdrop onClick={close}>
-      <Drawer onClick={(e) => e.stopPropagation()}>
-        <Header>
-          <Title>{data?.title || data?.id || id}</Title>
-          <CloseButton
-            type="button"
-            aria-label={String(t("close"))}
-            onClick={close}
-          >
-            <BsX />
-          </CloseButton>
-        </Header>
-        {renderBody()}
-        <Footer>
-          <ButtonSecondary type="button" onClick={close}>
-            {t("manage-photo-button-cancel")}
-          </ButtonSecondary>
-          <ButtonPrimary
-            type="button"
-            disabled={!dirty || saving}
-            onClick={save}
-          >
-            {saving
-              ? t("manage-photo-button-saving")
-              : t("manage-photo-button-save")}
-          </ButtonPrimary>
-        </Footer>
-      </Drawer>
-    </Backdrop>
+    <Drawer>
+      <Header>
+        <Title>{data?.title || data?.id || id}</Title>
+        <CloseButton
+          type="button"
+          aria-label={String(t("close"))}
+          onClick={close}
+        >
+          <BsX />
+        </CloseButton>
+      </Header>
+      {renderBody()}
+      <Footer>
+        <ButtonSecondary type="button" onClick={close}>
+          {t("manage-photo-button-cancel")}
+        </ButtonSecondary>
+        <ButtonPrimary
+          type="button"
+          disabled={!dirty || saving}
+          onClick={save}
+        >
+          {saving
+            ? t("manage-photo-button-saving")
+            : t("manage-photo-button-save")}
+        </ButtonPrimary>
+      </Footer>
+    </Drawer>
   );
 };
 
