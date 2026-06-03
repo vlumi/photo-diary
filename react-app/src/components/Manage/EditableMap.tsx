@@ -37,6 +37,10 @@ interface Props {
   // single callback whenever the operator drags the marker or
   // clicks a new position on the map.
   onChange: (next: { lat: number; lon: number }) => void;
+  // When true, the marker is non-draggable and clicking the map
+  // is a no-op — operator can pan / zoom to look but can't edit.
+  // Used when the EXIF-derived edit gate is engaged.
+  readOnly?: boolean;
 }
 
 // Keeps the map view in sync with the form's lat/lon values. The
@@ -84,7 +88,12 @@ const NULL_ISLAND_FALLBACK: [number, number] = [0, 0];
 const INITIAL_ZOOM = 12;
 const FALLBACK_ZOOM = 2;
 
-const EditableMap = ({ lat, lon, onChange }: Props): React.ReactElement => {
+const EditableMap = ({
+  lat,
+  lon,
+  onChange,
+  readOnly,
+}: Props): React.ReactElement => {
   const hasCoords = lat != null && lon != null;
   const initialCenter: [number, number] = hasCoords
     ? [lat, lon]
@@ -118,12 +127,12 @@ const EditableMap = ({ lat, lon, onChange }: Props): React.ReactElement => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <RecenterOnProps lat={lat} lon={lon} positionKey={positionKey} />
-        <ClickToSet onChange={onChange} />
+        {!readOnly && <ClickToSet onChange={onChange} />}
         {hasCoords && (
           <Marker
             position={[lat, lon]}
-            draggable
-            eventHandlers={markerHandlers}
+            draggable={!readOnly}
+            eventHandlers={readOnly ? undefined : markerHandlers}
           />
         )}
       </Map>

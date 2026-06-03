@@ -19,6 +19,7 @@ interface Props {
   lat: number | null;
   lon: number | null;
   onChange: (next: { lat: number; lon: number }) => void;
+  readOnly?: boolean;
 }
 
 const LazyEditableMap = (props: Props): React.ReactElement => (

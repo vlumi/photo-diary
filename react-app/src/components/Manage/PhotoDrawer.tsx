@@ -945,7 +945,7 @@ const PhotoDrawer = (): React.ReactElement => {
           {highlight.coords && (
             <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
           )}
-          {!exifDisabled && (() => {
+          {(() => {
             // parseFloat("") is NaN; parseFloat("0") is 0 (a real
             // coordinate at the equator / Greenwich, not unset).
             // Convert via NaN-test, not falsy-coercion, so the
@@ -955,14 +955,23 @@ const PhotoDrawer = (): React.ReactElement => {
               const v = parseFloat(s);
               return Number.isFinite(v) ? v : null;
             };
+            const lat = parse(form.latitude);
+            const lon = parse(form.longitude);
+            // Render the map when coords are set OR when editing is
+            // allowed (so the operator can click-to-drop a new
+            // marker). Locked rows with no coords skip the map —
+            // there's nothing to look at and nothing actionable.
+            const hasCoords = lat !== null && lon !== null;
+            if (!hasCoords && exifDisabled) return null;
             return (
               <EditableMap
-                lat={parse(form.latitude)}
-                lon={parse(form.longitude)}
+                lat={lat}
+                lon={lon}
                 onChange={(next) => {
                   setField("latitude", String(next.lat));
                   setField("longitude", String(next.lon));
                 }}
+                readOnly={exifDisabled}
               />
             );
           })()}
