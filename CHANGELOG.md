@@ -4,6 +4,7 @@
 
 ### Server
 
+- SPA fallback handler now serves `index.html` for `/m`, `/m/*`, `/s`, and `/s/*` in addition to `/g` and `/g/*` — refreshing or deep-linking any admin / stats URL no longer 404s at the server. Previously only `/g` routes were covered, so the admin and stats surfaces (added during 0.13) silently broke when the SPA wasn't entered through the gallery side.
 - `photo.exif_at_intake` TEXT column (migration 014) captures the camera's full EXIF / properties blob at converter intake; the admin photo drawer surfaces a per-field "↺ revert to EXIF" affordance, and gates EXIF-derived edits with a "no backup" unlock on rows that pre-date the column (NULL blob). (part of #416)
 - `PUT /api/v1/photos/<id>` with changed coordinates now synchronously clears the row's `geocoded_*` columns + drops a JSON sidecar into `photos/inbox/`, so the running converter daemon picks it up and refreshes the geocoded fields via Nominatim. The operator never sees stale geocoded values pinned to the previous coords. (closes #415)
 - `GET /api/v1/photos` accepts filter query params (`gallery`, `orphan`, `dateFrom`, `dateTo`, `missing`, `duplicates`, `countryMismatch`, `q`) and returns a paginated `{ photos, page, pageSize, total }` shape sorted newest-first; predicates lifted into `server/lib/photo-filter.ts` so `bin/photo.ts audit` and the admin endpoint share one definition. (part of #10)

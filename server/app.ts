@@ -25,6 +25,7 @@ import groupGalleryV1 from "./controllers/group-gallery-v1.js";
 import middleware from "./lib/middleware/index.js";
 import { NotFoundError } from "./lib/errors.js";
 import logger from "./lib/logger.js";
+import { isSpaRoute } from "./lib/spa-routes.js";
 
 export const app = Fastify({
   trustProxy: 1,
@@ -174,13 +175,15 @@ await app.register(groupGalleryV1.plugin, {
   prefix: "/api/v1/group-gallery",
 });
 
-// Double-duty 404 handler: serve index.html for SPA routes
-// (`/g`, `/g/*`) so React Router can resolve deep links; everything
-// else (incl. unknown `/api/*`) goes through `errorHandler` for the
-// JSON 404 the API has always produced.
+// Double-duty 404 handler: serve index.html for SPA routes so
+// React Router can resolve deep links (refreshing /m/photos, or
+// pasting a /s/<gallery>/year URL into the bar, must not 404 at
+// the server); everything else (incl. unknown `/api/*`) goes
+// through `errorHandler` for the JSON 404 the API has always
+// produced. SPA root list lives in lib/spa-routes.ts.
 app.setNotFoundHandler(async (request, reply) => {
   const pathOnly = request.url.split("?")[0];
-  if (pathOnly === "/g" || pathOnly.startsWith("/g/")) {
+  if (isSpaRoute(pathOnly)) {
     return reply.type("text/html").sendFile("index.html");
   }
   throw new NotFoundError();
