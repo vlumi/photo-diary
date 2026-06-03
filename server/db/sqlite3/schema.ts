@@ -96,6 +96,9 @@ export interface PhotoRow {
   // Negative-result cache: 1 = Nominatim has no data here, intake
   // and the backfill daemon both skip the row.
   geocode_no_data: number;
+  // JSON-stringified output of the converter's read-exif at intake.
+  // NULL for rows that pre-date migration 014.
+  exif_at_intake: string | null;
 }
 
 export interface PhotoLocalizedRow {
@@ -183,6 +186,11 @@ export interface Photo {
     address: Record<string, unknown> | undefined;
     noData: boolean;
   };
+  // Parsed JSON blob of the EXIF read at converter intake. Undefined
+  // for rows pre-dating migration 014. Operator-only fields the admin
+  // sets (title, description, place, country override) aren't in here;
+  // this is the camera's raw output.
+  exifAtIntake: Record<string, unknown> | undefined;
 }
 
 // Partial input shapes for updates / inserts. DeepPartial so nested
@@ -501,6 +509,14 @@ export default () => {
             })(),
             noData: row.geocode_no_data === 1,
           },
+          exifAtIntake: (() => {
+            if (!row.exif_at_intake) return undefined;
+            try {
+              return JSON.parse(row.exif_at_intake) as Record<string, unknown>;
+            } catch {
+              return undefined;
+            }
+          })(),
         };
       },
       mapInsert: (photo: PhotoInput): unknown[] => {
@@ -545,6 +561,7 @@ export default () => {
           map.geocoded_address,
 
           0, // geocode_no_data: defaults to 0 (not yet attempted)
+          map.exif_at_intake,
         ];
       },
 
@@ -702,6 +719,15 @@ const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
             : JSON.stringify(g.address);
     }
   }
+  if ("exifAtIntake" in photo) {
+    const blob = photo.exifAtIntake;
+    result.exif_at_intake =
+      typeof blob === "string"
+        ? blob
+        : blob === undefined || blob === null
+          ? null
+          : JSON.stringify(blob);
+  }
   return result;
 };
 
@@ -827,6 +853,7 @@ const SCHEMA = {
       "geocoded_address",
 
       "geocode_no_data",
+      "exif_at_intake",
     ],
     primaryKey: ["id"],
     // Tiebreak same-second shots by `original_filename`, which carries
