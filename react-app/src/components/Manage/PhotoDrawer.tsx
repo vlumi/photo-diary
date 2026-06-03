@@ -128,11 +128,30 @@ const TextArea = styled.textarea<{ $highlight?: boolean }>`
   box-sizing: border-box;
   resize: vertical;
 `;
-const ReadOnly = styled.div`
+// MetadataPanel-style 2-col label/value grid for the read-only
+// section: small uppercase labels, muted values, long entries wrap
+// inside the value cell so they don't push the panel wider.
+const MetaTable = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  row-gap: 4px;
+`;
+const MetaLabel = styled.div`
+  font-size: 0.7em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--inactive-color);
+  padding-top: 2px;
+  text-align: right;
+  white-space: nowrap;
+`;
+const MetaValue = styled.div`
   font-size: 0.85em;
   color: var(--inactive-color);
-  white-space: pre-wrap;
+  line-height: 1.4;
   word-break: break-word;
+  min-width: 0;
 `;
 const Footer = styled.div`
   display: flex;
@@ -194,6 +213,7 @@ interface PhotoData {
   lens?: { make?: string; model?: string };
   exposure?: {
     focalLength?: number;
+    focalLength35mmEquiv?: number;
     aperture?: number;
     iso?: number;
     exposureTime?: number;
@@ -214,11 +234,15 @@ interface FormState {
   author: string;
   country: string;
   place: string;
+  latitude: string;
+  longitude: string;
+  altitude: string;
   cameraMake: string;
   cameraModel: string;
   lensMake: string;
   lensModel: string;
   focalLength: string;
+  focalLength35mmEquiv: string;
   aperture: string;
 }
 
@@ -228,13 +252,20 @@ const emptyForm = (): FormState => ({
   author: "",
   country: "",
   place: "",
+  latitude: "",
+  longitude: "",
+  altitude: "",
   cameraMake: "",
   cameraModel: "",
   lensMake: "",
   lensModel: "",
   focalLength: "",
+  focalLength35mmEquiv: "",
   aperture: "",
 });
+
+const numField = (v: number | null | undefined): string =>
+  v !== undefined && v !== null ? String(v) : "";
 
 const formFrom = (p: PhotoData): FormState => ({
   title: p.title ?? "",
@@ -242,18 +273,16 @@ const formFrom = (p: PhotoData): FormState => ({
   author: p.taken?.author ?? "",
   country: p.taken?.location?.country ?? "",
   place: p.taken?.location?.place ?? "",
+  latitude: numField(p.taken?.location?.coordinates?.latitude),
+  longitude: numField(p.taken?.location?.coordinates?.longitude),
+  altitude: numField(p.taken?.location?.coordinates?.altitude),
   cameraMake: p.camera?.make ?? "",
   cameraModel: p.camera?.model ?? "",
   lensMake: p.lens?.make ?? "",
   lensModel: p.lens?.model ?? "",
-  focalLength:
-    p.exposure?.focalLength !== undefined && p.exposure.focalLength !== null
-      ? String(p.exposure.focalLength)
-      : "",
-  aperture:
-    p.exposure?.aperture !== undefined && p.exposure.aperture !== null
-      ? String(p.exposure.aperture)
-      : "",
+  focalLength: numField(p.exposure?.focalLength),
+  focalLength35mmEquiv: numField(p.exposure?.focalLength35mmEquiv),
+  aperture: numField(p.exposure?.aperture),
 });
 
 // Reduce a form state to the changed fields, shaped to PhotoUpdatePatch.
@@ -279,6 +308,31 @@ const patchFrom = (
   }
   if (trim(current.place) !== trim(original.place)) {
     takenLocation.place = trim(current.place);
+  }
+  // Coordinates: empty → null (clears the field server-side),
+  // valid number → parsed, invalid → skip.
+  const coordPatch = (
+    cur: string,
+    orig: string
+  ): number | null | undefined => {
+    if (cur.trim() === orig.trim()) return undefined;
+    if (cur.trim() === "") return null;
+    const v = parseFloat(cur);
+    return Number.isNaN(v) ? undefined : v;
+  };
+  const coordinates: NonNullable<
+    NonNullable<
+      NonNullable<PhotoUpdatePatch["taken"]>["location"]
+    >["coordinates"]
+  > = {};
+  const lat = coordPatch(current.latitude, original.latitude);
+  if (lat !== undefined) coordinates.latitude = lat;
+  const lon = coordPatch(current.longitude, original.longitude);
+  if (lon !== undefined) coordinates.longitude = lon;
+  const alt = coordPatch(current.altitude, original.altitude);
+  if (alt !== undefined) coordinates.altitude = alt;
+  if (Object.keys(coordinates).length > 0) {
+    takenLocation.coordinates = coordinates;
   }
   const taken: NonNullable<PhotoUpdatePatch["taken"]> = {};
   if (trim(current.author) !== trim(original.author)) {
@@ -306,6 +360,13 @@ const patchFrom = (
   if (current.focalLength.trim() !== original.focalLength.trim()) {
     const v = parseFloat(current.focalLength);
     if (!Number.isNaN(v)) exposure.focalLength = v;
+  }
+  if (
+    current.focalLength35mmEquiv.trim() !==
+    original.focalLength35mmEquiv.trim()
+  ) {
+    const v = parseFloat(current.focalLength35mmEquiv);
+    if (!Number.isNaN(v)) exposure.focalLength35mmEquiv = v;
   }
   if (current.aperture.trim() !== original.aperture.trim()) {
     const v = parseFloat(current.aperture);
@@ -403,9 +464,6 @@ const PhotoDrawer = (): React.ReactElement => {
     if (isError || !data) {
       return <Body>{t("manage-photo-load-error")}</Body>;
     }
-    const lat = data.taken?.location?.coordinates?.latitude;
-    const lon = data.taken?.location?.coordinates?.longitude;
-    const hasCoords = lat !== undefined && lat !== null && lon !== undefined && lon !== null;
     const geocoded = data.geocoded;
     return (
       <Body>
@@ -482,6 +540,39 @@ const PhotoDrawer = (): React.ReactElement => {
               )}
             </Field>
           </FieldRow>
+          <FieldRow>
+            <Field>
+              <FieldLabel>{t("manage-photo-field-latitude")}</FieldLabel>
+              <Input
+                type="number"
+                step="any"
+                inputMode="decimal"
+                value={form.latitude}
+                onChange={(e) => setField("latitude", e.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>{t("manage-photo-field-longitude")}</FieldLabel>
+              <Input
+                type="number"
+                step="any"
+                inputMode="decimal"
+                value={form.longitude}
+                onChange={(e) => setField("longitude", e.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>{t("manage-photo-field-altitude")}</FieldLabel>
+              <Input
+                type="number"
+                step="any"
+                inputMode="decimal"
+                value={form.altitude}
+                onChange={(e) => setField("altitude", e.target.value)}
+              />
+            </Field>
+          </FieldRow>
+          <FieldHint>{t("manage-photo-coord-hint")}</FieldHint>
         </Section>
         <Section>
           <SectionTitle>{t("manage-photo-section-camera")}</SectionTitle>
@@ -528,6 +619,17 @@ const PhotoDrawer = (): React.ReactElement => {
               />
             </Field>
             <Field>
+              <FieldLabel>{t("manage-photo-field-focal-35mm")}</FieldLabel>
+              <Input
+                type="number"
+                step="any"
+                value={form.focalLength35mmEquiv}
+                onChange={(e) =>
+                  setField("focalLength35mmEquiv", e.target.value)
+                }
+              />
+            </Field>
+            <Field>
               <FieldLabel>{t("manage-photo-field-aperture")}</FieldLabel>
               <Input
                 type="number"
@@ -540,55 +642,49 @@ const PhotoDrawer = (): React.ReactElement => {
         </Section>
         <Section>
           <SectionTitle>{t("manage-photo-section-readonly")}</SectionTitle>
-          <Field>
-            <FieldLabel>{t("manage-photo-field-id")}</FieldLabel>
-            <ReadOnly>{data.id}</ReadOnly>
-          </Field>
-          {data.originalFilename && (
-            <Field>
-              <FieldLabel>{t("manage-photo-field-original-filename")}</FieldLabel>
-              <ReadOnly>{data.originalFilename}</ReadOnly>
-            </Field>
-          )}
-          {data.taken?.instant?.timestamp && (
-            <Field>
-              <FieldLabel>{t("manage-photo-field-taken")}</FieldLabel>
-              <ReadOnly>{data.taken.instant.timestamp}</ReadOnly>
-            </Field>
-          )}
-          {hasCoords && (
-            <Field>
-              <FieldLabel>{t("manage-photo-field-coords")}</FieldLabel>
-              <ReadOnly>{`${lat}, ${lon}`}</ReadOnly>
-            </Field>
-          )}
-          {geocoded?.city && (
-            <Field>
-              <FieldLabel>{t("manage-photo-field-geocoded")}</FieldLabel>
-              <ReadOnly>
-                {[geocoded.countryCode, geocoded.state, geocoded.city]
-                  .filter(Boolean)
-                  .join(" / ")}
-              </ReadOnly>
-            </Field>
-          )}
-          {data.exposure?.iso !== undefined && (
-            <Field>
-              <FieldLabel>{t("manage-photo-field-exposure-extra")}</FieldLabel>
-              <ReadOnly>
-                {[
-                  data.exposure.exposureTime !== undefined
-                    ? `${data.exposure.exposureTime}s`
-                    : null,
-                  data.exposure.iso !== undefined
-                    ? `ISO ${data.exposure.iso}`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </ReadOnly>
-            </Field>
-          )}
+          <MetaTable>
+            <MetaLabel>{t("manage-photo-field-id")}</MetaLabel>
+            <MetaValue>{data.id}</MetaValue>
+            {data.originalFilename && (
+              <>
+                <MetaLabel>{t("manage-photo-field-original-filename")}</MetaLabel>
+                <MetaValue>{data.originalFilename}</MetaValue>
+              </>
+            )}
+            {data.taken?.instant?.timestamp && (
+              <>
+                <MetaLabel>{t("manage-photo-field-taken")}</MetaLabel>
+                <MetaValue>{data.taken.instant.timestamp}</MetaValue>
+              </>
+            )}
+            {geocoded?.city && (
+              <>
+                <MetaLabel>{t("manage-photo-field-geocoded")}</MetaLabel>
+                <MetaValue>
+                  {[geocoded.countryCode, geocoded.state, geocoded.city]
+                    .filter(Boolean)
+                    .join(" / ")}
+                </MetaValue>
+              </>
+            )}
+            {data.exposure?.iso !== undefined && (
+              <>
+                <MetaLabel>{t("manage-photo-field-exposure-extra")}</MetaLabel>
+                <MetaValue>
+                  {[
+                    data.exposure.exposureTime !== undefined
+                      ? `${data.exposure.exposureTime}s`
+                      : null,
+                    data.exposure.iso !== undefined
+                      ? `ISO ${data.exposure.iso}`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </MetaValue>
+              </>
+            )}
+          </MetaTable>
         </Section>
       </Body>
     );

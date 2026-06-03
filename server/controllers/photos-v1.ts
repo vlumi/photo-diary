@@ -24,13 +24,17 @@ const PhotoIdParam = Type.Object({ photoId: Type.String() });
 // No response schemas here — these routes aren't consumed by the
 // SPA (which uses `/api/v1/gallery-photos/:galleryId`).
 //
-// Body shape is restricted to the override fields `bin/photo.ts`
-// already exposes (title, description, author, country, place, gear,
-// focal, aperture). EXIF-derived fields (timestamps, coordinates,
-// dimensions, ISO, shutter, the 35mm-equiv, serials) and Nominatim-
-// derived `geocoded.*` are intentionally NOT writable — they're
-// owned by the converter / photo-geocode daemon. `additionalProperties:
-// false` at each nested level rejects unknown writes with 400.
+// Body shape is restricted to the operator-set override fields:
+// title, description, author, country, place, coordinates
+// (lat / lon / alt), gear (camera / lens make + model), focal
+// length, 35mm-equiv focal length, aperture. The remaining
+// EXIF-derived fields (timestamps, dimensions, ISO, shutter,
+// serials) and Nominatim-derived `geocoded.*` stay locked —
+// owned by the converter / photo-geocode daemon. The 35mm-equiv
+// and coordinates are operator-writable because EXIF doesn't
+// always carry them (older / phoneless bodies, GPS off).
+// `additionalProperties: false` at each nested level rejects
+// unknown writes with 400.
 const PhotoOverridesFields = {
   title: Type.Optional(Type.String()),
   description: Type.Optional(Type.String()),
@@ -43,6 +47,22 @@ const PhotoOverridesFields = {
             {
               country: Type.Optional(Type.String()),
               place: Type.Optional(Type.String()),
+              coordinates: Type.Optional(
+                Type.Object(
+                  {
+                    latitude: Type.Optional(
+                      Type.Union([Type.Number(), Type.Null()])
+                    ),
+                    longitude: Type.Optional(
+                      Type.Union([Type.Number(), Type.Null()])
+                    ),
+                    altitude: Type.Optional(
+                      Type.Union([Type.Number(), Type.Null()])
+                    ),
+                  },
+                  { additionalProperties: false }
+                )
+              ),
             },
             { additionalProperties: false }
           )
@@ -73,6 +93,7 @@ const PhotoOverridesFields = {
     Type.Object(
       {
         focalLength: Type.Optional(Type.Number()),
+        focalLength35mmEquiv: Type.Optional(Type.Number()),
         aperture: Type.Optional(Type.Number()),
       },
       { additionalProperties: false }

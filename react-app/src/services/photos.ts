@@ -81,6 +81,11 @@ export interface PhotoUpdatePatch {
     location?: {
       country?: string;
       place?: string;
+      coordinates?: {
+        latitude?: number | null;
+        longitude?: number | null;
+        altitude?: number | null;
+      };
     };
   };
   camera?: {
@@ -93,6 +98,7 @@ export interface PhotoUpdatePatch {
   };
   exposure?: {
     focalLength?: number;
+    focalLength35mmEquiv?: number;
     aperture?: number;
   };
 }

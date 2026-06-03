@@ -34,11 +34,18 @@ const Root = styled.div`
 // mode rather than wasted real estate.
 const Sidebar = styled.aside`
   flex: 0 0 360px;
+  // Belt-and-suspenders width pin so a stray min-content from any
+  // inner element (long photo id, unbroken Title text, etc.) can't
+  // push the flex item wider than 360px when the edit form mounts.
+  min-width: 360px;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   @media (max-width: 700px) {
     flex: 0 0 auto;
+    min-width: 0;
+    max-width: none;
     width: 100%;
   }
 `;
