@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { BsImages, BsShieldLock } from "react-icons/bs";
+import { BsImages, BsPlus, BsShieldLock } from "react-icons/bs";
 
 import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
@@ -18,9 +18,30 @@ const Root = styled.div`
   margin: 0 auto;
   text-align: left;
 `;
-const Title = styled.h2`
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
   margin: 0 0 16px;
+`;
+const Title = styled.h2`
+  margin: 0;
   font-size: 1.2em;
+`;
+const CreateButton = styled.button`
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--header-background);
+  color: var(--header-color);
+  border: 1px solid var(--header-background);
+  border-radius: 4px;
+  font-size: 0.85em;
+  cursor: pointer;
 `;
 const Notice = styled.p`
   color: var(--inactive-color);
@@ -134,7 +155,16 @@ const Galleries = (): React.ReactElement => {
 
   return (
     <Root>
-      <Title>{t("manage-page-galleries-title")}</Title>
+      <TitleRow>
+        <Title>{t("manage-page-galleries-title")}</Title>
+        <CreateButton
+          type="button"
+          onClick={() => navigate("/m/galleries/new")}
+        >
+          <BsPlus aria-hidden />
+          {t("manage-galleries-create")}
+        </CreateButton>
+      </TitleRow>
       {isLoading ? (
         <Notice>{t("loading")}</Notice>
       ) : isError ? (

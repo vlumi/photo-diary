@@ -21,6 +21,7 @@ import ManageGalleryPhotos from "./components/Manage/GalleryPhotos";
 import ManagePhotoDrawer from "./components/Manage/PhotoDrawer";
 import ManageGalleries from "./components/Manage/Galleries";
 import ManageGalleryEdit from "./components/Manage/GalleryEdit";
+import ManageGalleryCreate from "./components/Manage/GalleryCreate";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -138,6 +139,10 @@ const App = (): React.ReactElement => {
                   }
                 />
                 <Route path="galleries" element={<ManageGalleries />} />
+                <Route
+                  path="galleries/new"
+                  element={<ManageGalleryCreate />}
+                />
                 <Route path="photos" element={<ManagePhotos />}>
                   <Route path=":photoId" element={<ManagePhotoDrawer />} />
                 </Route>
