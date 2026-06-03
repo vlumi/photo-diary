@@ -13,9 +13,15 @@ import galleriesService, {
 } from "../../services/galleries";
 import { useUserStore } from "../../stores";
 
+// body has text-align: center globally; cancel it here so form
+// labels and section titles read flush-left rather than drifting
+// to the centre of the 640px box. margin: 0 auto keeps the form
+// centred on the page rather than pinned to the left edge.
 const Root = styled.div`
   padding: 24px 16px;
   max-width: 640px;
+  margin: 0 auto;
+  text-align: left;
 `;
 const TitleRow = styled.div`
   display: flex;

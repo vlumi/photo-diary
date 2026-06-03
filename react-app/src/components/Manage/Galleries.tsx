@@ -8,9 +8,15 @@ import { BsImages, BsShieldLock } from "react-icons/bs";
 import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
 
+// body has text-align: center globally; cancel it here so column
+// content (and the heading above the table) lines up with the
+// column header from the left. margin: 0 auto centres the bounded
+// table on ultrawide screens instead of pinning it to the left.
 const Root = styled.div`
   padding: 24px 16px;
   max-width: 1200px;
+  margin: 0 auto;
+  text-align: left;
 `;
 const Title = styled.h2`
   margin: 0 0 16px;
