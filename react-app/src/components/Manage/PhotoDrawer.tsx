@@ -12,22 +12,19 @@ import photosService, {
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 
-// Floating side panel pinned to the right; the grid behind stays
-// interactive so an operator can click a different tile and the
-// drawer reloads with that photo's data. No backdrop — close requires
-// Esc, Cancel, or the close button.
+// In-flow editor panel — replaces the photos sidebar's filter
+// contents when a photo is open. The grid stays clickable so an
+// operator can hop between photos; clicking another tile reloads
+// this panel with the new photo's data. Close (back to filters)
+// happens via Esc, Cancel, or the close button.
 const Drawer = styled.div`
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: min(520px, 100%);
-  height: 100dvh;
-  background: var(--primary-background);
-  color: var(--primary-color);
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
-  z-index: 1100;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  background: var(--primary-background);
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
   overflow: hidden;
   box-sizing: border-box;
 `;
@@ -62,8 +59,6 @@ const CloseButton = styled.button`
   }
 `;
 const Body = styled.div`
-  flex: 1 1 auto;
-  overflow-y: auto;
   padding: 14px;
   display: flex;
   flex-direction: column;

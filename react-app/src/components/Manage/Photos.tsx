@@ -18,23 +18,22 @@ import galleriesService from "../../services/galleries";
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 
-// Right padding reserves space for the floating PhotoDrawer (528px
-// wide on desktop) so tiles in the grid don't hide underneath when
-// the drawer is open. Same `min(520px, 100%)` cap the drawer uses,
-// plus a small breathing gap.
-const Root = styled.div<{ $drawerOpen: boolean }>`
+const Root = styled.div`
   display: flex;
   gap: 16px;
   padding: 16px 8px;
-  padding-right: ${({ $drawerOpen }) =>
-    $drawerOpen ? "calc(min(520px, 100%) + 16px)" : "8px"};
   align-items: flex-start;
   @media (max-width: 700px) {
     flex-direction: column;
   }
 `;
+// One sidebar, two modes: filters (default) and edit (when a photo
+// is open via `/m/photos/<id>` or `/m/g/<g>/photos/<id>`). Widened
+// from the filter-only 220px so the edit form fits without
+// cramping; the extra width reads as comfortable padding in filter
+// mode rather than wasted real estate.
 const Sidebar = styled.aside`
-  flex: 0 0 220px;
+  flex: 0 0 360px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -345,8 +344,8 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   useKeyPress("Home", () => goToPage(1));
   useKeyPress("End", () => goToPage(pageCount));
 
-  const renderSidebar = () => (
-    <Sidebar>
+  const renderSidebarContents = () => (
+    <>
       <FilterGroup>
         <FilterTitle>{t("manage-photos-filter-search")}</FilterTitle>
         <TextInput
@@ -436,7 +435,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           })}
         </ChipRow>
       </FilterGroup>
-    </Sidebar>
+    </>
   );
 
   const renderBody = () => {
@@ -512,15 +511,15 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   };
 
   // useParams() inside the parent <Photos> route picks up the
-  // child :photoId param when the drawer is mounted.
+  // child :photoId. When a photo is open, the sidebar swaps from
+  // filter controls to the edit form (rendered via <Outlet />).
   const params = useParams();
-  const drawerOpen = !!params.photoId;
+  const editing = !!params.photoId;
 
   return (
-    <Root $drawerOpen={drawerOpen}>
-      {renderSidebar()}
+    <Root>
+      <Sidebar>{editing ? <Outlet /> : renderSidebarContents()}</Sidebar>
       <Body>{renderBody()}</Body>
-      <Outlet />
     </Root>
   );
 };
