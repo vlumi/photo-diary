@@ -12,6 +12,7 @@ import photosService, {
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 import { useLangStore } from "../../stores";
+import EditableMap from "./EditableMap.lazy";
 
 // In-flow editor panel — replaces the photos sidebar's filter
 // contents when a photo is open. The grid stays clickable so an
@@ -723,18 +724,20 @@ const PhotoDrawer = (): React.ReactElement => {
   // and shows a per-field revert when the blob has a value to
   // revert *to*. Operator-only fields (title, description, country
   // override, place) are not in this set.
-  type ExifKey =
-    | "author"
-    | "latitude"
-    | "longitude"
-    | "altitude"
-    | "cameraMake"
-    | "cameraModel"
-    | "lensMake"
-    | "lensModel"
-    | "focalLength"
-    | "focalLength35mmEquiv"
-    | "aperture";
+  const EXIF_KEYS = [
+    "author",
+    "latitude",
+    "longitude",
+    "altitude",
+    "cameraMake",
+    "cameraModel",
+    "lensMake",
+    "lensModel",
+    "focalLength",
+    "focalLength35mmEquiv",
+    "aperture",
+  ] as const;
+  type ExifKey = (typeof EXIF_KEYS)[number];
   const exifValueFor = (key: ExifKey): string | undefined => {
     const blob = data?.exifAtIntake;
     if (!blob) return undefined;
@@ -826,7 +829,24 @@ const PhotoDrawer = (): React.ReactElement => {
             <input
               type="checkbox"
               checked={unlocked}
-              onChange={(e) => setUnlocked(e.target.checked)}
+              onChange={(e) => {
+                const next = e.target.checked;
+                setUnlocked(next);
+                // Re-locking reverts any pending EXIF-derived edits
+                // back to `original`. The operator sees in the
+                // (now-disabled) inputs exactly what will be sent
+                // on Save — no ambiguity between visible-but-not-
+                // saved values vs values held under the lock.
+                if (!next) {
+                  setForm((prev) => {
+                    const reverted = { ...prev };
+                    for (const key of EXIF_KEYS) {
+                      reverted[key] = original[key];
+                    }
+                    return reverted;
+                  });
+                }
+              }}
             />
             <span>{t("manage-photo-unlock-exif")}</span>
           </UnlockRow>
@@ -925,6 +945,36 @@ const PhotoDrawer = (): React.ReactElement => {
           {highlight.coords && (
             <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
           )}
+          {(() => {
+            // parseFloat("") is NaN; parseFloat("0") is 0 (a real
+            // coordinate at the equator / Greenwich, not unset).
+            // Convert via NaN-test, not falsy-coercion, so the
+            // marker still renders for legitimate zero values.
+            const parse = (s: string): number | null => {
+              if (s.trim() === "") return null;
+              const v = parseFloat(s);
+              return Number.isFinite(v) ? v : null;
+            };
+            const lat = parse(form.latitude);
+            const lon = parse(form.longitude);
+            // Render the map when coords are set OR when editing is
+            // allowed (so the operator can click-to-drop a new
+            // marker). Locked rows with no coords skip the map —
+            // there's nothing to look at and nothing actionable.
+            const hasCoords = lat !== null && lon !== null;
+            if (!hasCoords && exifDisabled) return null;
+            return (
+              <EditableMap
+                lat={lat}
+                lon={lon}
+                onChange={(next) => {
+                  setField("latitude", String(next.lat));
+                  setField("longitude", String(next.lon));
+                }}
+                readOnly={exifDisabled}
+              />
+            );
+          })()}
           <FieldHint>{t("manage-photo-coord-hint")}</FieldHint>
         </Section>
         <Section>
