@@ -492,10 +492,11 @@ const loadGalleryPhoto = async (
   lang?: string
 ) => {
   const schema = SCHEMA.photo;
+  // buildSelectQuery joins with " AND " — entries are bare predicates.
   const stmt = db.prepare(
     schema.buildSelectQuery([
       "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
-      "AND id = ?",
+      "id = ?",
     ])
   );
   const rows = stmt.all(galleryId, photoId) as PhotoRow[];
