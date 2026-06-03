@@ -212,6 +212,12 @@ const dateLabel = (p: Record<string, unknown> & { id: string }): string => {
   return "";
 };
 
+// `state-code` is left out of the chip list deliberately — countries
+// with no ISO-3166-2 subdivisions (Luxembourg, Monaco, Vatican …)
+// permanently match the predicate, and there's no field for the
+// operator to edit to clear the match anyway. The CLI audit still
+// surfaces it via `bin/photo.ts audit --missing state-code` for
+// people who want to spot geocoder gaps in larger countries.
 const MISSING_FIELDS: MissingField[] = [
   "taken",
   "coords",
@@ -220,7 +226,6 @@ const MISSING_FIELDS: MissingField[] = [
   "author",
   "title",
   "description",
-  "state-code",
 ];
 
 // Parse the searchParams into a typed PhotoFilter. Filters that aren't

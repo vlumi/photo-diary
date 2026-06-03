@@ -430,6 +430,9 @@ const PhotoDrawer = (): React.ReactElement => {
     author: missingActive.has("author") && !original.author,
     country: missingActive.has("country") && !original.country,
     place: missingActive.has("place") && !original.place,
+    coords:
+      missingActive.has("coords") &&
+      (!original.latitude || !original.longitude),
   };
 
   const dirty = React.useMemo(() => {
@@ -550,6 +553,7 @@ const PhotoDrawer = (): React.ReactElement => {
                 inputMode="decimal"
                 value={form.latitude}
                 onChange={(e) => setField("latitude", e.target.value)}
+                $highlight={highlight.coords}
               />
             </Field>
             <Field>
@@ -560,6 +564,7 @@ const PhotoDrawer = (): React.ReactElement => {
                 inputMode="decimal"
                 value={form.longitude}
                 onChange={(e) => setField("longitude", e.target.value)}
+                $highlight={highlight.coords}
               />
             </Field>
             <Field>
@@ -573,6 +578,9 @@ const PhotoDrawer = (): React.ReactElement => {
               />
             </Field>
           </FieldRow>
+          {highlight.coords && (
+            <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
+          )}
           <FieldHint>{t("manage-photo-coord-hint")}</FieldHint>
         </Section>
         <Section>
