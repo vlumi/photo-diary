@@ -150,6 +150,7 @@ const MetaValue = styled.div`
   font-size: 0.85em;
   color: var(--inactive-color);
   line-height: 1.4;
+  text-align: left;
   word-break: break-word;
   min-width: 0;
 `;
