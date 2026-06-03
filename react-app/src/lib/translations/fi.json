@@ -113,6 +113,9 @@
     "manage-photo-save-error": "Tallennus epäonnistui.",
     "manage-photo-revert-to-exif": "Palauta EXIF-arvoon",
     "manage-photo-unlock-exif": "Tämä kuva on otettu ennen EXIF-varmuuskopion käyttöönottoa. Salli EXIF-pohjaisten kenttien muokkaus; muutoksia ei voi palauttaa.",
+    "manage-photo-country-filter-placeholder": "Suodata tai liitä 2-kirjaiminen maakoodi",
+    "manage-photo-country-clear": "Tyhjennä maa",
+    "manage-photo-country-no-match": "Maata ei löytynyt.",
     "manage-page-gallery-access-title": "Käyttöoikeudet",
     "manage-page-gallery-access-blurb": "Galleriakohtaiset käyttöoikeudet. Tulossa.",
 
