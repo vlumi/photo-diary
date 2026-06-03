@@ -172,7 +172,13 @@ const buildCrumbs = (
       out.push({ kind: "leaf", label: resolved.photoLabel ?? photoId });
     }
   } else if (page === "galleries") {
-    out.push({ kind: "leaf", label: t("manage-page-galleries-title") });
+    const sub = tail[1];
+    pushLinkOrLeaf(!sub, "/m/galleries", t("manage-page-galleries-title"));
+    if (sub === "new") {
+      out.push({ kind: "leaf", label: t("manage-gallery-create-title") });
+    } else if (sub) {
+      out.push({ kind: "leaf", label: sub });
+    }
   } else if (page === "users") {
     out.push({ kind: "leaf", label: t("manage-page-users-title") });
   } else if (page === "inbox") {
