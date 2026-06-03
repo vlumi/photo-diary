@@ -12,7 +12,6 @@ import { BsFillHouseFill, BsChevronRight } from "react-icons/bs";
 
 import useKeyPress from "../../lib/keypress";
 import galleriesService from "../../services/galleries";
-import photosService from "../../services/photos";
 import { useLastGalleryPathStore, useUserStore } from "../../stores";
 
 const Root = styled.div`
@@ -109,7 +108,6 @@ type Crumb =
 
 interface ResolvedLabels {
   galleryTitle?: string;
-  photoLabel?: string;
 }
 
 const buildCrumbs = (
@@ -146,15 +144,12 @@ const buildCrumbs = (
     const galleryLabel = resolved.galleryTitle ?? galleryId;
     pushLinkOrLeaf(!sub, `/m/g/${galleryId}`, galleryLabel);
     if (sub === "photos") {
-      const photoId = tail[3];
-      pushLinkOrLeaf(
-        !photoId,
-        `/m/g/${galleryId}/photos`,
-        t("manage-crumb-photos")
-      );
-      if (photoId) {
-        out.push({ kind: "leaf", label: resolved.photoLabel ?? photoId });
-      }
+      // The photoId tail segment drives the drawer-open state on
+      // the Photos page (so deep-linking still works), but it
+      // isn't a navigation level — Photos is always the deepest
+      // breadcrumb leaf whether or not a drawer is open. The
+      // drawer's own header names the photo.
+      out.push({ kind: "leaf", label: t("manage-crumb-photos") });
     } else if (sub === "access") {
       out.push({ kind: "leaf", label: t("manage-page-gallery-access-title") });
     } else if (sub) {
@@ -166,11 +161,9 @@ const buildCrumbs = (
   // /m/<page>[/<photoId>]
   const page = tail[0];
   if (page === "photos") {
-    const photoId = tail[1];
-    pushLinkOrLeaf(!photoId, "/m/photos", t("manage-page-photos-title"));
-    if (photoId) {
-      out.push({ kind: "leaf", label: resolved.photoLabel ?? photoId });
-    }
+    // Same as the gallery-scoped photos branch above: photoId
+    // drives the drawer, not the crumb trail.
+    out.push({ kind: "leaf", label: t("manage-page-photos-title") });
   } else if (page === "galleries") {
     out.push({ kind: "leaf", label: t("manage-page-galleries-title") });
   } else if (page === "users") {
@@ -191,37 +184,25 @@ const Manage = (): React.ReactElement => {
   const user = useUserStore((s) => s.user);
   const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
   const galleryId = params.galleryId;
-  const photoId = params.photoId;
 
-  // Resolve raw IDs in the breadcrumb to human-readable labels.
-  // Both queries share TanStack keys with the data-owning pages
-  // (PhotoDrawer uses ["manage-photo", id]) so the cache is shared
-  // and we don't double-fetch. While the queries resolve the
-  // breadcrumb falls back to the raw ID — visible briefly on cold
-  // navigations, never a permanent state.
+  // Resolve the gallery's raw id to its title via a shared-cache
+  // useQuery (same key shape as the rest of the app, so this
+  // doesn't double-fetch). While the query resolves the breadcrumb
+  // falls back to the raw id — visible briefly on cold
+  // navigations, never permanent.
   const galleryQuery = useQuery({
     queryKey: ["gallery", galleryId, user?.id ?? null],
     queryFn: () => galleriesService.get(galleryId as string),
     enabled: !!galleryId && !!user?.isAdmin(),
   });
-  const photoQuery = useQuery({
-    queryKey: ["manage-photo", photoId],
-    queryFn: () => photosService.get(photoId as string),
-    enabled: !!photoId && !!user?.isAdmin(),
-  });
   const resolved = React.useMemo<ResolvedLabels>(() => {
     const galleryData = galleryQuery.data as
       | { title?: string }
       | undefined;
-    const photoData = photoQuery.data as
-      | { originalFilename?: string; title?: string }
-      | undefined;
     return {
       galleryTitle: galleryData?.title || undefined,
-      photoLabel:
-        photoData?.originalFilename || photoData?.title || undefined,
     };
-  }, [galleryQuery.data, photoQuery.data]);
+  }, [galleryQuery.data]);
 
   const crumbs = React.useMemo(
     () => buildCrumbs(location.pathname, t, resolved),
