@@ -7,9 +7,12 @@ import {
 } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { BsFillHouseFill, BsChevronRight } from "react-icons/bs";
 
 import useKeyPress from "../../lib/keypress";
+import galleriesService from "../../services/galleries";
+import photosService from "../../services/photos";
 import { useLastGalleryPathStore, useUserStore } from "../../stores";
 
 const Root = styled.div`
@@ -104,9 +107,15 @@ type Crumb =
   | { kind: "link"; path: string; label: string }
   | { kind: "leaf"; label: string };
 
+interface ResolvedLabels {
+  galleryTitle?: string;
+  photoLabel?: string;
+}
+
 const buildCrumbs = (
   pathname: string,
-  t: (key: string) => string
+  t: (key: string) => string,
+  resolved: ResolvedLabels
 ): Crumb[] => {
   const parts = pathname.split("/").filter(Boolean);
   // parts[0] === "m"
@@ -134,16 +143,17 @@ const buildCrumbs = (
     const galleryId = tail[1];
     if (!galleryId) return out;
     const sub = tail[2];
-    pushLinkOrLeaf(!sub, `/m/g/${galleryId}`, galleryId);
+    const galleryLabel = resolved.galleryTitle ?? galleryId;
+    pushLinkOrLeaf(!sub, `/m/g/${galleryId}`, galleryLabel);
     if (sub === "photos") {
       const photoId = tail[3];
       pushLinkOrLeaf(
         !photoId,
         `/m/g/${galleryId}/photos`,
-        t("manage-page-gallery-photos-title")
+        t("manage-crumb-photos")
       );
       if (photoId) {
-        out.push({ kind: "leaf", label: photoId });
+        out.push({ kind: "leaf", label: resolved.photoLabel ?? photoId });
       }
     } else if (sub === "access") {
       out.push({ kind: "leaf", label: t("manage-page-gallery-access-title") });
@@ -158,11 +168,15 @@ const buildCrumbs = (
   if (page === "photos") {
     const photoId = tail[1];
     pushLinkOrLeaf(!photoId, "/m/photos", t("manage-page-photos-title"));
-    if (photoId) out.push({ kind: "leaf", label: photoId });
+    if (photoId) {
+      out.push({ kind: "leaf", label: resolved.photoLabel ?? photoId });
+    }
   } else if (page === "galleries") {
     out.push({ kind: "leaf", label: t("manage-page-galleries-title") });
   } else if (page === "users") {
     out.push({ kind: "leaf", label: t("manage-page-users-title") });
+  } else if (page === "inbox") {
+    out.push({ kind: "leaf", label: t("manage-page-inbox-title") });
   } else {
     out.push({ kind: "leaf", label: page });
   }
@@ -177,9 +191,41 @@ const Manage = (): React.ReactElement => {
   const user = useUserStore((s) => s.user);
   const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
   const galleryId = params.galleryId;
+  const photoId = params.photoId;
+
+  // Resolve raw IDs in the breadcrumb to human-readable labels.
+  // Both queries share TanStack keys with the data-owning pages
+  // (PhotoDrawer uses ["manage-photo", id]) so the cache is shared
+  // and we don't double-fetch. While the queries resolve the
+  // breadcrumb falls back to the raw ID — visible briefly on cold
+  // navigations, never a permanent state.
+  const galleryQuery = useQuery({
+    queryKey: ["gallery", galleryId, user?.id ?? null],
+    queryFn: () => galleriesService.get(galleryId as string),
+    enabled: !!galleryId && !!user?.isAdmin(),
+  });
+  const photoQuery = useQuery({
+    queryKey: ["manage-photo", photoId],
+    queryFn: () => photosService.get(photoId as string),
+    enabled: !!photoId && !!user?.isAdmin(),
+  });
+  const resolved = React.useMemo<ResolvedLabels>(() => {
+    const galleryData = galleryQuery.data as
+      | { title?: string }
+      | undefined;
+    const photoData = photoQuery.data as
+      | { originalFilename?: string; title?: string }
+      | undefined;
+    return {
+      galleryTitle: galleryData?.title || undefined,
+      photoLabel:
+        photoData?.originalFilename || photoData?.title || undefined,
+    };
+  }, [galleryQuery.data, photoQuery.data]);
+
   const crumbs = React.useMemo(
-    () => buildCrumbs(location.pathname, t),
-    [location.pathname, t]
+    () => buildCrumbs(location.pathname, t, resolved),
+    [location.pathname, t, resolved]
   );
 
   const body = !user ? (
