@@ -1,5 +1,6 @@
 import { init } from "../../app.js";
 import dummyFactory from "../../db/dummy.js";
+import dbFacade from "../../db/index.js";
 import { createApi, loginUser } from "./helper.js";
 
 const db = dummyFactory();
@@ -418,6 +419,59 @@ describe("Mutations as admin", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({ exposure: { iso: 100 } })
       .expect(400));
+  test("Update with changed coords clears stale geocoded columns (#415)", async () => {
+    // Seed geocoded data, then PUT new coords. Expect the geocoded
+    // payload to be wiped (handed off to the converter via the
+    // inbox sidecar; tests don't write actual files since the
+    // sidecar writer is best-effort).
+    await dbFacade.upsertGeocoded("gallery1photo.jpg", "en", {
+      countryCode: "JP",
+      stateCode: "JP-13",
+      city: "Tokyo",
+      address: '{"country":"Japan"}',
+    });
+    const beforeResult = await getPhoto(token, "gallery1photo.jpg");
+    expect(beforeResult.body.geocoded?.city).toBe("Tokyo");
+    await api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        taken: {
+          location: {
+            coordinates: { latitude: 48.85, longitude: 2.35, altitude: null },
+          },
+        },
+      })
+      .expect(204);
+    const afterResult = await getPhoto(token, "gallery1photo.jpg");
+    expect(afterResult.body.geocoded?.city).toBeFalsy();
+    expect(afterResult.body.geocoded?.countryCode).toBeFalsy();
+  });
+  test("Update with unchanged coords keeps geocoded values", async () => {
+    await dbFacade.upsertGeocoded("gallery1photo.jpg", "en", {
+      countryCode: "JP",
+      city: "Tokyo",
+    });
+    const before = await getPhoto(token, "gallery1photo.jpg");
+    const coords = before.body.taken?.location?.coordinates;
+    await api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        taken: {
+          location: {
+            coordinates: {
+              latitude: coords?.latitude ?? null,
+              longitude: coords?.longitude ?? null,
+              altitude: coords?.altitude ?? null,
+            },
+          },
+        },
+      })
+      .expect(204);
+    const after = await getPhoto(token, "gallery1photo.jpg");
+    expect(after.body.geocoded?.city).toBe("Tokyo");
+  });
 });
 
 describe("List photos: filters + pagination", () => {

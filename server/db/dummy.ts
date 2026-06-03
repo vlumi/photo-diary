@@ -75,6 +75,7 @@ export default () => {
     renamePhoto,
     upsertGeocoded,
     markGeocodeNoData,
+    clearGeocoded,
     loadPhotosMissingGeocoded,
     deletePhoto,
     loadPhotoLocalized,
@@ -637,6 +638,18 @@ const upsertGeocoded = async (
 const markGeocodeNoData = async (photoId: string): Promise<void> => {
   if (!(photoId in db.photos)) return;
   db.photos[photoId].geocodeNoData = true;
+};
+const clearGeocoded = async (photoId: string): Promise<void> => {
+  if (!(photoId in db.photos)) return;
+  delete db.photos[photoId].geocoded;
+  db.photos[photoId].geocodeNoData = false;
+  if (!db.photoLocalized) return;
+  for (const key of Object.keys(db.photoLocalized)) {
+    if (key.startsWith(`${photoId}:`)) {
+      const row = db.photoLocalized[key];
+      if (row && typeof row === "object") row.city = null;
+    }
+  }
 };
 const loadPhotosMissingGeocoded = async (
   lang: string,

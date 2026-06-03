@@ -92,6 +92,7 @@ export default () => {
     renamePhoto,
     upsertGeocoded,
     markGeocodeNoData,
+    clearGeocoded,
     loadPhotosMissingGeocoded,
     deletePhoto,
     loadPhotoLocalized,
@@ -769,6 +770,29 @@ const upsertGeocoded = async (
 // clears `geocode_no_data` back to 0 to force a fresh attempt.
 const markGeocodeNoData = async (photoId: string): Promise<void> => {
   db.prepare("UPDATE photo SET geocode_no_data = 1 WHERE id = ?").run(photoId);
+};
+
+// Reset every geocode-derived column to NULL so the admin coord-edit
+// flow can hand off to the converter without leaving stale values
+// visible in the meantime. `geocode_no_data` resets to 0 so the next
+// intake / daemon run will retry instead of skipping. The per-language
+// rows in `photo_localized` lose their `geocoded_city` too (FK CASCADE
+// would drop the row entirely, which we don't want — the
+// `geocoded_address` raw blob stays for audit / re-localize, only the
+// derived city goes NULL).
+const clearGeocoded = async (photoId: string): Promise<void> => {
+  db.prepare(
+    `UPDATE photo SET
+       geocoded_country_code = NULL,
+       geocoded_state_code   = NULL,
+       geocoded_city         = NULL,
+       geocoded_address      = NULL,
+       geocode_no_data       = 0
+     WHERE id = ?`
+  ).run(photoId);
+  db.prepare(
+    "UPDATE photo_localized SET geocoded_city = NULL WHERE photo_id = ?"
+  ).run(photoId);
 };
 
 // Daemon's "give me work" query — photos with coords that are missing

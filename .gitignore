@@ -16,3 +16,4 @@ dev/
 
 # Local sqlite databases that may sit next to the repo root or in server/
 *.sqlite3
+server/photos/
