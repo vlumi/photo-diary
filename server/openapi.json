@@ -1183,6 +1183,42 @@
                           },
                           "place": {
                             "type": "string"
+                          },
+                          "coordinates": {
+                            "type": "object",
+                            "properties": {
+                              "latitude": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "longitude": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "altitude": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "additionalProperties": false
                           }
                         },
                         "additionalProperties": false
@@ -1218,6 +1254,9 @@
                     "type": "object",
                     "properties": {
                       "focalLength": {
+                        "type": "number"
+                      },
+                      "focalLength35mmEquiv": {
                         "type": "number"
                       },
                       "aperture": {
@@ -1262,7 +1301,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         }
       },
@@ -1298,6 +1346,42 @@
                           },
                           "place": {
                             "type": "string"
+                          },
+                          "coordinates": {
+                            "type": "object",
+                            "properties": {
+                              "latitude": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "longitude": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "altitude": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "additionalProperties": false
                           }
                         },
                         "additionalProperties": false
@@ -1333,6 +1417,9 @@
                     "type": "object",
                     "properties": {
                       "focalLength": {
+                        "type": "number"
+                      },
+                      "focalLength35mmEquiv": {
                         "type": "number"
                       },
                       "aperture": {

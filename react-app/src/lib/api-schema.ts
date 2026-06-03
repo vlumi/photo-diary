@@ -758,6 +758,11 @@ export interface paths {
                             location?: {
                                 country?: string;
                                 place?: string;
+                                coordinates?: {
+                                    latitude?: number | null;
+                                    longitude?: number | null;
+                                    altitude?: number | null;
+                                };
                             };
                         };
                         camera?: {
@@ -770,6 +775,7 @@ export interface paths {
                         };
                         exposure?: {
                             focalLength?: number;
+                            focalLength35mmEquiv?: number;
                             aperture?: number;
                         };
                     };
@@ -815,7 +821,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
                 };
             };
         };
@@ -839,6 +849,11 @@ export interface paths {
                             location?: {
                                 country?: string;
                                 place?: string;
+                                coordinates?: {
+                                    latitude?: number | null;
+                                    longitude?: number | null;
+                                    altitude?: number | null;
+                                };
                             };
                         };
                         camera?: {
@@ -851,6 +866,7 @@ export interface paths {
                         };
                         exposure?: {
                             focalLength?: number;
+                            focalLength35mmEquiv?: number;
                             aperture?: number;
                         };
                     };

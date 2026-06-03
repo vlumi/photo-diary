@@ -388,14 +388,24 @@ describe("Mutations as admin", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({ taken: { instant: { timestamp: "1999-01-01 00:00:00" } } })
       .expect(400));
-  test("Update rejects EXIF-managed field (taken.location.coordinates)", () =>
+  test("Update accepts operator-set coordinates (lat / lon / alt)", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
       .set("Authorization", `Bearer ${token}`)
       .send({
-        taken: { location: { coordinates: { latitude: 0, longitude: 0 } } },
+        taken: {
+          location: {
+            coordinates: { latitude: 0, longitude: 0, altitude: null },
+          },
+        },
       })
-      .expect(400));
+      .expect(204));
+  test("Update accepts operator-set focal-35mm-equiv", () =>
+    api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ exposure: { focalLength35mmEquiv: 41 } })
+      .expect(204));
   test("Update rejects Nominatim-managed field (geocoded)", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")

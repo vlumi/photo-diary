@@ -1,5 +1,11 @@
 import React from "react";
-import { useSearchParams } from "react-router-dom";
+import {
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -21,13 +27,25 @@ const Root = styled.div`
     flex-direction: column;
   }
 `;
+// One sidebar, two modes: filters (default) and edit (when a photo
+// is open via `/m/photos/<id>` or `/m/g/<g>/photos/<id>`). Widened
+// from the filter-only 220px so the edit form fits without
+// cramping; the extra width reads as comfortable padding in filter
+// mode rather than wasted real estate.
 const Sidebar = styled.aside`
-  flex: 0 0 220px;
+  flex: 0 0 360px;
+  // Belt-and-suspenders width pin so a stray min-content from any
+  // inner element (long photo id, unbroken Title text, etc.) can't
+  // push the flex item wider than 360px when the edit form mounts.
+  min-width: 360px;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   @media (max-width: 700px) {
     flex: 0 0 auto;
+    min-width: 0;
+    max-width: none;
     width: 100%;
   }
 `;
@@ -99,12 +117,21 @@ const Grid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 8px;
 `;
-const Tile = styled.div`
+const Tile = styled.button`
   display: flex;
   flex-direction: column;
   background: var(--tile-background);
+  border: 1px solid transparent;
   border-radius: 2px;
+  padding: 0;
   overflow: hidden;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  &:hover,
+  &:focus-visible {
+    border-color: var(--primary-color);
+  }
 `;
 // Square wrap reserves the box before the image loads, so the grid
 // doesn't reflow as thumbs come in. Portrait and landscape captures
@@ -185,6 +212,12 @@ const dateLabel = (p: Record<string, unknown> & { id: string }): string => {
   return "";
 };
 
+// `state-code` is left out of the chip list deliberately — countries
+// with no ISO-3166-2 subdivisions (Luxembourg, Monaco, Vatican …)
+// permanently match the predicate, and there's no field for the
+// operator to edit to clear the match anyway. The CLI audit still
+// surfaces it via `bin/photo.ts audit --missing state-code` for
+// people who want to spot geocoder gaps in larger countries.
 const MISSING_FIELDS: MissingField[] = [
   "taken",
   "coords",
@@ -193,7 +226,6 @@ const MISSING_FIELDS: MissingField[] = [
   "author",
   "title",
   "description",
-  "state-code",
 ];
 
 // Parse the searchParams into a typed PhotoFilter. Filters that aren't
@@ -244,6 +276,19 @@ const PAGE_SIZE = 100;
 const Photos = ({ galleryId }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  // The drawer mounts at /m/photos/:photoId and /m/g/<g>/photos/:photoId
+  // via a nested <Outlet>; this Photos page is the parent.
+  const openPhoto = (id: string) => {
+    // pathname is /m/photos[/<oldId>] or /m/g/<g>/photos[/<oldId>];
+    // normalise to ".../photos" and append the new id, preserving
+    // the filter query.
+    const base = location.pathname.endsWith("/photos")
+      ? location.pathname
+      : location.pathname.replace(/\/[^/]+$/, "");
+    navigate({ pathname: `${base}/${id}`, search: location.search });
+  };
 
   const filter = React.useMemo(
     () => filterFromSearchParams(searchParams, galleryId),
@@ -311,8 +356,8 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   useKeyPress("Home", () => goToPage(1));
   useKeyPress("End", () => goToPage(pageCount));
 
-  const renderSidebar = () => (
-    <Sidebar>
+  const renderSidebarContents = () => (
+    <>
       <FilterGroup>
         <FilterTitle>{t("manage-photos-filter-search")}</FilterTitle>
         <TextInput
@@ -402,7 +447,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           })}
         </ChipRow>
       </FilterGroup>
-    </Sidebar>
+    </>
   );
 
   const renderBody = () => {
@@ -435,7 +480,12 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
             {photos.map((p) => {
               const label = dateLabel(p);
               return (
-                <Tile key={p.id} title={p.id}>
+                <Tile
+                  key={p.id}
+                  type="button"
+                  title={p.id}
+                  onClick={() => openPhoto(p.id)}
+                >
                   <ThumbWrap>
                     <Thumb
                       src={`${config.PHOTO_ROOT_URL}thumbnail/${p.id}`}
@@ -472,9 +522,15 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     );
   };
 
+  // useParams() inside the parent <Photos> route picks up the
+  // child :photoId. When a photo is open, the sidebar swaps from
+  // filter controls to the edit form (rendered via <Outlet />).
+  const params = useParams();
+  const editing = !!params.photoId;
+
   return (
     <Root>
-      {renderSidebar()}
+      <Sidebar>{editing ? <Outlet /> : renderSidebarContents()}</Sidebar>
       <Body>{renderBody()}</Body>
     </Root>
   );

@@ -38,11 +38,8 @@ import {
   useLangStore,
   useFiltersStore,
   useScrollStore,
-  useBetaStore,
   useThemePreferenceStore,
 } from "../../stores";
-import type { BetaFeature, BetaMode } from "../../stores/beta";
-import { BETA_FEATURES } from "../../stores/beta";
 
 interface Meta {
   cdn?: string;
@@ -147,26 +144,9 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     photosQuery.error?.message ||
     "";
 
-  const setBetaModes = useBetaStore((s) => s.setModes);
-  // Push runtime-tunable bits from `meta` into the SPA's config singleton.
-  React.useEffect(() => {
-    if (!meta) return;
-    config.PHOTO_ROOT_URL = meta.cdn || config.PHOTO_ROOT_URL;
-    if (meta.defaultGallery) config.DEFAULT_GALLERY = meta.defaultGallery;
-    if (meta.defaultTheme) config.DEFAULT_THEME = meta.defaultTheme;
-    if (meta.initialGalleryView)
-      config.INITIAL_GALLERY_VIEW = meta.initialGalleryView;
-    if (meta.firstWeekday !== undefined)
-      config.FIRST_WEEKDAY = Number(meta.firstWeekday);
-    if (meta.betaFeatures) {
-      const next: Partial<Record<BetaFeature, BetaMode>> = {};
-      for (const f of BETA_FEATURES) {
-        const v = meta.betaFeatures[f];
-        if (v === "on" || v === "off" || v === "user") next[f] = v;
-      }
-      if (Object.keys(next).length > 0) setBetaModes(next);
-    }
-  }, [meta, setBetaModes]);
+  // The meta-to-config side-effect now lives in App.tsx so the
+  // Manage routes pick up `cdn` / `defaultTheme` / etc. too — see
+  // there.
 
   const selectedGallery =
     galleries && galleries.find((gallery) => gallery.id() === galleryId);
