@@ -143,14 +143,24 @@ const processJpeg = async (
 
   const properties = await extractProperties(originalPath, id, rootDir);
   properties.originalFilename = originalFilename;
+  // Capture the EXIF-at-intake snapshot before the write so the
+  // admin UI can revert per-field overrides back to the camera's
+  // original value (#416). Stored as a JSON blob on the photo row;
+  // overwritten on re-imports so the blob always reflects the
+  // last JPEG actually processed.
+  const exifAtIntake = JSON.parse(JSON.stringify(properties)) as Record<
+    string,
+    unknown
+  >;
 
   if (isReimport) {
-    const update = { ...properties };
+    const update: Record<string, unknown> = { ...properties, exifAtIntake };
     delete update.id;
     await db.updatePhoto(id, update);
     logger.debug(`[${relPath}] Refreshed DB row ${id}`);
   } else {
-    await db.createPhoto(properties);
+    const create: Record<string, unknown> = { ...properties, exifAtIntake };
+    await db.createPhoto(create);
     logger.debug(`[${relPath}] Created DB row ${id}`);
   }
 

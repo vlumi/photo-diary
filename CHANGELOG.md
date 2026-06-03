@@ -4,6 +4,7 @@
 
 ### Server
 
+- `photo.exif_at_intake` TEXT column (migration 014) captures the camera's full EXIF / properties blob at converter intake; the admin photo drawer surfaces a per-field "↺ revert to EXIF" affordance, and gates EXIF-derived edits with a "no backup" unlock on rows that pre-date the column (NULL blob). (part of #416)
 - `PUT /api/v1/photos/<id>` with changed coordinates now synchronously clears the row's `geocoded_*` columns + drops a JSON sidecar into `photos/inbox/`, so the running converter daemon picks it up and refreshes the geocoded fields via Nominatim. The operator never sees stale geocoded values pinned to the previous coords. (closes #415)
 - `GET /api/v1/photos` accepts filter query params (`gallery`, `orphan`, `dateFrom`, `dateTo`, `missing`, `duplicates`, `countryMismatch`, `q`) and returns a paginated `{ photos, page, pageSize, total }` shape sorted newest-first; predicates lifted into `server/lib/photo-filter.ts` so `bin/photo.ts audit` and the admin endpoint share one definition. (part of #10)
 - ACL user groups — `group` / `user_group` / `group_gallery` (migration 013) compose into the access cascade as another positive-grant source, exposed via `/api/v1/groups` + `/api/v1/group-gallery` and routed through `bin/{user,group,gallery}.ts` as `bin/access.ts` retires. (closes #270)

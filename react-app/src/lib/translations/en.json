@@ -111,6 +111,8 @@
     "manage-photo-button-cancel": "Cancel",
     "manage-photo-load-error": "Failed to load photo.",
     "manage-photo-save-error": "Failed to save changes.",
+    "manage-photo-revert-to-exif": "Revert to EXIF",
+    "manage-photo-unlock-exif": "This photo predates the EXIF backup. Tick to enable editing EXIF-derived fields; overrides are not reversible.",
     "manage-page-gallery-access-title": "Access",
     "manage-page-gallery-access-blurb": "Per-gallery user access. Coming soon.",
 

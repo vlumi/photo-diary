@@ -113,6 +113,41 @@ const Input = styled.input<{ $highlight?: boolean }>`
   border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+`;
+// Wraps an EXIF-derived input + the optional revert affordance so
+// the input keeps its 100% width and the button slots flush on the
+// right.
+const InputRow = styled.div`
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+`;
+const RevertButton = styled.button`
+  flex: 0 0 auto;
+  padding: 0 8px;
+  background: transparent;
+  color: var(--inactive-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  &:hover {
+    color: var(--primary-color);
+  }
+`;
+const UnlockRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px dashed var(--inactive-color);
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: var(--inactive-color);
 `;
 const TextArea = styled.textarea<{ $highlight?: boolean }>`
   font: inherit;
@@ -224,6 +259,28 @@ interface PhotoData {
     stateCode?: string;
     state?: string;
     city?: string;
+  };
+  // EXIF snapshot captured at converter intake (#416). Undefined on
+  // rows that pre-date migration 014. Drives the per-field revert
+  // affordance and the "no backup" gate on EXIF-derived inputs.
+  exifAtIntake?: {
+    taken?: {
+      author?: string;
+      location?: {
+        coordinates?: {
+          latitude?: number | null;
+          longitude?: number | null;
+          altitude?: number | null;
+        };
+      };
+    };
+    camera?: { make?: string; model?: string };
+    lens?: { make?: string; model?: string };
+    exposure?: {
+      focalLength?: number;
+      focalLength35mmEquiv?: number;
+      aperture?: number;
+    };
   };
 }
 
@@ -405,6 +462,11 @@ const PhotoDrawer = (): React.ReactElement => {
   const [original, setOriginal] = React.useState<FormState>(emptyForm);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  // Per-photo unlock toggle for EXIF-derived fields when the photo
+  // has no `exifAtIntake` blob (#416). Resets when the open photo
+  // changes — the operator must consciously re-acknowledge "no
+  // backup" on each row.
+  const [unlocked, setUnlocked] = React.useState(false);
 
   React.useEffect(() => {
     if (data) {
@@ -412,8 +474,9 @@ const PhotoDrawer = (): React.ReactElement => {
       setForm(f);
       setOriginal(f);
       setError(null);
+      setUnlocked(false);
     }
-  }, [data]);
+  }, [data, id]);
 
   const close = React.useCallback(() => {
     // Strip /<photoId> from the pathname, keep search.
@@ -463,6 +526,96 @@ const PhotoDrawer = (): React.ReactElement => {
   const setField = <K extends keyof FormState>(key: K, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
+  // The form-state keys that came from EXIF originally. The drawer
+  // gates these behind an unlock when `exifAtIntake` is missing,
+  // and shows a per-field revert when the blob has a value to
+  // revert *to*. Operator-only fields (title, description, country
+  // override, place) are not in this set.
+  type ExifKey =
+    | "author"
+    | "latitude"
+    | "longitude"
+    | "altitude"
+    | "cameraMake"
+    | "cameraModel"
+    | "lensMake"
+    | "lensModel"
+    | "focalLength"
+    | "focalLength35mmEquiv"
+    | "aperture";
+  const exifValueFor = (key: ExifKey): string | undefined => {
+    const blob = data?.exifAtIntake;
+    if (!blob) return undefined;
+    const num = (v: number | null | undefined): string | undefined =>
+      v === undefined || v === null ? undefined : String(v);
+    switch (key) {
+      case "author":
+        return blob.taken?.author;
+      case "latitude":
+        return num(blob.taken?.location?.coordinates?.latitude);
+      case "longitude":
+        return num(blob.taken?.location?.coordinates?.longitude);
+      case "altitude":
+        return num(blob.taken?.location?.coordinates?.altitude);
+      case "cameraMake":
+        return blob.camera?.make;
+      case "cameraModel":
+        return blob.camera?.model;
+      case "lensMake":
+        return blob.lens?.make;
+      case "lensModel":
+        return blob.lens?.model;
+      case "focalLength":
+        return num(blob.exposure?.focalLength);
+      case "focalLength35mmEquiv":
+        return num(blob.exposure?.focalLength35mmEquiv);
+      case "aperture":
+        return num(blob.exposure?.aperture);
+    }
+  };
+  const hasBlob = !!data?.exifAtIntake;
+  const exifDisabled = !hasBlob && !unlocked;
+  // Returns the EXIF value to revert to, or undefined when there's
+  // nothing to revert (no blob / no value for this field).
+  const revertableFor = (key: ExifKey): string | undefined => {
+    const exif = exifValueFor(key);
+    if (exif === undefined) return undefined;
+    if (form[key].trim() === exif.trim()) return undefined;
+    return exif;
+  };
+  // Renders an EXIF-derived input + the matching revert button when
+  // a blob value is available. Caller passes the form key and any
+  // input attributes (type, step, placeholder, $highlight…).
+  const renderExifInput = (
+    key: ExifKey,
+    extra: Omit<
+      React.ComponentProps<typeof Input>,
+      "value" | "onChange" | "disabled"
+    > = {}
+  ): React.ReactElement => {
+    const revertTo = revertableFor(key);
+    return (
+      <InputRow>
+        <Input
+          {...extra}
+          value={form[key]}
+          onChange={(e) => setField(key, e.target.value)}
+          disabled={exifDisabled}
+        />
+        {revertTo !== undefined && (
+          <RevertButton
+            type="button"
+            title={`${t("manage-photo-revert-to-exif")}: ${revertTo}`}
+            onClick={() => setField(key, revertTo)}
+            disabled={exifDisabled}
+          >
+            ↺
+          </RevertButton>
+        )}
+      </InputRow>
+    );
+  };
+
   const renderBody = () => {
     if (isLoading) return <Body>{t("loading")}</Body>;
     if (isError || !data) {
@@ -476,6 +629,16 @@ const PhotoDrawer = (): React.ReactElement => {
           alt={data.id}
         />
         {error && <ErrorBanner>{error}</ErrorBanner>}
+        {!hasBlob && (
+          <UnlockRow>
+            <input
+              type="checkbox"
+              checked={unlocked}
+              onChange={(e) => setUnlocked(e.target.checked)}
+            />
+            <span>{t("manage-photo-unlock-exif")}</span>
+          </UnlockRow>
+        )}
         <Section>
           <SectionTitle>{t("manage-photo-section-content")}</SectionTitle>
           <Field>
@@ -503,12 +666,10 @@ const PhotoDrawer = (): React.ReactElement => {
           </Field>
           <Field>
             <FieldLabel>{t("manage-photo-field-author")}</FieldLabel>
-            <Input
-              type="text"
-              value={form.author}
-              onChange={(e) => setField("author", e.target.value)}
-              $highlight={highlight.author}
-            />
+            {renderExifInput("author", {
+              type: "text",
+              $highlight: highlight.author,
+            })}
             {highlight.author && (
               <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
             )}
@@ -547,35 +708,29 @@ const PhotoDrawer = (): React.ReactElement => {
           <FieldRow>
             <Field>
               <FieldLabel>{t("manage-photo-field-latitude")}</FieldLabel>
-              <Input
-                type="number"
-                step="any"
-                inputMode="decimal"
-                value={form.latitude}
-                onChange={(e) => setField("latitude", e.target.value)}
-                $highlight={highlight.coords}
-              />
+              {renderExifInput("latitude", {
+                type: "number",
+                step: "any",
+                inputMode: "decimal",
+                $highlight: highlight.coords,
+              })}
             </Field>
             <Field>
               <FieldLabel>{t("manage-photo-field-longitude")}</FieldLabel>
-              <Input
-                type="number"
-                step="any"
-                inputMode="decimal"
-                value={form.longitude}
-                onChange={(e) => setField("longitude", e.target.value)}
-                $highlight={highlight.coords}
-              />
+              {renderExifInput("longitude", {
+                type: "number",
+                step: "any",
+                inputMode: "decimal",
+                $highlight: highlight.coords,
+              })}
             </Field>
             <Field>
               <FieldLabel>{t("manage-photo-field-altitude")}</FieldLabel>
-              <Input
-                type="number"
-                step="any"
-                inputMode="decimal"
-                value={form.altitude}
-                onChange={(e) => setField("altitude", e.target.value)}
-              />
+              {renderExifInput("altitude", {
+                type: "number",
+                step: "any",
+                inputMode: "decimal",
+              })}
             </Field>
           </FieldRow>
           {highlight.coords && (
@@ -588,64 +743,40 @@ const PhotoDrawer = (): React.ReactElement => {
           <FieldRow>
             <Field>
               <FieldLabel>{t("manage-photo-field-camera-make")}</FieldLabel>
-              <Input
-                type="text"
-                value={form.cameraMake}
-                onChange={(e) => setField("cameraMake", e.target.value)}
-              />
+              {renderExifInput("cameraMake", { type: "text" })}
             </Field>
             <Field>
               <FieldLabel>{t("manage-photo-field-camera-model")}</FieldLabel>
-              <Input
-                type="text"
-                value={form.cameraModel}
-                onChange={(e) => setField("cameraModel", e.target.value)}
-              />
+              {renderExifInput("cameraModel", { type: "text" })}
             </Field>
             <Field>
               <FieldLabel>{t("manage-photo-field-lens-make")}</FieldLabel>
-              <Input
-                type="text"
-                value={form.lensMake}
-                onChange={(e) => setField("lensMake", e.target.value)}
-              />
+              {renderExifInput("lensMake", { type: "text" })}
             </Field>
             <Field>
               <FieldLabel>{t("manage-photo-field-lens-model")}</FieldLabel>
-              <Input
-                type="text"
-                value={form.lensModel}
-                onChange={(e) => setField("lensModel", e.target.value)}
-              />
+              {renderExifInput("lensModel", { type: "text" })}
             </Field>
             <Field>
               <FieldLabel>{t("manage-photo-field-focal")}</FieldLabel>
-              <Input
-                type="number"
-                step="any"
-                value={form.focalLength}
-                onChange={(e) => setField("focalLength", e.target.value)}
-              />
+              {renderExifInput("focalLength", {
+                type: "number",
+                step: "any",
+              })}
             </Field>
             <Field>
               <FieldLabel>{t("manage-photo-field-focal-35mm")}</FieldLabel>
-              <Input
-                type="number"
-                step="any"
-                value={form.focalLength35mmEquiv}
-                onChange={(e) =>
-                  setField("focalLength35mmEquiv", e.target.value)
-                }
-              />
+              {renderExifInput("focalLength35mmEquiv", {
+                type: "number",
+                step: "any",
+              })}
             </Field>
             <Field>
               <FieldLabel>{t("manage-photo-field-aperture")}</FieldLabel>
-              <Input
-                type="number"
-                step="any"
-                value={form.aperture}
-                onChange={(e) => setField("aperture", e.target.value)}
-              />
+              {renderExifInput("aperture", {
+                type: "number",
+                step: "any",
+              })}
             </Field>
           </FieldRow>
         </Section>
