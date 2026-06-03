@@ -2,11 +2,13 @@ import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
+import db from "../db/index.js";
 import {
   collectScopePhotoIds,
   requirePhotoInScope,
   requireUnscoped,
 } from "../lib/host-scope.js";
+import { writeCoordSidecar } from "../lib/inbox-sidecar.js";
 import modelFactory from "../models/photo.js";
 import type {
   MissingField,
@@ -152,6 +154,52 @@ const PhotosQuery = Type.Object(
 const toArray = <T>(v: T | T[] | undefined): T[] | undefined =>
   v === undefined ? undefined : Array.isArray(v) ? v : [v];
 
+// Coordinate-change helpers for the geocode auto-refresh path (#415).
+// The patch may omit some coord axes; merging with the existing row's
+// values lets the converter geocode using the actual post-update state.
+type CoordPatch = {
+  latitude?: number | null;
+  longitude?: number | null;
+  altitude?: number | null;
+};
+const readIncomingCoords = (
+  body: Record<string, unknown>
+): CoordPatch | undefined => {
+  const taken = body?.taken as
+    | { location?: { coordinates?: CoordPatch } }
+    | undefined;
+  const coords = taken?.location?.coordinates;
+  return coords && typeof coords === "object" ? coords : undefined;
+};
+const readCurrentCoords = (
+  photo: Record<string, unknown>
+): CoordPatch => {
+  const taken = photo?.taken as
+    | { location?: { coordinates?: CoordPatch } }
+    | undefined;
+  const coords = taken?.location?.coordinates;
+  return {
+    latitude: coords?.latitude ?? null,
+    longitude: coords?.longitude ?? null,
+    altitude: coords?.altitude ?? null,
+  };
+};
+const coordsDiffer = (before: CoordPatch, after: CoordPatch): boolean => {
+  const axes: Array<keyof CoordPatch> = ["latitude", "longitude", "altitude"];
+  for (const axis of axes) {
+    if (after[axis] === undefined) continue; // patch didn't touch this axis
+    if ((before[axis] ?? null) !== (after[axis] ?? null)) return true;
+  }
+  return false;
+};
+const mergeCoords = (before: CoordPatch, after: CoordPatch): CoordPatch => ({
+  latitude: after.latitude !== undefined ? after.latitude : before.latitude,
+  longitude:
+    after.longitude !== undefined ? after.longitude : before.longitude,
+  altitude:
+    after.altitude !== undefined ? after.altitude : before.altitude,
+});
+
 // Permissive — joined photo metadata, wider than any tight contract.
 const PhotoItem = Type.Object({}, { additionalProperties: true });
 const PhotosListResponse = Type.Object({
@@ -266,10 +314,33 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request, reply) => {
       await requirePhotoInScope(request, request.params.photoId);
       await authorizer.authorizeAdmin(request.user.id);
-      await model.updatePhoto(
-        request.params.photoId,
-        request.body as Record<string, unknown>
-      );
+      const photoId = request.params.photoId;
+      const body = request.body as Record<string, unknown>;
+      // Did the patch actually change any of the coords? If yes,
+      // the geocoded columns become stale — clear them
+      // synchronously and write a sidecar so the converter's
+      // intake pipeline refreshes them via Nominatim (#415).
+      const incomingCoords = readIncomingCoords(body);
+      let coordChanged = false;
+      let nextCoords:
+        | { latitude?: number | null; longitude?: number | null; altitude?: number | null }
+        | undefined;
+      if (incomingCoords) {
+        const existing = (await model.getPhoto(photoId)) as Record<
+          string,
+          unknown
+        >;
+        const before = readCurrentCoords(existing);
+        coordChanged = coordsDiffer(before, incomingCoords);
+        if (coordChanged) {
+          nextCoords = mergeCoords(before, incomingCoords);
+        }
+      }
+      await model.updatePhoto(photoId, body);
+      if (coordChanged && nextCoords) {
+        await db.clearGeocoded(photoId);
+        await writeCoordSidecar(photoId, nextCoords);
+      }
       reply.status(204).send();
     }
   );
