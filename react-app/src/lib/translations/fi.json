@@ -154,6 +154,8 @@
     "manage-gallery-field-id-hint": "Käytetään osana URL-osoitetta. Pakollinen, ei saa alkaa kaksoispisteellä.",
     "manage-gallery-button-create": "Luo galleria",
     "manage-gallery-button-creating": "Luodaan…",
+    "manage-gallery-button-edit": "Muokkaa",
+    "manage-gallery-summary-empty": "—",
     "manage-gallery-button-delete": "Poista",
     "manage-gallery-button-confirm-delete": "Poista galleria",
     "manage-gallery-button-deleting": "Poistetaan…",

@@ -154,6 +154,8 @@
     "manage-gallery-field-id-hint": "URL セグメントとして使用されます。必須、コロンで始めることはできません。",
     "manage-gallery-button-create": "ギャラリーを作成",
     "manage-gallery-button-creating": "作成中…",
+    "manage-gallery-button-edit": "編集",
+    "manage-gallery-summary-empty": "—",
     "manage-gallery-button-delete": "削除",
     "manage-gallery-button-confirm-delete": "ギャラリーを削除",
     "manage-gallery-button-deleting": "削除中…",

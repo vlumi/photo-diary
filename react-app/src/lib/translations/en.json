@@ -154,6 +154,8 @@
     "manage-gallery-field-id-hint": "Used as the URL segment. Required, must not start with a colon.",
     "manage-gallery-button-create": "Create gallery",
     "manage-gallery-button-creating": "Creating…",
+    "manage-gallery-button-edit": "Edit",
+    "manage-gallery-summary-empty": "—",
     "manage-gallery-button-delete": "Delete",
     "manage-gallery-button-confirm-delete": "Delete gallery",
     "manage-gallery-button-deleting": "Deleting…",

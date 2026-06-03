@@ -3,7 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsImages, BsShieldLock, BsTrash } from "react-icons/bs";
+import {
+  BsImages,
+  BsPencilSquare,
+  BsShieldLock,
+  BsTrash,
+} from "react-icons/bs";
 
 import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
@@ -70,6 +75,9 @@ const FooterRight = styled.div`
 `;
 const ButtonPrimary = styled.button`
   font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   background: var(--header-background);
   color: var(--header-color);
@@ -140,6 +148,33 @@ const ConfirmActions = styled.div`
   justify-content: flex-end;
   gap: 8px;
 `;
+// Read-only key/value layout for view mode. Two columns: small
+// uppercase label on the left, value on the right; long values
+// wrap inside the value cell rather than push the label out.
+const Summary = styled.dl`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 16px;
+  row-gap: 8px;
+  margin: 0;
+`;
+const SummaryLabel = styled.dt`
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--inactive-color);
+  padding-top: 2px;
+  white-space: nowrap;
+`;
+const SummaryValue = styled.dd`
+  margin: 0;
+  word-break: break-word;
+  min-width: 0;
+`;
+const SummaryEmpty = styled.span`
+  color: var(--inactive-color);
+  font-style: italic;
+`;
 
 interface GalleryData {
   id: string;
@@ -170,6 +205,7 @@ const GalleryEdit = (): React.ReactElement => {
   const [form, setForm] = React.useState<FormState>(EMPTY_FORM);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
+  const [editing, setEditing] = React.useState(false);
 
   React.useEffect(() => {
     if (data) {
@@ -184,6 +220,7 @@ const GalleryEdit = (): React.ReactElement => {
       queryClient.invalidateQueries({ queryKey: ["gallery", galleryId] });
       queryClient.invalidateQueries({ queryKey: ["manage-galleries"] });
       queryClient.invalidateQueries({ queryKey: ["galleries"] });
+      setEditing(false);
     },
     onError: (err: Error) => {
       setSaveError(err.message);
@@ -210,8 +247,16 @@ const GalleryEdit = (): React.ReactElement => {
     setSaveError(null);
     updateMutation.mutate();
   };
-  const handleCancel = (): void => {
-    navigate("/m/galleries");
+  const handleStartEdit = (): void => {
+    setSaveError(null);
+    setEditing(true);
+  };
+  const handleCancelEdit = (): void => {
+    // Discard pending edits — reset the form back to the
+    // server's current value before flipping out of edit mode.
+    if (data) setForm(fromGalleryData(data as GalleryData));
+    setSaveError(null);
+    setEditing(false);
   };
 
   if (isLoading) return <Root><Notice>{t("loading")}</Notice></Root>;
@@ -222,6 +267,14 @@ const GalleryEdit = (): React.ReactElement => {
       </Root>
     );
   }
+
+  const gallery = data as GalleryData;
+  const renderValue = (value: string | undefined): React.ReactNode =>
+    value && value.length > 0 ? (
+      value
+    ) : (
+      <SummaryEmpty>{t("manage-gallery-summary-empty")}</SummaryEmpty>
+    );
 
   return (
     <Root>
@@ -254,35 +307,72 @@ const GalleryEdit = (): React.ReactElement => {
         </ErrorBanner>
       )}
 
-      <GalleryFormFields form={form} setField={setField} />
-
-      <Footer>
-        <ButtonDanger
-          type="button"
-          onClick={() => {
-            setSaveError(null);
-            setConfirmingDelete(true);
-          }}
-          disabled={deleteMutation.isPending || confirmingDelete}
-        >
-          <BsTrash aria-hidden />
-          {t("manage-gallery-button-delete")}
-        </ButtonDanger>
-        <FooterRight>
-          <ButtonSecondary type="button" onClick={handleCancel}>
-            {t("manage-gallery-button-cancel")}
-          </ButtonSecondary>
-          <ButtonPrimary
-            type="button"
-            onClick={handleSave}
-            disabled={updateMutation.isPending}
-          >
-            {updateMutation.isPending
-              ? t("manage-gallery-button-saving")
-              : t("manage-gallery-button-save")}
-          </ButtonPrimary>
-        </FooterRight>
-      </Footer>
+      {editing ? (
+        <>
+          <GalleryFormFields form={form} setField={setField} />
+          <Footer>
+            <span />
+            <FooterRight>
+              <ButtonSecondary
+                type="button"
+                onClick={handleCancelEdit}
+                disabled={updateMutation.isPending}
+              >
+                {t("manage-gallery-button-cancel")}
+              </ButtonSecondary>
+              <ButtonPrimary
+                type="button"
+                onClick={handleSave}
+                disabled={updateMutation.isPending}
+              >
+                {updateMutation.isPending
+                  ? t("manage-gallery-button-saving")
+                  : t("manage-gallery-button-save")}
+              </ButtonPrimary>
+            </FooterRight>
+          </Footer>
+        </>
+      ) : (
+        <>
+          <Summary>
+            <SummaryLabel>{t("manage-gallery-field-title")}</SummaryLabel>
+            <SummaryValue>{renderValue(gallery.title)}</SummaryValue>
+            <SummaryLabel>{t("manage-gallery-field-description")}</SummaryLabel>
+            <SummaryValue>{renderValue(gallery.description)}</SummaryValue>
+            <SummaryLabel>{t("manage-gallery-field-icon")}</SummaryLabel>
+            <SummaryValue>{renderValue(gallery.icon)}</SummaryValue>
+            <SummaryLabel>{t("manage-gallery-field-theme")}</SummaryLabel>
+            <SummaryValue>{renderValue(gallery.theme)}</SummaryValue>
+            <SummaryLabel>{t("manage-gallery-field-initial-view")}</SummaryLabel>
+            <SummaryValue>{renderValue(gallery.initialView)}</SummaryValue>
+            <SummaryLabel>{t("manage-gallery-field-epoch")}</SummaryLabel>
+            <SummaryValue>{renderValue(gallery.epoch)}</SummaryValue>
+            <SummaryLabel>{t("manage-gallery-field-epoch-type")}</SummaryLabel>
+            <SummaryValue>{renderValue(gallery.epochType)}</SummaryValue>
+            <SummaryLabel>{t("manage-gallery-field-hostname")}</SummaryLabel>
+            <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
+          </Summary>
+          <Footer>
+            <ButtonDanger
+              type="button"
+              onClick={() => {
+                setSaveError(null);
+                setConfirmingDelete(true);
+              }}
+              disabled={deleteMutation.isPending || confirmingDelete}
+            >
+              <BsTrash aria-hidden />
+              {t("manage-gallery-button-delete")}
+            </ButtonDanger>
+            <FooterRight>
+              <ButtonPrimary type="button" onClick={handleStartEdit}>
+                <BsPencilSquare aria-hidden />
+                {t("manage-gallery-button-edit")}
+              </ButtonPrimary>
+            </FooterRight>
+          </Footer>
+        </>
+      )}
 
       {confirmingDelete && (
         <ConfirmPanel role="alertdialog" aria-labelledby="delete-confirm-heading">
