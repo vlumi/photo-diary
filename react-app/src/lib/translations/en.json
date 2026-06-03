@@ -143,6 +143,9 @@
     "manage-gallery-button-save": "Save",
     "manage-gallery-button-saving": "Saving…",
     "manage-gallery-button-cancel": "Cancel",
+    "manage-gallery-nav-group": "Gallery navigation",
+    "manage-gallery-link-photos": "Photos",
+    "manage-gallery-link-access": "Access",
     "manage-page-gallery-access-title": "Access",
     "manage-page-gallery-access-blurb": "Per-gallery user access. Coming soon.",
 

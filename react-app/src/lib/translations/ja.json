@@ -143,6 +143,9 @@
     "manage-gallery-button-save": "保存",
     "manage-gallery-button-saving": "保存中…",
     "manage-gallery-button-cancel": "キャンセル",
+    "manage-gallery-nav-group": "ギャラリーナビゲーション",
+    "manage-gallery-link-photos": "写真",
+    "manage-gallery-link-access": "アクセス権",
     "manage-page-gallery-access-title": "アクセス権",
     "manage-page-gallery-access-blurb": "ギャラリー別アクセス権設定。準備中です。",
 

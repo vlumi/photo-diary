@@ -143,6 +143,9 @@
     "manage-gallery-button-save": "Tallenna",
     "manage-gallery-button-saving": "Tallennetaan…",
     "manage-gallery-button-cancel": "Peruuta",
+    "manage-gallery-nav-group": "Gallerian navigaatio",
+    "manage-gallery-link-photos": "Valokuvat",
+    "manage-gallery-link-access": "Käyttöoikeudet",
     "manage-page-gallery-access-title": "Käyttöoikeudet",
     "manage-page-gallery-access-blurb": "Galleriakohtaiset käyttöoikeudet. Tulossa.",
 

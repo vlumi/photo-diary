@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { BsImages } from "react-icons/bs";
 
 import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
@@ -50,6 +51,17 @@ const Mono = styled.span`
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.9em;
 `;
+const ActionLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
 
 interface GalleryRow {
   id: string;
@@ -93,6 +105,7 @@ const Galleries = (): React.ReactElement => {
               <Th>{t("manage-galleries-col-title")}</Th>
               <Th>{t("manage-galleries-col-hostname")}</Th>
               <Th>{t("manage-galleries-col-theme")}</Th>
+              <Th></Th>
             </tr>
           </thead>
           <tbody>
@@ -106,6 +119,20 @@ const Galleries = (): React.ReactElement => {
                   <Mono>{g.hostname || ""}</Mono>
                 </Td>
                 <Td>{g.theme || ""}</Td>
+                <Td>
+                  <ActionLink
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/m/g/${g.id}/photos`);
+                    }}
+                    role="link"
+                    tabIndex={0}
+                    title={String(t("manage-gallery-link-photos"))}
+                  >
+                    <BsImages aria-hidden />
+                    {t("manage-gallery-link-photos")}
+                  </ActionLink>
+                </Td>
               </Row>
             ))}
           </tbody>

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BsImages, BsShieldLock } from "react-icons/bs";
 
 import galleriesService, {
   type EpochType,
@@ -16,9 +17,37 @@ const Root = styled.div`
   padding: 24px 16px;
   max-width: 640px;
 `;
-const Title = styled.h2`
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
   margin: 0 0 16px;
+`;
+const Title = styled.h2`
+  margin: 0;
   font-size: 1.2em;
+`;
+const SiblingNav = styled.nav`
+  display: inline-flex;
+  gap: 8px;
+`;
+const SiblingLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 0.85em;
+  cursor: pointer;
+  &:hover {
+    background: var(--header-background);
+    color: var(--header-color);
+  }
 `;
 const Section = styled.section`
   display: flex;
@@ -260,7 +289,27 @@ const GalleryEdit = (): React.ReactElement => {
 
   return (
     <Root>
-      <Title>{galleryId}</Title>
+      <TitleRow>
+        <Title>{galleryId}</Title>
+        <SiblingNav aria-label={String(t("manage-gallery-nav-group"))}>
+          <SiblingLink
+            onClick={() => navigate(`/m/g/${galleryId}/photos`)}
+            role="link"
+            tabIndex={0}
+          >
+            <BsImages aria-hidden />
+            {t("manage-gallery-link-photos")}
+          </SiblingLink>
+          <SiblingLink
+            onClick={() => navigate(`/m/g/${galleryId}/access`)}
+            role="link"
+            tabIndex={0}
+          >
+            <BsShieldLock aria-hidden />
+            {t("manage-gallery-link-access")}
+          </SiblingLink>
+        </SiblingNav>
+      </TitleRow>
       {saveError && (
         <ErrorBanner>
           {t("manage-gallery-save-error")}
