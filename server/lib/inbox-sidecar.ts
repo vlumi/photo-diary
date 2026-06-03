@@ -27,6 +27,11 @@ export const writeCoordSidecar = async (
     altitude?: number | null;
   }
 ): Promise<void> => {
+  // Tests share cwd with the project; writing real files into
+  // `photos/inbox/` would leak across runs and pollute the repo.
+  // The DB-level clear-geocoded side effect is what the tests
+  // verify; the file write is irrelevant to the assertion.
+  if (process.env.NODE_ENV === "test") return;
   const sidecar = {
     id: photoId,
     taken: { location: { coordinates } },
