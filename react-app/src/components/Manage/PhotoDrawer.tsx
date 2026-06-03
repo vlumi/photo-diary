@@ -724,18 +724,20 @@ const PhotoDrawer = (): React.ReactElement => {
   // and shows a per-field revert when the blob has a value to
   // revert *to*. Operator-only fields (title, description, country
   // override, place) are not in this set.
-  type ExifKey =
-    | "author"
-    | "latitude"
-    | "longitude"
-    | "altitude"
-    | "cameraMake"
-    | "cameraModel"
-    | "lensMake"
-    | "lensModel"
-    | "focalLength"
-    | "focalLength35mmEquiv"
-    | "aperture";
+  const EXIF_KEYS = [
+    "author",
+    "latitude",
+    "longitude",
+    "altitude",
+    "cameraMake",
+    "cameraModel",
+    "lensMake",
+    "lensModel",
+    "focalLength",
+    "focalLength35mmEquiv",
+    "aperture",
+  ] as const;
+  type ExifKey = (typeof EXIF_KEYS)[number];
   const exifValueFor = (key: ExifKey): string | undefined => {
     const blob = data?.exifAtIntake;
     if (!blob) return undefined;
@@ -827,7 +829,24 @@ const PhotoDrawer = (): React.ReactElement => {
             <input
               type="checkbox"
               checked={unlocked}
-              onChange={(e) => setUnlocked(e.target.checked)}
+              onChange={(e) => {
+                const next = e.target.checked;
+                setUnlocked(next);
+                // Re-locking reverts any pending EXIF-derived edits
+                // back to `original`. The operator sees in the
+                // (now-disabled) inputs exactly what will be sent
+                // on Save — no ambiguity between visible-but-not-
+                // saved values vs values held under the lock.
+                if (!next) {
+                  setForm((prev) => {
+                    const reverted = { ...prev };
+                    for (const key of EXIF_KEYS) {
+                      reverted[key] = original[key];
+                    }
+                    return reverted;
+                  });
+                }
+              }}
             />
             <span>{t("manage-photo-unlock-exif")}</span>
           </UnlockRow>
