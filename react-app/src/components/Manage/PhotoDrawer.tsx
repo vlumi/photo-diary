@@ -12,6 +12,7 @@ import photosService, {
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 import { useLangStore } from "../../stores";
+import EditableMap from "./EditableMap.lazy";
 
 // In-flow editor panel — replaces the photos sidebar's filter
 // contents when a photo is open. The grid stays clickable so an
@@ -925,6 +926,27 @@ const PhotoDrawer = (): React.ReactElement => {
           {highlight.coords && (
             <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
           )}
+          {!exifDisabled && (() => {
+            // parseFloat("") is NaN; parseFloat("0") is 0 (a real
+            // coordinate at the equator / Greenwich, not unset).
+            // Convert via NaN-test, not falsy-coercion, so the
+            // marker still renders for legitimate zero values.
+            const parse = (s: string): number | null => {
+              if (s.trim() === "") return null;
+              const v = parseFloat(s);
+              return Number.isFinite(v) ? v : null;
+            };
+            return (
+              <EditableMap
+                lat={parse(form.latitude)}
+                lon={parse(form.longitude)}
+                onChange={(next) => {
+                  setField("latitude", String(next.lat));
+                  setField("longitude", String(next.lon));
+                }}
+              />
+            );
+          })()}
           <FieldHint>{t("manage-photo-coord-hint")}</FieldHint>
         </Section>
         <Section>
