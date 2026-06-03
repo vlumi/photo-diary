@@ -570,13 +570,26 @@ const CountrySelect = ({
     setOpen(false);
   };
 
+  const openDropdown = () => {
+    // Pre-populate the filter with the current country's localised
+    // name so the operator sees the current selection on first
+    // open, narrowed to a tight list. They can edit or clear the
+    // filter to browse; no scroll-into-view needed because the
+    // pre-population keeps the match set small enough to fit.
+    if (value) {
+      const upper = value.toUpperCase();
+      setFilter(names[upper] ?? upper);
+    }
+    setOpen(true);
+  };
+
   return (
     <CountrySelectRoot ref={rootRef}>
       <Input
         type="text"
         value={open ? filter : display}
         placeholder={String(t("manage-photo-country-filter-placeholder"))}
-        onFocus={() => setOpen(true)}
+        onFocus={openDropdown}
         onChange={(e) => {
           setFilter(e.target.value);
           if (!open) setOpen(true);
