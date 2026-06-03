@@ -113,6 +113,9 @@
     "manage-photo-save-error": "保存に失敗しました。",
     "manage-photo-revert-to-exif": "EXIF 値に戻す",
     "manage-photo-unlock-exif": "この写真は EXIF バックアップ導入前のものです。チェックすると EXIF 由来のフィールドを編集できますが、変更は元に戻せません。",
+    "manage-photo-country-filter-placeholder": "入力で絞り込み(または 2 文字コードを貼り付け)",
+    "manage-photo-country-clear": "国を消去",
+    "manage-photo-country-no-match": "該当する国がありません。",
     "manage-page-gallery-access-title": "アクセス権",
     "manage-page-gallery-access-blurb": "ギャラリー別アクセス権設定。準備中です。",
 

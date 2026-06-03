@@ -11,6 +11,7 @@ import photosService, {
 } from "../../services/photos";
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
+import { useLangStore } from "../../stores";
 
 // In-flow editor panel — replaces the photos sidebar's filter
 // contents when a photo is open. The grid stays clickable so an
@@ -146,6 +147,54 @@ const UnlockRow = styled.label`
   padding: 6px 8px;
   border: 1px dashed var(--inactive-color);
   border-radius: 4px;
+  font-size: 0.85em;
+  color: var(--inactive-color);
+`;
+// Country picker: typeahead-style select using the lang store's
+// localised country dictionary (reused from the public viewer's
+// flag rendering, no new dependency). Stores the alpha-2 code on
+// the form; renders "<flag> Country name (CC)" in the dropdown.
+const CountrySelectRoot = styled.div`
+  position: relative;
+`;
+const CountryDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin-top: 2px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--primary-background);
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+`;
+const CountryOption = styled.button<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  background: ${({ $active }) =>
+    $active ? "var(--header-background)" : "transparent"};
+  color: ${({ $active }) =>
+    $active ? "var(--header-color)" : "var(--primary-color)"};
+  border: none;
+  text-align: left;
+  font: inherit;
+  font-size: 0.9em;
+  cursor: pointer;
+  &:hover {
+    background: var(--header-background);
+    color: var(--header-color);
+  }
+`;
+const CountryCode = styled.span`
+  margin-left: auto;
+  font-family: monospace;
   font-size: 0.85em;
   color: var(--inactive-color);
 `;
@@ -445,6 +494,136 @@ const activeMissing = (searchParams: URLSearchParams): Set<MissingField> => {
   return out;
 };
 
+// Inline typeahead for the country field. Reuses the lang store's
+// `countryData` (the same i18n-iso-countries instance the public
+// viewer uses for flag rendering) — no extra network call, no new
+// dependency. Stores the alpha-2 code on the form; the dropdown
+// renders localised names. Empty filter shows all countries
+// alphabetised; typing narrows.
+interface CountrySelectProps {
+  value: string;
+  onChange: (code: string) => void;
+  highlight?: boolean;
+  disabled?: boolean;
+}
+const CountrySelect = ({
+  value,
+  onChange,
+  highlight,
+  disabled,
+}: CountrySelectProps): React.ReactElement => {
+  const { t } = useTranslation();
+  const lang = useLangStore((s) => s.lang);
+  const countryData = useLangStore((s) => s.countryData);
+  const [filter, setFilter] = React.useState("");
+  const [open, setOpen] = React.useState(false);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const names = React.useMemo(() => {
+    if (!countryData) return {} as Record<string, string>;
+    return countryData.getNames(lang) as Record<string, string>;
+  }, [countryData, lang]);
+
+  const matches = React.useMemo(() => {
+    const needle = filter.trim().toLowerCase();
+    const entries = Object.entries(names).map(([code, name]) => ({
+      code: code.toLowerCase(),
+      name,
+    }));
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+    if (!needle) return entries;
+    return entries.filter(
+      (e) =>
+        e.name.toLowerCase().includes(needle) ||
+        e.code.toLowerCase().includes(needle)
+    );
+  }, [names, filter]);
+
+  const display = React.useMemo(() => {
+    if (!value) return "";
+    const upper = value.toUpperCase();
+    const name = names[upper];
+    return name ? `${name} (${upper.toUpperCase()})` : upper.toUpperCase();
+  }, [value, names]);
+
+  const choose = (code: string) => {
+    onChange(code);
+    setFilter("");
+    setOpen(false);
+  };
+
+  return (
+    <CountrySelectRoot ref={rootRef}>
+      <Input
+        type="text"
+        value={open ? filter : display}
+        placeholder={String(t("manage-photo-country-filter-placeholder"))}
+        onFocus={() => setOpen(true)}
+        onChange={(e) => {
+          setFilter(e.target.value);
+          if (!open) setOpen(true);
+        }}
+        $highlight={!!highlight}
+        disabled={disabled}
+      />
+      {open && (
+        <CountryDropdown role="listbox">
+          {value && (
+            <CountryOption
+              type="button"
+              $active={false}
+              onClick={() => choose("")}
+              title={String(t("manage-photo-country-clear"))}
+            >
+              <span>—</span>
+              <span>{t("manage-photo-country-clear")}</span>
+            </CountryOption>
+          )}
+          {matches.length === 0 && (
+            <CountryOption type="button" $active={false} disabled>
+              <span>{t("manage-photo-country-no-match")}</span>
+            </CountryOption>
+          )}
+          {matches.map((entry) => {
+            const codeUpper = entry.code.toUpperCase();
+            const selected =
+              value && value.toUpperCase() === codeUpper;
+            return (
+              <CountryOption
+                key={entry.code}
+                type="button"
+                $active={!!selected}
+                onClick={() => choose(entry.code)}
+              >
+                <span>{entry.name}</span>
+                <CountryCode>{codeUpper}</CountryCode>
+              </CountryOption>
+            );
+          })}
+        </CountryDropdown>
+      )}
+    </CountrySelectRoot>
+  );
+};
+
 const PhotoDrawer = (): React.ReactElement => {
   const { t } = useTranslation();
   const { photoId } = useParams<{ photoId: string }>();
@@ -680,13 +859,10 @@ const PhotoDrawer = (): React.ReactElement => {
           <FieldRow>
             <Field>
               <FieldLabel>{t("manage-photo-field-country")}</FieldLabel>
-              <Input
-                type="text"
+              <CountrySelect
                 value={form.country}
-                onChange={(e) => setField("country", e.target.value)}
-                placeholder="JP"
-                maxLength={2}
-                $highlight={highlight.country}
+                onChange={(code) => setField("country", code)}
+                highlight={highlight.country}
               />
               {highlight.country && (
                 <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>

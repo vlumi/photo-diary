@@ -113,6 +113,9 @@
     "manage-photo-save-error": "Failed to save changes.",
     "manage-photo-revert-to-exif": "Revert to EXIF",
     "manage-photo-unlock-exif": "This photo predates the EXIF backup. Tick to enable editing EXIF-derived fields; overrides are not reversible.",
+    "manage-photo-country-filter-placeholder": "Type to filter (or paste a 2-letter code)",
+    "manage-photo-country-clear": "Clear country",
+    "manage-photo-country-no-match": "No matching country.",
     "manage-page-gallery-access-title": "Access",
     "manage-page-gallery-access-blurb": "Per-gallery user access. Coming soon.",
 
