@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { BsImages } from "react-icons/bs";
+import { BsImages, BsShieldLock } from "react-icons/bs";
 
 import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
 
 const Root = styled.div`
   padding: 24px 16px;
+  max-width: 1200px;
 `;
 const Title = styled.h2`
   margin: 0 0 16px;
@@ -25,6 +26,9 @@ const Table = styled.table`
   border-collapse: collapse;
   font-size: 0.9em;
 `;
+// First column's inner padding would push its content right of the
+// Title (which sits at Root's padding edge); zeroing the leading
+// pad on first-of-type cells lines the column up with the heading.
 const Th = styled.th`
   text-align: left;
   padding: 8px 12px;
@@ -34,11 +38,23 @@ const Th = styled.th`
   text-transform: uppercase;
   font-size: 0.85em;
   letter-spacing: 0.05em;
+  &:first-of-type {
+    padding-left: 0;
+  }
+  &:last-of-type {
+    padding-right: 0;
+  }
 `;
 const Td = styled.td`
   padding: 8px 12px;
   border-bottom: 1px solid var(--inactive-color);
-  vertical-align: top;
+  vertical-align: middle;
+  &:first-of-type {
+    padding-left: 0;
+  }
+  &:last-of-type {
+    padding-right: 0;
+  }
 `;
 const Row = styled.tr`
   cursor: pointer;
@@ -51,15 +67,27 @@ const Mono = styled.span`
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.9em;
 `;
-const ActionLink = styled.a`
+const Actions = styled.div`
+  display: inline-flex;
+  gap: 6px;
+  justify-content: flex-end;
+`;
+const ActionButton = styled.a`
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: inherit;
+  padding: 4px 10px;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  color: var(--primary-color);
+  background: var(--primary-background);
   text-decoration: none;
+  font-size: 0.85em;
   cursor: pointer;
+  white-space: nowrap;
   &:hover {
-    text-decoration: underline;
+    background: var(--header-background);
+    color: var(--header-color);
   }
 `;
 
@@ -120,18 +148,32 @@ const Galleries = (): React.ReactElement => {
                 </Td>
                 <Td>{g.theme || ""}</Td>
                 <Td>
-                  <ActionLink
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/m/g/${g.id}/photos`);
-                    }}
-                    role="link"
-                    tabIndex={0}
-                    title={String(t("manage-gallery-link-photos"))}
-                  >
-                    <BsImages aria-hidden />
-                    {t("manage-gallery-link-photos")}
-                  </ActionLink>
+                  <Actions>
+                    <ActionButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/m/g/${g.id}/photos`);
+                      }}
+                      role="link"
+                      tabIndex={0}
+                      title={String(t("manage-gallery-link-photos"))}
+                    >
+                      <BsImages aria-hidden />
+                      {t("manage-gallery-link-photos")}
+                    </ActionButton>
+                    <ActionButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/m/g/${g.id}/access`);
+                      }}
+                      role="link"
+                      tabIndex={0}
+                      title={String(t("manage-gallery-link-access"))}
+                    >
+                      <BsShieldLock aria-hidden />
+                      {t("manage-gallery-link-access")}
+                    </ActionButton>
+                  </Actions>
                 </Td>
               </Row>
             ))}
