@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
 import Leaflet from "leaflet";
 import {
   MapContainer as Map,
@@ -14,12 +15,41 @@ import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
 
-const Root = styled.div`
+const Root = styled.div<{ readOnly?: boolean }>`
+  position: relative;
   width: 100%;
   height: 240px;
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid var(--inactive-color);
+
+  /* Editable mode: crosshair on the map (click-to-set), grab on
+     the marker (drag-to-move). Locked mode: leaflet's default
+     pan-grab cursor — no edit affordance. */
+  ${({ readOnly }) =>
+    readOnly
+      ? ""
+      : `
+  .leaflet-container { cursor: crosshair; }
+  .leaflet-container.leaflet-grab { cursor: crosshair; }
+  .leaflet-container.leaflet-dragging { cursor: grabbing; }
+  .leaflet-marker-icon { cursor: grab; }
+  .leaflet-marker-icon:active { cursor: grabbing; }
+  `}
+`;
+
+const LockBadge = styled.div`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.8em;
+  pointer-events: auto;
+  cursor: help;
 `;
 
 const DefaultIcon = Leaflet.icon({
@@ -94,6 +124,7 @@ const EditableMap = ({
   onChange,
   readOnly,
 }: Props): React.ReactElement => {
+  const { t } = useTranslation();
   const hasCoords = lat != null && lon != null;
   const initialCenter: [number, number] = hasCoords
     ? [lat, lon]
@@ -116,7 +147,12 @@ const EditableMap = ({
   );
 
   return (
-    <Root>
+    <Root readOnly={readOnly}>
+      {readOnly && (
+        <LockBadge title={t("manage-photo-map-locked-hint")}>
+          {`\u{1F512} ${t("manage-photo-map-locked")}`}
+        </LockBadge>
+      )}
       <Map
         center={initialCenter}
         zoom={initialZoom}
