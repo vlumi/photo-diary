@@ -174,13 +174,19 @@ await app.register(groupGalleryV1.plugin, {
   prefix: "/api/v1/group-gallery",
 });
 
-// Double-duty 404 handler: serve index.html for SPA routes
-// (`/g`, `/g/*`) so React Router can resolve deep links; everything
-// else (incl. unknown `/api/*`) goes through `errorHandler` for the
-// JSON 404 the API has always produced.
+// Double-duty 404 handler: serve index.html for SPA routes so
+// React Router can resolve deep links (refreshing /m/photos, or
+// pasting a /s/<gallery>/year URL into the bar, must not 404 at
+// the server); everything else (incl. unknown `/api/*`) goes
+// through `errorHandler` for the JSON 404 the API has always
+// produced.
+const SPA_ROOTS = ["/g", "/m", "/s"];
 app.setNotFoundHandler(async (request, reply) => {
   const pathOnly = request.url.split("?")[0];
-  if (pathOnly === "/g" || pathOnly.startsWith("/g/")) {
+  const isSpaRoute = SPA_ROOTS.some(
+    (root) => pathOnly === root || pathOnly.startsWith(`${root}/`)
+  );
+  if (isSpaRoute) {
     return reply.type("text/html").sendFile("index.html");
   }
   throw new NotFoundError();
