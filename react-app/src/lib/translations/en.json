@@ -218,6 +218,7 @@
     "photo-count_other": "{{count}} photos",
     "photo-metadata": "Photo details",
     "photo-author": "Photo author",
+    "manage-this-photo": "Manage this photo",
     "metadata-camera": "Camera",
     "metadata-focal-eq": "({{value}}㎜ eq.)",
     "metadata-lens": "Lens",

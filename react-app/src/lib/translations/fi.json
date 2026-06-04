@@ -218,6 +218,7 @@
     "photo-count_other": "{{count}} kuvaa",
     "photo-metadata": "Kuvan tiedot",
     "photo-author": "Valokuvaaja",
+    "manage-this-photo": "Hallinnoi tätä kuvaa",
     "metadata-camera": "Kamera",
     "metadata-focal-eq": "({{value}}㎜ vast.)",
     "metadata-lens": "Objektiivi",

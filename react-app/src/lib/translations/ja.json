@@ -218,6 +218,7 @@
     "photo-count_other": "{{count}}枚",
     "photo-metadata": "写真情報",
     "photo-author": "撮影者",
+    "manage-this-photo": "この写真を管理",
     "metadata-camera": "カメラ",
     "metadata-focal-eq": "（{{value}}㎜換算）",
     "metadata-lens": "レンズ",
