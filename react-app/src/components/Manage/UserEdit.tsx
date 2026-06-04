@@ -283,7 +283,12 @@ const UserEdit = (): React.ReactElement => {
 
   const flag = isAdminFlag(data as UserData);
   const isSelf = user?.id() === userId;
-  const isGuest = userId === ":guest";
+  // `:`-prefixed ids are reserved for pseudo-users (`:guest` for
+  // now). They aren't real accounts — no login, no password, no
+  // admin promotion makes sense — so the Edit + Delete affordances
+  // are suppressed and only the read-only summary + the banner
+  // remain. The id pattern is enforced server-side at create time.
+  const isPseudo = userId.startsWith(":");
 
   return (
     <Root>
@@ -292,7 +297,7 @@ const UserEdit = (): React.ReactElement => {
           <Mono>{userId}</Mono>
         </Title>
       </TitleRow>
-      {isGuest && (
+      {isPseudo && (
         <InfoBanner>{t("manage-user-guest-banner")}</InfoBanner>
       )}
       {saveError && (
@@ -363,25 +368,27 @@ const UserEdit = (): React.ReactElement => {
               {flag ? t("manage-user-flag-yes") : t("manage-user-flag-no")}
             </SummaryValue>
           </Summary>
-          <Footer>
-            <ButtonDanger
-              type="button"
-              onClick={() => {
-                setSaveError(null);
-                setConfirmingDelete(true);
-              }}
-              disabled={deleteMutation.isPending || confirmingDelete}
-            >
-              <BsTrash aria-hidden />
-              {t("manage-user-button-delete")}
-            </ButtonDanger>
-            <FooterRight>
-              <ButtonPrimary type="button" onClick={handleStartEdit}>
-                <BsPencilSquare aria-hidden />
-                {t("manage-user-button-edit")}
-              </ButtonPrimary>
-            </FooterRight>
-          </Footer>
+          {!isPseudo && (
+            <Footer>
+              <ButtonDanger
+                type="button"
+                onClick={() => {
+                  setSaveError(null);
+                  setConfirmingDelete(true);
+                }}
+                disabled={deleteMutation.isPending || confirmingDelete}
+              >
+                <BsTrash aria-hidden />
+                {t("manage-user-button-delete")}
+              </ButtonDanger>
+              <FooterRight>
+                <ButtonPrimary type="button" onClick={handleStartEdit}>
+                  <BsPencilSquare aria-hidden />
+                  {t("manage-user-button-edit")}
+                </ButtonPrimary>
+              </FooterRight>
+            </Footer>
+          )}
         </>
       )}
 
