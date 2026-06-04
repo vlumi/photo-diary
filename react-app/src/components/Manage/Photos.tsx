@@ -360,12 +360,21 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
 
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  // When photoIdFocus is in play the server overrides the URL's
+  // (absent) page, so the effective current page is the one the
+  // server returned. The pager display + Next/Prev keys read from
+  // here, otherwise they'd report "1 / N" while actually showing
+  // page 2 — and clicking Prev wouldn't move.
+  const currentPage = data?.page ?? page;
   const goToPage = (target: number) => {
     if (target < 1 || target > pageCount) return;
-    setSearchParam("page", target > 1 ? String(target) : null);
+    // Always write ?page= explicitly, including page 1, so the
+    // photoIdFocus side-effect doesn't snap back to the focused
+    // page after the operator pages away.
+    setSearchParam("page", String(target));
   };
-  useKeyPress("ArrowLeft", () => goToPage(page - 1));
-  useKeyPress("ArrowRight", () => goToPage(page + 1));
+  useKeyPress("ArrowLeft", () => goToPage(currentPage - 1));
+  useKeyPress("ArrowRight", () => goToPage(currentPage + 1));
   useKeyPress("Home", () => goToPage(1));
   useKeyPress("End", () => goToPage(pageCount));
 
@@ -480,7 +489,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           {pageCount > 1 && (
             <span>
               {t("manage-photos-result-page", {
-                page,
+                page: currentPage,
                 pageCount,
               })}
             </span>
@@ -517,16 +526,16 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           <Pager>
             <PagerButton
               type="button"
-              disabled={page <= 1}
-              onClick={() => goToPage(page - 1)}
+              disabled={currentPage <= 1}
+              onClick={() => goToPage(currentPage - 1)}
             >
               {t("manage-photos-prev-page")}
             </PagerButton>
-            <span>{page} / {pageCount}</span>
+            <span>{currentPage} / {pageCount}</span>
             <PagerButton
               type="button"
-              disabled={page >= pageCount}
-              onClick={() => goToPage(page + 1)}
+              disabled={currentPage >= pageCount}
+              onClick={() => goToPage(currentPage + 1)}
             >
               {t("manage-photos-next-page")}
             </PagerButton>
