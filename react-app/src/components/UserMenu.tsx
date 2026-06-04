@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -114,6 +115,7 @@ const ThemeSelect = styled.select`
 // "Log out". Click outside or Escape closes the dropdown.
 const UserMenu = (): React.ReactElement => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
   const openLoginModal = useLoginModalStore((s) => s.open);
   const openChangePasswordModal = useChangePasswordModalStore((s) => s.open);
@@ -210,6 +212,18 @@ const UserMenu = (): React.ReactElement => {
           >
             {t("change-password-title")}
           </MenuItem>
+          {user.isAdmin() && (
+            <MenuItem
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setIsOpen(false);
+                navigate("/m");
+              }}
+            >
+              {t("manage-menu-entry")}
+            </MenuItem>
+          )}
           <ThemeRow>
             <span>{t("theme-label")}</span>
             <ThemeSelect

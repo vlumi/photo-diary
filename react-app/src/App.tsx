@@ -22,6 +22,7 @@ import ManagePhotoDrawer from "./components/Manage/PhotoDrawer";
 import ManageGalleries from "./components/Manage/Galleries";
 import ManageGalleryEdit from "./components/Manage/GalleryEdit";
 import ManageGalleryCreate from "./components/Manage/GalleryCreate";
+import ManageDashboard from "./components/Manage/Dashboard";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -120,15 +121,7 @@ const App = (): React.ReactElement => {
               />
               <Route path="/g" element={<Gallery />} />
               <Route path="/m" element={<Manage />}>
-                <Route
-                  index
-                  element={
-                    <ManagePlaceholder
-                      titleKey="manage-page-dashboard-title"
-                      blurbKey="manage-page-dashboard-blurb"
-                    />
-                  }
-                />
+                <Route index element={<ManageDashboard />} />
                 <Route
                   path="users"
                   element={
