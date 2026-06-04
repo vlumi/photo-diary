@@ -252,14 +252,20 @@ const upsertUserGallery = async (
 ): Promise<void> => {
   // Only touch the columns the caller passed (everything else is preserved on
   // conflict). Done with SQLite's INSERT ON CONFLICT DO UPDATE so a single
-  // statement handles both the create and the partial-update path.
+  // statement handles both the create and the partial-update path. When no
+  // mutable columns were passed the conflict clause must be DO NOTHING —
+  // SQLite rejects an empty DO UPDATE SET as a syntax error.
   const sets: string[] = [];
   if ("is_admin" in row) sets.push("is_admin = excluded.is_admin");
   if ("hide_map" in row) sets.push("hide_map = excluded.hide_map");
+  const conflict =
+    sets.length > 0
+      ? `DO UPDATE SET ${sets.join(", ")}`
+      : "DO NOTHING";
   const query =
     "INSERT INTO user_gallery (user_id, gallery_id, is_admin, hide_map) " +
     "VALUES (?, ?, ?, ?) " +
-    `ON CONFLICT(user_id, gallery_id) DO UPDATE SET ${sets.join(", ")}`;
+    `ON CONFLICT(user_id, gallery_id) ${conflict}`;
   db.prepare(query).run(
     row.user_id,
     row.gallery_id,
@@ -354,13 +360,19 @@ const upsertGroupGallery = async (row: {
   is_admin?: boolean;
   hide_map?: number | null;
 }): Promise<void> => {
+  // Mirror upsertUserGallery: DO NOTHING when no mutable columns were
+  // passed, else DO UPDATE the supplied subset.
   const sets: string[] = [];
   if ("is_admin" in row) sets.push("is_admin = excluded.is_admin");
   if ("hide_map" in row) sets.push("hide_map = excluded.hide_map");
+  const conflict =
+    sets.length > 0
+      ? `DO UPDATE SET ${sets.join(", ")}`
+      : "DO NOTHING";
   const query =
     "INSERT INTO group_gallery (group_id, gallery_id, is_admin, hide_map) " +
     "VALUES (?, ?, ?, ?) " +
-    `ON CONFLICT(group_id, gallery_id) DO UPDATE SET ${sets.join(", ")}`;
+    `ON CONFLICT(group_id, gallery_id) ${conflict}`;
   db.prepare(query).run(
     row.group_id,
     row.gallery_id,
