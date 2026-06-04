@@ -23,6 +23,9 @@ import ManageGalleries from "./components/Manage/Galleries";
 import ManageGalleryEdit from "./components/Manage/GalleryEdit";
 import ManageGalleryCreate from "./components/Manage/GalleryCreate";
 import ManageDashboard from "./components/Manage/Dashboard";
+import ManageUsers from "./components/Manage/Users";
+import ManageUserEdit from "./components/Manage/UserEdit";
+import ManageUserCreate from "./components/Manage/UserCreate";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -122,15 +125,9 @@ const App = (): React.ReactElement => {
               <Route path="/g" element={<Gallery />} />
               <Route path="/m" element={<Manage />}>
                 <Route index element={<ManageDashboard />} />
-                <Route
-                  path="users"
-                  element={
-                    <ManagePlaceholder
-                      titleKey="manage-page-users-title"
-                      blurbKey="manage-page-users-blurb"
-                    />
-                  }
-                />
+                <Route path="users" element={<ManageUsers />} />
+                <Route path="users/new" element={<ManageUserCreate />} />
+                <Route path="users/:userId" element={<ManageUserEdit />} />
                 <Route path="galleries" element={<ManageGalleries />} />
                 <Route
                   path="galleries/new"
