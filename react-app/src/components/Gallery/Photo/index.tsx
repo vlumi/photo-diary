@@ -6,6 +6,7 @@ import {
   BsArrowsFullscreen,
   BsFullscreenExit,
   BsInfoCircleFill,
+  BsPencilSquare,
   BsXLg,
 } from "react-icons/bs";
 import { motion, useAnimationControls, type PanInfo } from "framer-motion";
@@ -16,6 +17,7 @@ import MetadataPanel from "./MetadataPanel";
 
 import useKeyPress from "../../../lib/keypress";
 import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
+import { useUserStore } from "../../../stores";
 
 import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo as PhotoT } from "../../../models/PhotoModel";
@@ -100,6 +102,11 @@ const CloseButton = styled(FloatingButton)`
 // 58 = 50px Navigation height + 8px clearance.
 const FullscreenButton = styled(FloatingButton)`
   top: 58px;
+  left: 8px;
+`;
+// 100 = FullscreenButton top 58 + 34px height + 8px clearance.
+const ManageButton = styled(FloatingButton)`
+  top: 100px;
   left: 8px;
 `;
 const InfoButton = styled(FloatingButton)`
@@ -208,6 +215,8 @@ const Photo = ({
   countryData,
 }: Props): React.ReactElement => {
   const navigate = useNavigate();
+  const user = useUserStore((s) => s.user);
+  const isAdmin = !!user?.isAdmin();
   const [zoom, setZoom] = React.useState<ZoomState>(ZOOM_RESET);
   const [isFullscreen, setIsFullscreen] = React.useState(
     typeof document !== "undefined" && !!document.fullscreenElement
@@ -424,6 +433,18 @@ const Photo = ({
           >
             {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
           </FullscreenButton>
+        )}
+        {isAdmin && (
+          <ManageButton
+            type="button"
+            onClick={() =>
+              navigate(`/m/g/${gallery.id()}/photos/${photo.id()}`)
+            }
+            aria-label={String(t("manage-this-photo"))}
+            title={String(t("manage-this-photo"))}
+          >
+            <BsPencilSquare />
+          </ManageButton>
         )}
         <InfoButton
           type="button"

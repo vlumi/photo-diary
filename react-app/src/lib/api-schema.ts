@@ -713,6 +713,7 @@ export interface paths {
                     q?: string;
                     page?: number;
                     pageSize?: number;
+                    photoIdFocus?: string;
                 };
                 header?: never;
                 path?: never;

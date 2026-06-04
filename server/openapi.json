@@ -1099,6 +1099,14 @@
             "in": "query",
             "name": "pageSize",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "photoIdFocus",
+            "required": false
           }
         ],
         "security": [

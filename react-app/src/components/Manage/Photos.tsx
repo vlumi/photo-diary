@@ -117,17 +117,22 @@ const Grid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 8px;
 `;
-const Tile = styled.button`
+const Tile = styled.button<{ $focused?: boolean }>`
   display: flex;
   flex-direction: column;
   background: var(--tile-background);
-  border: 1px solid transparent;
+  border: ${({ $focused }) =>
+    $focused
+      ? "2px solid var(--header-background)"
+      : "1px solid transparent"};
   border-radius: 2px;
   padding: 0;
   overflow: hidden;
   cursor: pointer;
   font: inherit;
   text-align: left;
+  box-shadow: ${({ $focused }) =>
+    $focused ? "0 0 0 2px var(--header-background)" : "none"};
   &:hover,
   &:focus-visible {
     border-color: var(--primary-color);
@@ -296,10 +301,34 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   );
   const page = pageFromSearchParams(searchParams);
 
+  // When a photo is open AND the URL doesn't carry an explicit
+  // ?page=, ask the server to return the page containing that
+  // photo. Explicit page wins so paging via Next/Prev keeps
+  // working with a drawer open.
+  const params = useParams();
+  const focusOpen = !!params.photoId && !searchParams.has("page");
+  const photoIdFocus = focusOpen ? params.photoId : undefined;
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["manage-photos", filter, page, PAGE_SIZE],
-    queryFn: () => photosService.list(filter, page, PAGE_SIZE),
+    queryKey: ["manage-photos", filter, page, PAGE_SIZE, photoIdFocus],
+    queryFn: () => photosService.list(filter, page, PAGE_SIZE, photoIdFocus),
   });
+
+  // After photoIdFocus resolves a non-1 page, write it back to the
+  // URL. Without this the page param stays absent: closing the
+  // drawer keeps the URL on `.../photos` (no ?page=), the focus
+  // de-engages with no photoId left, and the list snaps back to
+  // page 1 even though the operator was viewing page 2.
+  React.useEffect(() => {
+    if (!focusOpen) return;
+    const resolved = data?.page;
+    if (!resolved || resolved <= 1) return;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", String(resolved));
+      return next;
+    });
+  }, [focusOpen, data?.page, setSearchParams]);
 
   // Galleries list for the gallery-membership facet. Skipped in
   // gallery-scoped mode where the gallery is fixed.
@@ -347,12 +376,21 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
 
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  // When photoIdFocus is in play the server overrides the URL's
+  // (absent) page, so the effective current page is the one the
+  // server returned. The pager display + Next/Prev keys read from
+  // here, otherwise they'd report "1 / N" while actually showing
+  // page 2 — and clicking Prev wouldn't move.
+  const currentPage = data?.page ?? page;
   const goToPage = (target: number) => {
     if (target < 1 || target > pageCount) return;
-    setSearchParam("page", target > 1 ? String(target) : null);
+    // Always write ?page= explicitly, including page 1, so the
+    // photoIdFocus side-effect doesn't snap back to the focused
+    // page after the operator pages away.
+    setSearchParam("page", String(target));
   };
-  useKeyPress("ArrowLeft", () => goToPage(page - 1));
-  useKeyPress("ArrowRight", () => goToPage(page + 1));
+  useKeyPress("ArrowLeft", () => goToPage(currentPage - 1));
+  useKeyPress("ArrowRight", () => goToPage(currentPage + 1));
   useKeyPress("Home", () => goToPage(1));
   useKeyPress("End", () => goToPage(pageCount));
 
@@ -467,7 +505,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           {pageCount > 1 && (
             <span>
               {t("manage-photos-result-page", {
-                page,
+                page: currentPage,
                 pageCount,
               })}
             </span>
@@ -485,6 +523,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
                   type="button"
                   title={p.id}
                   onClick={() => openPhoto(p.id)}
+                  $focused={p.id === params.photoId}
                 >
                   <ThumbWrap>
                     <Thumb
@@ -503,16 +542,16 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           <Pager>
             <PagerButton
               type="button"
-              disabled={page <= 1}
-              onClick={() => goToPage(page - 1)}
+              disabled={currentPage <= 1}
+              onClick={() => goToPage(currentPage - 1)}
             >
               {t("manage-photos-prev-page")}
             </PagerButton>
-            <span>{page} / {pageCount}</span>
+            <span>{currentPage} / {pageCount}</span>
             <PagerButton
               type="button"
-              disabled={page >= pageCount}
-              onClick={() => goToPage(page + 1)}
+              disabled={currentPage >= pageCount}
+              onClick={() => goToPage(currentPage + 1)}
             >
               {t("manage-photos-next-page")}
             </PagerButton>
@@ -525,7 +564,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   // useParams() inside the parent <Photos> route picks up the
   // child :photoId. When a photo is open, the sidebar swaps from
   // filter controls to the edit form (rendered via <Outlet />).
-  const params = useParams();
+  // `params` is declared earlier alongside the focus query.
   const editing = !!params.photoId;
 
   return (
