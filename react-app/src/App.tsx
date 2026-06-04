@@ -29,6 +29,7 @@ import ManageUserCreate from "./components/Manage/UserCreate";
 import ManageGroups from "./components/Manage/Groups";
 import ManageGroupEdit from "./components/Manage/GroupEdit";
 import ManageGroupCreate from "./components/Manage/GroupCreate";
+import ManageGalleryAccess from "./components/Manage/GalleryAccess";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -147,15 +148,7 @@ const App = (): React.ReactElement => {
                   <Route path="photos" element={<ManageGalleryPhotos />}>
                     <Route path=":photoId" element={<ManagePhotoDrawer />} />
                   </Route>
-                  <Route
-                    path="access"
-                    element={
-                      <ManagePlaceholder
-                        titleKey="manage-page-gallery-access-title"
-                        blurbKey="manage-page-gallery-access-blurb"
-                      />
-                    }
-                  />
+                  <Route path="access" element={<ManageGalleryAccess />} />
                 </Route>
               </Route>
               <Route path="/" element={<Navigate to="/g" replace />} />
