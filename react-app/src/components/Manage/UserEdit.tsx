@@ -122,6 +122,15 @@ const ButtonDanger = styled.button`
     cursor: default;
   }
 `;
+const InfoBanner = styled.div`
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  background: var(--primary-background);
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  font-size: 0.85em;
+`;
 const ErrorBanner = styled.div`
   padding: 8px 12px;
   margin-bottom: 16px;
@@ -274,6 +283,7 @@ const UserEdit = (): React.ReactElement => {
 
   const flag = isAdminFlag(data as UserData);
   const isSelf = user?.id() === userId;
+  const isGuest = userId === ":guest";
 
   return (
     <Root>
@@ -282,6 +292,9 @@ const UserEdit = (): React.ReactElement => {
           <Mono>{userId}</Mono>
         </Title>
       </TitleRow>
+      {isGuest && (
+        <InfoBanner>{t("manage-user-guest-banner")}</InfoBanner>
+      )}
       {saveError && (
         <ErrorBanner>
           {t("manage-user-save-error")}

@@ -54,6 +54,8 @@
     "manage-users-col-id": "ID",
     "manage-users-col-role": "Role",
     "manage-users-role-admin": "Admin",
+    "manage-users-role-guest": "Guest",
+    "manage-user-guest-banner": "`:guest` is a pseudo-user. Grants on this row apply to every anonymous visitor (the access cascade adds `:guest`'s rows to whatever the current user has). It can't log in, can't be promoted to admin, and removing it disables all anonymous access until the row is recreated.",
     "manage-user-create-title": "New user",
     "manage-user-create-error": "Failed to create user",
     "manage-user-load-error": "Failed to load user.",

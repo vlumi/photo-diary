@@ -54,6 +54,8 @@
     "manage-users-col-id": "Tunniste",
     "manage-users-col-role": "Rooli",
     "manage-users-role-admin": "Ylläpitäjä",
+    "manage-users-role-guest": "Vieras",
+    "manage-user-guest-banner": "`:guest` on pseudokäyttäjä. Tämän rivin oikeudet koskevat kaikkia anonyymejä kävijöitä (oikeudet kerätään nykyisen käyttäjän omien rivien lisäksi). Ei voi kirjautua, ei voi nostaa pääkäyttäjäksi; rivin poistaminen poistaa anonyymin pääsyn kunnes se luodaan uudelleen.",
     "manage-user-create-title": "Uusi käyttäjä",
     "manage-user-create-error": "Käyttäjän luonti epäonnistui",
     "manage-user-load-error": "Käyttäjän lataus epäonnistui.",

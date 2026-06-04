@@ -54,6 +54,8 @@
     "manage-users-col-id": "ID",
     "manage-users-col-role": "ロール",
     "manage-users-role-admin": "管理者",
+    "manage-users-role-guest": "ゲスト",
+    "manage-user-guest-banner": "`:guest` は擬似ユーザーです。この行の権限はすべての匿名訪問者に適用されます(アクセスカスケードが現在のユーザーの権限に加えて `:guest` の権限も読み込みます)。ログインできず管理者に昇格もできません。削除すると再作成するまで匿名アクセスは無効になります。",
     "manage-user-create-title": "新しいユーザー",
     "manage-user-create-error": "ユーザーの作成に失敗しました",
     "manage-user-load-error": "ユーザーの読み込みに失敗しました。",
