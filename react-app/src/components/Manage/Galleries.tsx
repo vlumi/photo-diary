@@ -53,14 +53,7 @@ const Table = styled.table`
   border-collapse: collapse;
   font-size: 0.9em;
 `;
-// width: 1% + white-space: nowrap on the trailing actions column
-// is the classic "shrink to fit content" idiom for auto-layout
-// tables. Without it the actions cell soaks up the slack space the
-// browser distributes across auto-sized columns, leaving the
-// buttons floating at the cell's left edge with empty space to
-// their right. Uniform inner padding on every cell keeps the row
-// hover background away from the table edges so the text never
-// touches the highlight border.
+// last-of-type width: 1% + nowrap shrinks the column to fit.
 const Th = styled.th`
   text-align: left;
   padding: 8px 12px;
