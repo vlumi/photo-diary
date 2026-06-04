@@ -173,7 +173,13 @@ const buildCrumbs = (
       out.push({ kind: "leaf", label: sub });
     }
   } else if (page === "users") {
-    out.push({ kind: "leaf", label: t("manage-page-users-title") });
+    const sub = tail[1];
+    pushLinkOrLeaf(!sub, "/m/users", t("manage-page-users-title"));
+    if (sub === "new") {
+      out.push({ kind: "leaf", label: t("manage-user-create-title") });
+    } else if (sub) {
+      out.push({ kind: "leaf", label: sub });
+    }
   } else if (page === "inbox") {
     out.push({ kind: "leaf", label: t("manage-page-inbox-title") });
   } else {
