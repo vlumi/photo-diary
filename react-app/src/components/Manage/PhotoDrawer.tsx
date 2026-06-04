@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsX } from "react-icons/bs";
+import { BsBoxArrowUpRight, BsX } from "react-icons/bs";
 
 import photosService, {
   type MissingField,
@@ -56,6 +56,24 @@ const CloseButton = styled.button`
   padding: 0 4px;
   display: inline-flex;
   align-items: center;
+  &:hover {
+    color: var(--inactive-color);
+  }
+`;
+const HeaderActions = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+`;
+const ViewOnSiteLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  font-size: 1.1em;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0 4px;
   &:hover {
     color: var(--inactive-color);
   }
@@ -640,7 +658,10 @@ const CountrySelect = ({
 
 const PhotoDrawer = (): React.ReactElement => {
   const { t } = useTranslation();
-  const { photoId } = useParams<{ photoId: string }>();
+  const { photoId, galleryId } = useParams<{
+    photoId: string;
+    galleryId: string;
+  }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -1069,17 +1090,45 @@ const PhotoDrawer = (): React.ReactElement => {
     );
   };
 
+  // Public-side URL — only shown when we know the gallery scope
+  // (i.e. we're on /m/g/<gallery>/photos/<id>, not the cross-gallery
+  // /m/photos/<id>) and the photo carries a capture timestamp the
+  // public route can resolve. Format mirrors the gallery routes:
+  // /g/<gallery>/<year>/<month>/<day>/<photoId>.
+  const publicUrl = ((): string | null => {
+    if (!galleryId) return null;
+    const ts = data?.taken?.instant?.timestamp;
+    if (!ts) return null;
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(ts);
+    if (!match) return null;
+    const [, year, month, day] = match;
+    return `/g/${galleryId}/${year}/${month}/${day}/${id}`;
+  })();
+
   return (
     <Drawer>
       <Header>
         <Title>{data?.title || data?.id || id}</Title>
-        <CloseButton
-          type="button"
-          aria-label={String(t("close"))}
-          onClick={close}
-        >
-          <BsX />
-        </CloseButton>
+        <HeaderActions>
+          {publicUrl && (
+            <ViewOnSiteLink
+              onClick={() => navigate(publicUrl)}
+              role="link"
+              tabIndex={0}
+              aria-label={String(t("manage-photo-view-on-site"))}
+              title={String(t("manage-photo-view-on-site"))}
+            >
+              <BsBoxArrowUpRight />
+            </ViewOnSiteLink>
+          )}
+          <CloseButton
+            type="button"
+            aria-label={String(t("close"))}
+            onClick={close}
+          >
+            <BsX />
+          </CloseButton>
+        </HeaderActions>
       </Header>
       {renderBody()}
       <Footer>

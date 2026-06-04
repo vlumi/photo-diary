@@ -31,7 +31,8 @@ export interface PhotosPage {
 const toQuery = (
   filter: PhotoFilter,
   page: number,
-  pageSize: number
+  pageSize: number,
+  photoIdFocus?: string
 ): Record<string, unknown> => {
   const q: Record<string, unknown> = {};
   if (filter.galleryIds && filter.galleryIds.length > 0)
@@ -45,17 +46,19 @@ const toQuery = (
   if (filter.q) q.q = filter.q;
   if (page > 1) q.page = page;
   if (pageSize !== 100) q.pageSize = pageSize;
+  if (photoIdFocus) q.photoIdFocus = photoIdFocus;
   return q;
 };
 
 const list = async (
   filter: PhotoFilter,
   page: number,
-  pageSize: number
+  pageSize: number,
+  photoIdFocus?: string
 ): Promise<PhotosPage> =>
   unwrap(
     api.GET("/api/v1/photos", {
-      params: { query: toQuery(filter, page, pageSize) },
+      params: { query: toQuery(filter, page, pageSize, photoIdFocus) },
     })
   ) as Promise<PhotosPage>;
 

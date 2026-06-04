@@ -110,6 +110,7 @@
     "manage-photo-load-error": "Failed to load photo.",
     "manage-photo-save-error": "Failed to save changes.",
     "manage-photo-revert-to-exif": "Revert to EXIF",
+    "manage-photo-view-on-site": "View on public side",
     "manage-photo-map-locked": "Locked",
     "manage-photo-map-locked-hint": "Unlock EXIF-derived fields above to move the pin.",
     "manage-photo-unlock-exif": "This photo predates the EXIF backup. Tick to enable editing EXIF-derived fields; overrides are not reversible.",

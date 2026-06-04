@@ -147,6 +147,7 @@ const PhotosQuery = Type.Object(
     q: Type.Optional(Type.String()),
     page: Type.Optional(Type.Integer({ minimum: 1 })),
     pageSize: Type.Optional(Type.Integer({ minimum: 1, maximum: 500 })),
+    photoIdFocus: Type.Optional(Type.String()),
   },
   { additionalProperties: false }
 );
@@ -249,6 +250,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         page: q.page,
         pageSize: q.pageSize,
         restrictToIds: restrictToIds ?? undefined,
+        photoIdFocus: q.photoIdFocus,
       });
     }
   );

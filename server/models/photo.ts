@@ -38,6 +38,12 @@ export interface ListOptions {
   // virtual-host scope (#386) passes its in-scope photo set here so
   // pagination still produces a correctly-sized window.
   restrictToIds?: Set<string>;
+  // When set, the response page is the one containing this photo
+  // in the sorted filtered set (1-based). Overrides `page`. Used
+  // by the admin photos view to land the operator on the right
+  // page when deep-linking to a specific photo. Silently ignored
+  // when the photo isn't in the filtered set.
+  photoIdFocus?: string;
 }
 
 export interface ListResult {
@@ -83,7 +89,12 @@ const listPhotos = async (opts: ListOptions = {}): Promise<ListResult> => {
     matched = matched.filter((p) => allow.has(p.id));
   }
   const sorted = sortByTakenDesc(matched);
-  const result = paginate(sorted, page, pageSize);
+  let effectivePage = page;
+  if (opts.photoIdFocus) {
+    const idx = sorted.findIndex((p) => p.id === opts.photoIdFocus);
+    if (idx >= 0) effectivePage = Math.floor(idx / pageSize) + 1;
+  }
+  const result = paginate(sorted, effectivePage, pageSize);
   return {
     photos: result.items,
     page: result.page,
