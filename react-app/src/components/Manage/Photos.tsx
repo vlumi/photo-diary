@@ -314,6 +314,22 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     queryFn: () => photosService.list(filter, page, PAGE_SIZE, photoIdFocus),
   });
 
+  // After photoIdFocus resolves a non-1 page, write it back to the
+  // URL. Without this the page param stays absent: closing the
+  // drawer keeps the URL on `.../photos` (no ?page=), the focus
+  // de-engages with no photoId left, and the list snaps back to
+  // page 1 even though the operator was viewing page 2.
+  React.useEffect(() => {
+    if (!focusOpen) return;
+    const resolved = data?.page;
+    if (!resolved || resolved <= 1) return;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", String(resolved));
+      return next;
+    });
+  }, [focusOpen, data?.page, setSearchParams]);
+
   // Galleries list for the gallery-membership facet. Skipped in
   // gallery-scoped mode where the gallery is fixed.
   const galleriesQuery = useQuery({
