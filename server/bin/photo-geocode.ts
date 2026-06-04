@@ -12,6 +12,8 @@
  *   photo-geocode.ts --limit 100     # cap per language (default: no cap)
  *   photo-geocode.ts --force         # run even when REVERSE_GEOCODE isn't set
  *   photo-geocode.ts --yes           # skip the confirmation prompt
+ *   photo-geocode.ts --wipe-cache    # dry-run: count cache files
+ *   photo-geocode.ts --wipe-cache --apply  # delete every cache file
  *
  * Runs from the per-instance directory (`/var/photo-diary/<name>/`), so the
  * SQLite DB at `./db.sqlite3` and the geocode cache at `./.geocode/` (override
@@ -151,12 +153,21 @@ const argv = await yargs(hideBin(process.argv))
   .scriptName("photo-geocode.ts")
   .locale("en")
   .strict()
-  .usage("Usage: $0 [--apply] [--langs en,ja] [--limit N] [--force] [--yes]")
+  .usage(
+    "Usage: $0 [--apply] [--langs en,ja] [--limit N] [--force] [--yes]\n" +
+      "       $0 --wipe-cache [--apply] [--yes]"
+  )
   .option("apply", {
     type: "boolean",
     default: false,
     describe:
-      "Actually fetch from Nominatim and write rows. Without this, the script reports counts and exits (dry-run is the default).",
+      "Actually fetch from Nominatim and write rows (or actually delete the cache when paired with --wipe-cache). Without this, the script reports counts and exits.",
+  })
+  .option("wipe-cache", {
+    type: "boolean",
+    default: false,
+    describe:
+      "Delete every reverse-geocode cache file (per-lang JSONs under $GEOCODE_DIR/cache). Doesn't touch DB rows or photos — only forces the next geocode of each lat/lon to re-fetch from Nominatim. Default: dry-run; pass --apply to actually delete.",
   })
   .option("langs", {
     type: "string",
@@ -181,6 +192,42 @@ const argv = await yargs(hideBin(process.argv))
     describe: "Skip the confirmation prompt (only meaningful with --apply).",
   })
   .parseAsync();
+
+if (argv["wipe-cache"]) {
+  const cacheRoot = path.join(geocodeDir(), "cache");
+  const langs = fs.existsSync(cacheRoot)
+    ? fs
+      .readdirSync(cacheRoot, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+    : [];
+  let total = 0;
+  for (const lang of langs) {
+    const langDir = path.join(cacheRoot, lang);
+    const files = fs.readdirSync(langDir).filter((f) => f.endsWith(".json"));
+    console.log(`  ${lang}: ${files.length} cache file(s)`);
+    total += files.length;
+  }
+  console.log(`\nTotal: ${total} cache file(s) under ${cacheRoot}`);
+  if (!argv.apply) {
+    console.log("Dry run. Re-run with --apply to delete.");
+    process.exit(0);
+  }
+  if (!argv.yes) {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    const answer = await rl.question(
+      `Delete ${total} cache file(s)? [y/N] `
+    );
+    rl.close();
+    if (answer.trim().toLowerCase() !== "y") {
+      console.log("Aborted.");
+      process.exit(1);
+    }
+  }
+  fs.rmSync(cacheRoot, { recursive: true, force: true });
+  console.log(`Wiped ${total} cache file(s).`);
+  process.exit(0);
+}
 
 if (!process.env.REVERSE_GEOCODE && !argv.force) {
   console.error(
