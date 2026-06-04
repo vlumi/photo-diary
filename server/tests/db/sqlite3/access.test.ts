@@ -19,7 +19,7 @@ beforeAll(async () => {
   await driver.createUser(mkUser("viewer"));
   await driver.createUser(mkUser("editor"));
   await driver.createUser(mkUser("stranger"));
-  await driver.createUser(mkUser(":guest"));
+  // `:guest` is seeded by migration 015 — don't re-insert.
   await driver.createGallery(mkGallery({ id: "gal-a" }));
   await driver.createGallery(mkGallery({ id: "gal-b" }));
   await driver.createGallery(mkGallery({ id: "gal-public" }));
