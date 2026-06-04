@@ -266,6 +266,10 @@
     "manage-access-filter-viewer": "閲覧",
     "manage-access-filter-gallery": "ギャラリー",
     "manage-access-remove": "{{subject}} を {{gallery}} から削除",
+    "manage-access-global-admins": "グローバル管理者",
+    "manage-access-global-admins-empty": "グローバル管理者がいません。",
+    "manage-access-global-admins-hint": "グローバル管理者はギャラリー別の権限を全てバイパスします。編集はユーザーページから。",
+    "manage-access-global-admins-jump": "ユーザーページを開く",
 
     "nav-up": "ひとつ上へ",
     "nav-photo-position": "写真の位置",

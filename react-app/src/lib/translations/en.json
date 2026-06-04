@@ -266,6 +266,10 @@
     "manage-access-filter-viewer": "View",
     "manage-access-filter-gallery": "Gallery",
     "manage-access-remove": "Remove {{subject}} from {{gallery}}",
+    "manage-access-global-admins": "Global admins",
+    "manage-access-global-admins-empty": "No global admins.",
+    "manage-access-global-admins-hint": "Global admins bypass every per-gallery grant. Edit on the user's page.",
+    "manage-access-global-admins-jump": "Open user page",
 
     "nav-up": "Up one level",
     "nav-photo-position": "Photo position",

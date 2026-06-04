@@ -11,6 +11,7 @@ import userGalleryService, {
 import groupGalleryService, {
   type GroupGalleryRow,
 } from "../../services/group-gallery";
+import usersService, { type UserRow } from "../../services/users";
 import { useUserStore } from "../../stores";
 
 const Root = styled.div`
@@ -27,6 +28,44 @@ const Notice = styled.p`
   color: var(--inactive-color);
   font-style: italic;
   margin: 0;
+`;
+const AdminsBlock = styled.section`
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  background: var(--primary-background);
+`;
+const AdminsHeading = styled.div`
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--inactive-color);
+  margin-bottom: 6px;
+`;
+const AdminsHint = styled.div`
+  font-size: 0.8em;
+  color: var(--inactive-color);
+  font-style: italic;
+  margin-top: 6px;
+`;
+const AdminChip = styled.a`
+  display: inline-block;
+  padding: 2px 10px;
+  margin: 2px 4px 2px 0;
+  background: var(--primary-background);
+  border: 1px solid var(--inactive-color);
+  border-radius: 12px;
+  color: var(--primary-color);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  cursor: pointer;
+  text-decoration: none;
+  &:hover {
+    background: var(--header-background);
+    color: var(--header-color);
+    border-color: var(--header-background);
+  }
 `;
 const ErrorBanner = styled.div`
   padding: 8px 12px;
@@ -173,6 +212,15 @@ const Access = (): React.ReactElement => {
   const groupGalleryQuery = useQuery({
     queryKey: ["manage-group-gallery-all", user?.id ?? null],
     queryFn: () => groupGalleryService.list(),
+    enabled: !!user?.isAdmin(),
+  });
+  // Global admins (user.is_admin = 1) bypass the per-gallery ACL
+  // entirely and don't show up in user_gallery / group_gallery,
+  // so the table never lists them. Surface them as a small
+  // banner above the filters for context.
+  const usersQuery = useQuery({
+    queryKey: ["manage-users", user?.id ?? null],
+    queryFn: () => usersService.getAll(),
     enabled: !!user?.isAdmin(),
   });
 
@@ -377,6 +425,11 @@ const Access = (): React.ReactElement => {
   const isLoading = userGalleryQuery.isLoading || groupGalleryQuery.isLoading;
   const isError = userGalleryQuery.isError || groupGalleryQuery.isError;
 
+  const globalAdmins = ((usersQuery.data as UserRow[] | undefined) ?? [])
+    .filter((u) => u.isAdmin)
+    .map((u) => u.id)
+    .sort();
+
   return (
     <Root>
       <Title>{t("manage-page-access-title")}</Title>
@@ -387,6 +440,26 @@ const Access = (): React.ReactElement => {
           {actionError}
         </ErrorBanner>
       )}
+
+      <AdminsBlock>
+        <AdminsHeading>{t("manage-access-global-admins")}</AdminsHeading>
+        {globalAdmins.length === 0 ? (
+          <Notice>{t("manage-access-global-admins-empty")}</Notice>
+        ) : (
+          globalAdmins.map((id) => (
+            <AdminChip
+              key={id}
+              role="link"
+              tabIndex={0}
+              onClick={() => navigate(`/m/users/${id}`)}
+              title={String(t("manage-access-global-admins-jump"))}
+            >
+              {id}
+            </AdminChip>
+          ))
+        )}
+        <AdminsHint>{t("manage-access-global-admins-hint")}</AdminsHint>
+      </AdminsBlock>
 
       <FilterRow>
         <FilterLabel>{t("manage-access-filter-type")}</FilterLabel>

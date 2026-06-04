@@ -266,6 +266,10 @@
     "manage-access-filter-viewer": "Katselija",
     "manage-access-filter-gallery": "Galleria",
     "manage-access-remove": "Poista {{subject}} galleriasta {{gallery}}",
+    "manage-access-global-admins": "Pääkäyttäjät",
+    "manage-access-global-admins-empty": "Ei pääkäyttäjiä.",
+    "manage-access-global-admins-hint": "Pääkäyttäjät ohittavat galleriakohtaiset oikeudet. Muokkaa käyttäjäsivulla.",
+    "manage-access-global-admins-jump": "Avaa käyttäjäsivu",
 
     "nav-up": "Ylemmäs",
     "nav-photo-position": "Kuvan sijainti",
