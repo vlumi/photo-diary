@@ -66,10 +66,10 @@ const Table = styled.table`
   border-collapse: collapse;
   font-size: 0.9em;
 `;
-// width: 1% + nowrap on every column except the second one (the
-// Subject column, which carries the longest content). All others
-// hug their content.
-const Th = styled.th<{ $sortable?: boolean }>`
+// $wide marks the column that takes the slack; everything else
+// hugs its content. Position-agnostic so re-ordering columns
+// doesn't require fiddling with nth-of-type indices.
+const Th = styled.th<{ $sortable?: boolean; $wide?: boolean }>`
   text-align: left;
   padding: 8px 12px;
   border-bottom: 1px solid var(--inactive-color);
@@ -80,12 +80,8 @@ const Th = styled.th<{ $sortable?: boolean }>`
   letter-spacing: 0.05em;
   white-space: nowrap;
   cursor: ${({ $sortable }) => ($sortable ? "pointer" : "default")};
-  &:user-select {
-    user-select: none;
-  }
-  &:not(:nth-of-type(2)) {
-    width: 1%;
-  }
+  user-select: none;
+  width: ${({ $wide }) => ($wide ? "auto" : "1%")};
   &:hover {
     color: ${({ $sortable }) =>
       $sortable ? "var(--primary-color)" : "var(--inactive-color)"};
@@ -97,14 +93,12 @@ const SortIndicator = styled.span`
   margin-left: 4px;
   vertical-align: middle;
 `;
-const Td = styled.td`
+const Td = styled.td<{ $wide?: boolean }>`
   padding: 8px 12px;
   border-bottom: 1px solid var(--inactive-color);
   vertical-align: middle;
-  &:not(:nth-of-type(2)) {
-    width: 1%;
-    white-space: nowrap;
-  }
+  width: ${({ $wide }) => ($wide ? "auto" : "1%")};
+  white-space: ${({ $wide }) => ($wide ? "normal" : "nowrap")};
 `;
 const Mono = styled.span`
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -471,13 +465,13 @@ const Access = (): React.ReactElement => {
                 {t("manage-access-col-gallery")}
                 {sortIndicator("gallery")}
               </Th>
-              <Th $sortable onClick={() => setSort("subject")}>
-                {t("manage-access-col-subject")}
-                {sortIndicator("subject")}
-              </Th>
               <Th $sortable onClick={() => setSort("type")}>
                 {t("manage-access-col-type")}
                 {sortIndicator("type")}
+              </Th>
+              <Th $sortable $wide onClick={() => setSort("subject")}>
+                {t("manage-access-col-subject")}
+                {sortIndicator("subject")}
               </Th>
               <Th $sortable onClick={() => setSort("admin")}>
                 {t("manage-gallery-access-col-admin")}
@@ -503,14 +497,14 @@ const Access = (): React.ReactElement => {
                   </GalleryLink>
                 </Td>
                 <Td>
-                  <Mono>{row.subjectId}</Mono>
-                </Td>
-                <Td>
                   {row.type === "user" ? (
                     <BsPeople aria-hidden title={String(t("manage-access-type-user"))} />
                   ) : (
                     <BsPeopleFill aria-hidden title={String(t("manage-access-type-group"))} />
                   )}
+                </Td>
+                <Td $wide>
+                  <Mono>{row.subjectId}</Mono>
                 </Td>
                 <Td>
                   <Checkbox
