@@ -100,6 +100,20 @@ const acquireSlot = async (): Promise<void> => {
   }
 };
 
+// Cache stores the raw Nominatim response and re-runs `extract`
+// on every read. Storing the extracted shape (its older form)
+// meant new extraction fields — anything `extract` learns to
+// pull out — silently went missing on existing cache hits: the
+// cached JSON predated the new field, the read returned an
+// object without it, and the column stayed NULL even though
+// Nominatim itself had the data. The .address blob shape from
+// Nominatim is stable; reading the cache and re-extracting
+// keeps every extracted field current.
+//
+// Backward-compatible: the old cached shape carried `address`
+// at the top level too (alongside the extracted countryCode /
+// city), so passing the parsed JSON straight into `extract`
+// works for both old and new files. No version bump needed.
 const readCache = (
   lat: number,
   lon: number,
@@ -107,7 +121,8 @@ const readCache = (
 ): NominatimResult | null => {
   try {
     const raw = fs.readFileSync(cachePathFor(lat, lon, lang), "utf8");
-    return JSON.parse(raw) as NominatimResult;
+    const parsed = JSON.parse(raw) as NominatimResponse;
+    return extract(parsed);
   } catch {
     return null;
   }
@@ -117,14 +132,14 @@ const writeCache = (
   lat: number,
   lon: number,
   lang: string,
-  result: NominatimResult
+  raw: NominatimResponse
 ): void => {
   const dir = cacheDirFor(lang);
   fs.mkdirSync(dir, { recursive: true });
   // Atomic write so a partial JSON never gets read back as a cache hit.
   const finalPath = cachePathFor(lat, lon, lang);
   const tmpPath = `${finalPath}.${process.pid}.tmp`;
-  fs.writeFileSync(tmpPath, JSON.stringify(result), "utf8");
+  fs.writeFileSync(tmpPath, JSON.stringify(raw), "utf8");
   fs.renameSync(tmpPath, finalPath);
 };
 
@@ -174,6 +189,6 @@ export const geocode = async (
     logger.info(`[geocode] ${lat},${lon} (${lang}): no address in response`);
     return null;
   }
-  writeCache(lat, lon, lang, result);
+  writeCache(lat, lon, lang, raw);
   return result;
 };
