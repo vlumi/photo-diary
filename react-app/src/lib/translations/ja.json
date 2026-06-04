@@ -245,6 +245,9 @@
     "manage-gallery-access-no-available-groups": "全グループが既に権限を持っています。",
     "manage-gallery-access-add": "追加",
     "manage-gallery-access-remove": "{{id}} を削除",
+    "manage-gallery-access-expand-members": "メンバーを表示",
+    "manage-gallery-access-collapse-members": "メンバーを隠す",
+    "manage-gallery-access-members-empty": "メンバーがいません。",
 
     "nav-up": "ひとつ上へ",
     "nav-photo-position": "写真の位置",

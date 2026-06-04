@@ -245,6 +245,9 @@
     "manage-gallery-access-no-available-groups": "Every group already has a grant.",
     "manage-gallery-access-add": "Add",
     "manage-gallery-access-remove": "Remove {{id}}",
+    "manage-gallery-access-expand-members": "Show members",
+    "manage-gallery-access-collapse-members": "Hide members",
+    "manage-gallery-access-members-empty": "No members.",
 
     "nav-up": "Up one level",
     "nav-photo-position": "Photo position",

@@ -245,6 +245,9 @@
     "manage-gallery-access-no-available-groups": "Kaikilla ryhmillä on jo oikeus.",
     "manage-gallery-access-add": "Lisää",
     "manage-gallery-access-remove": "Poista {{id}}",
+    "manage-gallery-access-expand-members": "Näytä jäsenet",
+    "manage-gallery-access-collapse-members": "Piilota jäsenet",
+    "manage-gallery-access-members-empty": "Ei jäseniä.",
 
     "nav-up": "Ylemmäs",
     "nav-photo-position": "Kuvan sijainti",

@@ -3,7 +3,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsImages, BsPencilSquare, BsPlus, BsXLg } from "react-icons/bs";
+import {
+  BsChevronDown,
+  BsChevronRight,
+  BsImages,
+  BsPencilSquare,
+  BsPlus,
+  BsXLg,
+} from "react-icons/bs";
 
 import userGalleryService, {
   type UserGalleryRow,
@@ -79,7 +86,9 @@ const Table = styled.table`
   font-size: 0.9em;
   margin-bottom: 12px;
 `;
-// last-of-type width: 1% + nowrap shrinks the column to fit.
+// width: 1% + nowrap on every column except the first one shrinks
+// the controls (admin / hide-map / remove) to fit their content
+// and lets the user/group column take the slack.
 const Th = styled.th`
   text-align: left;
   padding: 8px 12px;
@@ -89,7 +98,7 @@ const Th = styled.th`
   text-transform: uppercase;
   font-size: 0.85em;
   letter-spacing: 0.05em;
-  &:last-of-type {
+  &:not(:first-of-type) {
     width: 1%;
     white-space: nowrap;
   }
@@ -98,10 +107,39 @@ const Td = styled.td`
   padding: 8px 12px;
   border-bottom: 1px solid var(--inactive-color);
   vertical-align: middle;
-  &:last-of-type {
+  &:not(:first-of-type) {
     width: 1%;
     white-space: nowrap;
   }
+`;
+const ExpandButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--inactive-color);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px 0 0;
+  &:hover {
+    color: var(--primary-color);
+  }
+`;
+const MembersCell = styled.td`
+  padding: 0 12px 8px 36px;
+  border-bottom: 1px solid var(--inactive-color);
+  font-size: 0.85em;
+  color: var(--inactive-color);
+`;
+const MemberChip = styled.span`
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.95em;
+  padding: 1px 6px;
+  margin: 2px 4px 2px 0;
+  background: var(--primary-background);
+  border: 1px solid var(--inactive-color);
+  border-radius: 10px;
+  color: var(--primary-color);
 `;
 const Mono = styled.span`
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -433,9 +471,9 @@ const GroupGrantsTable = ({
       </thead>
       <tbody>
         {grants.map((g) => (
-          <GrantRow
+          <GroupGrantRow
             key={g.group_id}
-            id={g.group_id}
+            groupId={g.group_id}
             isAdmin={!!g.is_admin}
             hideMap={hideMapFromDb(g.hide_map)}
             onUpsert={(isAdmin, hideMap) =>
@@ -447,6 +485,118 @@ const GroupGrantsTable = ({
         ))}
       </tbody>
     </Table>
+  );
+};
+
+// Group rows get an expand chevron next to the id; clicking it
+// lazy-fetches the group's members and shows them inline below
+// the row. Two TRs instead of one when expanded — visually a
+// continuation of the row above thanks to the shared bottom
+// border and indented padding.
+interface GroupGrantRowProps {
+  groupId: string;
+  isAdmin: boolean;
+  hideMap: HideMapValue;
+  onUpsert: (isAdmin: boolean, hideMap: HideMapValue) => void;
+  onRemove: () => void;
+  mutating: boolean;
+}
+
+const GroupGrantRow = ({
+  groupId,
+  isAdmin,
+  hideMap,
+  onUpsert,
+  onRemove,
+  mutating,
+}: GroupGrantRowProps): React.ReactElement => {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = React.useState(false);
+  const user = useUserStore((s) => s.user);
+  const membersQuery = useQuery({
+    queryKey: ["manage-group-members", groupId, user?.id ?? null],
+    queryFn: () => groupsService.getMembers(groupId),
+    enabled: expanded && !!user?.isAdmin(),
+  });
+  const members = (membersQuery.data as string[] | undefined) ?? [];
+  return (
+    <>
+      <tr>
+        <Td>
+          <ExpandButton
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            aria-label={String(
+              expanded
+                ? t("manage-gallery-access-collapse-members")
+                : t("manage-gallery-access-expand-members")
+            )}
+            title={String(
+              expanded
+                ? t("manage-gallery-access-collapse-members")
+                : t("manage-gallery-access-expand-members")
+            )}
+          >
+            {expanded ? <BsChevronDown /> : <BsChevronRight />}
+          </ExpandButton>
+          <Mono>{groupId}</Mono>
+        </Td>
+        <Td>
+          <Checkbox
+            type="checkbox"
+            checked={isAdmin}
+            disabled={mutating}
+            onChange={(e) => onUpsert(e.target.checked, hideMap)}
+            aria-label={String(t("manage-gallery-access-col-admin"))}
+          />
+        </Td>
+        <Td>
+          <Select
+            value={hideMap}
+            disabled={mutating}
+            onChange={(e) =>
+              onUpsert(isAdmin, e.target.value as HideMapValue)
+            }
+            aria-label={String(t("manage-gallery-access-col-hidemap"))}
+          >
+            <option value="inherit">
+              {t("manage-gallery-access-hidemap-inherit")}
+            </option>
+            <option value="show">
+              {t("manage-gallery-access-hidemap-show")}
+            </option>
+            <option value="hide">
+              {t("manage-gallery-access-hidemap-hide")}
+            </option>
+          </Select>
+        </Td>
+        <Td>
+          <RemoveButton
+            type="button"
+            onClick={onRemove}
+            disabled={mutating}
+            aria-label={String(t("manage-gallery-access-remove", { id: groupId }))}
+            title={String(t("manage-gallery-access-remove", { id: groupId }))}
+          >
+            <BsXLg />
+          </RemoveButton>
+        </Td>
+      </tr>
+      {expanded && (
+        <tr>
+          <MembersCell colSpan={4}>
+            {membersQuery.isLoading ? (
+              <span>{t("loading")}</span>
+            ) : members.length === 0 ? (
+              <span>{t("manage-gallery-access-members-empty")}</span>
+            ) : (
+              members.map((id) => <MemberChip key={id}>{id}</MemberChip>)
+            )}
+          </MembersCell>
+        </tr>
+      )}
+    </>
   );
 };
 
