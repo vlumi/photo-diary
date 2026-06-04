@@ -180,6 +180,14 @@ const buildCrumbs = (
     } else if (sub) {
       out.push({ kind: "leaf", label: sub });
     }
+  } else if (page === "groups") {
+    const sub = tail[1];
+    pushLinkOrLeaf(!sub, "/m/groups", t("manage-page-groups-title"));
+    if (sub === "new") {
+      out.push({ kind: "leaf", label: t("manage-group-create-title") });
+    } else if (sub) {
+      out.push({ kind: "leaf", label: sub });
+    }
   } else if (page === "inbox") {
     out.push({ kind: "leaf", label: t("manage-page-inbox-title") });
   } else {

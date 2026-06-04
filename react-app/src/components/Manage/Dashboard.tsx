@@ -2,7 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { BsCollection, BsImages, BsPeople } from "react-icons/bs";
+import {
+  BsCollection,
+  BsImages,
+  BsPeople,
+  BsPeopleFill,
+} from "react-icons/bs";
 import type { IconType } from "react-icons";
 
 const Root = styled.div`
@@ -77,6 +82,12 @@ const TILES: TileSpec[] = [
     Icon: BsPeople,
     titleKey: "manage-page-users-title",
     blurbKey: "manage-dashboard-tile-users-blurb",
+  },
+  {
+    path: "/m/groups",
+    Icon: BsPeopleFill,
+    titleKey: "manage-page-groups-title",
+    blurbKey: "manage-dashboard-tile-groups-blurb",
   },
 ];
 
