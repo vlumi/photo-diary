@@ -7,6 +7,7 @@ import {
   BsImages,
   BsPeople,
   BsPeopleFill,
+  BsShieldLock,
 } from "react-icons/bs";
 import type { IconType } from "react-icons";
 
@@ -88,6 +89,12 @@ const TILES: TileSpec[] = [
     Icon: BsPeopleFill,
     titleKey: "manage-page-groups-title",
     blurbKey: "manage-dashboard-tile-groups-blurb",
+  },
+  {
+    path: "/m/access",
+    Icon: BsShieldLock,
+    titleKey: "manage-page-access-title",
+    blurbKey: "manage-dashboard-tile-access-blurb",
   },
 ];
 

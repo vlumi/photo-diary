@@ -188,6 +188,8 @@ const buildCrumbs = (
     } else if (sub) {
       out.push({ kind: "leaf", label: sub });
     }
+  } else if (page === "access") {
+    out.push({ kind: "leaf", label: t("manage-page-access-title") });
   } else if (page === "inbox") {
     out.push({ kind: "leaf", label: t("manage-page-inbox-title") });
   } else {

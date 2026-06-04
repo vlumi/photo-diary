@@ -95,6 +95,18 @@ const AdminBadge = styled.span`
   text-transform: uppercase;
   letter-spacing: 0.05em;
 `;
+const GuestBadge = styled.span`
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--inactive-color);
+  border: 1px solid var(--inactive-color);
+  font-size: 0.75em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+`;
 
 const Users = (): React.ReactElement => {
   const { t } = useTranslation();
@@ -145,7 +157,9 @@ const Users = (): React.ReactElement => {
                   <Mono>{u.id}</Mono>
                 </Td>
                 <Td>
-                  {u.isAdmin ? (
+                  {u.id === ":guest" ? (
+                    <GuestBadge>{t("manage-users-role-guest")}</GuestBadge>
+                  ) : u.isAdmin ? (
                     <AdminBadge>{t("manage-users-role-admin")}</AdminBadge>
                   ) : null}
                 </Td>
