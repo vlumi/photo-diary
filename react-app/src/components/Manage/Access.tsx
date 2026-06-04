@@ -469,17 +469,17 @@ const Access = (): React.ReactElement => {
         <Table>
           <thead>
             <tr>
-              <Th $sortable onClick={() => setSort("gallery")}>
-                {t("manage-access-col-gallery")}
-                {sortIndicator("gallery")}
+              <Th $sortable onClick={() => setSort("type")}>
+                {t("manage-access-col-type")}
+                {sortIndicator("type")}
               </Th>
               <Th $sortable $wide onClick={() => setSort("subject")}>
                 {t("manage-access-col-subject")}
                 {sortIndicator("subject")}
               </Th>
-              <Th $sortable onClick={() => setSort("type")}>
-                {t("manage-access-col-type")}
-                {sortIndicator("type")}
+              <Th $sortable onClick={() => setSort("gallery")}>
+                {t("manage-access-col-gallery")}
+                {sortIndicator("gallery")}
               </Th>
               <Th $sortable onClick={() => setSort("admin")}>
                 {t("manage-gallery-access-col-admin")}
@@ -496,6 +496,16 @@ const Access = (): React.ReactElement => {
             {sorted.map((row) => (
               <tr key={`${row.type}:${row.subjectId}:${row.galleryId}`}>
                 <Td>
+                  {row.type === "user" ? (
+                    <BsPerson aria-hidden title={String(t("manage-access-type-user"))} />
+                  ) : (
+                    <BsPeople aria-hidden title={String(t("manage-access-type-group"))} />
+                  )}
+                </Td>
+                <Td $wide>
+                  <Mono>{row.subjectId}</Mono>
+                </Td>
+                <Td>
                   <GalleryLink
                     role="link"
                     tabIndex={0}
@@ -503,16 +513,6 @@ const Access = (): React.ReactElement => {
                   >
                     <Mono>{row.galleryId}</Mono>
                   </GalleryLink>
-                </Td>
-                <Td $wide>
-                  <Mono>{row.subjectId}</Mono>
-                </Td>
-                <Td>
-                  {row.type === "user" ? (
-                    <BsPerson aria-hidden title={String(t("manage-access-type-user"))} />
-                  ) : (
-                    <BsPeople aria-hidden title={String(t("manage-access-type-group"))} />
-                  )}
                 </Td>
                 <Td>
                   <Checkbox
