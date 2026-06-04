@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsPeople, BsPeopleFill, BsXLg, BsArrowDown, BsArrowUp } from "react-icons/bs";
+import { BsPeople, BsPerson, BsXLg, BsArrowDown, BsArrowUp } from "react-icons/bs";
 
 import userGalleryService, {
   type UserGalleryRow,
@@ -209,8 +209,11 @@ const Access = (): React.ReactElement => {
     });
   };
 
-  // Sort.
-  const sort = (searchParams.get("sort") ?? "gallery") as SortKey;
+  // Sort. Default groups by type first (users then groups) and
+  // breaks ties by subject id so each subject's rows are
+  // contiguous — closest to "what access do users have?" when
+  // scanning the table top to bottom.
+  const sort = (searchParams.get("sort") ?? "type") as SortKey;
   const dir = (searchParams.get("dir") ?? "asc") as "asc" | "desc";
   const setSort = (key: SortKey) => {
     setSearchParams((prev) => {
@@ -247,8 +250,13 @@ const Access = (): React.ReactElement => {
       return c !== 0 ? factor * c : compareString(a.galleryId, b.galleryId);
     }
     if (sort === "type") {
+      // Type primary, subject secondary, gallery tertiary — so
+      // each subject's rows stay contiguous within the type
+      // block (users-then-groups).
       const c = compareString(a.type, b.type);
-      return c !== 0 ? factor * c : compareString(a.galleryId, b.galleryId);
+      if (c !== 0) return factor * c;
+      const s = compareString(a.subjectId, b.subjectId);
+      return s !== 0 ? s : compareString(a.galleryId, b.galleryId);
     }
     if (sort === "admin") {
       const c = Number(a.isAdmin) - Number(b.isAdmin);
@@ -465,13 +473,13 @@ const Access = (): React.ReactElement => {
                 {t("manage-access-col-gallery")}
                 {sortIndicator("gallery")}
               </Th>
-              <Th $sortable onClick={() => setSort("type")}>
-                {t("manage-access-col-type")}
-                {sortIndicator("type")}
-              </Th>
               <Th $sortable $wide onClick={() => setSort("subject")}>
                 {t("manage-access-col-subject")}
                 {sortIndicator("subject")}
+              </Th>
+              <Th $sortable onClick={() => setSort("type")}>
+                {t("manage-access-col-type")}
+                {sortIndicator("type")}
               </Th>
               <Th $sortable onClick={() => setSort("admin")}>
                 {t("manage-gallery-access-col-admin")}
@@ -496,15 +504,15 @@ const Access = (): React.ReactElement => {
                     <Mono>{row.galleryId}</Mono>
                   </GalleryLink>
                 </Td>
-                <Td>
-                  {row.type === "user" ? (
-                    <BsPeople aria-hidden title={String(t("manage-access-type-user"))} />
-                  ) : (
-                    <BsPeopleFill aria-hidden title={String(t("manage-access-type-group"))} />
-                  )}
-                </Td>
                 <Td $wide>
                   <Mono>{row.subjectId}</Mono>
+                </Td>
+                <Td>
+                  {row.type === "user" ? (
+                    <BsPerson aria-hidden title={String(t("manage-access-type-user"))} />
+                  ) : (
+                    <BsPeople aria-hidden title={String(t("manage-access-type-group"))} />
+                  )}
                 </Td>
                 <Td>
                   <Checkbox
