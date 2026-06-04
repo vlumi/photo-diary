@@ -53,15 +53,7 @@ const Table = styled.table`
   border-collapse: collapse;
   font-size: 0.9em;
 `;
-// First column's inner padding would push its content right of the
-// Title (which sits at Root's padding edge); zeroing the leading
-// pad on first-of-type cells lines the column up with the heading.
-// width: 1% + white-space: nowrap on the trailing actions column
-// is the classic "shrink to fit content" idiom for auto-layout
-// tables. Without it the actions cell soaks up the slack space the
-// browser distributes across auto-sized columns, leaving the
-// buttons floating at the cell's left edge with empty space to
-// their right.
+// last-of-type width: 1% + nowrap shrinks the column to fit.
 const Th = styled.th`
   text-align: left;
   padding: 8px 12px;
@@ -71,11 +63,7 @@ const Th = styled.th`
   text-transform: uppercase;
   font-size: 0.85em;
   letter-spacing: 0.05em;
-  &:first-of-type {
-    padding-left: 0;
-  }
   &:last-of-type {
-    padding-right: 0;
     width: 1%;
     white-space: nowrap;
   }
@@ -84,11 +72,7 @@ const Td = styled.td`
   padding: 8px 12px;
   border-bottom: 1px solid var(--inactive-color);
   vertical-align: middle;
-  &:first-of-type {
-    padding-left: 0;
-  }
   &:last-of-type {
-    padding-right: 0;
     width: 1%;
     white-space: nowrap;
   }
