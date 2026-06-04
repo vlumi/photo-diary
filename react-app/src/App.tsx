@@ -30,6 +30,7 @@ import ManageGroups from "./components/Manage/Groups";
 import ManageGroupEdit from "./components/Manage/GroupEdit";
 import ManageGroupCreate from "./components/Manage/GroupCreate";
 import ManageGalleryAccess from "./components/Manage/GalleryAccess";
+import ManageAccess from "./components/Manage/Access";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -135,6 +136,7 @@ const App = (): React.ReactElement => {
                 <Route path="groups" element={<ManageGroups />} />
                 <Route path="groups/new" element={<ManageGroupCreate />} />
                 <Route path="groups/:groupId" element={<ManageGroupEdit />} />
+                <Route path="access" element={<ManageAccess />} />
                 <Route path="galleries" element={<ManageGalleries />} />
                 <Route
                   path="galleries/new"
