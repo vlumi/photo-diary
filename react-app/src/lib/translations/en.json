@@ -270,6 +270,10 @@
     "manage-access-global-admins-empty": "No global admins.",
     "manage-access-global-admins-hint": "Global admins bypass every per-gallery grant. Edit on the user's page.",
     "manage-access-global-admins-jump": "Open user page",
+    "manage-access-add-heading": "Add grant",
+    "manage-access-add-pick-gallery": "Pick a gallery…",
+    "manage-access-add-pick-subject": "Pick a user or group…",
+    "manage-access-add-button": "Add",
 
     "nav-up": "Up one level",
     "nav-photo-position": "Photo position",

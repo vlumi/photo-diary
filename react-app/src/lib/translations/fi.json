@@ -270,6 +270,10 @@
     "manage-access-global-admins-empty": "Ei pääkäyttäjiä.",
     "manage-access-global-admins-hint": "Pääkäyttäjät ohittavat galleriakohtaiset oikeudet. Muokkaa käyttäjäsivulla.",
     "manage-access-global-admins-jump": "Avaa käyttäjäsivu",
+    "manage-access-add-heading": "Lisää käyttöoikeus",
+    "manage-access-add-pick-gallery": "Valitse galleria…",
+    "manage-access-add-pick-subject": "Valitse käyttäjä tai ryhmä…",
+    "manage-access-add-button": "Lisää",
 
     "nav-up": "Ylemmäs",
     "nav-photo-position": "Kuvan sijainti",

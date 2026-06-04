@@ -270,6 +270,10 @@
     "manage-access-global-admins-empty": "グローバル管理者がいません。",
     "manage-access-global-admins-hint": "グローバル管理者はギャラリー別の権限を全てバイパスします。編集はユーザーページから。",
     "manage-access-global-admins-jump": "ユーザーページを開く",
+    "manage-access-add-heading": "権限を追加",
+    "manage-access-add-pick-gallery": "ギャラリーを選択…",
+    "manage-access-add-pick-subject": "ユーザーまたはグループを選択…",
+    "manage-access-add-button": "追加",
 
     "nav-up": "ひとつ上へ",
     "nav-photo-position": "写真の位置",

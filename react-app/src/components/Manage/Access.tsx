@@ -3,7 +3,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsPeople, BsPerson, BsXLg, BsArrowDown, BsArrowUp } from "react-icons/bs";
+import {
+  BsArrowDown,
+  BsArrowUp,
+  BsPeople,
+  BsPerson,
+  BsPlus,
+  BsXLg,
+} from "react-icons/bs";
 
 import userGalleryService, {
   type UserGalleryRow,
@@ -12,6 +19,8 @@ import groupGalleryService, {
   type GroupGalleryRow,
 } from "../../services/group-gallery";
 import usersService, { type UserRow } from "../../services/users";
+import groupsService, { type GroupRow } from "../../services/groups";
+import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
 
 const Root = styled.div`
@@ -150,6 +159,51 @@ const GalleryLink = styled.a`
     text-decoration: underline;
   }
 `;
+const SubjectLink = GalleryLink;
+const AddPanel = styled.section`
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  background: var(--primary-background);
+`;
+const AddHeading = styled.div`
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--inactive-color);
+  margin-bottom: 8px;
+`;
+const AddGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+`;
+const AddButton = styled.button`
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: var(--header-background);
+  color: var(--header-color);
+  border: 1px solid var(--header-background);
+  border-radius: 4px;
+  font-size: 0.9em;
+  cursor: pointer;
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+`;
+const AddLabel = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
+  color: var(--primary-color);
+`;
 const Select = styled.select`
   font: inherit;
   padding: 4px 6px;
@@ -221,6 +275,16 @@ const Access = (): React.ReactElement => {
   const usersQuery = useQuery({
     queryKey: ["manage-users", user?.id ?? null],
     queryFn: () => usersService.getAll(),
+    enabled: !!user?.isAdmin(),
+  });
+  const groupsQuery = useQuery({
+    queryKey: ["manage-groups", user?.id ?? null],
+    queryFn: () => groupsService.getAll(),
+    enabled: !!user?.isAdmin(),
+  });
+  const galleriesQuery = useQuery({
+    queryKey: ["manage-galleries", user?.id ?? null],
+    queryFn: () => galleriesService.getAll(),
     enabled: !!user?.isAdmin(),
   });
 
@@ -576,7 +640,19 @@ const Access = (): React.ReactElement => {
                   )}
                 </Td>
                 <Td $wide>
-                  <Mono>{row.subjectId}</Mono>
+                  <SubjectLink
+                    role="link"
+                    tabIndex={0}
+                    onClick={() =>
+                      navigate(
+                        row.type === "user"
+                          ? `/m/users/${row.subjectId}`
+                          : `/m/groups/${row.subjectId}`
+                      )
+                    }
+                  >
+                    <Mono>{row.subjectId}</Mono>
+                  </SubjectLink>
                 </Td>
                 <Td>
                   <GalleryLink
@@ -644,7 +720,155 @@ const Access = (): React.ReactElement => {
           </tbody>
         </Table>
       )}
+
+      <AddGrantPanel
+        galleries={(galleriesQuery.data as Array<{ id: string }> | undefined) ?? []}
+        users={(usersQuery.data as UserRow[] | undefined) ?? []}
+        groups={(groupsQuery.data as GroupRow[] | undefined) ?? []}
+        onAdd={(args) => {
+          setActionError(null);
+          if (args.subjectType === "user") {
+            upsertUserMutation.mutate({
+              userId: args.subjectId,
+              galleryId: args.galleryId,
+              isAdmin: args.isAdmin,
+              hideMap: args.hideMap,
+            });
+          } else {
+            upsertGroupMutation.mutate({
+              groupId: args.subjectId,
+              galleryId: args.galleryId,
+              isAdmin: args.isAdmin,
+              hideMap: args.hideMap,
+            });
+          }
+        }}
+        mutating={mutating}
+      />
     </Root>
+  );
+};
+
+interface AddGrantPanelProps {
+  galleries: Array<{ id: string }>;
+  users: UserRow[];
+  groups: GroupRow[];
+  onAdd: (args: {
+    galleryId: string;
+    subjectType: "user" | "group";
+    subjectId: string;
+    isAdmin: boolean;
+    hideMap: HideMapValue;
+  }) => void;
+  mutating: boolean;
+}
+
+// Single subject picker with optgroups for users vs groups —
+// avoids the per-gallery page's two parallel forms while keeping
+// the add flow on the global page small. The option value
+// encodes the type so the submit handler routes to the right
+// upsert without a separate type radio.
+const AddGrantPanel = ({
+  galleries,
+  users,
+  groups,
+  onAdd,
+  mutating,
+}: AddGrantPanelProps): React.ReactElement => {
+  const { t } = useTranslation();
+  const [galleryId, setGalleryId] = React.useState("");
+  const [subjectValue, setSubjectValue] = React.useState("");
+  const [isAdmin, setIsAdmin] = React.useState(false);
+  const [hideMap, setHideMap] = React.useState<HideMapValue>("inherit");
+
+  const sortedGalleries = galleries
+    .slice()
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const sortedUsers = users.slice().sort((a, b) => a.id.localeCompare(b.id));
+  const sortedGroups = groups.slice().sort((a, b) => a.id.localeCompare(b.id));
+
+  const handleAdd = () => {
+    if (!galleryId || !subjectValue) return;
+    const [subjectType, subjectId] = subjectValue.split(":", 2) as [
+      "user" | "group",
+      string,
+    ];
+    onAdd({ galleryId, subjectType, subjectId, isAdmin, hideMap });
+    setSubjectValue("");
+    setIsAdmin(false);
+    setHideMap("inherit");
+  };
+
+  const canAdd = !!galleryId && !!subjectValue && !mutating;
+
+  return (
+    <AddPanel>
+      <AddHeading>{t("manage-access-add-heading")}</AddHeading>
+      <AddGrid>
+        <Select
+          value={galleryId}
+          onChange={(e) => setGalleryId(e.target.value)}
+          aria-label={String(t("manage-access-col-gallery"))}
+        >
+          <option value="">{t("manage-access-add-pick-gallery")}</option>
+          {sortedGalleries.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.id}
+            </option>
+          ))}
+        </Select>
+        <Select
+          value={subjectValue}
+          onChange={(e) => setSubjectValue(e.target.value)}
+          aria-label={String(t("manage-access-col-subject"))}
+        >
+          <option value="">{t("manage-access-add-pick-subject")}</option>
+          <optgroup label={String(t("manage-access-filter-users"))}>
+            {sortedUsers.map((u) => (
+              <option key={`user:${u.id}`} value={`user:${u.id}`}>
+                {u.id}
+                {u.isAdmin ? " (" + t("manage-users-role-admin") + ")" : ""}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label={String(t("manage-access-filter-groups"))}>
+            {sortedGroups.map((g) => (
+              <option key={`group:${g.id}`} value={`group:${g.id}`}>
+                {g.id}
+                {g.title ? ` — ${g.title}` : ""}
+              </option>
+            ))}
+          </optgroup>
+        </Select>
+        <AddLabel>
+          <Checkbox
+            type="checkbox"
+            checked={isAdmin}
+            onChange={(e) => setIsAdmin(e.target.checked)}
+          />
+          {t("manage-gallery-access-col-admin")}
+        </AddLabel>
+        <Select
+          value={hideMap}
+          onChange={(e) => setHideMap(e.target.value as HideMapValue)}
+          aria-label={String(t("manage-gallery-access-col-hidemap"))}
+        >
+          <option value="inherit">
+            {t("manage-gallery-access-hidemap-inherit")}
+          </option>
+          <option value="show">
+            {t("manage-gallery-access-hidemap-show")}
+          </option>
+          <option value="hide">
+            {t("manage-gallery-access-hidemap-hide")}
+          </option>
+        </Select>
+        <AddButton type="button" onClick={handleAdd} disabled={!canAdd}>
+          <BsPlus aria-hidden />
+          {t("manage-access-add-button")}
+        </AddButton>
+      </AddGrid>
+    </AddPanel>
   );
 };
 
