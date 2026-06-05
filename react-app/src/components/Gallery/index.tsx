@@ -27,10 +27,8 @@ import collection from "../../lib/collection";
 import config from "../../lib/config";
 import format from "../../lib/format";
 import { galleriesForHost } from "../../lib/host-scope";
-import stats, {
-  type UniqueValues,
-  type UniqueValueEntry,
-} from "../../lib/stats";
+import stats, { type UniqueValues } from "../../lib/stats";
+import { buildUniqueValues } from "../../lib/uniqueValues";
 import theme from "../../lib/theme";
 
 import {
@@ -154,65 +152,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
   // Recomputes on language change too — display values are localised.
   const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
     if (!photos || !countryData) return undefined;
-    const accumulator: Record<string, Record<string, Set<unknown>>> = photos
-      .map((photo) => photo.uniqueValues())
-      .reduce(
-        collection.mergeObjects<unknown>(
-          (a, b) => new Set([...a, ...b]) as Set<unknown>
-        ),
-        {}
-      ) as Record<string, Record<string, Set<unknown>>>;
-    const categoryValueFormatter = format.categoryValue(lang, t, countryData);
-    const formatCountryName = format.countryName(lang, countryData);
-    const flattened: UniqueValues = {} as UniqueValues;
-    Object.keys(accumulator).forEach((topic) => {
-      const topicBag: Record<string, UniqueValueEntry[]> = {};
-      Object.keys(accumulator[topic]).forEach((category) => {
-        const cityLocalizedByKey: Record<string, string> =
-          category === "city"
-            ? photos.reduce<Record<string, string>>((acc, photo) => {
-                const k = photo.geocodedCityKey();
-                const v = photo.geocodedCity();
-                if (k && v && !acc[k]) acc[k] = v;
-                return acc;
-              }, {})
-            : {};
-        const cityLabels =
-          category === "city"
-            ? format.buildCityLabels(
-                [...accumulator[topic][category]].filter(
-                  (v): v is string => typeof v === "string" && !!v
-                ),
-                lang,
-                formatCountryName,
-                cityLocalizedByKey
-              )
-            : null;
-        topicBag[category] = [...accumulator[topic][category]]
-          .map((value) => {
-            if (value === "" || value === undefined || value === null) {
-              return {
-                key: stats.UNKNOWN,
-                value: String(t("stats-unknown")),
-              };
-            }
-            if (cityLabels) {
-              return {
-                key: value as string,
-                value: cityLabels[value as string] ?? String(value),
-              };
-            }
-            return {
-              key: value as string | number,
-              value: categoryValueFormatter(category)(value),
-            };
-          })
-          .sort(format.categorySorter("key", "value")(category));
-      });
-      (flattened as Record<string, Record<string, UniqueValueEntry[]>>)[topic] =
-        topicBag;
-    });
-    return flattened;
+    return buildUniqueValues(photos, lang, t, countryData);
   }, [photos, lang, t, countryData]);
 
   const gallery = React.useMemo<GalleryT | undefined>(() => {

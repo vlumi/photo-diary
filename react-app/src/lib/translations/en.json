@@ -41,6 +41,10 @@
 
     "manage-menu-entry": "Manage",
     "stats-menu-entry": "Statistics",
+    "stats-global-title": "Statistics",
+    "stats-global-nav-group": "Global stats",
+    "stats-global-load-error": "Failed to load photos.",
+    "stats-global-empty": "No photos in the catalogue yet.",
     "landing-shortcut-manage": "Manage",
     "landing-shortcut-manage-blurb": "Photos, galleries, users, access — admin tools.",
     "landing-shortcut-stats": "Statistics",

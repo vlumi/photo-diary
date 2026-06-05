@@ -28,6 +28,7 @@
 
 ### Frontend
 
+- Global Statistics page at `/s` — admin-only, aggregates every photo in the catalogue (paginated fetch under the existing `/api/v1/photos` endpoint) through the same Stats / Filters UI the per-gallery `/s/<gallery>` view uses. The shared `uniqueValues` build moves out of `Gallery/index.tsx` into `lib/uniqueValues.ts` so the two pages can't drift. (part of #404)
 - Landing page gains admin-only quick-access cards for `/m` (Manage) and `/s` (Statistics), shown above the gallery picker. UserMenu picks up a parallel `Statistics` entry next to the existing `Manage` one. Non-admins see no change. Discoverability fix for the global stats and admin surfaces that until now were URL-typing only from the landing.
 - Admin UI shell — `/m/*` (global) + `/m/g/<gallery>/*` (gallery-scoped) routes with placeholder sub-pages, a `Manage` tab in the title-bar context group, and a `Manage` entry in the UserMenu, all gated on `user.isAdmin`. (part of #10)
 - Public ↔ admin photo navigation closes the loop: a "Manage this photo" floating button on the public photo view (admins only, below the fullscreen button) jumps to the photo's gallery-scoped admin drawer; the admin drawer's header carries a return link back to the same photo's public view. The admin photos grid highlights the open photo's tile and auto-scrolls to the page containing it via a new `photoIdFocus` query param on `GET /api/v1/photos`. (closes #427)

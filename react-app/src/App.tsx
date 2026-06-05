@@ -31,6 +31,7 @@ import ManageGroupEdit from "./components/Manage/GroupEdit";
 import ManageGroupCreate from "./components/Manage/GroupCreate";
 import ManageGalleryAccess from "./components/Manage/GalleryAccess";
 import ManageAccess from "./components/Manage/Access";
+import GlobalStats from "./components/GlobalStats";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -119,6 +120,7 @@ const App = (): React.ReactElement => {
                 path="/s/:galleryId"
                 element={<Gallery isStats={true} />}
               />
+              <Route path="/s" element={<GlobalStats />} />
               <Route
                 path="/g/:galleryId/:year/:month/:day/:photoId"
                 element={<Gallery />}

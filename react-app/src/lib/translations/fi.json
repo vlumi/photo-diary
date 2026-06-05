@@ -41,6 +41,10 @@
 
     "manage-menu-entry": "Hallinta",
     "stats-menu-entry": "Tilastot",
+    "stats-global-title": "Tilastot",
+    "stats-global-nav-group": "Globaalit tilastot",
+    "stats-global-load-error": "Valokuvien lataus epäonnistui.",
+    "stats-global-empty": "Katalogissa ei ole vielä valokuvia.",
     "landing-shortcut-manage": "Hallinta",
     "landing-shortcut-manage-blurb": "Valokuvat, galleriat, käyttäjät, käyttöoikeudet — ylläpitotyökalut.",
     "landing-shortcut-stats": "Tilastot",
