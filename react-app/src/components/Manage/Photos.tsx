@@ -9,7 +9,7 @@ import {
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsCheck } from "react-icons/bs";
+import { BsCheck, BsPencilSquare } from "react-icons/bs";
 
 import photosService, {
   type MissingField,
@@ -178,6 +178,31 @@ const SelectBadge = styled.span`
   pointer-events: none;
   box-shadow: 0 0 0 2px var(--tile-background);
 `;
+// Per-tile edit affordance — matches the BsPencilSquare button on
+// the public photo view's manage-this-photo link, so the icon
+// vocabulary stays consistent across the public + admin sides.
+const EditButton = styled.button`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85em;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  &:hover,
+  &:focus-visible {
+    background: var(--header-background);
+    color: var(--header-color);
+  }
+`;
 // Square wrap reserves the box before the image loads, so the grid
 // doesn't reflow as thumbs come in. Portrait and landscape captures
 // of the same aspect ratio occupy equal area inside the square
@@ -324,13 +349,16 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [selectMode, setSelectMode] = React.useState(false);
+  // Selection is always-on (no mode toggle). Clicking a tile
+  // toggles selection; shift-click extends a range from the last
+  // toggle anchor; a per-tile pencil icon opens the edit drawer.
+  // The bulk-action bar appears only when there's something to act
+  // on.
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(
     () => new Set()
   );
   const [anchorId, setAnchorId] = React.useState<string | null>(null);
-  const exitSelectMode = React.useCallback(() => {
-    setSelectMode(false);
+  const clearSelection = React.useCallback(() => {
     setSelectedIds(new Set());
     setAnchorId(null);
   }, []);
@@ -552,10 +580,6 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     pagePhotoIds: string[],
     shift: boolean
   ) => {
-    if (!selectMode) {
-      openPhoto(photoId);
-      return;
-    }
     if (shift && anchorId) {
       const a = pagePhotoIds.indexOf(anchorId);
       const b = pagePhotoIds.indexOf(photoId);
@@ -609,7 +633,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     const refreshAfterBulk = () => {
       void queryClient.invalidateQueries({ queryKey: ["manage-photos"] });
       void queryClient.invalidateQueries({ queryKey: ["galleries"] });
-      exitSelectMode();
+      clearSelection();
     };
     return (
       <>
@@ -626,36 +650,26 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
                 })}
               </span>
             )}
-            {!selectMode ? (
-              <SelectButton
-                type="button"
-                disabled={photos.length === 0}
-                onClick={() => setSelectMode(true)}
-              >
-                {t("manage-photos-bulk-enter")}
-              </SelectButton>
-            ) : (
-              <SelectButton
-                type="button"
-                disabled={photos.length === 0}
-                onClick={
-                  allOnPageSelected ? clearPageSelection : selectAllOnPage
-                }
-              >
-                {allOnPageSelected
-                  ? t("manage-photos-bulk-clear-page")
-                  : t("manage-photos-bulk-select-page")}
-              </SelectButton>
-            )}
+            <SelectButton
+              type="button"
+              disabled={photos.length === 0}
+              onClick={
+                allOnPageSelected ? clearPageSelection : selectAllOnPage
+              }
+            >
+              {allOnPageSelected
+                ? t("manage-photos-bulk-clear-page")
+                : t("manage-photos-bulk-select-page")}
+            </SelectButton>
           </SummaryActions>
         </ResultSummary>
-        {selectMode && (
+        {selectedIds.size > 0 && (
           <BulkActions
             selectedIds={[...selectedIds]}
             galleries={galleries}
             scopedGalleryId={galleryId}
             onDone={refreshAfterBulk}
-            onCancel={exitSelectMode}
+            onCancel={clearSelection}
           />
         )}
         {photos.length === 0 ? (
@@ -664,7 +678,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           <Grid>
             {photos.map((p) => {
               const label = dateLabel(p);
-              const isSelected = selectMode && selectedIds.has(p.id);
+              const isSelected = selectedIds.has(p.id);
               return (
                 <Tile
                   key={p.id}
@@ -687,6 +701,17 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
                         <BsCheck />
                       </SelectBadge>
                     )}
+                    <EditButton
+                      type="button"
+                      aria-label={String(t("manage-this-photo"))}
+                      title={String(t("manage-this-photo"))}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openPhoto(p.id);
+                      }}
+                    >
+                      <BsPencilSquare aria-hidden />
+                    </EditButton>
                   </ThumbWrap>
                   <TileMeta>{label || " "}</TileMeta>
                 </Tile>
