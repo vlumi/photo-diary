@@ -224,6 +224,18 @@ const UserMenu = (): React.ReactElement => {
               {t("manage-menu-entry")}
             </MenuItem>
           )}
+          {user.isAdmin() && (
+            <MenuItem
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setIsOpen(false);
+                navigate("/s");
+              }}
+            >
+              {t("stats-menu-entry")}
+            </MenuItem>
+          )}
           <ThemeRow>
             <span>{t("theme-label")}</span>
             <ThemeSelect

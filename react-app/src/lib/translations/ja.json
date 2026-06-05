@@ -40,6 +40,11 @@
     "nav-context-group": "表示",
 
     "manage-menu-entry": "管理",
+    "stats-menu-entry": "統計",
+    "landing-shortcut-manage": "管理",
+    "landing-shortcut-manage-blurb": "写真、ギャラリー、ユーザー、アクセス権 — 管理者ツール。",
+    "landing-shortcut-stats": "統計",
+    "landing-shortcut-stats-blurb": "ギャラリー横断の集計と推移。",
     "manage-nav-group": "管理",
     "manage-root": "管理",
     "home": "ホーム",
