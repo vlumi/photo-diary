@@ -8,8 +8,10 @@ import { BsHouseFill, BsBarChartLine } from "react-icons/bs";
 
 import Filters from "../Gallery/Filters";
 import Stats from "../Gallery/Stats";
+import Galleries from "./Galleries";
 import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
 import photosService from "../../services/photos";
+import galleriesService from "../../services/galleries";
 import theme from "../../lib/theme";
 import { type UniqueValues } from "../../lib/stats";
 import { buildUniqueValues } from "../../lib/uniqueValues";
@@ -106,8 +108,14 @@ const GlobalStats = (): React.ReactElement => {
     queryFn: fetchAllPhotos,
     enabled: !!user?.isAdmin(),
   });
+  const galleriesQuery = useQuery({
+    queryKey: ["global-stats-galleries", user?.id ?? null],
+    queryFn: () => galleriesService.getAll(),
+    enabled: !!user?.isAdmin(),
+  });
 
   const photos = photosQuery.data;
+  const galleries = galleriesQuery.data ?? [];
   const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
     if (!photos || !countryData) return undefined;
     return buildUniqueValues(photos, lang, t, countryData);
@@ -152,25 +160,28 @@ const GlobalStats = (): React.ReactElement => {
   }
 
   return frame(
-    <Stats
-      photos={photos}
-      uniqueValues={uniqueValues}
-      filters={filters}
-      setFilters={setFilters}
-      lang={lang}
-      countryData={countryData}
-      theme={activeTheme}
-      hideMap={false}
-    >
-      <Filters
+    <>
+      <Galleries photos={photos} galleries={galleries} lang={lang} />
+      <Stats
+        photos={photos}
+        uniqueValues={uniqueValues}
         filters={filters}
         setFilters={setFilters}
-        uniqueValues={uniqueValues}
         lang={lang}
         countryData={countryData}
+        theme={activeTheme}
         hideMap={false}
-      />
-    </Stats>
+      >
+        <Filters
+          filters={filters}
+          setFilters={setFilters}
+          uniqueValues={uniqueValues}
+          lang={lang}
+          countryData={countryData}
+          hideMap={false}
+        />
+      </Stats>
+    </>
   );
 };
 

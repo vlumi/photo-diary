@@ -95,8 +95,12 @@ const listPhotos = async (opts: ListOptions = {}): Promise<ListResult> => {
     if (idx >= 0) effectivePage = Math.floor(idx / pageSize) + 1;
   }
   const result = paginate(sorted, effectivePage, pageSize);
+  const decorated = result.items.map((p) => ({
+    ...p,
+    galleries: Array.from(galleryMembers.get(p.id) ?? []),
+  }));
   return {
-    photos: result.items,
+    photos: decorated,
     page: result.page,
     pageSize: result.pageSize,
     total: result.total,
