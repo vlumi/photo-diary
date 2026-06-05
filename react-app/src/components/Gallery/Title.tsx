@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill, BsChevronRight, BsMap } from "react-icons/bs";
@@ -351,6 +351,14 @@ const Title = ({
           <BsFillHouseFill />
         </HomeLink>
         <Separator aria-hidden="true" />
+        {context === "stats" && showManage && (
+          <>
+            <LinkCrumb>
+              <RouterLink to="/s">{t("stats-global-title")}</RouterLink>
+            </LinkCrumb>
+            <Separator aria-hidden="true" />
+          </>
+        )}
         {renderGalleryCrumb()}
         {year !== undefined && (
           <>
