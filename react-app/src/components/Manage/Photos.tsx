@@ -9,7 +9,7 @@ import {
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsCheck, BsPencilSquare } from "react-icons/bs";
+import { BsCheck } from "react-icons/bs";
 
 import photosService, {
   type MissingField,
@@ -172,45 +172,34 @@ const Tile = styled.button<{ $focused?: boolean; $selected?: boolean }>`
     border-color: var(--primary-color);
   }
 `;
-const SelectBadge = styled.span`
+// Always-visible checkbox affordance per tile. Selecting the first
+// photo flips the grid into "selection mode" implicitly — subsequent
+// tile clicks then toggle selection instead of opening the drawer.
+// Tap target is sized for mobile (28px); button styling matches a
+// native-feeling checkbox more than the SelectBadge it replaced.
+const CheckBox = styled.button<{ $selected: boolean }>`
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--header-background);
-  color: var(--header-color);
+  top: 6px;
+  left: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 2px solid
+    ${({ $selected }) =>
+      $selected ? "var(--header-background)" : "rgba(255, 255, 255, 0.85)"};
+  background: ${({ $selected }) =>
+    $selected ? "var(--header-background)" : "rgba(0, 0, 0, 0.35)"};
+  color: ${({ $selected }) =>
+    $selected ? "var(--header-color)" : "rgba(255, 255, 255, 0.85)"};
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1em;
-  pointer-events: none;
-  box-shadow: 0 0 0 2px var(--tile-background);
-`;
-// Per-tile edit affordance — matches the BsPencilSquare button on
-// the public photo view's manage-this-photo link, so the icon
-// vocabulary stays consistent across the public + admin sides.
-const EditButton = styled.button`
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85em;
-  border: none;
+  font-size: 1.1em;
   padding: 0;
   cursor: pointer;
   &:hover,
   &:focus-visible {
-    background: var(--header-background);
-    color: var(--header-color);
+    border-color: var(--primary-color);
   }
 `;
 // Square wrap reserves the box before the image loads, so the grid
@@ -585,6 +574,16 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     </>
   );
 
+  const toggleSelected = (photoId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(photoId)) next.delete(photoId);
+      else next.add(photoId);
+      return next;
+    });
+    setAnchorId(photoId);
+  };
+
   const handleTileClick = (
     photoId: string,
     pagePhotoIds: string[],
@@ -604,13 +603,15 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
         return;
       }
     }
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(photoId)) next.delete(photoId);
-      else next.add(photoId);
-      return next;
-    });
-    setAnchorId(photoId);
+    // No selection yet → tile click opens the drawer; matches the
+    // single-photo edit flow the operator expects from a gallery
+    // grid. Once anything is selected the grid is implicitly in
+    // selection mode and tile click toggles instead.
+    if (selectedIds.size === 0) {
+      openPhoto(photoId);
+      return;
+    }
+    toggleSelected(photoId);
   };
 
   const renderBody = () => {
@@ -706,22 +707,32 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
                       alt={p.id}
                       loading="lazy"
                     />
-                    {isSelected && (
-                      <SelectBadge aria-hidden>
-                        <BsCheck />
-                      </SelectBadge>
-                    )}
-                    <EditButton
+                    <CheckBox
                       type="button"
-                      aria-label={String(t("manage-this-photo"))}
-                      title={String(t("manage-this-photo"))}
+                      role="checkbox"
+                      aria-checked={isSelected}
+                      aria-label={String(
+                        t(
+                          isSelected
+                            ? "manage-photos-tile-deselect"
+                            : "manage-photos-tile-select"
+                        )
+                      )}
+                      title={String(
+                        t(
+                          isSelected
+                            ? "manage-photos-tile-deselect"
+                            : "manage-photos-tile-select"
+                        )
+                      )}
+                      $selected={isSelected}
                       onClick={(e) => {
                         e.stopPropagation();
-                        openPhoto(p.id);
+                        toggleSelected(p.id);
                       }}
                     >
-                      <BsPencilSquare aria-hidden />
-                    </EditButton>
+                      {isSelected ? <BsCheck aria-hidden /> : null}
+                    </CheckBox>
                   </ThumbWrap>
                   <TileMeta>{label || " "}</TileMeta>
                 </Tile>

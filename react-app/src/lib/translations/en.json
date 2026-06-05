@@ -151,6 +151,8 @@
     "manage-photos-empty": "No photos match this filter.",
     "manage-photos-load-error": "Failed to load photos.",
     "manage-photos-bulk-exit": "Clear selection",
+    "manage-photos-tile-select": "Select",
+    "manage-photos-tile-deselect": "Deselect",
     "manage-photos-bulk-select-page": "Select page",
     "manage-photos-bulk-clear-page": "Clear page",
     "manage-photos-bulk-selected_one": "{{count}} selected",

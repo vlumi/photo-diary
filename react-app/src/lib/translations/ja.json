@@ -151,6 +151,8 @@
     "manage-photos-empty": "条件に合う写真がありません。",
     "manage-photos-load-error": "写真の読み込みに失敗しました。",
     "manage-photos-bulk-exit": "選択を解除",
+    "manage-photos-tile-select": "選択",
+    "manage-photos-tile-deselect": "選択を解除",
     "manage-photos-bulk-select-page": "ページを選択",
     "manage-photos-bulk-clear-page": "ページの選択を解除",
     "manage-photos-bulk-selected_one": "{{count}} 枚選択中",
