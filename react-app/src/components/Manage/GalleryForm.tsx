@@ -8,25 +8,12 @@ import {
   type InitialView,
   type Theme,
 } from "../../services/galleries";
+import theme, { THEME_CATEGORIES, type ThemeCategory } from "../../lib/theme";
 
 // Enum values must mirror server's GalleryUpdateBody. Kept inline
 // rather than importing from api-schema so the dropdowns don't
 // silently lose values if the typegen output rearranges.
 const EPOCH_TYPES: EpochType[] = ["birthday", "1-index", "0-index"];
-const THEMES: Theme[] = [
-  "blue",
-  "red",
-  "grayscale",
-  "contrast",
-  "alert",
-  "dark",
-  "amoled",
-  "forest",
-  "silver",
-  "showcase",
-  "teal",
-  "paper",
-];
 const INITIAL_VIEWS: InitialView[] = ["year", "month", "day", "photo"];
 
 export interface FormState {
@@ -193,11 +180,24 @@ const GalleryFormFields = ({ form, setField }: Props): React.ReactElement => {
             onChange={(e) => setField("theme", e.target.value)}
           >
             <option value="">{t("manage-gallery-enum-default")}</option>
-            {THEMES.map((th) => (
-              <option key={th} value={th}>
-                {th}
-              </option>
-            ))}
+            {THEME_CATEGORIES.map((category: ThemeCategory) => {
+              const entries = theme.manifest.filter(
+                (e) => e.category === category
+              );
+              if (entries.length === 0) return null;
+              return (
+                <optgroup
+                  key={category}
+                  label={String(t(`theme-group-${category}`))}
+                >
+                  {entries.map((e) => (
+                    <option key={e.id} value={e.id as Theme}>
+                      {e.displayName}
+                    </option>
+                  ))}
+                </optgroup>
+              );
+            })}
           </Select>
         </Field>
         <Field>

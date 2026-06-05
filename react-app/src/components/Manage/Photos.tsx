@@ -337,7 +337,15 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     queryFn: galleriesService.getAll,
     enabled: !galleryId,
   });
-  const galleries = (galleriesQuery.data as Array<{ id: string; title?: string }> | undefined) ?? [];
+  const galleries = React.useMemo(() => {
+    const raw =
+      (galleriesQuery.data as
+        | Array<{ id: string; title?: string }>
+        | undefined) ?? [];
+    return raw.slice().sort((a, b) =>
+      (a.title || a.id).localeCompare(b.title || b.id)
+    );
+  }, [galleriesQuery.data]);
 
   const setSearchParam = (
     name: string,
