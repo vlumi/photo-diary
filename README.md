@@ -403,9 +403,10 @@ End-to-end flow from a new JPG arriving on the host to it being browsable in the
 
 Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
 
-- [**0.13 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): frontend admin view (#10), retire `:private` pseudo-gallery (#385), virtual-host scope (#386), landing-page redirects (#387), test-flakiness audit (#390), ACL user groups (#270), ACL `:all` floor rule (#271), theme selector UI (#287) and additional themes (#279), per-language editing for place / title / description (#343). Mutation API (#222) shipped.
-- [**0.14 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), Postgres driver alongside SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286).
-- [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283).
+- [**0.13 — Admin UI bundle**](https://github.com/vlumi/photo-diary/milestone/14): the admin frontend (#10) shipped across eight PRs ending with multi-select + bulk actions on the admin photos grid. Stats split (#404) and Galleries topic on `/s` (#444) also landed. Wrap-up items still open: theme selector UI / additional themes (#279) and stronger landing-page redirects (#387).
+- [**0.14 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): hybrid galleries (#22), DB drivers beyond SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286), content localization for photo metadata (#281), per-language editing for place / title / description (#343), stats category evolution over time (#383), year view full Jan–Dec on wide screens (#399), per-view fetch + server-side filtering (#406), retire the dummy DB driver in favour of real `:memory:` sqlite (#434), Galleries section composes with the Filters sidebar (#446).
+- [**0.15 — Admin UI polish**](https://github.com/vlumi/photo-diary/milestone/17): everything that came out of the #10 closure plus admin UX gaps. Mobile / small-screen admin layout (#412), tree-nav for the admin breadcrumb (#438), revisit the Inbox surface post-daemon (#439), set-field bulk action (#451), mobile multi-select polish — long-press + drag-rectangle (#452), surface the gallery-admin tier in the UI (#453), dashboard audit-count cards (#454), filter-sidebar month-picker / timeline strip (#455).
+- [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283), `bin/photo.ts` subcommand-surface tidy (#376).
 
 ## Backlog
 
@@ -415,10 +416,10 @@ Ideas without a milestone yet — too far out to schedule, kept here so they don
 - **Photo license + original-size download** (#263) — license metadata on the photo row + a gated download path for `original/` bytes.
 - **Range filters for continuous variables** (#264) — time, focal length, aperture, etc. Coordinate-radius dropped in favour of place-categorical filtering after #246.
 - **Non-calendar gallery view** (#280) — alternative renderer for galleries that aren't date-shaped.
-- **Content localization for photo metadata** (#281) — per-language titles/captions/place names; manual-entry friction is the real blocker.
 - **Map modal: keep open across prev/next month/year navigation** (#321) — restores the cross-month/year geographic sweep that the inline-footer-map workflow had before the modal-isation in #313.
 - **Filter pills: edit value in place** (#342) — clicking an existing filter's value opens the same selector the topic-adder uses, so changing country=jp → fi takes two clicks instead of four.
-- **Stats: category evolution over time** (#383) — second axis on the existing Stats categories (orientation, focal length, camera, shutter, etc.) so you can see how the distribution has shifted across years, not just its current shape.
+- **Decide how to handle location localization in Finnish** (#362) — open localization-policy question for FI exonyms.
+- **Expose subdivision-name data as a reusable resource** (#366) — pull out the per-language subdivision dataset for use beyond this app.
 
 ## Version History
 
