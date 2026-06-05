@@ -127,4 +127,12 @@ const regeocode = async (id: string): Promise<void> => {
   );
 };
 
-export default { list, get, update, regeocode };
+const remove = async (id: string): Promise<void> => {
+  await unwrap(
+    api.DELETE("/api/v1/photos/{photoId}", {
+      params: { path: { photoId: id } },
+    })
+  );
+};
+
+export default { list, get, update, regeocode, remove };

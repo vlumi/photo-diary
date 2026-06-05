@@ -8,7 +8,8 @@ import {
 } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { BsCheck } from "react-icons/bs";
 
 import photosService, {
   type MissingField,
@@ -17,6 +18,7 @@ import photosService, {
 import galleriesService from "../../services/galleries";
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
+import BulkActions from "./BulkActions";
 
 const Root = styled.div`
   display: flex;
@@ -52,6 +54,16 @@ const Sidebar = styled.aside`
 const Body = styled.section`
   flex: 1 1 auto;
   min-width: 0;
+  /* Root's align-items: flex-start means flex items keep their
+     intrinsic width on the cross axis. In column mode that left the
+     Body shrink-wrapped to its widest child — the grid (auto-fill
+     minmax(120px, 1fr)) collapsed to a single 120px column, and only
+     stretched once the BulkActions bar mounted and forced the
+     parent's content width up. Pin the width in column mode so the
+     grid always fills the viewport. */
+  @media (max-width: 700px) {
+    width: 100%;
+  }
 `;
 const FilterGroup = styled.div`
   display: flex;
@@ -108,31 +120,83 @@ const ResultSummary = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
   font-size: 0.9em;
   color: var(--inactive-color);
+`;
+const SummaryActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+const SelectButton = styled.button`
+  font: inherit;
+  font-size: 0.95em;
+  padding: 3px 10px;
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    border-color: var(--primary-color);
+  }
 `;
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 8px;
 `;
-const Tile = styled.button<{ $focused?: boolean }>`
+const Tile = styled.button<{ $focused?: boolean; $selected?: boolean }>`
   display: flex;
   flex-direction: column;
   background: var(--tile-background);
-  border: ${({ $focused }) =>
-    $focused
+  border: ${({ $focused, $selected }) =>
+    $selected
       ? "2px solid var(--header-background)"
-      : "1px solid transparent"};
+      : $focused
+        ? "2px solid var(--header-background)"
+        : "1px solid transparent"};
   border-radius: 2px;
   padding: 0;
   overflow: hidden;
   cursor: pointer;
   font: inherit;
   text-align: left;
-  box-shadow: ${({ $focused }) =>
-    $focused ? "0 0 0 2px var(--header-background)" : "none"};
+  box-shadow: ${({ $focused, $selected }) =>
+    $focused || $selected ? "0 0 0 2px var(--header-background)" : "none"};
+  position: relative;
+  &:hover,
+  &:focus-visible {
+    border-color: var(--primary-color);
+  }
+`;
+// Always-visible checkbox affordance per tile. Selecting the first
+// photo flips the grid into "selection mode" implicitly — subsequent
+// tile clicks then toggle selection instead of opening the drawer.
+// Tap target is sized for mobile (28px); button styling matches a
+// native-feeling checkbox more than the SelectBadge it replaced.
+const CheckBox = styled.button<{ $selected: boolean }>`
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 2px solid
+    ${({ $selected }) =>
+      $selected ? "var(--header-background)" : "rgba(255, 255, 255, 0.85)"};
+  background: ${({ $selected }) =>
+    $selected ? "var(--header-background)" : "rgba(0, 0, 0, 0.35)"};
+  color: ${({ $selected }) =>
+    $selected ? "var(--header-color)" : "rgba(255, 255, 255, 0.85)"};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+  padding: 0;
+  cursor: pointer;
   &:hover,
   &:focus-visible {
     border-color: var(--primary-color);
@@ -283,6 +347,20 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  // Selection is always-on (no mode toggle). Clicking a tile
+  // toggles selection; shift-click extends a range from the last
+  // toggle anchor; a per-tile pencil icon opens the edit drawer.
+  // The bulk-action bar appears only when there's something to act
+  // on.
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(
+    () => new Set()
+  );
+  const [anchorId, setAnchorId] = React.useState<string | null>(null);
+  const clearSelection = React.useCallback(() => {
+    setSelectedIds(new Set());
+    setAnchorId(null);
+  }, []);
   // The drawer mounts at /m/photos/:photoId and /m/g/<g>/photos/:photoId
   // via a nested <Outlet>; this Photos page is the parent.
   const openPhoto = (id: string) => {
@@ -496,6 +574,46 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     </>
   );
 
+  const toggleSelected = (photoId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(photoId)) next.delete(photoId);
+      else next.add(photoId);
+      return next;
+    });
+    setAnchorId(photoId);
+  };
+
+  const handleTileClick = (
+    photoId: string,
+    pagePhotoIds: string[],
+    shift: boolean
+  ) => {
+    if (shift && anchorId) {
+      const a = pagePhotoIds.indexOf(anchorId);
+      const b = pagePhotoIds.indexOf(photoId);
+      if (a >= 0 && b >= 0) {
+        const [lo, hi] = a <= b ? [a, b] : [b, a];
+        const range = pagePhotoIds.slice(lo, hi + 1);
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          for (const id of range) next.add(id);
+          return next;
+        });
+        return;
+      }
+    }
+    // No selection yet → tile click opens the drawer; matches the
+    // single-photo edit flow the operator expects from a gallery
+    // grid. Once anything is selected the grid is implicitly in
+    // selection mode and tile click toggles instead.
+    if (selectedIds.size === 0) {
+      openPhoto(photoId);
+      return;
+    }
+    toggleSelected(photoId);
+  };
+
   const renderBody = () => {
     if (isLoading) {
       return <EmptyState>{t("loading")}</EmptyState>;
@@ -504,34 +622,84 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
       return <EmptyState>{t("manage-photos-load-error")}</EmptyState>;
     }
     const { photos } = data;
+    const pagePhotoIds = photos.map((p) => p.id);
+    const allOnPageSelected =
+      pagePhotoIds.length > 0 &&
+      pagePhotoIds.every((id) => selectedIds.has(id));
+    const selectAllOnPage = () => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of pagePhotoIds) next.add(id);
+        return next;
+      });
+    };
+    const clearPageSelection = () => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of pagePhotoIds) next.delete(id);
+        return next;
+      });
+      setAnchorId(null);
+    };
+    const refreshAfterBulk = () => {
+      void queryClient.invalidateQueries({ queryKey: ["manage-photos"] });
+      void queryClient.invalidateQueries({ queryKey: ["galleries"] });
+      clearSelection();
+    };
     return (
       <>
         <ResultSummary>
           <span>
             {t("manage-photos-result-count", { count: total })}
           </span>
-          {pageCount > 1 && (
-            <span>
-              {t("manage-photos-result-page", {
-                page: currentPage,
-                pageCount,
-              })}
-            </span>
-          )}
+          <SummaryActions>
+            {pageCount > 1 && (
+              <span>
+                {t("manage-photos-result-page", {
+                  page: currentPage,
+                  pageCount,
+                })}
+              </span>
+            )}
+            <SelectButton
+              type="button"
+              disabled={photos.length === 0}
+              onClick={
+                allOnPageSelected ? clearPageSelection : selectAllOnPage
+              }
+            >
+              {allOnPageSelected
+                ? t("manage-photos-bulk-clear-page")
+                : t("manage-photos-bulk-select-page")}
+            </SelectButton>
+          </SummaryActions>
         </ResultSummary>
+        {selectedIds.size > 0 && (
+          <BulkActions
+            selectedIds={[...selectedIds]}
+            galleries={galleries}
+            scopedGalleryId={galleryId}
+            onDone={refreshAfterBulk}
+            onCancel={clearSelection}
+          />
+        )}
         {photos.length === 0 ? (
           <EmptyState>{t("manage-photos-empty")}</EmptyState>
         ) : (
           <Grid>
             {photos.map((p) => {
               const label = dateLabel(p);
+              const isSelected = selectedIds.has(p.id);
               return (
                 <Tile
                   key={p.id}
                   type="button"
                   title={p.id}
-                  onClick={() => openPhoto(p.id)}
+                  onClick={(e) =>
+                    handleTileClick(p.id, pagePhotoIds, e.shiftKey)
+                  }
                   $focused={p.id === params.photoId}
+                  $selected={isSelected}
                 >
                   <ThumbWrap>
                     <Thumb
@@ -539,6 +707,32 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
                       alt={p.id}
                       loading="lazy"
                     />
+                    <CheckBox
+                      type="button"
+                      role="checkbox"
+                      aria-checked={isSelected}
+                      aria-label={String(
+                        t(
+                          isSelected
+                            ? "manage-photos-tile-deselect"
+                            : "manage-photos-tile-select"
+                        )
+                      )}
+                      title={String(
+                        t(
+                          isSelected
+                            ? "manage-photos-tile-deselect"
+                            : "manage-photos-tile-select"
+                        )
+                      )}
+                      $selected={isSelected}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelected(p.id);
+                      }}
+                    >
+                      {isSelected ? <BsCheck aria-hidden /> : null}
+                    </CheckBox>
                   </ThumbWrap>
                   <TileMeta>{label || " "}</TileMeta>
                 </Tile>
