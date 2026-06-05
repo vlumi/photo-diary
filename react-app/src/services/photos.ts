@@ -115,4 +115,16 @@ const update = async (id: string, patch: PhotoUpdatePatch): Promise<void> => {
   );
 };
 
-export default { list, get, update };
+// Clear the photo's geocoded_* columns and drop a sidecar so the
+// converter daemon re-fetches via Nominatim. No body / no coord
+// change; same semantic as the coord-edit path's clear step on
+// `PUT`, but for the "refresh as-is" case.
+const regeocode = async (id: string): Promise<void> => {
+  await unwrap(
+    api.POST("/api/v1/photos/{photoId}/regeocode", {
+      params: { path: { photoId: id } },
+    })
+  );
+};
+
+export default { list, get, update, regeocode };

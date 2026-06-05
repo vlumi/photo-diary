@@ -2,8 +2,8 @@ import React from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsBoxArrowUpRight, BsX } from "react-icons/bs";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BsArrowClockwise, BsBoxArrowUpRight, BsX } from "react-icons/bs";
 
 import photosService, {
   type MissingField,
@@ -256,6 +256,38 @@ const MetaValue = styled.div`
   text-align: left;
   word-break: break-word;
   min-width: 0;
+`;
+const MetaValueRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+`;
+const InlineActionButton = styled.button`
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 10px;
+  font-size: 0.75em;
+  cursor: pointer;
+  white-space: nowrap;
+  &:hover {
+    background: var(--header-background);
+    color: var(--header-color);
+    border-color: var(--header-background);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+`;
+const EmptyValue = styled.span`
+  font-style: italic;
 `;
 const Footer = styled.div`
   display: flex;
@@ -737,6 +769,22 @@ const PhotoDrawer = (): React.ReactElement => {
     }
   };
 
+  // Fire the regeocode endpoint and refresh the photo so the
+  // cleared (and shortly re-fetched, if the daemon is up)
+  // geocoded fields show through. The Nominatim fetch is async
+  // on the converter side; the immediate visible effect is the
+  // geocoded section going blank.
+  const regeocodeMutation = useMutation({
+    mutationFn: () => photosService.regeocode(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["manage-photo", id] });
+      queryClient.invalidateQueries({ queryKey: ["manage-photos"] });
+    },
+    onError: (e: Error) => {
+      setError(e.message || t("manage-photo-save-error"));
+    },
+  });
+
   const setField = <K extends keyof FormState>(key: K, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -1057,16 +1105,38 @@ const PhotoDrawer = (): React.ReactElement => {
                 <MetaValue>{data.taken.instant.timestamp}</MetaValue>
               </>
             )}
-            {geocoded?.city && (
-              <>
-                <MetaLabel>{t("manage-photo-field-geocoded")}</MetaLabel>
-                <MetaValue>
-                  {[geocoded.countryCode, geocoded.state, geocoded.city]
-                    .filter(Boolean)
-                    .join(" / ")}
-                </MetaValue>
-              </>
-            )}
+            {!!data.taken?.location?.coordinates?.latitude &&
+              !!data.taken?.location?.coordinates?.longitude && (
+                <>
+                  <MetaLabel>{t("manage-photo-field-geocoded")}</MetaLabel>
+                  <MetaValue>
+                    <MetaValueRow>
+                      <span>
+                        {geocoded?.city ? (
+                          [geocoded.countryCode, geocoded.state, geocoded.city]
+                            .filter(Boolean)
+                            .join(" / ")
+                        ) : (
+                          <EmptyValue>
+                            {t("manage-photo-geocoded-empty")}
+                          </EmptyValue>
+                        )}
+                      </span>
+                      <InlineActionButton
+                        type="button"
+                        onClick={() => regeocodeMutation.mutate()}
+                        disabled={regeocodeMutation.isPending}
+                        title={String(t("manage-photo-geocoded-refresh-hint"))}
+                      >
+                        <BsArrowClockwise aria-hidden />
+                        {regeocodeMutation.isPending
+                          ? t("manage-photo-geocoded-refreshing")
+                          : t("manage-photo-geocoded-refresh")}
+                      </InlineActionButton>
+                    </MetaValueRow>
+                  </MetaValue>
+                </>
+              )}
             {data.exposure?.iso !== undefined && (
               <>
                 <MetaLabel>{t("manage-photo-field-exposure-extra")}</MetaLabel>

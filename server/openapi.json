@@ -1490,6 +1490,34 @@
         }
       }
     },
+    "/api/v1/photos/{photoId}/regeocode": {
+      "post": {
+        "summary": "Clear and re-fetch geocoded data for one photo (admin)",
+        "tags": [
+          "photos"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "photoId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/gallery-photos/{galleryId}": {
       "get": {
         "summary": "List photos in a gallery",

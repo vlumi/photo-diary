@@ -8,6 +8,13 @@ import { hideBin } from "yargs/helpers";
 
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
+import { writeCoordSidecar } from "../lib/inbox-sidecar.js";
+import {
+  coordsDiffer,
+  readCurrentCoords,
+  readIncomingCoords,
+  mergeCoords,
+} from "../lib/photo-coords.js";
 import {
   acceptLocalizedCity,
   RULED_LANGS,
@@ -47,6 +54,9 @@ const overrideOptionKeys = [
   "country",
   "author",
   "place",
+  "latitude",
+  "longitude",
+  "altitude",
   "camera-make",
   "camera-model",
   "lens-make",
@@ -54,6 +64,17 @@ const overrideOptionKeys = [
   "focal",
   "aperture",
 ] as const;
+
+const setCoord = (
+  patch: any,
+  axis: "latitude" | "longitude" | "altitude",
+  value: number | null
+): void => {
+  patch.taken = patch.taken || {};
+  patch.taken.location = patch.taken.location || {};
+  patch.taken.location.coordinates = patch.taken.location.coordinates || {};
+  patch.taken.location.coordinates[axis] = value;
+};
 
 const buildPatchFromArgv = (argv: any): any => {
   const patch: any = {};
@@ -73,6 +94,9 @@ const buildPatchFromArgv = (argv: any): any => {
     patch.taken.location = patch.taken.location || {};
     patch.taken.location.place = argv.place;
   }
+  if ("latitude" in argv) setCoord(patch, "latitude", argv.latitude);
+  if ("longitude" in argv) setCoord(patch, "longitude", argv.longitude);
+  if ("altitude" in argv) setCoord(patch, "altitude", argv.altitude);
   if ("camera-make" in argv) {
     patch.camera = patch.camera || {};
     patch.camera.make = argv["camera-make"];
@@ -109,6 +133,10 @@ const applyOverrideOptions = (y: Argv) =>
       type: "string",
       describe: "Two-letter country code (ISO 3166-1 alpha-2)",
     })
+    .group(["latitude", "longitude", "altitude"], "Coordinates")
+    .option("latitude", { type: "number", describe: "Latitude (decimal degrees)" })
+    .option("longitude", { type: "number", describe: "Longitude (decimal degrees)" })
+    .option("altitude", { type: "number", describe: "Altitude (metres)" })
     .group(
       [
         "author",
@@ -375,11 +403,67 @@ await yargs(hideBin(process.argv))
         );
         process.exit(1);
       }
+      // Match the admin UI's coord-change semantics: when the
+      // pin moves, clear geocoded_* synchronously so stale values
+      // don't linger, then drop a sidecar so the converter
+      // daemon (if running) re-fetches via Nominatim.
+      const incomingCoords = readIncomingCoords(patch);
+      let coordChanged = false;
+      let nextCoords:
+        | { latitude?: number | null; longitude?: number | null; altitude?: number | null }
+        | undefined;
+      if (incomingCoords) {
+        const before = readCurrentCoords(existing as Record<string, unknown>);
+        coordChanged = coordsDiffer(before, incomingCoords);
+        if (coordChanged) {
+          nextCoords = mergeCoords(before, incomingCoords);
+        }
+      }
       if (anyField) {
         await db.updatePhoto(id, patch);
-        console.log(`✓ Updated "${id}".`);
+        if (coordChanged && nextCoords) {
+          await db.clearGeocoded(id);
+          await writeCoordSidecar(id, nextCoords);
+          console.log(
+            `✓ Updated "${id}" (coords changed; cleared geocoded + queued re-fetch).`
+          );
+        } else {
+          console.log(`✓ Updated "${id}".`);
+        }
       }
       await setGalleries(id, argv.gallery);
+    }
+  )
+  .command(
+    "regeocode <id>",
+    "Clear the photo's geocoded_* columns and drop a sidecar so the converter daemon re-fetches via Nominatim. Useful when the row's geocoded data has drifted (Nominatim updated, manual fix, post-coord-edit refresh).",
+    (y) =>
+      y.positional("id", {
+        describe: "Photo id",
+        type: "string",
+        demandOption: true,
+      }),
+    async (argv) => {
+      const id = argv.id as string;
+      const existing = await db.loadPhoto(id).catch(() => null);
+      if (!existing) {
+        console.error(`✗ Photo "${id}" doesn't exist.`);
+        process.exit(1);
+      }
+      const coords = readCurrentCoords(existing as Record<string, unknown>);
+      if (coords.latitude === null || coords.longitude === null) {
+        console.error(
+          `✗ Photo "${id}" has no coordinates; nothing to re-geocode.`
+        );
+        process.exit(1);
+      }
+      await db.clearGeocoded(id);
+      await writeCoordSidecar(id, coords);
+      console.log(
+        `✓ Cleared geocoded_* on "${id}" and dropped sidecar. ` +
+          "If the converter daemon is running, it will re-fetch shortly; " +
+          "otherwise run `photo-geocode.ts --apply` to backfill."
+      );
     }
   )
   .command(
