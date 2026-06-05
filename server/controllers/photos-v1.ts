@@ -9,6 +9,12 @@ import {
   requireUnscoped,
 } from "../lib/host-scope.js";
 import { writeCoordSidecar } from "../lib/inbox-sidecar.js";
+import {
+  coordsDiffer,
+  mergeCoords,
+  readCurrentCoords,
+  readIncomingCoords,
+} from "../lib/photo-coords.js";
 import modelFactory from "../models/photo.js";
 import type {
   MissingField,
@@ -158,48 +164,6 @@ const toArray = <T>(v: T | T[] | undefined): T[] | undefined =>
 // Coordinate-change helpers for the geocode auto-refresh path (#415).
 // The patch may omit some coord axes; merging with the existing row's
 // values lets the converter geocode using the actual post-update state.
-type CoordPatch = {
-  latitude?: number | null;
-  longitude?: number | null;
-  altitude?: number | null;
-};
-const readIncomingCoords = (
-  body: Record<string, unknown>
-): CoordPatch | undefined => {
-  const taken = body?.taken as
-    | { location?: { coordinates?: CoordPatch } }
-    | undefined;
-  const coords = taken?.location?.coordinates;
-  return coords && typeof coords === "object" ? coords : undefined;
-};
-const readCurrentCoords = (
-  photo: Record<string, unknown>
-): CoordPatch => {
-  const taken = photo?.taken as
-    | { location?: { coordinates?: CoordPatch } }
-    | undefined;
-  const coords = taken?.location?.coordinates;
-  return {
-    latitude: coords?.latitude ?? null,
-    longitude: coords?.longitude ?? null,
-    altitude: coords?.altitude ?? null,
-  };
-};
-const coordsDiffer = (before: CoordPatch, after: CoordPatch): boolean => {
-  const axes: Array<keyof CoordPatch> = ["latitude", "longitude", "altitude"];
-  for (const axis of axes) {
-    if (after[axis] === undefined) continue; // patch didn't touch this axis
-    if ((before[axis] ?? null) !== (after[axis] ?? null)) return true;
-  }
-  return false;
-};
-const mergeCoords = (before: CoordPatch, after: CoordPatch): CoordPatch => ({
-  latitude: after.latitude !== undefined ? after.latitude : before.latitude,
-  longitude:
-    after.longitude !== undefined ? after.longitude : before.longitude,
-  altitude:
-    after.altitude !== undefined ? after.altitude : before.altitude,
-});
 
 // Permissive — joined photo metadata, wider than any tight contract.
 const PhotoItem = Type.Object({}, { additionalProperties: true });
@@ -343,6 +307,45 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         await db.clearGeocoded(photoId);
         await writeCoordSidecar(photoId, nextCoords);
       }
+      reply.status(204).send();
+    }
+  );
+
+  /**
+   * Clear the photo's geocoded_* columns and drop a sidecar so
+   * the converter daemon re-fetches via Nominatim. Same semantic
+   * as the coord-edit path on `PUT /:photoId`, just without
+   * changing the coordinates themselves — for "this row's
+   * geocoded data drifted, re-fetch it as-is" cases.
+   */
+  fastify.post(
+    "/:photoId/regeocode",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Clear and re-fetch geocoded data for one photo (admin)",
+        params: PhotoIdParam,
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request, reply) => {
+      await requirePhotoInScope(request, request.params.photoId);
+      await authorizer.authorizeAdmin(request.user.id);
+      const photoId = request.params.photoId;
+      const existing = (await model.getPhoto(photoId)) as Record<
+        string,
+        unknown
+      >;
+      const coords = readCurrentCoords(existing);
+      if (coords.latitude === null || coords.longitude === null) {
+        // Nothing to geocode without coordinates. Surface as 400
+        // rather than silently clearing — the operator probably
+        // wanted to verify the row had coords first.
+        reply.status(400).send({ error: "Photo has no coordinates" });
+        return;
+      }
+      await db.clearGeocoded(photoId);
+      await writeCoordSidecar(photoId, coords);
       reply.status(204).send();
     }
   );

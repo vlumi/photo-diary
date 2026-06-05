@@ -6,6 +6,11 @@ import path from "node:path";
 
 import db from "photo-diary-server/db/index.js";
 import { lookup } from "photo-diary-server/lib/photo-intake.js";
+import {
+  coordsDiffer,
+  readCurrentCoords,
+  readIncomingCoords,
+} from "photo-diary-server/lib/photo-coords.js";
 
 import { DIR_INBOX, DIR_ORIGINAL, TARGETS } from "./lib/constants.js";
 import * as logger from "./lib/logger.js";
@@ -232,10 +237,32 @@ const processJsonSidecar = async (
     }
     const targetId = r.kind === "update" ? r.existingId : photo.id;
     if (r.kind === "update") {
+      // Detect coord changes vs the existing row BEFORE the update
+      // so geocoded_* gets cleared whenever the pin moves — REVERSE_GEOCODE
+      // may be off / failing / rate-limited, and a successful sidecar
+      // update with stale geocoded columns would silently mis-locate
+      // the photo.
+      const incomingCoords = readIncomingCoords(photo);
+      let coordChanged = false;
+      if (incomingCoords) {
+        const existing = (await db.loadPhoto(targetId)) as Record<
+          string,
+          unknown
+        >;
+        coordChanged = coordsDiffer(
+          readCurrentCoords(existing),
+          incomingCoords
+        );
+      }
       const update = { ...photo };
       delete update.id;
       await db.updatePhoto(targetId, update);
-      logger.info(`[${relPath}] Updated "${targetId}"`);
+      if (coordChanged) {
+        await db.clearGeocoded(targetId);
+      }
+      logger.info(
+        `[${relPath}] Updated "${targetId}"${coordChanged ? " (coords changed; cleared geocoded)" : ""}`
+      );
     } else {
       const create = { ...photo };
       if (!create.originalFilename) create.originalFilename = create.id;

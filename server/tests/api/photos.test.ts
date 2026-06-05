@@ -472,6 +472,26 @@ describe("Mutations as admin", () => {
     const after = await getPhoto(token, "gallery1photo.jpg");
     expect(after.body.geocoded?.city).toBe("Tokyo");
   });
+  test("POST /:id/regeocode clears geocoded_*", async () => {
+    await dbFacade.upsertGeocoded("gallery1photo.jpg", "en", {
+      countryCode: "JP",
+      city: "Tokyo",
+    });
+    await api
+      .post("/api/v1/photos/gallery1photo.jpg/regeocode")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204);
+    const after = await getPhoto(token, "gallery1photo.jpg");
+    expect(after.body.geocoded?.city).toBeFalsy();
+    expect(after.body.geocoded?.countryCode).toBeFalsy();
+  });
+  test("POST /:id/regeocode rejects photo with no coordinates (400)", async () => {
+    // gallery3photo has no coords in the dummy fixture.
+    await api
+      .post("/api/v1/photos/gallery3photo.jpg/regeocode")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400);
+  });
 });
 
 describe("List photos: filters + pagination", () => {
