@@ -28,6 +28,7 @@
 
 ### Frontend
 
+- Landing page gains admin-only quick-access cards for `/m` (Manage) and `/s` (Statistics), shown above the gallery picker. UserMenu picks up a parallel `Statistics` entry next to the existing `Manage` one. Non-admins see no change. Discoverability fix for the global stats and admin surfaces that until now were URL-typing only from the landing.
 - Admin UI shell — `/m/*` (global) + `/m/g/<gallery>/*` (gallery-scoped) routes with placeholder sub-pages, a `Manage` tab in the title-bar context group, and a `Manage` entry in the UserMenu, all gated on `user.isAdmin`. (part of #10)
 - Public ↔ admin photo navigation closes the loop: a "Manage this photo" floating button on the public photo view (admins only, below the fullscreen button) jumps to the photo's gallery-scoped admin drawer; the admin drawer's header carries a return link back to the same photo's public view. The admin photos grid highlights the open photo's tile and auto-scrolls to the page containing it via a new `photoIdFocus` query param on `GET /api/v1/photos`. (closes #427)
 - Admin dashboard at `/m` replaces the placeholder with a grid of nav tiles (Photos / Galleries / Users), each linking to its sub-page; the UserMenu gains a "Manage" entry for admins. The global `/m/*` pages are now reachable without typing the URL or starting from a gallery's Manage pill. (closes #421)

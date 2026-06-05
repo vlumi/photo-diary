@@ -40,6 +40,11 @@
     "nav-context-group": "Näkymä",
 
     "manage-menu-entry": "Hallinta",
+    "stats-menu-entry": "Tilastot",
+    "landing-shortcut-manage": "Hallinta",
+    "landing-shortcut-manage-blurb": "Valokuvat, galleriat, käyttäjät, käyttöoikeudet — ylläpitotyökalut.",
+    "landing-shortcut-stats": "Tilastot",
+    "landing-shortcut-stats-blurb": "Galleriarajat ylittävät lukemat ja kehityskäyrät.",
     "manage-nav-group": "Hallinta",
     "manage-root": "Hallinta",
     "home": "Etusivu",

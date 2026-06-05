@@ -40,6 +40,11 @@
     "nav-context-group": "View",
 
     "manage-menu-entry": "Manage",
+    "stats-menu-entry": "Statistics",
+    "landing-shortcut-manage": "Manage",
+    "landing-shortcut-manage-blurb": "Photos, galleries, users, access — admin tools.",
+    "landing-shortcut-stats": "Statistics",
+    "landing-shortcut-stats-blurb": "Cross-gallery counts and trends.",
     "manage-nav-group": "Management",
     "manage-root": "Manage",
     "home": "Home",
