@@ -7,4 +7,20 @@ const get = async (galleryId: string, lang?: string) =>
     })
   );
 
-export default { get };
+const link = async (galleryId: string, photoId: string): Promise<void> => {
+  await unwrap(
+    api.PUT("/api/v1/gallery-photos/{galleryId}/{photoId}", {
+      params: { path: { galleryId, photoId } },
+    })
+  );
+};
+
+const unlink = async (galleryId: string, photoId: string): Promise<void> => {
+  await unwrap(
+    api.DELETE("/api/v1/gallery-photos/{galleryId}/{photoId}", {
+      params: { path: { galleryId, photoId } },
+    })
+  );
+};
+
+export default { get, link, unlink };

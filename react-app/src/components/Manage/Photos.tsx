@@ -8,7 +8,8 @@ import {
 } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { BsCheck } from "react-icons/bs";
 
 import photosService, {
   type MissingField,
@@ -17,6 +18,7 @@ import photosService, {
 import galleriesService from "../../services/galleries";
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
+import BulkActions from "./BulkActions";
 
 const Root = styled.div`
   display: flex;
@@ -108,35 +110,73 @@ const ResultSummary = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
   font-size: 0.9em;
   color: var(--inactive-color);
+`;
+const SummaryActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+const SelectButton = styled.button`
+  font: inherit;
+  font-size: 0.95em;
+  padding: 3px 10px;
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    border-color: var(--primary-color);
+  }
 `;
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 8px;
 `;
-const Tile = styled.button<{ $focused?: boolean }>`
+const Tile = styled.button<{ $focused?: boolean; $selected?: boolean }>`
   display: flex;
   flex-direction: column;
   background: var(--tile-background);
-  border: ${({ $focused }) =>
-    $focused
+  border: ${({ $focused, $selected }) =>
+    $selected
       ? "2px solid var(--header-background)"
-      : "1px solid transparent"};
+      : $focused
+        ? "2px solid var(--header-background)"
+        : "1px solid transparent"};
   border-radius: 2px;
   padding: 0;
   overflow: hidden;
   cursor: pointer;
   font: inherit;
   text-align: left;
-  box-shadow: ${({ $focused }) =>
-    $focused ? "0 0 0 2px var(--header-background)" : "none"};
+  box-shadow: ${({ $focused, $selected }) =>
+    $focused || $selected ? "0 0 0 2px var(--header-background)" : "none"};
+  position: relative;
   &:hover,
   &:focus-visible {
     border-color: var(--primary-color);
   }
+`;
+const SelectBadge = styled.span`
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--header-background);
+  color: var(--header-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px var(--tile-background);
 `;
 // Square wrap reserves the box before the image loads, so the grid
 // doesn't reflow as thumbs come in. Portrait and landscape captures
@@ -283,6 +323,17 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [selectMode, setSelectMode] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(
+    () => new Set()
+  );
+  const [anchorId, setAnchorId] = React.useState<string | null>(null);
+  const exitSelectMode = React.useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+    setAnchorId(null);
+  }, []);
   // The drawer mounts at /m/photos/:photoId and /m/g/<g>/photos/:photoId
   // via a nested <Outlet>; this Photos page is the parent.
   const openPhoto = (id: string) => {
@@ -496,6 +547,38 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     </>
   );
 
+  const handleTileClick = (
+    photoId: string,
+    pagePhotoIds: string[],
+    shift: boolean
+  ) => {
+    if (!selectMode) {
+      openPhoto(photoId);
+      return;
+    }
+    if (shift && anchorId) {
+      const a = pagePhotoIds.indexOf(anchorId);
+      const b = pagePhotoIds.indexOf(photoId);
+      if (a >= 0 && b >= 0) {
+        const [lo, hi] = a <= b ? [a, b] : [b, a];
+        const range = pagePhotoIds.slice(lo, hi + 1);
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          for (const id of range) next.add(id);
+          return next;
+        });
+        return;
+      }
+    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(photoId)) next.delete(photoId);
+      else next.add(photoId);
+      return next;
+    });
+    setAnchorId(photoId);
+  };
+
   const renderBody = () => {
     if (isLoading) {
       return <EmptyState>{t("loading")}</EmptyState>;
@@ -504,34 +587,94 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
       return <EmptyState>{t("manage-photos-load-error")}</EmptyState>;
     }
     const { photos } = data;
+    const pagePhotoIds = photos.map((p) => p.id);
+    const allOnPageSelected =
+      pagePhotoIds.length > 0 &&
+      pagePhotoIds.every((id) => selectedIds.has(id));
+    const selectAllOnPage = () => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of pagePhotoIds) next.add(id);
+        return next;
+      });
+    };
+    const clearPageSelection = () => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of pagePhotoIds) next.delete(id);
+        return next;
+      });
+      setAnchorId(null);
+    };
+    const refreshAfterBulk = () => {
+      void queryClient.invalidateQueries({ queryKey: ["manage-photos"] });
+      void queryClient.invalidateQueries({ queryKey: ["galleries"] });
+      exitSelectMode();
+    };
     return (
       <>
         <ResultSummary>
           <span>
             {t("manage-photos-result-count", { count: total })}
           </span>
-          {pageCount > 1 && (
-            <span>
-              {t("manage-photos-result-page", {
-                page: currentPage,
-                pageCount,
-              })}
-            </span>
-          )}
+          <SummaryActions>
+            {pageCount > 1 && (
+              <span>
+                {t("manage-photos-result-page", {
+                  page: currentPage,
+                  pageCount,
+                })}
+              </span>
+            )}
+            {!selectMode ? (
+              <SelectButton
+                type="button"
+                disabled={photos.length === 0}
+                onClick={() => setSelectMode(true)}
+              >
+                {t("manage-photos-bulk-enter")}
+              </SelectButton>
+            ) : (
+              <SelectButton
+                type="button"
+                disabled={photos.length === 0}
+                onClick={
+                  allOnPageSelected ? clearPageSelection : selectAllOnPage
+                }
+              >
+                {allOnPageSelected
+                  ? t("manage-photos-bulk-clear-page")
+                  : t("manage-photos-bulk-select-page")}
+              </SelectButton>
+            )}
+          </SummaryActions>
         </ResultSummary>
+        {selectMode && (
+          <BulkActions
+            selectedIds={[...selectedIds]}
+            galleries={galleries}
+            scopedGalleryId={galleryId}
+            onDone={refreshAfterBulk}
+            onCancel={exitSelectMode}
+          />
+        )}
         {photos.length === 0 ? (
           <EmptyState>{t("manage-photos-empty")}</EmptyState>
         ) : (
           <Grid>
             {photos.map((p) => {
               const label = dateLabel(p);
+              const isSelected = selectMode && selectedIds.has(p.id);
               return (
                 <Tile
                   key={p.id}
                   type="button"
                   title={p.id}
-                  onClick={() => openPhoto(p.id)}
+                  onClick={(e) =>
+                    handleTileClick(p.id, pagePhotoIds, e.shiftKey)
+                  }
                   $focused={p.id === params.photoId}
+                  $selected={isSelected}
                 >
                   <ThumbWrap>
                     <Thumb
@@ -539,6 +682,11 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
                       alt={p.id}
                       loading="lazy"
                     />
+                    {isSelected && (
+                      <SelectBadge aria-hidden>
+                        <BsCheck />
+                      </SelectBadge>
+                    )}
                   </ThumbWrap>
                   <TileMeta>{label || " "}</TileMeta>
                 </Tile>
