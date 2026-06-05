@@ -41,6 +41,10 @@
 
     "manage-menu-entry": "管理",
     "stats-menu-entry": "統計",
+    "stats-global-title": "統計",
+    "stats-global-nav-group": "全体統計",
+    "stats-global-load-error": "写真の読み込みに失敗しました。",
+    "stats-global-empty": "カタログにまだ写真がありません。",
     "landing-shortcut-manage": "管理",
     "landing-shortcut-manage-blurb": "写真、ギャラリー、ユーザー、アクセス権 — 管理者ツール。",
     "landing-shortcut-stats": "統計",
