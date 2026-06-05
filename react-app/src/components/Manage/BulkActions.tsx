@@ -280,17 +280,27 @@ const BulkActions = ({
     );
   };
 
+  // Action scoping. In gallery-scoped mode (`/m/g/<id>/photos`)
+  // the operator is "inside" one gallery, so cross-gallery linking
+  // belongs in `/m/photos` instead — hide the Link button. Delete
+  // stays available to global admins regardless of scope (and the
+  // Manage UI is currently gated on the global admin flag overall).
+  // When the gallery-admin tier lands in the UI it'll also need to
+  // hide Delete here.
+  const showLink = !scopedGalleryId;
   return (
     <>
       <Bar>
         <Count>{t("manage-photos-bulk-selected", { count })}</Count>
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "pick-link" })}
-        >
-          {t("manage-photos-bulk-link")}
-        </ActionButton>
+        {showLink && (
+          <ActionButton
+            type="button"
+            disabled={busy || count === 0}
+            onClick={() => setPending({ kind: "pick-link" })}
+          >
+            {t("manage-photos-bulk-link")}
+          </ActionButton>
+        )}
         <ActionButton
           type="button"
           disabled={busy || count === 0}
