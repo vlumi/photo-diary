@@ -72,6 +72,7 @@ export interface PhotoData {
   lens?: Gear;
   exposure?: Exposure;
   geocoded?: Geocoded;
+  galleries?: string[];
 }
 
 interface CountryData {
@@ -124,6 +125,7 @@ const PhotoModel = (photoData: unknown) => {
     title: (): string | undefined => photo.title,
     description: (): string | undefined => photo.description,
     author: (): string | undefined => photo.taken.author,
+    galleries: (): string[] => photo.galleries ?? [],
 
     ymd: (): [number, number, number] => [self.year(), self.month(), self.day()],
     year: (): number => photo.taken.instant.year,

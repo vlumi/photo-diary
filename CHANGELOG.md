@@ -28,6 +28,7 @@
 
 ### Frontend
 
+- Global Statistics page gains a Galleries section at the top — one row per gallery showing photo count + share, plus an "(no gallery)" row for orphans; clicking a row drills into that gallery's per-gallery stats at `/s/<id>`. `/api/v1/photos` now attaches each photo's gallery memberships to the response so the count is computed client-side without a second fetch. (closes #444)
 - Per-gallery stats title bar gains a `Statistics` breadcrumb between Home and the gallery dropdown for admins, linking back to `/s` (global stats). Without it, the Galleries-section drill from `/s` into `/s/<gallery>` was a one-way trip. Non-admins are unchanged. (closes #447)
 - Global Statistics page at `/s` — admin-only, aggregates every photo in the catalogue (paginated fetch under the existing `/api/v1/photos` endpoint) through the same Stats / Filters UI the per-gallery `/s/<gallery>` view uses. The shared `uniqueValues` build moves out of `Gallery/index.tsx` into `lib/uniqueValues.ts` so the two pages can't drift. (part of #404)
 - Landing page gains admin-only quick-access cards for `/m` (Manage) and `/s` (Statistics), shown above the gallery picker. UserMenu picks up a parallel `Statistics` entry next to the existing `Manage` one. Non-admins see no change. Discoverability fix for the global stats and admin surfaces that until now were URL-typing only from the landing.

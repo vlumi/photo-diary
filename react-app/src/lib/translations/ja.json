@@ -407,6 +407,10 @@
     "stats-year-month": "{{year}}年{{month}}",
     "stats-per-day": "{{count}}枚／日",
 
+    "stats-topic-galleries": "ギャラリー",
+    "stats-category-gallery": "ギャラリー",
+    "stats-galleries-orphans": "（ギャラリー未所属）",
+
     "stats-topic-general": "一般",
     "stats-category-summary": "まとめ",
     "stats-category-author": "撮影者",
