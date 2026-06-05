@@ -54,6 +54,16 @@ const Sidebar = styled.aside`
 const Body = styled.section`
   flex: 1 1 auto;
   min-width: 0;
+  /* Root's align-items: flex-start means flex items keep their
+     intrinsic width on the cross axis. In column mode that left the
+     Body shrink-wrapped to its widest child — the grid (auto-fill
+     minmax(120px, 1fr)) collapsed to a single 120px column, and only
+     stretched once the BulkActions bar mounted and forced the
+     parent's content width up. Pin the width in column mode so the
+     grid always fills the viewport. */
+  @media (max-width: 700px) {
+    width: 100%;
+  }
 `;
 const FilterGroup = styled.div`
   display: flex;
