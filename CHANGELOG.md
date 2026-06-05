@@ -28,6 +28,7 @@
 
 ### Frontend
 
+- Gallery editor theme picker now mirrors the user-menu picker: grouped by category (Coloured / Neutral / Dark / Statement) in canonical manifest order, with each option labelled by display name rather than the raw enum id. The hardcoded arbitrary order is gone; both pickers now read the same `theme.manifest`. Admin photos page's gallery facet + bulk picker also sorts galleries by visible title (not server's id order), since the operator sees titles, not slugs.
 - Global Statistics page gains a Galleries section at the top — one row per gallery showing photo count + share, plus an "(no gallery)" row for orphans; clicking a row drills into that gallery's per-gallery stats at `/s/<id>`. `/api/v1/photos` now attaches each photo's gallery memberships to the response so the count is computed client-side without a second fetch. (closes #444)
 - Per-gallery stats title bar gains a `Statistics` breadcrumb between Home and the gallery dropdown for admins, linking back to `/s` (global stats). Without it, the Galleries-section drill from `/s` into `/s/<gallery>` was a one-way trip. Non-admins are unchanged. (closes #447)
 - Global Statistics page at `/s` — admin-only, aggregates every photo in the catalogue (paginated fetch under the existing `/api/v1/photos` endpoint) through the same Stats / Filters UI the per-gallery `/s/<gallery>` view uses. The shared `uniqueValues` build moves out of `Gallery/index.tsx` into `lib/uniqueValues.ts` so the two pages can't drift. (part of #404)
