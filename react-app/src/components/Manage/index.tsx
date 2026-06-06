@@ -36,9 +36,12 @@ const Header = styled.div`
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 0 5px;
+  padding: 8px 5px;
   gap: 6px;
+  row-gap: 8px;
   min-height: 44px;
+  box-sizing: border-box;
+  margin-bottom: 8px;
 `;
 const Crumbs = styled.nav`
   display: flex;

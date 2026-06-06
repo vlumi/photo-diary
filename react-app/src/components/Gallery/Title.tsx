@@ -17,10 +17,12 @@ const Root = styled.div`
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 0 5px;
+  padding: 8px 5px;
   gap: 6px;
+  row-gap: 8px;
   /* 44px iOS HIG tap target. */
   min-height: 44px;
+  box-sizing: border-box;
 `;
 const Path = styled.nav`
   display: flex;
