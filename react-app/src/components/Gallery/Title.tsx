@@ -14,22 +14,32 @@ import type { Photo } from "../../models/PhotoModel";
 
 const Root = styled.div`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 0 5px;
+  /* Vertical padding sized so align-items: center's slack on the
+     single-line layout (where min-height: 44 forces extra height
+     around ~22px content) is absorbed by the padding, so wrap-vs-
+     no-wrap don't visually shift the first row's top. */
+  padding: 11px 5px;
   gap: 6px;
+  row-gap: 8px;
   /* 44px iOS HIG tap target. */
   min-height: 44px;
+  box-sizing: border-box;
 `;
 const Path = styled.nav`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
+  /* Pin the row height to the right-cluster (map / context
+     segmented buttons) height so wrapping them away on a narrow
+     screen doesn't shrink the line this nav sits in — without it
+     the first row's baseline jumps by ~6px between layouts. */
+  min-height: 25px;
 `;
 const Separator = styled(BsChevronRight)`
   flex: 0 0 auto;
@@ -128,6 +138,17 @@ const ContextButton = styled.button<{ $active: boolean }>`
     color: ${({ $active }) =>
       $active ? "var(--header-color)" : "var(--primary-color)"};
   }
+`;
+// Wraps the map button + context segmented control as a single
+// flex item so they stay together when the path above wraps onto
+// its own line. `margin-left: auto` (justify-self) makes the
+// cluster stick to the right edge.
+const RightCluster = styled.div`
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 `;
 const MapButton = styled.button`
   flex: 0 0 auto;
@@ -395,17 +416,19 @@ const Title = ({
           </>
         )}
       </Path>
-      {mapPhotos.length > 0 && (
-        <MapButton
-          type="button"
-          onClick={() => setMapOpen(true)}
-          aria-label={String(t("stats-location-see-on-map"))}
-          title={`${t("stats-location-see-on-map")} (m)`}
-        >
-          <BsMap />
-        </MapButton>
-      )}
-      {renderContext()}
+      <RightCluster>
+        {mapPhotos.length > 0 && (
+          <MapButton
+            type="button"
+            onClick={() => setMapOpen(true)}
+            aria-label={String(t("stats-location-see-on-map"))}
+            title={`${t("stats-location-see-on-map")} (m)`}
+          >
+            <BsMap />
+          </MapButton>
+        )}
+        {renderContext()}
+      </RightCluster>
       {mapOpen && (
         <MapModal
           title={String(t("stats-category-location"))}

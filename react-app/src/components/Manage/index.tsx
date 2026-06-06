@@ -33,20 +33,32 @@ const Root = styled.div`
 `;
 const Header = styled.div`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 0 5px;
+  /* Vertical padding sized so align-items: center's slack on the
+     single-line layout (where min-height: 44 forces extra height
+     around ~22px content) is absorbed by the padding instead, so
+     wrap-vs-no-wrap don't visually shift the first row's top. */
+  padding: 11px 5px;
   gap: 6px;
+  row-gap: 8px;
   min-height: 44px;
+  box-sizing: border-box;
+  margin-bottom: 8px;
 `;
 const Crumbs = styled.nav`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   flex: 1 1 auto;
   min-width: 0;
+  /* Pin the row height to the context-button height so wrapping
+     the buttons away on a narrow screen doesn't shrink the line
+     this nav sits in — without it the first row's effective
+     baseline jumps by ~6px between layouts. */
+  min-height: 25px;
 `;
 const Separator = styled(BsChevronRight)`
   flex: 0 0 auto;
