@@ -107,23 +107,25 @@ const App = (): React.ReactElement => {
   });
   const meta = metaQuery.data as Meta | undefined;
   const setBetaModes = useBetaStore((s) => s.setModes);
-  React.useEffect(() => {
-    if (!meta) return;
-    config.PHOTO_ROOT_URL = meta.cdn || config.PHOTO_ROOT_URL;
+  // Sync config during render — descendants read these on the same
+  // render meta arrives on; a useEffect would leave them stale.
+  if (meta) {
+    if (meta.cdn) config.PHOTO_ROOT_URL = meta.cdn;
     if (meta.defaultGallery) config.DEFAULT_GALLERY = meta.defaultGallery;
     if (meta.defaultTheme) config.DEFAULT_THEME = meta.defaultTheme;
     if (meta.initialGalleryView)
       config.INITIAL_GALLERY_VIEW = meta.initialGalleryView;
     if (meta.firstWeekday !== undefined)
       config.FIRST_WEEKDAY = Number(meta.firstWeekday);
-    if (meta.betaFeatures) {
-      const next: Partial<Record<BetaFeature, BetaMode>> = {};
-      for (const f of BETA_FEATURES) {
-        const v = meta.betaFeatures[f];
-        if (v === "on" || v === "off" || v === "user") next[f] = v;
-      }
-      if (Object.keys(next).length > 0) setBetaModes(next);
+  }
+  React.useEffect(() => {
+    if (!meta?.betaFeatures) return;
+    const next: Partial<Record<BetaFeature, BetaMode>> = {};
+    for (const f of BETA_FEATURES) {
+      const v = meta.betaFeatures[f];
+      if (v === "on" || v === "off" || v === "user") next[f] = v;
     }
+    if (Object.keys(next).length > 0) setBetaModes(next);
   }, [meta, setBetaModes]);
 
   const themePreference = useThemePreferenceStore((s) => s.preference);
