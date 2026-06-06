@@ -6,6 +6,7 @@ import {
   writeGalleryIcon,
   type CropPixels,
 } from "../lib/gallery-icon.js";
+import { assertSlugId } from "../lib/id-shape.js";
 
 export default () => {
   return {
@@ -26,6 +27,7 @@ const getGalleries = async () => {
   return await db.loadGalleries();
 };
 const createGallery = async (gallery: { id: string } & Record<string, any>) => {
+  assertSlugId(gallery.id);
   logger.debug("Creating gallery", { id: gallery.id });
   await db.createGallery(gallery);
 };

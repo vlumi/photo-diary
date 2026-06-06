@@ -101,11 +101,11 @@ describe("As guest", () => {
 describe("As blocked user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "blockedUser");
+    token = await loginUser(api, "blockeduser");
   });
 
   test("List galleries", async () => {
-    // blockedUser has no user_gallery rows. Falls through to :guest's
+    // blockeduser has no user_gallery rows. Falls through to :guest's
     // grants under the post-#394 model — :guest sees gallery3.
     const result = await getGalleries(token);
     expect(result.body.length).toBe(1);
@@ -117,7 +117,7 @@ describe("As blocked user", () => {
     await expectGalleryUnavailable(token, "gallery2");
   });
   test("Get gallery3", async () => {
-    // blockedUser inherits :guest's gallery3 view under the new model.
+    // blockeduser inherits :guest's gallery3 view under the new model.
     const result = await getGallery(token, "gallery3");
     expectGallery3(result);
   });
@@ -135,7 +135,7 @@ describe("As blocked user", () => {
 describe("As simple user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "simpleUser");
+    token = await loginUser(api, "simpleuser");
   });
 
   test("List galleries", async () => {
@@ -163,10 +163,10 @@ describe("As simple user", () => {
   });
 });
 
-describe("As publicUser", () => {
+describe("As publicuser", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "publicUser");
+    token = await loginUser(api, "publicuser");
   });
 
   test("List galleries", async () => {
@@ -231,10 +231,10 @@ describe("As admin", () => {
   });
 });
 
-describe("As gallery1Admin", () => {
+describe("As gallery1admin", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery1Admin");
+    token = await loginUser(api, "gallery1admin");
   });
 
   test("List galleries", async () => {
@@ -264,10 +264,10 @@ describe("As gallery1Admin", () => {
   });
 });
 
-describe("As gallery2Admin", () => {
+describe("As gallery2admin", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery2Admin");
+    token = await loginUser(api, "gallery2admin");
   });
 
   test("List galleries", async () => {
@@ -296,10 +296,10 @@ describe("As gallery2Admin", () => {
   });
 });
 
-describe("As plainUser", () => {
+describe("As plainuser", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "plainUser");
+    token = await loginUser(api, "plainuser");
   });
 
   test("List galleries", async () => {
@@ -330,10 +330,10 @@ describe("As plainUser", () => {
   });
 });
 
-describe("As gallery1User", () => {
+describe("As gallery1user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery1User");
+    token = await loginUser(api, "gallery1user");
   });
 
   test("List galleries", async () => {
@@ -362,10 +362,10 @@ describe("As gallery1User", () => {
   });
 });
 
-describe("As gallery12User", () => {
+describe("As gallery12user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery12User");
+    token = await loginUser(api, "gallery12user");
   });
 
   test("List galleries", async () => {
@@ -401,7 +401,7 @@ describe("hide_map cascade applied to GET /galleries/:id", () => {
   let token: string | undefined = undefined;
   let spy: ReturnType<typeof vi.spyOn>;
   beforeAll(async () => {
-    token = await loginUser(api, "plainUser");
+    token = await loginUser(api, "plainuser");
   });
   beforeEach(() => {
     spy = vi.spyOn(dbFacade, "resolveHideMap").mockResolvedValue(1);
@@ -447,10 +447,10 @@ describe("Mutations as guest", () => {
     api.delete("/api/v1/galleries/gallery1").expect(403));
 });
 
-describe("Mutations as gallery1Admin", () => {
+describe("Mutations as gallery1admin", () => {
   let token: string;
   beforeEach(async () => {
-    token = await loginUser(api, "gallery1Admin");
+    token = await loginUser(api, "gallery1admin");
   });
   test("Create rejected (admin-only)", () =>
     api

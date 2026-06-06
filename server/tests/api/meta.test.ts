@@ -122,7 +122,7 @@ describe("As admin", () => {
 describe("As non-admin", () => {
   let token: string;
   beforeEach(async () => {
-    token = await loginUser(api, "gallery1Admin");
+    token = await loginUser(api, "gallery1admin");
   });
   test("Create rejected", () =>
     api

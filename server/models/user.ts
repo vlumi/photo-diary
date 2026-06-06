@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 
 import { SALT_ROUNDS } from "../lib/bcrypt-rounds.js";
 import { ValidationError } from "../lib/errors.js";
+import { assertSlugId } from "../lib/id-shape.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -31,6 +32,7 @@ const createUser = async (user: {
   password: string;
   isAdmin?: boolean;
 }) => {
+  assertSlugId(user.id);
   logger.debug("Creating user", { id: user.id, isAdmin: !!user.isAdmin });
   const password = await bcrypt.hash(user.password, SALT_ROUNDS);
   await db.createUser({

@@ -57,18 +57,18 @@ describe("As admin", () => {
   test("Get admin", async () => {
     await getUser(token, "admin");
   });
-  test("Get plainUser", async () => {
-    await getUser(token, "plainUser");
+  test("Get plainuser", async () => {
+    await getUser(token, "plainuser");
   });
   test("Get invalid", async () => {
     await getUser(token, "invalid", 404);
   });
 });
 
-describe("As gallery1Admin", () => {
+describe("As gallery1admin", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery1Admin");
+    token = await loginUser(api, "gallery1admin");
   });
 
   test("Get users", async () => {
@@ -77,18 +77,18 @@ describe("As gallery1Admin", () => {
   test("Get admin", async () => {
     await getUser(token, "admin", 403);
   });
-  test("Get plainUser", async () => {
-    await getUser(token, "plainUser", 403);
+  test("Get plainuser", async () => {
+    await getUser(token, "plainuser", 403);
   });
   test("Get invalid", async () => {
     await getUser(token, "invalid", 403);
   });
 });
 
-describe("As gallery2Admin", () => {
+describe("As gallery2admin", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery2Admin");
+    token = await loginUser(api, "gallery2admin");
   });
 
   test("Get users", async () => {
@@ -97,18 +97,18 @@ describe("As gallery2Admin", () => {
   test("Get admin", async () => {
     await getUser(token, "admin", 403);
   });
-  test("Get plainUser", async () => {
-    await getUser(token, "plainUser", 403);
+  test("Get plainuser", async () => {
+    await getUser(token, "plainuser", 403);
   });
   test("Get invalid", async () => {
     await getUser(token, "invalid", 403);
   });
 });
 
-describe("As plainUser", () => {
+describe("As plainuser", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "plainUser");
+    token = await loginUser(api, "plainuser");
   });
 
   test("Get users", async () => {
@@ -117,18 +117,18 @@ describe("As plainUser", () => {
   test("Get admin", async () => {
     await getUser(token, "admin", 403);
   });
-  test("Get plainUser", async () => {
-    await getUser(token, "plainUser", 403);
+  test("Get plainuser", async () => {
+    await getUser(token, "plainuser", 403);
   });
   test("Get invalid", async () => {
     await getUser(token, "invalid", 403);
   });
 });
 
-describe("As gallery1User", () => {
+describe("As gallery1user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery1User");
+    token = await loginUser(api, "gallery1user");
   });
 
   test("Get users", async () => {
@@ -137,18 +137,18 @@ describe("As gallery1User", () => {
   test("Get admin", async () => {
     await getUser(token, "admin", 403);
   });
-  test("Get plainUser", async () => {
-    await getUser(token, "plainUser", 403);
+  test("Get plainuser", async () => {
+    await getUser(token, "plainuser", 403);
   });
   test("Get invalid", async () => {
     await getUser(token, "invalid", 403);
   });
 });
 
-describe("As gallery12User", () => {
+describe("As gallery12user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery12User");
+    token = await loginUser(api, "gallery12user");
   });
 
   test("Get users", async () => {
@@ -157,8 +157,8 @@ describe("As gallery12User", () => {
   test("Get admin", async () => {
     await getUser(token, "admin", 403);
   });
-  test("Get plainUser", async () => {
-    await getUser(token, "plainUser", 403);
+  test("Get plainuser", async () => {
+    await getUser(token, "plainuser", 403);
   });
   test("Get invalid", async () => {
     await getUser(token, "invalid", 403);
@@ -269,10 +269,10 @@ describe("Mutations as guest", () => {
   test("Delete rejected", () => api.delete("/api/v1/users/admin").expect(403));
 });
 
-describe("Mutations as gallery1Admin", () => {
+describe("Mutations as gallery1admin", () => {
   let token: string;
   beforeEach(async () => {
-    token = await loginUser(api, "gallery1Admin");
+    token = await loginUser(api, "gallery1admin");
   });
   test("Create rejected", () =>
     api
@@ -313,25 +313,25 @@ describe("Mutations as admin", () => {
   });
   test("Update user password (admin reset)", async () => {
     await api
-      .put("/api/v1/users/plainUser")
+      .put("/api/v1/users/plainuser")
       .set("Authorization", `Bearer ${token}`)
       .send({ password: "reset-pass" })
       .expect(204);
     await api
       .post("/api/v1/tokens")
-      .send({ id: "plainUser", password: "reset-pass" })
+      .send({ id: "plainuser", password: "reset-pass" })
       .expect(200);
     await api
       .post("/api/v1/tokens")
-      .send({ id: "plainUser", password: "foobar" })
+      .send({ id: "plainuser", password: "foobar" })
       .expect(401);
   });
   test("Delete user", async () => {
     await api
-      .delete("/api/v1/users/plainUser")
+      .delete("/api/v1/users/plainuser")
       .set("Authorization", `Bearer ${token}`)
       .expect(204);
-    await getUser(token, "plainUser", 404);
+    await getUser(token, "plainuser", 404);
   });
   test("Create with invalid body → 400", () =>
     api

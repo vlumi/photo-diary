@@ -12,7 +12,7 @@ beforeEach(async () => {
 
 const adminAuth = async () => `Bearer ${await loginUser(api, "admin")}`;
 
-// Bootstrap: a `family` group + a gallery1User member. Tests then exercise
+// Bootstrap: a `family` group + a gallery1user member. Tests then exercise
 // access flips via grant + revoke at the group layer.
 const setupGroup = async (auth: string) => {
   await api
@@ -21,7 +21,7 @@ const setupGroup = async (auth: string) => {
     .send({ id: "family", title: "Family" })
     .expect(201);
   await api
-    .put("/api/v1/groups/family/members/gallery1Admin")
+    .put("/api/v1/groups/family/members/gallery1admin")
     .set("Authorization", auth)
     .expect(204);
 };
@@ -40,10 +40,10 @@ describe("As admin", () => {
   test("Upsert (grants view) → flip cascade", async () => {
     const auth = await adminAuth();
     await setupGroup(auth);
-    // Before grant: gallery1Admin has no rows on gallery2.
+    // Before grant: gallery1admin has no rows on gallery2.
     const before = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1Admin")}`)
+      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(before.body).toStrictEqual({ id: "gallery2", hideMap: false });
 
@@ -54,10 +54,10 @@ describe("As admin", () => {
       .send({ isAdmin: false })
       .expect(204);
 
-    // Now gallery1Admin (in family) gets gallery2 via the group.
+    // Now gallery1admin (in family) gets gallery2 via the group.
     const after = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1Admin")}`)
+      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(after.body.id).toBe("gallery2");
     expect(after.body.title).toBe("gallery 2");
@@ -71,8 +71,8 @@ describe("As admin", () => {
       .set("Authorization", auth)
       .send({ isAdmin: true })
       .expect(204);
-    // gallery1Admin can now PUT gallery2 via the group's admin grant.
-    const galleryAdminToken = `Bearer ${await loginUser(api, "gallery1Admin")}`;
+    // gallery1admin can now PUT gallery2 via the group's admin grant.
+    const galleryAdminToken = `Bearer ${await loginUser(api, "gallery1admin")}`;
     await api
       .put("/api/v1/galleries/gallery2")
       .set("Authorization", galleryAdminToken)
@@ -94,7 +94,7 @@ describe("As admin", () => {
       .expect(204);
     const after = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1Admin")}`)
+      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(after.body).toStrictEqual({ id: "gallery2", hideMap: false });
   });
@@ -129,19 +129,19 @@ describe("As admin", () => {
     // With membership: gallery2 visible.
     const with_ = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1Admin")}`)
+      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(with_.body.id).toBe("gallery2");
     expect(with_.body.title).toBe("gallery 2");
 
     // Remove membership: gallery2 falls back to "unavailable" placeholder.
     await api
-      .delete("/api/v1/groups/family/members/gallery1Admin")
+      .delete("/api/v1/groups/family/members/gallery1admin")
       .set("Authorization", auth)
       .expect(204);
     const without = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1Admin")}`)
+      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(without.body).toStrictEqual({ id: "gallery2", hideMap: false });
   });

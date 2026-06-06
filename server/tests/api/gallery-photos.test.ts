@@ -187,10 +187,10 @@ describe("As admin", () => {
   });
 });
 
-describe("As gallery1Admin", () => {
+describe("As gallery1admin", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery1Admin");
+    token = await loginUser(api, "gallery1admin");
   });
 
   describe("Gallery 1", () => {
@@ -259,10 +259,10 @@ describe("As gallery1Admin", () => {
   });
 });
 
-describe("As gallery2Admin", () => {
+describe("As gallery2admin", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery2Admin");
+    token = await loginUser(api, "gallery2admin");
   });
 
   describe("Gallery 1", () => {
@@ -349,10 +349,10 @@ describe("As gallery2Admin", () => {
   });
 });
 
-describe("As plainUser", () => {
+describe("As plainuser", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "plainUser");
+    token = await loginUser(api, "plainuser");
   });
 
   describe("Gallery 1", () => {
@@ -431,10 +431,10 @@ describe("As plainUser", () => {
   });
 });
 
-describe("As gallery1User", () => {
+describe("As gallery1user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery1User");
+    token = await loginUser(api, "gallery1user");
   });
 
   describe("Gallery 1", () => {
@@ -521,10 +521,10 @@ describe("As gallery1User", () => {
   });
 });
 
-describe("As gallery12User", () => {
+describe("As gallery12user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery12User");
+    token = await loginUser(api, "gallery12user");
   });
 
   describe("Gallery 1", () => {
@@ -623,10 +623,10 @@ describe("As gallery12User", () => {
   });
 });
 
-describe("As publicUser", () => {
+describe("As publicuser", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "publicUser");
+    token = await loginUser(api, "publicuser");
   });
 
   describe("Gallery 1", () => {

@@ -146,8 +146,8 @@ describe("Refresh", () => {
 
 describe("Logout", () => {
   test("revokes only the calling session — other sessions stay valid", async () => {
-    const sessionA = await loginUserPair(api, "plainUser");
-    const sessionB = await loginUserPair(api, "plainUser");
+    const sessionA = await loginUserPair(api, "plainuser");
+    const sessionB = await loginUserPair(api, "plainuser");
     await api
       .delete("/api/v1/tokens")
       .set("Authorization", `Bearer ${sessionA.accessToken}`)
@@ -164,7 +164,7 @@ describe("Logout", () => {
   });
 
   test("is idempotent — second logout call still 204s", async () => {
-    const session = await loginUserPair(api, "plainUser");
+    const session = await loginUserPair(api, "plainuser");
     await api
       .delete("/api/v1/tokens")
       .set("Authorization", `Bearer ${session.accessToken}`)
@@ -181,10 +181,10 @@ describe("Logout", () => {
 describe("Admin revoke", () => {
   test("admin can revoke all sessions for another user", async () => {
     const adminToken = await loginUser(api, "admin");
-    const targetA = await loginUserPair(api, "plainUser");
-    const targetB = await loginUserPair(api, "plainUser");
+    const targetA = await loginUserPair(api, "plainuser");
+    const targetB = await loginUserPair(api, "plainuser");
     await api
-      .delete("/api/v1/tokens/plainUser")
+      .delete("/api/v1/tokens/plainuser")
       .set("Authorization", `Bearer ${adminToken}`)
       .expect(204);
     await api
@@ -198,9 +198,9 @@ describe("Admin revoke", () => {
   });
 
   test("non-admin gets 403 trying to revoke another user", async () => {
-    const otherToken = await loginUser(api, "simpleUser");
+    const otherToken = await loginUser(api, "simpleuser");
     await api
-      .delete("/api/v1/tokens/plainUser")
+      .delete("/api/v1/tokens/plainuser")
       .set("Authorization", `Bearer ${otherToken}`)
       .expect(403);
   });

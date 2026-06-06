@@ -20,7 +20,7 @@ describe("As guest", () => {
 
 describe("As non-admin", () => {
   test("list rejected", async () => {
-    const token = await loginUser(api, "gallery1Admin");
+    const token = await loginUser(api, "gallery1admin");
     await api
       .get("/api/v1/groups")
       .set("Authorization", `Bearer ${token}`)
@@ -93,21 +93,21 @@ describe("As admin", () => {
       .send({ id: "family" })
       .expect(201);
     await api
-      .put("/api/v1/groups/family/members/gallery1User")
+      .put("/api/v1/groups/family/members/gallery1user")
       .set("Authorization", auth)
       .expect(204);
     // Re-running is a no-op (idempotent), still 204.
     await api
-      .put("/api/v1/groups/family/members/gallery1User")
+      .put("/api/v1/groups/family/members/gallery1user")
       .set("Authorization", auth)
       .expect(204);
     const members = await api
       .get("/api/v1/groups/family/members")
       .set("Authorization", auth)
       .expect(200);
-    expect(members.body).toEqual(["gallery1User"]);
+    expect(members.body).toEqual(["gallery1user"]);
     await api
-      .delete("/api/v1/groups/family/members/gallery1User")
+      .delete("/api/v1/groups/family/members/gallery1user")
       .set("Authorization", auth)
       .expect(204);
     const afterRemove = await api

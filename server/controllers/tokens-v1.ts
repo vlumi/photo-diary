@@ -116,9 +116,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           "Too many failed login attempts. Try again later."
         );
       }
-      logger.debug(`Login attempt for "${request.body?.id}"`);
+      // Lowercase the typed id so iOS-autocapitalized "Admin" matches
+      // the stored lowercase user.id. Migration 017 ensures every
+      // existing user.id is already lowercase.
+      const typedId = request.body?.id?.toLowerCase();
+      logger.debug(`Login attempt for "${typedId}"`);
       const credentials = {
-        id: request.body?.id,
+        id: typedId,
         password: request.body?.password,
       };
       if (!credentials.id || !credentials.password) {

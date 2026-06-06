@@ -207,7 +207,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
   test("PUT /user-gallery/:user/:gallery (in scope) → 204", async () => {
     const auth = await adminAuth();
     await withHost(
-      api.put("/api/v1/user-gallery/plainUser/gallery1"),
+      api.put("/api/v1/user-gallery/plainuser/gallery1"),
       "gallery1.example.com"
     )
       .set("Authorization", auth)
@@ -218,7 +218,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
   test("PUT /user-gallery/:user/:gallery (off scope) → 404", async () => {
     const auth = await adminAuth();
     await withHost(
-      api.put("/api/v1/user-gallery/plainUser/gallery2"),
+      api.put("/api/v1/user-gallery/plainuser/gallery2"),
       "gallery1.example.com"
     )
       .set("Authorization", auth)
@@ -229,7 +229,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
   test("DELETE /user-gallery/:user/:gallery (off scope) → 404", async () => {
     const auth = await adminAuth();
     await withHost(
-      api.delete("/api/v1/user-gallery/plainUser/gallery2"),
+      api.delete("/api/v1/user-gallery/plainuser/gallery2"),
       "gallery1.example.com"
     )
       .set("Authorization", auth)

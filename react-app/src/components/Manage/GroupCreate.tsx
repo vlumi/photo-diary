@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import groupsService, {
   type GroupCreateBody,
 } from "../../services/groups";
+import { ID_PATTERN } from "../../lib/id-shape";
 
 const Root = styled.div`
   padding: 24px 16px;
@@ -100,7 +101,6 @@ const ErrorBanner = styled.div`
 
 // Mirrors the server's id constraint: minLength 1, must not start
 // with ":" (reserved for pseudo-ids).
-const ID_PATTERN = /^[^:].*$/;
 
 const GroupCreate = (): React.ReactElement => {
   const { t } = useTranslation();

@@ -55,10 +55,10 @@ describe("As guest", () => {
   });
 });
 
-describe("As blockedUser", () => {
+describe("As blockeduser", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "blockedUser");
+    token = await loginUser(api, "blockeduser");
   });
 
   test("List photos", async () => {
@@ -84,10 +84,10 @@ describe("As blockedUser", () => {
   });
 });
 
-describe("As simpleUser", () => {
+describe("As simpleuser", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "simpleUser");
+    token = await loginUser(api, "simpleuser");
   });
 
   test("List photos", async () => {
@@ -161,14 +161,14 @@ describe("As admin", () => {
   });
 });
 
-describe("As gallery1Admin", () => {
+describe("As gallery1admin", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery1Admin");
+    token = await loginUser(api, "gallery1admin");
   });
 
   // /photos and /photos/:id are admin-only post-#394 (the old "global
-  // view" tier collapsed into is_admin). gallery1Admin has only a
+  // view" tier collapsed into is_admin). gallery1admin has only a
   // per-gallery grant → 403 across the board.
   test("List photos", async () => {
     await getPhotos(token, 403);
@@ -193,10 +193,10 @@ describe("As gallery1Admin", () => {
   });
 });
 
-describe("As gallery2Admin", () => {
+describe("As gallery2admin", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery2Admin");
+    token = await loginUser(api, "gallery2admin");
   });
 
   test("List photos", async () => {
@@ -222,15 +222,15 @@ describe("As gallery2Admin", () => {
   });
 });
 
-describe("As plainUser", () => {
+describe("As plainuser", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "plainUser");
+    token = await loginUser(api, "plainuser");
   });
 
-  // plainUser previously had `:all VIEW`, granting access to the
+  // plainuser previously had `:all VIEW`, granting access to the
   // cross-gallery `/photos` endpoints. Under #394 these are admin-only;
-  // plainUser's per-gallery grants don't reach them.
+  // plainuser's per-gallery grants don't reach them.
   test("List photos", async () => {
     await getPhotos(token, 403);
   });
@@ -254,10 +254,10 @@ describe("As plainUser", () => {
   });
 });
 
-describe("As gallery1User", () => {
+describe("As gallery1user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery1User");
+    token = await loginUser(api, "gallery1user");
   });
 
   test("List photos", async () => {
@@ -283,10 +283,10 @@ describe("As gallery1User", () => {
   });
 });
 
-describe("As gallery12User", () => {
+describe("As gallery12user", () => {
   let token: string | undefined = undefined;
   beforeAll(async () => {
-    token = await loginUser(api, "gallery12User");
+    token = await loginUser(api, "gallery12user");
   });
 
   test("List photos", async () => {
@@ -324,10 +324,10 @@ describe("Mutations as guest", () => {
     api.delete("/api/v1/photos/gallery1photo.jpg").expect(403));
 });
 
-describe("Mutations as gallery1Admin", () => {
+describe("Mutations as gallery1admin", () => {
   let token: string;
   beforeEach(async () => {
-    token = await loginUser(api, "gallery1Admin");
+    token = await loginUser(api, "gallery1admin");
   });
   test("Create rejected (global admin only)", () =>
     api

@@ -4,6 +4,7 @@
 
 ### Server
 
+- User / gallery / group ids tighten to a lowercase slug shape: `^[a-z0-9][a-z0-9_-]*$` (lowercase alnum, may contain `_` / `-`, must start with alnum). Schema migration 017 lowercases any existing uppercase ids and cascades the change through the FK columns (`user_gallery`, `user_group`, `session`, `group_gallery`, `gallery_photo`). Login lowercases the typed id before lookup so iOS-autocapitalized "Admin" matches a stored `admin`. INSERT-time pattern validation lives in the model + TypeBox schemas; the migration's PK UNIQUE constraint surfaces existing case-collisions on first run. (part of #476)
 - New `PUT /api/v1/galleries/<id>/icon` endpoint (gallery admin) that crops a photo's `display/` variant into a 1:1 / 160×160 JPEG under `photos/gallery-icons/<id>.jpg` and updates `gallery.icon` to point at it. Uses sharp (new server dep, same version as the converter). `gallery.icon_source` TEXT column added via migration 016 stores `{photoId, crop:{x,y,width,height}}` so the editor can re-open the cropper against the same source and crop rect. Source pool is the gallery's own photos. `bin/gallery.ts delete` (and the matching API endpoint) now removes the icon file too. The display variant — not the original — drives the crop, so icon generation works regardless of whether the server keeps originals on disk. (part of #457)
 
 ### Frontend
