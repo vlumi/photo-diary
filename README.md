@@ -401,11 +401,12 @@ End-to-end flow from a new JPG arriving on the host to it being browsable in the
 
 ## Roadmap
 
-Active milestones on the way to 1.0. Each bullet links the GitHub milestone for live status.
+Active milestones on the way to 1.0, plus the far-out 2.0 direction. Each bullet links the GitHub milestone for live status.
 
 - [**0.14 — Admin UI polish**](https://github.com/vlumi/photo-diary/milestone/17): completes the admin surface — mobile / small-screen admin layout (#412), tree-nav for the admin breadcrumb (#438), revisit the Inbox surface post-daemon (#439), set-field bulk action (#451), mobile multi-select polish — long-press + drag-rectangle (#452), surface the gallery-admin tier in the UI (#453), dashboard audit-count cards (#454), filter-sidebar month-picker / timeline strip (#455), build the gallery icon from an existing photo via a live crop (#457).
 - [**0.15 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): the larger architectural shifts. Hybrid galleries (#22), DB drivers beyond SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286), content localization for photo metadata (#281), per-language editing for place / title / description (#343), stats category evolution over time (#383), year view full Jan–Dec on wide screens (#399), per-view fetch + server-side filtering (#406), retire the dummy DB driver in favour of real `:memory:` sqlite (#434), Galleries section composes with the Filters sidebar (#446).
 - [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283), `bin/photo.ts` subcommand-surface tidy (#376).
+- [**2.0 — Thin server, cloud-native direction**](https://github.com/vlumi/photo-diary/milestone/18) *(direction-setting, far out)*: shape may change significantly. Originals leave the server and live client-side or in cold storage; the converter's sharp pipeline becomes a local uploader bundled from the admin UI; all DB ops route through the API (no direct backdoor); storage backends behind a vendor-agnostic interface so S3-compatible / CDN deployments are an option. Vision and sub-ticket breakdown in #469. Likely diverges from today's self-hosted-monolith shape enough that it may end up being a different product line.
 
 ## Backlog
 
