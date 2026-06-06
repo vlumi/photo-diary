@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import styled from "@emotion/styled";
+import { Global, css } from "@emotion/react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 
@@ -38,8 +39,33 @@ import ChangePasswordModal from "./components/ChangePasswordModal";
 
 import config from "./lib/config";
 import metaService from "./services/meta";
-import { useBetaStore, useLangStore } from "./stores";
+import theme from "./lib/theme";
+import { useBetaStore, useLangStore, useThemePreferenceStore } from "./stores";
 import { BETA_FEATURES, type BetaFeature, type BetaMode } from "./stores/beta";
+
+type ActiveTheme = ReturnType<typeof theme.setTheme>;
+
+// Baseline theme styles applied at the App level so every route
+// (Manage, GlobalStats, picker, plus the Gallery routes before
+// their inner Global mounts) reflects the user's theme preference.
+// Gallery's inner Global renders after this one in tree order and
+// overrides with the gallery-specific theme when the per-gallery
+// override applies — emotion's Global writes to the document
+// styleSheets, so later renders win for matching selectors.
+const baseGlobalStyles = (active: ActiveTheme) => css`
+  html {
+    --primary-color: ${active.get("primary-color")};
+    --primary-background: ${active.get("primary-background")};
+    --inactive-color: ${active.get("inactive-color")};
+    --header-color: ${active.get("header-color")};
+    --header-sub-color: ${active.get("header-sub-color")};
+    --header-background: ${active.get("header-background")};
+    --tile-background: ${active.get("tile-background")};
+    --photo-frame-mat: ${active.get("photo-frame-mat")};
+    --photo-frame-border: ${active.get("photo-frame-border")};
+    filter: ${active.get("filter")};
+  }
+`;
 
 interface Meta {
   cdn?: string;
@@ -101,8 +127,12 @@ const App = (): React.ReactElement => {
     }
   }, [meta, setBetaModes]);
 
+  const themePreference = useThemePreferenceStore((s) => s.preference);
+  const baseTheme = theme.setTheme(themePreference ?? config.DEFAULT_THEME);
+
   return (
     <>
+      <Global styles={baseGlobalStyles(baseTheme)} />
       <title>Photo diary</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="robots" content="noindex" />
