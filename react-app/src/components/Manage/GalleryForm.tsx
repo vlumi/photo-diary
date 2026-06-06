@@ -8,7 +8,7 @@ import {
   type InitialView,
   type Theme,
 } from "../../services/galleries";
-import theme, { THEME_CATEGORIES, type ThemeCategory } from "../../lib/theme";
+import ThemePicker from "../ThemePicker";
 
 // Enum values must mirror server's GalleryUpdateBody. Kept inline
 // rather than importing from api-schema so the dropdowns don't
@@ -175,30 +175,11 @@ const GalleryFormFields = ({ form, setField }: Props): React.ReactElement => {
         <SectionTitle>{t("manage-gallery-section-display")}</SectionTitle>
         <Field>
           <FieldLabel>{t("manage-gallery-field-theme")}</FieldLabel>
-          <Select
-            value={form.theme}
-            onChange={(e) => setField("theme", e.target.value)}
-          >
-            <option value="">{t("manage-gallery-enum-default")}</option>
-            {THEME_CATEGORIES.map((category: ThemeCategory) => {
-              const entries = theme.manifest.filter(
-                (e) => e.category === category
-              );
-              if (entries.length === 0) return null;
-              return (
-                <optgroup
-                  key={category}
-                  label={String(t(`theme-group-${category}`))}
-                >
-                  {entries.map((e) => (
-                    <option key={e.id} value={e.id as Theme}>
-                      {e.displayName}
-                    </option>
-                  ))}
-                </optgroup>
-              );
-            })}
-          </Select>
+          <ThemePicker
+            value={form.theme || null}
+            onChange={(id) => setField("theme", id ?? "")}
+            defaultLabel={String(t("manage-gallery-enum-default"))}
+          />
         </Field>
         <Field>
           <FieldLabel>{t("manage-gallery-field-initial-view")}</FieldLabel>

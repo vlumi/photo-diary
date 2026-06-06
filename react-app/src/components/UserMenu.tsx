@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
-import theme, { THEME_CATEGORIES, type ThemeCategory } from "../lib/theme";
+import ThemePicker from "./ThemePicker";
 import token from "../lib/token";
 import tokenService from "../services/tokens";
 import {
@@ -105,81 +105,6 @@ const ThemeBlock = styled.div`
 `;
 const ThemeBlockLabel = styled.span`
   font-size: 0.95em;
-`;
-const FollowDefault = styled.button<{ $active: boolean }>`
-  align-self: flex-start;
-  font: inherit;
-  font-size: 0.85em;
-  padding: 2px 8px;
-  border: 1px solid
-    ${({ $active }) =>
-      $active ? "var(--primary-color)" : "var(--inactive-color)"};
-  border-radius: 12px;
-  background: ${({ $active }) =>
-    $active ? "var(--header-background)" : "transparent"};
-  color: ${({ $active }) =>
-    $active ? "var(--header-color)" : "var(--primary-color)"};
-  cursor: pointer;
-`;
-const SwatchCategory = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-const SwatchCategoryLabel = styled.span`
-  font-size: 0.75em;
-  text-transform: uppercase;
-  color: var(--inactive-color);
-  letter-spacing: 0.05em;
-`;
-const SwatchGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
-  gap: 4px;
-`;
-// Each swatch renders using its OWN theme's three lead colors so the
-// visual identity is obvious without hovering. Bottom half is the
-// page background, top band is the header band; "T" glyph in the
-// theme's primary-color shows text-on-background contrast.
-const Swatch = styled.button<{
-  $bg: string;
-  $fg: string;
-  $active: boolean;
-}>`
-  position: relative;
-  height: 36px;
-  border-radius: 4px;
-  padding: 0;
-  cursor: pointer;
-  background: ${({ $bg }) => $bg};
-  color: ${({ $fg }) => $fg};
-  border: 2px solid
-    ${({ $active }) =>
-      $active ? "var(--primary-color)" : "var(--inactive-color)"};
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  overflow: hidden;
-  font: inherit;
-  font-weight: bold;
-  font-size: 0.85em;
-  &:hover,
-  &:focus-visible {
-    border-color: var(--primary-color);
-  }
-`;
-const SwatchHeader = styled.span<{ $header: string }>`
-  display: block;
-  height: 12px;
-  background: ${({ $header }) => $header};
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-`;
-const SwatchBody = styled.span`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
 `;
 
 // Profile icon in the top-right of the top menu. Anonymous (outlined) when
@@ -340,52 +265,17 @@ const UserMenu = (): React.ReactElement => {
               {t("stats-menu-entry")}
             </MenuItem>
           )}
-          <ThemeBlock onMouseLeave={onGridLeave}>
+          <ThemeBlock>
             <ThemeBlockLabel>{t("theme-label")}</ThemeBlockLabel>
-            <FollowDefault
-              type="button"
-              $active={committedTheme === null}
-              onMouseEnter={() => onSwatchEnter(null)}
-              onClick={() => onSwatchClick(null)}
-            >
-              {t("theme-follow-default")}
-            </FollowDefault>
-            {THEME_CATEGORIES.map((category: ThemeCategory) => {
-              const entries = theme.manifest.filter(
-                (entry) => entry.category === category
-              );
-              if (entries.length === 0) return null;
-              return (
-                <SwatchCategory key={category}>
-                  <SwatchCategoryLabel>
-                    {t(`theme-group-${category}`)}
-                  </SwatchCategoryLabel>
-                  <SwatchGrid>
-                    {entries.map((entry) => {
-                      const themeColors = theme.setTheme(entry.id);
-                      return (
-                        <Swatch
-                          key={entry.id}
-                          type="button"
-                          title={entry.displayName}
-                          aria-label={entry.displayName}
-                          $bg={themeColors.get("primary-background")}
-                          $fg={themeColors.get("primary-color")}
-                          $active={committedTheme === entry.id}
-                          onMouseEnter={() => onSwatchEnter(entry.id)}
-                          onClick={() => onSwatchClick(entry.id)}
-                        >
-                          <SwatchHeader
-                            $header={themeColors.get("header-background")}
-                          />
-                          <SwatchBody>T</SwatchBody>
-                        </Swatch>
-                      );
-                    })}
-                  </SwatchGrid>
-                </SwatchCategory>
-              );
-            })}
+            <ThemePicker
+              value={committedTheme}
+              onChange={onSwatchClick}
+              onPreview={(id) => {
+                if (id === null) onGridLeave();
+                else onSwatchEnter(id);
+              }}
+              defaultLabel={String(t("theme-follow-default"))}
+            />
           </ThemeBlock>
           {userBetaFeatures.map((f) => (
             <BetaToggle key={f}>
