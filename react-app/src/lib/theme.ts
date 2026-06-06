@@ -10,7 +10,13 @@ type ThemeName =
   | "silver"
   | "showcase"
   | "teal"
-  | "paper";
+  | "paper"
+  | "amber"
+  | "lavender"
+  | "sage"
+  | "slate"
+  | "midnight"
+  | "espresso";
 
 // Theme variable roles:
 //   primary-color        main text / dark accents
@@ -194,6 +200,82 @@ const THEMES: Record<ThemeName, Theme> = {
     ...FRAME_LIGHT,
     filter: "none",
   },
+  // Warm orange / burnt gold, fills the warm gap in the coloured set
+  // between `red` and the greens.
+  amber: {
+    "primary-color": "#4a2008",
+    "primary-background": "#fceedd",
+    "inactive-color": "#b89878",
+    "header-color": "#fff",
+    "header-sub-color": "#fceedd",
+    "header-background": "#4a2008",
+    "tile-background": "#fff",
+    ...FRAME_LIGHT,
+    filter: "none",
+  },
+  // Cool purple, fills the violet gap between blue and red.
+  lavender: {
+    "primary-color": "#2a1a4a",
+    "primary-background": "#ece4f5",
+    "inactive-color": "#9a90b8",
+    "header-color": "#fff",
+    "header-sub-color": "#ece4f5",
+    "header-background": "#2a1a4a",
+    "tile-background": "#fff",
+    ...FRAME_LIGHT,
+    filter: "none",
+  },
+  // Muted, dusty greyish-green — calmer than forest, less neutral than
+  // silver.
+  sage: {
+    "primary-color": "#34423a",
+    "primary-background": "#e8ebe5",
+    "inactive-color": "#8a9888",
+    "header-color": "#fff",
+    "header-sub-color": "#e8ebe5",
+    "header-background": "#34423a",
+    "tile-background": "#fff",
+    ...FRAME_LIGHT,
+    filter: "none",
+  },
+  // Darker neutral than silver; mid-grey background with a deep-slate
+  // header band. Light theme, no photo desaturation.
+  slate: {
+    "primary-color": "#1e2530",
+    "primary-background": "#cdd2d8",
+    "inactive-color": "#7a8290",
+    "header-color": "#fff",
+    "header-sub-color": "#cdd2d8",
+    "header-background": "#1e2530",
+    "tile-background": "#fff",
+    ...FRAME_LIGHT,
+    filter: "none",
+  },
+  // Navy-tinted dark theme — adds chromatic warmth missing from `dark`
+  // (charcoal-grey) and `amoled` (pure black).
+  midnight: {
+    "primary-color": "#e0e8f0",
+    "primary-background": "#0e1828",
+    "inactive-color": "#5a6878",
+    "header-color": "#fff",
+    "header-sub-color": "#a8b8c8",
+    "header-background": "#1a2840",
+    "tile-background": "#1a2840",
+    ...FRAME_DARK,
+    filter: "none",
+  },
+  // Warm dark counterpart to midnight — espresso brown tint.
+  espresso: {
+    "primary-color": "#f0e8e0",
+    "primary-background": "#1a120a",
+    "inactive-color": "#785a40",
+    "header-color": "#fff",
+    "header-sub-color": "#c8b8a8",
+    "header-background": "#2a1f15",
+    "tile-background": "#2a1f15",
+    ...FRAME_DARK,
+    filter: "none",
+  },
 };
 
 export type ThemeCategory = "coloured" | "neutral" | "dark" | "statement";
@@ -215,16 +297,22 @@ interface ThemeManifestEntry {
 // displayName within each category. The picker renders one <optgroup>
 // per category in this order.
 const MANIFEST: ThemeManifestEntry[] = [
+  { id: "amber", displayName: "Amber", category: "coloured" },
   { id: "blue", displayName: "Blue", category: "coloured" },
   { id: "forest", displayName: "Forest", category: "coloured" },
+  { id: "lavender", displayName: "Lavender", category: "coloured" },
   { id: "red", displayName: "Red", category: "coloured" },
+  { id: "sage", displayName: "Sage", category: "coloured" },
   { id: "teal", displayName: "Teal", category: "coloured" },
   { id: "grayscale", displayName: "Grayscale", category: "neutral" },
   { id: "contrast", displayName: "High Contrast", category: "neutral" },
   { id: "paper", displayName: "Paper", category: "neutral" },
   { id: "silver", displayName: "Silver", category: "neutral" },
+  { id: "slate", displayName: "Slate", category: "neutral" },
   { id: "amoled", displayName: "AMOLED", category: "dark" },
   { id: "dark", displayName: "Dark", category: "dark" },
+  { id: "espresso", displayName: "Espresso", category: "dark" },
+  { id: "midnight", displayName: "Midnight", category: "dark" },
   { id: "showcase", displayName: "Showcase", category: "dark" },
   { id: "alert", displayName: "Alert", category: "statement" },
 ];
