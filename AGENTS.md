@@ -37,7 +37,8 @@ The release step touches several files that need to stay in lockstep. Miss one a
 6. **README.** Bump the install / upgrade `0.x.y` examples to the new version (search for the prior version string). Move the released milestone's bullet out of the Roadmap section into Version History with a one-paragraph release summary. Update the "what's in flight after 0.x" footer pointer.
 7. **Validate.** `npm test`, `npm run typecheck`, `npm run lint` across all three subtrees.
 8. **Open the release PR.** Title `Release <version>`. Body summarises what shipped + any milestone reorg.
-9. **After merge, tag.** `git checkout main && git pull && git tag v<version> && git push origin v<version>`. GitHub auto-generates the tarball that `bin/instance.ts` examples reference.
+9. **After merge, tag.** `git checkout main && git pull && git tag -a v<version> -m "Release <version>" && git push origin v<version>`. GitHub auto-generates the tarball that `bin/instance.ts` examples reference.
+10. **Publish the GitHub Release.** The tag alone doesn't create a release object — extract the `[<version>]` section from `CHANGELOG.md` into a temp file and `gh release create v<version> --title v<version> --notes-file <file> --latest`. The release body becomes the human-readable changelog on the releases page.
 
 ## Workflow conventions
 
