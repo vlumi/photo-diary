@@ -181,12 +181,39 @@ interface GalleryData {
   title?: string;
   description?: string;
   icon?: string;
+  iconSource?: string | null;
   epoch?: string;
   epochType?: string;
   theme?: string;
   initialView?: string;
   hostname?: string;
+  photos?: Array<{ id: string }>;
 }
+
+interface ParsedIconSource {
+  photoId: string;
+  crop: { x: number; y: number; width: number; height: number };
+}
+
+const parseIconSource = (raw?: string | null): ParsedIconSource | null => {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as ParsedIconSource;
+    if (
+      typeof parsed.photoId === "string" &&
+      parsed.crop &&
+      typeof parsed.crop.x === "number" &&
+      typeof parsed.crop.y === "number" &&
+      typeof parsed.crop.width === "number" &&
+      typeof parsed.crop.height === "number"
+    ) {
+      return parsed;
+    }
+  } catch {
+    // Older / malformed payload — fall through to null.
+  }
+  return null;
+};
 
 const GalleryEdit = (): React.ReactElement => {
   const { t } = useTranslation();
@@ -309,7 +336,22 @@ const GalleryEdit = (): React.ReactElement => {
 
       {editing ? (
         <>
-          <GalleryFormFields form={form} setField={setField} />
+          <GalleryFormFields
+            form={form}
+            setField={setField}
+            galleryId={galleryId}
+            photos={(data as GalleryData | undefined)?.photos ?? []}
+            iconSource={parseIconSource(
+              (data as GalleryData | undefined)?.iconSource
+            )}
+            onIconChanged={() => {
+              queryClient.invalidateQueries({
+                queryKey: ["gallery", galleryId],
+              });
+              queryClient.invalidateQueries({ queryKey: ["manage-galleries"] });
+              queryClient.invalidateQueries({ queryKey: ["galleries"] });
+            }}
+          />
           <Footer>
             <span />
             <FooterRight>

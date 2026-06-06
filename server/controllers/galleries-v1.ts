@@ -24,6 +24,16 @@ const init = async () => {
 };
 
 const GalleryIdParam = Type.Object({ galleryId: Type.String() });
+const GalleryIconBody = Type.Object({
+  sourcePhotoId: Type.String({ minLength: 1 }),
+  crop: Type.Object({
+    x: Type.Number({ minimum: 0 }),
+    y: Type.Number({ minimum: 0 }),
+    width: Type.Number({ exclusiveMinimum: 0 }),
+    height: Type.Number({ exclusiveMinimum: 0 }),
+  }),
+});
+const GalleryIconResponse = Type.Object({ icon: Type.String() });
 // Schema pins the two fields we care about; extras (title, theme,
 // hostname, photos, …) pass through to the client.
 const GalleryListItem = Type.Object(
@@ -226,6 +236,38 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       );
       await model.deleteGallery(request.params.galleryId);
       reply.status(204).send();
+    }
+  );
+
+  /**
+   * Crop a photo's display variant into a square gallery icon and
+   * stash the source + crop on the gallery row so the cropper can
+   * reopen against the same rect.
+   */
+  fastify.put(
+    "/:galleryId/icon",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Set gallery icon from a photo crop (gallery admin)",
+        params: GalleryIdParam,
+        body: GalleryIconBody,
+        response: { 200: GalleryIconResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      requireScopeMatches(request, request.params.galleryId);
+      await authorizer.authorizeGalleryAdmin(
+        request.user.id,
+        request.params.galleryId
+      );
+      const icon = await model.setGalleryIcon(
+        request.params.galleryId,
+        request.body.sourcePhotoId,
+        request.body.crop
+      );
+      return { icon };
     }
   );
 };

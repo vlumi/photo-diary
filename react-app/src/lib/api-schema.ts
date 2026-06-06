@@ -692,6 +692,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/galleries/{galleryId}/icon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set gallery icon from a photo crop (gallery admin) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    galleryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        sourcePhotoId: string;
+                        crop: {
+                            x: number;
+                            y: number;
+                            width: number;
+                            height: number;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            icon: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/photos": {
         parameters: {
             query?: never;

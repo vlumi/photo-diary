@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
+import {
+  removeGalleryIcon,
+  writeGalleryIcon,
+  type CropPixels,
+} from "../lib/gallery-icon.js";
 
 export default () => {
   return {
@@ -10,6 +15,7 @@ export default () => {
     getGallery,
     updateGallery,
     deleteGallery,
+    setGalleryIcon,
   };
 };
 
@@ -53,4 +59,21 @@ const deleteGallery = async (galleryId: string) => {
     await db.deleteUserGallery(row.user_id, row.gallery_id);
   }
   await db.deleteGallery(galleryId);
+  await removeGalleryIcon(galleryId);
+};
+
+// Crop the source photo's display variant + write the icon file,
+// then update the gallery row's icon column to point at it.
+// Stores `icon_source` JSON alongside so the editor can re-open the
+// cropper against the same source + crop rect.
+const setGalleryIcon = async (
+  galleryId: string,
+  sourcePhotoId: string,
+  crop: CropPixels
+) => {
+  logger.debug("Setting gallery icon", { galleryId, sourcePhotoId });
+  const iconPath = await writeGalleryIcon(galleryId, sourcePhotoId, crop);
+  const iconSource = JSON.stringify({ photoId: sourcePhotoId, crop });
+  await db.updateGallery(galleryId, { icon: iconPath, iconSource });
+  return iconPath;
 };

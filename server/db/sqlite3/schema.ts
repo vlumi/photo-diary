@@ -48,6 +48,7 @@ export interface GalleryRow {
   title: string;
   description: string;
   icon: string;
+  icon_source: string | null;
   epoch: string;
   epoch_type: string;
   theme: string;
@@ -120,6 +121,7 @@ export interface Gallery {
   title: string;
   description: string;
   icon: string;
+  iconSource?: string | null;
   epoch: string;
   epochType: string;
   theme: string;
@@ -358,6 +360,7 @@ export default () => {
         title: toString(row.title),
         description: toString(row.description),
         icon: toString(row.icon),
+        iconSource: row.icon_source ?? null,
         epoch: toString(row.epoch).substring(0, 10),
         epochType: toString(row.epoch_type),
         theme: toString(row.theme),
@@ -369,6 +372,7 @@ export default () => {
         gallery.title,
         gallery.description,
         gallery.icon,
+        gallery.iconSource ?? null,
         gallery.epoch,
         gallery.epochType,
         gallery.theme,
@@ -632,6 +636,7 @@ const galleryMapToRow = (
   if ("title" in gallery) result.title = gallery.title;
   if ("description" in gallery) result.description = gallery.description;
   if ("icon" in gallery) result.icon = gallery.icon;
+  if ("iconSource" in gallery) result.icon_source = gallery.iconSource;
   if ("epoch" in gallery) result.epoch = gallery.epoch;
   if ("epochType" in gallery) result.epoch_type = gallery.epochType;
   if ("theme" in gallery) result.theme = gallery.theme;
@@ -794,6 +799,7 @@ const SCHEMA = {
       "title",
       "description",
       "icon",
+      "icon_source",
       "epoch",
       "epoch_type",
       "theme",

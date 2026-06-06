@@ -2,8 +2,13 @@
 
 ## [Unreleased]
 
+### Server
+
+- New `PUT /api/v1/galleries/<id>/icon` endpoint (gallery admin) that crops a photo's `display/` variant into a 1:1 / 160×160 JPEG under `photos/gallery-icons/<id>.jpg` and updates `gallery.icon` to point at it. Uses sharp (new server dep, same version as the converter). `gallery.icon_source` TEXT column added via migration 016 stores `{photoId, crop:{x,y,width,height}}` so the editor can re-open the cropper against the same source and crop rect. Source pool is the gallery's own photos. `bin/gallery.ts delete` (and the matching API endpoint) now removes the icon file too. The display variant — not the original — drives the crop, so icon generation works regardless of whether the server keeps originals on disk. (part of #457)
+
 ### Frontend
 
+- Gallery editor's icon field swaps the path input for a cropper. Adjust button opens a modal with `react-easy-crop`; the operator picks a photo from the gallery's own grid, pans / zooms / locks a 1:1 square crop, saves. The server renders the icon JPEG and stores the source + crop rect alongside, so re-opening the cropper later loads the same source with the saved rect ready to tweak. Create flow keeps the legacy text input — the cropper endpoint needs a saved gallery row to target; pick from photos after creating. (closes #457)
 - Meta-driven config (`PHOTO_ROOT_URL`, `DEFAULT_GALLERY`, `DEFAULT_THEME`, `INITIAL_GALLERY_VIEW`, `FIRST_WEEKDAY`) now syncs during render in `App.tsx` rather than inside a `useEffect`. The previous shape ran the sync after render, so the first render with fresh meta left descendants reading stale module-load values — visible as picker icons resolving against the wrong root URL on cold-load of `/g`. Beta-feature modes (zustand state) keep their effect, since those writes do trigger downstream re-renders.
 - Home button always lands on the tile picker. The no-galleryId redirect ladder (single-visible-gallery → `DEFAULT_GALLERY`) moves off `/g` and onto `/` (the bare-instance landing). `/g` becomes pure picker. Direct visits to `/` keep the smart-redirect behaviour; clicking Home from inside a gallery (on instances with a `DEFAULT_GALLERY` or a single visible gallery) no longer bounces straight back into the same gallery. Manage and Global Stats Home buttons retarget to `/g` for the same effect. (closes #468)
 - Access add-grant rows on `/m/access` and `/m/g/<id>/access` now label the Inherit / Show / Hide dropdown with "Map visibility" so the three context-less words don't make the operator guess what the select does. Per-row controls inside the access table stay unchanged — their column header already disambiguates. (closes #464)
