@@ -17,8 +17,8 @@ const FilterQuery = Type.Object({
   galleryId: Type.Optional(Type.String()),
 });
 const RowParams = Type.Object({
-  groupId: Type.String(),
-  galleryId: Type.String(),
+  groupId: Type.String({ minLength: 1 }),
+  galleryId: Type.String({ minLength: 1 }),
 });
 const RowResponse = Type.Object({
   group_id: Type.String(),

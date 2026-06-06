@@ -789,10 +789,12 @@ const AddGrantPanel = ({
 
   const handleAdd = () => {
     if (!galleryId || !subjectValue) return;
-    const [subjectType, subjectId] = subjectValue.split(":", 2) as [
-      "user" | "group",
-      string,
-    ];
+    // Encoded as `<type>:<id>`. Split at the FIRST colon only —
+    // ids can themselves contain colons (`:guest`), which the
+    // limit-2 form of `.split(":", 2)` would eat.
+    const colonIdx = subjectValue.indexOf(":");
+    const subjectType = subjectValue.slice(0, colonIdx) as "user" | "group";
+    const subjectId = subjectValue.slice(colonIdx + 1);
     onAdd({ galleryId, subjectType, subjectId, isAdmin, hideMap });
     setSubjectValue("");
     setIsAdmin(false);
