@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
-import { Global, css } from "@emotion/react";
 import { useQuery } from "@tanstack/react-query";
 import { BsHouseFill, BsBarChartLine } from "react-icons/bs";
 
@@ -12,6 +11,7 @@ import Galleries from "./Galleries";
 import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
 import photosService from "../../services/photos";
 import galleriesService from "../../services/galleries";
+import metaService from "../../services/meta";
 import theme from "../../lib/theme";
 import { type UniqueValues } from "../../lib/stats";
 import { buildUniqueValues } from "../../lib/uniqueValues";
@@ -22,23 +22,6 @@ import {
   useThemePreferenceStore,
   useUserStore,
 } from "../../stores";
-
-type ActiveTheme = ReturnType<typeof theme.setTheme>;
-
-const globalStyles = (active: ActiveTheme) => css`
-  html {
-    --primary-color: ${active.get("primary-color")};
-    --primary-background: ${active.get("primary-background")};
-    --inactive-color: ${active.get("inactive-color")};
-    --header-color: ${active.get("header-color")};
-    --header-sub-color: ${active.get("header-sub-color")};
-    --header-background: ${active.get("header-background")};
-    --tile-background: ${active.get("tile-background")};
-    --photo-frame-mat: ${active.get("photo-frame-mat")};
-    --photo-frame-border: ${active.get("photo-frame-border")};
-    filter: ${active.get("filter")};
-  }
-`;
 
 const Header = styled.div`
   display: flex;
@@ -98,10 +81,19 @@ const GlobalStats = (): React.ReactElement => {
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
   const themePreference = useThemePreferenceStore((s) => s.preference);
-
+  // App's base Global already paints html with the right theme on
+  // this route, so this `activeTheme` only carries through to chart
+  // gradients via the Stats prop. Read meta directly to dodge the
+  // same stale-config race App resolves. The metaQuery is cached so
+  // this is a free read.
+  const metaQuery = useQuery({
+    queryKey: ["meta"],
+    queryFn: () => metaService.getAll(),
+  });
+  const meta = metaQuery.data as { defaultTheme?: string } | undefined;
   const activeTheme = themePreference
     ? theme.setTheme(themePreference)
-    : theme.setTheme(config.DEFAULT_THEME);
+    : theme.setTheme(meta?.defaultTheme ?? config.DEFAULT_THEME);
 
   const photosQuery = useQuery({
     queryKey: ["global-stats-photos", user?.id ?? null],
@@ -123,7 +115,6 @@ const GlobalStats = (): React.ReactElement => {
 
   const frame = (body: React.ReactNode): React.ReactElement => (
     <>
-      <Global styles={globalStyles(activeTheme)} />
       <Header aria-label={String(t("stats-global-nav-group"))}>
         <HomeLink
           onClick={() => navigate("/")}

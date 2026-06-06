@@ -180,11 +180,16 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
 
   // Theme resolution priority: user preference → gallery theme → instance default.
   const selectedThemeName = selectedGallery?.theme();
+  // Read `meta.defaultTheme` directly rather than via the mutated
+  // `config.DEFAULT_THEME` — the meta-to-config side-effect in App
+  // runs after render, so the first render with fresh meta would
+  // otherwise pick up the hardcoded baseline. See App.tsx for the
+  // same workaround on the base Global.
   const activeTheme = themePreference
     ? theme.setTheme(themePreference)
     : selectedGallery && selectedGallery.hasTheme() && selectedThemeName
       ? theme.setTheme(selectedThemeName)
-      : theme.setTheme(config.DEFAULT_THEME);
+      : theme.setTheme(meta?.defaultTheme ?? config.DEFAULT_THEME);
 
   if (error) {
     return <div className="error">Loading failed</div>;
