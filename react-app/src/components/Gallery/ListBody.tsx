@@ -8,6 +8,7 @@ import Link from "./Link";
 
 import config from "../../lib/config";
 import theme from "../../lib/theme";
+import { useHostScope } from "../../lib/use-host-scope";
 import { useUserStore } from "../../stores";
 
 import type { Gallery as GalleryT } from "../../models/GalleryModel";
@@ -95,6 +96,7 @@ const ListBody = ({ galleries }: Props): React.ReactElement => {
   const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
   const isAdmin = !!user?.isAdmin();
+  const { isHostScoped } = useHostScope();
   const renderIcon = (gallery: GalleryT) => {
     if (!gallery.hasIcon()) {
       return "";
@@ -138,13 +140,15 @@ const ListBody = ({ galleries }: Props): React.ReactElement => {
             </ShortcutTitle>
             <ShortcutBlurb>{t("landing-shortcut-manage-blurb")}</ShortcutBlurb>
           </Shortcut>
-          <Shortcut type="button" onClick={() => navigate("/s")}>
-            <ShortcutTitle>
-              <BsBarChartLine aria-hidden />
-              {t("landing-shortcut-stats")}
-            </ShortcutTitle>
-            <ShortcutBlurb>{t("landing-shortcut-stats-blurb")}</ShortcutBlurb>
-          </Shortcut>
+          {!isHostScoped && (
+            <Shortcut type="button" onClick={() => navigate("/s")}>
+              <ShortcutTitle>
+                <BsBarChartLine aria-hidden />
+                {t("landing-shortcut-stats")}
+              </ShortcutTitle>
+              <ShortcutBlurb>{t("landing-shortcut-stats-blurb")}</ShortcutBlurb>
+            </Shortcut>
+          )}
         </ShortcutsRow>
       )}
       <Row>{galleries.map((gallery) => renderGallery(gallery))}</Row>

@@ -126,6 +126,8 @@
     "manage-page-photos-title": "写真",
     "manage-page-inbox-title": "受信トレイ",
     "manage-dashboard-tile-photos-blurb": "全ギャラリーの写真 — 絞り込み、編集、監査。",
+    "manage-dashboard-tile-gallery-edit": "ギャラリー設定",
+    "manage-dashboard-tile-gallery-edit-blurb": "このギャラリーのタイトル、説明、アイコン、テーマなどの表示設定を編集します。",
     "manage-dashboard-tile-galleries-blurb": "ギャラリーの作成、編集、削除。",
     "manage-dashboard-tile-users-blurb": "ユーザーアカウントとグローバル管理者ロール。",
     "manage-crumb-photos": "写真",

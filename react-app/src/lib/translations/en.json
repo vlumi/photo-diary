@@ -126,6 +126,8 @@
     "manage-page-photos-title": "Photos",
     "manage-page-inbox-title": "Inbox",
     "manage-dashboard-tile-photos-blurb": "All photos across galleries — filter, edit, audit.",
+    "manage-dashboard-tile-gallery-edit": "Gallery settings",
+    "manage-dashboard-tile-gallery-edit-blurb": "Edit title, description, icon, theme, and other display properties of this gallery.",
     "manage-dashboard-tile-galleries-blurb": "Create, edit, and delete galleries.",
     "manage-dashboard-tile-users-blurb": "User accounts and global admin role.",
     "manage-crumb-photos": "Photos",

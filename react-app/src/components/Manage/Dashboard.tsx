@@ -1,15 +1,18 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import {
   BsCollection,
   BsImages,
+  BsPencilSquare,
   BsPeople,
   BsPeopleFill,
   BsShieldLock,
 } from "react-icons/bs";
 import type { IconType } from "react-icons";
+
+import { useHostScope } from "../../lib/use-host-scope";
 
 const Root = styled.div`
   padding: 24px 16px;
@@ -65,7 +68,7 @@ interface TileSpec {
   blurbKey: string;
 }
 
-const TILES: TileSpec[] = [
+const GLOBAL_TILES: TileSpec[] = [
   {
     path: "/m/photos",
     Icon: BsImages,
@@ -98,14 +101,45 @@ const TILES: TileSpec[] = [
   },
 ];
 
+const galleryScopedTiles = (galleryId: string): TileSpec[] => [
+  {
+    path: `/m/g/${galleryId}`,
+    Icon: BsPencilSquare,
+    titleKey: "manage-dashboard-tile-gallery-edit",
+    blurbKey: "manage-dashboard-tile-gallery-edit-blurb",
+  },
+  {
+    path: `/m/g/${galleryId}/photos`,
+    Icon: BsImages,
+    titleKey: "manage-page-photos-title",
+    blurbKey: "manage-dashboard-tile-photos-blurb",
+  },
+  {
+    path: `/m/g/${galleryId}/access`,
+    Icon: BsShieldLock,
+    titleKey: "manage-page-access-title",
+    blurbKey: "manage-dashboard-tile-access-blurb",
+  },
+];
+
 const Dashboard = (): React.ReactElement => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { isReady, isHostScoped, scopedGalleryIds } = useHostScope();
+  // Single-gallery host scope is the common shape (one hostname →
+  // one gallery). Drop the operator straight into that gallery's
+  // edit page — the manage dashboard has nothing to add on top.
+  if (isReady && isHostScoped && scopedGalleryIds.length === 1) {
+    return <Navigate to={`/m/g/${scopedGalleryIds[0]}`} replace />;
+  }
+  const tiles = isHostScoped
+    ? scopedGalleryIds.flatMap((id) => galleryScopedTiles(id))
+    : GLOBAL_TILES;
   return (
     <Root>
       <Title>{t("manage-page-dashboard-title")}</Title>
       <Tiles>
-        {TILES.map(({ path, Icon, titleKey, blurbKey }) => (
+        {tiles.map(({ path, Icon, titleKey, blurbKey }) => (
           <Tile
             key={path}
             type="button"
