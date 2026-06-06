@@ -25,6 +25,20 @@ Server tests use `DB_DRIVER=dummy` via the npm script, so no SQLite file is touc
 
 Run `npm test` and `npm run typecheck` before pushing. The build step rolls up bundle sizes — worth running for visual changes that might touch chunking.
 
+## Cutting a release
+
+The release step touches several files that need to stay in lockstep. Miss one and CI fails (the openapi-version check, the version-string assertions in the docs).
+
+1. **Close the milestone.** Verify all open issues in `<version>` are merged or moved out, then `gh api repos/vlumi/photo-diary/milestones/<n> -X PATCH -f state=closed`.
+2. **Branch.** `git checkout -b release/<version>` off main.
+3. **Bump `version`** in all four `package.json` files: root, `server/`, `react-app/`, `converter/`. Same value everywhere.
+4. **Regenerate the OpenAPI dump.** `cd server && npm run docs:dump` writes `server/openapi.json` with `info.version` from `server/package.json`. Then `cd ../react-app && npm run api:codegen` regenerates `src/lib/api-schema.ts` from the new dump. Both must be committed — CI rejects a version bump without the matching regen.
+5. **Stamp CHANGELOG.** Rename `[Unreleased]` to `[<version>] - <YYYY-MM-DD>`; add a fresh empty `[Unreleased]` heading above it.
+6. **README.** Bump the install / upgrade `0.x.y` examples to the new version (search for the prior version string). Move the released milestone's bullet out of the Roadmap section into Version History with a one-paragraph release summary. Update the "what's in flight after 0.x" footer pointer.
+7. **Validate.** `npm test`, `npm run typecheck`, `npm run lint` across all three subtrees.
+8. **Open the release PR.** Title `Release <version>`. Body summarises what shipped + any milestone reorg.
+9. **After merge, tag.** `git checkout main && git pull && git tag v<version> && git push origin v<version>`. GitHub auto-generates the tarball that `bin/instance.ts` examples reference.
+
 ## Workflow conventions
 
 - **One PR per ticket.** Don't bundle a multi-ticket milestone into one PR; don't bundle multiple discrete bugs into one commit.

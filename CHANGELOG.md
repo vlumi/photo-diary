@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-06-06
+
 ### Server
 
 - Coord-change geocoded-clear is now consistent across every path that mutates `taken.location.coordinates`: the admin `PUT /api/v1/photos/<id>` already did it (#415); the converter's JSON-sidecar `processJson` now does it too (was only refilling via `geocodeAtIntake` and only when `REVERSE_GEOCODE` was enabled — a sidecar with the feature off, or a failed Nominatim fetch, would leave stale geocoded values pinned to the previous location); and `bin/photo.ts update --latitude / --longitude / --altitude` gains the same semantic. Shared `coordsDiffer` / `mergeCoords` / `readCurrentCoords` extracted to `server/lib/photo-coords.ts` so the three call sites can't drift.
