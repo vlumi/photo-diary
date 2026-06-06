@@ -570,7 +570,7 @@ export interface paths {
                         /** @enum {string} */
                         epochType?: "birthday" | "1-index" | "0-index";
                         /** @enum {string} */
-                        theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper";
+                        theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper" | "amber" | "lavender" | "sage" | "slate" | "midnight" | "espresso";
                         /** @enum {string} */
                         initialView?: "year" | "month" | "day" | "photo";
                         hostname?: string;
@@ -648,7 +648,7 @@ export interface paths {
                         /** @enum {string} */
                         epochType?: "birthday" | "1-index" | "0-index";
                         /** @enum {string} */
-                        theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper";
+                        theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper" | "amber" | "lavender" | "sage" | "slate" | "midnight" | "espresso";
                         /** @enum {string} */
                         initialView?: "year" | "month" | "day" | "photo";
                         hostname?: string;

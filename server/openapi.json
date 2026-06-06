@@ -704,7 +704,13 @@
                       "silver",
                       "showcase",
                       "teal",
-                      "paper"
+                      "paper",
+                      "amber",
+                      "lavender",
+                      "sage",
+                      "slate",
+                      "midnight",
+                      "espresso"
                     ]
                   },
                   "initialView": {
@@ -824,7 +830,13 @@
                       "silver",
                       "showcase",
                       "teal",
-                      "paper"
+                      "paper",
+                      "amber",
+                      "lavender",
+                      "sage",
+                      "slate",
+                      "midnight",
+                      "espresso"
                     ]
                   },
                   "initialView": {

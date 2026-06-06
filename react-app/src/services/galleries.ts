@@ -13,7 +13,13 @@ export type Theme =
   | "silver"
   | "showcase"
   | "teal"
-  | "paper";
+  | "paper"
+  | "amber"
+  | "lavender"
+  | "sage"
+  | "slate"
+  | "midnight"
+  | "espresso";
 export type InitialView = "year" | "month" | "day" | "photo";
 
 export interface GalleryUpdatePatch {

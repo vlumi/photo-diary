@@ -17,6 +17,12 @@ export const GALLERY_THEMES = [
   "showcase",
   "teal",
   "paper",
+  "amber",
+  "lavender",
+  "sage",
+  "slate",
+  "midnight",
+  "espresso",
 ] as const;
 
 export const GALLERY_INITIAL_VIEWS = ["year", "month", "day", "photo"] as const;
