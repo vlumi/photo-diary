@@ -188,6 +188,7 @@ const Mono = styled.span`
 
 interface UserData {
   id: string;
+  name?: string;
   is_admin?: number | boolean;
   isAdmin?: boolean;
 }
@@ -212,6 +213,7 @@ const UserEdit = (): React.ReactElement => {
     enabled: !!userId && !!user?.isAdmin(),
   });
 
+  const [name, setName] = React.useState("");
   const [adminFlag, setAdminFlag] = React.useState(false);
   const [newPassword, setNewPassword] = React.useState("");
   const [saveError, setSaveError] = React.useState<string | null>(null);
@@ -220,6 +222,7 @@ const UserEdit = (): React.ReactElement => {
 
   React.useEffect(() => {
     if (data) {
+      setName(((data as UserData).name as string) ?? "");
       setAdminFlag(isAdminFlag(data as UserData));
       setNewPassword("");
       setSaveError(null);
@@ -229,7 +232,9 @@ const UserEdit = (): React.ReactElement => {
   const updateMutation = useMutation({
     mutationFn: () => {
       const original = isAdminFlag(data as UserData | undefined);
+      const originalName = ((data as UserData | undefined)?.name ?? "") as string;
       const patch: UserUpdatePatch = {};
+      if (name !== originalName) patch.name = name;
       if (adminFlag !== original) patch.isAdmin = adminFlag;
       if (newPassword.length > 0) patch.password = newPassword;
       return usersService.update(userId, patch);
@@ -266,6 +271,7 @@ const UserEdit = (): React.ReactElement => {
     setEditing(true);
   };
   const handleCancelEdit = (): void => {
+    setName(((data as UserData | undefined)?.name ?? "") as string);
     setAdminFlag(isAdminFlag(data as UserData | undefined));
     setNewPassword("");
     setSaveError(null);
@@ -311,6 +317,16 @@ const UserEdit = (): React.ReactElement => {
       {editing ? (
         <>
           <Section>
+            {!isPseudo && (
+              <Field>
+                <FieldLabel>{t("manage-user-field-name")}</FieldLabel>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <FieldHint>{t("manage-user-field-name-hint")}</FieldHint>
+              </Field>
+            )}
             <Field>
               <FieldLabel>{t("manage-user-field-password")}</FieldLabel>
               <Input
@@ -363,6 +379,8 @@ const UserEdit = (): React.ReactElement => {
             <SummaryValue>
               <Mono>{userId}</Mono>
             </SummaryValue>
+            <SummaryLabel>{t("manage-user-field-name")}</SummaryLabel>
+            <SummaryValue>{((data as UserData).name as string) || ""}</SummaryValue>
             <SummaryLabel>{t("manage-user-field-is-admin")}</SummaryLabel>
             <SummaryValue>
               {flag ? t("manage-user-flag-yes") : t("manage-user-flag-no")}

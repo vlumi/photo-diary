@@ -34,14 +34,14 @@ describe("As admin", () => {
     await api
       .post("/api/v1/groups")
       .set("Authorization", auth)
-      .send({ id: "family", title: "Family" })
+      .send({ id: "family", name: "Family" })
       .expect(201);
     const list = await api
       .get("/api/v1/groups")
       .set("Authorization", auth)
       .expect(200);
     expect(list.body).toEqual([
-      { id: "family", title: "Family", description: "" },
+      { id: "family", name: "Family", description: "" },
     ]);
   });
 
@@ -64,7 +64,7 @@ describe("As admin", () => {
     await api
       .put("/api/v1/groups/family")
       .set("Authorization", auth)
-      .send({ title: "Renamed", description: "Inner circle" })
+      .send({ name: "Renamed", description: "Inner circle" })
       .expect(204);
     const got = await api
       .get("/api/v1/groups/family")
@@ -72,7 +72,7 @@ describe("As admin", () => {
       .expect(200);
     expect(got.body).toEqual({
       id: "family",
-      title: "Renamed",
+      name: "Renamed",
       description: "Inner circle",
     });
     await api

@@ -214,12 +214,13 @@ await yargs(hideBin(process.argv))
     async () => {
       const users = (await db.loadUsers()) as Array<{
         id: string;
+        name?: string;
         is_admin?: number | boolean;
       }>;
-      const rows: string[][] = [["user", "admin"]];
+      const rows: string[][] = [["user", "name", "admin"]];
       for (const user of users) {
         if (!user.id) continue;
-        rows.push([user.id, user.is_admin ? "yes" : "no"]);
+        rows.push([user.id, user.name ?? user.id, user.is_admin ? "yes" : "no"]);
       }
       console.log(rows.length === 1 ? "(no users)" : formatTable(rows));
     }
@@ -258,6 +259,26 @@ await yargs(hideBin(process.argv))
       }
       await db.updateUser(argv.id, { is_admin: 0 });
       console.log(`✓ Revoked global-admin from "${argv.id}".`);
+    }
+  )
+  .command(
+    "set-name <id> <name>",
+    "Set the user's display name (defaults to id at create time)",
+    (y) =>
+      y
+        .positional("id", { describe: "User ID", type: "string", demandOption: true })
+        .positional("name", { describe: "Display name", type: "string", demandOption: true }),
+    async (argv) => {
+      const existing = await db
+        .loadUser(argv.id)
+        .then((u) => u as { id: string })
+        .catch(() => null);
+      if (!existing) {
+        console.error(`✗ User "${argv.id}" doesn't exist.`);
+        process.exit(1);
+      }
+      await db.updateUser(argv.id, { name: argv.name });
+      console.log(`✓ Set name of "${argv.id}" to "${argv.name}".`);
     }
   )
   .command(
@@ -304,6 +325,7 @@ await yargs(hideBin(process.argv))
       } else {
         await db.createUser({
           id: argv.id,
+          name: argv.id,
           password: hash,
           secret: randomUUID(),
           is_admin: 0,

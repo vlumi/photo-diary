@@ -147,6 +147,7 @@ const Users = (): React.ReactElement => {
           <thead>
             <tr>
               <Th>{t("manage-users-col-id")}</Th>
+              <Th>{t("manage-users-col-name")}</Th>
               <Th>{t("manage-users-col-role")}</Th>
             </tr>
           </thead>
@@ -156,6 +157,7 @@ const Users = (): React.ReactElement => {
                 <Td>
                   <Mono>{u.id}</Mono>
                 </Td>
+                <Td>{u.name || ""}</Td>
                 <Td>
                   {u.id === ":guest" ? (
                     <GuestBadge>{t("manage-users-role-guest")}</GuestBadge>

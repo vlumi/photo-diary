@@ -394,10 +394,14 @@
                     "type": "object",
                     "required": [
                       "id",
+                      "name",
                       "isAdmin"
                     ],
                     "properties": {
                       "id": {
+                        "type": "string"
+                      },
+                      "name": {
                         "type": "string"
                       },
                       "isAdmin": {
@@ -431,6 +435,9 @@
                     "type": "string",
                     "minLength": 1,
                     "pattern": "^[a-z0-9][a-z0-9_-]*$"
+                  },
+                  "name": {
+                    "type": "string"
                   },
                   "password": {
                     "type": "string",
@@ -495,6 +502,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "type": "string"
+                  },
                   "password": {
                     "type": "string",
                     "minLength": 1
@@ -1978,14 +1988,14 @@
                     "type": "object",
                     "required": [
                       "id",
-                      "title",
+                      "name",
                       "description"
                     ],
                     "properties": {
                       "id": {
                         "type": "string"
                       },
-                      "title": {
+                      "name": {
                         "type": "string"
                       },
                       "description": {
@@ -2019,7 +2029,7 @@
                     "minLength": 1,
                     "pattern": "^[a-z0-9][a-z0-9_-]*$"
                   },
-                  "title": {
+                  "name": {
                     "type": "string"
                   },
                   "description": {
@@ -2075,14 +2085,14 @@
                   "type": "object",
                   "required": [
                     "id",
-                    "title",
+                    "name",
                     "description"
                   ],
                   "properties": {
                     "id": {
                       "type": "string"
                     },
-                    "title": {
+                    "name": {
                       "type": "string"
                     },
                     "description": {
@@ -2107,7 +2117,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "title": {
+                  "name": {
                     "type": "string"
                   },
                   "description": {

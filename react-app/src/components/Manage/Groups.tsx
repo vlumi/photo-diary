@@ -115,7 +115,7 @@ const Groups = (): React.ReactElement => {
           <thead>
             <tr>
               <Th>{t("manage-groups-col-id")}</Th>
-              <Th>{t("manage-groups-col-title")}</Th>
+              <Th>{t("manage-groups-col-name")}</Th>
               <Th>{t("manage-groups-col-description")}</Th>
             </tr>
           </thead>
@@ -125,7 +125,7 @@ const Groups = (): React.ReactElement => {
                 <Td>
                   <Mono>{g.id}</Mono>
                 </Td>
-                <Td>{g.title || ""}</Td>
+                <Td>{g.name || ""}</Td>
                 <Td>{g.description || ""}</Td>
               </Row>
             ))}

@@ -8,6 +8,7 @@ export interface MetaRow {
 }
 export interface UserRow {
   id: string;
+  name: string;
   password: string;
   secret: string;
   is_admin: number;
@@ -30,7 +31,7 @@ export interface UserGalleryRow {
 }
 export interface GroupRow {
   id: string;
-  title: string;
+  name: string;
   description: string;
 }
 export interface UserGroupRow {
@@ -238,12 +239,14 @@ export default () => {
     user: {
       mapRow: (row: UserRow): User => ({
         id: toString(row.id),
+        name: toString(row.name),
         password: toString(row.password),
         secret: toString(row.secret),
         is_admin: Number(row.is_admin ?? 0),
       }),
       mapInsert: (user: User): unknown[] => [
         user.id,
+        user.name,
         user.password,
         user.secret,
         user.is_admin ? 1 : 0,
@@ -309,12 +312,12 @@ export default () => {
     group: {
       mapRow: (row: GroupRow): Group => ({
         id: toString(row.id),
-        title: toString(row.title),
+        name: toString(row.name),
         description: toString(row.description),
       }),
       mapInsert: (group: Group): unknown[] => [
         group.id,
-        group.title,
+        group.name,
         group.description,
       ],
       buildCreateQuery: () => buildCreateQuery(SCHEMA.group),
@@ -594,6 +597,7 @@ const metaMapToRow = (
 };
 const userMapToRow = (user: Partial<User>): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
+  if ("name" in user) result.name = user.name;
   if ("password" in user) result.password = user.password;
   if ("secret" in user) result.secret = user.secret;
   if ("is_admin" in user) result.is_admin = user.is_admin ? 1 : 0;
@@ -617,7 +621,7 @@ const userGalleryMapToRow = (
 };
 const groupMapToRow = (group: Partial<GroupRow>): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
-  if ("title" in group) result.title = group.title;
+  if ("name" in group) result.name = group.name;
   if ("description" in group) result.description = group.description;
   return result;
 };
@@ -746,7 +750,7 @@ const SCHEMA = {
   },
   user: {
     table: "user",
-    columns: ["id", "password", "secret", "is_admin"],
+    columns: ["id", "name", "password", "secret", "is_admin"],
     primaryKey: ["id"],
     order: ["id ASC"],
     mapToRow: userMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
@@ -773,7 +777,7 @@ const SCHEMA = {
   },
   group: {
     table: '"group"',
-    columns: ["id", "title", "description"],
+    columns: ["id", "name", "description"],
     primaryKey: ["id"],
     order: ["id ASC"],
     mapToRow: groupMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,

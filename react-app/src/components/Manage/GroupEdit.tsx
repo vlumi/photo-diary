@@ -279,7 +279,7 @@ const GroupEdit = (): React.ReactElement => {
     enabled: !!user?.isAdmin(),
   });
 
-  const [title, setTitle] = React.useState("");
+  const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState(false);
@@ -288,7 +288,7 @@ const GroupEdit = (): React.ReactElement => {
 
   React.useEffect(() => {
     if (data) {
-      setTitle(data.title ?? "");
+      setName(data.name ?? "");
       setDescription(data.description ?? "");
       setSaveError(null);
     }
@@ -297,7 +297,7 @@ const GroupEdit = (): React.ReactElement => {
   const updateMutation = useMutation({
     mutationFn: () => {
       const patch: GroupUpdatePatch = {};
-      if (title !== (data?.title ?? "")) patch.title = title;
+      if (name !== (data?.name ?? "")) patch.name = name;
       if (description !== (data?.description ?? "")) patch.description = description;
       return groupsService.update(groupId, patch);
     },
@@ -359,7 +359,7 @@ const GroupEdit = (): React.ReactElement => {
   };
   const handleCancelEdit = (): void => {
     if (data) {
-      setTitle(data.title ?? "");
+      setName(data.name ?? "");
       setDescription(data.description ?? "");
     }
     setSaveError(null);
@@ -411,10 +411,10 @@ const GroupEdit = (): React.ReactElement => {
           <Section>
             <SectionTitle>{t("manage-group-section-content")}</SectionTitle>
             <Field>
-              <FieldLabel>{t("manage-group-field-title")}</FieldLabel>
+              <FieldLabel>{t("manage-group-field-name")}</FieldLabel>
               <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
             </Field>
             <Field>
@@ -452,8 +452,8 @@ const GroupEdit = (): React.ReactElement => {
           <Section>
             <SectionTitle>{t("manage-group-section-content")}</SectionTitle>
             <Summary>
-              <SummaryLabel>{t("manage-group-field-title")}</SummaryLabel>
-              <SummaryValue>{renderValue(group.title)}</SummaryValue>
+              <SummaryLabel>{t("manage-group-field-name")}</SummaryLabel>
+              <SummaryValue>{renderValue(group.name)}</SummaryValue>
               <SummaryLabel>{t("manage-group-field-description")}</SummaryLabel>
               <SummaryValue>{renderValue(group.description)}</SummaryValue>
             </Summary>

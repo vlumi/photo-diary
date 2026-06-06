@@ -708,6 +708,7 @@ const AddUserGrant = ({
         {available.map((u) => (
           <option key={u.id} value={u.id}>
             {u.id}
+            {u.name && u.name !== u.id ? ` — ${u.name}` : ""}
             {u.isAdmin ? " (" + t("manage-users-role-admin") + ")" : ""}
           </option>
         ))}
@@ -782,7 +783,7 @@ const AddGroupGrant = ({
         {available.map((g) => (
           <option key={g.id} value={g.id}>
             {g.id}
-            {g.title ? ` — ${g.title}` : ""}
+            {g.name ? ` — ${g.name}` : ""}
           </option>
         ))}
       </Select>

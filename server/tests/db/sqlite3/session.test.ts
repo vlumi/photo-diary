@@ -10,12 +10,14 @@ beforeAll(async () => {
   driver = await loadDriver();
   await driver.createUser({
     id: "session-owner",
+    name: "session-owner",
     password: "h",
     secret: "s",
     is_admin: 0,
   });
   await driver.createUser({
     id: "other-user",
+    name: "other-user",
     password: "h",
     secret: "s",
     is_admin: 0,

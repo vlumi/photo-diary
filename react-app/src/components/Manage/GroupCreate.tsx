@@ -108,7 +108,7 @@ const GroupCreate = (): React.ReactElement => {
   const queryClient = useQueryClient();
 
   const [id, setId] = React.useState("");
-  const [title, setTitle] = React.useState("");
+  const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [saveError, setSaveError] = React.useState<string | null>(null);
 
@@ -131,7 +131,7 @@ const GroupCreate = (): React.ReactElement => {
     setSaveError(null);
     createMutation.mutate({
       id,
-      title: title || undefined,
+      name: name || undefined,
       description: description || undefined,
     });
   };
@@ -164,8 +164,8 @@ const GroupCreate = (): React.ReactElement => {
           <FieldHint>{t("manage-group-field-id-hint")}</FieldHint>
         </Field>
         <Field>
-          <FieldLabel>{t("manage-group-field-title")}</FieldLabel>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          <FieldLabel>{t("manage-group-field-name")}</FieldLabel>
+          <Input value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
         <Field>
           <FieldLabel>{t("manage-group-field-description")}</FieldLabel>

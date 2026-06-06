@@ -348,6 +348,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
+                            name: string;
                             isAdmin: boolean;
                         }[];
                     };
@@ -367,6 +368,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         id: string;
+                        name?: string;
                         password: string;
                         isAdmin?: boolean;
                     };
@@ -429,6 +431,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        name?: string;
                         password?: string;
                         isAdmin?: boolean;
                     };
@@ -1259,7 +1262,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            title: string;
+                            name: string;
                             description: string;
                         }[];
                     };
@@ -1279,7 +1282,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         id: string;
-                        title?: string;
+                        name?: string;
                         description?: string;
                     };
                 };
@@ -1327,7 +1330,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            title: string;
+                            name: string;
                             description: string;
                         };
                     };
@@ -1347,7 +1350,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        title?: string;
+                        name?: string;
                         description?: string;
                     };
                 };

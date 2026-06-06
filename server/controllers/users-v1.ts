@@ -20,6 +20,7 @@ const init = async () => {
 const UserIdParam = Type.Object({ userId: Type.String() });
 const UserSummary = Type.Object({
   id: Type.String(),
+  name: Type.String(),
   isAdmin: Type.Boolean(),
 });
 const UsersListResponse = Type.Array(UserSummary);
@@ -27,10 +28,12 @@ const UserCreateBody = Type.Object({
   // `:guest` is seeded via migration 015, not this endpoint —
   // rejecting colon-prefixed ids here is safe.
   id: Type.String({ minLength: 1, pattern: ID_PATTERN_SOURCE }),
+  name: Type.Optional(Type.String()),
   password: Type.String({ minLength: 1 }),
   isAdmin: Type.Optional(Type.Boolean()),
 });
 const UserUpdateBody = Type.Object({
+  name: Type.Optional(Type.String()),
   password: Type.Optional(Type.String({ minLength: 1 })),
   isAdmin: Type.Optional(Type.Boolean()),
 });
@@ -67,9 +70,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       await authorizer.authorizeAdmin(request.user.id);
       const users = (await model.getUsers()) as Array<{
         id: string;
+        name?: string;
         is_admin?: number | boolean;
       }>;
-      return users.map((user) => ({ id: user.id, isAdmin: !!user.is_admin }));
+      return users.map((user) => ({
+        id: user.id,
+        name: user.name ?? user.id,
+        isAdmin: !!user.is_admin,
+      }));
     }
   );
 

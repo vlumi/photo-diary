@@ -2,18 +2,18 @@ import api, { unwrap } from "../lib/api";
 
 export interface GroupRow {
   id: string;
-  title: string;
+  name: string;
   description: string;
 }
 
 export interface GroupCreateBody {
   id: string;
-  title?: string;
+  name?: string;
   description?: string;
 }
 
 export interface GroupUpdatePatch {
-  title?: string;
+  name?: string;
   description?: string;
 }
 

@@ -28,21 +28,21 @@ const MemberParams = Type.Object({
 });
 const GroupResponse = Type.Object({
   id: Type.String(),
-  title: Type.String(),
+  name: Type.String(),
   description: Type.String(),
 });
 const GroupsListResponse = Type.Array(GroupResponse);
 const GroupCreateBody = Type.Object(
   {
     id: GroupId,
-    title: Type.Optional(Type.String()),
+    name: Type.Optional(Type.String()),
     description: Type.Optional(Type.String()),
   },
   { additionalProperties: false }
 );
 const GroupUpdateBody = Type.Object(
   {
-    title: Type.Optional(Type.String()),
+    name: Type.Optional(Type.String()),
     description: Type.Optional(Type.String()),
   },
   { additionalProperties: false }

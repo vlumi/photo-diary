@@ -267,6 +267,7 @@ describe("loadOrphanUserGalleryRows", () => {
     // Set up users + galleries, then nuke one each.
     await driver.createUser({
       id: "to-delete-user",
+      name: "to-delete-user",
       password: "h",
       secret: "s",
       is_admin: 0,
@@ -274,6 +275,7 @@ describe("loadOrphanUserGalleryRows", () => {
     await driver.createGallery(mkGallery({ id: "to-delete-gallery" }));
     await driver.createUser({
       id: "keeper-user",
+      name: "keeper-user",
       password: "h",
       secret: "s",
       is_admin: 0,

@@ -23,20 +23,20 @@ const getGroups = async () => await db.loadGroups();
 const getGroup = async (groupId: string) => await db.loadGroup(groupId);
 const createGroup = async (group: {
   id: string;
-  title?: string;
+  name?: string;
   description?: string;
 }) => {
   assertSlugId(group.id);
   logger.debug("Creating group", { id: group.id });
   await db.createGroup({
     id: group.id,
-    title: group.title ?? "",
+    name: group.name ?? group.id,
     description: group.description ?? "",
   });
 };
 const updateGroup = async (
   groupId: string,
-  patch: { title?: string; description?: string }
+  patch: { name?: string; description?: string }
 ) => {
   logger.debug("Updating group", { id: groupId });
   await db.updateGroup(groupId, patch);

@@ -15,7 +15,7 @@ describe("meta", () => {
   test("loadMetas returns the baseline migration seeds", async () => {
     const metas = (await driver.loadMetas()) as Array<Record<string, string>>;
     const merged = Object.assign({}, ...metas);
-    expect(merged.schema_version).toBe("17");
+    expect(merged.schema_version).toBe("18");
     expect(merged.instance_name).toBe("");
   });
 

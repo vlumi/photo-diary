@@ -11,12 +11,14 @@ beforeAll(async () => {
   driver = await loadDriver();
   await driver.createUser({
     id: "g-user-a",
+    name: "g-user-a",
     password: "h",
     secret: "s",
     is_admin: 0,
   });
   await driver.createUser({
     id: "g-user-b",
+    name: "g-user-b",
     password: "h",
     secret: "s",
     is_admin: 0,
@@ -26,10 +28,10 @@ beforeAll(async () => {
 
 describe("group CRUD", () => {
   test("createGroup + loadGroup", async () => {
-    await driver.createGroup({ id: "g1", title: "Family", description: "" });
-    const row = (await driver.loadGroup("g1")) as { id: string; title: string };
+    await driver.createGroup({ id: "g1", name: "Family", description: "" });
+    const row = (await driver.loadGroup("g1")) as { id: string; name: string };
     expect(row.id).toBe("g1");
-    expect(row.title).toBe("Family");
+    expect(row.name).toBe("Family");
   });
 
   test("loadGroup throws NotFoundError on miss", async () => {
@@ -39,22 +41,22 @@ describe("group CRUD", () => {
   });
 
   test("loadGroups returns all rows", async () => {
-    await driver.createGroup({ id: "g2", title: "Friends", description: "" });
+    await driver.createGroup({ id: "g2", name: "Friends", description: "" });
     const rows = (await driver.loadGroups()) as Array<{ id: string }>;
     const ids = rows.map((r) => r.id);
     expect(ids).toContain("g1");
     expect(ids).toContain("g2");
   });
 
-  test("updateGroup changes title", async () => {
-    await driver.createGroup({ id: "g3", title: "old", description: "" });
-    await driver.updateGroup("g3", { title: "new" });
-    const row = (await driver.loadGroup("g3")) as { title: string };
-    expect(row.title).toBe("new");
+  test("updateGroup changes name", async () => {
+    await driver.createGroup({ id: "g3", name: "old", description: "" });
+    await driver.updateGroup("g3", { name: "new" });
+    const row = (await driver.loadGroup("g3")) as { name: string };
+    expect(row.name).toBe("new");
   });
 
   test("deleteGroup cascades through user_group / group_gallery", async () => {
-    await driver.createGroup({ id: "g4", title: "doomed", description: "" });
+    await driver.createGroup({ id: "g4", name: "doomed", description: "" });
     await driver.addUserGroup("g-user-a", "g4");
     await driver.upsertGroupGallery({
       group_id: "g4",
@@ -76,7 +78,7 @@ describe("group memberships (user_group)", () => {
   beforeAll(async () => {
     await driver.createGroup({
       id: "g-members",
-      title: "members",
+      name: "members",
       description: "",
     });
   });
@@ -108,7 +110,7 @@ describe("group_gallery upsert / load / delete", () => {
   beforeAll(async () => {
     await driver.createGroup({
       id: "g-gg",
-      title: "gg",
+      name: "gg",
       description: "",
     });
   });

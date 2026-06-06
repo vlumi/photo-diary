@@ -161,6 +161,7 @@ const loadUsers = async () => {
 };
 const createUser = async (user: {
   id: string;
+  name: string;
   password: string;
   secret: string;
 }) => {
@@ -288,14 +289,14 @@ const resolveHideMap = async (
 };
 
 // Groups
-type GroupShape = { id: string; title: string; description: string };
+type GroupShape = { id: string; name: string; description: string };
 const groupRow = (input: {
   id: string;
-  title?: string;
+  name?: string;
   description?: string;
 }): GroupShape => ({
   id: input.id,
-  title: input.title ?? "",
+  name: input.name ?? "",
   description: input.description ?? "",
 });
 const loadGroups = async () => {
@@ -311,7 +312,7 @@ const loadGroup = async (groupId: string) => {
 };
 const createGroup = async (group: {
   id: string;
-  title?: string;
+  name?: string;
   description?: string;
 }) => {
   const groups = (db.groups ??= {}) as Record<string, GroupShape>;
@@ -727,54 +728,63 @@ const dbDump = JSON.stringify({
   users: {
     admin: {
       id: "admin",
+      name: "admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: true,
     },
     gallery1admin: {
       id: "gallery1admin",
+      name: "gallery1admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
     gallery2admin: {
       id: "gallery2admin",
+      name: "gallery2admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
     gallery1user: {
       id: "gallery1user",
+      name: "gallery1user",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
     gallery12user: {
       id: "gallery12user",
+      name: "gallery12user",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
     plainuser: {
       id: "plainuser",
+      name: "plainuser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
     publicuser: {
       id: "publicuser",
+      name: "publicuser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
     simpleuser: {
       id: "simpleuser",
+      name: "simpleuser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
     blockeduser: {
       id: "blockeduser",
+      name: "blockeduser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
