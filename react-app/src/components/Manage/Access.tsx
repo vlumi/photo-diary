@@ -848,21 +848,23 @@ const AddGrantPanel = ({
           />
           {t("manage-gallery-access-col-admin")}
         </AddLabel>
-        <Select
-          value={hideMap}
-          onChange={(e) => setHideMap(e.target.value as HideMapValue)}
-          aria-label={String(t("manage-gallery-access-col-hidemap"))}
-        >
-          <option value="inherit">
-            {t("manage-gallery-access-hidemap-inherit")}
-          </option>
-          <option value="show">
-            {t("manage-gallery-access-hidemap-show")}
-          </option>
-          <option value="hide">
-            {t("manage-gallery-access-hidemap-hide")}
-          </option>
-        </Select>
+        <AddLabel>
+          {t("manage-gallery-access-col-hidemap")}
+          <Select
+            value={hideMap}
+            onChange={(e) => setHideMap(e.target.value as HideMapValue)}
+          >
+            <option value="inherit">
+              {t("manage-gallery-access-hidemap-inherit")}
+            </option>
+            <option value="show">
+              {t("manage-gallery-access-hidemap-show")}
+            </option>
+            <option value="hide">
+              {t("manage-gallery-access-hidemap-hide")}
+            </option>
+          </Select>
+        </AddLabel>
         <AddButton type="button" onClick={handleAdd} disabled={!canAdd}>
           <BsPlus aria-hidden />
           {t("manage-access-add-button")}

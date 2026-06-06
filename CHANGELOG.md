@@ -4,6 +4,7 @@
 
 ### Frontend
 
+- Access add-grant rows on `/m/access` and `/m/g/<id>/access` now label the Inherit / Show / Hide dropdown with "Map visibility" so the three context-less words don't make the operator guess what the select does. Per-row controls inside the access table stay unchanged — their column header already disambiguates. (closes #464)
 - Identifier inputs (login username, new user / gallery / group ids, gallery hostname regex) opt out of mobile autocapitalize / autocorrect / spellcheck via `autoCapitalize="none"`, `autoCorrect="off"`, `spellCheck={false}`. iOS Safari was capitalizing the first letter of the username on the login page, producing `Admin` for a case-sensitive lookup that expected `admin`; the same default applied to every other identifier-shaped field. Free-text fields (title, description, place, country typeahead) unchanged. (closes #465)
 - Instance `DEFAULT_THEME` (from `/api/v1/meta`'s `defaultTheme`) now actually applies on the Manage and Global Stats surfaces. The meta-to-config side-effect runs *after* render, so the first render with fresh meta still saw `config.DEFAULT_THEME = "blue"` (the hardcoded module-load baseline) and the mutated value never triggered another render. App.tsx, Gallery/index.tsx, and GlobalStats/index.tsx now read `meta?.defaultTheme` directly, falling back to `config.DEFAULT_THEME` only when meta hasn't resolved yet. GlobalStats also drops its own `<Global>` since the App-level one now handles theming for every route.
 
