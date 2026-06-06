@@ -69,9 +69,19 @@ const globalStyles = (theme: ActiveTheme) => css`
 
 interface Props {
   isStats?: boolean;
+  // Smart-landing routes (`/`) run a redirect ladder for the no-
+  // galleryId case — single visible gallery / DEFAULT_GALLERY take
+  // the visitor straight in. Picker-only routes (`/g`) skip the
+  // ladder and always render the tile picker. The Home button in
+  // the title bar uses `/g`; landing on the instance root via `/`
+  // uses the smart variant.
+  smartLanding?: boolean;
 }
 
-const Gallery = ({ isStats = false }: Props): React.ReactElement => {
+const Gallery = ({
+  isStats = false,
+  smartLanding = false,
+}: Props): React.ReactElement => {
   const user = useUserStore((s) => s.user);
   const lang = useLangStore((s) => s.lang);
   const countryData = useLangStore((s) => s.countryData);
@@ -211,15 +221,20 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
   // breadcrumb dropdown and landing picker can't navigate outside.
   const visibleGalleries = isHostScoped ? scopedGalleries : galleries;
   if (!galleryId) {
-    if (visibleGalleries.length === 1) {
-      return <Navigate to={visibleGalleries[0].path()} replace />;
-    }
-    if (config.DEFAULT_GALLERY) {
-      const targetGallery = visibleGalleries.find(
-        (gallery) => gallery.id() === config.DEFAULT_GALLERY
-      );
-      if (targetGallery) {
-        return <Navigate to={targetGallery.path()} replace />;
+    if (smartLanding) {
+      // Smart-landing routes (`/`) try to send the visitor straight
+      // to a gallery rather than the picker; picker-only routes
+      // (`/g`) skip this ladder.
+      if (visibleGalleries.length === 1) {
+        return <Navigate to={visibleGalleries[0].path()} replace />;
+      }
+      if (config.DEFAULT_GALLERY) {
+        const targetGallery = visibleGalleries.find(
+          (gallery) => gallery.id() === config.DEFAULT_GALLERY
+        );
+        if (targetGallery) {
+          return <Navigate to={targetGallery.path()} replace />;
+        }
       }
     }
 

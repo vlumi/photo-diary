@@ -305,7 +305,7 @@ const Manage = (): React.ReactElement => {
       <Header>
         <Crumbs aria-label={String(t("manage-nav-group"))}>
           <HomeLink
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/g")}
             title={String(t("home"))}
             role="link"
             tabIndex={0}

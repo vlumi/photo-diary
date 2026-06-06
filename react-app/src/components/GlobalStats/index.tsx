@@ -112,7 +112,7 @@ const GlobalStats = (): React.ReactElement => {
     <>
       <Header aria-label={String(t("stats-global-nav-group"))}>
         <HomeLink
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/g")}
           title={String(t("home"))}
           role="link"
           tabIndex={0}
