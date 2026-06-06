@@ -35,6 +35,11 @@ const Path = styled.nav`
   gap: 6px;
   flex: 1 1 auto;
   min-width: 0;
+  /* Pin the row height to the right-cluster (map / context
+     segmented buttons) height so wrapping them away on a narrow
+     screen doesn't shrink the line this nav sits in — without it
+     the first row's baseline jumps by ~6px between layouts. */
+  min-height: 25px;
 `;
 const Separator = styled(BsChevronRight)`
   flex: 0 0 auto;
