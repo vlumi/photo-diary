@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
-import theme, { THEME_CATEGORIES, type ThemeCategory } from "../lib/theme";
+import ThemePicker from "./ThemePicker";
 import token from "../lib/token";
 import tokenService from "../services/tokens";
 import {
@@ -95,18 +95,16 @@ const BetaToggle = styled.label`
     color: var(--header-color);
   }
 `;
-const ThemeRow = styled.label`
+const ThemeBlock = styled.div`
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   padding: 8px 14px;
   color: var(--primary-color);
   font: inherit;
 `;
-const ThemeSelect = styled.select`
-  flex: 1;
-  font: inherit;
-  padding: 2px 4px;
+const ThemeBlockLabel = styled.span`
+  font-size: 0.95em;
 `;
 
 // Profile icon in the top-right of the top menu. Anonymous (outlined) when
@@ -132,6 +130,37 @@ const UserMenu = (): React.ReactElement => {
 
   const [isOpen, setIsOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
+
+  // Hover-preview model: hovering a swatch applies the theme live (via
+  // the same store the rest of the app reads), moving away or closing
+  // the picker restores the committed value. `committedTheme` mirrors
+  // what the user clicked; sync it from the store only when the picker
+  // opens, so previewing during hover doesn't move the active outline.
+  const [committedTheme, setCommittedTheme] = React.useState<string | null>(
+    themePreference
+  );
+  const prevIsOpenRef = React.useRef(isOpen);
+  React.useEffect(() => {
+    if (isOpen && !prevIsOpenRef.current) {
+      setCommittedTheme(themePreference);
+    } else if (!isOpen && prevIsOpenRef.current) {
+      if (themePreference !== committedTheme) {
+        setThemePreference(committedTheme);
+      }
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, themePreference, committedTheme, setThemePreference]);
+
+  const onSwatchEnter = (id: string | null) => setThemePreference(id);
+  const onGridLeave = () => {
+    if (themePreference !== committedTheme) {
+      setThemePreference(committedTheme);
+    }
+  };
+  const onSwatchClick = (id: string | null) => {
+    setCommittedTheme(id);
+    setThemePreference(id);
+  };
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -236,35 +265,18 @@ const UserMenu = (): React.ReactElement => {
               {t("stats-menu-entry")}
             </MenuItem>
           )}
-          <ThemeRow>
-            <span>{t("theme-label")}</span>
-            <ThemeSelect
-              value={themePreference ?? ""}
-              onChange={(e) =>
-                setThemePreference(e.target.value === "" ? null : e.target.value)
-              }
-            >
-              <option value="">{t("theme-follow-default")}</option>
-              {THEME_CATEGORIES.map((category: ThemeCategory) => {
-                const entries = theme.manifest.filter(
-                  (entry) => entry.category === category
-                );
-                if (entries.length === 0) return null;
-                return (
-                  <optgroup
-                    key={category}
-                    label={String(t(`theme-group-${category}`))}
-                  >
-                    {entries.map((entry) => (
-                      <option key={entry.id} value={entry.id}>
-                        {entry.displayName}
-                      </option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </ThemeSelect>
-          </ThemeRow>
+          <ThemeBlock>
+            <ThemeBlockLabel>{t("theme-label")}</ThemeBlockLabel>
+            <ThemePicker
+              value={committedTheme}
+              onChange={onSwatchClick}
+              onPreview={(id) => {
+                if (id === null) onGridLeave();
+                else onSwatchEnter(id);
+              }}
+              defaultLabel={String(t("theme-follow-default"))}
+            />
+          </ThemeBlock>
           {userBetaFeatures.map((f) => (
             <BetaToggle key={f}>
               <input
