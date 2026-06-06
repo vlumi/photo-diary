@@ -228,7 +228,7 @@ const GalleryFormFields = ({
                 type="button"
                 onClick={() => setCropperOpen(true)}
               >
-                {form.icon
+                {iconSource
                   ? t("manage-gallery-icon-adjust")
                   : t("manage-gallery-icon-pick")}
               </AdjustButton>
