@@ -12,6 +12,7 @@ import GalleryFormFields, {
   toPatch,
   type FormState,
 } from "./GalleryForm";
+import { ID_PATTERN } from "../../lib/id-shape";
 
 const Root = styled.div`
   padding: 24px 16px;
@@ -101,7 +102,6 @@ const ErrorBanner = styled.div`
 // Server-side `id` pattern: minLength 1, must not start with ":"
 // (pseudo-galleries reserved). We surface the rule client-side so
 // the operator gets immediate feedback instead of a 400 round-trip.
-const ID_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
 const GalleryCreate = (): React.ReactElement => {
   const { t } = useTranslation();

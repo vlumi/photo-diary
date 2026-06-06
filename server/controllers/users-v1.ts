@@ -5,6 +5,7 @@ import CONST from "../lib/constants.js";
 import { AccessError } from "../lib/errors.js";
 import authorizerFactory from "../lib/authorizer.js";
 import { requireUnscoped } from "../lib/host-scope.js";
+import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import modelFactory from "../models/user.js";
 import tokenFactory from "../models/token.js";
 
@@ -23,12 +24,9 @@ const UserSummary = Type.Object({
 });
 const UsersListResponse = Type.Array(UserSummary);
 const UserCreateBody = Type.Object({
-  // Slug shape: lowercase alnum + underscore / hyphen, starts
-  // with alnum. URL-safe, no spaces / colons / uppercase. The
-  // `:guest` pseudo-user is seeded via migration 015, not
-  // through this endpoint, so the no-colon-start constraint is
-  // safe here.
-  id: Type.String({ minLength: 1, pattern: "^[a-z0-9][a-z0-9_-]*$" }),
+  // `:guest` is seeded via migration 015, not this endpoint —
+  // rejecting colon-prefixed ids here is safe.
+  id: Type.String({ minLength: 1, pattern: ID_PATTERN_SOURCE }),
   password: Type.String({ minLength: 1 }),
   isAdmin: Type.Optional(Type.Boolean()),
 });

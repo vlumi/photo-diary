@@ -12,6 +12,7 @@ import {
   requireScopeMatches,
   requireUnscoped,
 } from "../lib/host-scope.js";
+import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
@@ -59,7 +60,7 @@ const GalleryFields = {
   hostname: Type.Optional(Type.String()),
 };
 const GalleryCreateBody = Type.Object({
-  id: Type.String({ minLength: 1, pattern: "^[a-z0-9][a-z0-9_-]*$" }),
+  id: Type.String({ minLength: 1, pattern: ID_PATTERN_SOURCE }),
   ...GalleryFields,
 });
 const GalleryUpdateBody = Type.Object(GalleryFields);

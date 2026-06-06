@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import usersService, { type UserCreateBody } from "../../services/users";
+import { ID_PATTERN } from "../../lib/id-shape";
 
 const Root = styled.div`
   padding: 24px 16px;
@@ -92,7 +93,6 @@ const ErrorBanner = styled.div`
 
 // Mirrors the server's id constraint: minLength 1, must not start
 // with ":" (reserved for pseudo-users like :guest).
-const ID_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
 const UserCreate = (): React.ReactElement => {
   const { t } = useTranslation();

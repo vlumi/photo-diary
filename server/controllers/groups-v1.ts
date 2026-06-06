@@ -3,6 +3,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import { requireUnscoped } from "../lib/host-scope.js";
+import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import modelFactory from "../models/group.js";
 
 const authorizer = authorizerFactory();
@@ -12,13 +13,13 @@ const init = async () => {
   await model.init();
 };
 
-// Group ids follow the slug shape used across user / gallery /
-// group: lowercase alnum + underscore / hyphen, starts with alnum.
-// URL-safe and avoids the `:` sigil colliding with reserved
-// pseudo-ids like `:guest`.
+// Group ids follow the slug shape from `lib/id-shape.ts`. Used
+// here as both the create-body validator and the path-param shape,
+// so a hand-crafted URL like `/api/v1/groups/-bad` fails fast at
+// the schema layer.
 const GroupId = Type.String({
   minLength: 1,
-  pattern: "^[a-z0-9][a-z0-9_-]*$",
+  pattern: ID_PATTERN_SOURCE,
 });
 const GroupIdParam = Type.Object({ groupId: GroupId });
 const MemberParams = Type.Object({
