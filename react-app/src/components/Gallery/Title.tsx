@@ -130,6 +130,17 @@ const ContextButton = styled.button<{ $active: boolean }>`
       $active ? "var(--header-color)" : "var(--primary-color)"};
   }
 `;
+// Wraps the map button + context segmented control as a single
+// flex item so they stay together when the path above wraps onto
+// its own line. `margin-left: auto` (justify-self) makes the
+// cluster stick to the right edge.
+const RightCluster = styled.div`
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+`;
 const MapButton = styled.button`
   flex: 0 0 auto;
   display: inline-flex;
@@ -396,17 +407,19 @@ const Title = ({
           </>
         )}
       </Path>
-      {mapPhotos.length > 0 && (
-        <MapButton
-          type="button"
-          onClick={() => setMapOpen(true)}
-          aria-label={String(t("stats-location-see-on-map"))}
-          title={`${t("stats-location-see-on-map")} (m)`}
-        >
-          <BsMap />
-        </MapButton>
-      )}
-      {renderContext()}
+      <RightCluster>
+        {mapPhotos.length > 0 && (
+          <MapButton
+            type="button"
+            onClick={() => setMapOpen(true)}
+            aria-label={String(t("stats-location-see-on-map"))}
+            title={`${t("stats-location-see-on-map")} (m)`}
+          >
+            <BsMap />
+          </MapButton>
+        )}
+        {renderContext()}
+      </RightCluster>
       {mapOpen && (
         <MapModal
           title={String(t("stats-category-location"))}
