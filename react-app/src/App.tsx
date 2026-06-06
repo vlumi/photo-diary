@@ -3,7 +3,6 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
 } from "react-router-dom";
 import styled from "@emotion/styled";
 import { Global, css } from "@emotion/react";
@@ -187,7 +186,7 @@ const App = (): React.ReactElement => {
                   <Route path="access" element={<ManageGalleryAccess />} />
                 </Route>
               </Route>
-              <Route path="/" element={<Navigate to="/g" replace />} />
+              <Route path="/" element={<Gallery smartLanding />} />
             </Routes>
           )}
         </ScrollToPosition>
