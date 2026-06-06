@@ -37,6 +37,7 @@ import {
   useFiltersStore,
   useScrollStore,
   useThemePreferenceStore,
+  useLastGalleryPathStore,
 } from "../../stores";
 
 interface Meta {
@@ -79,6 +80,8 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
   const setFilters = useFiltersStore((s) => s.setFilters);
   const setScroll = useScrollStore((s) => s.set);
   const themePreference = useThemePreferenceStore((s) => s.preference);
+  const lastGalleryId = useLastGalleryPathStore((s) => s.lastGalleryId);
+  const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
   const loadThemePreference = useThemePreferenceStore((s) => s.load);
 
   const { t } = useTranslation();
@@ -211,8 +214,29 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
   // breadcrumb dropdown and landing picker can't navigate outside.
   const visibleGalleries = isHostScoped ? scopedGalleries : galleries;
   if (!galleryId) {
+    // Single visible gallery (already host-scope-narrowed) → no
+    // choice to make, drop the visitor straight in.
     if (visibleGalleries.length === 1) {
       return <Navigate to={visibleGalleries[0].path()} replace />;
+    }
+    // Global admin on the primary (unbound) host → admin home.
+    // Bound hostnames fall through; the admin's per-virtual-host
+    // scope keeps them inside the configured gallery (#386).
+    if (!isHostScoped && user?.isAdmin()) {
+      return <Navigate to="/m" replace />;
+    }
+    // Per-user last-viewed gallery — return signed-in users to
+    // where they were instead of dumping them at the picker.
+    // Validate against the current visible set; a revoked or
+    // renamed gallery falls through.
+    if (lastGalleryId) {
+      const remembered = visibleGalleries.find(
+        (gallery) => gallery.id() === lastGalleryId
+      );
+      if (remembered) {
+        const path = lookupGalleryPath(lastGalleryId) ?? remembered.path();
+        return <Navigate to={path} replace />;
+      }
     }
     if (config.DEFAULT_GALLERY) {
       const targetGallery = visibleGalleries.find(
