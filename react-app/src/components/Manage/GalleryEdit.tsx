@@ -373,7 +373,7 @@ const GalleryEdit = (): React.ReactElement => {
               )
             }
             autoOpenCropper={!!bootstrapIconSource}
-            onCropperOpened={() => setBootstrapIconSource(null)}
+            onCropperClosed={() => setBootstrapIconSource(null)}
             onIconChanged={() => {
               queryClient.invalidateQueries({
                 queryKey: ["gallery", galleryId],

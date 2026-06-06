@@ -160,7 +160,10 @@ interface Props {
   // Auto-open the cropper modal on mount — used when the operator
   // arrived via `?openIcon=<photoId>` from a photo view.
   autoOpenCropper?: boolean;
-  onCropperOpened?: () => void;
+  // Called after the cropper modal closes (save or cancel), so the
+  // parent can clear a one-shot `bootstrap` source that fed
+  // `iconSource` for the auto-opened session.
+  onCropperClosed?: () => void;
   onIconChanged?: (icon: string) => void;
 }
 
@@ -196,20 +199,19 @@ const GalleryFormFields = ({
   photos,
   iconSource,
   autoOpenCropper,
-  onCropperOpened,
+  onCropperClosed,
   onIconChanged,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const [cropperOpen, setCropperOpen] = React.useState(false);
   const canCrop = !!galleryId && !!photos;
   React.useEffect(() => {
-    if (autoOpenCropper && canCrop) {
-      setCropperOpen(true);
-      onCropperOpened?.();
-    }
-    // Auto-open is a one-shot trigger from the parent; fire only
-    // when the flag flips true.
-  }, [autoOpenCropper, canCrop, onCropperOpened]);
+    if (autoOpenCropper && canCrop) setCropperOpen(true);
+  }, [autoOpenCropper, canCrop]);
+  const closeCropper = () => {
+    setCropperOpen(false);
+    onCropperClosed?.();
+  };
   return (
     <>
       <Section>
@@ -263,9 +265,9 @@ const GalleryFormFields = ({
           galleryId={galleryId as string}
           photos={photos as PhotoLike[]}
           initialSource={iconSource ?? null}
-          onClose={() => setCropperOpen(false)}
+          onClose={closeCropper}
           onSaved={(icon) => {
-            setCropperOpen(false);
+            closeCropper();
             setField("icon", icon);
             onIconChanged?.(icon);
           }}
