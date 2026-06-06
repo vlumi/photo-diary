@@ -17,7 +17,7 @@ const Root = styled.div`
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  /* Vertical padding sized so `align-items: center`'s slack on the
+  /* Vertical padding sized so align-items: center's slack on the
      single-line layout (where min-height: 44 forces extra height
      around ~22px content) is absorbed by the padding, so wrap-vs-
      no-wrap don't visually shift the first row's top. */
