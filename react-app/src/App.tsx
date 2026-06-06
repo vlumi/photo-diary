@@ -128,13 +128,6 @@ const App = (): React.ReactElement => {
   }, [meta, setBetaModes]);
 
   const themePreference = useThemePreferenceStore((s) => s.preference);
-  // Read `meta.defaultTheme` directly rather than going through the
-  // mutated `config.DEFAULT_THEME` — the meta-to-config side-effect
-  // runs after render, so the first render after meta loads still
-  // sees the hardcoded "blue" baseline. Reading meta directly here
-  // means baseTheme is built with the fresh value on that very render.
-  // Falls back to `config.DEFAULT_THEME` (the seeded "blue") when meta
-  // hasn't resolved yet or doesn't set the field.
   const baseTheme = theme.setTheme(
     themePreference ?? meta?.defaultTheme ?? config.DEFAULT_THEME
   );

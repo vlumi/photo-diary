@@ -81,11 +81,6 @@ const GlobalStats = (): React.ReactElement => {
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
   const themePreference = useThemePreferenceStore((s) => s.preference);
-  // App's base Global already paints html with the right theme on
-  // this route, so this `activeTheme` only carries through to chart
-  // gradients via the Stats prop. Read meta directly to dodge the
-  // same stale-config race App resolves. The metaQuery is cached so
-  // this is a free read.
   const metaQuery = useQuery({
     queryKey: ["meta"],
     queryFn: () => metaService.getAll(),
