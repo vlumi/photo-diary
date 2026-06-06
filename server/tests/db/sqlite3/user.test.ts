@@ -13,6 +13,7 @@ beforeAll(async () => {
 
 const mkUser = (id: string, isAdmin = 0) => ({
   id,
+  name: id,
   password: "$2-fake-hash",
   secret: "fake-secret",
   is_admin: isAdmin,

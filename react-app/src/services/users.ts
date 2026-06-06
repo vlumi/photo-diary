@@ -2,16 +2,19 @@ import api, { unwrap } from "../lib/api";
 
 export interface UserRow {
   id: string;
+  name: string;
   isAdmin: boolean;
 }
 
 export interface UserCreateBody {
   id: string;
+  name?: string;
   password: string;
   isAdmin?: boolean;
 }
 
 export interface UserUpdatePatch {
+  name?: string;
   password?: string;
   isAdmin?: boolean;
 }

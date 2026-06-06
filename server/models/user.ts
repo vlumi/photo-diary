@@ -29,6 +29,7 @@ const getUser = async (id: string) => {
 };
 const createUser = async (user: {
   id: string;
+  name?: string;
   password: string;
   isAdmin?: boolean;
 }) => {
@@ -37,6 +38,7 @@ const createUser = async (user: {
   const password = await bcrypt.hash(user.password, SALT_ROUNDS);
   await db.createUser({
     id: user.id,
+    name: user.name ?? user.id,
     password,
     secret: randomUUID(),
     is_admin: user.isAdmin ? 1 : 0,
@@ -48,10 +50,13 @@ const createUser = async (user: {
 // secret; only password change does.
 const updateUser = async (
   userId: string,
-  patch: { password?: string; isAdmin?: boolean }
+  patch: { name?: string; password?: string; isAdmin?: boolean }
 ) => {
   logger.debug("Updating user", { id: userId, hasPassword: !!patch.password });
   const update: Record<string, unknown> = {};
+  if (patch.name !== undefined) {
+    update.name = patch.name;
+  }
   if (patch.password) {
     update.password = await bcrypt.hash(patch.password, SALT_ROUNDS);
     update.secret = randomBytes(32).toString("hex");

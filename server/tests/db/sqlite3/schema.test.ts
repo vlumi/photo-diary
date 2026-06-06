@@ -3,10 +3,10 @@ import schemaFactory from "../../../db/sqlite3/schema.js";
 const schema = schemaFactory();
 
 describe("User", () => {
-  const cols = ["id", "password", "secret", "is_admin"].join(",");
+  const cols = ["id", "name", "password", "secret", "is_admin"].join(",");
   test("Build create query", () =>
     expect(schema.user.buildCreateQuery()).toBe(
-      `INSERT INTO user (${cols}) VALUES (?,?,?,?)`
+      `INSERT INTO user (${cols}) VALUES (?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.user.buildSelectByIdQuery()).toBe(

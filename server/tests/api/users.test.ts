@@ -45,11 +45,11 @@ describe("As admin", () => {
     expect(admin).toBeDefined();
     expect(admin.id).toBe("admin");
     expect(admin.password).not.toBeDefined();
-    users.forEach((user: { id: string; isAdmin?: boolean; password?: string }) => {
+    users.forEach((user: { id: string; name?: string; isAdmin?: boolean; password?: string }) => {
       expect(user).toBeDefined();
-      // Two visible fields now: id + isAdmin. Password not exposed.
-      expect(Object.keys(user).length).toBe(2);
+      expect(Object.keys(user).length).toBe(3);
       expect(user.id).toBeDefined();
+      expect(typeof user.name).toBe("string");
       expect(typeof user.isAdmin).toBe("boolean");
       expect(user.password).not.toBeDefined();
     });

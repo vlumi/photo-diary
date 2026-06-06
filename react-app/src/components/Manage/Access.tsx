@@ -829,6 +829,7 @@ const AddGrantPanel = ({
             {sortedUsers.map((u) => (
               <option key={`user:${u.id}`} value={`user:${u.id}`}>
                 {u.id}
+                {u.name && u.name !== u.id ? ` — ${u.name}` : ""}
                 {u.isAdmin ? " (" + t("manage-users-role-admin") + ")" : ""}
               </option>
             ))}
@@ -837,7 +838,7 @@ const AddGrantPanel = ({
             {sortedGroups.map((g) => (
               <option key={`group:${g.id}`} value={`group:${g.id}`}>
                 {g.id}
-                {g.title ? ` — ${g.title}` : ""}
+                {g.name ? ` — ${g.name}` : ""}
               </option>
             ))}
           </optgroup>

@@ -18,7 +18,7 @@ const setupGroup = async (auth: string) => {
   await api
     .post("/api/v1/groups")
     .set("Authorization", auth)
-    .send({ id: "family", title: "Family" })
+    .send({ id: "family", name: "Family" })
     .expect(201);
   await api
     .put("/api/v1/groups/family/members/gallery1admin")

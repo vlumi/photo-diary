@@ -7,8 +7,8 @@
  * Identity:
  *   group.ts list                          # every group
  *   group.ts show <id>                     # one group with member list
- *   group.ts create <id> [--title …] [--description …]
- *   group.ts update <id> [--title …] [--description …]
+ *   group.ts create <id> [--name …] [--description …]
+ *   group.ts update <id> [--name …] [--description …]
  *   group.ts delete <id>                   # FK cascade clears members + grants
  *
  * Members:
@@ -100,11 +100,11 @@ await yargs(hideBin(process.argv))
     async () => {
       const groups = (await db.loadGroups()) as Array<{
         id: string;
-        title: string;
+        name: string;
         description: string;
       }>;
-      const rows: string[][] = [["id", "title", "description"]];
-      for (const g of groups) rows.push([g.id, g.title, g.description]);
+      const rows: string[][] = [["id", "name", "description"]];
+      for (const g of groups) rows.push([g.id, g.name, g.description]);
       console.log(rows.length === 1 ? "(no groups)" : formatTable(rows));
     }
   )
@@ -116,14 +116,14 @@ await yargs(hideBin(process.argv))
     async (argv) => {
       const group = (await db
         .loadGroup(argv.id)
-        .catch(() => null)) as { id: string; title: string; description: string } | null;
+        .catch(() => null)) as { id: string; name: string; description: string } | null;
       if (!group) {
         console.error(`✗ Group "${argv.id}" doesn't exist.`);
         process.exit(1);
       }
       const members = await db.loadGroupMembers(argv.id);
       console.log(`id:          ${group.id}`);
-      console.log(`title:       ${group.title}`);
+      console.log(`name:       ${group.name}`);
       console.log(`description: ${group.description}`);
       console.log(`members:     ${members.length === 0 ? "(none)" : members.join(", ")}`);
     }
@@ -134,7 +134,7 @@ await yargs(hideBin(process.argv))
     (y) =>
       y
         .positional("id", { describe: "Group ID", type: "string", demandOption: true })
-        .option("title", { describe: "Display title", type: "string" })
+        .option("name", { describe: "Display name", type: "string" })
         .option("description", { describe: "Long description", type: "string" }),
     async (argv) => {
       checkGroupId(argv.id);
@@ -145,7 +145,7 @@ await yargs(hideBin(process.argv))
       }
       await db.createGroup({
         id: argv.id,
-        title: argv.title ?? "",
+        name: argv.name ?? "",
         description: argv.description ?? "",
       });
       console.log(`✓ Created group "${argv.id}".`);
@@ -157,7 +157,7 @@ await yargs(hideBin(process.argv))
     (y) =>
       y
         .positional("id", { describe: "Group ID", type: "string", demandOption: true })
-        .option("title", { describe: "Display title", type: "string" })
+        .option("name", { describe: "Display name", type: "string" })
         .option("description", { describe: "Long description", type: "string" }),
     async (argv) => {
       const existing = await db.loadGroup(argv.id).catch(() => null);
@@ -165,8 +165,8 @@ await yargs(hideBin(process.argv))
         console.error(`✗ Group "${argv.id}" doesn't exist. Use \`create\` first.`);
         process.exit(1);
       }
-      const patch: { title?: string; description?: string } = {};
-      if ("title" in argv) patch.title = argv.title as string;
+      const patch: { name?: string; description?: string } = {};
+      if ("name" in argv) patch.name = argv.name as string;
       if ("description" in argv) patch.description = argv.description as string;
       await db.updateGroup(argv.id, patch);
       console.log(`✓ Updated group "${argv.id}".`);

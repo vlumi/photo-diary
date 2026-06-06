@@ -100,6 +100,7 @@ const UserCreate = (): React.ReactElement => {
   const queryClient = useQueryClient();
 
   const [id, setId] = React.useState("");
+  const [name, setName] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [adminFlag, setAdminFlag] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
@@ -123,7 +124,12 @@ const UserCreate = (): React.ReactElement => {
   const handleSave = (): void => {
     if (!formValid) return;
     setSaveError(null);
-    createMutation.mutate({ id, password, isAdmin: adminFlag || undefined });
+    createMutation.mutate({
+      id,
+      name: name || undefined,
+      password,
+      isAdmin: adminFlag || undefined,
+    });
   };
   const handleCancel = (): void => {
     navigate("/m/users");
@@ -152,6 +158,11 @@ const UserCreate = (): React.ReactElement => {
             spellCheck={false}
           />
           <FieldHint>{t("manage-user-field-id-hint")}</FieldHint>
+        </Field>
+        <Field>
+          <FieldLabel>{t("manage-user-field-name")}</FieldLabel>
+          <Input value={name} onChange={(e) => setName(e.target.value)} />
+          <FieldHint>{t("manage-user-field-name-hint")}</FieldHint>
         </Field>
         <Field>
           <FieldLabel>{t("manage-user-field-password")}</FieldLabel>

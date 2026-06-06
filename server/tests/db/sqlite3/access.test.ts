@@ -8,6 +8,7 @@ let driver: Driver;
 
 const mkUser = (id: string, isAdmin = 0) => ({
   id,
+  name: id,
   password: "h",
   secret: "s",
   is_admin: isAdmin,
