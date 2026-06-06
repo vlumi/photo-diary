@@ -3,7 +3,12 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsArrowClockwise, BsBoxArrowUpRight, BsX } from "react-icons/bs";
+import {
+  BsArrowClockwise,
+  BsBookmarkStar,
+  BsBoxArrowUpRight,
+  BsX,
+} from "react-icons/bs";
 
 import photosService, {
   type MissingField,
@@ -1191,6 +1196,21 @@ const PhotoDrawer = (): React.ReactElement => {
               <BsBoxArrowUpRight />
             </ViewOnSiteLink>
           )}
+          {galleryId && id ? (
+            <ViewOnSiteLink
+              onClick={() =>
+                navigate(
+                  `/m/g/${galleryId}?openIcon=${encodeURIComponent(id)}`
+                )
+              }
+              role="link"
+              tabIndex={0}
+              aria-label={String(t("set-as-gallery-icon"))}
+              title={String(t("set-as-gallery-icon"))}
+            >
+              <BsBookmarkStar />
+            </ViewOnSiteLink>
+          ) : null}
           <CloseButton
             type="button"
             aria-label={String(t("close"))}

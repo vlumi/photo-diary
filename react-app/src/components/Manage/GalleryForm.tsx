@@ -9,6 +9,8 @@ import {
   type Theme,
 } from "../../services/galleries";
 import ThemePicker from "../ThemePicker";
+import IconCropper from "./IconCropper";
+import config from "../../lib/config";
 
 // Enum values must mirror server's GalleryUpdateBody. Kept inline
 // rather than importing from api-schema so the dropdowns don't
@@ -136,13 +138,80 @@ const Select = styled.select`
   box-sizing: border-box;
 `;
 
+interface PhotoLike {
+  id: string;
+}
+
+interface IconSource {
+  photoId: string;
+  crop?: { x: number; y: number; width: number; height: number };
+}
+
 interface Props {
   form: FormState;
   setField: (key: keyof FormState, value: string) => void;
+  // When both are present the icon field renders the cropper UI:
+  // current icon preview + Adjust button. Absent → falls back to a
+  // text input (Create flow has no gallery row yet so the cropper
+  // endpoint would 404).
+  galleryId?: string;
+  photos?: PhotoLike[];
+  iconSource?: IconSource | null;
+  // Auto-open the cropper modal on mount — used when the operator
+  // arrived via `?openIcon=<photoId>` from a photo view.
+  autoOpenCropper?: boolean;
+  // Called after the cropper modal closes (save or cancel), so the
+  // parent can clear a one-shot `bootstrap` source that fed
+  // `iconSource` for the auto-opened session.
+  onCropperClosed?: () => void;
+  onIconChanged?: (icon: string) => void;
 }
 
-const GalleryFormFields = ({ form, setField }: Props): React.ReactElement => {
+const IconPreview = styled.img`
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  border: 1px solid var(--inactive-color);
+  display: block;
+`;
+const IconRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+const AdjustButton = styled.button`
+  padding: 4px 10px;
+  border: 1px solid var(--inactive-color);
+  background: transparent;
+  color: var(--primary-color);
+  font: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    border-color: var(--primary-color);
+  }
+`;
+
+const GalleryFormFields = ({
+  form,
+  setField,
+  galleryId,
+  photos,
+  iconSource,
+  autoOpenCropper,
+  onCropperClosed,
+  onIconChanged,
+}: Props): React.ReactElement => {
   const { t } = useTranslation();
+  const [cropperOpen, setCropperOpen] = React.useState(false);
+  const canCrop = !!galleryId && !!photos;
+  React.useEffect(() => {
+    if (autoOpenCropper && canCrop) setCropperOpen(true);
+  }, [autoOpenCropper, canCrop]);
+  const closeCropper = () => {
+    setCropperOpen(false);
+    onCropperClosed?.();
+  };
   return (
     <>
       <Section>
@@ -163,13 +232,47 @@ const GalleryFormFields = ({ form, setField }: Props): React.ReactElement => {
         </Field>
         <Field>
           <FieldLabel>{t("manage-gallery-field-icon")}</FieldLabel>
-          <Input
-            value={form.icon}
-            onChange={(e) => setField("icon", e.target.value)}
-          />
-          <FieldHint>{t("manage-gallery-field-icon-hint")}</FieldHint>
+          {canCrop ? (
+            <IconRow>
+              {form.icon ? (
+                <IconPreview
+                  src={`${config.PHOTO_ROOT_URL}${form.icon}`}
+                  alt=""
+                />
+              ) : null}
+              <AdjustButton
+                type="button"
+                onClick={() => setCropperOpen(true)}
+              >
+                {iconSource
+                  ? t("manage-gallery-icon-adjust")
+                  : t("manage-gallery-icon-pick")}
+              </AdjustButton>
+            </IconRow>
+          ) : (
+            <Input
+              value={form.icon}
+              onChange={(e) => setField("icon", e.target.value)}
+            />
+          )}
+          {!canCrop ? (
+            <FieldHint>{t("manage-gallery-field-icon-hint")}</FieldHint>
+          ) : null}
         </Field>
       </Section>
+      {canCrop && cropperOpen ? (
+        <IconCropper
+          galleryId={galleryId as string}
+          photos={photos as PhotoLike[]}
+          initialSource={iconSource ?? null}
+          onClose={closeCropper}
+          onSaved={(icon) => {
+            closeCropper();
+            setField("icon", icon);
+            onIconChanged?.(icon);
+          }}
+        />
+      ) : null}
 
       <Section>
         <SectionTitle>{t("manage-gallery-section-display")}</SectionTitle>

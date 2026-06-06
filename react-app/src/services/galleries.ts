@@ -76,4 +76,23 @@ const remove = async (galleryId: string): Promise<void> => {
   );
 };
 
-export default { getAll, get, update, create, remove };
+export interface IconCrop {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const setIcon = async (
+  galleryId: string,
+  sourcePhotoId: string,
+  crop: IconCrop
+): Promise<{ icon: string }> =>
+  unwrap(
+    api.PUT("/api/v1/galleries/{galleryId}/icon", {
+      params: { path: { galleryId } },
+      body: { sourcePhotoId, crop },
+    })
+  ) as Promise<{ icon: string }>;
+
+export default { getAll, get, update, create, remove, setIcon };

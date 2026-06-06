@@ -904,6 +904,96 @@
         }
       }
     },
+    "/api/v1/galleries/{galleryId}/icon": {
+      "put": {
+        "summary": "Set gallery icon from a photo crop (gallery admin)",
+        "tags": [
+          "galleries"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "sourcePhotoId",
+                  "crop"
+                ],
+                "properties": {
+                  "sourcePhotoId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "crop": {
+                    "type": "object",
+                    "required": [
+                      "x",
+                      "y",
+                      "width",
+                      "height"
+                    ],
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "width": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "height": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "galleryId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "icon"
+                  ],
+                  "properties": {
+                    "icon": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/photos": {
       "get": {
         "summary": "List photos with optional filters; returns a paginated page of the matching set sorted newest-first by capture timestamp",

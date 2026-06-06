@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -181,12 +181,39 @@ interface GalleryData {
   title?: string;
   description?: string;
   icon?: string;
+  iconSource?: string | null;
   epoch?: string;
   epochType?: string;
   theme?: string;
   initialView?: string;
   hostname?: string;
+  photos?: Array<{ id: string }>;
 }
+
+interface ParsedIconSource {
+  photoId: string;
+  crop: { x: number; y: number; width: number; height: number };
+}
+
+const parseIconSource = (raw?: string | null): ParsedIconSource | null => {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as ParsedIconSource;
+    if (
+      typeof parsed.photoId === "string" &&
+      parsed.crop &&
+      typeof parsed.crop.x === "number" &&
+      typeof parsed.crop.y === "number" &&
+      typeof parsed.crop.width === "number" &&
+      typeof parsed.crop.height === "number"
+    ) {
+      return parsed;
+    }
+  } catch {
+    // Older / malformed payload — fall through to null.
+  }
+  return null;
+};
 
 const GalleryEdit = (): React.ReactElement => {
   const { t } = useTranslation();
@@ -205,7 +232,32 @@ const GalleryEdit = (): React.ReactElement => {
   const [form, setForm] = React.useState<FormState>(EMPTY_FORM);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
-  const [editing, setEditing] = React.useState(false);
+  // `?openIcon=<photoId>` arrives from the "Set as gallery icon"
+  // link on the photo view; it auto-opens the cropper on that
+  // photo. Promote into Edit mode + remember the bootstrap source
+  // so the form passes it to GalleryFormFields. Clear the URL
+  // param so a reload doesn't re-trigger the modal.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openIconParam = searchParams.get("openIcon");
+  const [bootstrapIconSource, setBootstrapIconSource] = React.useState<
+    { photoId: string } | null
+  >(openIconParam ? { photoId: openIconParam } : null);
+  const [editing, setEditing] = React.useState(!!openIconParam);
+  React.useEffect(() => {
+    if (openIconParam) {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("openIcon");
+          return next;
+        },
+        { replace: true }
+      );
+    }
+    // Strip the param exactly once, on mount. Subsequent state
+    // changes don't depend on it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     if (data) {
@@ -309,7 +361,27 @@ const GalleryEdit = (): React.ReactElement => {
 
       {editing ? (
         <>
-          <GalleryFormFields form={form} setField={setField} />
+          <GalleryFormFields
+            form={form}
+            setField={setField}
+            galleryId={galleryId}
+            photos={(data as GalleryData | undefined)?.photos ?? []}
+            iconSource={
+              bootstrapIconSource ??
+              parseIconSource(
+                (data as GalleryData | undefined)?.iconSource
+              )
+            }
+            autoOpenCropper={!!bootstrapIconSource}
+            onCropperClosed={() => setBootstrapIconSource(null)}
+            onIconChanged={() => {
+              queryClient.invalidateQueries({
+                queryKey: ["gallery", galleryId],
+              });
+              queryClient.invalidateQueries({ queryKey: ["manage-galleries"] });
+              queryClient.invalidateQueries({ queryKey: ["galleries"] });
+            }}
+          />
           <Footer>
             <span />
             <FooterRight>
