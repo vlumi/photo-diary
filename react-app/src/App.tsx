@@ -128,7 +128,9 @@ const App = (): React.ReactElement => {
   }, [meta, setBetaModes]);
 
   const themePreference = useThemePreferenceStore((s) => s.preference);
-  const baseTheme = theme.setTheme(themePreference ?? config.DEFAULT_THEME);
+  const baseTheme = theme.setTheme(
+    themePreference ?? meta?.defaultTheme ?? config.DEFAULT_THEME
+  );
 
   return (
     <>

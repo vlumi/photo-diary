@@ -184,7 +184,7 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     ? theme.setTheme(themePreference)
     : selectedGallery && selectedGallery.hasTheme() && selectedThemeName
       ? theme.setTheme(selectedThemeName)
-      : theme.setTheme(config.DEFAULT_THEME);
+      : theme.setTheme(meta?.defaultTheme ?? config.DEFAULT_THEME);
 
   if (error) {
     return <div className="error">Loading failed</div>;

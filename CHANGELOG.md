@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Instance `DEFAULT_THEME` (from `/api/v1/meta`'s `defaultTheme`) now actually applies on the Manage and Global Stats surfaces. The meta-to-config side-effect runs *after* render, so the first render with fresh meta still saw `config.DEFAULT_THEME = "blue"` (the hardcoded module-load baseline) and the mutated value never triggered another render. App.tsx, Gallery/index.tsx, and GlobalStats/index.tsx now read `meta?.defaultTheme` directly, falling back to `config.DEFAULT_THEME` only when meta hasn't resolved yet. GlobalStats also drops its own `<Global>` since the App-level one now handles theming for every route.
+
 ## [0.13.0] - 2026-06-06
 
 ### Server
