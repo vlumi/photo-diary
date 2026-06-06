@@ -147,6 +147,9 @@ const UserCreate = (): React.ReactElement => {
             onChange={(e) => setId(e.target.value)}
             $invalid={idTouched && !idValid}
             autoFocus
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
           />
           <FieldHint>{t("manage-user-field-id-hint")}</FieldHint>
         </Field>

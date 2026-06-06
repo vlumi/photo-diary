@@ -231,6 +231,9 @@ const GalleryFormFields = ({ form, setField }: Props): React.ReactElement => {
           <Input
             value={form.hostname}
             onChange={(e) => setField("hostname", e.target.value)}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
           />
           <FieldHint>{t("manage-gallery-field-hostname-hint")}</FieldHint>
         </Field>
