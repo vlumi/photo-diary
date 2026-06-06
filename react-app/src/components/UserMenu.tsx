@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
 import ThemePicker from "./ThemePicker";
+import { useHostScope } from "../lib/use-host-scope";
 import token from "../lib/token";
 import tokenService from "../services/tokens";
 import {
@@ -115,6 +116,7 @@ const UserMenu = (): React.ReactElement => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
+  const { isHostScoped } = useHostScope();
   const openLoginModal = useLoginModalStore((s) => s.open);
   const openChangePasswordModal = useChangePasswordModalStore((s) => s.open);
   const setUser = useUserStore((s) => s.setUser);
@@ -253,7 +255,7 @@ const UserMenu = (): React.ReactElement => {
               {t("manage-menu-entry")}
             </MenuItem>
           )}
-          {user.isAdmin() && (
+          {user.isAdmin() && !isHostScoped && (
             <MenuItem
               type="button"
               role="menuitem"

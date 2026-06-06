@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Navigate,
   Outlet,
   useLocation,
   useNavigate,
@@ -12,7 +13,20 @@ import { BsFillHouseFill, BsChevronRight } from "react-icons/bs";
 
 import useKeyPress from "../../lib/keypress";
 import galleriesService from "../../services/galleries";
+import { useHostScope } from "../../lib/use-host-scope";
 import { useLastGalleryPathStore, useUserStore } from "../../stores";
+
+// Routes whose endpoints reject with 404 on hostname-bound
+// instances (server-side `requireUnscoped`). Visiting them when
+// scoped is a dead end; redirect to `/m` so the Dashboard's
+// scope-aware tile set takes over.
+const GLOBAL_MANAGE_PATHS = [
+  "/m/photos",
+  "/m/galleries",
+  "/m/users",
+  "/m/groups",
+  "/m/access",
+];
 
 const Root = styled.div`
   padding: 0 5px;
@@ -206,6 +220,12 @@ const Manage = (): React.ReactElement => {
   const user = useUserStore((s) => s.user);
   const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
   const galleryId = params.galleryId;
+  const { isReady: hostScopeReady, isHostScoped } = useHostScope();
+  const onGlobalManagePath = GLOBAL_MANAGE_PATHS.some(
+    (p) => location.pathname === p || location.pathname.startsWith(`${p}/`)
+  );
+  const shouldBounceToDashboard =
+    hostScopeReady && isHostScoped && onGlobalManagePath;
 
   // Resolve the gallery's raw id to its title via a shared-cache
   // useQuery (same key shape as the rest of the app, so this
@@ -235,6 +255,8 @@ const Manage = (): React.ReactElement => {
     <NoticeBody>{t("manage-not-logged-in")}</NoticeBody>
   ) : !user.isAdmin() ? (
     <NoticeBody>{t("manage-not-admin")}</NoticeBody>
+  ) : shouldBounceToDashboard ? (
+    <Navigate to="/m" replace />
   ) : (
     <Outlet />
   );

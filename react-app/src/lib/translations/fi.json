@@ -126,6 +126,8 @@
     "manage-page-photos-title": "Valokuvat",
     "manage-page-inbox-title": "Saapuvat",
     "manage-dashboard-tile-photos-blurb": "Kaikki gallerioiden kuvat — suodatus, muokkaus, auditointi.",
+    "manage-dashboard-tile-gallery-edit": "Gallerian asetukset",
+    "manage-dashboard-tile-gallery-edit-blurb": "Muokkaa tämän gallerian otsikkoa, kuvausta, kuvaketta, teemaa ja muita näkymäasetuksia.",
     "manage-dashboard-tile-galleries-blurb": "Luo, muokkaa ja poista gallerioita.",
     "manage-dashboard-tile-users-blurb": "Käyttäjätilit ja pääkäyttäjärooli.",
     "manage-crumb-photos": "Valokuvat",

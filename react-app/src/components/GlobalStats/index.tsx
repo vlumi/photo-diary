@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ import theme from "../../lib/theme";
 import { type UniqueValues } from "../../lib/stats";
 import { buildUniqueValues } from "../../lib/uniqueValues";
 import config from "../../lib/config";
+import { useHostScope } from "../../lib/use-host-scope";
 import {
   useFiltersStore,
   useLangStore,
@@ -76,6 +77,7 @@ const GlobalStats = (): React.ReactElement => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
+  const { isReady: hostScopeReady, isHostScoped } = useHostScope();
   const lang = useLangStore((s) => s.lang);
   const countryData = useLangStore((s) => s.countryData);
   const filters = useFiltersStore((s) => s.filters);
@@ -134,6 +136,12 @@ const GlobalStats = (): React.ReactElement => {
   }
   if (!user.isAdmin()) {
     return frame(<Notice>{t("manage-not-admin")}</Notice>);
+  }
+  // Global stats endpoint is `requireUnscoped` on the server — 404s
+  // on a hostname-bound instance. Bounce to the picker instead of
+  // rendering a page whose queries all fail.
+  if (hostScopeReady && isHostScoped) {
+    return <Navigate to="/g" replace />;
   }
   if (!countryData || photosQuery.isLoading || !photos || !uniqueValues) {
     return frame(<Notice>{t("loading")}</Notice>);
