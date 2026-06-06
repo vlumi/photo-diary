@@ -17,7 +17,11 @@ const Root = styled.div`
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 5px;
+  /* Vertical padding sized so `align-items: center`'s slack on the
+     single-line layout (where min-height: 44 forces extra height
+     around ~22px content) is absorbed by the padding, so wrap-vs-
+     no-wrap don't visually shift the first row's top. */
+  padding: 11px 5px;
   gap: 6px;
   row-gap: 8px;
   /* 44px iOS HIG tap target. */
