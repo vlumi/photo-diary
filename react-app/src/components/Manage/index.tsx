@@ -33,7 +33,7 @@ const Root = styled.div`
 `;
 const Header = styled.div`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   padding: 0 5px;
@@ -42,7 +42,7 @@ const Header = styled.div`
 `;
 const Crumbs = styled.nav`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   flex: 1 1 auto;

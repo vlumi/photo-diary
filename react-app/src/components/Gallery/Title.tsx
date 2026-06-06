@@ -14,7 +14,7 @@ import type { Photo } from "../../models/PhotoModel";
 
 const Root = styled.div`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   padding: 0 5px;
@@ -24,12 +24,11 @@ const Root = styled.div`
 `;
 const Path = styled.nav`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
 `;
 const Separator = styled(BsChevronRight)`
   flex: 0 0 auto;
