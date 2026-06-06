@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 import {
   BsArrowsFullscreen,
+  BsBookmarkStar,
   BsFullscreenExit,
   BsInfoCircleFill,
   BsPencilSquare,
@@ -107,6 +108,11 @@ const FullscreenButton = styled(FloatingButton)`
 // 100 = FullscreenButton top 58 + 34px height + 8px clearance.
 const ManageButton = styled(FloatingButton)`
   top: 100px;
+  left: 8px;
+`;
+// 142 = ManageButton top 100 + 34px height + 8px clearance.
+const SetIconButton = styled(FloatingButton)`
+  top: 142px;
   left: 8px;
 `;
 const InfoButton = styled(FloatingButton)`
@@ -445,6 +451,20 @@ const Photo = ({
           >
             <BsPencilSquare />
           </ManageButton>
+        )}
+        {isAdmin && (
+          <SetIconButton
+            type="button"
+            onClick={() =>
+              navigate(
+                `/m/g/${gallery.id()}?openIcon=${encodeURIComponent(photo.id())}`
+              )
+            }
+            aria-label={String(t("set-as-gallery-icon"))}
+            title={String(t("set-as-gallery-icon"))}
+          >
+            <BsBookmarkStar />
+          </SetIconButton>
         )}
         <InfoButton
           type="button"

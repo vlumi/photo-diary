@@ -144,7 +144,7 @@ interface PhotoLike {
 
 interface IconSource {
   photoId: string;
-  crop: { x: number; y: number; width: number; height: number };
+  crop?: { x: number; y: number; width: number; height: number };
 }
 
 interface Props {
@@ -157,6 +157,10 @@ interface Props {
   galleryId?: string;
   photos?: PhotoLike[];
   iconSource?: IconSource | null;
+  // Auto-open the cropper modal on mount — used when the operator
+  // arrived via `?openIcon=<photoId>` from a photo view.
+  autoOpenCropper?: boolean;
+  onCropperOpened?: () => void;
   onIconChanged?: (icon: string) => void;
 }
 
@@ -191,11 +195,21 @@ const GalleryFormFields = ({
   galleryId,
   photos,
   iconSource,
+  autoOpenCropper,
+  onCropperOpened,
   onIconChanged,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const [cropperOpen, setCropperOpen] = React.useState(false);
   const canCrop = !!galleryId && !!photos;
+  React.useEffect(() => {
+    if (autoOpenCropper && canCrop) {
+      setCropperOpen(true);
+      onCropperOpened?.();
+    }
+    // Auto-open is a one-shot trigger from the parent; fire only
+    // when the flag flips true.
+  }, [autoOpenCropper, canCrop, onCropperOpened]);
   return (
     <>
       <Section>

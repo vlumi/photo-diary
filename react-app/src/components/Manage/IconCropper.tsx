@@ -14,7 +14,10 @@ interface PhotoLike {
 
 interface IconSource {
   photoId: string;
-  crop: IconCrop;
+  // Missing when the operator was bounced in via the "Set as
+  // gallery icon" link from a photo view — there's no saved rect
+  // yet. Cropper defaults to centered + zoom 1.
+  crop?: IconCrop;
 }
 
 interface Props {

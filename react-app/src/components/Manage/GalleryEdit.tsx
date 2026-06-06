@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -232,7 +232,32 @@ const GalleryEdit = (): React.ReactElement => {
   const [form, setForm] = React.useState<FormState>(EMPTY_FORM);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
-  const [editing, setEditing] = React.useState(false);
+  // `?openIcon=<photoId>` arrives from the "Set as gallery icon"
+  // link on the photo view; it auto-opens the cropper on that
+  // photo. Promote into Edit mode + remember the bootstrap source
+  // so the form passes it to GalleryFormFields. Clear the URL
+  // param so a reload doesn't re-trigger the modal.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openIconParam = searchParams.get("openIcon");
+  const [bootstrapIconSource, setBootstrapIconSource] = React.useState<
+    { photoId: string } | null
+  >(openIconParam ? { photoId: openIconParam } : null);
+  const [editing, setEditing] = React.useState(!!openIconParam);
+  React.useEffect(() => {
+    if (openIconParam) {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("openIcon");
+          return next;
+        },
+        { replace: true }
+      );
+    }
+    // Strip the param exactly once, on mount. Subsequent state
+    // changes don't depend on it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     if (data) {
@@ -341,9 +366,14 @@ const GalleryEdit = (): React.ReactElement => {
             setField={setField}
             galleryId={galleryId}
             photos={(data as GalleryData | undefined)?.photos ?? []}
-            iconSource={parseIconSource(
-              (data as GalleryData | undefined)?.iconSource
-            )}
+            iconSource={
+              bootstrapIconSource ??
+              parseIconSource(
+                (data as GalleryData | undefined)?.iconSource
+              )
+            }
+            autoOpenCropper={!!bootstrapIconSource}
+            onCropperOpened={() => setBootstrapIconSource(null)}
             onIconChanged={() => {
               queryClient.invalidateQueries({
                 queryKey: ["gallery", galleryId],
