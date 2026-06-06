@@ -731,50 +731,50 @@ const dbDump = JSON.stringify({
       secret: randomUUID(),
       is_admin: true,
     },
-    gallery1Admin: {
-      id: "gallery1Admin",
+    gallery1admin: {
+      id: "gallery1admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
-    gallery2Admin: {
-      id: "gallery2Admin",
+    gallery2admin: {
+      id: "gallery2admin",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
-    gallery1User: {
-      id: "gallery1User",
+    gallery1user: {
+      id: "gallery1user",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
-    gallery12User: {
-      id: "gallery12User",
+    gallery12user: {
+      id: "gallery12user",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
-    plainUser: {
-      id: "plainUser",
+    plainuser: {
+      id: "plainuser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
-    publicUser: {
-      id: "publicUser",
+    publicuser: {
+      id: "publicuser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
-    simpleUser: {
-      id: "simpleUser",
+    simpleuser: {
+      id: "simpleuser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
     },
-    blockedUser: {
-      id: "blockedUser",
+    blockeduser: {
+      id: "blockeduser",
       password: "$2b$10$7edID90/TmAdhGtJRqjDj.hBzXEJZorgDYZ9jwPcdDdqceYlaQ2ZG",
       secret: randomUUID(),
       is_admin: false,
@@ -785,34 +785,34 @@ const dbDump = JSON.stringify({
   // is "delete the row." `admin` user is global admin (is_admin flag on
   // the user table), so no rows here.
   accessControl: {
-    gallery1Admin: {
+    gallery1admin: {
       gallery1: { is_admin: true },
     },
-    gallery2Admin: {
+    gallery2admin: {
       gallery2: { is_admin: true },
     },
-    gallery1User: {
+    gallery1user: {
       gallery1: { is_admin: false },
     },
-    gallery12User: {
+    gallery12user: {
       gallery1: { is_admin: false },
       gallery2: { is_admin: false },
     },
-    // plainUser and publicUser previously used the `:all` / `:public`
+    // plainuser and publicuser previously used the `:all` / `:public`
     // wildcard rows. The post-#394 equivalent is explicit per-gallery
     // grants on every real gallery in the fixture.
-    plainUser: {
+    plainuser: {
       gallery1: { is_admin: false },
       gallery2: { is_admin: false },
       gallery3: { is_admin: false },
     },
-    publicUser: {
+    publicuser: {
       gallery1: { is_admin: false },
       gallery2: { is_admin: false },
       gallery3: { is_admin: false },
     },
-    simpleUser: {},
-    blockedUser: {},
+    simpleuser: {},
+    blockeduser: {},
     ":guest": {
       gallery3: { is_admin: false },
     },

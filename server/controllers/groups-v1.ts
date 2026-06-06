@@ -12,12 +12,13 @@ const init = async () => {
   await model.init();
 };
 
-// Group ids share the user-id namespace at the resolution layer (the
-// cascade joins user_gallery and group_gallery), so reject the `:`
-// sigil prefix to avoid collisions with `:guest`.
+// Group ids follow the slug shape used across user / gallery /
+// group: lowercase alnum + underscore / hyphen, starts with alnum.
+// URL-safe and avoids the `:` sigil colliding with reserved
+// pseudo-ids like `:guest`.
 const GroupId = Type.String({
   minLength: 1,
-  pattern: "^[^:].*$",
+  pattern: "^[a-z0-9][a-z0-9_-]*$",
 });
 const GroupIdParam = Type.Object({ groupId: GroupId });
 const MemberParams = Type.Object({

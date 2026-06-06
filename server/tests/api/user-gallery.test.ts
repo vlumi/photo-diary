@@ -16,17 +16,17 @@ describe("As guest", () => {
   test("List rejected", () => api.get("/api/v1/user-gallery").expect(403));
   test("Upsert rejected", () =>
     api
-      .put("/api/v1/user-gallery/plainUser/gallery1")
+      .put("/api/v1/user-gallery/plainuser/gallery1")
       .send({ isAdmin: false })
       .expect(403));
   test("Delete rejected", () =>
-    api.delete("/api/v1/user-gallery/plainUser/gallery1").expect(403));
+    api.delete("/api/v1/user-gallery/plainuser/gallery1").expect(403));
 });
 
-describe("As gallery1Admin (non-global)", () => {
+describe("As gallery1admin (non-global)", () => {
   let token: string;
   beforeEach(async () => {
-    token = await loginUser(api, "gallery1Admin");
+    token = await loginUser(api, "gallery1admin");
   });
   test("List rejected (global admin only)", () =>
     api
@@ -35,13 +35,13 @@ describe("As gallery1Admin (non-global)", () => {
       .expect(403));
   test("Upsert rejected", () =>
     api
-      .put("/api/v1/user-gallery/plainUser/gallery1")
+      .put("/api/v1/user-gallery/plainuser/gallery1")
       .set("Authorization", `Bearer ${token}`)
       .send({ isAdmin: false })
       .expect(403));
   test("Delete rejected", () =>
     api
-      .delete("/api/v1/user-gallery/plainUser/gallery1")
+      .delete("/api/v1/user-gallery/plainuser/gallery1")
       .set("Authorization", `Bearer ${token}`)
       .expect(403));
 });
@@ -62,12 +62,12 @@ describe("As admin", () => {
   test("Filter by userId", async () => {
     const result = await api
       .get("/api/v1/user-gallery")
-      .query({ userId: "gallery1Admin" })
+      .query({ userId: "gallery1admin" })
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(
       result.body.every(
-        (row: { user_id: string }) => row.user_id === "gallery1Admin"
+        (row: { user_id: string }) => row.user_id === "gallery1admin"
       )
     ).toBe(true);
   });
@@ -85,13 +85,13 @@ describe("As admin", () => {
   });
   test("Upsert grants view (is_admin=false)", async () => {
     await api
-      .put("/api/v1/user-gallery/plainUser/gallery1")
+      .put("/api/v1/user-gallery/plainuser/gallery1")
       .set("Authorization", `Bearer ${token}`)
       .send({ isAdmin: false })
       .expect(204);
     const result = await api
       .get("/api/v1/user-gallery")
-      .query({ userId: "plainUser", galleryId: "gallery1" })
+      .query({ userId: "plainuser", galleryId: "gallery1" })
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(result.body.length).toBe(1);
@@ -99,38 +99,38 @@ describe("As admin", () => {
   });
   test("Upsert promotes to gallery admin (is_admin=true)", async () => {
     await api
-      .put("/api/v1/user-gallery/gallery1Admin/gallery1")
+      .put("/api/v1/user-gallery/gallery1admin/gallery1")
       .set("Authorization", `Bearer ${token}`)
       .send({ isAdmin: true })
       .expect(204);
     const result = await api
       .get("/api/v1/user-gallery")
-      .query({ userId: "gallery1Admin", galleryId: "gallery1" })
+      .query({ userId: "gallery1admin", galleryId: "gallery1" })
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(result.body[0].is_admin).toBe(1);
   });
   test("Delete (revokes the row entirely)", async () => {
     await api
-      .delete("/api/v1/user-gallery/gallery1Admin/gallery1")
+      .delete("/api/v1/user-gallery/gallery1admin/gallery1")
       .set("Authorization", `Bearer ${token}`)
       .expect(204);
     const result = await api
       .get("/api/v1/user-gallery")
-      .query({ userId: "gallery1Admin", galleryId: "gallery1" })
+      .query({ userId: "gallery1admin", galleryId: "gallery1" })
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(result.body.length).toBe(0);
   });
   test("Upsert with invalid isAdmin → 400", () =>
     api
-      .put("/api/v1/user-gallery/plainUser/gallery1")
+      .put("/api/v1/user-gallery/plainuser/gallery1")
       .set("Authorization", `Bearer ${token}`)
       .send({ isAdmin: "yes" })
       .expect(400));
   test("Upsert with extra field → 400", () =>
     api
-      .put("/api/v1/user-gallery/plainUser/gallery1")
+      .put("/api/v1/user-gallery/plainuser/gallery1")
       .set("Authorization", `Bearer ${token}`)
       .send({ isAdmin: false, bogus: true })
       .expect(400));

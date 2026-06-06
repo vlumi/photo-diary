@@ -92,7 +92,7 @@ const ErrorBanner = styled.div`
 
 // Mirrors the server's id constraint: minLength 1, must not start
 // with ":" (reserved for pseudo-users like :guest).
-const ID_PATTERN = /^[^:].*$/;
+const ID_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
 const UserCreate = (): React.ReactElement => {
   const { t } = useTranslation();

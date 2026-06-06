@@ -1,3 +1,4 @@
+import { assertSlugId } from "../lib/id-shape.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 
@@ -25,6 +26,7 @@ const createGroup = async (group: {
   title?: string;
   description?: string;
 }) => {
+  assertSlugId(group.id);
   logger.debug("Creating group", { id: group.id });
   await db.createGroup({
     id: group.id,

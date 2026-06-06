@@ -23,7 +23,12 @@ const UserSummary = Type.Object({
 });
 const UsersListResponse = Type.Array(UserSummary);
 const UserCreateBody = Type.Object({
-  id: Type.String({ minLength: 1 }),
+  // Slug shape: lowercase alnum + underscore / hyphen, starts
+  // with alnum. URL-safe, no spaces / colons / uppercase. The
+  // `:guest` pseudo-user is seeded via migration 015, not
+  // through this endpoint, so the no-colon-start constraint is
+  // safe here.
+  id: Type.String({ minLength: 1, pattern: "^[a-z0-9][a-z0-9_-]*$" }),
   password: Type.String({ minLength: 1 }),
   isAdmin: Type.Optional(Type.Boolean()),
 });
