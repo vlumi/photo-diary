@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 
+import { NotFoundError } from "./errors.js";
 import logger from "./logger.js";
 
 // Icon source = the photo's `display/<id>` variant (~1280-1600px
@@ -38,7 +39,16 @@ export const writeGalleryIcon = async (
 ): Promise<string> => {
   await fs.promises.mkdir(ICON_DIR, { recursive: true });
   const sourcePath = path.join(DISPLAY_DIR, sourcePhotoId);
-  await fs.promises.access(sourcePath, fs.constants.R_OK);
+  try {
+    await fs.promises.access(sourcePath, fs.constants.R_OK);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new NotFoundError(
+        `Source photo display variant not found: ${sourcePhotoId}`
+      );
+    }
+    throw err;
+  }
   const outPath = path.join(ICON_DIR, `${galleryId}.jpg`);
   const oriented = sharp(sourcePath).rotate();
   const { width: srcWidth = 0, height: srcHeight = 0 } =
