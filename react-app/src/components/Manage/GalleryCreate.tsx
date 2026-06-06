@@ -159,6 +159,9 @@ const GalleryCreate = (): React.ReactElement => {
             onChange={(e) => setId(e.target.value)}
             $invalid={idTouched && !idValid}
             autoFocus
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
           />
           <FieldHint>{t("manage-gallery-field-id-hint")}</FieldHint>
         </Field>

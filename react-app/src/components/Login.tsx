@@ -135,6 +135,9 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
         value={userId}
         name="userId"
         autoComplete="username"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         placeholder={t("login-username")}
         autoFocus={autoFocus}
         onChange={({ target }) => setUserId(target.value)}
