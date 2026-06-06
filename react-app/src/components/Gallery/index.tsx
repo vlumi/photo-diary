@@ -219,12 +219,6 @@ const Gallery = ({ isStats = false }: Props): React.ReactElement => {
     if (visibleGalleries.length === 1) {
       return <Navigate to={visibleGalleries[0].path()} replace />;
     }
-    // Global admin on the primary (unbound) host → admin home.
-    // Bound hostnames fall through; the admin's per-virtual-host
-    // scope keeps them inside the configured gallery (#386).
-    if (!isHostScoped && user?.isAdmin()) {
-      return <Navigate to="/m" replace />;
-    }
     // Per-user last-viewed gallery — return signed-in users to
     // where they were instead of dumping them at the picker.
     // Validate against the current visible set; a revoked or
