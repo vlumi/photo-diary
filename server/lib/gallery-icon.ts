@@ -26,6 +26,11 @@ export const iconRelPath = (galleryId: string): string =>
 // Crop the photo's display variant to the requested square, resize
 // to 160x160, and write under `photos/gallery-icons/<galleryId>.jpg`.
 // Returns the relative path stored in `gallery.icon`.
+//
+// `.rotate()` with no arg applies the source's EXIF orientation so
+// the pixel space matches what the browser-side cropper saw — without
+// it, react-easy-crop's coords (in the displayed, auto-rotated
+// orientation) miss the raw-orientation image sharp reads.
 export const writeGalleryIcon = async (
   galleryId: string,
   sourcePhotoId: string,
@@ -35,13 +40,15 @@ export const writeGalleryIcon = async (
   const sourcePath = path.join(DISPLAY_DIR, sourcePhotoId);
   await fs.promises.access(sourcePath, fs.constants.R_OK);
   const outPath = path.join(ICON_DIR, `${galleryId}.jpg`);
-  await sharp(sourcePath)
-    .extract({
-      left: Math.max(0, Math.round(crop.x)),
-      top: Math.max(0, Math.round(crop.y)),
-      width: Math.max(1, Math.round(crop.width)),
-      height: Math.max(1, Math.round(crop.height)),
-    })
+  const oriented = sharp(sourcePath).rotate();
+  const { width: srcWidth = 0, height: srcHeight = 0 } =
+    await oriented.metadata();
+  const left = Math.max(0, Math.min(srcWidth - 1, Math.round(crop.x)));
+  const top = Math.max(0, Math.min(srcHeight - 1, Math.round(crop.y)));
+  const width = Math.max(1, Math.min(srcWidth - left, Math.round(crop.width)));
+  const height = Math.max(1, Math.min(srcHeight - top, Math.round(crop.height)));
+  await oriented
+    .extract({ left, top, width, height })
     .resize(ICON_SIZE, ICON_SIZE, { fit: "cover" })
     .jpeg({ quality: 90 })
     .toFile(outPath);
