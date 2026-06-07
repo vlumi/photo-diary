@@ -140,7 +140,9 @@ const ListBody = ({ galleries }: Props): React.ReactElement => {
             {gallery.title()}
           </GalleryTitle>
           {renderIcon(gallery)}
-          <Description>{gallery.description()}</Description>
+          {gallery.description() && (
+            <Description>{gallery.description()}</Description>
+          )}
         </Gallery>
       </Link>
     );
