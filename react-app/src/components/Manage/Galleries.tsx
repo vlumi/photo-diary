@@ -48,6 +48,13 @@ const Notice = styled.p`
   font-style: italic;
   margin: 0;
 `;
+// Horizontal scroll only when the columns can't fit (mobile /
+// narrow viewports). On wide screens it's a no-op — the table
+// already fills 100% inside the Root's 1200px max-width.
+const TableScroll = styled.div`
+  overflow-x: auto;
+  width: 100%;
+`;
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -156,8 +163,9 @@ const Galleries = (): React.ReactElement => {
       ) : rows.length === 0 ? (
         <Notice>{t("manage-galleries-empty")}</Notice>
       ) : (
-        <Table>
-          <thead>
+        <TableScroll>
+          <Table>
+            <thead>
             <tr>
               <Th>{t("manage-galleries-col-id")}</Th>
               <Th>{t("manage-galleries-col-title")}</Th>
@@ -208,7 +216,8 @@ const Galleries = (): React.ReactElement => {
               </Row>
             ))}
           </tbody>
-        </Table>
+          </Table>
+        </TableScroll>
       )}
     </Root>
   );

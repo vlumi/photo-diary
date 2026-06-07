@@ -109,6 +109,14 @@ const Chip = styled.button<{ $active: boolean }>`
   font-size: 0.85em;
   cursor: pointer;
 `;
+// Mobile / narrow-viewport horizontal scroll for the wide access
+// table. On desktop it's a no-op — the table fits inside the
+// Root's 1200px bound; on phones the columns scroll instead of
+// pushing the whole page wide.
+const TableScroll = styled.div`
+  overflow-x: auto;
+  width: 100%;
+`;
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -603,7 +611,8 @@ const Access = (): React.ReactElement => {
       ) : sorted.length === 0 ? (
         <Notice>{t("manage-access-empty")}</Notice>
       ) : (
-        <Table>
+        <TableScroll>
+          <Table>
           <thead>
             <tr>
               <Th $sortable onClick={() => setSort("type")}>
@@ -718,7 +727,8 @@ const Access = (): React.ReactElement => {
               </tr>
             ))}
           </tbody>
-        </Table>
+          </Table>
+        </TableScroll>
       )}
 
       <AddGrantPanel
