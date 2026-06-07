@@ -182,7 +182,7 @@ const Galleries = (): React.ReactElement => {
                     <ActionButton
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/m/g/${g.id}/photos`);
+                        navigate(`/m/photos?gallery=${g.id}`);
                       }}
                       role="link"
                       tabIndex={0}

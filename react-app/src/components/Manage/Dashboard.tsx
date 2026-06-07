@@ -185,7 +185,7 @@ const galleryScopedTiles = (galleryId: string): TileSpec[] => [
     blurbKey: "manage-dashboard-tile-gallery-edit-blurb",
   },
   {
-    path: `/m/g/${galleryId}/photos`,
+    path: `/m/photos?gallery=${galleryId}`,
     Icon: BsImages,
     titleKey: "manage-page-photos-title",
     blurbKey: "manage-dashboard-tile-photos-blurb",

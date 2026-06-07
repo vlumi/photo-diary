@@ -17,7 +17,6 @@ import Gallery from "./components/Gallery";
 import Manage from "./components/Manage";
 import ManagePlaceholder from "./components/Manage/Placeholder";
 import ManagePhotos from "./components/Manage/Photos";
-import ManageGalleryPhotos from "./components/Manage/GalleryPhotos";
 import ManagePhotoDrawer from "./components/Manage/PhotoDrawer";
 import ManageGalleries from "./components/Manage/Galleries";
 import ManageGalleryEdit from "./components/Manage/GalleryEdit";
@@ -182,9 +181,6 @@ const App = (): React.ReactElement => {
                 </Route>
                 <Route path="g/:galleryId">
                   <Route index element={<ManageGalleryEdit />} />
-                  <Route path="photos" element={<ManageGalleryPhotos />}>
-                    <Route path=":photoId" element={<ManagePhotoDrawer />} />
-                  </Route>
                   <Route path="access" element={<ManageGalleryAccess />} />
                 </Route>
               </Route>

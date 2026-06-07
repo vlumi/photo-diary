@@ -301,16 +301,11 @@ const MISSING_FIELDS: MissingField[] = [
 // Parse the searchParams into a typed PhotoFilter. Filters that aren't
 // present in the URL collapse to undefined / false / [].
 const filterFromSearchParams = (
-  searchParams: URLSearchParams,
-  galleryId: string | undefined
+  searchParams: URLSearchParams
 ): PhotoFilter => {
   const filter: PhotoFilter = {};
-  if (galleryId) {
-    filter.galleryIds = [galleryId];
-  } else {
-    const galleries = searchParams.getAll("gallery");
-    if (galleries.length > 0) filter.galleryIds = galleries;
-  }
+  const galleries = searchParams.getAll("gallery");
+  if (galleries.length > 0) filter.galleryIds = galleries;
   if (searchParams.get("orphan") === "1") filter.orphan = true;
   const dateFrom = searchParams.get("dateFrom");
   if (dateFrom) filter.dateFrom = dateFrom;
@@ -334,16 +329,9 @@ const pageFromSearchParams = (searchParams: URLSearchParams): number => {
   return Number.isFinite(n) && n > 0 ? n : 1;
 };
 
-interface Props {
-  // When set, the photos list is locked to this gallery and the
-  // gallery-membership facet hides. Cross-gallery view (`/m/photos`)
-  // passes undefined.
-  galleryId?: string;
-}
-
 const PAGE_SIZE = 100;
 
-const Photos = ({ galleryId }: Props): React.ReactElement => {
+const Photos = (): React.ReactElement => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
@@ -375,8 +363,8 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   };
 
   const filter = React.useMemo(
-    () => filterFromSearchParams(searchParams, galleryId),
-    [searchParams, galleryId]
+    () => filterFromSearchParams(searchParams),
+    [searchParams]
   );
   const page = pageFromSearchParams(searchParams);
 
@@ -425,11 +413,10 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
   }, [focusOpen, data?.page, setSearchParams]);
 
   // Galleries list for the gallery-membership facet. Skipped in
-  // gallery-scoped mode where the gallery is fixed.
+  // Galleries list for the gallery-membership facet and chips.
   const galleriesQuery = useQuery({
     queryKey: ["galleries"],
     queryFn: galleriesService.getAll,
-    enabled: !galleryId,
   });
   const galleries = React.useMemo(() => {
     const raw =
@@ -550,33 +537,31 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           }}
         />
       </FilterGroup>
-      {!galleryId && (
-        <FilterGroup>
-          <FilterTitle>{t("manage-photos-filter-gallery")}</FilterTitle>
-          <ChipRow>
-            <Chip
-              type="button"
-              $active={searchParams.get("orphan") === "1"}
-              onClick={() => toggleBoolParam("orphan")}
-            >
-              {t("manage-photos-filter-orphan")}
-            </Chip>
-            {galleries.map((g) => {
-              const active = searchParams.getAll("gallery").includes(g.id);
-              return (
-                <Chip
-                  key={g.id}
-                  type="button"
-                  $active={active}
-                  onClick={() => toggleArrayParam("gallery", g.id)}
-                >
-                  {g.title || g.id}
-                </Chip>
-              );
-            })}
-          </ChipRow>
-        </FilterGroup>
-      )}
+      <FilterGroup>
+        <FilterTitle>{t("manage-photos-filter-gallery")}</FilterTitle>
+        <ChipRow>
+          <Chip
+            type="button"
+            $active={searchParams.get("orphan") === "1"}
+            onClick={() => toggleBoolParam("orphan")}
+          >
+            {t("manage-photos-filter-orphan")}
+          </Chip>
+          {galleries.map((g) => {
+            const active = searchParams.getAll("gallery").includes(g.id);
+            return (
+              <Chip
+                key={g.id}
+                type="button"
+                $active={active}
+                onClick={() => toggleArrayParam("gallery", g.id)}
+              >
+                {g.title || g.id}
+              </Chip>
+            );
+          })}
+        </ChipRow>
+      </FilterGroup>
       <FilterGroup>
         <FilterTitle>{t("manage-photos-filter-audit")}</FilterTitle>
         <ChipRow>
@@ -726,7 +711,6 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
           <BulkActions
             selectedIds={[...selectedIds]}
             galleries={galleries}
-            scopedGalleryId={galleryId}
             onDone={refreshAfterBulk}
             onCancel={clearSelection}
           />

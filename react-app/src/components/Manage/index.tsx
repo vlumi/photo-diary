@@ -19,9 +19,12 @@ import { useLastGalleryPathStore, useUserStore } from "../../stores";
 // Routes whose endpoints reject with 404 on hostname-bound
 // instances (server-side `requireUnscoped`). Visiting them when
 // scoped is a dead end; redirect to `/m` so the Dashboard's
-// scope-aware tile set takes over.
+// scope-aware tile set takes over. `/m/photos` is intentionally
+// absent — the server already auto-filters the photos endpoint
+// by host scope, so a hostname-bound operator visiting it sees
+// only their own gallery's photos, which is exactly what their
+// gallery-scoped Photos tile now links to.
 const GLOBAL_MANAGE_PATHS = [
-  "/m/photos",
   "/m/galleries",
   "/m/users",
   "/m/groups",
@@ -162,21 +165,14 @@ const buildCrumbs = (
   out.push({ kind: "link", path: "/m", label: t("manage-root") });
 
   if (tail[0] === "g") {
-    // /m/g/<id>[/sub[/photoId]]
+    // /m/g/<id>[/sub]
     out.push({ kind: "link", path: "/m/galleries", label: t("manage-page-galleries-title") });
     const galleryId = tail[1];
     if (!galleryId) return out;
     const sub = tail[2];
     const galleryLabel = resolved.galleryTitle ?? galleryId;
     pushLinkOrLeaf(!sub, `/m/g/${galleryId}`, galleryLabel);
-    if (sub === "photos") {
-      // The photoId tail segment drives the drawer-open state on
-      // the Photos page (so deep-linking still works), but it
-      // isn't a navigation level — Photos is always the deepest
-      // breadcrumb leaf whether or not a drawer is open. The
-      // drawer's own header names the photo.
-      out.push({ kind: "leaf", label: t("manage-crumb-photos") });
-    } else if (sub === "access") {
+    if (sub === "access") {
       out.push({ kind: "leaf", label: t("manage-page-gallery-access-title") });
     } else if (sub) {
       out.push({ kind: "leaf", label: sub });
