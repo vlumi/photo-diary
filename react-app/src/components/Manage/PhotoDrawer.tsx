@@ -7,6 +7,8 @@ import {
   BsArrowClockwise,
   BsBookmarkStar,
   BsBoxArrowUpRight,
+  BsClipboard,
+  BsClipboardCheck,
   BsX,
 } from "react-icons/bs";
 
@@ -291,6 +293,32 @@ const InlineActionButton = styled.button`
     cursor: default;
   }
 `;
+const CopyIconButton = styled.button`
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  margin-left: 6px;
+  background: transparent;
+  color: var(--inactive-color);
+  border: none;
+  border-radius: 3px;
+  font-size: 0.85em;
+  cursor: pointer;
+  vertical-align: middle;
+  &:hover {
+    color: var(--primary-color);
+  }
+  &:focus-visible {
+    outline: 1px solid var(--primary-color);
+    outline-offset: 1px;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+`;
 const EmptyValue = styled.span`
   font-style: italic;
 `;
@@ -388,6 +416,47 @@ interface PhotoData {
     };
   };
 }
+
+// Small inline copy-to-clipboard button used in the read-only meta
+// rows (id, original filename). Falls back to hidden when the
+// clipboard API isn't available (non-HTTPS dev origins). Flashes
+// a check icon for 1.5s after a successful copy so the operator
+// sees the action register without needing a separate toast.
+const CopyButton = ({
+  value,
+  label,
+}: {
+  value: string;
+  label: string;
+}): React.ReactElement | null => {
+  const [copied, setCopied] = React.useState(false);
+  const hasClipboard =
+    typeof navigator !== "undefined" &&
+    typeof navigator.clipboard?.writeText === "function";
+  React.useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  if (!hasClipboard) return null;
+  const onClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    void navigator.clipboard.writeText(value).then(
+      () => setCopied(true),
+      () => undefined
+    );
+  };
+  return (
+    <CopyIconButton
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+    >
+      {copied ? <BsClipboardCheck aria-hidden /> : <BsClipboard aria-hidden />}
+    </CopyIconButton>
+  );
+};
 
 // Editable subset of the photo — mirrors the server's PhotoUpdateBody
 // schema. EXIF / geocoded fields stay read-only.
@@ -1099,11 +1168,23 @@ const PhotoDrawer = (): React.ReactElement => {
           <SectionTitle>{t("manage-photo-section-readonly")}</SectionTitle>
           <MetaTable>
             <MetaLabel>{t("manage-photo-field-id")}</MetaLabel>
-            <MetaValue>{data.id}</MetaValue>
+            <MetaValue>
+              {data.id}
+              <CopyButton
+                value={data.id}
+                label={String(t("manage-photo-field-copy-id"))}
+              />
+            </MetaValue>
             {data.originalFilename && (
               <>
                 <MetaLabel>{t("manage-photo-field-original-filename")}</MetaLabel>
-                <MetaValue>{data.originalFilename}</MetaValue>
+                <MetaValue>
+                  {data.originalFilename}
+                  <CopyButton
+                    value={data.originalFilename}
+                    label={String(t("manage-photo-field-copy-original-filename"))}
+                  />
+                </MetaValue>
               </>
             )}
             {data.taken?.instant?.timestamp && (
