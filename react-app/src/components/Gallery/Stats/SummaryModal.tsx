@@ -193,7 +193,7 @@ const SummaryModal = ({
         return `${format.padNumber(Number(key), 2)}:00`;
       case "country":
         return (
-          format.countryName(lang, countryData)(String(key)) ?? String(key)
+          format.countryName(lang, countryData, t)(String(key)) ?? String(key)
         );
       case "state":
         return format.subdivisionName(lang, String(key));

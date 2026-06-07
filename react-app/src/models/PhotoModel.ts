@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next";
+
 import format from "../lib/format";
 import cropFactors from "../lib/crop-factors.json";
 
@@ -283,9 +285,13 @@ const PhotoModel = (photoData: unknown) => {
 
     hasCountry: (): boolean => !!photo.taken.location?.country,
     countryCode: (): string | undefined => photo.taken.location?.country,
-    countryName: (lang: string, countryData: CountryData): string =>
+    countryName: (
+      lang: string,
+      countryData: CountryData,
+      t?: TFunction
+    ): string =>
       self.hasCountry() && self.countryCode()
-        ? format.countryName(lang, countryData)(self.countryCode() as string)
+        ? format.countryName(lang, countryData, t)(self.countryCode() as string)
         : "",
     hasPlace: (): boolean => !!photo.taken.location?.place,
     place: (): string | undefined => photo.taken.location?.place,

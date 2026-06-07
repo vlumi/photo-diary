@@ -24,6 +24,15 @@ const isMissing = (v: unknown): boolean =>
   v === "unknown" ||
   v === "Invalid date";
 
+// User-assigned ISO 3166 code for "no country" — operator-applied to
+// photos taken in international waters or otherwise outside any
+// nation's territory. Treated as a deliberate value (not missing,
+// not a mismatch against any geocoded countryCode). Matches the
+// client-side sentinel in `react-app/src/lib/country-sentinel.ts`.
+export const COUNTRY_SENTINEL = "xx";
+const isCountrySentinel = (c: unknown): boolean =>
+  typeof c === "string" && c.toLowerCase() === COUNTRY_SENTINEL;
+
 const hasCoords = (p: any): boolean => {
   const lat = p.taken?.location?.coordinates?.latitude;
   const lon = p.taken?.location?.coordinates?.longitude;
@@ -48,11 +57,14 @@ export const MISSING_PREDICATES: Record<MissingField, (p: any) => boolean> = {
 // The reverse — operator set, geocoded empty — is silent: the
 // geocoder may simply not have run yet (no coords, rate-limit,
 // or Nominatim cache miss), and that's not an operator data
-// problem.
+// problem. Operator-set sentinel (`xx` = no country) silences
+// the predicate entirely — it's a deliberate "this row is not
+// in any country" mark, not a mismatch.
 export const countryMismatch = (p: any): boolean => {
   const geocoded = p.geocoded?.countryCode;
   if (isMissing(geocoded)) return false;
   const operator = p.taken?.location?.country;
+  if (isCountrySentinel(operator)) return false;
   if (isMissing(operator)) return true;
   return String(operator).toLowerCase() !== String(geocoded).toLowerCase();
 };

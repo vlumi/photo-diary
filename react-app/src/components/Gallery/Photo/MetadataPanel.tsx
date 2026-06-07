@@ -9,6 +9,7 @@ import FlagIcon from "../../FlagIcon";
 import MapContainer from "../../MapContainer.lazy";
 
 import format from "../../../lib/format";
+import { isCountrySentinel } from "../../../lib/country-sentinel";
 import { useBetaStore } from "../../../stores";
 
 import type { Gallery } from "../../../models/GalleryModel";
@@ -180,22 +181,26 @@ const MetadataPanel = ({
       : undefined;
     const operatorCountryName =
       !geocodedAddress && photo.hasCountry() && photo.countryCode()
-        ? photo.countryName(lang, countryData)
+        ? photo.countryName(lang, countryData, t)
         : undefined;
     const text = geocodedAddress ?? operatorCountryName;
     const code = photo.geocodedCountryCode() ?? photo.countryCode();
     if (!text && !code) return null;
     const flagAt = format.geocodedFlagPosition(lang);
+    // No country sentinel — render the localised label without a
+    // flag (the sentinel isn't a real ISO code so FlagIcon would
+    // fall back to a broken/empty image).
+    const showFlag = code && !isCountrySentinel(code);
     return (
       <Row>
         <Part>
-          {code && flagAt === "start" ? (
+          {showFlag && flagAt === "start" ? (
             <>
               <FlagIcon code={code} />{" "}
             </>
           ) : null}
           {text}
-          {code && flagAt === "end" ? (
+          {showFlag && flagAt === "end" ? (
             <>
               {" "}
               <FlagIcon code={code} />

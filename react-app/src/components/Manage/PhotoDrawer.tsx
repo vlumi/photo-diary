@@ -18,6 +18,10 @@ import photosService, {
 } from "../../services/photos";
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
+import {
+  COUNTRY_SENTINEL,
+  isCountrySentinel,
+} from "../../lib/country-sentinel";
 import { useLangStore } from "../../stores";
 import EditableMap from "./EditableMap.lazy";
 
@@ -750,10 +754,27 @@ const CountrySelect = ({
 
   const display = React.useMemo(() => {
     if (!value) return "";
+    if (isCountrySentinel(value)) {
+      return String(t("country-sentinel-label"));
+    }
     const upper = value.toUpperCase();
     const name = names[upper];
     return name ? `${name} (${upper.toUpperCase()})` : upper.toUpperCase();
-  }, [value, names]);
+  }, [value, names, t]);
+
+  // Whether the operator's typed filter matches the sentinel
+  // option. Lets typing `no country` / "international" / `xx`
+  // surface the pinned top option even when it doesn't fit the
+  // ISO-code-or-name shape the rest of the matcher checks.
+  const sentinelLabel = String(t("country-sentinel-label"));
+  const sentinelMatches = React.useMemo(() => {
+    const needle = filter.trim().toLowerCase();
+    if (!needle) return true;
+    return (
+      sentinelLabel.toLowerCase().includes(needle) ||
+      "xx".includes(needle)
+    );
+  }, [filter, sentinelLabel]);
 
   const choose = (code: string) => {
     onChange(code);
@@ -768,8 +789,12 @@ const CountrySelect = ({
     // filter to browse; no scroll-into-view needed because the
     // pre-population keeps the match set small enough to fit.
     if (value) {
-      const upper = value.toUpperCase();
-      setFilter(names[upper] ?? upper);
+      if (isCountrySentinel(value)) {
+        setFilter(sentinelLabel);
+      } else {
+        const upper = value.toUpperCase();
+        setFilter(names[upper] ?? upper);
+      }
     }
     setOpen(true);
   };
@@ -801,7 +826,18 @@ const CountrySelect = ({
               <span>{t("manage-photo-country-clear")}</span>
             </CountryOption>
           )}
-          {matches.length === 0 && (
+          {sentinelMatches && (
+            <CountryOption
+              type="button"
+              $active={isCountrySentinel(value)}
+              onClick={() => choose(COUNTRY_SENTINEL)}
+              title={sentinelLabel}
+            >
+              <span>{sentinelLabel}</span>
+              <CountryCode>XX</CountryCode>
+            </CountryOption>
+          )}
+          {matches.length === 0 && !sentinelMatches && (
             <CountryOption type="button" $active={false} disabled>
               <span>{t("manage-photo-country-no-match")}</span>
             </CountryOption>

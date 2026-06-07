@@ -249,6 +249,7 @@
     "manage-photo-country-filter-placeholder": "Type to filter (or paste a 2-letter code)",
     "manage-photo-country-clear": "Clear country",
     "manage-photo-country-no-match": "No matching country.",
+    "country-sentinel-label": "International / no country",
     "manage-galleries-load-error": "Failed to load galleries.",
     "manage-galleries-empty": "No galleries.",
     "manage-galleries-col-id": "ID",

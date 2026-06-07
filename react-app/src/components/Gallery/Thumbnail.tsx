@@ -1,11 +1,13 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
 
 import FlagIcon from "../FlagIcon";
 
 import Link from "./Link";
 
 import config from "../../lib/config";
+import { isCountrySentinel } from "../../lib/country-sentinel";
 
 import type { Gallery } from "../../models/GalleryModel";
 import type { Photo } from "../../models/PhotoModel";
@@ -57,6 +59,7 @@ const Thumbnail = ({
   countryData,
   highlighted,
 }: Props): React.ReactElement => {
+  const { t } = useTranslation();
   const url = `url("${config.PHOTO_ROOT_URL}thumbnail/${photo.id()}")`;
   const dimensions = photo.thumbnailDimensions();
   const style = {
@@ -67,12 +70,16 @@ const Thumbnail = ({
 
   const renderFlag = () => {
     const countryCode = photo.countryCode();
-    return photo.hasCountry() && countryCode ? (
-      <Flag title={photo.countryName(lang, countryData)}>
+    if (!photo.hasCountry() || !countryCode) return "";
+    // No-country sentinel — render the localised label as a tooltip
+    // but skip the flag icon (the sentinel isn't a real ISO code).
+    if (isCountrySentinel(countryCode)) {
+      return <Flag title={photo.countryName(lang, countryData, t)} />;
+    }
+    return (
+      <Flag title={photo.countryName(lang, countryData, t)}>
         <StyledFlagIcon code={countryCode} />
       </Flag>
-    ) : (
-      ""
     );
   };
   return (
