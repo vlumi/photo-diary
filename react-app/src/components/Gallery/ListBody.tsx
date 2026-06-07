@@ -76,11 +76,27 @@ const GalleryTitle = styled("h3", {
   text-align: center;
   margin: 0;
 `;
+// Reserve a square slot for the icon on every card so the layout
+// stays consistent whether or not the operator has cropped one.
+// `aspect-ratio: 1 / 1` pins the height to the card's full 214px
+// width; the placeholder background fills the slot for un-iconed
+// galleries.
 const IconContainer = styled.div`
   margin: 0;
-`;
-const Icon = styled.img`
   width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--tile-background);
+`;
+// `display: block` kills the ~4px inline-baseline gap an <img>
+// otherwise leaves between itself and the surrounding box — that
+// gap showed through as a white stripe at the bottom of the
+// header-color tile. `object-fit: cover` keeps the cropped icon
+// filling the square without distortion.
+const Icon = styled.img`
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 const Description = styled.div`
   margin: 5px;
@@ -99,7 +115,7 @@ const ListBody = ({ galleries }: Props): React.ReactElement => {
   const { isHostScoped } = useHostScope();
   const renderIcon = (gallery: GalleryT) => {
     if (!gallery.hasIcon()) {
-      return "";
+      return <IconContainer aria-hidden />;
     }
     const url = `${config.PHOTO_ROOT_URL}${gallery.icon()}`;
     return (
@@ -124,7 +140,9 @@ const ListBody = ({ galleries }: Props): React.ReactElement => {
             {gallery.title()}
           </GalleryTitle>
           {renderIcon(gallery)}
-          <Description>{gallery.description()}</Description>
+          {gallery.description() && (
+            <Description>{gallery.description()}</Description>
+          )}
         </Gallery>
       </Link>
     );
