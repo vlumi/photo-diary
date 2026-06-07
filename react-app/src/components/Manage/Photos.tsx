@@ -148,18 +148,13 @@ const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 8px;
-  position: relative;
-  touch-action: pan-y;
   user-select: none;
 `;
-const DragRect = styled.div`
-  position: absolute;
-  pointer-events: none;
-  background: rgba(64, 96, 192, 0.18);
-  border: 1px dashed var(--header-background);
-  z-index: 5;
-`;
-const Tile = styled.button<{ $focused?: boolean; $selected?: boolean }>`
+const Tile = styled.button<{
+  $focused?: boolean;
+  $selected?: boolean;
+  $selectionMode?: boolean;
+}>`
   display: flex;
   flex-direction: column;
   background: var(--tile-background);
@@ -178,6 +173,8 @@ const Tile = styled.button<{ $focused?: boolean; $selected?: boolean }>`
   box-shadow: ${({ $focused, $selected }) =>
     $focused || $selected ? "0 0 0 2px var(--header-background)" : "none"};
   position: relative;
+  touch-action: ${({ $selectionMode }) =>
+    $selectionMode ? "none" : "auto"};
   &:hover,
   &:focus-visible {
     border-color: var(--primary-color);
@@ -374,6 +371,8 @@ const Photos = (): React.ReactElement => {
 
   const LONG_PRESS_MS = 400;
   const POINTER_MOVE_CANCEL_PX = 10;
+  const AUTO_SCROLL_EDGE_PX = 80;
+  const AUTO_SCROLL_STEP_PX = 14;
   const longPressTimer = React.useRef<number | null>(null);
   const longPressFired = React.useRef(false);
   const longPressStart = React.useRef<{ x: number; y: number } | null>(null);
@@ -385,14 +384,83 @@ const Photos = (): React.ReactElement => {
     longPressStart.current = null;
   };
 
-  const gridRef = React.useRef<HTMLDivElement | null>(null);
-  const [dragRect, setDragRect] = React.useState<{
-    startX: number;
-    startY: number;
-    currX: number;
-    currY: number;
+  // Touch sweep-select. After long-press fires (or after a pending
+  // drag in selection mode crosses the move threshold), every tile
+  // the finger crosses gets the "paint" outcome — either select or
+  // deselect depending on the originating tile's pre-toggle state.
+  // Auto-scrolls the page when the finger nears the viewport edge.
+  const pendingSweepRef = React.useRef<{
+    photoId: string;
+    paintSelect: boolean;
   } | null>(null);
-  const dragBaselineRef = React.useRef<Set<string> | null>(null);
+  const sweepRef = React.useRef<{
+    paintSelect: boolean;
+    lastTileId: string | null;
+    pointerX: number;
+    pointerY: number;
+    rafId: number | null;
+  } | null>(null);
+  const applyPaint = (photoId: string, paintSelect: boolean) => {
+    setSelectedIds((prev) => {
+      const has = prev.has(photoId);
+      if (paintSelect === has) return prev;
+      const next = new Set(prev);
+      if (paintSelect) next.add(photoId);
+      else next.delete(photoId);
+      return next;
+    });
+  };
+  const paintAtPoint = (clientX: number, clientY: number) => {
+    const s = sweepRef.current;
+    if (!s) return;
+    const el = document.elementFromPoint(clientX, clientY);
+    const tile = el?.closest("[data-photo-id]") as HTMLElement | null;
+    const id = tile?.getAttribute("data-photo-id") ?? null;
+    if (id && id !== s.lastTileId) {
+      s.lastTileId = id;
+      applyPaint(id, s.paintSelect);
+    }
+  };
+  const tickAutoScroll = () => {
+    const s = sweepRef.current;
+    if (!s) return;
+    let dir = 0;
+    if (s.pointerY < AUTO_SCROLL_EDGE_PX) dir = -1;
+    else if (s.pointerY > window.innerHeight - AUTO_SCROLL_EDGE_PX) dir = 1;
+    if (dir === 0) {
+      s.rafId = null;
+      return;
+    }
+    window.scrollBy(0, dir * AUTO_SCROLL_STEP_PX);
+    paintAtPoint(s.pointerX, s.pointerY);
+    s.rafId = requestAnimationFrame(tickAutoScroll);
+  };
+  const ensureAutoScrollTick = () => {
+    const s = sweepRef.current;
+    if (!s || s.rafId !== null) return;
+    s.rafId = requestAnimationFrame(tickAutoScroll);
+  };
+  const beginSweep = (
+    photoId: string,
+    paintSelect: boolean,
+    clientX: number,
+    clientY: number
+  ) => {
+    sweepRef.current = {
+      paintSelect,
+      lastTileId: photoId,
+      pointerX: clientX,
+      pointerY: clientY,
+      rafId: null,
+    };
+    ensureAutoScrollTick();
+  };
+  const endSweep = () => {
+    const s = sweepRef.current;
+    if (!s) return;
+    if (s.rafId !== null) cancelAnimationFrame(s.rafId);
+    sweepRef.current = null;
+  };
   // The drawer mounts at /m/photos/:photoId via a nested
   // <Outlet>; this Photos page is the parent.
   const openPhoto = (id: string) => {
@@ -656,78 +724,62 @@ const Photos = (): React.ReactElement => {
     if (e.pointerType === "mouse") return;
     longPressFired.current = false;
     longPressStart.current = { x: e.clientX, y: e.clientY };
-    longPressTimer.current = window.setTimeout(() => {
-      longPressFired.current = true;
-      longPressTimer.current = null;
-      toggleSelected(photoId);
-    }, LONG_PRESS_MS);
+    if (selectedIds.size > 0) {
+      // Already in selection mode — pending sweep. A pointer-move
+      // past the threshold promotes to active sweep painting the
+      // opposite of this tile's current state; staying still falls
+      // through to onClick which toggles via handleTileClick.
+      pendingSweepRef.current = {
+        photoId,
+        paintSelect: !selectedIds.has(photoId),
+      };
+    } else {
+      // No selection yet — long-press timer. On fire, toggle the
+      // tile and immediately enter sweep so the finger can keep
+      // painting more tiles without lifting.
+      longPressTimer.current = window.setTimeout(() => {
+        longPressFired.current = true;
+        longPressTimer.current = null;
+        const wasSelected = selectedIds.has(photoId);
+        applyPaint(photoId, !wasSelected);
+        setAnchorId(photoId);
+        const start = longPressStart.current;
+        beginSweep(
+          photoId,
+          !wasSelected,
+          start?.x ?? e.clientX,
+          start?.y ?? e.clientY
+        );
+      }, LONG_PRESS_MS);
+    }
   };
   const onTilePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (longPressTimer.current === null || !longPressStart.current) return;
-    const dx = Math.abs(e.clientX - longPressStart.current.x);
-    const dy = Math.abs(e.clientY - longPressStart.current.y);
-    if (dx > POINTER_MOVE_CANCEL_PX || dy > POINTER_MOVE_CANCEL_PX) {
-      clearLongPressTimer();
-    }
-  };
-  const onTilePointerEnd = () => clearLongPressTimer();
-
-  const onGridPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== "mouse" || e.button !== 0) return;
-    if ((e.target as HTMLElement).closest("[data-photo-id]")) return;
-    const grid = gridRef.current;
-    if (!grid) return;
-    const rect = grid.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setDragRect({ startX: x, startY: y, currX: x, currY: y });
-    dragBaselineRef.current = new Set(selectedIds);
-    grid.setPointerCapture(e.pointerId);
-  };
-  const onGridPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragRect || !gridRef.current) return;
-    const rect = gridRef.current.getBoundingClientRect();
-    setDragRect((prev) =>
-      prev
-        ? {
-            ...prev,
-            currX: e.clientX - rect.left,
-            currY: e.clientY - rect.top,
-          }
-        : prev
-    );
-  };
-  const onGridPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragRect || !gridRef.current) return;
-    const grid = gridRef.current;
-    const rect = grid.getBoundingClientRect();
-    const xMin = Math.min(dragRect.startX, dragRect.currX) + rect.left;
-    const xMax = Math.max(dragRect.startX, dragRect.currX) + rect.left;
-    const yMin = Math.min(dragRect.startY, dragRect.currY) + rect.top;
-    const yMax = Math.max(dragRect.startY, dragRect.currY) + rect.top;
-    const moved =
-      Math.abs(dragRect.currX - dragRect.startX) > 3 ||
-      Math.abs(dragRect.currY - dragRect.startY) > 3;
-    const next = new Set(dragBaselineRef.current ?? selectedIds);
-    if (moved) {
-      grid.querySelectorAll<HTMLElement>("[data-photo-id]").forEach((node) => {
-        const tr = node.getBoundingClientRect();
-        if (tr.right < xMin || tr.left > xMax) return;
-        if (tr.bottom < yMin || tr.top > yMax) return;
-        const id = node.getAttribute("data-photo-id");
-        if (id && !e.shiftKey) next.add(id);
-        else if (id) {
-          if (next.has(id)) next.delete(id);
-          else next.add(id);
+    if (longPressStart.current) {
+      const dx = Math.abs(e.clientX - longPressStart.current.x);
+      const dy = Math.abs(e.clientY - longPressStart.current.y);
+      if (dx > POINTER_MOVE_CANCEL_PX || dy > POINTER_MOVE_CANCEL_PX) {
+        clearLongPressTimer();
+        if (pendingSweepRef.current && !sweepRef.current) {
+          const { photoId, paintSelect } = pendingSweepRef.current;
+          applyPaint(photoId, paintSelect);
+          setAnchorId(photoId);
+          beginSweep(photoId, paintSelect, e.clientX, e.clientY);
+          longPressFired.current = true;
+          pendingSweepRef.current = null;
         }
-      });
-      setSelectedIds(next);
+      }
     }
-    setDragRect(null);
-    dragBaselineRef.current = null;
-    if (grid.hasPointerCapture(e.pointerId)) {
-      grid.releasePointerCapture(e.pointerId);
+    if (sweepRef.current) {
+      sweepRef.current.pointerX = e.clientX;
+      sweepRef.current.pointerY = e.clientY;
+      paintAtPoint(e.clientX, e.clientY);
+      ensureAutoScrollTick();
     }
+  };
+  const onTilePointerEnd = () => {
+    clearLongPressTimer();
+    pendingSweepRef.current = null;
+    endSweep();
   };
 
   const handleTileClick = (
@@ -870,23 +922,7 @@ const Photos = (): React.ReactElement => {
         {photos.length === 0 ? (
           <EmptyState>{t("manage-photos-empty")}</EmptyState>
         ) : (
-          <Grid
-            ref={gridRef}
-            onPointerDown={onGridPointerDown}
-            onPointerMove={onGridPointerMove}
-            onPointerUp={onGridPointerUp}
-            onPointerCancel={onGridPointerUp}
-          >
-            {dragRect && (
-              <DragRect
-                style={{
-                  left: Math.min(dragRect.startX, dragRect.currX),
-                  top: Math.min(dragRect.startY, dragRect.currY),
-                  width: Math.abs(dragRect.currX - dragRect.startX),
-                  height: Math.abs(dragRect.currY - dragRect.startY),
-                }}
-              />
-            )}
+          <Grid>
             {photos.map((p) => {
               const label = dateLabel(p);
               const isSelected = selectedIds.has(p.id);
@@ -903,9 +939,9 @@ const Photos = (): React.ReactElement => {
                   onPointerMove={onTilePointerMove}
                   onPointerUp={onTilePointerEnd}
                   onPointerCancel={onTilePointerEnd}
-                  onPointerLeave={onTilePointerEnd}
                   $focused={p.id === params.photoId}
                   $selected={isSelected}
+                  $selectionMode={selectedIds.size > 0}
                 >
                   <ThumbWrap>
                     <Thumb
@@ -932,6 +968,7 @@ const Photos = (): React.ReactElement => {
                         )
                       )}
                       $selected={isSelected}
+                      onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleSelected(p.id);
