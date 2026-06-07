@@ -30,11 +30,11 @@ const Root = styled.div`
     flex-direction: column;
   }
 `;
-// One sidebar, two modes: filters (default) and edit (when a photo
-// is open via `/m/photos/<id>` or `/m/g/<g>/photos/<id>`). Widened
-// from the filter-only 220px so the edit form fits without
-// cramping; the extra width reads as comfortable padding in filter
-// mode rather than wasted real estate.
+// One sidebar, two modes: filters (default) and edit (when a
+// photo is open via /m/photos/<id>). Widened from the filter-
+// only 220px so the edit form fits without cramping; the extra
+// width reads as comfortable padding in filter mode rather than
+// wasted real estate.
 const Sidebar = styled.aside`
   flex: 0 0 360px;
   // Belt-and-suspenders width pin so a stray min-content from any
@@ -350,12 +350,11 @@ const Photos = (): React.ReactElement => {
     setSelectedIds(new Set());
     setAnchorId(null);
   }, []);
-  // The drawer mounts at /m/photos/:photoId and /m/g/<g>/photos/:photoId
-  // via a nested <Outlet>; this Photos page is the parent.
+  // The drawer mounts at /m/photos/:photoId via a nested
+  // <Outlet>; this Photos page is the parent.
   const openPhoto = (id: string) => {
-    // pathname is /m/photos[/<oldId>] or /m/g/<g>/photos[/<oldId>];
-    // normalise to ".../photos" and append the new id, preserving
-    // the filter query.
+    // pathname is /m/photos[/<oldId>]; normalise to "/m/photos"
+    // and append the new id, preserving the filter query.
     const base = location.pathname.endsWith("/photos")
       ? location.pathname
       : location.pathname.replace(/\/[^/]+$/, "");
