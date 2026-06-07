@@ -426,9 +426,15 @@ describe("Mutations as gallery1admin", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({ id: "new.jpg" })
       .expect(403));
-  test("Update rejected (global admin only)", () =>
+  test("Update allowed on own gallery's photo (gallery-editor)", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "x" })
+      .expect(204));
+  test("Update rejected on other gallery's photo", () =>
+    api
+      .put("/api/v1/photos/gallery2photo.jpg")
       .set("Authorization", `Bearer ${token}`)
       .send({ title: "x" })
       .expect(403));

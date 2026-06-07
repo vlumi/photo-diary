@@ -207,10 +207,24 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request, reply) => {
       requireScopeMatches(request, request.params.galleryId);
-      await authorizer.authorizeGalleryAdmin(
+      await authorizer.authorizeGalleryEditor(
         request.user.id,
         request.params.galleryId
       );
+      // Hostname is an instance-level concern (routes traffic to
+      // this gallery), not curation — gallery-editors can't set
+      // it. Global admins pass the editor check trivially and
+      // bypass this gate.
+      if (
+        request.body.hostname !== undefined &&
+        !request.user.isAdmin
+      ) {
+        throw new AccessError(undefined, {
+          userId: request.user.id,
+          required: "global admin",
+          field: "hostname",
+        });
+      }
       await model.updateGallery(request.params.galleryId, request.body);
       reply.status(204).send();
     }
@@ -231,10 +245,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request, reply) => {
       requireUnscoped(request);
-      await authorizer.authorizeGalleryAdmin(
-        request.user.id,
-        request.params.galleryId
-      );
+      await authorizer.authorizeAdmin(request.user.id);
       await model.deleteGallery(request.params.galleryId);
       reply.status(204).send();
     }
@@ -259,7 +270,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request) => {
       requireScopeMatches(request, request.params.galleryId);
-      await authorizer.authorizeGalleryAdmin(
+      await authorizer.authorizeGalleryEditor(
         request.user.id,
         request.params.galleryId
       );

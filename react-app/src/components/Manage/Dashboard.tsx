@@ -177,26 +177,34 @@ const MISSING_FIELDS: ReadonlyArray<{ field: MissingField; labelKey: string }> =
   },
 ];
 
-const galleryScopedTiles = (galleryId: string): TileSpec[] => [
-  {
-    path: `/m/g/${galleryId}`,
-    Icon: BsPencilSquare,
-    titleKey: "manage-dashboard-tile-gallery-edit",
-    blurbKey: "manage-dashboard-tile-gallery-edit-blurb",
-  },
-  {
-    path: `/m/photos?gallery=${galleryId}`,
-    Icon: BsImages,
-    titleKey: "manage-page-photos-title",
-    blurbKey: "manage-dashboard-tile-photos-blurb",
-  },
-  {
-    path: `/m/g/${galleryId}/access`,
-    Icon: BsShieldLock,
-    titleKey: "manage-page-access-title",
-    blurbKey: "manage-dashboard-tile-access-blurb",
-  },
-];
+const galleryScopedTiles = (
+  galleryId: string,
+  includeAccess: boolean
+): TileSpec[] => {
+  const tiles: TileSpec[] = [
+    {
+      path: `/m/g/${galleryId}`,
+      Icon: BsPencilSquare,
+      titleKey: "manage-dashboard-tile-gallery-edit",
+      blurbKey: "manage-dashboard-tile-gallery-edit-blurb",
+    },
+    {
+      path: `/m/photos?gallery=${galleryId}`,
+      Icon: BsImages,
+      titleKey: "manage-page-photos-title",
+      blurbKey: "manage-dashboard-tile-photos-blurb",
+    },
+  ];
+  if (includeAccess) {
+    tiles.push({
+      path: `/m/g/${galleryId}/access`,
+      Icon: BsShieldLock,
+      titleKey: "manage-page-access-title",
+      blurbKey: "manage-dashboard-tile-access-blurb",
+    });
+  }
+  return tiles;
+};
 
 const Dashboard = (): React.ReactElement => {
   const { t } = useTranslation();
@@ -210,15 +218,31 @@ const Dashboard = (): React.ReactElement => {
     enabled: isAdmin,
     staleTime: 0,
   });
+  // Gallery-editor (non-admin) sees only the galleries they
+  // can act on — same tile shape as host-scope, with editor
+  // grants driving the per-gallery set. A single editable
+  // gallery short-circuits to its edit page like the
+  // single-host-scope case does.
+  const editorGalleries = user?.editorGalleries() ?? [];
+  const editorScoped = !isAdmin && editorGalleries.length > 0;
   // Single-gallery host scope is the common shape (one hostname →
   // one gallery). Drop the operator straight into that gallery's
   // edit page — the manage dashboard has nothing to add on top.
   if (isReady && isHostScoped && scopedGalleryIds.length === 1) {
     return <Navigate to={`/m/g/${scopedGalleryIds[0]}`} replace />;
   }
+  if (editorScoped && !isHostScoped && editorGalleries.length === 1) {
+    return <Navigate to={`/m/g/${editorGalleries[0]}`} replace />;
+  }
+  // Global admins (incl. host-scoped global admins) keep the
+  // Access tile per-gallery; editors (no global admin) don't —
+  // gallery ACL management stays out of their reach.
+  const includeAccess = isAdmin;
   const tiles = isHostScoped
-    ? scopedGalleryIds.flatMap((id) => galleryScopedTiles(id))
-    : GLOBAL_TILES;
+    ? scopedGalleryIds.flatMap((id) => galleryScopedTiles(id, includeAccess))
+    : editorScoped
+      ? editorGalleries.flatMap((id) => galleryScopedTiles(id, false))
+      : GLOBAL_TILES;
   const counts = auditQuery.data;
   const auditCards: Array<{ query: string; label: string; count: number }> = [];
   if (counts) {

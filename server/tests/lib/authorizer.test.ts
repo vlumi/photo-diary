@@ -15,7 +15,7 @@ const {
   authorizeView,
   authorizeAdmin,
   authorizeGalleryView,
-  authorizeGalleryAdmin,
+  authorizeGalleryEditor,
 } = authorizerFactory();
 
 type Authorize = (user: string, gallery?: any) => Promise<unknown>;
@@ -58,13 +58,13 @@ describe("No grants", () => {
     test("View (admin-only)", () => fail(authorizeView, ":guest"));
     test("Admin", () => fail(authorizeAdmin, ":guest"));
     test("Gallery view", () => fail(authorizeGalleryView, ":guest", "gallery"));
-    test("Gallery admin", () => fail(authorizeGalleryAdmin, ":guest", "gallery"));
+    test("Gallery admin", () => fail(authorizeGalleryEditor, ":guest", "gallery"));
   });
   describe("As user", () => {
     test("View (admin-only)", () => fail(authorizeView, "user"));
     test("Admin", () => fail(authorizeAdmin, "user"));
     test("Gallery view", () => fail(authorizeGalleryView, "user", "gallery"));
-    test("Gallery admin", () => fail(authorizeGalleryAdmin, "user", "gallery"));
+    test("Gallery admin", () => fail(authorizeGalleryEditor, "user", "gallery"));
   });
 });
 
@@ -76,7 +76,7 @@ describe("user.is_admin bypass", () => {
     test("Gallery view (any)", () =>
       authorizeGalleryView("admin", "any-gallery"));
     test("Gallery admin (any)", () =>
-      authorizeGalleryAdmin("admin", "any-gallery"));
+      authorizeGalleryEditor("admin", "any-gallery"));
   });
   describe("As non-admin", () => {
     test("View denied", () => fail(authorizeView, "other"));
@@ -93,7 +93,7 @@ describe("Per-gallery view grant", () => {
     test("Admin (no global)", () => fail(authorizeAdmin, "user"));
     test("Gallery1 view", () => authorizeGalleryView("user", "gallery1"));
     test("Gallery1 admin denied", () =>
-      fail(authorizeGalleryAdmin, "user", "gallery1"));
+      fail(authorizeGalleryEditor, "user", "gallery1"));
     test("Gallery2 view denied", () =>
       fail(authorizeGalleryView, "user", "gallery2"));
   });
@@ -104,7 +104,7 @@ describe("Per-gallery admin grant", () => {
   describe("As user", () => {
     test("Global view denied", () => fail(authorizeView, "user"));
     test("Gallery1 view", () => authorizeGalleryView("user", "gallery1"));
-    test("Gallery1 admin", () => authorizeGalleryAdmin("user", "gallery1"));
+    test("Gallery1 admin", () => authorizeGalleryEditor("user", "gallery1"));
     test("Gallery2 view denied", () =>
       fail(authorizeGalleryView, "user", "gallery2"));
   });

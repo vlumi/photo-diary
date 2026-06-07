@@ -81,7 +81,11 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
         id: string;
         isAdmin?: boolean;
       };
-      const user = UserModel(userData, data.accessToken, data.refreshToken);
+      const user = UserModel(
+        { ...userData, editorGalleries: data.editorGalleries },
+        data.accessToken,
+        data.refreshToken
+      );
 
       token.setTokens(data.accessToken, data.refreshToken);
       window.localStorage.setItem("user", user.toJson());

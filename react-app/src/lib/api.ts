@@ -53,16 +53,20 @@ const refreshOnce = async (): Promise<string | undefined> => {
       const data = (await response.json()) as {
         accessToken: string;
         refreshToken: string;
+        editorGalleries: string[];
       };
       token.setTokens(data.accessToken, data.refreshToken);
       // Mirror the new pair into the stored user blob so a reload picks
-      // it up too. The user record's other fields stay as they were.
+      // it up too. The user record's other fields stay as they were,
+      // except editorGalleries which the server resolves freshly on
+      // every refresh (catches grant changes between refreshes).
       const stored = window.localStorage.getItem("user");
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
           parsed.token = data.accessToken;
           parsed.refreshToken = data.refreshToken;
+          parsed.editorGalleries = data.editorGalleries;
           window.localStorage.setItem("user", JSON.stringify(parsed));
         } catch {
           // Corrupt localStorage — ignore; in-memory tokens are

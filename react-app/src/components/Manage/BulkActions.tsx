@@ -7,6 +7,7 @@ import photosService, {
   type PhotoUpdatePatch,
 } from "../../services/photos";
 import galleryPhotosService from "../../services/gallery-photos";
+import { useUserStore } from "../../stores";
 import CountrySelect from "./CountrySelect";
 
 interface Gallery {
@@ -316,6 +317,8 @@ const BulkActions = ({
   onCancel,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
+  const user = useUserStore((s) => s.user);
+  const isAdmin = !!user?.isAdmin();
   const [pending, setPending] = React.useState<Pending>({ kind: "none" });
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -682,20 +685,25 @@ const BulkActions = ({
     );
   };
 
-  // Today the Manage UI is global-admin-only so every action
-  // runs unconditionally; per-tier gating will land when the
-  // gallery-editor tier is surfaced.
+  // Link + Delete stay global-admin-only. Editor can't see
+  // photos outside their galleries (no candidates for Link) and
+  // delete is a destructive admin operation — the matrix puts
+  // both with global admin. Edit fields / Regeocode / Unlink
+  // run for both global-admin and gallery-editor; the server
+  // gate authorizes per-photo / per-gallery.
   return (
     <>
       <Bar>
         <Count>{t("manage-photos-bulk-selected", { count })}</Count>
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "pick-link" })}
-        >
-          {t("manage-photos-bulk-link")}
-        </ActionButton>
+        {isAdmin && (
+          <ActionButton
+            type="button"
+            disabled={busy || count === 0}
+            onClick={() => setPending({ kind: "pick-link" })}
+          >
+            {t("manage-photos-bulk-link")}
+          </ActionButton>
+        )}
         <ActionButton
           type="button"
           disabled={busy || count === 0}
@@ -717,14 +725,16 @@ const BulkActions = ({
         >
           {t("manage-photos-bulk-regeocode")}
         </ActionButton>
-        <ActionButton
-          type="button"
-          $danger
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "confirm-delete" })}
-        >
-          {t("manage-photos-bulk-delete")}
-        </ActionButton>
+        {isAdmin && (
+          <ActionButton
+            type="button"
+            $danger
+            disabled={busy || count === 0}
+            onClick={() => setPending({ kind: "confirm-delete" })}
+          >
+            {t("manage-photos-bulk-delete")}
+          </ActionButton>
+        )}
         <Spacer />
         <ActionButton type="button" disabled={busy} onClick={onCancel}>
           {t("manage-photos-bulk-exit")}
