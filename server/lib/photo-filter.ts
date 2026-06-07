@@ -42,11 +42,19 @@ export const MISSING_PREDICATES: Record<MissingField, (p: any) => boolean> = {
     hasCoords(p) && !!p.geocoded?.city && !p.geocoded?.stateCode,
 };
 
-const countryMismatch = (p: any): boolean => {
-  const operator = p.taken?.location?.country;
+// Geocoded country says X, operator country says Y — surface it.
+// Includes the "geocoded set, operator empty" case (a backfill
+// candidate) because the row still needs operator attention.
+// The reverse — operator set, geocoded empty — is silent: the
+// geocoder may simply not have run yet (no coords, rate-limit,
+// or Nominatim cache miss), and that's not an operator data
+// problem.
+export const countryMismatch = (p: any): boolean => {
   const geocoded = p.geocoded?.countryCode;
-  if (!operator || !geocoded) return false;
-  return operator.toLowerCase() !== geocoded.toLowerCase();
+  if (isMissing(geocoded)) return false;
+  const operator = p.taken?.location?.country;
+  if (isMissing(operator)) return true;
+  return String(operator).toLowerCase() !== String(geocoded).toLowerCase();
 };
 
 export interface PhotoFilter {

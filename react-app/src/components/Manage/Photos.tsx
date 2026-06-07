@@ -648,6 +648,7 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
       // drawer keeps serving the pre-bulk row until a hard reload.
       void queryClient.invalidateQueries({ queryKey: ["manage-photo"] });
       void queryClient.invalidateQueries({ queryKey: ["galleries"] });
+      void queryClient.invalidateQueries({ queryKey: ["manage-audit-counts"] });
       clearSelection();
     };
     return (

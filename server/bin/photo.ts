@@ -163,7 +163,11 @@ const applyOverrideOptions = (y: Argv) =>
 
 // Predicates live in server/lib/photo-filter.ts so the CLI and the
 // admin photos endpoint share the same definitions.
-import { MISSING_PREDICATES, type MissingField } from "../lib/photo-filter.js";
+import {
+  countryMismatch as isCountryMismatch,
+  MISSING_PREDICATES,
+  type MissingField,
+} from "../lib/photo-filter.js";
 
 interface AuditCheck {
   key: string;
@@ -231,8 +235,9 @@ const buildChecks = (
 
   // Operator-set country vs Nominatim's geocoded country. The operator
   // value wins by convention (custom labels, region overrides) — this
-  // check just surfaces the drift so the operator can decide which is
-  // wrong. Photos still missing geocoded data are counted separately so
+  // check surfaces the drift so the operator can decide which is wrong.
+  // Includes "operator empty, geocoded set" as a backfill candidate;
+  // photos missing geocoded data are counted in the footer instead so
   // they don't dilute the mismatch list.
   checks.push({
     key: "country-mismatch",
@@ -241,14 +246,13 @@ const buildChecks = (
     rows: () => {
       const out: Array<{ id: string; row: any; why?: string }> = [];
       for (const p of photos) {
+        if (!isCountryMismatch(p)) continue;
         const operator = p.taken?.location?.country;
         const geocoded = p.geocoded?.countryCode;
-        if (!operator || !geocoded) continue;
-        if (operator.toLowerCase() === geocoded.toLowerCase()) continue;
         out.push({
           id: p.id,
           row: p,
-          why: `${operator} → ${geocoded}`,
+          why: `${operator || "(empty)"} → ${geocoded}`,
         });
       }
       return out;

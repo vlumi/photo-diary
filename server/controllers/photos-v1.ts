@@ -173,6 +173,21 @@ const PhotosListResponse = Type.Object({
   pageSize: Type.Integer(),
   total: Type.Integer(),
 });
+const AuditCountsResponse = Type.Object({
+  orphan: Type.Integer(),
+  duplicates: Type.Integer(),
+  countryMismatch: Type.Integer(),
+  missing: Type.Object({
+    taken: Type.Integer(),
+    coords: Type.Integer(),
+    place: Type.Integer(),
+    country: Type.Integer(),
+    author: Type.Integer(),
+    title: Type.Integer(),
+    description: Type.Integer(),
+    "state-code": Type.Integer(),
+  }),
+});
 const PhotosByIdsBody = Type.Object(
   {
     ids: Type.Array(Type.String({ minLength: 1 }), {
@@ -227,6 +242,32 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         pageSize: q.pageSize,
         restrictToIds: restrictToIds ?? undefined,
         photoIdFocus: q.photoIdFocus,
+      });
+    }
+  );
+
+  /**
+   * Audit counts per filter predicate. Drives the Manage
+   * dashboard's "what's still to fix" tiles — keys match the
+   * filter-chip query-string params so each tile is a deep link
+   * into `/m/photos?<key>=…`. Host-scope narrows the counts to
+   * in-scope photos.
+   */
+  fastify.get(
+    "/audit-counts",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Audit-predicate counts (admin)",
+        response: { 200: AuditCountsResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const restrictToIds = await collectScopePhotoIds(request);
+      return await model.countAudits({
+        restrictToIds: restrictToIds ?? undefined,
       });
     }
   );

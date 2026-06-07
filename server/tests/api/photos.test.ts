@@ -184,6 +184,27 @@ describe("As admin", () => {
       .send({ ids: [] })
       .expect(400);
   });
+  test("Audit-counts returns per-predicate tallies", async () => {
+    const result = await api
+      .get("/api/v1/photos/audit-counts")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const body = result.body as {
+      orphan: number;
+      duplicates: number;
+      countryMismatch: number;
+      missing: Record<string, number>;
+    };
+    // The dummy fixture has a known orphan photo (orphanphoto.jpg).
+    expect(body.orphan).toBeGreaterThanOrEqual(1);
+    expect(body.duplicates).toBeGreaterThanOrEqual(0);
+    expect(body.countryMismatch).toBeGreaterThanOrEqual(0);
+    // The fixture's photos lack most metadata, so every "missing"
+    // bucket should have a count for at least one entry.
+    expect(typeof body.missing.taken).toBe("number");
+    expect(typeof body.missing.coords).toBe("number");
+    expect(typeof body.missing.author).toBe("number");
+  });
 });
 
 describe("As gallery1admin", () => {

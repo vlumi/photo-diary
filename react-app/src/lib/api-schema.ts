@@ -853,6 +853,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/photos/audit-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit-predicate counts (admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            orphan: number;
+                            duplicates: number;
+                            countryMismatch: number;
+                            missing: {
+                                taken: number;
+                                coords: number;
+                                place: number;
+                                country: number;
+                                author: number;
+                                title: number;
+                                description: number;
+                                "state-code": number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/photos/by-ids": {
         parameters: {
             query?: never;
