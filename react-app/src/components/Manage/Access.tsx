@@ -9,7 +9,7 @@ import {
   BsPeople,
   BsPerson,
   BsPlus,
-  BsXLg,
+  BsTrash3,
 } from "react-icons/bs";
 
 import userGalleryService, {
@@ -125,8 +125,12 @@ const Table = styled.table`
 // $wide marks the column that takes the slack; everything else
 // hugs its content. Position-agnostic so re-ordering columns
 // doesn't require fiddling with nth-of-type indices.
-const Th = styled.th<{ $sortable?: boolean; $wide?: boolean }>`
-  text-align: left;
+const Th = styled.th<{
+  $sortable?: boolean;
+  $wide?: boolean;
+  $center?: boolean;
+}>`
+  text-align: ${({ $center }) => ($center ? "center" : "left")};
   padding: 8px 12px;
   border-bottom: 1px solid var(--inactive-color);
   font-weight: bold;
@@ -142,6 +146,9 @@ const Th = styled.th<{ $sortable?: boolean; $wide?: boolean }>`
     color: ${({ $sortable }) =>
       $sortable ? "var(--primary-color)" : "var(--inactive-color)"};
   }
+  @media (max-width: 640px) {
+    padding: 6px 6px;
+  }
 `;
 const SortIndicator = styled.span`
   display: inline-flex;
@@ -149,12 +156,16 @@ const SortIndicator = styled.span`
   margin-left: 4px;
   vertical-align: middle;
 `;
-const Td = styled.td<{ $wide?: boolean }>`
+const Td = styled.td<{ $wide?: boolean; $center?: boolean }>`
   padding: 8px 12px;
   border-bottom: 1px solid var(--inactive-color);
   vertical-align: middle;
+  text-align: ${({ $center }) => ($center ? "center" : "left")};
   width: ${({ $wide }) => ($wide ? "auto" : "1%")};
   white-space: ${({ $wide }) => ($wide ? "normal" : "nowrap")};
+  @media (max-width: 640px) {
+    padding: 6px 6px;
+  }
 `;
 const Mono = styled.span`
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -167,7 +178,16 @@ const GalleryLink = styled.a`
     text-decoration: underline;
   }
 `;
-const SubjectLink = GalleryLink;
+const SubjectLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
 const AddPanel = styled.section`
   margin-top: 16px;
   padding: 12px 14px;
@@ -256,7 +276,7 @@ interface AccessRow {
   hideMap: HideMapValue;
 }
 
-type SortKey = "gallery" | "subject" | "type" | "admin" | "hidemap";
+type SortKey = "gallery" | "subject" | "admin" | "hidemap";
 
 const Access = (): React.ReactElement => {
   const { t } = useTranslation();
@@ -329,11 +349,7 @@ const Access = (): React.ReactElement => {
     });
   };
 
-  // Sort. Default groups by type first (users then groups) and
-  // breaks ties by subject id so each subject's rows are
-  // contiguous — closest to "what access do users have?" when
-  // scanning the table top to bottom.
-  const sort = (searchParams.get("sort") ?? "type") as SortKey;
+  const sort = (searchParams.get("sort") ?? "subject") as SortKey;
   const dir = (searchParams.get("dir") ?? "asc") as "asc" | "desc";
   const setSort = (key: SortKey) => {
     setSearchParams((prev) => {
@@ -368,15 +384,6 @@ const Access = (): React.ReactElement => {
     if (sort === "subject") {
       const c = compareString(a.subjectId, b.subjectId);
       return c !== 0 ? factor * c : compareString(a.galleryId, b.galleryId);
-    }
-    if (sort === "type") {
-      // Type primary, subject secondary, gallery tertiary — so
-      // each subject's rows stay contiguous within the type
-      // block (users-then-groups).
-      const c = compareString(a.type, b.type);
-      if (c !== 0) return factor * c;
-      const s = compareString(a.subjectId, b.subjectId);
-      return s !== 0 ? s : compareString(a.galleryId, b.galleryId);
     }
     if (sort === "admin") {
       const c = Number(a.isEditor) - Number(b.isEditor);
@@ -615,10 +622,6 @@ const Access = (): React.ReactElement => {
           <Table>
           <thead>
             <tr>
-              <Th $sortable onClick={() => setSort("type")}>
-                {t("manage-access-col-type")}
-                {sortIndicator("type")}
-              </Th>
               <Th $sortable $wide onClick={() => setSort("subject")}>
                 {t("manage-access-col-subject")}
                 {sortIndicator("subject")}
@@ -627,11 +630,11 @@ const Access = (): React.ReactElement => {
                 {t("manage-access-col-gallery")}
                 {sortIndicator("gallery")}
               </Th>
-              <Th $sortable onClick={() => setSort("admin")}>
+              <Th $sortable $center onClick={() => setSort("admin")}>
                 {t("manage-gallery-access-col-admin")}
                 {sortIndicator("admin")}
               </Th>
-              <Th $sortable onClick={() => setSort("hidemap")}>
+              <Th $sortable $center onClick={() => setSort("hidemap")}>
                 {t("manage-gallery-access-col-hidemap")}
                 {sortIndicator("hidemap")}
               </Th>
@@ -641,13 +644,6 @@ const Access = (): React.ReactElement => {
           <tbody>
             {sorted.map((row) => (
               <tr key={`${row.type}:${row.subjectId}:${row.galleryId}`}>
-                <Td>
-                  {row.type === "user" ? (
-                    <BsPerson aria-hidden title={String(t("manage-access-type-user"))} />
-                  ) : (
-                    <BsPeople aria-hidden title={String(t("manage-access-type-group"))} />
-                  )}
-                </Td>
                 <Td $wide>
                   <SubjectLink
                     role="link"
@@ -660,6 +656,17 @@ const Access = (): React.ReactElement => {
                       )
                     }
                   >
+                    {row.type === "user" ? (
+                      <BsPerson
+                        aria-hidden
+                        title={String(t("manage-access-type-user"))}
+                      />
+                    ) : (
+                      <BsPeople
+                        aria-hidden
+                        title={String(t("manage-access-type-group"))}
+                      />
+                    )}
                     <Mono>{row.subjectId}</Mono>
                   </SubjectLink>
                 </Td>
@@ -672,7 +679,7 @@ const Access = (): React.ReactElement => {
                     <Mono>{row.galleryId}</Mono>
                   </GalleryLink>
                 </Td>
-                <Td>
+                <Td $center>
                   <Checkbox
                     type="checkbox"
                     checked={row.isEditor}
@@ -683,7 +690,7 @@ const Access = (): React.ReactElement => {
                     aria-label={String(t("manage-gallery-access-col-admin"))}
                   />
                 </Td>
-                <Td>
+                <Td $center>
                   <Select
                     value={row.hideMap}
                     disabled={mutating}
@@ -721,7 +728,7 @@ const Access = (): React.ReactElement => {
                       })
                     )}
                   >
-                    <BsXLg />
+                    <BsTrash3 />
                   </RemoveButton>
                 </Td>
               </tr>
