@@ -92,12 +92,12 @@ export default {
   // Resolve effective access for (userId, galleryId):
   //   user.is_admin → global admin (bypass).
   //   matching user_gallery row (user or :guest, this gallery) → access;
-  //     is_admin flag on the winning row distinguishes gallery admin from view.
+  //     is_editor flag on the winning row distinguishes editor from view.
   //   no match → deny.
   resolveAccessLevel: async (
     userId: string,
     galleryId: string
-  ): Promise<{ hasAccess: boolean; isAdmin: boolean }> => {
+  ): Promise<{ hasAccess: boolean; isEditor: boolean }> => {
     return await db.resolveAccessLevel(userId, galleryId);
   },
   loadUserGalleryRows: async (
@@ -108,7 +108,7 @@ export default {
   upsertUserGallery: async (row: {
     user_id: string;
     gallery_id: string;
-    is_admin?: boolean;
+    is_editor?: boolean;
     hide_map?: number | null;
   }): Promise<void> => {
     await db.upsertUserGallery(row);
@@ -168,7 +168,7 @@ export default {
   upsertGroupGallery: async (row: {
     group_id: string;
     gallery_id: string;
-    is_admin?: boolean;
+    is_editor?: boolean;
     hide_map?: number | null;
   }): Promise<void> => {
     await db.upsertGroupGallery(row);

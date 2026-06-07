@@ -319,7 +319,7 @@
     "manage-gallery-access-empty-groups": "Ei ryhmäoikeuksia.",
     "manage-gallery-access-col-user": "Käyttäjä",
     "manage-gallery-access-col-group": "Ryhmä",
-    "manage-gallery-access-col-admin": "Pääkäyttäjä",
+    "manage-gallery-access-col-admin": "Muokkaaja",
     "manage-gallery-access-col-hidemap": "Kartan näkyvyys",
     "manage-gallery-access-hidemap-inherit": "Peri",
     "manage-gallery-access-hidemap-show": "Näytä",

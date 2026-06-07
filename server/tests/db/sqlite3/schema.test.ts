@@ -71,7 +71,7 @@ describe("User", () => {
 });
 
 describe("UserGallery", () => {
-  const cols = ["user_id", "gallery_id", "is_admin", "hide_map"].join(",");
+  const cols = ["user_id", "gallery_id", "is_editor", "hide_map"].join(",");
   test("Build create query", () =>
     expect(schema.userGallery.buildCreateQuery()).toBe(
       `INSERT INTO user_gallery (${cols}) VALUES (?,?,?,?)`
@@ -106,12 +106,12 @@ describe("UserGallery", () => {
         gallery_id: "bar",
       })
     ).toStrictEqual({ query: undefined, values: undefined }));
-  test("Build update by id query: is_admin", () =>
+  test("Build update by id query: is_editor", () =>
     expect(
-      schema.userGallery.buildUpdateByIdQuery({ is_admin: 1 })
+      schema.userGallery.buildUpdateByIdQuery({ is_editor: 1 })
     ).toStrictEqual({
       query:
-        "UPDATE user_gallery SET is_admin=? WHERE user_id = ? AND gallery_id = ?",
+        "UPDATE user_gallery SET is_editor=? WHERE user_id = ? AND gallery_id = ?",
       values: [1],
     }));
   test("Build update by id query: all", () =>
@@ -119,11 +119,11 @@ describe("UserGallery", () => {
       schema.userGallery.buildUpdateByIdQuery({
         user_id: "foo",
         gallery_id: "bar",
-        is_admin: 1,
+        is_editor: 1,
       })
     ).toStrictEqual({
       query:
-        "UPDATE user_gallery SET is_admin=? WHERE user_id = ? AND gallery_id = ?",
+        "UPDATE user_gallery SET is_editor=? WHERE user_id = ? AND gallery_id = ?",
       values: [1],
     }));
   test("Build delete by id query", () =>

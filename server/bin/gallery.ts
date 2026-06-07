@@ -189,13 +189,13 @@ await yargs(hideBin(process.argv))
         const users = (await db.loadUserGalleryRows({ galleryId })) as Array<{
           user_id: string;
           gallery_id: string;
-          is_admin: number;
+          is_editor: number;
           hide_map: number | null;
         }>;
         const groups = (await db.loadGroupGalleryRows({ galleryId })) as Array<{
           group_id: string;
           gallery_id: string;
-          is_admin: number;
+          is_editor: number;
           hide_map: number | null;
         }>;
         if (users.length === 0 && groups.length === 0) continue;
@@ -207,7 +207,7 @@ await yargs(hideBin(process.argv))
           lines.push([
             "user",
             r.user_id,
-            r.is_admin ? "admin" : "view",
+            r.is_editor ? "editor" : "view",
             r.hide_map === null ? "—" : r.hide_map === 1 ? "hide" : "show",
           ]);
         }
@@ -215,7 +215,7 @@ await yargs(hideBin(process.argv))
           lines.push([
             "group",
             r.group_id,
-            r.is_admin ? "admin" : "view",
+            r.is_editor ? "editor" : "view",
             r.hide_map === null ? "—" : r.hide_map === 1 ? "hide" : "show",
           ]);
         }

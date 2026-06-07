@@ -66,8 +66,13 @@ export const fromGalleryData = (g: GalleryData): FormState => ({
 // for enum fields (server's update query keys on column-presence,
 // so an absent field is a no-op) and pass through as empty strings
 // on free-text fields (server accepts empty title / description /
-// etc.).
-export const toPatch = (form: FormState): GalleryUpdatePatch => ({
+// etc.). The hostname-editable flag mirrors the form's gating —
+// non-admins don't render the field at all, so the patch omits
+// it to avoid sending stale state to the (rejecting) server.
+export const toPatch = (
+  form: FormState,
+  hostnameEditable = true
+): GalleryUpdatePatch => ({
   title: form.title,
   description: form.description,
   icon: form.icon,
@@ -75,7 +80,7 @@ export const toPatch = (form: FormState): GalleryUpdatePatch => ({
   epochType: (form.epochType || undefined) as EpochType | undefined,
   theme: (form.theme || undefined) as Theme | undefined,
   initialView: (form.initialView || undefined) as InitialView | undefined,
-  hostname: form.hostname,
+  ...(hostnameEditable ? { hostname: form.hostname } : {}),
 });
 
 const Section = styled.section`
@@ -165,6 +170,12 @@ interface Props {
   // `iconSource` for the auto-opened session.
   onCropperClosed?: () => void;
   onIconChanged?: (icon: string) => void;
+  // Hostname routing is instance-level — only global admins can
+  // edit it. Gallery-editors get the form without the Scope
+  // section at all (rather than a disabled input) so the field
+  // isn't a teaser they can't act on. Defaults to true so the
+  // Create flow (global-admin-only) keeps the section.
+  hostnameEditable?: boolean;
 }
 
 const IconPreview = styled.img`
@@ -201,6 +212,7 @@ const GalleryFormFields = ({
   autoOpenCropper,
   onCropperClosed,
   onIconChanged,
+  hostnameEditable = true,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const [cropperOpen, setCropperOpen] = React.useState(false);
@@ -327,20 +339,22 @@ const GalleryFormFields = ({
         </Field>
       </Section>
 
-      <Section>
-        <SectionTitle>{t("manage-gallery-section-scope")}</SectionTitle>
-        <Field>
-          <FieldLabel>{t("manage-gallery-field-hostname")}</FieldLabel>
-          <Input
-            value={form.hostname}
-            onChange={(e) => setField("hostname", e.target.value)}
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-          />
-          <FieldHint>{t("manage-gallery-field-hostname-hint")}</FieldHint>
-        </Field>
-      </Section>
+      {hostnameEditable && (
+        <Section>
+          <SectionTitle>{t("manage-gallery-section-scope")}</SectionTitle>
+          <Field>
+            <FieldLabel>{t("manage-gallery-field-hostname")}</FieldLabel>
+            <Input
+              value={form.hostname}
+              onChange={(e) => setField("hostname", e.target.value)}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            <FieldHint>{t("manage-gallery-field-hostname-hint")}</FieldHint>
+          </Field>
+        </Section>
+      )}
     </>
   );
 };

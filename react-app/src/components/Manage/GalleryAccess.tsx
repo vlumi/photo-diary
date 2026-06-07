@@ -256,11 +256,11 @@ const GalleryAccess = (): React.ReactElement => {
   const upsertUserMutation = useMutation({
     mutationFn: (args: {
       userId: string;
-      isAdmin: boolean;
+      isEditor: boolean;
       hideMap: HideMapValue;
     }) =>
       userGalleryService.upsert(args.userId, galleryId, {
-        isAdmin: args.isAdmin,
+        isEditor: args.isEditor,
         hideMap: hideMapToBody(args.hideMap),
       }),
     onSuccess: invalidateUserGrants,
@@ -275,11 +275,11 @@ const GalleryAccess = (): React.ReactElement => {
   const upsertGroupMutation = useMutation({
     mutationFn: (args: {
       groupId: string;
-      isAdmin: boolean;
+      isEditor: boolean;
       hideMap: HideMapValue;
     }) =>
       groupGalleryService.upsert(args.groupId, galleryId, {
-        isAdmin: args.isAdmin,
+        isEditor: args.isEditor,
         hideMap: hideMapToBody(args.hideMap),
       }),
     onSuccess: invalidateGroupGrants,
@@ -352,8 +352,8 @@ const GalleryAccess = (): React.ReactElement => {
         <UserGrantsTable
           grants={userGrants}
           loading={userGrantsQuery.isLoading}
-          onUpsert={(userId, isAdmin, hideMap) =>
-            upsertUserMutation.mutate({ userId, isAdmin, hideMap })
+          onUpsert={(userId, isEditor, hideMap) =>
+            upsertUserMutation.mutate({ userId, isEditor, hideMap })
           }
           onRemove={(userId) => removeUserMutation.mutate(userId)}
           mutating={
@@ -363,8 +363,8 @@ const GalleryAccess = (): React.ReactElement => {
         <AddUserGrant
           available={availableUsers}
           mutating={upsertUserMutation.isPending}
-          onAdd={(userId, isAdmin, hideMap) =>
-            upsertUserMutation.mutate({ userId, isAdmin, hideMap })
+          onAdd={(userId, isEditor, hideMap) =>
+            upsertUserMutation.mutate({ userId, isEditor, hideMap })
           }
         />
       </SectionBlock>
@@ -374,8 +374,8 @@ const GalleryAccess = (): React.ReactElement => {
         <GroupGrantsTable
           grants={groupGrants}
           loading={groupGrantsQuery.isLoading}
-          onUpsert={(groupId, isAdmin, hideMap) =>
-            upsertGroupMutation.mutate({ groupId, isAdmin, hideMap })
+          onUpsert={(groupId, isEditor, hideMap) =>
+            upsertGroupMutation.mutate({ groupId, isEditor, hideMap })
           }
           onRemove={(groupId) => removeGroupMutation.mutate(groupId)}
           mutating={
@@ -385,8 +385,8 @@ const GalleryAccess = (): React.ReactElement => {
         <AddGroupGrant
           available={availableGroups}
           mutating={upsertGroupMutation.isPending}
-          onAdd={(groupId, isAdmin, hideMap) =>
-            upsertGroupMutation.mutate({ groupId, isAdmin, hideMap })
+          onAdd={(groupId, isEditor, hideMap) =>
+            upsertGroupMutation.mutate({ groupId, isEditor, hideMap })
           }
         />
       </SectionBlock>
@@ -397,7 +397,7 @@ const GalleryAccess = (): React.ReactElement => {
 interface UserGrantsTableProps {
   grants: UserGalleryRow[];
   loading: boolean;
-  onUpsert: (userId: string, isAdmin: boolean, hideMap: HideMapValue) => void;
+  onUpsert: (userId: string, isEditor: boolean, hideMap: HideMapValue) => void;
   onRemove: (userId: string) => void;
   mutating: boolean;
 }
@@ -427,10 +427,10 @@ const UserGrantsTable = ({
           <GrantRow
             key={g.user_id}
             id={g.user_id}
-            isAdmin={!!g.is_admin}
+            isEditor={!!g.is_editor}
             hideMap={hideMapFromDb(g.hide_map)}
-            onUpsert={(isAdmin, hideMap) =>
-              onUpsert(g.user_id, isAdmin, hideMap)
+            onUpsert={(isEditor, hideMap) =>
+              onUpsert(g.user_id, isEditor, hideMap)
             }
             onRemove={() => onRemove(g.user_id)}
             mutating={mutating}
@@ -444,7 +444,7 @@ const UserGrantsTable = ({
 interface GroupGrantsTableProps {
   grants: GroupGalleryRow[];
   loading: boolean;
-  onUpsert: (groupId: string, isAdmin: boolean, hideMap: HideMapValue) => void;
+  onUpsert: (groupId: string, isEditor: boolean, hideMap: HideMapValue) => void;
   onRemove: (groupId: string) => void;
   mutating: boolean;
 }
@@ -474,10 +474,10 @@ const GroupGrantsTable = ({
           <GroupGrantRow
             key={g.group_id}
             groupId={g.group_id}
-            isAdmin={!!g.is_admin}
+            isEditor={!!g.is_editor}
             hideMap={hideMapFromDb(g.hide_map)}
-            onUpsert={(isAdmin, hideMap) =>
-              onUpsert(g.group_id, isAdmin, hideMap)
+            onUpsert={(isEditor, hideMap) =>
+              onUpsert(g.group_id, isEditor, hideMap)
             }
             onRemove={() => onRemove(g.group_id)}
             mutating={mutating}
@@ -495,16 +495,16 @@ const GroupGrantsTable = ({
 // border and indented padding.
 interface GroupGrantRowProps {
   groupId: string;
-  isAdmin: boolean;
+  isEditor: boolean;
   hideMap: HideMapValue;
-  onUpsert: (isAdmin: boolean, hideMap: HideMapValue) => void;
+  onUpsert: (isEditor: boolean, hideMap: HideMapValue) => void;
   onRemove: () => void;
   mutating: boolean;
 }
 
 const GroupGrantRow = ({
   groupId,
-  isAdmin,
+  isEditor,
   hideMap,
   onUpsert,
   onRemove,
@@ -545,7 +545,7 @@ const GroupGrantRow = ({
         <Td>
           <Checkbox
             type="checkbox"
-            checked={isAdmin}
+            checked={isEditor}
             disabled={mutating}
             onChange={(e) => onUpsert(e.target.checked, hideMap)}
             aria-label={String(t("manage-gallery-access-col-admin"))}
@@ -556,7 +556,7 @@ const GroupGrantRow = ({
             value={hideMap}
             disabled={mutating}
             onChange={(e) =>
-              onUpsert(isAdmin, e.target.value as HideMapValue)
+              onUpsert(isEditor, e.target.value as HideMapValue)
             }
             aria-label={String(t("manage-gallery-access-col-hidemap"))}
           >
@@ -606,16 +606,16 @@ const GroupGrantRow = ({
 // expects the row to settle on what they picked).
 interface GrantRowProps {
   id: string;
-  isAdmin: boolean;
+  isEditor: boolean;
   hideMap: HideMapValue;
-  onUpsert: (isAdmin: boolean, hideMap: HideMapValue) => void;
+  onUpsert: (isEditor: boolean, hideMap: HideMapValue) => void;
   onRemove: () => void;
   mutating: boolean;
 }
 
 const GrantRow = ({
   id,
-  isAdmin,
+  isEditor,
   hideMap,
   onUpsert,
   onRemove,
@@ -630,7 +630,7 @@ const GrantRow = ({
       <Td>
         <Checkbox
           type="checkbox"
-          checked={isAdmin}
+          checked={isEditor}
           disabled={mutating}
           onChange={(e) => onUpsert(e.target.checked, hideMap)}
           aria-label={String(t("manage-gallery-access-col-admin"))}
@@ -641,7 +641,7 @@ const GrantRow = ({
           value={hideMap}
           disabled={mutating}
           onChange={(e) =>
-            onUpsert(isAdmin, e.target.value as HideMapValue)
+            onUpsert(isEditor, e.target.value as HideMapValue)
           }
           aria-label={String(t("manage-gallery-access-col-hidemap"))}
         >
@@ -674,7 +674,7 @@ const GrantRow = ({
 interface AddUserGrantProps {
   available: UserRow[];
   mutating: boolean;
-  onAdd: (userId: string, isAdmin: boolean, hideMap: HideMapValue) => void;
+  onAdd: (userId: string, isEditor: boolean, hideMap: HideMapValue) => void;
 }
 
 const AddUserGrant = ({
@@ -684,11 +684,11 @@ const AddUserGrant = ({
 }: AddUserGrantProps): React.ReactElement => {
   const { t } = useTranslation();
   const [picked, setPicked] = React.useState("");
-  const [isAdmin, setIsAdmin] = React.useState(false);
+  const [isEditor, setIsAdmin] = React.useState(false);
   const [hideMap, setHideMap] = React.useState<HideMapValue>("inherit");
   const handleAdd = () => {
     if (!picked) return;
-    onAdd(picked, isAdmin, hideMap);
+    onAdd(picked, isEditor, hideMap);
     setPicked("");
     setIsAdmin(false);
     setHideMap("inherit");
@@ -716,7 +716,7 @@ const AddUserGrant = ({
       <AddLabel>
         <Checkbox
           type="checkbox"
-          checked={isAdmin}
+          checked={isEditor}
           onChange={(e) => setIsAdmin(e.target.checked)}
         />
         {t("manage-gallery-access-col-admin")}
@@ -749,7 +749,7 @@ const AddUserGrant = ({
 interface AddGroupGrantProps {
   available: GroupRow[];
   mutating: boolean;
-  onAdd: (groupId: string, isAdmin: boolean, hideMap: HideMapValue) => void;
+  onAdd: (groupId: string, isEditor: boolean, hideMap: HideMapValue) => void;
 }
 
 const AddGroupGrant = ({
@@ -759,11 +759,11 @@ const AddGroupGrant = ({
 }: AddGroupGrantProps): React.ReactElement => {
   const { t } = useTranslation();
   const [picked, setPicked] = React.useState("");
-  const [isAdmin, setIsAdmin] = React.useState(false);
+  const [isEditor, setIsAdmin] = React.useState(false);
   const [hideMap, setHideMap] = React.useState<HideMapValue>("inherit");
   const handleAdd = () => {
     if (!picked) return;
-    onAdd(picked, isAdmin, hideMap);
+    onAdd(picked, isEditor, hideMap);
     setPicked("");
     setIsAdmin(false);
     setHideMap("inherit");
@@ -790,7 +790,7 @@ const AddGroupGrant = ({
       <AddLabel>
         <Checkbox
           type="checkbox"
-          checked={isAdmin}
+          checked={isEditor}
           onChange={(e) => setIsAdmin(e.target.checked)}
         />
         {t("manage-gallery-access-col-admin")}

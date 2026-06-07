@@ -127,10 +127,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request, reply) => {
       requireScopeMatches(request, request.params.galleryId);
-      await authorizer.authorizeGalleryAdmin(
-        request.user.id,
-        request.params.galleryId
-      );
+      // Link is global-admin-only: a gallery-editor can't see
+      // photos outside their galleries, so there's no candidate
+      // set for them to pick from.
+      await authorizer.authorizeAdmin(request.user.id);
       await model.linkGalleryPhoto(
         request.params.galleryId,
         request.params.photoId
@@ -147,14 +147,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
-        summary: "Unlink a photo from a gallery (admin)",
+        summary: "Unlink a photo from a gallery (gallery-editor)",
         params: GalleryPhotoParams,
         security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {
       requireScopeMatches(request, request.params.galleryId);
-      await authorizer.authorizeGalleryAdmin(
+      await authorizer.authorizeGalleryEditor(
         request.user.id,
         request.params.galleryId
       );

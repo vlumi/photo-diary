@@ -15,7 +15,7 @@ const {
   authorizeView,
   authorizeAdmin,
   authorizeGalleryView,
-  authorizeGalleryAdmin,
+  authorizeGalleryEditor,
 } = authorizerFactory();
 
 type Authorize = (user: string, gallery?: any) => Promise<unknown>;
@@ -27,14 +27,14 @@ const fail = (authorize: Authorize, user: string, gallery?: string) => {
   );
 };
 
-// New model: the authorizer reads two things —
+// The authorizer reads two things —
 //   - user.is_admin (via db.loadUser) for the global-admin bypass
-//   - resolveAccessLevel(userId, galleryId) → { hasAccess, isAdmin } for
+//   - resolveAccessLevel(userId, galleryId) → { hasAccess, isEditor } for
 //     gallery-scoped checks
 // The mock keeps a per-test ACL and answers both queries from it.
 const setup = (
   globalAdmins: string[],
-  perGallery: Record<string, Record<string, { isAdmin: boolean }>>
+  perGallery: Record<string, Record<string, { isEditor: boolean }>>
 ): void => {
   db.loadUser.mockImplementation(async (userId) => {
     if (userId === ":guest") return { id: ":guest", is_admin: 0 };
@@ -42,13 +42,13 @@ const setup = (
   });
   db.resolveAccessLevel.mockImplementation(async (userId, galleryId) => {
     if (globalAdmins.includes(userId)) {
-      return { hasAccess: true, isAdmin: true };
+      return { hasAccess: true, isEditor: true };
     }
     const userRow = perGallery[userId]?.[galleryId];
     const guestRow = perGallery[":guest"]?.[galleryId];
-    if (!userRow && !guestRow) return { hasAccess: false, isAdmin: false };
-    const isAdmin = !!(userRow?.isAdmin || guestRow?.isAdmin);
-    return { hasAccess: true, isAdmin };
+    if (!userRow && !guestRow) return { hasAccess: false, isEditor: false };
+    const isEditor = !!(userRow?.isEditor || guestRow?.isEditor);
+    return { hasAccess: true, isEditor };
   });
 };
 
@@ -58,13 +58,13 @@ describe("No grants", () => {
     test("View (admin-only)", () => fail(authorizeView, ":guest"));
     test("Admin", () => fail(authorizeAdmin, ":guest"));
     test("Gallery view", () => fail(authorizeGalleryView, ":guest", "gallery"));
-    test("Gallery admin", () => fail(authorizeGalleryAdmin, ":guest", "gallery"));
+    test("Gallery admin", () => fail(authorizeGalleryEditor, ":guest", "gallery"));
   });
   describe("As user", () => {
     test("View (admin-only)", () => fail(authorizeView, "user"));
     test("Admin", () => fail(authorizeAdmin, "user"));
     test("Gallery view", () => fail(authorizeGalleryView, "user", "gallery"));
-    test("Gallery admin", () => fail(authorizeGalleryAdmin, "user", "gallery"));
+    test("Gallery admin", () => fail(authorizeGalleryEditor, "user", "gallery"));
   });
 });
 
@@ -76,7 +76,7 @@ describe("user.is_admin bypass", () => {
     test("Gallery view (any)", () =>
       authorizeGalleryView("admin", "any-gallery"));
     test("Gallery admin (any)", () =>
-      authorizeGalleryAdmin("admin", "any-gallery"));
+      authorizeGalleryEditor("admin", "any-gallery"));
   });
   describe("As non-admin", () => {
     test("View denied", () => fail(authorizeView, "other"));
@@ -87,24 +87,24 @@ describe("user.is_admin bypass", () => {
 });
 
 describe("Per-gallery view grant", () => {
-  beforeAll(() => setup([], { user: { gallery1: { isAdmin: false } } }));
+  beforeAll(() => setup([], { user: { gallery1: { isEditor: false } } }));
   describe("As user", () => {
     test("View (no global)", () => fail(authorizeView, "user"));
     test("Admin (no global)", () => fail(authorizeAdmin, "user"));
     test("Gallery1 view", () => authorizeGalleryView("user", "gallery1"));
     test("Gallery1 admin denied", () =>
-      fail(authorizeGalleryAdmin, "user", "gallery1"));
+      fail(authorizeGalleryEditor, "user", "gallery1"));
     test("Gallery2 view denied", () =>
       fail(authorizeGalleryView, "user", "gallery2"));
   });
 });
 
 describe("Per-gallery admin grant", () => {
-  beforeAll(() => setup([], { user: { gallery1: { isAdmin: true } } }));
+  beforeAll(() => setup([], { user: { gallery1: { isEditor: true } } }));
   describe("As user", () => {
     test("Global view denied", () => fail(authorizeView, "user"));
     test("Gallery1 view", () => authorizeGalleryView("user", "gallery1"));
-    test("Gallery1 admin", () => authorizeGalleryAdmin("user", "gallery1"));
+    test("Gallery1 admin", () => authorizeGalleryEditor("user", "gallery1"));
     test("Gallery2 view denied", () =>
       fail(authorizeGalleryView, "user", "gallery2"));
   });
@@ -112,7 +112,7 @@ describe("Per-gallery admin grant", () => {
 
 describe(":guest grant falls through to logged-in users without a row", () => {
   beforeAll(() =>
-    setup([], { ":guest": { gallery3: { isAdmin: false } } })
+    setup([], { ":guest": { gallery3: { isEditor: false } } })
   );
   describe("As :guest", () => {
     test("Gallery3 view", () => authorizeGalleryView(":guest", "gallery3"));
@@ -133,7 +133,7 @@ describe("Global admin missing user is denied (not 500)", () => {
     });
     db.resolveAccessLevel.mockResolvedValue({
       hasAccess: false,
-      isAdmin: false,
+      isEditor: false,
     });
   });
   test("authorizeAdmin throws AccessError on missing user", () =>

@@ -33,7 +33,7 @@ describe("migrate", () => {
   test("fresh DB runs every migration and lands at the highest version", () => {
     const db = open();
     migrate(db);
-    expect(schemaVersion(db)).toBe(18);
+    expect(schemaVersion(db)).toBe(19);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "gallery",
@@ -52,8 +52,10 @@ describe("migrate", () => {
       db.pragma("table_info(user_gallery)") as { name: string }[]
     ).map((r) => r.name);
     expect(userGalleryCols).toContain("hide_map");
-    // Migration 012 swapped access_level INTEGER for is_admin INTEGER.
-    expect(userGalleryCols).toContain("is_admin");
+    // Migration 012 swapped access_level INTEGER for is_admin INTEGER;
+    // migration 019 renamed that column to is_editor to match the
+    // gallery-editor tier vocabulary.
+    expect(userGalleryCols).toContain("is_editor");
     expect(userGalleryCols).not.toContain("access_level");
     expect(userGalleryCols).not.toContain("level");
   });
@@ -103,7 +105,7 @@ describe("migrate", () => {
 
     migrate(db);
 
-    expect(schemaVersion(db)).toBe(18);
+    expect(schemaVersion(db)).toBe(19);
     expect(gallerPhotoFkRefs(db).sort()).toEqual(["gallery", "photo"]);
     const rows = db.prepare("SELECT * FROM gallery_photo").all();
     expect(rows).toEqual([{ gallery_id: "g1", photo_id: "p1" }]);

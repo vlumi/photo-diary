@@ -207,6 +207,7 @@ export interface paths {
                         "application/json": {
                             accessToken: string;
                             refreshToken: string;
+                            editorGalleries: string[];
                         };
                     };
                 };
@@ -276,6 +277,7 @@ export interface paths {
                         "application/json": {
                             accessToken: string;
                             refreshToken: string;
+                            editorGalleries: string[];
                         };
                     };
                 };
@@ -960,7 +962,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Fetch many photos by id (admin) */
+        /** Fetch many photos by id (admin / gallery-editor) */
         post: {
             parameters: {
                 query?: never;
@@ -1245,7 +1247,7 @@ export interface paths {
             };
         };
         post?: never;
-        /** Unlink a photo from a gallery (admin) */
+        /** Unlink a photo from a gallery (gallery-editor) */
         delete: {
             parameters: {
                 query?: never;
@@ -1301,7 +1303,7 @@ export interface paths {
                         "application/json": {
                             user_id: string;
                             gallery_id: string;
-                            is_admin: number;
+                            is_editor: number;
                             hide_map: number | null;
                         }[];
                     };
@@ -1338,7 +1340,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        isAdmin: boolean;
+                        isEditor: boolean;
                         hideMap?: boolean | null;
                     };
                 };
@@ -1661,7 +1663,7 @@ export interface paths {
                         "application/json": {
                             group_id: string;
                             gallery_id: string;
-                            is_admin: number;
+                            is_editor: number;
                             hide_map: number | null;
                         }[];
                     };
@@ -1698,7 +1700,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        isAdmin: boolean;
+                        isEditor: boolean;
                         hideMap?: boolean | null;
                     };
                 };

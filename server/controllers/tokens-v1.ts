@@ -22,10 +22,13 @@ const LoginBody = Type.Object({
 });
 // Login + refresh both return the same shape: a short-lived JWT for
 // API calls + an opaque refresh token (sessionId.secret) for the
-// rotation endpoint.
+// rotation endpoint + the user's current set of editor-grant
+// gallery ids (purely a client-rendering hint; the server still
+// enforces every request via the authorizer).
 const TokenPairResponse = Type.Object({
   accessToken: Type.String(),
   refreshToken: Type.String(),
+  editorGalleries: Type.Array(Type.String()),
 });
 const RefreshBody = Type.Object({
   refreshToken: Type.String(),
@@ -140,8 +143,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
       const isAdmin = await resolveIsAdmin(credentials.id);
       const pair = await model.createSession(credentials.id, isAdmin);
+      const editorGalleries = await authorizer.loadEditorGalleries(
+        credentials.id
+      );
       logger.debug(`User "${credentials.id}" logged in successfully.`);
-      reply.status(200).send(pair);
+      reply.status(200).send({ ...pair, editorGalleries });
     }
   );
 
@@ -169,7 +175,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       );
       const isAdmin = await resolveIsAdmin(userId);
       const accessToken = await model.signAccessToken(userId, isAdmin);
-      reply.status(200).send({ accessToken, refreshToken });
+      const editorGalleries = await authorizer.loadEditorGalleries(userId);
+      reply.status(200).send({ accessToken, refreshToken, editorGalleries });
     }
   );
 

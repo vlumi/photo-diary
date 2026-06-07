@@ -319,7 +319,7 @@
     "manage-gallery-access-empty-groups": "No group grants.",
     "manage-gallery-access-col-user": "User",
     "manage-gallery-access-col-group": "Group",
-    "manage-gallery-access-col-admin": "Admin",
+    "manage-gallery-access-col-admin": "Editor",
     "manage-gallery-access-col-hidemap": "Map visibility",
     "manage-gallery-access-hidemap-inherit": "Inherit",
     "manage-gallery-access-hidemap-show": "Show",

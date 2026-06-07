@@ -186,7 +186,7 @@ const deleteUser = async (id: string) => {
   delete db.users[id];
 };
 
-type AclEntry = { is_admin: boolean; hide_map?: number | null };
+type AclEntry = { is_editor: boolean; hide_map?: number | null };
 type AclMap = Record<string, Record<string, AclEntry>>;
 
 const loadUserGalleryRows = async (
@@ -196,7 +196,7 @@ const loadUserGalleryRows = async (
   const out: Array<{
     user_id: string;
     gallery_id: string;
-    is_admin: number;
+    is_editor: number;
     hide_map: number | null;
   }> = [];
   for (const [userId, perGallery] of Object.entries(acl)) {
@@ -206,7 +206,7 @@ const loadUserGalleryRows = async (
       out.push({
         user_id: userId,
         gallery_id: galleryId,
-        is_admin: entry.is_admin ? 1 : 0,
+        is_editor: entry.is_editor ? 1 : 0,
         hide_map: entry.hide_map ?? null,
       });
     }
@@ -223,13 +223,13 @@ const deleteUserGallery = async (userId: string, galleryId: string) => {
 const upsertUserGallery = async (row: {
   user_id: string;
   gallery_id: string;
-  is_admin?: boolean;
+  is_editor?: boolean;
   hide_map?: number | null;
 }) => {
   const acl = (db.accessControl ??= {}) as AclMap;
   acl[row.user_id] ??= {};
-  const existing = acl[row.user_id][row.gallery_id] ?? { is_admin: false };
-  if ("is_admin" in row) existing.is_admin = !!row.is_admin;
+  const existing = acl[row.user_id][row.gallery_id] ?? { is_editor: false };
+  if ("is_editor" in row) existing.is_editor = !!row.is_editor;
   if ("hide_map" in row) existing.hide_map = row.hide_map;
   acl[row.user_id][row.gallery_id] = existing;
 };
@@ -248,21 +248,21 @@ const groupRowsFor = (userId: string, galleryId: string): AclEntry[] => {
 const resolveAccessLevel = async (
   userId: string,
   galleryId: string
-): Promise<{ hasAccess: boolean; isAdmin: boolean }> => {
+): Promise<{ hasAccess: boolean; isEditor: boolean }> => {
   const user = db.users[userId] as { is_admin?: boolean } | undefined;
-  if (user?.is_admin) return { hasAccess: true, isAdmin: true };
+  if (user?.is_admin) return { hasAccess: true, isEditor: true };
   const acl = db.accessControl as AclMap;
   const userRow = acl[userId]?.[galleryId];
   const guestRow = acl[":guest"]?.[galleryId];
   const groupRows = groupRowsFor(userId, galleryId);
   if (!userRow && !guestRow && groupRows.length === 0) {
-    return { hasAccess: false, isAdmin: false };
+    return { hasAccess: false, isEditor: false };
   }
-  const isAdmin =
-    !!userRow?.is_admin ||
-    !!guestRow?.is_admin ||
-    groupRows.some((r) => r.is_admin);
-  return { hasAccess: true, isAdmin };
+  const isEditor =
+    !!userRow?.is_editor ||
+    !!guestRow?.is_editor ||
+    groupRows.some((r) => r.is_editor);
+  return { hasAccess: true, isEditor };
 };
 const resolveHideMap = async (
   userId: string,
@@ -366,7 +366,7 @@ const loadGroupGalleryRows = async (
   const out: Array<{
     group_id: string;
     gallery_id: string;
-    is_admin: number;
+    is_editor: number;
     hide_map: number | null;
   }> = [];
   for (const [groupId, perGallery] of Object.entries(acl)) {
@@ -376,7 +376,7 @@ const loadGroupGalleryRows = async (
       out.push({
         group_id: groupId,
         gallery_id: galleryId,
-        is_admin: entry.is_admin ? 1 : 0,
+        is_editor: entry.is_editor ? 1 : 0,
         hide_map: entry.hide_map ?? null,
       });
     }
@@ -386,13 +386,13 @@ const loadGroupGalleryRows = async (
 const upsertGroupGallery = async (row: {
   group_id: string;
   gallery_id: string;
-  is_admin?: boolean;
+  is_editor?: boolean;
   hide_map?: number | null;
 }) => {
   const acl = (db.groupAccessControl ??= {}) as AclMap;
   acl[row.group_id] ??= {};
-  const existing = acl[row.group_id][row.gallery_id] ?? { is_admin: false };
-  if ("is_admin" in row) existing.is_admin = !!row.is_admin;
+  const existing = acl[row.group_id][row.gallery_id] ?? { is_editor: false };
+  if ("is_editor" in row) existing.is_editor = !!row.is_editor;
   if ("hide_map" in row) existing.hide_map = row.hide_map;
   acl[row.group_id][row.gallery_id] = existing;
 };
@@ -790,41 +790,42 @@ const dbDump = JSON.stringify({
       is_admin: false,
     },
   },
-  // Per-(user, gallery) positive grants. Row presence = VIEW; is_admin
-  // upgrades to gallery admin. The new model has no NONE rows — revoke
-  // is "delete the row." `admin` user is global admin (is_admin flag on
-  // the user table), so no rows here.
+  // Per-(user, gallery) positive grants. Row presence = VIEW;
+  // is_editor upgrades to gallery editor. The model has no
+  // NONE rows — revoke is "delete the row." `admin` user is
+  // global admin (is_admin flag on the user table), so no
+  // rows here.
   accessControl: {
     gallery1admin: {
-      gallery1: { is_admin: true },
+      gallery1: { is_editor: true },
     },
     gallery2admin: {
-      gallery2: { is_admin: true },
+      gallery2: { is_editor: true },
     },
     gallery1user: {
-      gallery1: { is_admin: false },
+      gallery1: { is_editor: false },
     },
     gallery12user: {
-      gallery1: { is_admin: false },
-      gallery2: { is_admin: false },
+      gallery1: { is_editor: false },
+      gallery2: { is_editor: false },
     },
     // plainuser and publicuser previously used the `:all` / `:public`
-    // wildcard rows. The post-#394 equivalent is explicit per-gallery
+    // wildcard rows. The current equivalent is explicit per-gallery
     // grants on every real gallery in the fixture.
     plainuser: {
-      gallery1: { is_admin: false },
-      gallery2: { is_admin: false },
-      gallery3: { is_admin: false },
+      gallery1: { is_editor: false },
+      gallery2: { is_editor: false },
+      gallery3: { is_editor: false },
     },
     publicuser: {
-      gallery1: { is_admin: false },
-      gallery2: { is_admin: false },
-      gallery3: { is_admin: false },
+      gallery1: { is_editor: false },
+      gallery2: { is_editor: false },
+      gallery3: { is_editor: false },
     },
     simpleuser: {},
     blockeduser: {},
     ":guest": {
-      gallery3: { is_admin: false },
+      gallery3: { is_editor: false },
     },
   },
   // Empty by default; tests that exercise groups seed via the model

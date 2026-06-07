@@ -23,16 +23,16 @@ const RowParams = Type.Object({
 const RowResponse = Type.Object({
   user_id: Type.String(),
   gallery_id: Type.String(),
-  is_admin: Type.Number(),
+  is_editor: Type.Number(),
   hide_map: Type.Union([Type.Number(), Type.Null()]),
 });
 const RowsResponse = Type.Array(RowResponse);
-// `isAdmin = true` upgrades a row to gallery admin. `hideMap`
+// `isEditor = true` upgrades a row to gallery editor. `hideMap`
 // is the privacy override on this specific (user, gallery) pair —
 // `null` means "inherit from the next outer level."
 const UpsertBody = Type.Object(
   {
-    isAdmin: Type.Boolean(),
+    isEditor: Type.Boolean(),
     hideMap: Type.Optional(Type.Union([Type.Boolean(), Type.Null()])),
   },
   { additionalProperties: false }
@@ -63,7 +63,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       })) as Array<{
         user_id: string;
         gallery_id: string;
-        is_admin: number;
+        is_editor: number;
         hide_map: number | null;
       }>;
       // On a scoped host, narrow to the scoped galleries. Rows for any
@@ -92,11 +92,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request, reply) => {
       requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeAdmin(request.user.id);
-      const { isAdmin, hideMap } = request.body;
+      const { isEditor, hideMap } = request.body;
       await model.upsertUserGallery({
         user_id: request.params.userId,
         gallery_id: request.params.galleryId,
-        is_admin: isAdmin,
+        is_editor: isEditor,
         hide_map:
           hideMap === undefined ? undefined : hideMap === null ? null : hideMap ? 1 : 0,
       });

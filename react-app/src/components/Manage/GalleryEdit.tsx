@@ -223,10 +223,12 @@ const GalleryEdit = (): React.ReactElement => {
   const user = useUserStore((s) => s.user);
   const queryClient = useQueryClient();
 
+  const isAdmin = !!user?.isAdmin();
+  const isEditor = !!(galleryId && user?.isGalleryEditor(galleryId));
   const { data, isLoading, isError } = useQuery({
     queryKey: ["gallery", galleryId, user?.id ?? null],
     queryFn: () => galleriesService.get(galleryId),
-    enabled: !!galleryId && !!user?.isAdmin(),
+    enabled: !!galleryId && (isAdmin || isEditor),
   });
 
   const [form, setForm] = React.useState<FormState>(EMPTY_FORM);
@@ -267,7 +269,8 @@ const GalleryEdit = (): React.ReactElement => {
   }, [data]);
 
   const updateMutation = useMutation({
-    mutationFn: () => galleriesService.update(galleryId, toPatch(form)),
+    mutationFn: () =>
+      galleriesService.update(galleryId, toPatch(form, isAdmin)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gallery", galleryId] });
       queryClient.invalidateQueries({ queryKey: ["manage-galleries"] });
@@ -341,14 +344,16 @@ const GalleryEdit = (): React.ReactElement => {
             <BsImages aria-hidden />
             {t("manage-gallery-link-photos")}
           </SiblingLink>
-          <SiblingLink
-            onClick={() => navigate(`/m/g/${galleryId}/access`)}
-            role="link"
-            tabIndex={0}
-          >
-            <BsShieldLock aria-hidden />
-            {t("manage-gallery-link-access")}
-          </SiblingLink>
+          {isAdmin && (
+            <SiblingLink
+              onClick={() => navigate(`/m/g/${galleryId}/access`)}
+              role="link"
+              tabIndex={0}
+            >
+              <BsShieldLock aria-hidden />
+              {t("manage-gallery-link-access")}
+            </SiblingLink>
+          )}
         </SiblingNav>
       </TitleRow>
       {saveError && (
@@ -381,6 +386,7 @@ const GalleryEdit = (): React.ReactElement => {
               queryClient.invalidateQueries({ queryKey: ["manage-galleries"] });
               queryClient.invalidateQueries({ queryKey: ["galleries"] });
             }}
+            hostnameEditable={isAdmin}
           />
           <Footer>
             <span />
@@ -425,17 +431,19 @@ const GalleryEdit = (): React.ReactElement => {
             <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
           </Summary>
           <Footer>
-            <ButtonDanger
-              type="button"
-              onClick={() => {
-                setSaveError(null);
-                setConfirmingDelete(true);
-              }}
-              disabled={deleteMutation.isPending || confirmingDelete}
-            >
-              <BsTrash aria-hidden />
-              {t("manage-gallery-button-delete")}
-            </ButtonDanger>
+            {isAdmin && (
+              <ButtonDanger
+                type="button"
+                onClick={() => {
+                  setSaveError(null);
+                  setConfirmingDelete(true);
+                }}
+                disabled={deleteMutation.isPending || confirmingDelete}
+              >
+                <BsTrash aria-hidden />
+                {t("manage-gallery-button-delete")}
+              </ButtonDanger>
+            )}
             <FooterRight>
               <ButtonPrimary type="button" onClick={handleStartEdit}>
                 <BsPencilSquare aria-hidden />

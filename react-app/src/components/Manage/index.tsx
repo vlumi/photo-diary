@@ -264,11 +264,17 @@ const Manage = (): React.ReactElement => {
     params.galleryId ??
     (filteredGalleries.length === 1 ? filteredGalleries[0] : undefined);
   const { isReady: hostScopeReady, isHostScoped } = useHostScope();
+  const isAdmin = !!user?.isAdmin();
+  const isEditor = !isAdmin && (user?.editorGalleries() ?? []).length > 0;
   const onGlobalManagePath = GLOBAL_MANAGE_PATHS.some(
     (p) => location.pathname === p || location.pathname.startsWith(`${p}/`)
   );
+  // Bounce non-global-admins off the global Manage surfaces.
+  // Host-scope already handles its case; editors get the same
+  // treatment so they don't land on a dead end / 403 list.
   const shouldBounceToDashboard =
-    hostScopeReady && isHostScoped && onGlobalManagePath;
+    (hostScopeReady && isHostScoped && onGlobalManagePath) ||
+    (isEditor && onGlobalManagePath);
 
   // Resolve the gallery's raw id to its title via a shared-cache
   // useQuery (same key shape as the rest of the app, so this
@@ -278,7 +284,9 @@ const Manage = (): React.ReactElement => {
   const galleryQuery = useQuery({
     queryKey: ["gallery", galleryId, user?.id ?? null],
     queryFn: () => galleriesService.get(galleryId as string),
-    enabled: !!galleryId && !!user?.isAdmin(),
+    enabled:
+      !!galleryId &&
+      (isAdmin || !!(galleryId && user?.isGalleryEditor(galleryId))),
   });
   const resolved = React.useMemo<ResolvedLabels>(() => {
     const galleryData = galleryQuery.data as

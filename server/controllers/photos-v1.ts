@@ -364,32 +364,38 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 
   /**
-   * Look up many photos in one call. Admin only — drives the
-   * bulk-edit modal's "what does each selected photo currently
-   * hold" check. Host-scope is enforced: out-of-scope ids are
-   * silently dropped from the result rather than 404'd, so a
-   * scope-changed selection doesn't surface as a hard error.
+   * Look up many photos in one call. Drives the bulk-edit
+   * modal's "what does each selected photo currently hold"
+   * check. Open to global-admin + gallery-editor: ids the
+   * caller can't edit are silently dropped from the response
+   * (matches how host-scope already filters out-of-scope ids).
+   * A scope-changed selection therefore surfaces as a smaller
+   * result, not an error.
    */
   fastify.post(
     "/by-ids",
     {
       schema: {
         tags: TAGS,
-        summary: "Fetch many photos by id (admin)",
+        summary: "Fetch many photos by id (admin / gallery-editor)",
         body: PhotosByIdsBody,
         response: { 200: PhotosByIdsResponse },
         security: [{ bearer: [] }],
       },
     },
     async (request) => {
-      await authorizer.authorizeAdmin(request.user.id);
       const inScope = await collectScopePhotoIds(request);
       const requested = request.body.ids;
-      const allowed = inScope
+      const hostScoped = inScope
         ? requested.filter((id) => inScope.has(id))
         : requested;
       const photos: Record<string, unknown>[] = [];
-      for (const id of allowed) {
+      for (const id of hostScoped) {
+        try {
+          await authorizer.authorizePhotoEditor(request.user.id, id);
+        } catch {
+          continue;
+        }
         const row = (await model
           .getPhoto(id)
           .catch(() => null)) as Record<string, unknown> | null;
@@ -436,13 +442,16 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request, reply) => {
       await requirePhotoInScope(request, request.params.photoId);
-      await authorizer.authorizeAdmin(request.user.id);
+      await authorizer.authorizePhotoEditor(
+        request.user.id,
+        request.params.photoId
+      );
       const photoId = request.params.photoId;
       const body = request.body as Record<string, unknown>;
       // Did the patch actually change any of the coords? If yes,
       // the geocoded columns become stale — clear them
       // synchronously and write a sidecar so the converter's
-      // intake pipeline refreshes them via Nominatim (#415).
+      // intake pipeline refreshes them via Nominatim.
       const incomingCoords = readIncomingCoords(body);
       let coordChanged = false;
       let nextCoords:
@@ -487,7 +496,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request, reply) => {
       await requirePhotoInScope(request, request.params.photoId);
-      await authorizer.authorizeAdmin(request.user.id);
+      await authorizer.authorizePhotoEditor(
+        request.user.id,
+        request.params.photoId
+      );
       const photoId = request.params.photoId;
       const existing = (await model.getPhoto(photoId)) as Record<
         string,

@@ -131,7 +131,7 @@ describe("group_gallery upsert / load / delete", () => {
     ).resolves.toBeUndefined();
   });
 
-  test("upsertGroupGallery promotes is_admin without touching hide_map", async () => {
+  test("upsertGroupGallery promotes is_editor without touching hide_map", async () => {
     await driver.upsertGroupGallery({
       group_id: "g-gg",
       gallery_id: "g-gallery",
@@ -140,12 +140,12 @@ describe("group_gallery upsert / load / delete", () => {
     await driver.upsertGroupGallery({
       group_id: "g-gg",
       gallery_id: "g-gallery",
-      is_admin: true,
+      is_editor: true,
     });
     const rows = (await driver.loadGroupGalleryRows({
       groupId: "g-gg",
-    })) as Array<{ is_admin: number; hide_map: number }>;
-    expect(rows[0].is_admin).toBe(1);
+    })) as Array<{ is_editor: number; hide_map: number }>;
+    expect(rows[0].is_editor).toBe(1);
     expect(rows[0].hide_map).toBe(1);
   });
 

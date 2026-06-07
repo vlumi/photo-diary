@@ -470,15 +470,21 @@ describe("Mutations as gallery1admin", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({ title: "renamed" })
       .expect(403));
-  test("Delete own gallery", () =>
+  test("Delete own gallery rejected (admin-only)", () =>
     api
       .delete("/api/v1/galleries/gallery1")
       .set("Authorization", `Bearer ${token}`)
-      .expect(204));
+      .expect(403));
   test("Delete other gallery rejected", () =>
     api
       .delete("/api/v1/galleries/gallery2")
       .set("Authorization", `Bearer ${token}`)
+      .expect(403));
+  test("Update with hostname rejected (admin-only)", () =>
+    api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ hostname: "example.com" })
       .expect(403));
 });
 
