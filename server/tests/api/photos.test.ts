@@ -159,6 +159,18 @@ describe("As admin", () => {
   test("Get invalid", async () => {
     await getPhoto(token, "invalid.jpg", 404);
   });
+  test("Get includes the photo's gallery memberships", async () => {
+    const result = await getPhoto(token, "gallery12photo.jpg");
+    const galleries = result.body.galleries as string[];
+    expect(Array.isArray(galleries)).toBe(true);
+    expect(galleries.sort()).toEqual(["gallery1", "gallery2"]);
+  });
+  test("Get on an orphan returns an empty galleries array", async () => {
+    const result = await getPhoto(token, "orphanphoto.jpg");
+    const galleries = result.body.galleries as string[];
+    expect(Array.isArray(galleries)).toBe(true);
+    expect(galleries).toEqual([]);
+  });
   test("Batch by-ids returns the requested photos in order", async () => {
     const result = await api
       .post("/api/v1/photos/by-ids")
