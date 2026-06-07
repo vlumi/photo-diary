@@ -44,6 +44,10 @@ const Notice = styled.p`
   font-style: italic;
   margin: 0;
 `;
+const TableScroll = styled.div`
+  overflow-x: auto;
+  width: 100%;
+`;
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -143,7 +147,8 @@ const Users = (): React.ReactElement => {
       ) : rows.length === 0 ? (
         <Notice>{t("manage-users-empty")}</Notice>
       ) : (
-        <Table>
+        <TableScroll>
+          <Table>
           <thead>
             <tr>
               <Th>{t("manage-users-col-id")}</Th>
@@ -168,7 +173,8 @@ const Users = (): React.ReactElement => {
               </Row>
             ))}
           </tbody>
-        </Table>
+          </Table>
+        </TableScroll>
       )}
     </Root>
   );

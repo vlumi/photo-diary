@@ -10,7 +10,7 @@ import {
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { BsFillHouseFill, BsChevronRight } from "react-icons/bs";
+import { BsFillHouseFill, BsChevronRight, BsGearFill } from "react-icons/bs";
 
 import useKeyPress from "../../lib/keypress";
 import galleriesService from "../../services/galleries";
@@ -72,6 +72,9 @@ const Separator = styled(BsChevronRight)`
 `;
 const Crumb = styled.span`
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   white-space: nowrap;
 `;
 const HomeLink = styled.a`
@@ -389,6 +392,7 @@ const Manage = (): React.ReactElement => {
             <React.Fragment key={`${i}-${c.label}`}>
               <Separator />
               <Crumb>
+                {i === 0 && <BsGearFill aria-hidden />}
                 {c.kind === "link" ? (
                   <CrumbLink
                     onClick={(e) => {

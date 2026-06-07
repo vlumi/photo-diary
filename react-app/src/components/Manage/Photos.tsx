@@ -251,15 +251,23 @@ const Pager = styled.div`
   justify-content: center;
   align-items: center;
   gap: 12px;
-  padding: 16px 0;
+  padding: 12px 0;
 `;
+// Padding bumps the button to ~44px tall (iOS HIG touch target)
+// so the pager is reachable on phones; min-width keeps Prev /
+// Next consistent when one is disabled.
 const PagerButton = styled.button`
-  padding: 4px 10px;
+  padding: 10px 18px;
+  min-width: 88px;
   border: 1px solid var(--inactive-color);
+  border-radius: 4px;
   background: transparent;
   color: var(--primary-color);
   font: inherit;
   cursor: pointer;
+  &:hover:not(:disabled) {
+    border-color: var(--primary-color);
+  }
   &:disabled {
     color: var(--inactive-color);
     cursor: default;
@@ -678,6 +686,30 @@ const Photos = (): React.ReactElement => {
       });
       clearSelection();
     };
+    // Top-and-bottom Pager so the operator can flip pages from
+    // either end of a long results page without scrolling.
+    const renderPager = () =>
+      pageCount > 1 ? (
+        <Pager>
+          <PagerButton
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => goToPage(currentPage - 1)}
+          >
+            {t("manage-photos-prev-page")}
+          </PagerButton>
+          <span>
+            {currentPage} / {pageCount}
+          </span>
+          <PagerButton
+            type="button"
+            disabled={currentPage >= pageCount}
+            onClick={() => goToPage(currentPage + 1)}
+          >
+            {t("manage-photos-next-page")}
+          </PagerButton>
+        </Pager>
+      ) : null;
     return (
       <>
         <ResultSummary>
@@ -714,6 +746,7 @@ const Photos = (): React.ReactElement => {
             onCancel={clearSelection}
           />
         )}
+        {renderPager()}
         {photos.length === 0 ? (
           <EmptyState>{t("manage-photos-empty")}</EmptyState>
         ) : (
@@ -771,25 +804,7 @@ const Photos = (): React.ReactElement => {
             })}
           </Grid>
         )}
-        {pageCount > 1 && (
-          <Pager>
-            <PagerButton
-              type="button"
-              disabled={currentPage <= 1}
-              onClick={() => goToPage(currentPage - 1)}
-            >
-              {t("manage-photos-prev-page")}
-            </PagerButton>
-            <span>{currentPage} / {pageCount}</span>
-            <PagerButton
-              type="button"
-              disabled={currentPage >= pageCount}
-              onClick={() => goToPage(currentPage + 1)}
-            >
-              {t("manage-photos-next-page")}
-            </PagerButton>
-          </Pager>
-        )}
+        {renderPager()}
       </>
     );
   };
