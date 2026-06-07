@@ -32,6 +32,15 @@ const Bar = styled.div`
   border: 1px solid var(--inactive-color);
   border-radius: 4px;
   margin-bottom: 8px;
+  @media (max-width: 700px) {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    margin-bottom: 0;
+    z-index: 950;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  }
 `;
 const Count = styled.span`
   font-weight: bold;
