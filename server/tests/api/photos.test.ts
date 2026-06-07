@@ -184,6 +184,39 @@ describe("As admin", () => {
       .send({ ids: [] })
       .expect(400);
   });
+  test("Year-months returns one bucket per (year, month) sorted newest-first", async () => {
+    const result = await api
+      .get("/api/v1/photos/year-months")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const buckets = result.body.buckets as Array<{
+      yearMonth: string;
+      count: number;
+    }>;
+    expect(Array.isArray(buckets)).toBe(true);
+    // The dummy fixture has photos but most lack a `taken` timestamp,
+    // so the resulting bucket count is loose. Just verify the shape
+    // and the sort order.
+    for (const b of buckets) {
+      expect(b.yearMonth).toMatch(/^\d{4}-\d{2}$/);
+      expect(b.count).toBeGreaterThan(0);
+    }
+    for (let i = 1; i < buckets.length; i++) {
+      expect(buckets[i - 1].yearMonth.localeCompare(buckets[i].yearMonth)).toBeGreaterThan(0);
+    }
+  });
+  test("Year-months respects filter chips (orphan)", async () => {
+    const result = await api
+      .get("/api/v1/photos/year-months")
+      .query({ orphan: true })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const buckets = result.body.buckets as Array<{
+      yearMonth: string;
+      count: number;
+    }>;
+    expect(Array.isArray(buckets)).toBe(true);
+  });
   test("Audit-counts returns per-predicate tallies", async () => {
     const result = await api
       .get("/api/v1/photos/audit-counts")

@@ -84,6 +84,34 @@ export interface AuditCounts {
 const getAuditCounts = async (): Promise<AuditCounts> =>
   unwrap(api.GET("/api/v1/photos/audit-counts", {})) as Promise<AuditCounts>;
 
+export interface YearMonthBucket {
+  yearMonth: string;
+  count: number;
+}
+
+// Year-month bucket counts. The server endpoint takes the same
+// filter chips as `/photos` but rejects dateFrom / dateTo by
+// design — the timeline shouldn't narrow itself. Strip them
+// before the call.
+const getYearMonths = async (
+  filter: PhotoFilter
+): Promise<YearMonthBucket[]> => {
+  const q: Record<string, unknown> = {};
+  if (filter.galleryIds && filter.galleryIds.length > 0)
+    q.gallery = filter.galleryIds;
+  if (filter.orphan) q.orphan = true;
+  if (filter.missing && filter.missing.length > 0) q.missing = filter.missing;
+  if (filter.duplicates) q.duplicates = true;
+  if (filter.countryMismatch) q.countryMismatch = true;
+  if (filter.q) q.q = filter.q;
+  const result = (await unwrap(
+    api.GET("/api/v1/photos/year-months", {
+      params: { query: q },
+    })
+  )) as { buckets: YearMonthBucket[] };
+  return result.buckets;
+};
+
 const getByIds = async (ids: string[]): Promise<PhotoRow[]> => {
   if (ids.length === 0) return [];
   const result = (await unwrap(
@@ -158,6 +186,7 @@ export default {
   get,
   getByIds,
   getAuditCounts,
+  getYearMonths,
   update,
   regeocode,
   remove,

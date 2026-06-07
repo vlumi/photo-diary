@@ -19,6 +19,7 @@ import galleriesService from "../../services/galleries";
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 import BulkActions from "./BulkActions";
+import TimelineStrip from "./TimelineStrip";
 
 const Root = styled.div`
   display: flex;
@@ -392,6 +393,21 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     queryFn: () => photosService.list(filter, page, PAGE_SIZE, photoIdFocus),
   });
 
+  // Filter for the sidebar timeline — strip dateFrom / dateTo so
+  // the buckets don't narrow themselves as the operator drills
+  // into a specific month. Bucket counts recompute when any other
+  // chip changes.
+  const timelineFilter = React.useMemo(() => {
+    const next = { ...filter };
+    delete next.dateFrom;
+    delete next.dateTo;
+    return next;
+  }, [filter]);
+  const timelineQuery = useQuery({
+    queryKey: ["manage-photos-year-months", timelineFilter],
+    queryFn: () => photosService.getYearMonths(timelineFilter),
+  });
+
   // After photoIdFocus resolves a non-1 page, write it back to the
   // URL. Without this the page param stays absent: closing the
   // drawer keeps the URL on `.../photos` (no ?page=), the focus
@@ -511,6 +527,28 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
             }
           />
         </DateRow>
+      </FilterGroup>
+      <FilterGroup>
+        <FilterTitle>{t("manage-photos-filter-timeline")}</FilterTitle>
+        <TimelineStrip
+          buckets={timelineQuery.data ?? []}
+          dateFrom={searchParams.get("dateFrom")}
+          dateTo={searchParams.get("dateTo")}
+          onPickMonth={(_yearMonth, range) => {
+            setSearchParams((prev) => {
+              const next = new URLSearchParams(prev);
+              if (range) {
+                next.set("dateFrom", range.dateFrom);
+                next.set("dateTo", range.dateTo);
+              } else {
+                next.delete("dateFrom");
+                next.delete("dateTo");
+              }
+              next.delete("page");
+              return next;
+            });
+          }}
+        />
       </FilterGroup>
       {!galleryId && (
         <FilterGroup>
@@ -649,6 +687,11 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
       void queryClient.invalidateQueries({ queryKey: ["manage-photo"] });
       void queryClient.invalidateQueries({ queryKey: ["galleries"] });
       void queryClient.invalidateQueries({ queryKey: ["manage-audit-counts"] });
+      // Bulk deletes / Edit fields touching `taken` shift the
+      // year-month bucket counts; keep the sidebar timeline current.
+      void queryClient.invalidateQueries({
+        queryKey: ["manage-photos-year-months"],
+      });
       clearSelection();
     };
     return (

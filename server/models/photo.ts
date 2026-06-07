@@ -17,6 +17,7 @@ export default () => {
     getPhotos,
     listPhotos,
     countAudits,
+    countYearMonths,
     createPhoto,
     getPhoto,
     updatePhoto,
@@ -170,6 +171,58 @@ const countAudits = async (opts: {
     }
   }
   return { orphan, duplicates, countryMismatch, missing };
+};
+
+// Per-(year, month) photo counts over the filtered + scoped set —
+// drives the Manage Photos sidebar's month-picker timeline. The
+// caller omits `dateFrom` / `dateTo` from the filter (would
+// narrow the timeline to itself); other filter chips DO apply so
+// the strip recomputes as orphan / missing / etc. toggle. Skips
+// rows without a usable `taken.instant.timestamp` — they have no
+// year-month bucket to land in.
+export interface YearMonthBucket {
+  yearMonth: string;
+  count: number;
+}
+
+const countYearMonths = async (
+  opts: {
+    filter?: PhotoFilter;
+    restrictToIds?: Set<string>;
+  } = {}
+): Promise<YearMonthBucket[]> => {
+  logger.debug("Counting year-months", { scoped: !!opts.restrictToIds });
+  const photos = toArray(await db.loadPhotos());
+  const orphanIds = new Set<string>(await db.loadOrphanPhotoIds());
+  const links = await db.loadAllGalleryPhotoLinks();
+  const galleryMembers = new Map<string, Set<string>>();
+  for (const link of links) {
+    let set = galleryMembers.get(link.photoId);
+    if (!set) {
+      set = new Set();
+      galleryMembers.set(link.photoId, set);
+    }
+    set.add(link.galleryId);
+  }
+  let matched = applyFilter(photos, opts.filter ?? {}, {
+    galleryMembers,
+    orphanIds,
+  });
+  if (opts.restrictToIds) {
+    const allow = opts.restrictToIds;
+    matched = matched.filter((p) => allow.has(p.id));
+  }
+  const counts = new Map<string, number>();
+  for (const p of matched) {
+    const ts = p.taken?.instant?.timestamp as string | undefined;
+    if (!ts || ts === "Invalid date") continue;
+    const ym = ts.slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(ym)) continue;
+    counts.set(ym, (counts.get(ym) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([yearMonth, count]) => ({ yearMonth, count }))
+    .sort((a, b) => b.yearMonth.localeCompare(a.yearMonth));
 };
 
 const createPhoto = async (photo: { id: string } & Record<string, any>) => {

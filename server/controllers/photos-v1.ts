@@ -173,6 +173,35 @@ const PhotosListResponse = Type.Object({
   pageSize: Type.Integer(),
   total: Type.Integer(),
 });
+// Query for the year-months timeline. Same shape as PhotosQuery
+// without pagination and without dateFrom / dateTo (the timeline
+// should not narrow itself — the client strips those before the
+// call so the buckets stay stable as the operator drills into a
+// specific month).
+const YearMonthsQuery = Type.Object(
+  {
+    gallery: Type.Optional(stringOrArray(Type.String)),
+    orphan: Type.Optional(Type.Boolean()),
+    missing: Type.Optional(
+      Type.Union([
+        Type.Union(MISSING_VALUES.map((v) => Type.Literal(v))),
+        Type.Array(Type.Union(MISSING_VALUES.map((v) => Type.Literal(v)))),
+      ])
+    ),
+    duplicates: Type.Optional(Type.Boolean()),
+    countryMismatch: Type.Optional(Type.Boolean()),
+    q: Type.Optional(Type.String()),
+  },
+  { additionalProperties: false }
+);
+const YearMonthsResponse = Type.Object({
+  buckets: Type.Array(
+    Type.Object({
+      yearMonth: Type.String(),
+      count: Type.Integer(),
+    })
+  ),
+});
 const AuditCountsResponse = Type.Object({
   orphan: Type.Integer(),
   duplicates: Type.Integer(),
@@ -269,6 +298,45 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       return await model.countAudits({
         restrictToIds: restrictToIds ?? undefined,
       });
+    }
+  );
+
+  /**
+   * Year-month bucket counts over the filtered (sans date-range)
+   * scope. Drives the Manage Photos sidebar's month-picker
+   * timeline — operator clicks a year/month to set dateFrom and
+   * dateTo. Counts narrow as other filter chips toggle so the
+   * timeline reflects "of the currently-filtered photos, this
+   * many are in <YYYY-MM>".
+   */
+  fastify.get(
+    "/year-months",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Photo counts grouped by year-month (admin)",
+        querystring: YearMonthsQuery,
+        response: { 200: YearMonthsResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const q = request.query;
+      const filter: PhotoFilter = {
+        galleryIds: toArray(q.gallery),
+        orphan: q.orphan,
+        missing: toArray(q.missing) as MissingField[] | undefined,
+        duplicates: q.duplicates,
+        countryMismatch: q.countryMismatch,
+        q: q.q,
+      };
+      const restrictToIds = await collectScopePhotoIds(request);
+      const buckets = await model.countYearMonths({
+        filter,
+        restrictToIds: restrictToIds ?? undefined,
+      });
+      return { buckets };
     }
   );
 
