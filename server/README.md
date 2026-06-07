@@ -82,46 +82,60 @@ The per-instance `bin/` directory (`<instance>/bin/{photo,photo-rename,photo-geo
 
 Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. Default base is `/var/photo-diary`. Mode is auto-detected from existing state:
 
-- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root, and creates the per-instance `bin/{photo,gallery,user}.ts` shortcuts.
+- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root, and creates the per-instance `bin/{photo,gallery,group,user,meta}.ts` shortcuts.
 - **Doctor** — instance exists, `code` already points at this script's root. Reports missing `.env` keys with `✓`/`✗` markers. Refreshes any missing `bin/` shortcuts. Add `--fix` to append defaults to `.env`.
 - **Upgrade** — `code` points at a different version. Backs up the DB to `db.sqlite3.pre-<new-version>` and flips the symlink. Refreshes `bin/` shortcuts.
 
 #### `user.ts <subcommand> …`
 
-| Subcommand | Purpose |
-| --- | --- |
-| `list` | Print every user as a table with their admin flag (derived from a `(user, ':all', admin)` row in `user_gallery`). |
-| `passwd <id> <password> [--keep-secret]` | Upsert: creates the user if missing, updates the password if present. Default rotates the user's `secret` (kills active JWT sessions, correct for "password lost / leaked"); `--keep-secret` opts out and keeps sessions alive. |
-| `delete <id> [--yes]` | Delete the user and cascade their `user_gallery` rows (access + hide_map). Asks for confirmation unless `--yes` is given. |
-
-Access level changes are handled by [`access.ts`](#accessts-subcommand-) — `user.ts` doesn't touch the `user_gallery` table except to cascade-delete on `delete`.
-
-#### `access.ts <subcommand> …`
-
-Manages rows in the `user_gallery` table — access level (view / admin) and the `hide_map` privacy toggle. Replaces the previous "edit the DB directly with sqlite3" recipes. `:guest` (the sentinel user) and `:all` (the sentinel gallery) are accepted directly as positional arguments.
+Manages the `user` row, the global-admin flag, and the per-user grants in `user_gallery`. `:guest` (the sentinel user representing anonymous visitors) is accepted directly as a positional argument.
 
 | Subcommand | Purpose |
 | --- | --- |
-| `list [--user <id>] [--gallery <id>]` | Print existing rows as a table. Optional filters narrow to one user, one gallery, or both. |
-| `level <user> <gallery> <none\|view\|admin>` | Set the access level on a row (upserts). `none` is the row-level deny — the cascade stops here. Preserves any existing `hide_map` value on the same pair. |
-| `unset <user> <gallery> [--yes]` | Delete the row entirely so the cascade falls through to less-specific rows. Asks for confirmation unless `--yes` is given. |
-| `hide-map <user> <gallery> <hide\|show\|default>` | Set or clear the privacy toggle. `default` clears the override so the cascade falls through to a less-specific row. |
-
-`level … none` and `unset` are not the same: `level … none` writes a row with `access_level=0` and stops the cascade at that row (explicit deny at this level); `unset` deletes the row entirely and lets the cascade fall through to less-specific rows.
+| `list` | Print every user as a table with their `name` and global-admin flag (`user.is_admin`). |
+| `make-admin <id>` | Set `user.is_admin = 1` — global admin bypasses every per-gallery check. |
+| `revoke-admin <id>` | Set `user.is_admin = 0`. Per-gallery grants on `user_gallery` are untouched. |
+| `set-name <id> <name>` | Set the mutable display `name` on a user. |
+| `passwd <id> [password]` | Upsert: creates the user if missing, updates the password if present. Default rotates the user's `secret` (kills active JWT sessions, correct for "password lost / leaked"); `--keep-secret` opts out and keeps sessions alive. |
+| `grant <user> <gallery> [--editor]` | Upsert a `user_gallery` row. Default grants view; `--editor` flips `is_editor = 1` (gallery-editor tier). Re-running with a different `--editor` toggles it. |
+| `revoke <user> <gallery> [--yes]` | Delete the `user_gallery` row entirely. Asks for confirmation unless `--yes` is given. |
+| `hide-map <user> <gallery> <hide\|show\|default>` | Set or clear the privacy override on the row. `default` clears the override so the cascade falls through. |
+| `grants [user]` | Print direct `user_gallery` rows (optionally filtered to one user) plus a listing of users with the global-admin flag. |
+| `access [user]` | Print effective access for a user (direct grants + inherited via groups + `:guest` fallback), with the sources for each row. |
+| `audit` | Find users with no access, warn if the instance has no admin, or report `user_gallery` rows whose user is gone. |
+| `delete <id> [--yes]` | Delete the user and cascade their `user_gallery` rows. Asks for confirmation unless `--yes` is given. |
 
 Examples:
 
 ```sh
-./bin/access.ts level alice :all admin            # alice gets admin everywhere
-./bin/access.ts level :guest :all view            # public visitors can view everything
-./bin/access.ts level alice secret none           # block alice from "secret" even if :all grants view
-./bin/access.ts hide-map :guest dailybw hide      # hide map for guests on one gallery
-./bin/access.ts hide-map alice dailybw default    # clear alice's override on that gallery
-./bin/access.ts list --user alice                 # show alice's rows
-./bin/access.ts unset alice travel                # delete the row (with confirmation)
+./bin/user.ts make-admin alice                    # alice becomes global admin
+./bin/user.ts grant :guest :all                   # public visitors can view everything
+./bin/user.ts grant bob travel --editor           # bob can edit photos in the travel gallery
+./bin/user.ts hide-map :guest dailybw hide        # hide map for guests on one gallery
+./bin/user.ts access alice                        # what alice can actually see / edit, and why
+./bin/user.ts revoke bob secret                   # drop bob's grant on the "secret" gallery
 ```
 
-The cascade resolution lives in [server/lib/privacy.ts](lib/privacy.ts) and `loadUserAccessControl` in [server/db/sqlite3/index.ts](db/sqlite3/index.ts) — privacy-only rows (those with `access_level=NULL`) are filtered out of the access map so they don't break access fall-through to `:all`.
+#### `group.ts <subcommand> …`
+
+Manages user groups and their `group_gallery` grants. Groups are a way to collectively grant view / editor on a set of galleries to a set of users — a user inherits the union of every group they belong to (plus their own direct `user_gallery` grants, plus `:guest`'s grants as the floor).
+
+| Subcommand | Purpose |
+| --- | --- |
+| `list` | Every group with its member count and gallery-grant count. |
+| `show <id>` | Members + per-gallery grants for one group. |
+| `create <id> [--name <s>] [--description <s>]` | Create a group. |
+| `update <id> [--name <s>] [--description <s>]` | Update the metadata on a group. |
+| `delete <id> [--yes]` | Delete the group and cascade `user_group` + `group_gallery`. |
+| `members <id>` | List the members of a group. |
+| `add <user> <group>` | Add a user to a group. |
+| `remove <user> <group>` | Remove a user from a group. |
+| `grant <group> <gallery> [--editor]` | Upsert a `group_gallery` row. Same view / `--editor` toggle as `user.ts grant`. |
+| `revoke <group> <gallery> [--yes]` | Delete the `group_gallery` row. |
+| `hide-map <group> <gallery> <state>` | Set or clear the privacy override on the row. |
+| `audit` | Empty groups, groups with no grants, dangling FK rows. |
+
+The cascade resolution lives in [server/lib/privacy.ts](lib/privacy.ts) and [server/lib/authorizer.ts](lib/authorizer.ts). `user.ts access <user>` is the operator-friendly way to inspect the resolved access map for any user — it shows which row (direct, group-derived, or `:guest`-derived) contributed each gallery grant.
 
 #### `gallery.ts <id> [options]`
 
@@ -205,91 +219,87 @@ Wrapper scripts that source `.env` from the current working directory, prepend t
 
 ### Access control
 
-The access control has three levels of increasing access:
+Two flags carry the entire model:
 
-1. No access
-2. View access
-3. Admin access
+- **`user.is_admin`** — global admin. Bypasses every per-gallery check; can do everything the API exposes.
+- **`is_editor`** on `user_gallery` / `group_gallery` — gallery-editor tier. Can edit photo data on the gallery's photos and update most gallery settings; cannot delete the gallery itself or change `hostname` (instance-level concern).
 
-An access level can be assigned to each user globally, or to any number of galleries.
+A `user_gallery` or `group_gallery` row with `is_editor = 0` is a plain **view** grant — the holder can read the gallery and its photos but not modify anything.
 
-Gallery-level access is also hierarchical, with increasing scope:
+A user's effective access is the union of:
 
-1. Specific gallery
-2. Virtual gallery ":public", matching all galleries and their photos
-3. Virtual gallery ":all", matching every photo (including orphans not linked to any gallery)
+1. Their direct `user_gallery` rows.
+2. The `group_gallery` rows of every group they belong to (`user_group` join).
+3. `:guest`'s grants — the anonymous-visitor floor. Even a logged-in user with no direct or group grants still gets whatever `:guest` is allowed.
+
+The sentinel gallery **`:all`** is a wildcard target — a grant of `(subject, :all, …)` applies to every real gallery the instance owns. Use it for "anyone authenticated can view everything" patterns (`./bin/user.ts grant :guest :all`).
+
+The `hide_map` column on `user_gallery` / `group_gallery` is an independent per-row override of the gallery's map-visibility default — three states (hide / show / inherit-from-gallery) that resolve through the same cascade as the access grant.
+
+The authorization primitives live in [`server/lib/authorizer.ts`](lib/authorizer.ts):
+
+- `authorizeAdmin(userId)` — global admin only.
+- `authorizeGalleryView(userId, galleryId)` — any grant on the gallery (direct, group, or `:guest`).
+- `authorizeGalleryEditor(userId, galleryId)` — global admin OR `is_editor` on the gallery.
+- `authorizePhotoEditor(userId, photoId)` — global admin OR gallery-editor on at least one of the photo's galleries. Orphan photos (no gallery links) are global-admin-only.
+
+The **virtual-host scope** ([`server/lib/host-scope.ts`](lib/host-scope.ts)) layers on top: requests whose `Host` header matches a gallery's `hostname` regex are narrowed to that gallery's photos for both reads and writes. `requireUnscoped(request)` rejects cross-gallery admin operations on a bound hostname — `gh issue` examples in the top-level README.
 
 ### RESTful resources
 
-The required access level is listed in brackets at the end of each resource method. The access levels are hierarchical, with the following, ascending priority:
+The required tier is listed in brackets at the end of each route. From least to most privileged:
 
-1. **[gallery/view]** – User with view access assigned to the specific gallery, ":public", or ":all"
-2. **[view]** – User with global (":all") view access
-3. **[gallery/admin]** – User with admin access assigned to the specific gallery, ":public", or ":all"
-4. **[admin]** – User with global (":all") admin acces
-5. **[none]** – A user with access explicitly denied
-6. **[any]** – Any user with an account
+1. **[any]** — no auth required (anonymous OK, the request still inherits `:guest`'s grants).
+2. **[user]** — any authenticated user.
+3. **[gallery/view]** — any grant on the specific gallery (direct, group, or `:guest`).
+4. **[gallery/editor]** — `is_editor` on the gallery, or global admin.
+5. **[admin]** — global admin only.
+
+A bracketed `[unscoped]` suffix means the route is also rejected on hostname-bound instances (cross-gallery admin operations).
 
 - `/meta`
-  - `GET` – List all metadata **[any]**
-  - `POST` – Create a new metadata **[admin]**
-    1. `meta`
-    - Returns `meta`
-  - `GET ../:key` – Get metadata for the ky **[admin]**
-    - Returns `meta`
-  - `PUT ../:key` – Update metadata **[admin]**
-    1. `meta`
-    - Returns `meta`
-  - `DELETE ../:key` – Delete metadata **[admin]**
+  - `GET` — Boot metadata for the SPA **[any]**
+  - `POST` — Create a meta entry **[admin]**
+  - `GET ../:key` — Read one meta entry **[admin]**
+  - `PUT ../:key` — Update a meta entry **[admin]**
+  - `DELETE ../:key` — Delete a meta entry **[admin]**
 - `/tokens`
-  - `POST` – Login, create an authentication token **[any]**
-    1. `id`
-    2. `password`
-    - Returns `token`
-  - `GET` – Verify the current authenticatio ntoken **[any]**
-  - `DELETE` – Logout, revoke all tokens for the current user **[any]**
-  - `DELETE ../:userId` – Logout, revoke all tokens for the user **[admin]**
-- `/users`
-  - `GET` – List all users **[admin]**
-  - `POST` – Create a new user **[admin]**
-    1. `user`
-    - Returns `users`
-  - `GET ../:userId` – Get user **[admin]**
-    - Returns `user`
-  - `PUT ../:userId` – Update user **[admin]**
-    1. `user`
-    - Returns `user`
-  - `DELETE ../:userId` – Delete user **[admin]**
+  - `POST` — Login, mint an access + refresh token pair **[any]**
+  - `GET` — Verify the current token **[any]**
+  - `DELETE` — Logout the current session **[any]**
+  - `DELETE ../:userId` — Force-logout every session for a user **[admin]**
+- `/users` **[unscoped]**
+  - `GET` — List users **[admin]**
+  - `POST` — Create a user **[admin]**
+  - `GET ../:userId` — Read a user **[admin]**
+  - `PUT ../:userId` — Update a user (name, password, `is_admin`) **[admin]**
+  - `DELETE ../:userId` — Delete a user **[admin]**
+- `/groups` **[unscoped]**
+  - `GET` / `POST` / `GET ../:id` / `PUT ../:id` / `DELETE ../:id` — CRUD on user groups **[admin]**
+  - `GET ../:groupId/members` / `PUT ../:groupId/members/:userId` / `DELETE ../:groupId/members/:userId` — membership **[admin]**
+- `/user-gallery`, `/group-gallery` **[unscoped]**
+  - List + upsert + delete the per-gallery ACL rows **[admin]**
 - `/galleries`
-  - `GET` – List all galleries the user has access to **[view]**
-    - Returns `galleries`
-  - `POST` – Create a new gallery **[admin]**
-    1. `gallery`
-    - Returns `gallery`
-  - `GET ../:galleryId` – Get gallery and its photos **[gallery/view]**
-  - `PUT ../:galleryId` – Update gallery **[gallery/admin]**
-    1. `gallery`
-    - Returns `gallery`
-  - `DELETE ../:galleryId` – Delete gallery **[gallery/admin]**
+  - `GET` — Galleries the caller can see **[user]** (filtered by access map)
+  - `POST` — Create a gallery **[admin]**
+  - `GET ../:galleryId` — Read a gallery + its photos **[gallery/view]**
+  - `PUT ../:galleryId` — Update gallery settings **[gallery/editor]** (editors cannot set `hostname`)
+  - `DELETE ../:galleryId` — Delete a gallery **[admin]**
+  - `PUT ../:galleryId/icon` — Crop + render the gallery icon from one of its photos **[gallery/editor]**
 - `/photos`
-  - `GET` – Get all photos **[view]**
-    - Returns `photos`
-  - `POST` – Create a new photo **[admin]**
-    1. `photo`
-    - Returns `photo`
-  - `GET ../:photoId` – Get photo **[view]**
-    - Returns `photo`
-  - `PUT ../:photoId` – Update photo **[admin]**
-    1. `photo`
-    - Returns `photo`
-  - `DELETE ../:photoId` – Delete photo **[admin]**
+  - `GET` — Cross-gallery photo list (paginated, filterable) **[admin]**
+  - `GET ../:photoId` — Read a single photo **[gallery/view]** on any gallery it's linked to (orphans require **[admin]**)
+  - `PUT ../:photoId` — Update photo data (title, location, exposure, …) **[gallery/editor]** on any gallery it's linked to (orphans **[admin]**)
+  - `POST ../:photoId/regeocode` — Clear `geocoded_*` columns and drop a coord sidecar for the converter daemon **[gallery/editor]** on any of the photo's galleries
+  - `POST ../by-ids` — Batch fetch (cap 500), out-of-scope ids silently dropped **[user]**
+  - `GET ../audit-counts` — Per-predicate tallies for the dashboard tiles **[admin]**
+  - `GET ../year-months` — Per-(year, month) bucket counts for the filter timeline **[admin]**
+  - `DELETE ../:photoId` — Delete a photo row **[admin]**
 - `/gallery-photos`
-  - `GET ../:galleryId/` – Get all photos in the gallery **[gallery/view]**
-    - Returns `photos`
-  - `GET ../:galleryId/:photoId` – Get photo in gallery context **[gallery/view]**
-    - Returns `photo`
-  - `PUT ../:galleryId/:photoId` – Link photo to gallery **[gallery/admin]**
-  - `DELETE ../:galleryId/:photoId` – Unlink photo from gallery **[gallery/admin]**
+  - `PUT ../:galleryId/:photoId` — Link a photo into a gallery **[admin]**
+  - `DELETE ../:galleryId/:photoId` — Unlink **[gallery/editor]**
+
+The OpenAPI dump at `/api/v1/docs` (or `server/openapi.json` checked in) is the authoritative request / response shape for every route.
 
 ### Entities
 

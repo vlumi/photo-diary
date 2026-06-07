@@ -60,10 +60,9 @@ const authorizeGalleryView = async (
   return galleryId;
 };
 
-// Gallery-editor tier. Backed by the `is_admin` flag on
-// `user_gallery` / `group_gallery` — the column name predates the
-// tier name; the column stays so old grants keep working. Global
-// admins implicitly pass: they can do everything an editor can.
+// Gallery-editor tier. Backed by the `is_editor` flag on
+// `user_gallery` / `group_gallery`. Global admins implicitly
+// pass — they can do everything an editor can.
 const authorizeGalleryEditor = async (
   userId: string,
   galleryId: string
