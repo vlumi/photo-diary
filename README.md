@@ -67,7 +67,7 @@ Quickstart for a single personal instance. For the full production layout (multi
    ./bin/access.ts level <user> :all admin
    ```
 
-5. **Set the instance `cdn`** — the public URL that serves `display/` and `thumbnail/` (typically the same nginx host):
+5. **Set the instance `cdn`** — the public URL that serves `display/`, `thumbnail/`, and `gallery-icons/` (typically the same nginx host):
 
    ```sh
    ./bin/meta.ts set instance_cdn https://photos.example.com/
@@ -196,7 +196,7 @@ The DB backup is named `db.sqlite3.pre-<new-version>` — a plain file copy that
 
 #### nginx
 
-One server block per instance, proxying to its `PORT` (set in the instance's `.env`). nginx also serves `display/` and `thumbnail/` directly from disk — the server never streams photos, only their metadata. The `cdn` meta row (set via `./bin/meta.ts set instance_cdn …` — or the [API](server/README.md) / raw SQL as fallback) tells the frontend which URL to load images from; typically the same host the API is on.
+One server block per instance, proxying to its `PORT` (set in the instance's `.env`). nginx also serves `display/`, `thumbnail/`, and `gallery-icons/` directly from disk — the server never streams photos, only their metadata. The `cdn` meta row (set via `./bin/meta.ts set instance_cdn …` — or the [API](server/README.md) / raw SQL as fallback) tells the frontend which URL to load images from; typically the same host the API is on.
 
 A realistic per-instance vhost with TLS, certbot-managed certs, proxy headers, and aggressive caching on the photo locations:
 
@@ -238,6 +238,15 @@ server {
     alias /var/photo-diary/dailybw/photos/thumbnail/;
     expires 30d;
     add_header Cache-Control "public, immutable";
+    access_log off;
+  }
+
+  # Gallery icons — written by the cropper at `<galleryId>.jpg`. The path
+  # is stable but the bytes are not (operator can re-crop), so short
+  # cache and no `immutable`.
+  location /gallery-icons/ {
+    alias /var/photo-diary/dailybw/photos/gallery-icons/;
+    expires 1d;
     access_log off;
   }
 
@@ -457,3 +466,4 @@ After the hiatus, a burst of releases that modernized the stack, formalized the 
 - **0.14** (Jun 2026) — Admin UI polish. Slug-shaped (lowercase) ids across `user` / `gallery` / `group` with a one-shot lowercasing migration, mutable `user.name` + renamed `group.name`, per-photo bulk Edit-fields modal (#451), bulk Regeocode (#483), audit-count tiles on the dashboard (#454), filter-sidebar timeline strip with shift-range month picking (#455), gallery-icon cropper from the gallery's own photos (#457), Inbox surface revamp post-daemon (#439), drawer Galleries row + the `/m/g/<id>/photos` route collapsed into `/m/photos?gallery=<id>` (#496/#497), gallery-editor tier surfaced end-to-end via `is_editor` (#498), country dropdown polish (#488/#489) and the new `xx` sentinel for international waters (#486). Mobile / small-screen pass (#412): tables wrap in `TableScroll`, Photos page top-and-bottom pagers with 44px touch targets, Access table redesign (icon-prefixed Subject, centred control headers, trash icon, frosted-glass `BulkActions` bar that floats centred over the grid). Touch multi-select (#452): long-press to anchor, drag to range-fill the anchor → head span, auto-scroll near viewport edges. Manage breadcrumb gains the gear-icon parity with `GlobalStats`. Manage Dashboard navigation reshuffle (#481) plus the manage-galleries-list row-padding (#496) fix.
 
 See the [Roadmap](#roadmap) for what's in flight after 0.14.
+  
