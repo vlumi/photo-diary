@@ -174,7 +174,7 @@ const Tile = styled.button<{
     $focused || $selected ? "0 0 0 2px var(--header-background)" : "none"};
   position: relative;
   touch-action: ${({ $selectionMode }) =>
-    $selectionMode ? "none" : "auto"};
+    $selectionMode ? "pan-y" : "auto"};
   &:hover,
   &:focus-visible {
     border-color: var(--primary-color);
@@ -384,42 +384,54 @@ const Photos = (): React.ReactElement => {
     longPressStart.current = null;
   };
 
-  // Touch sweep-select. After long-press fires (or after a pending
-  // drag in selection mode crosses the move threshold), every tile
-  // the finger crosses gets the "paint" outcome — either select or
-  // deselect depending on the originating tile's pre-toggle state.
-  // Auto-scrolls the page when the finger nears the viewport edge.
+  // Touch sweep-select (range-fill). The originating tile anchors
+  // a contiguous range in the current page's DOM order; the head is
+  // whichever tile lives under the finger right now. Every tile
+  // between the two ends — including any the finger physically
+  // skipped — adopts the paint outcome on top of a pre-sweep
+  // baseline, so dragging back contracts the range.
+  const pagePhotoIdsRef = React.useRef<string[]>([]);
   const pendingSweepRef = React.useRef<{
     photoId: string;
     paintSelect: boolean;
   } | null>(null);
   const sweepRef = React.useRef<{
     paintSelect: boolean;
-    lastTileId: string | null;
+    baseline: Set<string>;
+    pageIds: string[];
+    anchorIndex: number;
+    headIndex: number;
     pointerX: number;
     pointerY: number;
     rafId: number | null;
   } | null>(null);
-  const applyPaint = (photoId: string, paintSelect: boolean) => {
-    setSelectedIds((prev) => {
-      const has = prev.has(photoId);
-      if (paintSelect === has) return prev;
-      const next = new Set(prev);
-      if (paintSelect) next.add(photoId);
-      else next.delete(photoId);
+  const applyRangeFromHead = (headPhotoId: string | null) => {
+    const s = sweepRef.current;
+    if (!s) return;
+    let headIndex = s.headIndex;
+    if (headPhotoId !== null) {
+      const idx = s.pageIds.indexOf(headPhotoId);
+      if (idx >= 0) headIndex = idx;
+    }
+    if (headIndex === s.headIndex) return;
+    s.headIndex = headIndex;
+    const lo = Math.min(s.anchorIndex, headIndex);
+    const hi = Math.max(s.anchorIndex, headIndex);
+    setSelectedIds(() => {
+      const next = new Set(s.baseline);
+      for (let i = lo; i <= hi; i++) {
+        const id = s.pageIds[i];
+        if (s.paintSelect) next.add(id);
+        else next.delete(id);
+      }
       return next;
     });
   };
   const paintAtPoint = (clientX: number, clientY: number) => {
-    const s = sweepRef.current;
-    if (!s) return;
     const el = document.elementFromPoint(clientX, clientY);
     const tile = el?.closest("[data-photo-id]") as HTMLElement | null;
     const id = tile?.getAttribute("data-photo-id") ?? null;
-    if (id && id !== s.lastTileId) {
-      s.lastTileId = id;
-      applyPaint(id, s.paintSelect);
-    }
+    applyRangeFromHead(id);
   };
   const tickAutoScroll = () => {
     const s = sweepRef.current;
@@ -441,18 +453,26 @@ const Photos = (): React.ReactElement => {
     s.rafId = requestAnimationFrame(tickAutoScroll);
   };
   const beginSweep = (
-    photoId: string,
+    anchorPhotoId: string,
     paintSelect: boolean,
+    baseline: Set<string>,
     clientX: number,
     clientY: number
   ) => {
+    const pageIds = pagePhotoIdsRef.current;
+    const anchorIndex = pageIds.indexOf(anchorPhotoId);
+    if (anchorIndex < 0) return;
     sweepRef.current = {
       paintSelect,
-      lastTileId: photoId,
+      baseline,
+      pageIds,
+      anchorIndex,
+      headIndex: -1,
       pointerX: clientX,
       pointerY: clientY,
       rafId: null,
     };
+    applyRangeFromHead(anchorPhotoId);
     ensureAutoScrollTick();
   };
   const endSweep = () => {
@@ -725,28 +745,28 @@ const Photos = (): React.ReactElement => {
     longPressFired.current = false;
     longPressStart.current = { x: e.clientX, y: e.clientY };
     if (selectedIds.size > 0) {
-      // Already in selection mode — pending sweep. A pointer-move
-      // past the threshold promotes to active sweep painting the
-      // opposite of this tile's current state; staying still falls
-      // through to onClick which toggles via handleTileClick.
+      // Already in selection mode — pending sweep. Horizontal-
+      // dominant drag past the threshold promotes to active sweep;
+      // vertical-dominant drag stays pending (so native pan-y
+      // scroll wins) and a still finger falls through to onClick.
       pendingSweepRef.current = {
         photoId,
         paintSelect: !selectedIds.has(photoId),
       };
     } else {
       // No selection yet — long-press timer. On fire, toggle the
-      // tile and immediately enter sweep so the finger can keep
-      // painting more tiles without lifting.
+      // tile and immediately enter range-fill sweep so the finger
+      // can extend the selection without lifting.
       longPressTimer.current = window.setTimeout(() => {
         longPressFired.current = true;
         longPressTimer.current = null;
         const wasSelected = selectedIds.has(photoId);
-        applyPaint(photoId, !wasSelected);
         setAnchorId(photoId);
         const start = longPressStart.current;
         beginSweep(
           photoId,
           !wasSelected,
+          new Set(selectedIds),
           start?.x ?? e.clientX,
           start?.y ?? e.clientY
         );
@@ -755,16 +775,32 @@ const Photos = (): React.ReactElement => {
   };
   const onTilePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (longPressStart.current) {
-      const dx = Math.abs(e.clientX - longPressStart.current.x);
-      const dy = Math.abs(e.clientY - longPressStart.current.y);
-      if (dx > POINTER_MOVE_CANCEL_PX || dy > POINTER_MOVE_CANCEL_PX) {
+      const dx = e.clientX - longPressStart.current.x;
+      const dy = e.clientY - longPressStart.current.y;
+      const adx = Math.abs(dx);
+      const ady = Math.abs(dy);
+      if (adx > POINTER_MOVE_CANCEL_PX || ady > POINTER_MOVE_CANCEL_PX) {
         clearLongPressTimer();
-        if (pendingSweepRef.current && !sweepRef.current) {
+        // Only promote on horizontal-dominant motion — vertical-
+        // dominant motion is a scroll attempt; let touch-action:
+        // pan-y handle it.
+        if (
+          pendingSweepRef.current &&
+          !sweepRef.current &&
+          adx > ady
+        ) {
           const { photoId, paintSelect } = pendingSweepRef.current;
-          applyPaint(photoId, paintSelect);
           setAnchorId(photoId);
-          beginSweep(photoId, paintSelect, e.clientX, e.clientY);
+          beginSweep(
+            photoId,
+            paintSelect,
+            new Set(selectedIds),
+            e.clientX,
+            e.clientY
+          );
           longPressFired.current = true;
+          pendingSweepRef.current = null;
+        } else {
           pendingSweepRef.current = null;
         }
       }
@@ -825,6 +861,7 @@ const Photos = (): React.ReactElement => {
     }
     const { photos } = data;
     const pagePhotoIds = photos.map((p) => p.id);
+    pagePhotoIdsRef.current = pagePhotoIds;
     const allOnPageSelected =
       pagePhotoIds.length > 0 &&
       pagePhotoIds.every((id) => selectedIds.has(id));
