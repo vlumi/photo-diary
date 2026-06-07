@@ -230,6 +230,7 @@
     "manage-photo-field-taken": "Otettu",
     "manage-photo-field-geocoded": "Paikannin",
     "manage-photo-geocoded-empty": "Ei vielä paikannettu",
+    "manage-photo-geocoded-no-data": "Ei sijaintitietoja",
     "manage-photo-geocoded-refresh": "Päivitä",
     "manage-photo-geocoded-refreshing": "Päivitetään…",
     "manage-photo-geocoded-refresh-hint": "Tyhjennä paikantimen kentät ja hae ne uudelleen Nominatimista converterin kautta.",

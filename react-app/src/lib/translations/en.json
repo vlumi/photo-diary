@@ -230,6 +230,7 @@
     "manage-photo-field-taken": "Captured",
     "manage-photo-field-geocoded": "Geocoded",
     "manage-photo-geocoded-empty": "Not geocoded yet",
+    "manage-photo-geocoded-no-data": "No location data",
     "manage-photo-geocoded-refresh": "Refresh",
     "manage-photo-geocoded-refreshing": "Refreshing…",
     "manage-photo-geocoded-refresh-hint": "Clear the geocoded fields and re-fetch from Nominatim via the converter daemon.",
