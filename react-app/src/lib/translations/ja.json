@@ -249,6 +249,7 @@
     "manage-photo-country-filter-placeholder": "入力で絞り込み(または 2 文字コードを貼り付け)",
     "manage-photo-country-clear": "国を消去",
     "manage-photo-country-no-match": "該当する国がありません。",
+    "country-sentinel-label": "国際 / 国指定なし",
     "manage-galleries-load-error": "ギャラリーの読み込みに失敗しました。",
     "manage-galleries-empty": "ギャラリーがありません。",
     "manage-galleries-col-id": "ID",

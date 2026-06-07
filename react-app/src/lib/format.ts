@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 
 import collection from "./collection";
 import config from "./config";
+import { isCountrySentinel } from "./country-sentinel";
 
 interface CountryData {
   getName(
@@ -101,12 +102,24 @@ const dayOfWeek = (dow: number): string => {
 // "South Korea") over ISO's official long form ("Taiwan, Province of
 // China", "Russian Federation", "Korea, Republic of"). Falls back to
 // official when no alias exists.
+//
+// The "no country" sentinel (`xx`) isn't a real ISO code so
+// `getName` returns undefined; with `t` available, surface the
+// localised "No country" label. Callers without a `t` fall back
+// to the raw code, which keeps things readable but loses the
+// localisation — pass `t` whenever you have one.
 const countryName =
-  (lang: string, countryData: CountryData) =>
-  (countryCode: string): string =>
-    countryData.getName(countryCode, lang, { select: "alias" }) ||
-    countryData.getName(countryCode, lang) ||
-    countryCode;
+  (lang: string, countryData: CountryData, t?: TFunction) =>
+  (countryCode: string): string => {
+    if (isCountrySentinel(countryCode)) {
+      return t ? t("country-sentinel-label") : countryCode.toUpperCase();
+    }
+    return (
+      countryData.getName(countryCode, lang, { select: "alias" }) ||
+      countryData.getName(countryCode, lang) ||
+      countryCode
+    );
+  };
 
 // `<country>:<en-city>` → localized name. Per-language chunks load
 // on demand. Lookup is case-insensitive on the city portion;
@@ -342,7 +355,7 @@ const categoryValue =
       case "author":
         return identity as ValueFormatter;
       case "country":
-        return countryName(lang, countryData) as ValueFormatter;
+        return countryName(lang, countryData, t) as ValueFormatter;
       case "state":
         return ((code: string) => subdivisionName(lang, code)) as ValueFormatter;
       case "city":

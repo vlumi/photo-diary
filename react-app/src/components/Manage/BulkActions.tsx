@@ -7,6 +7,7 @@ import photosService, {
   type PhotoUpdatePatch,
 } from "../../services/photos";
 import galleryPhotosService from "../../services/gallery-photos";
+import CountrySelect from "./CountrySelect";
 
 interface Gallery {
   id: string;
@@ -482,15 +483,24 @@ const BulkActions = ({
                     summary.kind === "mixed"
                       ? `<${String(t("manage-photos-bulk-mixed"))}>`
                       : "";
-                  return (
-                    <FieldRow key={key} $active={checked}>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        disabled={busy}
-                        onChange={(e) => toggleField(key, e.target.checked)}
-                      />
-                      <FieldLabelText>{t(FIELD_LABEL_KEY[key])}</FieldLabelText>
+                  // Country gets the shared typeahead so the sentinel
+                  // (`xx` = no country) is one click away here too,
+                  // matching the single-row drawer. Ticks the checkbox
+                  // on first pick.
+                  const renderInput = () => {
+                    if (key === "country") {
+                      return (
+                        <CountrySelect
+                          value={inputValue}
+                          disabled={busy}
+                          placeholder={placeholder}
+                          onChange={(code) => {
+                            setFieldValue(key, code);
+                          }}
+                        />
+                      );
+                    }
+                    return (
                       <FieldInput
                         type={isString ? "text" : "number"}
                         step={isString ? undefined : "any"}
@@ -502,6 +512,18 @@ const BulkActions = ({
                           setFieldValue(key, e.target.value);
                         }}
                       />
+                    );
+                  };
+                  return (
+                    <FieldRow key={key} $active={checked}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={busy}
+                        onChange={(e) => toggleField(key, e.target.checked)}
+                      />
+                      <FieldLabelText>{t(FIELD_LABEL_KEY[key])}</FieldLabelText>
+                      {renderInput()}
                     </FieldRow>
                   );
                 })}

@@ -581,7 +581,7 @@ const collectTopics = (
     const [flat, data, valueRanks] = transformData({
       original: byCountry,
       formatter: (countryCode: any) =>
-        format.countryName(lang, countryData)(countryCode),
+        format.countryName(lang, countryData, t)(countryCode),
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -618,7 +618,8 @@ const collectTopics = (
             <>
               {format.countryName(
                 lang,
-                countryData
+                countryData,
+                t
               )(localizeUnknownKey(entry.key))}
             </>
           ),
@@ -629,7 +630,8 @@ const collectTopics = (
           _count: entry.value,
           _label: format.countryName(
             lang,
-            countryData
+            countryData,
+            t
           )(localizeUnknownKey(entry.key)),
           standardScore: (entry.value - mean) / stddev,
         };
@@ -696,7 +698,7 @@ const collectTopics = (
     const cityLabels = format.buildCityLabels(
       Object.keys(byCity),
       lang,
-      format.countryName(lang, countryData),
+      format.countryName(lang, countryData, t),
       byCityLocalized
     );
     const fallbackLabel = (key: string): string => {

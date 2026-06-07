@@ -249,6 +249,7 @@
     "manage-photo-country-filter-placeholder": "Suodata tai liitä 2-kirjaiminen maakoodi",
     "manage-photo-country-clear": "Tyhjennä maa",
     "manage-photo-country-no-match": "Maata ei löytynyt.",
+    "country-sentinel-label": "Kansainvälinen / ei maata",
     "manage-galleries-load-error": "Gallerioiden lataus epäonnistui.",
     "manage-galleries-empty": "Ei gallerioita.",
     "manage-galleries-col-id": "Tunniste",
