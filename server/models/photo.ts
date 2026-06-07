@@ -232,7 +232,19 @@ const createPhoto = async (photo: { id: string } & Record<string, any>) => {
 
 const getPhoto = async (photoId: string) => {
   logger.debug("Getting photo", photoId);
-  return await db.loadPhoto(photoId);
+  const row = (await db.loadPhoto(photoId)) as Record<string, unknown>;
+  // Decorate with the photo's gallery membership the same way
+  // listPhotos does. The drawer renders these as jump-link chips
+  // so the operator can navigate from a single-photo view to the
+  // public gallery view without leaving the admin surface.
+  const links = (await db.loadAllGalleryPhotoLinks()) as Array<{
+    photoId: string;
+    galleryId: string;
+  }>;
+  const galleries = links
+    .filter((l) => l.photoId === photoId)
+    .map((l) => l.galleryId);
+  return { ...row, galleries };
 };
 
 const updatePhoto = async (

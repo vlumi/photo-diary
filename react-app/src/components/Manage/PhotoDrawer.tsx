@@ -9,9 +9,11 @@ import {
   BsBoxArrowUpRight,
   BsClipboard,
   BsClipboardCheck,
+  BsPencilSquare,
   BsX,
 } from "react-icons/bs";
 
+import galleriesService from "../../services/galleries";
 import photosService, {
   type MissingField,
   type PhotoUpdatePatch,
@@ -224,6 +226,42 @@ const MetaValueRow = styled.div`
   gap: 8px;
   min-width: 0;
 `;
+const GalleryChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+const GalleryChip = styled.div`
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--inactive-color);
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 0.85em;
+  background: transparent;
+`;
+const GalleryChipPrimary = styled.a`
+  padding: 2px 8px;
+  color: var(--primary-color);
+  text-decoration: none;
+  cursor: pointer;
+  &:hover {
+    background: var(--header-background);
+    color: var(--header-color);
+  }
+`;
+const GalleryChipSecondary = styled.a`
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-left: 1px solid var(--inactive-color);
+  color: var(--inactive-color);
+  cursor: pointer;
+  &:hover {
+    background: var(--header-background);
+    color: var(--header-color);
+  }
+`;
 const InlineActionButton = styled.button`
   font: inherit;
   display: inline-flex;
@@ -378,6 +416,10 @@ interface PhotoData {
       aperture?: number;
     };
   };
+  // Gallery ids the photo is linked to. Decorated server-side by
+  // `getPhoto` / `listPhotos` so the drawer can render jump-link
+  // chips into `/g/<gallery>/<photoId>` or `/m/galleries/<id>`.
+  galleries?: string[];
 }
 
 // Maritime address keys Nominatim emits when reverse-geocoding
@@ -650,6 +692,23 @@ const PhotoDrawer = (): React.ReactElement => {
     queryKey: ["manage-photo", id],
     queryFn: () => photosService.get(id) as Promise<PhotoData>,
   });
+
+  // Galleries fetched once for the whole drawer to resolve the
+  // `Galleries` meta row chips into nice titles (the photo
+  // response only carries gallery ids). Shared cache key with
+  // Photos.tsx so this is usually already populated.
+  const galleriesQuery = useQuery({
+    queryKey: ["galleries"],
+    queryFn: galleriesService.getAll,
+  });
+  const galleryById = React.useMemo(() => {
+    const map = new Map<string, { id: string; title?: string }>();
+    const rows = galleriesQuery.data as
+      | Array<{ id: string; title?: string }>
+      | undefined;
+    for (const g of rows ?? []) map.set(g.id, g);
+    return map;
+  }, [galleriesQuery.data]);
 
   const [form, setForm] = React.useState<FormState>(emptyForm);
   const [original, setOriginal] = React.useState<FormState>(emptyForm);
@@ -1063,6 +1122,72 @@ const PhotoDrawer = (): React.ReactElement => {
                 </MetaValue>
               </>
             )}
+            <MetaLabel>{t("manage-photo-field-galleries")}</MetaLabel>
+            <MetaValue>
+              {data.galleries && data.galleries.length > 0 ? (
+                <GalleryChipRow>
+                  {data.galleries.map((gid) => {
+                    const meta = galleryById.get(gid);
+                    const label = meta?.title || gid;
+                    // Public gallery route is
+                    // `/g/<id>/<year>/<month>/<day>/<photoId>`
+                    // — parse year/month/day from the photo's
+                    // capture timestamp (first 10 chars of the
+                    // ISO string). Photos without a usable
+                    // timestamp fall back to the gallery's
+                    // landing page; deep-linking to the photo
+                    // requires a date.
+                    const ts = data.taken?.instant?.timestamp;
+                    const ymd = ts && /^\d{4}-\d{2}-\d{2}/.test(ts)
+                      ? [
+                          Number(ts.slice(0, 4)),
+                          Number(ts.slice(5, 7)),
+                          Number(ts.slice(8, 10)),
+                        ]
+                      : null;
+                    const viewHref = ymd
+                      ? `/g/${gid}/${ymd[0]}/${ymd[1]}/${ymd[2]}/${data.id}`
+                      : `/g/${gid}`;
+                    const editHref = `/m/g/${gid}`;
+                    return (
+                      <GalleryChip key={gid}>
+                        <GalleryChipPrimary
+                          href={viewHref}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(viewHref);
+                          }}
+                          title={String(
+                            t("manage-photo-galleries-jump-view", { label })
+                          )}
+                        >
+                          {label}
+                        </GalleryChipPrimary>
+                        <GalleryChipSecondary
+                          href={editHref}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(editHref);
+                          }}
+                          title={String(
+                            t("manage-photo-galleries-jump-edit", { label })
+                          )}
+                          aria-label={String(
+                            t("manage-photo-galleries-jump-edit", { label })
+                          )}
+                        >
+                          <BsPencilSquare aria-hidden />
+                        </GalleryChipSecondary>
+                      </GalleryChip>
+                    );
+                  })}
+                </GalleryChipRow>
+              ) : (
+                <EmptyValue>
+                  {t("manage-photo-galleries-orphan")}
+                </EmptyValue>
+              )}
+            </MetaValue>
             {data.taken?.instant?.timestamp && (
               <>
                 <MetaLabel>{t("manage-photo-field-taken")}</MetaLabel>
