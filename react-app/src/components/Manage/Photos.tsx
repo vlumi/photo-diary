@@ -120,6 +120,10 @@ const FilterSheetClose = styled.button`
 const Body = styled.section`
   flex: 1 1 auto;
   min-width: 0;
+  /* Clearance for the floating BulkActions bar (fixed on every
+     surface) and the mobile filter FAB so the last grid row isn't
+     permanently covered when either is up. */
+  padding-bottom: 88px;
   /* Root's align-items: flex-start means flex items keep their
      intrinsic width on the cross axis. In column mode that left the
      Body shrink-wrapped to its widest child — the grid (auto-fill
@@ -129,9 +133,6 @@ const Body = styled.section`
      grid always fills the viewport. */
   @media (max-width: 700px) {
     width: 100%;
-    /* Clearance for the fixed BulkActions bar / filter FAB so the
-       last grid row isn't permanently covered. */
-    padding-bottom: 88px;
   }
 `;
 const FilterGroup = styled.div`

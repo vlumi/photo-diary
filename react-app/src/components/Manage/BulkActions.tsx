@@ -22,15 +22,22 @@ interface Props {
   onCancel: () => void;
 }
 
-// Frosted-glass bar — themed via --header-background so it picks
-// up whichever theme is active, with backdrop-blur for the mobile
-// floating layout (no-op on desktop where the bar sits inline,
-// but the translucent fill still reads as a card).
+// Frosted-glass bar, themed via --header-background. Floats at the
+// bottom of the viewport on every surface so mounting it on first
+// selection doesn't reflow the grid. Two-row card on both surfaces:
+// Count (left) + Clear (right) anchor the top row; the action
+// buttons wrap into the second row. Desktop centres the card at
+// 900px max; phone width spans edge-to-edge.
 const Bar = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(900px, calc(100% - 32px));
+  z-index: 950;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
   padding: 10px 14px;
   background: color-mix(in srgb, var(--header-background) 80%, transparent);
   color: var(--header-color);
@@ -39,15 +46,13 @@ const Bar = styled.div`
   border-radius: 14px;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  margin-bottom: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   @media (max-width: 700px) {
-    position: fixed;
     left: 8px;
     right: 8px;
     bottom: 8px;
-    margin-bottom: 0;
-    z-index: 950;
+    transform: none;
+    max-width: none;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   }
 `;
@@ -57,12 +62,30 @@ const GroupSep = styled.span`
   background: currentColor;
   opacity: 0.25;
   margin: 0 2px;
+  @media (max-width: 700px) {
+    /* Vertical separators don't read well inside a wrapping action
+       row on a narrow card — the surrounding gap already groups
+       items visually. */
+    display: none;
+  }
 `;
 const Count = styled.span`
   font-weight: bold;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
 `;
-const Spacer = styled.span`
-  flex: 1 1 auto;
+const ClearSlot = styled.div`
+  grid-column: 2;
+  grid-row: 1;
+`;
+const ActionsRow = styled.div`
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
 `;
 const ActionButton = styled.button<{ $danger?: boolean }>`
   padding: 6px 12px;
@@ -731,55 +754,58 @@ const BulkActions = ({
     <>
       <Bar>
         <Count>{t("manage-photos-bulk-selected", { count })}</Count>
-        <GroupSep aria-hidden />
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "edit-fields" })}
-        >
-          {t("manage-photos-bulk-edit-fields")}
-        </ActionButton>
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "confirm-regeocode" })}
-        >
-          {t("manage-photos-bulk-regeocode")}
-        </ActionButton>
-        <GroupSep aria-hidden />
-        {isAdmin && (
+        <ActionsRow>
+          <GroupSep aria-hidden />
           <ActionButton
             type="button"
             disabled={busy || count === 0}
-            onClick={() => setPending({ kind: "pick-link" })}
+            onClick={() => setPending({ kind: "edit-fields" })}
           >
-            {t("manage-photos-bulk-link")}
+            {t("manage-photos-bulk-edit-fields")}
           </ActionButton>
-        )}
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "pick-unlink" })}
-        >
-          {t("manage-photos-bulk-unlink")}
-        </ActionButton>
-        {isAdmin && (
-          <>
-            <GroupSep aria-hidden />
+          <ActionButton
+            type="button"
+            disabled={busy || count === 0}
+            onClick={() => setPending({ kind: "confirm-regeocode" })}
+          >
+            {t("manage-photos-bulk-regeocode")}
+          </ActionButton>
+          <GroupSep aria-hidden />
+          {isAdmin && (
             <ActionButton
               type="button"
-              $danger
               disabled={busy || count === 0}
-              onClick={() => setPending({ kind: "confirm-delete" })}
+              onClick={() => setPending({ kind: "pick-link" })}
             >
-              {t("manage-photos-bulk-delete")}
+              {t("manage-photos-bulk-link")}
             </ActionButton>
-          </>
-        )}
-        <Spacer />
-        <ActionButton type="button" disabled={busy} onClick={onCancel}>
-          {t("manage-photos-bulk-exit")}
-        </ActionButton>
+          )}
+          <ActionButton
+            type="button"
+            disabled={busy || count === 0}
+            onClick={() => setPending({ kind: "pick-unlink" })}
+          >
+            {t("manage-photos-bulk-unlink")}
+          </ActionButton>
+          {isAdmin && (
+            <>
+              <GroupSep aria-hidden />
+              <ActionButton
+                type="button"
+                $danger
+                disabled={busy || count === 0}
+                onClick={() => setPending({ kind: "confirm-delete" })}
+              >
+                {t("manage-photos-bulk-delete")}
+              </ActionButton>
+            </>
+          )}
+        </ActionsRow>
+        <ClearSlot>
+          <ActionButton type="button" disabled={busy} onClick={onCancel}>
+            {t("manage-photos-bulk-exit")}
+          </ActionButton>
+        </ClearSlot>
       </Bar>
       {renderModal()}
     </>
