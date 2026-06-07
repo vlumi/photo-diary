@@ -188,7 +188,12 @@ const CountryDropdown = styled.div`
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 10;
+  /* Above leaflet's internal panes (tile 200, overlay 400,
+     marker 600, popup 700) AND its control containers
+     (.leaflet-top / -bottom wrap the +/- zoom buttons at
+     z-index: 1000). Stay below the modal layer (2000) used by
+     the bulk-action backdrops. */
+  z-index: 1100;
   margin-top: 2px;
   max-height: 240px;
   overflow-y: auto;
