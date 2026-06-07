@@ -148,6 +148,16 @@ const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 8px;
+  position: relative;
+  touch-action: pan-y;
+  user-select: none;
+`;
+const DragRect = styled.div`
+  position: absolute;
+  pointer-events: none;
+  background: rgba(64, 96, 192, 0.18);
+  border: 1px dashed var(--header-background);
+  z-index: 5;
 `;
 const Tile = styled.button<{ $focused?: boolean; $selected?: boolean }>`
   display: flex;
@@ -358,6 +368,28 @@ const Photos = (): React.ReactElement => {
     setSelectedIds(new Set());
     setAnchorId(null);
   }, []);
+
+  const LONG_PRESS_MS = 400;
+  const POINTER_MOVE_CANCEL_PX = 10;
+  const longPressTimer = React.useRef<number | null>(null);
+  const longPressFired = React.useRef(false);
+  const longPressStart = React.useRef<{ x: number; y: number } | null>(null);
+  const clearLongPressTimer = () => {
+    if (longPressTimer.current !== null) {
+      window.clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    longPressStart.current = null;
+  };
+
+  const gridRef = React.useRef<HTMLDivElement | null>(null);
+  const [dragRect, setDragRect] = React.useState<{
+    startX: number;
+    startY: number;
+    currX: number;
+    currY: number;
+  } | null>(null);
+  const dragBaselineRef = React.useRef<Set<string> | null>(null);
   // The drawer mounts at /m/photos/:photoId via a nested
   // <Outlet>; this Photos page is the parent.
   const openPhoto = (id: string) => {
@@ -614,11 +646,96 @@ const Photos = (): React.ReactElement => {
     setAnchorId(photoId);
   };
 
+  const onTilePointerDown = (
+    e: React.PointerEvent<HTMLButtonElement>,
+    photoId: string
+  ) => {
+    if (e.pointerType === "mouse") return;
+    longPressFired.current = false;
+    longPressStart.current = { x: e.clientX, y: e.clientY };
+    longPressTimer.current = window.setTimeout(() => {
+      longPressFired.current = true;
+      longPressTimer.current = null;
+      toggleSelected(photoId);
+    }, LONG_PRESS_MS);
+  };
+  const onTilePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (longPressTimer.current === null || !longPressStart.current) return;
+    const dx = Math.abs(e.clientX - longPressStart.current.x);
+    const dy = Math.abs(e.clientY - longPressStart.current.y);
+    if (dx > POINTER_MOVE_CANCEL_PX || dy > POINTER_MOVE_CANCEL_PX) {
+      clearLongPressTimer();
+    }
+  };
+  const onTilePointerEnd = () => clearLongPressTimer();
+
+  const onGridPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    if ((e.target as HTMLElement).closest("[data-photo-id]")) return;
+    const grid = gridRef.current;
+    if (!grid) return;
+    const rect = grid.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setDragRect({ startX: x, startY: y, currX: x, currY: y });
+    dragBaselineRef.current = new Set(selectedIds);
+    grid.setPointerCapture(e.pointerId);
+  };
+  const onGridPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRect || !gridRef.current) return;
+    const rect = gridRef.current.getBoundingClientRect();
+    setDragRect((prev) =>
+      prev
+        ? {
+            ...prev,
+            currX: e.clientX - rect.left,
+            currY: e.clientY - rect.top,
+          }
+        : prev
+    );
+  };
+  const onGridPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRect || !gridRef.current) return;
+    const grid = gridRef.current;
+    const rect = grid.getBoundingClientRect();
+    const xMin = Math.min(dragRect.startX, dragRect.currX) + rect.left;
+    const xMax = Math.max(dragRect.startX, dragRect.currX) + rect.left;
+    const yMin = Math.min(dragRect.startY, dragRect.currY) + rect.top;
+    const yMax = Math.max(dragRect.startY, dragRect.currY) + rect.top;
+    const moved =
+      Math.abs(dragRect.currX - dragRect.startX) > 3 ||
+      Math.abs(dragRect.currY - dragRect.startY) > 3;
+    const next = new Set(dragBaselineRef.current ?? selectedIds);
+    if (moved) {
+      grid.querySelectorAll<HTMLElement>("[data-photo-id]").forEach((node) => {
+        const tr = node.getBoundingClientRect();
+        if (tr.right < xMin || tr.left > xMax) return;
+        if (tr.bottom < yMin || tr.top > yMax) return;
+        const id = node.getAttribute("data-photo-id");
+        if (id && !e.shiftKey) next.add(id);
+        else if (id) {
+          if (next.has(id)) next.delete(id);
+          else next.add(id);
+        }
+      });
+      setSelectedIds(next);
+    }
+    setDragRect(null);
+    dragBaselineRef.current = null;
+    if (grid.hasPointerCapture(e.pointerId)) {
+      grid.releasePointerCapture(e.pointerId);
+    }
+  };
+
   const handleTileClick = (
     photoId: string,
     pagePhotoIds: string[],
     shift: boolean
   ) => {
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
     if (shift && anchorId) {
       const a = pagePhotoIds.indexOf(anchorId);
       const b = pagePhotoIds.indexOf(photoId);
@@ -750,7 +867,23 @@ const Photos = (): React.ReactElement => {
         {photos.length === 0 ? (
           <EmptyState>{t("manage-photos-empty")}</EmptyState>
         ) : (
-          <Grid>
+          <Grid
+            ref={gridRef}
+            onPointerDown={onGridPointerDown}
+            onPointerMove={onGridPointerMove}
+            onPointerUp={onGridPointerUp}
+            onPointerCancel={onGridPointerUp}
+          >
+            {dragRect && (
+              <DragRect
+                style={{
+                  left: Math.min(dragRect.startX, dragRect.currX),
+                  top: Math.min(dragRect.startY, dragRect.currY),
+                  width: Math.abs(dragRect.currX - dragRect.startX),
+                  height: Math.abs(dragRect.currY - dragRect.startY),
+                }}
+              />
+            )}
             {photos.map((p) => {
               const label = dateLabel(p);
               const isSelected = selectedIds.has(p.id);
@@ -759,9 +892,15 @@ const Photos = (): React.ReactElement => {
                   key={p.id}
                   type="button"
                   title={p.id}
+                  data-photo-id={p.id}
                   onClick={(e) =>
                     handleTileClick(p.id, pagePhotoIds, e.shiftKey)
                   }
+                  onPointerDown={(e) => onTilePointerDown(e, p.id)}
+                  onPointerMove={onTilePointerMove}
+                  onPointerUp={onTilePointerEnd}
+                  onPointerCancel={onTilePointerEnd}
+                  onPointerLeave={onTilePointerEnd}
                   $focused={p.id === params.photoId}
                   $selected={isSelected}
                 >
