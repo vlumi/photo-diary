@@ -397,6 +397,15 @@ interface PhotoData {
     stateCode?: string;
     state?: string;
     city?: string;
+    // Verbatim Nominatim address blob — used to surface maritime
+    // names (`ocean`, `sea`, `bay`, `strait`, `gulf`) when no city
+    // applies, e.g. photos taken in international waters.
+    address?: Record<string, unknown>;
+    // True if `markGeocodeNoData` ran (geocoder ran and reported
+    // nothing). Distinguishes "no data here" from "daemon hasn't
+    // gotten to this row yet" — both have empty city / countryCode
+    // otherwise.
+    noData?: boolean;
   };
   // EXIF snapshot captured at converter intake (#416). Undefined on
   // rows that pre-date migration 014. Drives the per-field revert
@@ -421,6 +430,58 @@ interface PhotoData {
     };
   };
 }
+
+// Maritime address keys Nominatim emits when reverse-geocoding
+// open water. Falling back to the first populated one lets the
+// drawer show "Atlantic Ocean" / "Gulf of Finland" for photos
+// taken on the water, instead of "Not geocoded yet".
+const MARITIME_ADDRESS_KEYS = [
+  "ocean",
+  "sea",
+  "bay",
+  "strait",
+  "gulf",
+] as const;
+
+// Render the geocoded-row summary as one of four states:
+//  1. city set → existing `countryCode / state / city` join
+//  2. maritime field set → that name verbatim
+//  3. noData = true → "no data" empty-state
+//  4. otherwise → existing "not geocoded yet" empty-state
+const renderGeocodedSummary = (
+  geocoded:
+    | {
+        countryCode?: string;
+        state?: string;
+        city?: string;
+        address?: Record<string, unknown>;
+        noData?: boolean;
+      }
+    | undefined,
+  t: (key: string) => string
+): React.ReactNode => {
+  if (geocoded?.city) {
+    return [geocoded.countryCode, geocoded.state, geocoded.city]
+      .filter(Boolean)
+      .join(" / ");
+  }
+  const address = geocoded?.address ?? {};
+  for (const key of MARITIME_ADDRESS_KEYS) {
+    const value = address[key];
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+  }
+  return (
+    <EmptyValue>
+      {t(
+        geocoded?.noData
+          ? "manage-photo-geocoded-no-data"
+          : "manage-photo-geocoded-empty"
+      )}
+    </EmptyValue>
+  );
+};
 
 // Small inline copy-to-clipboard button used in the read-only meta
 // rows (id, original filename). Falls back to hidden when the
@@ -1204,17 +1265,7 @@ const PhotoDrawer = (): React.ReactElement => {
                   <MetaLabel>{t("manage-photo-field-geocoded")}</MetaLabel>
                   <MetaValue>
                     <MetaValueRow>
-                      <span>
-                        {geocoded?.city ? (
-                          [geocoded.countryCode, geocoded.state, geocoded.city]
-                            .filter(Boolean)
-                            .join(" / ")
-                        ) : (
-                          <EmptyValue>
-                            {t("manage-photo-geocoded-empty")}
-                          </EmptyValue>
-                        )}
-                      </span>
+                      <span>{renderGeocodedSummary(geocoded, t)}</span>
                       <InlineActionButton
                         type="button"
                         onClick={() => regeocodeMutation.mutate()}
