@@ -444,7 +444,9 @@ const Photo = ({
           <ManageButton
             type="button"
             onClick={() =>
-              navigate(`/m/g/${gallery.id()}/photos/${photo.id()}`)
+              navigate(
+                `/m/photos/${photo.id()}?gallery=${gallery.id()}`
+              )
             }
             aria-label={String(t("manage-this-photo"))}
             title={String(t("manage-this-photo"))}

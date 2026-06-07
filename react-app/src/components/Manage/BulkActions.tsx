@@ -17,7 +17,6 @@ interface Gallery {
 interface Props {
   selectedIds: string[];
   galleries: Gallery[];
-  scopedGalleryId?: string;
   onDone: () => void;
   onCancel: () => void;
 }
@@ -313,7 +312,6 @@ const buildPatch = (
 const BulkActions = ({
   selectedIds,
   galleries,
-  scopedGalleryId,
   onDone,
   onCancel,
 }: Props): React.ReactElement => {
@@ -322,7 +320,7 @@ const BulkActions = ({
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [galleryPick, setGalleryPick] = React.useState<string>(
-    scopedGalleryId ?? galleries[0]?.id ?? ""
+    galleries[0]?.id ?? ""
   );
 
   // Edit-fields modal state. `values` holds only the fields the
@@ -343,13 +341,13 @@ const BulkActions = ({
 
   React.useEffect(() => {
     if (pending.kind === "none") return;
-    setGalleryPick(scopedGalleryId ?? galleries[0]?.id ?? "");
+    setGalleryPick(galleries[0]?.id ?? "");
     setError(null);
     if (pending.kind !== "edit-fields") {
       setRows(null);
       setValues({});
     }
-  }, [pending.kind, scopedGalleryId, galleries]);
+  }, [pending.kind, galleries]);
 
   // Load the selection's current values whenever the edit modal opens.
   React.useEffect(() => {
@@ -625,10 +623,7 @@ const BulkActions = ({
       );
     }
     const isLink = pending.kind === "pick-link";
-    const choices =
-      isLink || !scopedGalleryId
-        ? galleries
-        : galleries.filter((g) => g.id === scopedGalleryId);
+    const choices = galleries;
     return (
       <Backdrop
         onClick={onBackdropClick}
@@ -687,27 +682,20 @@ const BulkActions = ({
     );
   };
 
-  // Action scoping. In gallery-scoped mode (`/m/g/<id>/photos`)
-  // the operator is "inside" one gallery, so cross-gallery linking
-  // belongs in `/m/photos` instead — hide the Link button. Delete
-  // stays available to global admins regardless of scope (and the
-  // Manage UI is currently gated on the global admin flag overall).
-  // When the gallery-admin tier lands in the UI it'll also need to
-  // hide Delete here.
-  const showLink = !scopedGalleryId;
+  // Today the Manage UI is global-admin-only so every action
+  // runs unconditionally; per-tier gating will land when the
+  // gallery-editor tier is surfaced.
   return (
     <>
       <Bar>
         <Count>{t("manage-photos-bulk-selected", { count })}</Count>
-        {showLink && (
-          <ActionButton
-            type="button"
-            disabled={busy || count === 0}
-            onClick={() => setPending({ kind: "pick-link" })}
-          >
-            {t("manage-photos-bulk-link")}
-          </ActionButton>
-        )}
+        <ActionButton
+          type="button"
+          disabled={busy || count === 0}
+          onClick={() => setPending({ kind: "pick-link" })}
+        >
+          {t("manage-photos-bulk-link")}
+        </ActionButton>
         <ActionButton
           type="button"
           disabled={busy || count === 0}

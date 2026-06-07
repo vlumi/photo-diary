@@ -679,12 +679,17 @@ const activeMissing = (searchParams: URLSearchParams): Set<MissingField> => {
 
 const PhotoDrawer = (): React.ReactElement => {
   const { t } = useTranslation();
-  const { photoId, galleryId } = useParams<{
-    photoId: string;
-    galleryId: string;
-  }>();
+  const { photoId } = useParams<{ photoId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  // Gallery context for the drawer's "View in gallery" link and
+  // the Set-as-icon affordance — lifted from the active filter
+  // when exactly one `?gallery=` value is present (drawer is
+  // always nested under the photos route, no `:galleryId` route
+  // param to read).
+  const filteredGalleries = searchParams.getAll("gallery");
+  const galleryId =
+    filteredGalleries.length === 1 ? filteredGalleries[0] : undefined;
   const queryClient = useQueryClient();
 
   const id = photoId!;
@@ -1239,10 +1244,11 @@ const PhotoDrawer = (): React.ReactElement => {
     );
   };
 
-  // Public-side URL — only shown when we know the gallery scope
-  // (i.e. we're on /m/g/<gallery>/photos/<id>, not the cross-gallery
-  // /m/photos/<id>) and the photo carries a capture timestamp the
-  // public route can resolve. Format mirrors the gallery routes:
+  // Public-side URL — only shown when the photos page is
+  // filtered to a single gallery (so the drawer has a clear
+  // gallery context to jump into) and the photo carries a
+  // capture timestamp the public route can resolve. Format
+  // mirrors the gallery routes:
   // /g/<gallery>/<year>/<month>/<day>/<photoId>.
   const publicUrl = ((): string | null => {
     if (!galleryId) return null;

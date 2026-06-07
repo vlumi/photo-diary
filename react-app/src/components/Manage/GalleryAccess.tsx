@@ -329,7 +329,7 @@ const GalleryAccess = (): React.ReactElement => {
             {t("manage-gallery-link-edit")}
           </SiblingLink>
           <SiblingLink
-            onClick={() => navigate(`/m/g/${galleryId}/photos`)}
+            onClick={() => navigate(`/m/photos?gallery=${galleryId}`)}
             role="link"
             tabIndex={0}
           >

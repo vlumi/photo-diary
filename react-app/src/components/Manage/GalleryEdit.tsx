@@ -334,7 +334,7 @@ const GalleryEdit = (): React.ReactElement => {
         <Title>{galleryId}</Title>
         <SiblingNav aria-label={String(t("manage-gallery-nav-group"))}>
           <SiblingLink
-            onClick={() => navigate(`/m/g/${galleryId}/photos`)}
+            onClick={() => navigate(`/m/photos?gallery=${galleryId}`)}
             role="link"
             tabIndex={0}
           >

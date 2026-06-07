@@ -5,6 +5,7 @@ import {
   useLocation,
   useNavigate,
   useParams,
+  useSearchParams,
 } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
@@ -19,9 +20,12 @@ import { useLastGalleryPathStore, useUserStore } from "../../stores";
 // Routes whose endpoints reject with 404 on hostname-bound
 // instances (server-side `requireUnscoped`). Visiting them when
 // scoped is a dead end; redirect to `/m` so the Dashboard's
-// scope-aware tile set takes over.
+// scope-aware tile set takes over. `/m/photos` is intentionally
+// absent — the server already auto-filters the photos endpoint
+// by host scope, so a hostname-bound operator visiting it sees
+// only their own gallery's photos, which is exactly what their
+// gallery-scoped Photos tile now links to.
 const GLOBAL_MANAGE_PATHS = [
-  "/m/photos",
   "/m/galleries",
   "/m/users",
   "/m/groups",
@@ -136,10 +140,19 @@ interface ResolvedLabels {
   galleryTitle?: string;
 }
 
+// Single-gallery context for breadcrumb enrichment on routes
+// outside `/m/g/<id>` — currently used by `/m/photos` when
+// exactly one `?gallery=` filter is active. Drives the
+// "Galleries › <gallery> › Photos" trail.
+interface FilterContext {
+  galleryId?: string;
+}
+
 const buildCrumbs = (
   pathname: string,
   t: (key: string) => string,
-  resolved: ResolvedLabels
+  resolved: ResolvedLabels,
+  filterContext: FilterContext
 ): Crumb[] => {
   const parts = pathname.split("/").filter(Boolean);
   // parts[0] === "m"
@@ -162,21 +175,14 @@ const buildCrumbs = (
   out.push({ kind: "link", path: "/m", label: t("manage-root") });
 
   if (tail[0] === "g") {
-    // /m/g/<id>[/sub[/photoId]]
+    // /m/g/<id>[/sub]
     out.push({ kind: "link", path: "/m/galleries", label: t("manage-page-galleries-title") });
     const galleryId = tail[1];
     if (!galleryId) return out;
     const sub = tail[2];
     const galleryLabel = resolved.galleryTitle ?? galleryId;
     pushLinkOrLeaf(!sub, `/m/g/${galleryId}`, galleryLabel);
-    if (sub === "photos") {
-      // The photoId tail segment drives the drawer-open state on
-      // the Photos page (so deep-linking still works), but it
-      // isn't a navigation level — Photos is always the deepest
-      // breadcrumb leaf whether or not a drawer is open. The
-      // drawer's own header names the photo.
-      out.push({ kind: "leaf", label: t("manage-crumb-photos") });
-    } else if (sub === "access") {
+    if (sub === "access") {
       out.push({ kind: "leaf", label: t("manage-page-gallery-access-title") });
     } else if (sub) {
       out.push({ kind: "leaf", label: sub });
@@ -187,8 +193,23 @@ const buildCrumbs = (
   // /m/<page>[/<photoId>]
   const page = tail[0];
   if (page === "photos") {
-    // Same as the gallery-scoped photos branch above: photoId
-    // drives the drawer, not the crumb trail.
+    // When the photos page is filtered to exactly one gallery
+    // via `?gallery=<id>`, enrich the trail with the gallery
+    // context so the operator can navigate up to the gallery
+    // edit page. PhotoId tail segment drives the drawer; not a
+    // crumb level.
+    if (filterContext.galleryId) {
+      out.push({
+        kind: "link",
+        path: "/m/galleries",
+        label: t("manage-page-galleries-title"),
+      });
+      out.push({
+        kind: "link",
+        path: `/m/g/${filterContext.galleryId}`,
+        label: resolved.galleryTitle ?? filterContext.galleryId,
+      });
+    }
     out.push({ kind: "leaf", label: t("manage-page-photos-title") });
   } else if (page === "galleries") {
     const sub = tail[1];
@@ -229,9 +250,19 @@ const Manage = (): React.ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const user = useUserStore((s) => s.user);
   const lookupGalleryPath = useLastGalleryPathStore((s) => s.get);
-  const galleryId = params.galleryId;
+  // Effective gallery context for the title bar's three-state
+  // pill and the breadcrumb enrichment. The route's `:galleryId`
+  // covers `/m/g/<id>/...`; for `/m/photos?gallery=<id>` (the
+  // post-collapse photos page) we read the URL search param and
+  // treat exactly one active gallery filter the same way. Zero
+  // or multiple `?gallery=` values → no single gallery context.
+  const filteredGalleries = searchParams.getAll("gallery");
+  const galleryId =
+    params.galleryId ??
+    (filteredGalleries.length === 1 ? filteredGalleries[0] : undefined);
   const { isReady: hostScopeReady, isHostScoped } = useHostScope();
   const onGlobalManagePath = GLOBAL_MANAGE_PATHS.some(
     (p) => location.pathname === p || location.pathname.startsWith(`${p}/`)
@@ -259,8 +290,8 @@ const Manage = (): React.ReactElement => {
   }, [galleryQuery.data]);
 
   const crumbs = React.useMemo(
-    () => buildCrumbs(location.pathname, t, resolved),
-    [location.pathname, t, resolved]
+    () => buildCrumbs(location.pathname, t, resolved, { galleryId }),
+    [location.pathname, t, resolved, galleryId]
   );
 
   const body = !user ? (

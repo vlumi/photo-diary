@@ -244,7 +244,7 @@ const Title = ({
       case "stats":
         return gallery.statsPath();
       case "manage":
-        return `/m/g/${gallery.id()}/photos`;
+        return `/m/photos?gallery=${gallery.id()}`;
     }
   };
 
