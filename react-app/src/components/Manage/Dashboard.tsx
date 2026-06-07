@@ -159,6 +159,11 @@ const TOPLEVEL_AUDIT_SPECS: AuditSpec[] = [
     labelKey: "manage-photos-audit-country-mismatch",
   },
 ];
+// `state-code` is intentionally absent — the Photos page filter
+// chip excludes it (countries with no ISO-3166-2 subdivisions
+// permanently match with no operator-editable fix), so a tile
+// here would land on an unfiltered view. CLI audit still surfaces
+// it via `bin/photo.ts audit --missing state-code`.
 const MISSING_FIELDS: ReadonlyArray<{ field: MissingField; labelKey: string }> = [
   { field: "taken", labelKey: "manage-photos-audit-missing-taken" },
   { field: "coords", labelKey: "manage-photos-audit-missing-coords" },
@@ -169,10 +174,6 @@ const MISSING_FIELDS: ReadonlyArray<{ field: MissingField; labelKey: string }> =
   {
     field: "description",
     labelKey: "manage-photos-audit-missing-description",
-  },
-  {
-    field: "state-code",
-    labelKey: "manage-photos-audit-missing-state-code",
   },
 ];
 

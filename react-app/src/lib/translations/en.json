@@ -146,7 +146,6 @@
     "manage-photos-audit-missing-author": "Missing author",
     "manage-photos-audit-missing-title": "Missing title",
     "manage-photos-audit-missing-description": "Missing description",
-    "manage-photos-audit-missing-state-code": "Missing state code",
     "manage-crumb-photos": "Photos",
     "manage-photos-filter-search": "Search",
     "manage-photos-filter-search-placeholder": "Title, description, filename, place…",

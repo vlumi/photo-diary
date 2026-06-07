@@ -146,7 +146,6 @@
     "manage-photos-audit-missing-author": "Tekijä puuttuu",
     "manage-photos-audit-missing-title": "Otsikko puuttuu",
     "manage-photos-audit-missing-description": "Kuvaus puuttuu",
-    "manage-photos-audit-missing-state-code": "Osavaltiokoodi puuttuu",
     "manage-crumb-photos": "Valokuvat",
     "manage-photos-filter-search": "Haku",
     "manage-photos-filter-search-placeholder": "Otsikko, kuvaus, tiedostonimi, paikka…",

@@ -146,7 +146,6 @@
     "manage-photos-audit-missing-author": "撮影者が未設定",
     "manage-photos-audit-missing-title": "タイトルが未設定",
     "manage-photos-audit-missing-description": "説明が未設定",
-    "manage-photos-audit-missing-state-code": "州コードが未設定",
     "manage-crumb-photos": "写真",
     "manage-photos-filter-search": "検索",
     "manage-photos-filter-search-placeholder": "タイトル、説明、ファイル名、場所…",
