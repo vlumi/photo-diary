@@ -336,7 +336,7 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "grant <user> <gallery>",
-    "Grant a user view (or admin with --admin) on a gallery. Idempotent — re-running with a different --admin toggles it.",
+    "Grant a user view (or gallery-editor with --editor) on a gallery. Idempotent — re-running with a different --editor toggles it.",
     (y) =>
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })

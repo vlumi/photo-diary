@@ -103,13 +103,13 @@ Directory layout:
 ```text
 /opt/photo-diary/                       # parent dir, owned by the deploy user (see below)
   0.11.0/                               #   each version unpacked into its own subdir
-  0.13.0/                               #   so different instances can run different versions
+  0.14.0/                               #   so different instances can run different versions
                                         #   and upgrades are atomic (flip a symlink)
 
 /var/photo-diary/
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
-    code -> /opt/photo-diary/0.13.0      # symlink to the code version this instance runs
+    code -> /opt/photo-diary/0.14.0      # symlink to the code version this instance runs
     db.sqlite3                          # auto-created on first server start
     photos/
       inbox/  original/  display/  thumbnail/
@@ -136,7 +136,7 @@ sudo install -d -o "$USER" /opt/photo-diary /var/photo-diary
 GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` (no rename step), then run `npm run setup` to install everything and build the bundled frontend:
 
 ```sh
-V=0.13.0
+V=0.14.0
 mkdir -p "/opt/photo-diary/$V"
 curl -L "https://github.com/vlumi/photo-diary/archive/refs/tags/v$V.tar.gz" \
   | tar xz -C "/opt/photo-diary/$V" --strip-components=1
@@ -151,7 +151,7 @@ Repeat this block for each new version you want to land on this host.
 The `bin/instance.ts` script handles directory creation, `.env` generation (with a fresh random `SECRET`), the `code` symlink, and the per-instance `bin/` shortcuts in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary/0.13.0/bin/instance.ts dailybw
+/opt/photo-diary/0.14.0/bin/instance.ts dailybw
 ```
 
 That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The script can be invoked from any working directory; the instance dir is derived from the name (and the `--base <dir>` flag, default `/var/photo-diary`, if you want instances under a different parent). Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
@@ -182,7 +182,7 @@ Re-run `bin/instance.ts` from the new version of the code, then **delete + start
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.13.0/bin/instance.ts dailybw          # backs up the DB, flips the symlink
+/opt/photo-diary/0.14.0/bin/instance.ts dailybw          # backs up the DB, flips the symlink
 pm2 delete dailybw dailybw-converter                    # drop cached metadata
 cd /var/photo-diary/dailybw
 ./code/server/bin/start-prod.sh                         # migration runner applies any schema bumps
@@ -403,7 +403,6 @@ End-to-end flow from a new JPG arriving on the host to it being browsable in the
 
 Active milestones on the way to 1.0, plus the far-out 2.0 direction. Each bullet links the GitHub milestone for live status.
 
-- [**0.14 — Admin UI polish**](https://github.com/vlumi/photo-diary/milestone/17): completes the admin surface — mobile / small-screen admin layout (#412), tree-nav for the admin breadcrumb (#438), revisit the Inbox surface post-daemon (#439), set-field bulk action (#451), mobile multi-select polish — long-press + drag-rectangle (#452), surface the gallery-admin tier in the UI (#453), dashboard audit-count cards (#454), filter-sidebar month-picker / timeline strip (#455), build the gallery icon from an existing photo via a live crop (#457).
 - [**0.15 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): the larger architectural shifts. Hybrid galleries (#22), DB drivers beyond SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286), content localization for photo metadata (#281), per-language editing for place / title / description (#343), stats category evolution over time (#383), year view full Jan–Dec on wide screens (#399), per-view fetch + server-side filtering (#406), retire the dummy DB driver in favour of real `:memory:` sqlite (#434), Galleries section composes with the Filters sidebar (#446).
 - [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283), `bin/photo.ts` subcommand-surface tidy (#376).
 - [**2.0 — Thin server, cloud-native direction**](https://github.com/vlumi/photo-diary/milestone/18) *(direction-setting, far out)*: shape may change significantly. Originals leave the server and live client-side or in cold storage; the converter's sharp pipeline becomes a local uploader bundled from the admin UI; all DB ops route through the API (no direct backdoor); storage backends behind a vendor-agnostic interface so S3-compatible / CDN deployments are an option. Vision and sub-ticket breakdown in #469. Likely diverges from today's self-hosted-monolith shape enough that it may end up being a different product line.
@@ -455,5 +454,6 @@ After the hiatus, a burst of releases that modernized the stack, formalized the 
 - **0.11** (May 2026) — Reverse-geocoded place hierarchy: converter intake fetches structured Nominatim data per photo (English canonical + optional extra languages), backfill daemon (`bin/photo-geocode.ts`) fills the existing archive, and `bin/photo.ts audit --country-mismatch` surfaces operator-vs-geocoded drift. Converter hardens around filename collisions (stable `<taken>-<uuid>.<ext>` rename at intake) and stub flows (writes a DB row directly, dedups on `(originalFilename, EXIF DateTimeOriginal)`). New `bin/meta.ts` operator script and `audit` subcommands across `bin/{photo,gallery,user,access,meta}.ts`. Stats Location card splits geotagged / not-geotagged with click-to-filter chips.
 - **0.12** (May 2026) — Geocoded location surfaced across the app: per-language city / state / country address line in the MetadataPanel with locale-aware flag positioning, City + State filter categories, Stats Places + State topics with the same drill-down, per-language city overlay JSON layered on top of Nominatim. Converter intake now flows JSONs + recursive subdirs (`inbox/<gallery>/...` auto-link, JPG processing in place, no mid-pipeline rename). MetadataPanel polished into a label-value table with author overlay on the photo Frame. Stats Exposure topic splits into Settings / Image / Light; By-value mode drops the "Other (N+)" aggregation. New beta-gated Focal length 35mm equivalent (`focal_35mm_equiv` column + crop-factor fallback). `bin/photo.ts audit` defaults to a counts-only summary; city subcommands consolidated under `cities <action>`.
 - **0.13** (Jun 2026) — Admin frontend bundle. Full `/m/*` surface — dashboard, Photos grid with faceted filter sidebar + edit drawer + multi-select bulk actions (Link / Unlink / Delete) + EXIF-revert + draggable map marker + audit chips, Galleries CRUD, Users + Groups + per-gallery and global Access pages — all behind `user.is_admin`. Stats splits into its own `/s/` URL root with a new admin-only global stats page and a Galleries topic that drills into per-gallery stats. Mutation API hardens (#222) with TypeBox-validated bodies, field-locked photo overrides, the `:private` pseudo-gallery and `:all`/`:public` plumbing retire (#385/#394), virtual-host scope (#386) narrows reads + writes to a bound gallery, and ACL gains user groups (#270). Theme picker becomes a swatch grid with hover preview, six new built-in themes (Amber / Lavender / Sage / Slate / Midnight / Espresso), and converter coord-change paths consistently clear geocoded fields so place names track the photo.
+- **0.14** (Jun 2026) — Admin UI polish. Slug-shaped (lowercase) ids across `user` / `gallery` / `group` with a one-shot lowercasing migration, mutable `user.name` + renamed `group.name`, per-photo bulk Edit-fields modal (#451), bulk Regeocode (#483), audit-count tiles on the dashboard (#454), filter-sidebar timeline strip with shift-range month picking (#455), gallery-icon cropper from the gallery's own photos (#457), Inbox surface revamp post-daemon (#439), drawer Galleries row + the `/m/g/<id>/photos` route collapsed into `/m/photos?gallery=<id>` (#496/#497), gallery-editor tier surfaced end-to-end via `is_editor` (#498), country dropdown polish (#488/#489) and the new `xx` sentinel for international waters (#486). Mobile / small-screen pass (#412): tables wrap in `TableScroll`, Photos page top-and-bottom pagers with 44px touch targets, Access table redesign (icon-prefixed Subject, centred control headers, trash icon, frosted-glass `BulkActions` bar that floats centred over the grid). Touch multi-select (#452): long-press to anchor, drag to range-fill the anchor → head span, auto-scroll near viewport edges. Manage breadcrumb gains the gear-icon parity with `GlobalStats`. Manage Dashboard navigation reshuffle (#481) plus the manage-galleries-list row-padding (#496) fix.
 
-See the [Roadmap](#roadmap) for what's in flight after 0.13.
+See the [Roadmap](#roadmap) for what's in flight after 0.14.

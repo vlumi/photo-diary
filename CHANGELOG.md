@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-06-07
+
 ### Server
 
 - User / gallery / group ids tighten to a lowercase slug shape: `^[a-z0-9][a-z0-9_-]*$` (lowercase alnum, may contain `_` / `-`, must start with alnum). Schema migration 017 lowercases any existing uppercase ids and cascades the change through the FK columns (`user_gallery`, `user_group`, `session`, `group_gallery`, `gallery_photo`). Login lowercases the typed id before lookup so iOS-autocapitalized "Admin" matches a stored `admin`. INSERT-time pattern validation lives in the model + TypeBox schemas; the migration's PK UNIQUE constraint surfaces existing case-collisions on first run. (part of #476)
