@@ -22,15 +22,24 @@ interface Props {
   onCancel: () => void;
 }
 
+// Frosted-glass bar — themed via --header-background so it picks
+// up whichever theme is active, with backdrop-blur for the mobile
+// floating layout (no-op on desktop where the bar sits inline,
+// but the translucent fill still reads as a card).
 const Bar = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--tile-background);
-  border: 1px solid var(--inactive-color);
-  border-radius: 4px;
+  gap: 6px 8px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--header-background) 80%, transparent);
+  color: var(--header-color);
+  border: 1px solid
+    color-mix(in srgb, var(--header-color) 25%, transparent);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   margin-bottom: 8px;
   @media (max-width: 700px) {
     position: fixed;
@@ -39,8 +48,15 @@ const Bar = styled.div`
     bottom: 8px;
     margin-bottom: 0;
     z-index: 950;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   }
+`;
+const GroupSep = styled.span`
+  align-self: stretch;
+  width: 1px;
+  background: currentColor;
+  opacity: 0.25;
+  margin: 0 2px;
 `;
 const Count = styled.span`
   font-weight: bold;
@@ -49,22 +65,33 @@ const Spacer = styled.span`
   flex: 1 1 auto;
 `;
 const ActionButton = styled.button<{ $danger?: boolean }>`
-  padding: 4px 10px;
+  padding: 6px 12px;
+  border-radius: 6px;
   border: 1px solid
     ${({ $danger }) =>
-      $danger ? "var(--alert-color, #c33)" : "var(--inactive-color)"};
-  background: transparent;
-  color: ${({ $danger }) => ($danger ? "var(--alert-color, #c33)" : "var(--primary-color)")};
+      $danger
+        ? "var(--alert-color, #c33)"
+        : "color-mix(in srgb, currentColor 35%, transparent)"};
+  background: ${({ $danger }) =>
+    $danger
+      ? "transparent"
+      : "color-mix(in srgb, currentColor 10%, transparent)"};
+  color: ${({ $danger }) => ($danger ? "var(--alert-color, #c33)" : "inherit")};
   font: inherit;
   cursor: pointer;
   &:disabled {
-    color: var(--inactive-color);
-    border-color: var(--inactive-color);
+    opacity: 0.4;
     cursor: default;
   }
   &:hover:not(:disabled) {
     border-color: ${({ $danger }) =>
-      $danger ? "var(--alert-color, #c33)" : "var(--primary-color)"};
+      $danger
+        ? "var(--alert-color, #c33)"
+        : "color-mix(in srgb, currentColor 70%, transparent)"};
+    background: ${({ $danger }) =>
+      $danger
+        ? "color-mix(in srgb, var(--alert-color, #c33) 12%, transparent)"
+        : "color-mix(in srgb, currentColor 18%, transparent)"};
   }
 `;
 const Backdrop = styled.div`
@@ -704,6 +731,22 @@ const BulkActions = ({
     <>
       <Bar>
         <Count>{t("manage-photos-bulk-selected", { count })}</Count>
+        <GroupSep aria-hidden />
+        <ActionButton
+          type="button"
+          disabled={busy || count === 0}
+          onClick={() => setPending({ kind: "edit-fields" })}
+        >
+          {t("manage-photos-bulk-edit-fields")}
+        </ActionButton>
+        <ActionButton
+          type="button"
+          disabled={busy || count === 0}
+          onClick={() => setPending({ kind: "confirm-regeocode" })}
+        >
+          {t("manage-photos-bulk-regeocode")}
+        </ActionButton>
+        <GroupSep aria-hidden />
         {isAdmin && (
           <ActionButton
             type="button"
@@ -720,29 +763,18 @@ const BulkActions = ({
         >
           {t("manage-photos-bulk-unlink")}
         </ActionButton>
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "edit-fields" })}
-        >
-          {t("manage-photos-bulk-edit-fields")}
-        </ActionButton>
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "confirm-regeocode" })}
-        >
-          {t("manage-photos-bulk-regeocode")}
-        </ActionButton>
         {isAdmin && (
-          <ActionButton
-            type="button"
-            $danger
-            disabled={busy || count === 0}
-            onClick={() => setPending({ kind: "confirm-delete" })}
-          >
-            {t("manage-photos-bulk-delete")}
-          </ActionButton>
+          <>
+            <GroupSep aria-hidden />
+            <ActionButton
+              type="button"
+              $danger
+              disabled={busy || count === 0}
+              onClick={() => setPending({ kind: "confirm-delete" })}
+            >
+              {t("manage-photos-bulk-delete")}
+            </ActionButton>
+          </>
         )}
         <Spacer />
         <ActionButton type="button" disabled={busy} onClick={onCancel}>
