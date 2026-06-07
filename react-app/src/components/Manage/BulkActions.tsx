@@ -31,9 +31,18 @@ interface Props {
 const Bar = styled.div`
   position: fixed;
   bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: min(900px, calc(100% - 32px));
+  /* Desktop: pin the bar's containing box to the Body section
+     only, so the centring math doesn't include the 360px filter
+     sidebar on the left. Numbers match Photos.tsx: 8px Root
+     padding + 360px Sidebar + 16px gap = 384px. Right matches
+     Root's 8px padding. margin: 0 auto then distributes the
+     slack inside that band so the card sits centred over the
+     photo grid. */
+  left: 384px;
+  right: 8px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 900px;
   z-index: 950;
   display: grid;
   grid-template-columns: 1fr auto;
@@ -48,10 +57,11 @@ const Bar = styled.div`
   -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   @media (max-width: 700px) {
+    /* Phone-width: Sidebar is hidden, bar spans viewport edges. */
     left: 8px;
     right: 8px;
     bottom: 8px;
-    transform: none;
+    margin: 0;
     max-width: none;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   }
