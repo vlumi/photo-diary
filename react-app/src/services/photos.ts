@@ -74,6 +74,14 @@ const get = async (id: string): Promise<PhotoRow> =>
     })
   ) as Promise<PhotoRow>;
 
+const getByIds = async (ids: string[]): Promise<PhotoRow[]> => {
+  if (ids.length === 0) return [];
+  const result = (await unwrap(
+    api.POST("/api/v1/photos/by-ids", { body: { ids } })
+  )) as { photos: PhotoRow[] };
+  return result.photos;
+};
+
 // PhotoUpdateBody on the server only accepts the override fields
 // `bin/photo.ts update` exposes. EXIF-derived columns reject with 400.
 export interface PhotoUpdatePatch {
@@ -135,4 +143,4 @@ const remove = async (id: string): Promise<void> => {
   );
 };
 
-export default { list, get, update, regeocode, remove };
+export default { list, get, getByIds, update, regeocode, remove };

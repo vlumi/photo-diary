@@ -2,7 +2,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
 
-import photosService, { type PhotoUpdatePatch } from "../../services/photos";
+import photosService, {
+  type PhotoRow,
+  type PhotoUpdatePatch,
+} from "../../services/photos";
 import galleryPhotosService from "../../services/gallery-photos";
 
 interface Gallery {
@@ -71,7 +74,10 @@ const ModalBox = styled.div`
   border-radius: 6px;
   padding: 20px;
   width: 100%;
-  max-width: 420px;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 `;
 const ModalTitle = styled.h2`
@@ -81,6 +87,8 @@ const ModalTitle = styled.h2`
 const ModalBody = styled.div`
   margin-bottom: 16px;
   line-height: 1.4;
+  overflow-y: auto;
+  min-height: 0;
 `;
 const ModalFooter = styled.div`
   display: flex;
@@ -97,7 +105,20 @@ const Select = styled.select`
   width: 100%;
   margin-top: 8px;
 `;
-const Input = styled.input`
+const FieldRow = styled.label<{ $active: boolean }>`
+  display: grid;
+  grid-template-columns: auto 130px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  opacity: ${({ $active }) => ($active ? 1 : 0.7)};
+`;
+const FieldLabelText = styled.span`
+  font-size: 0.85em;
+  color: var(--inactive-color);
+`;
+const FieldInput = styled.input<{ $mixed?: boolean }>`
   font: inherit;
   padding: 4px 6px;
   background: var(--primary-background);
@@ -105,8 +126,16 @@ const Input = styled.input`
   border: 1px solid var(--inactive-color);
   border-radius: 4px;
   width: 100%;
-  margin-top: 8px;
   box-sizing: border-box;
+  &::placeholder {
+    font-style: ${({ $mixed }) => ($mixed ? "italic" : "normal")};
+    opacity: ${({ $mixed }) => ($mixed ? 0.65 : 0.45)};
+  }
+`;
+const Notice = styled.p`
+  margin: 0 0 12px;
+  color: var(--inactive-color);
+  font-style: italic;
 `;
 const ErrorText = styled.div`
   color: var(--alert-color, #c33);
@@ -119,7 +148,7 @@ type Pending =
   | { kind: "confirm-delete" }
   | { kind: "pick-link" }
   | { kind: "pick-unlink" }
-  | { kind: "pick-set-field" };
+  | { kind: "edit-fields" };
 
 type FieldKey =
   | "title"
@@ -177,38 +206,106 @@ const FIELD_LABEL_KEY: Record<FieldKey, string> = {
   aperture: "manage-photo-field-aperture",
 };
 
-// Shape one selected field + value into the PhotoUpdatePatch the
-// `PUT /photos/<id>` endpoint already accepts. Strings allow empty
-// = clear override; numbers reject NaN so an empty input is a no-op.
-const buildPatch = (field: FieldKey, value: string): PhotoUpdatePatch | null => {
-  const trimmed = value.trim();
-  if (!STRING_FIELDS.has(field)) {
-    if (trimmed === "") return null;
-    const v = parseFloat(trimmed);
-    if (Number.isNaN(v)) return null;
-    return { exposure: { [field]: v } as PhotoUpdatePatch["exposure"] };
-  }
-  switch (field) {
+// Pull one writable field out of a photo row as a string, so the
+// mixed-vs-shared check across the selection is a plain
+// string-equality comparison.
+const readField = (p: PhotoRow, key: FieldKey): string => {
+  const taken = (p.taken ?? {}) as {
+    author?: string;
+    location?: { country?: string; place?: string };
+  };
+  const location = taken.location ?? {};
+  const camera = (p.camera ?? {}) as { make?: string; model?: string };
+  const lens = (p.lens ?? {}) as { make?: string; model?: string };
+  const exposure = (p.exposure ?? {}) as {
+    focalLength?: number;
+    focalLength35mmEquiv?: number;
+    aperture?: number;
+  };
+  const numToStr = (v: number | undefined): string =>
+    v !== undefined && v !== null ? String(v) : "";
+  switch (key) {
     case "title":
-      return { title: trimmed };
+      return ((p.title as string | undefined) ?? "").trim();
     case "description":
-      return { description: trimmed };
+      return ((p.description as string | undefined) ?? "").trim();
     case "author":
-      return { taken: { author: trimmed } };
+      return (taken.author ?? "").trim();
     case "country":
-      return { taken: { location: { country: trimmed } } };
+      return (location.country ?? "").trim();
     case "place":
-      return { taken: { location: { place: trimmed } } };
+      return (location.place ?? "").trim();
     case "cameraMake":
-      return { camera: { make: trimmed } };
+      return (camera.make ?? "").trim();
     case "cameraModel":
-      return { camera: { model: trimmed } };
+      return (camera.model ?? "").trim();
     case "lensMake":
-      return { lens: { make: trimmed } };
+      return (lens.make ?? "").trim();
     case "lensModel":
-      return { lens: { model: trimmed } };
+      return (lens.model ?? "").trim();
+    case "focalLength":
+      return numToStr(exposure.focalLength);
+    case "focalLength35mmEquiv":
+      return numToStr(exposure.focalLength35mmEquiv);
+    case "aperture":
+      return numToStr(exposure.aperture);
   }
-  return null;
+};
+
+// Per-field "what does this field look like across the selection"
+// — a single shared value, mixed, or universally empty.
+type FieldSummary =
+  | { kind: "shared"; value: string }
+  | { kind: "mixed" }
+  | { kind: "empty" };
+
+const summarize = (rows: PhotoRow[], key: FieldKey): FieldSummary => {
+  if (rows.length === 0) return { kind: "empty" };
+  const first = readField(rows[0], key);
+  for (let i = 1; i < rows.length; i++) {
+    if (readField(rows[i], key) !== first) return { kind: "mixed" };
+  }
+  return first === "" ? { kind: "empty" } : { kind: "shared", value: first };
+};
+
+// Fold the checked rows into one PhotoUpdatePatch shaped to the
+// PUT /photos/<id> body. Strings allow "" = clear override;
+// numeric fields drop when parseFloat yields NaN.
+const buildPatch = (
+  values: Partial<Record<FieldKey, string>>
+): PhotoUpdatePatch => {
+  const patch: PhotoUpdatePatch = {};
+  const taken: NonNullable<PhotoUpdatePatch["taken"]> = {};
+  const location: NonNullable<
+    NonNullable<PhotoUpdatePatch["taken"]>["location"]
+  > = {};
+  const camera: NonNullable<PhotoUpdatePatch["camera"]> = {};
+  const lens: NonNullable<PhotoUpdatePatch["lens"]> = {};
+  const exposure: NonNullable<PhotoUpdatePatch["exposure"]> = {};
+  const setNum = (key: "focalLength" | "focalLength35mmEquiv" | "aperture") => {
+    const raw = values[key];
+    if (raw === undefined) return;
+    const v = parseFloat(raw.trim());
+    if (!Number.isNaN(v)) exposure[key] = v;
+  };
+  if (values.title !== undefined) patch.title = values.title.trim();
+  if (values.description !== undefined) patch.description = values.description.trim();
+  if (values.author !== undefined) taken.author = values.author.trim();
+  if (values.country !== undefined) location.country = values.country.trim();
+  if (values.place !== undefined) location.place = values.place.trim();
+  if (values.cameraMake !== undefined) camera.make = values.cameraMake.trim();
+  if (values.cameraModel !== undefined) camera.model = values.cameraModel.trim();
+  if (values.lensMake !== undefined) lens.make = values.lensMake.trim();
+  if (values.lensModel !== undefined) lens.model = values.lensModel.trim();
+  setNum("focalLength");
+  setNum("focalLength35mmEquiv");
+  setNum("aperture");
+  if (Object.keys(location).length > 0) taken.location = location;
+  if (Object.keys(taken).length > 0) patch.taken = taken;
+  if (Object.keys(camera).length > 0) patch.camera = camera;
+  if (Object.keys(lens).length > 0) patch.lens = lens;
+  if (Object.keys(exposure).length > 0) patch.exposure = exposure;
+  return patch;
 };
 
 const BulkActions = ({
@@ -225,8 +322,16 @@ const BulkActions = ({
   const [galleryPick, setGalleryPick] = React.useState<string>(
     scopedGalleryId ?? galleries[0]?.id ?? ""
   );
-  const [fieldPick, setFieldPick] = React.useState<FieldKey>("title");
-  const [fieldValue, setFieldValue] = React.useState<string>("");
+
+  // Edit-fields modal state. `values` holds only the fields the
+  // operator has actively touched (or pre-checked) — anything not
+  // in the map is "leave alone" regardless of how the UI rendered
+  // the original.
+  const [rows, setRows] = React.useState<PhotoRow[] | null>(null);
+  const [loadingRows, setLoadingRows] = React.useState(false);
+  const [values, setValues] = React.useState<Partial<Record<FieldKey, string>>>(
+    {}
+  );
 
   const closeModal = React.useCallback(() => {
     if (busy) return;
@@ -237,10 +342,36 @@ const BulkActions = ({
   React.useEffect(() => {
     if (pending.kind === "none") return;
     setGalleryPick(scopedGalleryId ?? galleries[0]?.id ?? "");
-    setFieldPick("title");
-    setFieldValue("");
     setError(null);
+    if (pending.kind !== "edit-fields") {
+      setRows(null);
+      setValues({});
+    }
   }, [pending.kind, scopedGalleryId, galleries]);
+
+  // Load the selection's current values whenever the edit modal opens.
+  React.useEffect(() => {
+    if (pending.kind !== "edit-fields") return;
+    let cancelled = false;
+    setLoadingRows(true);
+    setValues({});
+    setRows(null);
+    photosService
+      .getByIds(selectedIds)
+      .then((result) => {
+        if (cancelled) return;
+        setRows(result);
+        setLoadingRows(false);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setLoadingRows(false);
+        setError(e instanceof Error ? e.message : String(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pending.kind, selectedIds]);
 
   React.useEffect(() => {
     if (pending.kind === "none") return;
@@ -280,9 +411,13 @@ const BulkActions = ({
       galleryPhotosService.unlink(galleryPick, id)
     );
   };
-  const doSetField = () => {
-    const patch = buildPatch(fieldPick, fieldValue);
-    if (!patch) return;
+  const doApplyFields = () => {
+    const patch = buildPatch(values);
+    if (Object.keys(patch).length === 0) {
+      setPending({ kind: "none" });
+      onDone();
+      return;
+    }
     return runSequentially((id) => photosService.update(id, patch));
   };
 
@@ -291,8 +426,110 @@ const BulkActions = ({
     if (event.target === event.currentTarget) closeModal();
   };
 
+  const setFieldValue = (key: FieldKey, value: string) => {
+    setValues((prev) => ({ ...prev, [key]: value }));
+  };
+  const toggleField = (key: FieldKey, checked: boolean) => {
+    setValues((prev) => {
+      const next = { ...prev };
+      if (checked) {
+        // Default to the shared value when one exists, blank
+        // otherwise. Operator can still type a different value.
+        const summary = rows ? summarize(rows, key) : { kind: "empty" as const };
+        next[key] =
+          summary.kind === "shared" ? summary.value : prev[key] ?? "";
+      } else {
+        delete next[key];
+      }
+      return next;
+    });
+  };
+
+  const renderEditFieldsModal = () => {
+    const checkedCount = Object.keys(values).length;
+    return (
+      <Backdrop
+        onClick={onBackdropClick}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bulk-modal-title"
+      >
+        <ModalBox>
+          <ModalTitle id="bulk-modal-title">
+            {t("manage-photos-bulk-edit-fields")}
+          </ModalTitle>
+          <ModalBody>
+            {loadingRows || !rows ? (
+              <Notice>{t("loading")}</Notice>
+            ) : (
+              <>
+                <Notice>
+                  {t("manage-photos-bulk-edit-fields-intro", { count })}
+                </Notice>
+                {FIELD_KEYS.map((key) => {
+                  const summary = summarize(rows, key);
+                  const checked = values[key] !== undefined;
+                  const isString = STRING_FIELDS.has(key);
+                  const inputValue = checked
+                    ? (values[key] ?? "")
+                    : summary.kind === "shared"
+                      ? summary.value
+                      : "";
+                  const placeholder =
+                    summary.kind === "mixed"
+                      ? `<${String(t("manage-photos-bulk-mixed"))}>`
+                      : "";
+                  return (
+                    <FieldRow key={key} $active={checked}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={busy}
+                        onChange={(e) => toggleField(key, e.target.checked)}
+                      />
+                      <FieldLabelText>{t(FIELD_LABEL_KEY[key])}</FieldLabelText>
+                      <FieldInput
+                        type={isString ? "text" : "number"}
+                        step={isString ? undefined : "any"}
+                        value={inputValue}
+                        disabled={busy}
+                        placeholder={placeholder}
+                        $mixed={summary.kind === "mixed"}
+                        onChange={(e) => {
+                          setFieldValue(key, e.target.value);
+                        }}
+                      />
+                    </FieldRow>
+                  );
+                })}
+              </>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <ActionButton type="button" disabled={busy} onClick={closeModal}>
+              {t("manage-user-button-cancel")}
+            </ActionButton>
+            <ActionButton
+              type="button"
+              disabled={busy || loadingRows || checkedCount === 0}
+              onClick={() => void doApplyFields()}
+            >
+              {busy
+                ? t("manage-photos-bulk-applying")
+                : t("manage-photos-bulk-edit-fields-apply", {
+                    count: checkedCount,
+                  })}
+            </ActionButton>
+          </ModalFooter>
+          {error ? <ErrorText>{error}</ErrorText> : null}
+        </ModalBox>
+      </Backdrop>
+    );
+  };
+
   const renderModal = () => {
     if (pending.kind === "none") return null;
+    if (pending.kind === "edit-fields") return renderEditFieldsModal();
     if (pending.kind === "confirm-delete") {
       return (
         <Backdrop
@@ -321,90 +558,6 @@ const BulkActions = ({
                 {busy
                   ? t("manage-photos-bulk-deleting")
                   : t("manage-photos-bulk-confirm-delete-button")}
-              </ActionButton>
-            </ModalFooter>
-            {error ? <ErrorText>{error}</ErrorText> : null}
-          </ModalBox>
-        </Backdrop>
-      );
-    }
-    if (pending.kind === "pick-set-field") {
-      const fieldIsString = STRING_FIELDS.has(fieldPick);
-      const labelText = String(t(FIELD_LABEL_KEY[fieldPick]));
-      const trimmedValue = fieldValue.trim();
-      const isClear = fieldIsString && trimmedValue === "";
-      const parsedNumeric = fieldIsString
-        ? null
-        : trimmedValue === ""
-          ? null
-          : parseFloat(trimmedValue);
-      const numericValid =
-        fieldIsString || (parsedNumeric !== null && !Number.isNaN(parsedNumeric));
-      const canApply = fieldIsString || numericValid;
-      const previewKey = isClear
-        ? "manage-photos-bulk-set-field-clear-preview"
-        : "manage-photos-bulk-set-field-set-preview";
-      return (
-        <Backdrop
-          onClick={onBackdropClick}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="bulk-modal-title"
-        >
-          <ModalBox>
-            <ModalTitle id="bulk-modal-title">
-              {t("manage-photos-bulk-set-field")}
-            </ModalTitle>
-            <ModalBody>
-              {t("manage-photos-bulk-set-field-intro", { count })}
-              <Select
-                value={fieldPick}
-                disabled={busy}
-                onChange={(e) => {
-                  setFieldPick(e.target.value as FieldKey);
-                  setFieldValue("");
-                }}
-              >
-                {FIELD_KEYS.map((f) => (
-                  <option key={f} value={f}>
-                    {t(FIELD_LABEL_KEY[f])}
-                  </option>
-                ))}
-              </Select>
-              <Input
-                type={fieldIsString ? "text" : "number"}
-                step={fieldIsString ? undefined : "any"}
-                value={fieldValue}
-                disabled={busy}
-                onChange={(e) => setFieldValue(e.target.value)}
-                placeholder={
-                  fieldIsString
-                    ? String(t("manage-photos-bulk-set-field-string-placeholder"))
-                    : String(t("manage-photos-bulk-set-field-number-placeholder"))
-                }
-              />
-              {canApply ? (
-                <div style={{ marginTop: 8, opacity: 0.8 }}>
-                  {t(previewKey, {
-                    count,
-                    label: labelText,
-                    value: trimmedValue,
-                  })}
-                </div>
-              ) : null}
-            </ModalBody>
-            <ModalFooter>
-              <ActionButton type="button" disabled={busy} onClick={closeModal}>
-                {t("manage-user-button-cancel")}
-              </ActionButton>
-              <ActionButton
-                type="button"
-                disabled={busy || !canApply}
-                onClick={() => void doSetField()}
-              >
-                {busy
-                  ? t("manage-photos-bulk-applying")
-                  : t("manage-photos-bulk-set-field-button")}
               </ActionButton>
             </ModalFooter>
             {error ? <ErrorText>{error}</ErrorText> : null}
@@ -506,9 +659,9 @@ const BulkActions = ({
         <ActionButton
           type="button"
           disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "pick-set-field" })}
+          onClick={() => setPending({ kind: "edit-fields" })}
         >
-          {t("manage-photos-bulk-set-field")}
+          {t("manage-photos-bulk-edit-fields")}
         </ActionButton>
         <ActionButton
           type="button"

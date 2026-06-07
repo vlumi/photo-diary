@@ -173,6 +173,18 @@ const PhotosListResponse = Type.Object({
   pageSize: Type.Integer(),
   total: Type.Integer(),
 });
+const PhotosByIdsBody = Type.Object(
+  {
+    ids: Type.Array(Type.String({ minLength: 1 }), {
+      minItems: 1,
+      maxItems: 500,
+    }),
+  },
+  { additionalProperties: false }
+);
+const PhotosByIdsResponse = Type.Object({
+  photos: Type.Array(PhotoItem),
+});
 
 const TAGS = ["photos"];
 
@@ -239,6 +251,42 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.body as { id: string } & Record<string, unknown>
       );
       reply.status(201).send();
+    }
+  );
+
+  /**
+   * Look up many photos in one call. Admin only — drives the
+   * bulk-edit modal's "what does each selected photo currently
+   * hold" check. Host-scope is enforced: out-of-scope ids are
+   * silently dropped from the result rather than 404'd, so a
+   * scope-changed selection doesn't surface as a hard error.
+   */
+  fastify.post(
+    "/by-ids",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Fetch many photos by id (admin)",
+        body: PhotosByIdsBody,
+        response: { 200: PhotosByIdsResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      const inScope = await collectScopePhotoIds(request);
+      const requested = request.body.ids;
+      const allowed = inScope
+        ? requested.filter((id) => inScope.has(id))
+        : requested;
+      const photos: Record<string, unknown>[] = [];
+      for (const id of allowed) {
+        const row = (await model
+          .getPhoto(id)
+          .catch(() => null)) as Record<string, unknown> | null;
+        if (row) photos.push(row);
+      }
+      return { photos };
     }
   );
 
