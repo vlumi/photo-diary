@@ -3,8 +3,10 @@ import logger from "../lib/logger.js";
 import db from "../db/index.js";
 import {
   applyFilter,
+  MISSING_PREDICATES,
   paginate,
   sortByTakenDesc,
+  type MissingField,
   type PhotoFilter,
 } from "../lib/photo-filter.js";
 
@@ -13,6 +15,7 @@ export default () => {
     init,
     getPhotos,
     listPhotos,
+    countAudits,
     createPhoto,
     getPhoto,
     updatePhoto,
@@ -105,6 +108,73 @@ const listPhotos = async (opts: ListOptions = {}): Promise<ListResult> => {
     pageSize: result.pageSize,
     total: result.total,
   };
+};
+
+// Per-predicate audit counts over the catalogue. Each key matches
+// the filter-chip URL param on the admin photos page (`orphan=1`,
+// `duplicates=1`, `countryMismatch=1`, `missing=<field>`), so a
+// dashboard tile can deep-link to `/m/photos?<key>=…` and the
+// Photos page parses it straight into the active filter.
+const MISSING_FIELDS: MissingField[] = [
+  "taken",
+  "coords",
+  "place",
+  "country",
+  "author",
+  "title",
+  "description",
+  "state-code",
+];
+
+export interface AuditCounts {
+  orphan: number;
+  duplicates: number;
+  countryMismatch: number;
+  missing: Record<MissingField, number>;
+}
+
+const countAudits = async (opts: {
+  restrictToIds?: Set<string>;
+} = {}): Promise<AuditCounts> => {
+  logger.debug("Counting audits", { scoped: !!opts.restrictToIds });
+  const allPhotos = toArray(await db.loadPhotos());
+  const orphanIds = new Set<string>(await db.loadOrphanPhotoIds());
+  const photos = opts.restrictToIds
+    ? allPhotos.filter((p) => opts.restrictToIds!.has(p.id))
+    : allPhotos;
+  // duplicatesPredicate over the in-scope subset only — duplicates
+  // across scope boundaries shouldn't bleed into a scoped count.
+  const dupeCounts = new Map<string, number>();
+  for (const p of photos) {
+    const name = p.originalFilename as string | undefined;
+    if (!name) continue;
+    dupeCounts.set(name, (dupeCounts.get(name) ?? 0) + 1);
+  }
+  const isDupe = (p: any): boolean => {
+    const name = p.originalFilename as string | undefined;
+    return !!name && (dupeCounts.get(name) ?? 0) > 1;
+  };
+  const isCountryMismatch = (p: any): boolean => {
+    const op = p.taken?.location?.country;
+    const geo = p.geocoded?.countryCode;
+    if (!op || !geo) return false;
+    return String(op).toLowerCase() !== String(geo).toLowerCase();
+  };
+  const missing = Object.fromEntries(
+    MISSING_FIELDS.map((f) => [f, 0])
+  ) as Record<MissingField, number>;
+  let orphan = 0;
+  let duplicates = 0;
+  let countryMismatch = 0;
+  for (const p of photos) {
+    if (orphanIds.has(p.id)) orphan++;
+    if (isDupe(p)) duplicates++;
+    if (isCountryMismatch(p)) countryMismatch++;
+    for (const f of MISSING_FIELDS) {
+      if (MISSING_PREDICATES[f](p)) missing[f]++;
+    }
+  }
+  return { orphan, duplicates, countryMismatch, missing };
 };
 
 const createPhoto = async (photo: { id: string } & Record<string, any>) => {

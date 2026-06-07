@@ -766,6 +766,7 @@ const PhotoDrawer = (): React.ReactElement => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["manage-photo", id] }),
         queryClient.invalidateQueries({ queryKey: ["manage-photos"] }),
+        queryClient.invalidateQueries({ queryKey: ["manage-audit-counts"] }),
       ]);
     } catch (e) {
       setError((e as Error).message || t("manage-photo-save-error"));
@@ -784,6 +785,7 @@ const PhotoDrawer = (): React.ReactElement => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["manage-photo", id] });
       queryClient.invalidateQueries({ queryKey: ["manage-photos"] });
+      queryClient.invalidateQueries({ queryKey: ["manage-audit-counts"] });
     },
     onError: (e: Error) => {
       setError(e.message || t("manage-photo-save-error"));

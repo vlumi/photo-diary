@@ -1404,6 +1404,87 @@
         }
       }
     },
+    "/api/v1/photos/audit-counts": {
+      "get": {
+        "summary": "Audit-predicate counts (admin)",
+        "tags": [
+          "photos"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "orphan",
+                    "duplicates",
+                    "countryMismatch",
+                    "missing"
+                  ],
+                  "properties": {
+                    "orphan": {
+                      "type": "integer"
+                    },
+                    "duplicates": {
+                      "type": "integer"
+                    },
+                    "countryMismatch": {
+                      "type": "integer"
+                    },
+                    "missing": {
+                      "type": "object",
+                      "required": [
+                        "taken",
+                        "coords",
+                        "place",
+                        "country",
+                        "author",
+                        "title",
+                        "description",
+                        "state-code"
+                      ],
+                      "properties": {
+                        "taken": {
+                          "type": "integer"
+                        },
+                        "coords": {
+                          "type": "integer"
+                        },
+                        "place": {
+                          "type": "integer"
+                        },
+                        "country": {
+                          "type": "integer"
+                        },
+                        "author": {
+                          "type": "integer"
+                        },
+                        "title": {
+                          "type": "integer"
+                        },
+                        "description": {
+                          "type": "integer"
+                        },
+                        "state-code": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/photos/by-ids": {
       "post": {
         "summary": "Fetch many photos by id (admin)",

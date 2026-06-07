@@ -74,6 +74,16 @@ const get = async (id: string): Promise<PhotoRow> =>
     })
   ) as Promise<PhotoRow>;
 
+export interface AuditCounts {
+  orphan: number;
+  duplicates: number;
+  countryMismatch: number;
+  missing: Record<MissingField, number>;
+}
+
+const getAuditCounts = async (): Promise<AuditCounts> =>
+  unwrap(api.GET("/api/v1/photos/audit-counts", {})) as Promise<AuditCounts>;
+
 const getByIds = async (ids: string[]): Promise<PhotoRow[]> => {
   if (ids.length === 0) return [];
   const result = (await unwrap(
@@ -143,4 +153,12 @@ const remove = async (id: string): Promise<void> => {
   );
 };
 
-export default { list, get, getByIds, update, regeocode, remove };
+export default {
+  list,
+  get,
+  getByIds,
+  getAuditCounts,
+  update,
+  regeocode,
+  remove,
+};
