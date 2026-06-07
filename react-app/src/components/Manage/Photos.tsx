@@ -240,6 +240,9 @@ const Thumb = styled.img`
   object-fit: contain;
   object-position: center;
   display: block;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
 `;
 const TileMeta = styled.div`
   padding: 2px 4px;
