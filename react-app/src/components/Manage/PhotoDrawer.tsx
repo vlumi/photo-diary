@@ -1129,13 +1129,33 @@ const PhotoDrawer = (): React.ReactElement => {
                   {data.galleries.map((gid) => {
                     const meta = galleryById.get(gid);
                     const label = meta?.title || gid;
+                    // Public gallery route is
+                    // `/g/<id>/<year>/<month>/<day>/<photoId>`
+                    // — parse year/month/day from the photo's
+                    // capture timestamp (first 10 chars of the
+                    // ISO string). Photos without a usable
+                    // timestamp fall back to the gallery's
+                    // landing page; deep-linking to the photo
+                    // requires a date.
+                    const ts = data.taken?.instant?.timestamp;
+                    const ymd = ts && /^\d{4}-\d{2}-\d{2}/.test(ts)
+                      ? [
+                          Number(ts.slice(0, 4)),
+                          Number(ts.slice(5, 7)),
+                          Number(ts.slice(8, 10)),
+                        ]
+                      : null;
+                    const viewHref = ymd
+                      ? `/g/${gid}/${ymd[0]}/${ymd[1]}/${ymd[2]}/${data.id}`
+                      : `/g/${gid}`;
+                    const editHref = `/m/g/${gid}`;
                     return (
                       <GalleryChip key={gid}>
                         <GalleryChipPrimary
-                          href={`/g/${gid}/${data.id}`}
+                          href={viewHref}
                           onClick={(e) => {
                             e.preventDefault();
-                            navigate(`/g/${gid}/${data.id}`);
+                            navigate(viewHref);
                           }}
                           title={String(
                             t("manage-photo-galleries-jump-view", { label })
@@ -1144,10 +1164,10 @@ const PhotoDrawer = (): React.ReactElement => {
                           {label}
                         </GalleryChipPrimary>
                         <GalleryChipSecondary
-                          href={`/m/galleries/${gid}`}
+                          href={editHref}
                           onClick={(e) => {
                             e.preventDefault();
-                            navigate(`/m/galleries/${gid}`);
+                            navigate(editHref);
                           }}
                           title={String(
                             t("manage-photo-galleries-jump-edit", { label })
