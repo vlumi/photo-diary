@@ -9,6 +9,7 @@
 // `xx` sentinel) at the top so an operator can mark photos
 // taken in international waters without typing the raw code.
 import React from "react";
+import { createPortal } from "react-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
@@ -37,18 +38,15 @@ const TypeaheadInput = styled.input<{ $highlight?: boolean }>`
     cursor: not-allowed;
   }
 `;
+// position: fixed so we can escape any `overflow: auto` ancestor
+// (e.g. the bulk-action modal's ModalBody) — clipping would
+// otherwise hide the dropdown behind subsequent input rows.
+// The component portals the dropdown to <body> for the same
+// reason; z-index 2100 keeps it above modal backdrops (2000)
+// without painting over an open <select> menu native chrome.
 const Dropdown = styled.div`
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  /* Above leaflet's internal panes (tile 200, overlay 400,
-     marker 600, popup 700) AND its control containers
-     (.leaflet-top / -bottom wrap the +/- zoom buttons at
-     z-index: 1000). Stay below the modal layer (2000) used
-     by the bulk-action backdrops. */
-  z-index: 1100;
-  margin-top: 2px;
+  position: fixed;
+  z-index: 2100;
   max-height: 240px;
   overflow-y: auto;
   background: var(--primary-background);
@@ -105,11 +103,41 @@ const CountrySelect = ({
   const [filter, setFilter] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [rect, setRect] = React.useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+
+  // Re-position the portalled dropdown whenever the input moves —
+  // covers initial open, modal scroll, window resize, etc. Uses
+  // capture so scroll events bubble from inside `overflow: auto`
+  // ancestors too.
+  React.useLayoutEffect(() => {
+    if (!open) return;
+    const reposition = () => {
+      const node = rootRef.current;
+      if (!node) return;
+      const r = node.getBoundingClientRect();
+      setRect({ top: r.bottom + 2, left: r.left, width: r.width });
+    };
+    reposition();
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
 
   React.useEffect(() => {
     if (!open) return;
     const onPointer = (e: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const insideRoot = rootRef.current?.contains(target);
+      const insideDropdown = dropdownRef.current?.contains(target);
+      if (!insideRoot && !insideDropdown) {
         setOpen(false);
       }
     };
@@ -198,52 +226,59 @@ const CountrySelect = ({
         $highlight={!!highlight}
         disabled={disabled}
       />
-      {open && (
-        <Dropdown role="listbox">
-          {value && (
-            <Option
-              type="button"
-              $active={false}
-              onClick={() => choose("")}
-              title={String(t("manage-photo-country-clear"))}
-            >
-              <span>—</span>
-              <span>{t("manage-photo-country-clear")}</span>
-            </Option>
-          )}
-          {sentinelMatches && (
-            <Option
-              type="button"
-              $active={isCountrySentinel(value)}
-              onClick={() => choose(COUNTRY_SENTINEL)}
-              title={sentinelLabel}
-            >
-              <span>{sentinelLabel}</span>
-              <Code>XX</Code>
-            </Option>
-          )}
-          {matches.length === 0 && !sentinelMatches && (
-            <Option type="button" $active={false} disabled>
-              <span>{t("manage-photo-country-no-match")}</span>
-            </Option>
-          )}
-          {matches.map((entry) => {
-            const codeUpper = entry.code.toUpperCase();
-            const selected = value && value.toUpperCase() === codeUpper;
-            return (
+      {open &&
+        rect &&
+        createPortal(
+          <Dropdown
+            ref={dropdownRef}
+            role="listbox"
+            style={{ top: rect.top, left: rect.left, width: rect.width }}
+          >
+            {value && (
               <Option
-                key={entry.code}
                 type="button"
-                $active={!!selected}
-                onClick={() => choose(entry.code)}
+                $active={false}
+                onClick={() => choose("")}
+                title={String(t("manage-photo-country-clear"))}
               >
-                <span>{entry.name}</span>
-                <Code>{codeUpper}</Code>
+                <span>—</span>
+                <span>{t("manage-photo-country-clear")}</span>
               </Option>
-            );
-          })}
-        </Dropdown>
-      )}
+            )}
+            {sentinelMatches && (
+              <Option
+                type="button"
+                $active={isCountrySentinel(value)}
+                onClick={() => choose(COUNTRY_SENTINEL)}
+                title={sentinelLabel}
+              >
+                <span>{sentinelLabel}</span>
+                <Code>XX</Code>
+              </Option>
+            )}
+            {matches.length === 0 && !sentinelMatches && (
+              <Option type="button" $active={false} disabled>
+                <span>{t("manage-photo-country-no-match")}</span>
+              </Option>
+            )}
+            {matches.map((entry) => {
+              const codeUpper = entry.code.toUpperCase();
+              const selected = value && value.toUpperCase() === codeUpper;
+              return (
+                <Option
+                  key={entry.code}
+                  type="button"
+                  $active={!!selected}
+                  onClick={() => choose(entry.code)}
+                >
+                  <span>{entry.name}</span>
+                  <Code>{codeUpper}</Code>
+                </Option>
+              );
+            })}
+          </Dropdown>,
+          document.body
+        )}
     </Root>
   );
 };
