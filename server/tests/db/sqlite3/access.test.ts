@@ -29,7 +29,7 @@ beforeAll(async () => {
   await driver.upsertUserGallery({
     user_id: "editor",
     gallery_id: "gal-a",
-    is_admin: true,
+    is_editor: true,
   });
   // Guest grant on the "public" gallery — everyone matches via the ":guest" row.
   await driver.upsertUserGallery({
@@ -41,32 +41,32 @@ beforeAll(async () => {
 describe("resolveAccessLevel", () => {
   test("global admin gets access to any gallery without an explicit row", async () => {
     const out = await driver.resolveAccessLevel("admin", "gal-b");
-    expect(out).toEqual({ hasAccess: true, isAdmin: true });
+    expect(out).toEqual({ hasAccess: true, isEditor: true });
   });
 
   test("user with a direct viewer row gets access, not admin", async () => {
     const out = await driver.resolveAccessLevel("viewer", "gal-a");
-    expect(out).toEqual({ hasAccess: true, isAdmin: false });
+    expect(out).toEqual({ hasAccess: true, isEditor: false });
   });
 
-  test("user with an is_admin=1 row is upgraded to gallery admin", async () => {
+  test("user with an is_editor=1 row is upgraded to gallery editor", async () => {
     const out = await driver.resolveAccessLevel("editor", "gal-a");
-    expect(out).toEqual({ hasAccess: true, isAdmin: true });
+    expect(out).toEqual({ hasAccess: true, isEditor: true });
   });
 
   test("user without a row gets no access", async () => {
     const out = await driver.resolveAccessLevel("stranger", "gal-a");
-    expect(out).toEqual({ hasAccess: false, isAdmin: false });
+    expect(out).toEqual({ hasAccess: false, isEditor: false });
   });
 
   test(":guest grants visibility to anyone, without admin", async () => {
     const out = await driver.resolveAccessLevel("stranger", "gal-public");
-    expect(out).toEqual({ hasAccess: true, isAdmin: false });
+    expect(out).toEqual({ hasAccess: true, isEditor: false });
   });
 
   test("unknown user is treated as guest", async () => {
     const out = await driver.resolveAccessLevel("nobody", "gal-public");
-    expect(out).toEqual({ hasAccess: true, isAdmin: false });
+    expect(out).toEqual({ hasAccess: true, isEditor: false });
   });
 });
 
@@ -106,18 +106,18 @@ describe("upsertUserGallery", () => {
     await driver.upsertUserGallery({
       user_id: "stranger",
       gallery_id: "gal-b",
-      is_admin: false,
+      is_editor: false,
     });
     let out = await driver.resolveAccessLevel("stranger", "gal-b");
-    expect(out).toEqual({ hasAccess: true, isAdmin: false });
+    expect(out).toEqual({ hasAccess: true, isEditor: false });
     // Promote without touching hide_map.
     await driver.upsertUserGallery({
       user_id: "stranger",
       gallery_id: "gal-b",
-      is_admin: true,
+      is_editor: true,
     });
     out = await driver.resolveAccessLevel("stranger", "gal-b");
-    expect(out).toEqual({ hasAccess: true, isAdmin: true });
+    expect(out).toEqual({ hasAccess: true, isEditor: true });
   });
 });
 
@@ -129,7 +129,7 @@ describe("deleteUserGallery", () => {
     });
     await driver.deleteUserGallery("viewer", "gal-b");
     const out = await driver.resolveAccessLevel("viewer", "gal-b");
-    expect(out).toEqual({ hasAccess: false, isAdmin: false });
+    expect(out).toEqual({ hasAccess: false, isEditor: false });
   });
 });
 

@@ -2205,7 +2205,7 @@
                     "required": [
                       "user_id",
                       "gallery_id",
-                      "is_admin",
+                      "is_editor",
                       "hide_map"
                     ],
                     "properties": {
@@ -2215,7 +2215,7 @@
                       "gallery_id": {
                         "type": "string"
                       },
-                      "is_admin": {
+                      "is_editor": {
                         "type": "number"
                       },
                       "hide_map": {
@@ -2250,10 +2250,10 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "isAdmin"
+                  "isEditor"
                 ],
                 "properties": {
-                  "isAdmin": {
+                  "isEditor": {
                     "type": "boolean"
                   },
                   "hideMap": {
@@ -2712,7 +2712,7 @@
                     "required": [
                       "group_id",
                       "gallery_id",
-                      "is_admin",
+                      "is_editor",
                       "hide_map"
                     ],
                     "properties": {
@@ -2722,7 +2722,7 @@
                       "gallery_id": {
                         "type": "string"
                       },
-                      "is_admin": {
+                      "is_editor": {
                         "type": "number"
                       },
                       "hide_map": {
@@ -2757,10 +2757,10 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "isAdmin"
+                  "isEditor"
                 ],
                 "properties": {
-                  "isAdmin": {
+                  "isEditor": {
                     "type": "boolean"
                   },
                   "hideMap": {

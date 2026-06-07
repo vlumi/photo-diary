@@ -32,7 +32,7 @@ describe("As guest", () => {
   test("upsert rejected", () =>
     api
       .put("/api/v1/group-gallery/family/gallery2")
-      .send({ isAdmin: false })
+      .send({ isEditor: false })
       .expect(403));
 });
 
@@ -51,7 +51,7 @@ describe("As admin", () => {
     await api
       .put("/api/v1/group-gallery/family/gallery2")
       .set("Authorization", auth)
-      .send({ isAdmin: false })
+      .send({ isEditor: false })
       .expect(204);
 
     // Now gallery1admin (in family) gets gallery2 via the group.
@@ -69,7 +69,7 @@ describe("As admin", () => {
     await api
       .put("/api/v1/group-gallery/family/gallery2")
       .set("Authorization", auth)
-      .send({ isAdmin: true })
+      .send({ isEditor: true })
       .expect(204);
     // gallery1admin can now PUT gallery2 via the group's admin grant.
     const galleryAdminToken = `Bearer ${await loginUser(api, "gallery1admin")}`;
@@ -86,7 +86,7 @@ describe("As admin", () => {
     await api
       .put("/api/v1/group-gallery/family/gallery2")
       .set("Authorization", auth)
-      .send({ isAdmin: false })
+      .send({ isEditor: false })
       .expect(204);
     await api
       .delete("/api/v1/group-gallery/family/gallery2")
@@ -105,7 +105,7 @@ describe("As admin", () => {
     await api
       .put("/api/v1/group-gallery/family/gallery2")
       .set("Authorization", auth)
-      .send({ isAdmin: false })
+      .send({ isEditor: false })
       .expect(204);
     const result = await api
       .get("/api/v1/group-gallery")
@@ -123,7 +123,7 @@ describe("As admin", () => {
     await api
       .put("/api/v1/group-gallery/family/gallery2")
       .set("Authorization", auth)
-      .send({ isAdmin: false })
+      .send({ isEditor: false })
       .expect(204);
 
     // With membership: gallery2 visible.

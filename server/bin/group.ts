@@ -17,7 +17,7 @@
  *   group.ts remove <user> <group>         # remove user from group
  *
  * Access (group_gallery):
- *   group.ts grant <group> <gallery> [--admin]
+ *   group.ts grant <group> <gallery> [--editor]
  *   group.ts revoke <group> <gallery> [--yes]
  *   group.ts hide-map <group> <gallery> <hide|show|default>
  *   group.ts grants [<group>]              # direct group_gallery rows
@@ -54,8 +54,8 @@ const confirm = async (prompt: string): Promise<boolean> => {
   }
 };
 
-const accessLabel = (isAdmin: number | boolean): string =>
-  isAdmin ? "admin" : "view";
+const accessLabel = (isEditor: number | boolean): string =>
+  isEditor ? "editor" : "view";
 const hideMapLabel = (value: number | null): string => {
   if (value === null) return "—";
   return value === 1 ? "hide" : "show";
@@ -227,21 +227,21 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "grant <group> <gallery>",
-    "Grant a group view (or admin with --admin) on a gallery. Idempotent — re-running with a different --admin toggles it.",
+    "Grant a group view (or editor with --editor) on a gallery. Idempotent — re-running with a different --editor toggles it.",
     (y) =>
       y
         .positional("group", { describe: "Group ID", type: "string", demandOption: true })
         .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
-        .option("admin", { describe: "Grant gallery-admin instead of view", type: "boolean", default: false }),
+        .option("editor", { describe: "Grant gallery-editor instead of view", type: "boolean", default: false }),
     async (argv) => {
       requireRealGalleryId(argv.gallery);
       await db.upsertGroupGallery({
         group_id: argv.group,
         gallery_id: argv.gallery,
-        is_admin: !!argv.admin,
+        is_editor: !!argv.editor,
       });
       console.log(
-        `✓ Granted ${argv.admin ? "admin" : "view"} to group (${argv.group}, ${argv.gallery})`
+        `✓ Granted ${argv.editor ? "editor" : "view"} to group (${argv.group}, ${argv.gallery})`
       );
     }
   )
@@ -312,7 +312,7 @@ await yargs(hideBin(process.argv))
         lines.push([
           r.group_id,
           r.gallery_id,
-          accessLabel(r.is_admin),
+          accessLabel(r.is_editor),
           hideMapLabel(r.hide_map),
         ]);
       }
@@ -334,7 +334,7 @@ await yargs(hideBin(process.argv))
         lines.push([
           r.group_id,
           r.gallery_id,
-          accessLabel(r.is_admin),
+          accessLabel(r.is_editor),
           hideMapLabel(r.hide_map),
         ]);
       }

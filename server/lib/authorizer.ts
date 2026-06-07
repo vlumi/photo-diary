@@ -18,11 +18,11 @@ export default () => {
 const resolve = async (
   userId: string,
   galleryId: string
-): Promise<{ hasAccess: boolean; isAdmin: boolean }> => {
+): Promise<{ hasAccess: boolean; isEditor: boolean }> => {
   try {
     return await db.resolveAccessLevel(userId, galleryId);
   } catch {
-    return { hasAccess: false, isAdmin: false };
+    return { hasAccess: false, isEditor: false };
   }
 };
 
@@ -69,8 +69,8 @@ const authorizeGalleryEditor = async (
   galleryId: string
 ): Promise<string> => {
   if (await isGlobalAdmin(userId)) return galleryId;
-  const { isAdmin } = await resolve(userId, galleryId);
-  if (!isAdmin) {
+  const { isEditor } = await resolve(userId, galleryId);
+  if (!isEditor) {
     throw new AccessError(undefined, {
       userId,
       galleryId,
@@ -97,8 +97,8 @@ const authorizePhotoEditor = async (
     .filter((l) => l.photoId === photoId)
     .map((l) => l.galleryId);
   for (const galleryId of galleryIds) {
-    const { isAdmin } = await resolve(userId, galleryId);
-    if (isAdmin) return;
+    const { isEditor } = await resolve(userId, galleryId);
+    if (isEditor) return;
   }
   throw new AccessError(undefined, {
     userId,
@@ -119,8 +119,8 @@ const loadEditorGalleries = async (userId: string): Promise<string[]> => {
   const galleries = (await db.loadGalleries()) as Array<{ id: string }>;
   const out: string[] = [];
   for (const g of galleries) {
-    const { isAdmin } = await resolve(userId, g.id);
-    if (isAdmin) out.push(g.id);
+    const { isEditor } = await resolve(userId, g.id);
+    if (isEditor) out.push(g.id);
   }
   return out;
 };

@@ -23,8 +23,8 @@ export interface SessionRow {
 export interface UserGalleryRow {
   user_id: string;
   gallery_id: string;
-  // Row presence alone grants VIEW; is_admin=1 upgrades that row to gallery admin.
-  is_admin: number;
+  // Row presence alone grants VIEW; is_editor=1 upgrades that row to gallery editor.
+  is_editor: number;
   // Privacy toggle: 1 = hide map/coordinates, 0 = show; NULL inherits the
   // next outer level (gallery override → instance default).
   hide_map: number | null;
@@ -41,7 +41,7 @@ export interface UserGroupRow {
 export interface GroupGalleryRow {
   group_id: string;
   gallery_id: string;
-  is_admin: number;
+  is_editor: number;
   hide_map: number | null;
 }
 export interface GalleryRow {
@@ -293,7 +293,7 @@ export default () => {
     userGallery: {
       mapRow: (row: UserGalleryRow): UserGalleryAccess => [
         row.gallery_id,
-        row.is_admin,
+        row.is_editor,
       ],
       mapInsert: (): unknown[] => {
         throw new NotImplementedError();
@@ -615,7 +615,8 @@ const userGalleryMapToRow = (
   userGallery: Partial<UserGalleryRow>
 ): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
-  if ("is_admin" in userGallery) result.is_admin = userGallery.is_admin ? 1 : 0;
+  if ("is_editor" in userGallery)
+    result.is_editor = userGallery.is_editor ? 1 : 0;
   if ("hide_map" in userGallery) result.hide_map = userGallery.hide_map;
   return result;
 };
@@ -629,7 +630,7 @@ const groupGalleryMapToRow = (
   row: Partial<GroupGalleryRow>
 ): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
-  if ("is_admin" in row) result.is_admin = row.is_admin ? 1 : 0;
+  if ("is_editor" in row) result.is_editor = row.is_editor ? 1 : 0;
   if ("hide_map" in row) result.hide_map = row.hide_map;
   return result;
 };
@@ -770,7 +771,7 @@ const SCHEMA = {
   },
   userGallery: {
     table: "user_gallery",
-    columns: ["user_id", "gallery_id", "is_admin", "hide_map"],
+    columns: ["user_id", "gallery_id", "is_editor", "hide_map"],
     primaryKey: ["user_id", "gallery_id"],
     order: ["user_id ASC", "gallery_id ASC"],
     mapToRow: userGalleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
@@ -791,7 +792,7 @@ const SCHEMA = {
   },
   groupGallery: {
     table: "group_gallery",
-    columns: ["group_id", "gallery_id", "is_admin", "hide_map"],
+    columns: ["group_id", "gallery_id", "is_editor", "hide_map"],
     primaryKey: ["group_id", "gallery_id"],
     order: ["group_id ASC", "gallery_id ASC"],
     mapToRow: groupGalleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,

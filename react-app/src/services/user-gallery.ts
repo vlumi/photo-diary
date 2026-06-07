@@ -3,12 +3,12 @@ import api, { unwrap } from "../lib/api";
 export interface UserGalleryRow {
   user_id: string;
   gallery_id: string;
-  is_admin: number;
+  is_editor: number;
   hide_map: number | null;
 }
 
 export interface UserGalleryUpsertBody {
-  isAdmin: boolean;
+  isEditor: boolean;
   hideMap?: boolean | null;
 }
 

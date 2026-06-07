@@ -23,16 +23,16 @@ const RowParams = Type.Object({
 const RowResponse = Type.Object({
   group_id: Type.String(),
   gallery_id: Type.String(),
-  is_admin: Type.Number(),
+  is_editor: Type.Number(),
   hide_map: Type.Union([Type.Number(), Type.Null()]),
 });
 const RowsResponse = Type.Array(RowResponse);
-// Mirror of /user-gallery body. Row presence grants view; isAdmin
+// Mirror of /user-gallery body. Row presence grants view; isEditor
 // upgrades to gallery admin. `hideMap` is the privacy override at the
 // group layer.
 const UpsertBody = Type.Object(
   {
-    isAdmin: Type.Boolean(),
+    isEditor: Type.Boolean(),
     hideMap: Type.Optional(Type.Union([Type.Boolean(), Type.Null()])),
   },
   { additionalProperties: false }
@@ -59,7 +59,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       })) as Array<{
         group_id: string;
         gallery_id: string;
-        is_admin: number;
+        is_editor: number;
         hide_map: number | null;
       }>;
       const scope = request.galleryScope ?? [];
@@ -83,11 +83,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request, reply) => {
       requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeAdmin(request.user.id);
-      const { isAdmin, hideMap } = request.body;
+      const { isEditor, hideMap } = request.body;
       await model.upsertGroupGallery({
         group_id: request.params.groupId,
         gallery_id: request.params.galleryId,
-        is_admin: isAdmin,
+        is_editor: isEditor,
         hide_map:
           hideMap === undefined ? undefined : hideMap === null ? null : hideMap ? 1 : 0,
       });

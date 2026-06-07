@@ -185,43 +185,43 @@ const deleteUserSessions = async (userId: string): Promise<void> => {
   db.prepare("DELETE FROM session WHERE user_id = ?").run(userId);
 };
 
-// Resolve access for (userId, galleryId) under the post-#394 model:
+// Resolve access for (userId, galleryId):
 //   1. user.is_admin = true                       → global admin (bypass).
-//   2. MAX(is_admin) over matching positive rows from
+//   2. MAX(is_editor) over matching positive rows from
 //        user_gallery (user or :guest, this gallery)
 //        group_gallery (any group the user belongs to, this gallery)
-//      row present → view; is_admin=1 upgrades to gallery admin.
+//      row present → view; is_editor=1 upgrades to gallery editor.
 //   3. else                                       → deny.
 const resolveAccessLevel = async (
   userId: string,
   galleryId: string
-): Promise<{ hasAccess: boolean; isAdmin: boolean }> => {
+): Promise<{ hasAccess: boolean; isEditor: boolean }> => {
   const userRow = db
     .prepare("SELECT is_admin FROM user WHERE id = ?")
     .get(userId) as { is_admin: number } | undefined;
   if (userRow && userRow.is_admin) {
-    return { hasAccess: true, isAdmin: true };
+    return { hasAccess: true, isEditor: true };
   }
   // UNION ALL of the two row sources, then MAX. Sub-queries are cheap on
   // the small tables involved; explicit form reads better than a JOIN.
   const grantRow = db
     .prepare(
-      `SELECT MAX(is_admin) AS is_admin FROM (
-         SELECT is_admin FROM user_gallery
+      `SELECT MAX(is_editor) AS is_editor FROM (
+         SELECT is_editor FROM user_gallery
            WHERE user_id IN (?, ':guest') AND gallery_id = ?
          UNION ALL
-         SELECT is_admin FROM group_gallery
+         SELECT is_editor FROM group_gallery
            WHERE gallery_id = ?
              AND group_id IN (SELECT group_id FROM user_group WHERE user_id = ?)
        )`
     )
     .get(userId, galleryId, galleryId, userId) as
-    | { is_admin: number | null }
+    | { is_editor: number | null }
     | undefined;
-  if (grantRow?.is_admin === null || grantRow?.is_admin === undefined) {
-    return { hasAccess: false, isAdmin: false };
+  if (grantRow?.is_editor === null || grantRow?.is_editor === undefined) {
+    return { hasAccess: false, isEditor: false };
   }
-  return { hasAccess: true, isAdmin: !!grantRow.is_admin };
+  return { hasAccess: true, isEditor: !!grantRow.is_editor };
 };
 
 const loadUserGalleryRows = async (
@@ -246,7 +246,7 @@ const upsertUserGallery = async (
   row: {
     user_id: string;
     gallery_id: string;
-    is_admin?: boolean;
+    is_editor?: boolean;
     hide_map?: number | null;
   }
 ): Promise<void> => {
@@ -256,20 +256,20 @@ const upsertUserGallery = async (
   // mutable columns were passed the conflict clause must be DO NOTHING —
   // SQLite rejects an empty DO UPDATE SET as a syntax error.
   const sets: string[] = [];
-  if ("is_admin" in row) sets.push("is_admin = excluded.is_admin");
+  if ("is_editor" in row) sets.push("is_editor = excluded.is_editor");
   if ("hide_map" in row) sets.push("hide_map = excluded.hide_map");
   const conflict =
     sets.length > 0
       ? `DO UPDATE SET ${sets.join(", ")}`
       : "DO NOTHING";
   const query =
-    "INSERT INTO user_gallery (user_id, gallery_id, is_admin, hide_map) " +
+    "INSERT INTO user_gallery (user_id, gallery_id, is_editor, hide_map) " +
     "VALUES (?, ?, ?, ?) " +
     `ON CONFLICT(user_id, gallery_id) ${conflict}`;
   db.prepare(query).run(
     row.user_id,
     row.gallery_id,
-    row.is_admin ? 1 : 0,
+    row.is_editor ? 1 : 0,
     row.hide_map ?? null
   );
 };
@@ -357,26 +357,26 @@ const loadGroupGalleryRows = async (
 const upsertGroupGallery = async (row: {
   group_id: string;
   gallery_id: string;
-  is_admin?: boolean;
+  is_editor?: boolean;
   hide_map?: number | null;
 }): Promise<void> => {
   // Mirror upsertUserGallery: DO NOTHING when no mutable columns were
   // passed, else DO UPDATE the supplied subset.
   const sets: string[] = [];
-  if ("is_admin" in row) sets.push("is_admin = excluded.is_admin");
+  if ("is_editor" in row) sets.push("is_editor = excluded.is_editor");
   if ("hide_map" in row) sets.push("hide_map = excluded.hide_map");
   const conflict =
     sets.length > 0
       ? `DO UPDATE SET ${sets.join(", ")}`
       : "DO NOTHING";
   const query =
-    "INSERT INTO group_gallery (group_id, gallery_id, is_admin, hide_map) " +
+    "INSERT INTO group_gallery (group_id, gallery_id, is_editor, hide_map) " +
     "VALUES (?, ?, ?, ?) " +
     `ON CONFLICT(group_id, gallery_id) ${conflict}`;
   db.prepare(query).run(
     row.group_id,
     row.gallery_id,
-    row.is_admin ? 1 : 0,
+    row.is_editor ? 1 : 0,
     row.hide_map ?? null
   );
 };

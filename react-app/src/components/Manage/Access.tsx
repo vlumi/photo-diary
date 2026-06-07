@@ -244,7 +244,7 @@ interface AccessRow {
   galleryId: string;
   subjectId: string;
   type: "user" | "group";
-  isAdmin: boolean;
+  isEditor: boolean;
   hideMap: HideMapValue;
 }
 
@@ -268,7 +268,7 @@ const Access = (): React.ReactElement => {
     queryFn: () => groupGalleryService.list(),
     enabled: !!user?.isAdmin(),
   });
-  // Global admins (user.is_admin = 1) bypass the per-gallery ACL
+  // Global admins (user.is_editor = 1) bypass the per-gallery ACL
   // entirely and don't show up in user_gallery / group_gallery,
   // so the table never lists them. Surface them as a small
   // banner above the filters for context.
@@ -293,7 +293,7 @@ const Access = (): React.ReactElement => {
       galleryId: r.gallery_id,
       subjectId: r.user_id,
       type: "user",
-      isAdmin: !!r.is_admin,
+      isEditor: !!r.is_editor,
       hideMap: hideMapFromDb(r.hide_map),
     })
   );
@@ -302,7 +302,7 @@ const Access = (): React.ReactElement => {
       galleryId: r.gallery_id,
       subjectId: r.group_id,
       type: "group",
-      isAdmin: !!r.is_admin,
+      isEditor: !!r.is_editor,
       hideMap: hideMapFromDb(r.hide_map),
     })
   );
@@ -345,8 +345,8 @@ const Access = (): React.ReactElement => {
   const filtered = allRows.filter((r) => {
     if (typeFilter && r.type !== typeFilter) return false;
     if (galleryFilter && r.galleryId !== galleryFilter) return false;
-    if (adminFilter === "1" && !r.isAdmin) return false;
-    if (adminFilter === "0" && r.isAdmin) return false;
+    if (adminFilter === "1" && !r.isEditor) return false;
+    if (adminFilter === "0" && r.isEditor) return false;
     return true;
   });
   const sorted = filtered.slice().sort((a, b) => {
@@ -371,7 +371,7 @@ const Access = (): React.ReactElement => {
       return s !== 0 ? s : compareString(a.galleryId, b.galleryId);
     }
     if (sort === "admin") {
-      const c = Number(a.isAdmin) - Number(b.isAdmin);
+      const c = Number(a.isEditor) - Number(b.isEditor);
       return c !== 0
         ? factor * c
         : compareString(a.galleryId, b.galleryId);
@@ -390,11 +390,11 @@ const Access = (): React.ReactElement => {
     mutationFn: (args: {
       userId: string;
       galleryId: string;
-      isAdmin: boolean;
+      isEditor: boolean;
       hideMap: HideMapValue;
     }) =>
       userGalleryService.upsert(args.userId, args.galleryId, {
-        isAdmin: args.isAdmin,
+        isEditor: args.isEditor,
         hideMap: hideMapToBody(args.hideMap),
       }),
     onSuccess: () => {
@@ -406,11 +406,11 @@ const Access = (): React.ReactElement => {
     mutationFn: (args: {
       groupId: string;
       galleryId: string;
-      isAdmin: boolean;
+      isEditor: boolean;
       hideMap: HideMapValue;
     }) =>
       groupGalleryService.upsert(args.groupId, args.galleryId, {
-        isAdmin: args.isAdmin,
+        isEditor: args.isEditor,
         hideMap: hideMapToBody(args.hideMap),
       }),
     onSuccess: () => {
@@ -442,7 +442,7 @@ const Access = (): React.ReactElement => {
 
   const onUpsert = (
     row: AccessRow,
-    isAdmin: boolean,
+    isEditor: boolean,
     hideMap: HideMapValue
   ) => {
     setActionError(null);
@@ -450,14 +450,14 @@ const Access = (): React.ReactElement => {
       upsertUserMutation.mutate({
         userId: row.subjectId,
         galleryId: row.galleryId,
-        isAdmin,
+        isEditor,
         hideMap,
       });
     } else {
       upsertGroupMutation.mutate({
         groupId: row.subjectId,
         galleryId: row.galleryId,
-        isAdmin,
+        isEditor,
         hideMap,
       });
     }
@@ -666,7 +666,7 @@ const Access = (): React.ReactElement => {
                 <Td>
                   <Checkbox
                     type="checkbox"
-                    checked={row.isAdmin}
+                    checked={row.isEditor}
                     disabled={mutating}
                     onChange={(e) =>
                       onUpsert(row, e.target.checked, row.hideMap)
@@ -679,7 +679,7 @@ const Access = (): React.ReactElement => {
                     value={row.hideMap}
                     disabled={mutating}
                     onChange={(e) =>
-                      onUpsert(row, row.isAdmin, e.target.value as HideMapValue)
+                      onUpsert(row, row.isEditor, e.target.value as HideMapValue)
                     }
                     aria-label={String(t("manage-gallery-access-col-hidemap"))}
                   >
@@ -731,14 +731,14 @@ const Access = (): React.ReactElement => {
             upsertUserMutation.mutate({
               userId: args.subjectId,
               galleryId: args.galleryId,
-              isAdmin: args.isAdmin,
+              isEditor: args.isEditor,
               hideMap: args.hideMap,
             });
           } else {
             upsertGroupMutation.mutate({
               groupId: args.subjectId,
               galleryId: args.galleryId,
-              isAdmin: args.isAdmin,
+              isEditor: args.isEditor,
               hideMap: args.hideMap,
             });
           }
@@ -757,7 +757,7 @@ interface AddGrantPanelProps {
     galleryId: string;
     subjectType: "user" | "group";
     subjectId: string;
-    isAdmin: boolean;
+    isEditor: boolean;
     hideMap: HideMapValue;
   }) => void;
   mutating: boolean;
@@ -778,7 +778,7 @@ const AddGrantPanel = ({
   const { t } = useTranslation();
   const [galleryId, setGalleryId] = React.useState("");
   const [subjectValue, setSubjectValue] = React.useState("");
-  const [isAdmin, setIsAdmin] = React.useState(false);
+  const [isEditor, setIsAdmin] = React.useState(false);
   const [hideMap, setHideMap] = React.useState<HideMapValue>("inherit");
 
   const sortedGalleries = galleries
@@ -795,7 +795,7 @@ const AddGrantPanel = ({
     const colonIdx = subjectValue.indexOf(":");
     const subjectType = subjectValue.slice(0, colonIdx) as "user" | "group";
     const subjectId = subjectValue.slice(colonIdx + 1);
-    onAdd({ galleryId, subjectType, subjectId, isAdmin, hideMap });
+    onAdd({ galleryId, subjectType, subjectId, isEditor, hideMap });
     setSubjectValue("");
     setIsAdmin(false);
     setHideMap("inherit");
@@ -846,7 +846,7 @@ const AddGrantPanel = ({
         <AddLabel>
           <Checkbox
             type="checkbox"
-            checked={isAdmin}
+            checked={isEditor}
             onChange={(e) => setIsAdmin(e.target.checked)}
           />
           {t("manage-gallery-access-col-admin")}

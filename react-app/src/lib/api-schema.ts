@@ -1303,7 +1303,7 @@ export interface paths {
                         "application/json": {
                             user_id: string;
                             gallery_id: string;
-                            is_admin: number;
+                            is_editor: number;
                             hide_map: number | null;
                         }[];
                     };
@@ -1340,7 +1340,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        isAdmin: boolean;
+                        isEditor: boolean;
                         hideMap?: boolean | null;
                     };
                 };
@@ -1663,7 +1663,7 @@ export interface paths {
                         "application/json": {
                             group_id: string;
                             gallery_id: string;
-                            is_admin: number;
+                            is_editor: number;
                             hide_map: number | null;
                         }[];
                     };
@@ -1700,7 +1700,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        isAdmin: boolean;
+                        isEditor: boolean;
                         hideMap?: boolean | null;
                     };
                 };

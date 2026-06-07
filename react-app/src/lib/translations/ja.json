@@ -319,7 +319,7 @@
     "manage-gallery-access-empty-groups": "グループ権限はありません。",
     "manage-gallery-access-col-user": "ユーザー",
     "manage-gallery-access-col-group": "グループ",
-    "manage-gallery-access-col-admin": "管理者",
+    "manage-gallery-access-col-admin": "編集者",
     "manage-gallery-access-col-hidemap": "マップの表示",
     "manage-gallery-access-hidemap-inherit": "継承",
     "manage-gallery-access-hidemap-show": "表示",

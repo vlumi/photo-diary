@@ -12,7 +12,7 @@
  *   user.ts delete <id> [--yes]         # cascade user_gallery + sessions
  *
  * Access:
- *   user.ts grant <user> <gallery> [--admin]   # upsert user_gallery row
+ *   user.ts grant <user> <gallery> [--editor]   # upsert user_gallery row
  *   user.ts revoke <user> <gallery> [--yes]    # delete user_gallery row
  *   user.ts hide-map <user> <gallery> <hide|show|default>
  *   user.ts grants [<user>]             # direct user_gallery rows
@@ -133,8 +133,8 @@ const hideMapLabel = (value: number | null): string => {
   if (value === null) return "—";
   return value === 1 ? "hide" : "show";
 };
-const accessLabel = (isAdmin: number | boolean): string =>
-  isAdmin ? "admin" : "view";
+const accessLabel = (isEditor: number | boolean): string =>
+  isEditor ? "editor" : "view";
 
 // Effective per-gallery access for one user: walks direct user_gallery
 // rows, group_gallery rows for every group the user is in, and the
@@ -143,7 +143,7 @@ const accessLabel = (isAdmin: number | boolean): string =>
 const effectiveAccessFor = async (
   userId: string
 ): Promise<
-  Array<{ gallery_id: string; is_admin: boolean; sources: string[] }>
+  Array<{ gallery_id: string; is_editor: boolean; sources: string[] }>
 > => {
   const user = (await db
     .loadUser(userId)
@@ -153,14 +153,14 @@ const effectiveAccessFor = async (
   if (user.is_admin) {
     return galleries.map((g) => ({
       gallery_id: g.id,
-      is_admin: true,
+      is_editor: true,
       sources: ["is_admin"],
     }));
   }
   const userGroups = await db.loadUserGroups(userId);
   const out: Array<{
     gallery_id: string;
-    is_admin: boolean;
+    is_editor: boolean;
     sources: string[];
   }> = [];
   for (const g of galleries) {
@@ -172,7 +172,7 @@ const effectiveAccessFor = async (
     });
     if (direct.length > 0) {
       sources.push("direct");
-      if (direct[0].is_admin) level = true;
+      if (direct[0].is_editor) level = true;
     }
     for (const groupId of userGroups) {
       const gr = await db.loadGroupGalleryRows({
@@ -181,7 +181,7 @@ const effectiveAccessFor = async (
       });
       if (gr.length > 0) {
         sources.push(`group:${groupId}`);
-        if (gr[0].is_admin) level = true;
+        if (gr[0].is_editor) level = true;
       }
     }
     const guest = await db.loadUserGalleryRows({
@@ -190,10 +190,10 @@ const effectiveAccessFor = async (
     });
     if (guest.length > 0) {
       sources.push(":guest");
-      if (guest[0].is_admin) level = true;
+      if (guest[0].is_editor) level = true;
     }
     if (sources.length > 0) {
-      out.push({ gallery_id: g.id, is_admin: level, sources });
+      out.push({ gallery_id: g.id, is_editor: level, sources });
     }
   }
   return out;
@@ -341,16 +341,16 @@ await yargs(hideBin(process.argv))
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
         .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
-        .option("admin", { describe: "Grant gallery-admin instead of view", type: "boolean", default: false }),
+        .option("editor", { describe: "Grant gallery-editor instead of view", type: "boolean", default: false }),
     async (argv) => {
       requireRealGalleryId(argv.gallery);
       await db.upsertUserGallery({
         user_id: argv.user,
         gallery_id: argv.gallery,
-        is_admin: !!argv.admin,
+        is_editor: !!argv.editor,
       });
       console.log(
-        `✓ Granted ${argv.admin ? "admin" : "view"} to user (${argv.user}, ${argv.gallery})`
+        `✓ Granted ${argv.editor ? "editor" : "view"} to user (${argv.user}, ${argv.gallery})`
       );
     }
   )
@@ -434,7 +434,7 @@ await yargs(hideBin(process.argv))
         lines.push([
           annotated,
           r.gallery_id,
-          accessLabel(r.is_admin),
+          accessLabel(r.is_editor),
           hideMapLabel(r.hide_map),
         ]);
       }
@@ -465,7 +465,7 @@ await yargs(hideBin(process.argv))
         console.log(`user: ${userId}`);
         const lines: string[][] = [["gallery", "access", "sources"]];
         for (const r of rows) {
-          lines.push([r.gallery_id, accessLabel(r.is_admin), r.sources.join(", ")]);
+          lines.push([r.gallery_id, accessLabel(r.is_editor), r.sources.join(", ")]);
         }
         console.log(formatTable(lines));
       }
