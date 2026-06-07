@@ -1485,6 +1485,222 @@
         }
       }
     },
+    "/api/v1/photos/year-months": {
+      "get": {
+        "summary": "Photo counts grouped by year-month (admin)",
+        "tags": [
+          "photos"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "in": "query",
+            "name": "gallery",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "orphan",
+            "required": false
+          },
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "taken"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "coords"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "place"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "country"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "author"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "title"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "description"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "state-code"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "taken"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "coords"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "place"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "country"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "author"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "title"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "description"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "state-code"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "in": "query",
+            "name": "missing",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "duplicates",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "countryMismatch",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "buckets"
+                  ],
+                  "properties": {
+                    "buckets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "yearMonth",
+                          "count"
+                        ],
+                        "properties": {
+                          "yearMonth": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/photos/by-ids": {
       "post": {
         "summary": "Fetch many photos by id (admin)",

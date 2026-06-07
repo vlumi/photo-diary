@@ -709,6 +709,9 @@ const PhotoDrawer = (): React.ReactElement => {
         queryClient.invalidateQueries({ queryKey: ["manage-photo", id] }),
         queryClient.invalidateQueries({ queryKey: ["manage-photos"] }),
         queryClient.invalidateQueries({ queryKey: ["manage-audit-counts"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["manage-photos-year-months"],
+        }),
       ]);
     } catch (e) {
       setError((e as Error).message || t("manage-photo-save-error"));
