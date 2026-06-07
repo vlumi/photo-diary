@@ -643,6 +643,10 @@ const Photos = ({ galleryId }: Props): React.ReactElement => {
     };
     const refreshAfterBulk = () => {
       void queryClient.invalidateQueries({ queryKey: ["manage-photos"] });
+      // Per-id drawer caches (`["manage-photo", id]`) — the Edit
+      // fields action mutates per-photo content; without this the
+      // drawer keeps serving the pre-bulk row until a hard reload.
+      void queryClient.invalidateQueries({ queryKey: ["manage-photo"] });
       void queryClient.invalidateQueries({ queryKey: ["galleries"] });
       clearSelection();
     };

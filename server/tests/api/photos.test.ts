@@ -159,6 +159,31 @@ describe("As admin", () => {
   test("Get invalid", async () => {
     await getPhoto(token, "invalid.jpg", 404);
   });
+  test("Batch by-ids returns the requested photos in order", async () => {
+    const result = await api
+      .post("/api/v1/photos/by-ids")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ids: ["gallery1photo.jpg", "gallery2photo.jpg"] })
+      .expect(200);
+    const ids = result.body.photos.map((p: { id: string }) => p.id);
+    expect(ids).toEqual(["gallery1photo.jpg", "gallery2photo.jpg"]);
+  });
+  test("Batch by-ids drops unknown ids silently", async () => {
+    const result = await api
+      .post("/api/v1/photos/by-ids")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ids: ["gallery1photo.jpg", "no-such-id"] })
+      .expect(200);
+    const ids = result.body.photos.map((p: { id: string }) => p.id);
+    expect(ids).toEqual(["gallery1photo.jpg"]);
+  });
+  test("Batch by-ids: empty ids array rejected (minItems 1)", async () => {
+    await api
+      .post("/api/v1/photos/by-ids")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ids: [] })
+      .expect(400);
+  });
 });
 
 describe("As gallery1admin", () => {
