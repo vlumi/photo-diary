@@ -3,6 +3,7 @@ import logger from "../lib/logger.js";
 import db from "../db/index.js";
 import {
   applyFilter,
+  countryMismatch as isCountryMismatch,
   MISSING_PREDICATES,
   paginate,
   sortByTakenDesc,
@@ -153,12 +154,6 @@ const countAudits = async (opts: {
   const isDupe = (p: any): boolean => {
     const name = p.originalFilename as string | undefined;
     return !!name && (dupeCounts.get(name) ?? 0) > 1;
-  };
-  const isCountryMismatch = (p: any): boolean => {
-    const op = p.taken?.location?.country;
-    const geo = p.geocoded?.countryCode;
-    if (!op || !geo) return false;
-    return String(op).toLowerCase() !== String(geo).toLowerCase();
   };
   const missing = Object.fromEntries(
     MISSING_FIELDS.map((f) => [f, 0])
