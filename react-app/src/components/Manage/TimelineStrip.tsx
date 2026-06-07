@@ -169,7 +169,21 @@ const TimelineStrip = ({
   onPickMonth,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
-  const [expandedYear, setExpandedYear] = React.useState<number | null>(null);
+  // Years are independently expand/collapse-able so a cross-year
+  // range (April 2023 → May 2024 etc.) stays visible at a glance
+  // — without this the operator can only see the half of the
+  // range that lives in whichever year happens to be expanded.
+  const [expandedYears, setExpandedYears] = React.useState<Set<number>>(
+    () => new Set()
+  );
+  const toggleYear = (year: number) => {
+    setExpandedYears((prev) => {
+      const next = new Set(prev);
+      if (next.has(year)) next.delete(year);
+      else next.add(year);
+      return next;
+    });
+  };
 
   // Sum counts by year for the collapsed-row badge, and remember
   // which months actually have photos so the 12-cell grid greys
@@ -191,7 +205,7 @@ const TimelineStrip = ({
     }
     return Array.from(map.entries())
       .map(([year, entry]) => ({ year, ...entry }))
-      .sort((a, b) => b.year - a.year);
+      .sort((a, b) => a.year - b.year);
   }, [buckets]);
 
   // Every YYYY-MM bucket inside the current date range. Single-
@@ -207,16 +221,24 @@ const TimelineStrip = ({
     return activeMonths.values().next().value as string;
   }, [activeMonths]);
 
-  // Auto-expand the year that matches the current single-month
-  // selection so the cell stays visible without a manual click.
-  // For multi-month ranges, leave the expanded year alone — the
-  // operator may be drilling into a specific year of a multi-year
-  // span.
+  // Track range changes via a stable string key so the effect
+  // fires once per change (rather than on every Set identity
+  // shift). Empty range → no auto-expansion decision.
+  const rangeKey = dateFrom && dateTo ? `${dateFrom}|${dateTo}` : "";
   React.useEffect(() => {
-    if (!singleActiveYearMonth) return;
-    const year = Number(singleActiveYearMonth.slice(0, 4));
-    setExpandedYear((prev) => (prev === year ? prev : year));
-  }, [singleActiveYearMonth]);
+    if (!rangeKey) return;
+    const next = new Set<number>();
+    for (const ym of activeMonths) next.add(Number(ym.slice(0, 4)));
+    // Replace the expanded set: every year in the range stays
+    // open; years not in the range close. Manually opened years
+    // between range changes are intentionally cleared on the
+    // next selection — the operator's mental model is "the
+    // timeline shows my current range expanded".
+    setExpandedYears(next);
+    // activeMonths is derived from dateFrom/dateTo; rangeKey is
+    // sufficient to trigger this effect exactly once per change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rangeKey]);
 
   if (yearSummaries.length === 0) {
     return <Empty>{t("manage-photos-timeline-empty")}</Empty>;
@@ -225,13 +247,13 @@ const TimelineStrip = ({
   return (
     <Root>
       {yearSummaries.map((y) => {
-        const expanded = expandedYear === y.year;
+        const expanded = expandedYears.has(y.year);
         return (
           <React.Fragment key={y.year}>
             <YearRow
               type="button"
               $expanded={expanded}
-              onClick={() => setExpandedYear(expanded ? null : y.year)}
+              onClick={() => toggleYear(y.year)}
               title={String(
                 t("manage-photos-timeline-year-title", {
                   year: y.year,
