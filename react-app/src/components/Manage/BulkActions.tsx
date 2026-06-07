@@ -146,6 +146,7 @@ const ErrorText = styled.div`
 type Pending =
   | { kind: "none" }
   | { kind: "confirm-delete" }
+  | { kind: "confirm-regeocode" }
   | { kind: "pick-link" }
   | { kind: "pick-unlink" }
   | { kind: "edit-fields" };
@@ -401,6 +402,8 @@ const BulkActions = ({
   };
 
   const doDelete = () => runSequentially((id) => photosService.remove(id));
+  const doRegeocode = () =>
+    runSequentially((id) => photosService.regeocode(id));
   const doLink = () => {
     if (!galleryPick) return;
     return runSequentially((id) => galleryPhotosService.link(galleryPick, id));
@@ -565,6 +568,40 @@ const BulkActions = ({
         </Backdrop>
       );
     }
+    if (pending.kind === "confirm-regeocode") {
+      return (
+        <Backdrop
+          onClick={onBackdropClick}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bulk-modal-title"
+        >
+          <ModalBox>
+            <ModalTitle id="bulk-modal-title">
+              {t("manage-photos-bulk-regeocode")}
+            </ModalTitle>
+            <ModalBody>
+              {t("manage-photos-bulk-confirm-regeocode", { count })}
+            </ModalBody>
+            <ModalFooter>
+              <ActionButton type="button" disabled={busy} onClick={closeModal}>
+                {t("manage-user-button-cancel")}
+              </ActionButton>
+              <ActionButton
+                type="button"
+                disabled={busy}
+                onClick={() => void doRegeocode()}
+              >
+                {busy
+                  ? t("manage-photos-bulk-applying")
+                  : t("manage-photos-bulk-confirm-regeocode-button")}
+              </ActionButton>
+            </ModalFooter>
+            {error ? <ErrorText>{error}</ErrorText> : null}
+          </ModalBox>
+        </Backdrop>
+      );
+    }
     const isLink = pending.kind === "pick-link";
     const choices =
       isLink || !scopedGalleryId
@@ -662,6 +699,13 @@ const BulkActions = ({
           onClick={() => setPending({ kind: "edit-fields" })}
         >
           {t("manage-photos-bulk-edit-fields")}
+        </ActionButton>
+        <ActionButton
+          type="button"
+          disabled={busy || count === 0}
+          onClick={() => setPending({ kind: "confirm-regeocode" })}
+        >
+          {t("manage-photos-bulk-regeocode")}
         </ActionButton>
         <ActionButton
           type="button"
