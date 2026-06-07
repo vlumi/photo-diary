@@ -50,6 +50,24 @@ const geocodeAtIntake = async (
       city: result.city ?? null,
       address: JSON.stringify(result.address),
     });
+    // Backfill the operator-set country when it was empty and the
+    // English pass resolved one. Makes regeocode (single-photo or
+    // bulk, #483) double as a fix for `missing-country` and the
+    // backfill-candidate side of `countryMismatch`. Imports gain
+    // the same behaviour: when EXIF has no country but Nominatim
+    // resolves one, the photo's country slot is now populated.
+    // Once the country sentinel lands (#486), a row marked "no
+    // country" with the sentinel value won't be empty and the
+    // backfill stays out of its way.
+    if (lang === "en" && result.countryCode) {
+      const current = (await db.loadPhoto(photoId)) as Record<string, any>;
+      const operator = current?.taken?.location?.country;
+      if (!operator) {
+        await db.updatePhoto(photoId, {
+          taken: { location: { country: result.countryCode } },
+        });
+      }
+    }
   }
 };
 
