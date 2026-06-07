@@ -131,6 +131,37 @@ const monthRange = (
   };
 };
 
+// Every YYYY-MM bucket touched by the given date range. Walks
+// month by month so multi-year ranges still light up correctly.
+const monthsInRange = (
+  dateFrom: string | null,
+  dateTo: string | null
+): Set<string> => {
+  const out = new Set<string>();
+  if (!dateFrom || !dateTo) return out;
+  if (dateFrom.length < 7 || dateTo.length < 7) return out;
+  const [startY, startM] = dateFrom.slice(0, 7).split("-").map(Number);
+  const [endY, endM] = dateTo.slice(0, 7).split("-").map(Number);
+  if (
+    Number.isNaN(startY) ||
+    Number.isNaN(startM) ||
+    Number.isNaN(endY) ||
+    Number.isNaN(endM)
+  )
+    return out;
+  let y = startY;
+  let m = startM;
+  while (y < endY || (y === endY && m <= endM)) {
+    out.add(`${y}-${padTwo(m)}`);
+    m += 1;
+    if (m > 12) {
+      m = 1;
+      y += 1;
+    }
+  }
+  return out;
+};
+
 const TimelineStrip = ({
   buckets,
   dateFrom,
@@ -163,20 +194,29 @@ const TimelineStrip = ({
       .sort((a, b) => b.year - a.year);
   }, [buckets]);
 
-  // Auto-expand the year that matches the current date range so
-  // the active month cell stays visible without a manual click.
-  const activeYearMonth = React.useMemo(() => {
-    if (!dateFrom || !dateTo) return null;
-    if (dateFrom.length < 7 || dateTo.length < 7) return null;
-    if (dateFrom.slice(0, 7) !== dateTo.slice(0, 7)) return null;
-    return dateFrom.slice(0, 7);
-  }, [dateFrom, dateTo]);
+  // Every YYYY-MM bucket inside the current date range. Single-
+  // month range → one entry; shift-click extended range → many.
+  // Drives the active-cell highlight and the "is this the exact
+  // single-month selection?" toggle check below.
+  const activeMonths = React.useMemo(
+    () => monthsInRange(dateFrom, dateTo),
+    [dateFrom, dateTo]
+  );
+  const singleActiveYearMonth = React.useMemo(() => {
+    if (activeMonths.size !== 1) return null;
+    return activeMonths.values().next().value as string;
+  }, [activeMonths]);
 
+  // Auto-expand the year that matches the current single-month
+  // selection so the cell stays visible without a manual click.
+  // For multi-month ranges, leave the expanded year alone — the
+  // operator may be drilling into a specific year of a multi-year
+  // span.
   React.useEffect(() => {
-    if (!activeYearMonth) return;
-    const year = Number(activeYearMonth.slice(0, 4));
+    if (!singleActiveYearMonth) return;
+    const year = Number(singleActiveYearMonth.slice(0, 4));
     setExpandedYear((prev) => (prev === year ? prev : year));
-  }, [activeYearMonth]);
+  }, [singleActiveYearMonth]);
 
   if (yearSummaries.length === 0) {
     return <Empty>{t("manage-photos-timeline-empty")}</Empty>;
@@ -209,7 +249,36 @@ const TimelineStrip = ({
                   const yearMonth = `${y.year}-${padTwo(month)}`;
                   const count = y.months.get(month) ?? 0;
                   const present = count > 0;
-                  const active = activeYearMonth === yearMonth;
+                  const active = activeMonths.has(yearMonth);
+                  const onClick = (e: React.MouseEvent) => {
+                    if (!present) return;
+                    const clicked = monthRange(yearMonth);
+                    // Shift-click extends an existing range to
+                    // cover the clicked month. Without an active
+                    // range, falls through to the plain-click
+                    // (set single month) path so it isn't a
+                    // no-op for the first click in a span.
+                    if (e.shiftKey && dateFrom && dateTo) {
+                      const newFrom =
+                        dateFrom < clicked.dateFrom ? dateFrom : clicked.dateFrom;
+                      const newTo =
+                        dateTo > clicked.dateTo ? dateTo : clicked.dateTo;
+                      onPickMonth(yearMonth, {
+                        dateFrom: newFrom,
+                        dateTo: newTo,
+                      });
+                      return;
+                    }
+                    // Plain click on the only active month → clear.
+                    // Otherwise → replace the range with just this
+                    // month (works for both "no range" and "clicked
+                    // inside a multi-month span" cases).
+                    if (singleActiveYearMonth === yearMonth) {
+                      onPickMonth(yearMonth, null);
+                    } else {
+                      onPickMonth(yearMonth, clicked);
+                    }
+                  };
                   return (
                     <MonthCell
                       key={month}
@@ -217,14 +286,7 @@ const TimelineStrip = ({
                       $present={present}
                       $active={active}
                       disabled={!present}
-                      onClick={() => {
-                        if (!present) return;
-                        if (active) {
-                          onPickMonth(yearMonth, null);
-                        } else {
-                          onPickMonth(yearMonth, monthRange(yearMonth));
-                        }
-                      }}
+                      onClick={onClick}
                       title={String(
                         t("manage-photos-timeline-month-title", {
                           month: t(`month-long-${month}`),
