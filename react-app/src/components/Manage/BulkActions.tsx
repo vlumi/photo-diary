@@ -22,40 +22,109 @@ interface Props {
   onCancel: () => void;
 }
 
+// Frosted-glass bar, themed via --header-background. Floats at the
+// bottom of the viewport on every surface so mounting it on first
+// selection doesn't reflow the grid. Two-row card on both surfaces:
+// Count (left) + Clear (right) anchor the top row; the action
+// buttons wrap into the second row. Desktop centres the card at
+// 900px max; phone width spans edge-to-edge.
 const Bar = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  position: fixed;
+  bottom: 16px;
+  /* Desktop: pin the bar's containing box to the Body section
+     only, so the centring math doesn't include the 360px filter
+     sidebar on the left. Numbers match Photos.tsx: 8px Root
+     padding + 360px Sidebar + 16px gap = 384px. Right matches
+     Root's 8px padding. margin: 0 auto then distributes the
+     slack inside that band so the card sits centred over the
+     photo grid. */
+  left: 384px;
+  right: 8px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 900px;
+  z-index: 950;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 8px;
-  padding: 8px 12px;
-  background: var(--tile-background);
-  border: 1px solid var(--inactive-color);
-  border-radius: 4px;
-  margin-bottom: 8px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--header-background) 80%, transparent);
+  color: var(--header-color);
+  border: 1px solid
+    color-mix(in srgb, var(--header-color) 25%, transparent);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  @media (max-width: 700px) {
+    /* Phone-width: Sidebar is hidden, bar spans viewport edges. */
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    margin: 0;
+    max-width: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+`;
+const GroupSep = styled.span`
+  align-self: stretch;
+  width: 1px;
+  background: currentColor;
+  opacity: 0.25;
+  margin: 0 2px;
+  @media (max-width: 700px) {
+    /* Vertical separators don't read well inside a wrapping action
+       row on a narrow card — the surrounding gap already groups
+       items visually. */
+    display: none;
+  }
 `;
 const Count = styled.span`
   font-weight: bold;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
 `;
-const Spacer = styled.span`
-  flex: 1 1 auto;
+const ClearSlot = styled.div`
+  grid-column: 2;
+  grid-row: 1;
+`;
+const ActionsRow = styled.div`
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
 `;
 const ActionButton = styled.button<{ $danger?: boolean }>`
-  padding: 4px 10px;
+  padding: 6px 12px;
+  border-radius: 6px;
   border: 1px solid
     ${({ $danger }) =>
-      $danger ? "var(--alert-color, #c33)" : "var(--inactive-color)"};
-  background: transparent;
-  color: ${({ $danger }) => ($danger ? "var(--alert-color, #c33)" : "var(--primary-color)")};
+      $danger
+        ? "var(--alert-color, #c33)"
+        : "color-mix(in srgb, currentColor 35%, transparent)"};
+  background: ${({ $danger }) =>
+    $danger
+      ? "transparent"
+      : "color-mix(in srgb, currentColor 10%, transparent)"};
+  color: ${({ $danger }) => ($danger ? "var(--alert-color, #c33)" : "inherit")};
   font: inherit;
   cursor: pointer;
   &:disabled {
-    color: var(--inactive-color);
-    border-color: var(--inactive-color);
+    opacity: 0.4;
     cursor: default;
   }
   &:hover:not(:disabled) {
     border-color: ${({ $danger }) =>
-      $danger ? "var(--alert-color, #c33)" : "var(--primary-color)"};
+      $danger
+        ? "var(--alert-color, #c33)"
+        : "color-mix(in srgb, currentColor 70%, transparent)"};
+    background: ${({ $danger }) =>
+      $danger
+        ? "color-mix(in srgb, var(--alert-color, #c33) 12%, transparent)"
+        : "color-mix(in srgb, currentColor 18%, transparent)"};
   }
 `;
 const Backdrop = styled.div`
@@ -695,50 +764,58 @@ const BulkActions = ({
     <>
       <Bar>
         <Count>{t("manage-photos-bulk-selected", { count })}</Count>
-        {isAdmin && (
+        <ActionsRow>
+          <GroupSep aria-hidden />
           <ActionButton
             type="button"
             disabled={busy || count === 0}
-            onClick={() => setPending({ kind: "pick-link" })}
+            onClick={() => setPending({ kind: "edit-fields" })}
           >
-            {t("manage-photos-bulk-link")}
+            {t("manage-photos-bulk-edit-fields")}
           </ActionButton>
-        )}
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "pick-unlink" })}
-        >
-          {t("manage-photos-bulk-unlink")}
-        </ActionButton>
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "edit-fields" })}
-        >
-          {t("manage-photos-bulk-edit-fields")}
-        </ActionButton>
-        <ActionButton
-          type="button"
-          disabled={busy || count === 0}
-          onClick={() => setPending({ kind: "confirm-regeocode" })}
-        >
-          {t("manage-photos-bulk-regeocode")}
-        </ActionButton>
-        {isAdmin && (
           <ActionButton
             type="button"
-            $danger
             disabled={busy || count === 0}
-            onClick={() => setPending({ kind: "confirm-delete" })}
+            onClick={() => setPending({ kind: "confirm-regeocode" })}
           >
-            {t("manage-photos-bulk-delete")}
+            {t("manage-photos-bulk-regeocode")}
           </ActionButton>
-        )}
-        <Spacer />
-        <ActionButton type="button" disabled={busy} onClick={onCancel}>
-          {t("manage-photos-bulk-exit")}
-        </ActionButton>
+          <GroupSep aria-hidden />
+          {isAdmin && (
+            <ActionButton
+              type="button"
+              disabled={busy || count === 0}
+              onClick={() => setPending({ kind: "pick-link" })}
+            >
+              {t("manage-photos-bulk-link")}
+            </ActionButton>
+          )}
+          <ActionButton
+            type="button"
+            disabled={busy || count === 0}
+            onClick={() => setPending({ kind: "pick-unlink" })}
+          >
+            {t("manage-photos-bulk-unlink")}
+          </ActionButton>
+          {isAdmin && (
+            <>
+              <GroupSep aria-hidden />
+              <ActionButton
+                type="button"
+                $danger
+                disabled={busy || count === 0}
+                onClick={() => setPending({ kind: "confirm-delete" })}
+              >
+                {t("manage-photos-bulk-delete")}
+              </ActionButton>
+            </>
+          )}
+        </ActionsRow>
+        <ClearSlot>
+          <ActionButton type="button" disabled={busy} onClick={onCancel}>
+            {t("manage-photos-bulk-exit")}
+          </ActionButton>
+        </ClearSlot>
       </Bar>
       {renderModal()}
     </>

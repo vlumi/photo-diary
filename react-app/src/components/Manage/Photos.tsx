@@ -9,7 +9,7 @@ import {
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BsCheck } from "react-icons/bs";
+import { BsCheck, BsFunnel, BsXLg } from "react-icons/bs";
 
 import photosService, {
   type MissingField,
@@ -35,7 +35,7 @@ const Root = styled.div`
 // only 220px so the edit form fits without cramping; the extra
 // width reads as comfortable padding in filter mode rather than
 // wasted real estate.
-const Sidebar = styled.aside`
+const Sidebar = styled.aside<{ $hideOnMobile?: boolean }>`
   flex: 0 0 360px;
   // Belt-and-suspenders width pin so a stray min-content from any
   // inner element (long photo id, unbroken Title text, etc.) can't
@@ -50,11 +50,80 @@ const Sidebar = styled.aside`
     min-width: 0;
     max-width: none;
     width: 100%;
+    ${({ $hideOnMobile }) => ($hideOnMobile ? "display: none;" : "")}
   }
+`;
+const FilterFab = styled.button`
+  display: none;
+  @media (max-width: 700px) {
+    display: inline-flex;
+  }
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: var(--header-background);
+  color: var(--header-color);
+  border: 1px solid var(--header-background);
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4em;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  z-index: 900;
+`;
+const FilterSheetBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 2000;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+`;
+const FilterSheet = styled.div`
+  background: var(--primary-background);
+  color: var(--primary-color);
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 16px;
+  overflow-y: auto;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.4);
+`;
+const FilterSheetHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+`;
+const FilterSheetTitle = styled.h2`
+  margin: 0;
+  font-size: 1.05em;
+`;
+const FilterSheetClose = styled.button`
+  font: inherit;
+  padding: 8px 10px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
 `;
 const Body = styled.section`
   flex: 1 1 auto;
   min-width: 0;
+  /* Clearance for the floating BulkActions bar (fixed on every
+     surface) and the mobile filter FAB so the last grid row isn't
+     permanently covered when either is up. */
+  padding-bottom: 88px;
   /* Root's align-items: flex-start means flex items keep their
      intrinsic width on the cross axis. In column mode that left the
      Body shrink-wrapped to its widest child — the grid (auto-fill
@@ -1030,11 +1099,50 @@ const Photos = (): React.ReactElement => {
   // filter controls to the edit form (rendered via <Outlet />).
   // `params` is declared earlier alongside the focus query.
   const editing = !!params.photoId;
+  const [filterSheetOpen, setFilterSheetOpen] = React.useState(false);
+  React.useEffect(() => {
+    if (editing && filterSheetOpen) setFilterSheetOpen(false);
+  }, [editing, filterSheetOpen]);
 
   return (
     <Root>
-      <Sidebar>{editing ? <Outlet /> : renderSidebarContents()}</Sidebar>
+      <Sidebar $hideOnMobile={!editing}>
+        {editing ? <Outlet /> : renderSidebarContents()}
+      </Sidebar>
       <Body>{renderBody()}</Body>
+      {!editing && selectedIds.size === 0 && (
+        <FilterFab
+          type="button"
+          aria-label={String(t("manage-photos-filters-open"))}
+          title={String(t("manage-photos-filters-open"))}
+          onClick={() => setFilterSheetOpen(true)}
+        >
+          <BsFunnel aria-hidden />
+        </FilterFab>
+      )}
+      {!editing && filterSheetOpen && (
+        <FilterSheetBackdrop
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setFilterSheetOpen(false);
+          }}
+        >
+          <FilterSheet>
+            <FilterSheetHeader>
+              <FilterSheetTitle>
+                {t("manage-photos-filters-title")}
+              </FilterSheetTitle>
+              <FilterSheetClose
+                type="button"
+                aria-label={String(t("manage-photos-filters-close"))}
+                onClick={() => setFilterSheetOpen(false)}
+              >
+                <BsXLg aria-hidden />
+              </FilterSheetClose>
+            </FilterSheetHeader>
+            {renderSidebarContents()}
+          </FilterSheet>
+        </FilterSheetBackdrop>
+      )}
     </Root>
   );
 };
