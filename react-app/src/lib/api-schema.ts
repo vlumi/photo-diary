@@ -1770,6 +1770,7 @@ export interface paths {
                                 [key: string]: (string | number | boolean | null)[];
                             };
                         };
+                        lang?: string;
                     };
                 };
             };
@@ -1812,6 +1813,15 @@ export interface paths {
                                 [key: string]: {
                                     [key: string]: number;
                                 };
+                            };
+                            byStateCountry: {
+                                [key: string]: string;
+                            };
+                            byCityCountry: {
+                                [key: string]: string;
+                            };
+                            byCityLocalized: {
+                                [key: string]: string;
                             };
                         };
                     };

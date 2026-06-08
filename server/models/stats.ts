@@ -47,6 +47,15 @@ export interface StatsResponse {
   summary: StatsSummary;
   daysInYear: Record<string, number>;
   daysInYearMonth: YearMonthCounts;
+  // Display-side annotations. `byStateCountry` maps a state code
+  // (e.g. "jp-13") to its country code so the state table can
+  // render "Tokyo, JP" without a second lookup; `byCityCountry`
+  // does the same for the city key; `byCityLocalized` carries the
+  // localized city display name keyed by the same city key so a
+  // language switch is a label re-render, not a refetch.
+  byStateCountry: Record<string, string>;
+  byCityCountry: Record<string, string>;
+  byCityLocalized: Record<string, string>;
 }
 
 const inc = (map: BucketCounts, key: string): void => {
@@ -271,6 +280,33 @@ const buildByCategory = (
   ),
 });
 
+const buildAnnotations = (
+  photos: Photo[]
+): {
+  byStateCountry: Record<string, string>;
+  byCityCountry: Record<string, string>;
+  byCityLocalized: Record<string, string>;
+} => {
+  const byStateCountry: Record<string, string> = {};
+  const byCityCountry: Record<string, string> = {};
+  const byCityLocalized: Record<string, string> = {};
+  for (const photo of photos) {
+    const country = photo.geocoded?.countryCode;
+    const state = photo.geocoded?.stateCode;
+    if (state && country && !byStateCountry[state]) {
+      byStateCountry[state] = country;
+    }
+    const cityKey = geocodedCityKey(photo);
+    if (cityKey && country && !byCityCountry[cityKey]) {
+      byCityCountry[cityKey] = country;
+    }
+    if (cityKey && photo.geocoded?.city && !byCityLocalized[cityKey]) {
+      byCityLocalized[cityKey] = photo.geocoded.city;
+    }
+  }
+  return { byStateCountry, byCityCountry, byCityLocalized };
+};
+
 export const computeStats = (
   photos: Photo[],
   filter?: FilterShape
@@ -281,6 +317,7 @@ export const computeStats = (
 
   const byCategory = buildByCategory(filtered);
   const byYearMonth = buildByYearMonth(filtered);
+  const annotations = buildAnnotations(filtered);
 
   const sorted = filtered.slice().sort(compareTimestamps);
   const first = sorted[0];
@@ -321,6 +358,9 @@ export const computeStats = (
     summary,
     daysInYear: buildDaysInYear(filtered),
     daysInYearMonth: buildDaysInYearMonth(filtered),
+    byStateCountry: annotations.byStateCountry,
+    byCityCountry: annotations.byCityCountry,
+    byCityLocalized: annotations.byCityLocalized,
   };
 };
 
@@ -337,17 +377,26 @@ const isUnfilteredBase = (filter?: FilterShape): boolean => {
   return true;
 };
 
+// Cache key includes lang because `byCityLocalized` differs per
+// language; en is the baseline (matches `loadGalleryPhotos` with
+// no lang argument) and shares the bare `galleryId` key so cache
+// hits accrue across requests without a language overlay.
+const cacheKey = (galleryId: string, lang?: string): string =>
+  !lang || lang === "en" ? galleryId : `${galleryId}:${lang}`;
+
 const getGalleryStats = async (
   galleryId: string,
-  filter?: FilterShape
+  filter?: FilterShape,
+  lang?: string
 ): Promise<StatsResponse> => {
   const cacheable = isUnfilteredBase(filter);
+  const key = cacheKey(galleryId, lang);
   if (cacheable) {
-    const cached = cacheGet<StatsResponse>(galleryId);
+    const cached = cacheGet<StatsResponse>(key);
     if (cached) return cached;
   }
-  const photos = (await db.loadGalleryPhotos(galleryId)) as Photo[];
+  const photos = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
   const stats = computeStats(photos, filter);
-  if (cacheable) cacheSet(galleryId, stats);
+  if (cacheable) cacheSet(key, stats);
   return stats;
 };
