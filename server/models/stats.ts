@@ -56,6 +56,13 @@ export interface StatsResponse {
   byStateCountry: Record<string, string>;
   byCityCountry: Record<string, string>;
   byCityLocalized: Record<string, string>;
+  // Universe of bucket keys per category — computed from ALL
+  // photos in the gallery, regardless of filter. The client pads
+  // each filtered `byCategory[c]` map with 0 entries for keys
+  // present in the universe but missing in the filtered subset,
+  // so the filter UI's "add another value" affordance can still
+  // surface every possible value the user might union-add.
+  categoryValues: Record<string, string[]>;
 }
 
 const inc = (map: BucketCounts, key: string): void => {
@@ -307,6 +314,20 @@ const buildAnnotations = (
   return { byStateCountry, byCityCountry, byCityLocalized };
 };
 
+// Universe of bucket keys per category across the unfiltered
+// gallery. Same buckets `buildByCategory` produces, just collapsed
+// to a sorted key list so the wire payload stays small.
+const buildCategoryValues = (
+  photos: Photo[]
+): Record<string, string[]> => {
+  const all = buildByCategory(photos);
+  const out: Record<string, string[]> = {};
+  for (const [category, counts] of Object.entries(all)) {
+    out[category] = Object.keys(counts).sort();
+  }
+  return out;
+};
+
 export const computeStats = (
   photos: Photo[],
   filter?: FilterShape
@@ -318,6 +339,10 @@ export const computeStats = (
   const byCategory = buildByCategory(filtered);
   const byYearMonth = buildByYearMonth(filtered);
   const annotations = buildAnnotations(filtered);
+  // The universe always covers the gallery's full set so the
+  // filter UI keeps surfacing every value, even when the active
+  // filter narrows the count to zero for some of them.
+  const categoryValues = buildCategoryValues(photos);
 
   const sorted = filtered.slice().sort(compareTimestamps);
   const first = sorted[0];
@@ -361,6 +386,7 @@ export const computeStats = (
     byStateCountry: annotations.byStateCountry,
     byCityCountry: annotations.byCityCountry,
     byCityLocalized: annotations.byCityLocalized,
+    categoryValues,
   };
 };
 

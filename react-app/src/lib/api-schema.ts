@@ -1823,6 +1823,9 @@ export interface paths {
                             byCityLocalized: {
                                 [key: string]: string;
                             };
+                            categoryValues: {
+                                [key: string]: string[];
+                            };
                         };
                     };
                 };

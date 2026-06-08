@@ -166,6 +166,29 @@ describe("annotations", () => {
     expect(res.body.byCityCountry).toEqual({});
     expect(res.body.byCityLocalized).toEqual({});
   });
+
+  test("categoryValues lists the universe of bucket keys per category", async () => {
+    const res = await postStats(token, "gallery1");
+    // gallery1 has 2 photos: jp + nl, 2018 + 2020, FUJIFILM + Panasonic.
+    expect(res.body.categoryValues.country).toEqual(["jp", "nl"]);
+    expect(res.body.categoryValues.year).toEqual(["2018", "2020"]);
+    expect(res.body.categoryValues.cameraMake.sort()).toEqual([
+      "FUJIFILM",
+      "Panasonic",
+    ]);
+  });
+
+  test("categoryValues is unfiltered even when the active filter narrows the result", async () => {
+    const res = await postStats(token, "gallery1", {
+      filter: { general: { country: ["jp"] } },
+    });
+    // Filtered set has 1 photo (jp 2018), but the universe still
+    // covers everything in the gallery.
+    expect(res.body.total).toBe(1);
+    expect(res.body.byCategory.country).toEqual({ jp: 1 });
+    expect(res.body.categoryValues.country).toEqual(["jp", "nl"]);
+    expect(res.body.categoryValues.year).toEqual(["2018", "2020"]);
+  });
 });
 
 describe("cache", () => {
