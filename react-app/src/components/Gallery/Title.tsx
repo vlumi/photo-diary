@@ -3,12 +3,19 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillHouseFill, BsChevronRight, BsMap } from "react-icons/bs";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import Link from "./Link";
 import MapModal from "../MapModal";
 
 import useKeyPress from "../../lib/keypress";
-import { useLastGalleryPathStore, useUserStore } from "../../stores";
+import filter from "../../lib/filter";
+import galleryPhotosService from "../../services/gallery-photos";
+import {
+  useFiltersStore,
+  useLastGalleryPathStore,
+  useUserStore,
+} from "../../stores";
 import type { Gallery } from "../../models/GalleryModel";
 import type { Photo } from "../../models/PhotoModel";
 
@@ -195,6 +202,30 @@ const Title = ({
   const user = useUserStore((s) => s.user);
   const showManage = !!user?.isAdmin();
 
+  // Position of `photo` within the current filtered set — same
+  // queryKey as the Photo modal's neighbors fetch, so TanStack
+  // dedupes (one network call shared between this breadcrumb and
+  // the modal's Navigation bar).
+  const filters = useFiltersStore((s) => s.filters);
+  const serverFilters = React.useMemo(
+    () => filter.toServerFilters(filters),
+    [filters]
+  );
+  const { data: neighbors } = useQuery({
+    queryKey: [
+      "gallery-photo-neighbors",
+      gallery.id(),
+      photo?.id(),
+      serverFilters,
+    ],
+    queryFn: () =>
+      galleryPhotosService.getNeighbors(gallery.id(), photo!.id(), {
+        filter: serverFilters,
+      }),
+    enabled: !!photo,
+    placeholderData: keepPreviousData,
+  });
+
   // Remember the most recent Gallery URL per gallery id, so flipping to
   // Statistics and back returns to the same year/month/day (or photo)
   // instead of the gallery root.
@@ -361,8 +392,8 @@ const Title = ({
   const yearLabel = year !== undefined ? String(year) : "";
   const monthLabel = month !== undefined ? t(`month-long-${month}`) : "";
   const photoLabel =
-    photo !== undefined
-      ? `#${new Intl.NumberFormat(lang ?? "en").format(photo.index() + 1)}`
+    photo !== undefined && neighbors?.position !== undefined
+      ? `#${new Intl.NumberFormat(lang ?? "en").format(neighbors.position)}`
       : "";
 
   return (

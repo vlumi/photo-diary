@@ -11,14 +11,18 @@ import {
   BsXLg,
 } from "react-icons/bs";
 import { motion, useAnimationControls, type PanInfo } from "framer-motion";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import Navigation from "./Navigation";
 import Content from "./Content";
 import MetadataPanel from "./MetadataPanel";
 
+import filter from "../../../lib/filter";
 import useKeyPress from "../../../lib/keypress";
 import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
-import { useUserStore } from "../../../stores";
+import galleryPhotosService from "../../../services/gallery-photos";
+import { useFiltersStore, useUserStore } from "../../../stores";
+import PhotoModel from "../../../models/PhotoModel";
 
 import type { Gallery } from "../../../models/GalleryModel";
 import type { Photo as PhotoT } from "../../../models/PhotoModel";
@@ -264,12 +268,49 @@ const Photo = ({
   // 3-slide carousel: track rests at -1/3 so the middle slide
   // (current photo) is centred in the viewport. Sliding right exposes
   // slot 0 (prev); sliding left exposes slot 2 (next).
-  const prevPhoto = !gallery.isFirstPhoto(photo)
-    ? gallery.previousPhoto(year, month, day, photo)
-    : undefined;
-  const nextPhoto = !gallery.isLastPhoto(photo)
-    ? gallery.nextPhoto(year, month, day, photo)
-    : undefined;
+  //
+  // Neighbors fetched per-photo from the server (#406) so the
+  // adjacency respects the active filter. `keepPreviousData`
+  // holds the previous neighbors object while a navigation
+  // refetch is in flight — animated slide-out lands on real
+  // adjacent slides instead of flashing empty.
+  const filters = useFiltersStore((s) => s.filters);
+  const serverFilters = React.useMemo(
+    () => filter.toServerFilters(filters),
+    [filters]
+  );
+  const { data: neighbors } = useQuery({
+    queryKey: [
+      "gallery-photo-neighbors",
+      gallery.id(),
+      photo.id(),
+      serverFilters,
+    ],
+    queryFn: () =>
+      galleryPhotosService.getNeighbors(gallery.id(), photo.id(), {
+        filter: serverFilters,
+      }),
+    placeholderData: keepPreviousData,
+  });
+  const prevPhoto = React.useMemo(
+    () =>
+      neighbors?.previous ? PhotoModel(neighbors.previous) : undefined,
+    [neighbors?.previous]
+  );
+  const nextPhoto = React.useMemo(
+    () => (neighbors?.next ? PhotoModel(neighbors.next) : undefined),
+    [neighbors?.next]
+  );
+  const firstPhoto = React.useMemo(
+    () => (neighbors?.first ? PhotoModel(neighbors.first) : undefined),
+    [neighbors?.first]
+  );
+  const lastPhoto = React.useMemo(
+    () => (neighbors?.last ? PhotoModel(neighbors.last) : undefined),
+    [neighbors?.last]
+  );
+  const isFirstPhoto = !prevPhoto;
+  const isLastPhoto = !nextPhoto;
   const TRACK_REST = "-33.3333%";
   const TRACK_PREV = "0%";
   const TRACK_NEXT = "-66.6667%";
@@ -303,15 +344,13 @@ const Photo = ({
   }, [nextPhoto, gallery, navigate, trackControls]);
 
   const handlMoveToFirst = () => {
-    const first = gallery.firstPhoto();
-    if (!gallery.isFirstPhoto(photo) && first) {
-      navigate(first.path(gallery));
+    if (firstPhoto && firstPhoto.id() !== photo.id()) {
+      navigate(firstPhoto.path(gallery));
     }
   };
   const handlMoveToLast = () => {
-    const last = gallery.lastPhoto();
-    if (!gallery.isLastPhoto(photo) && last) {
-      navigate(last.path(gallery));
+    if (lastPhoto && lastPhoto.id() !== photo.id()) {
+      navigate(lastPhoto.path(gallery));
     }
   };
 
@@ -409,16 +448,20 @@ const Photo = ({
       onClick={handleBackdropClick}
     >
       <title>
-        {gallery.title(year, month, day, photo)} — {t("nav-gallery")}
+        {gallery.title(year, month, day, neighbors?.position)} —{" "}
+        {t("nav-gallery")}
       </title>
       <Frame>
         <Navigation
           gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
           photo={photo}
           lang={lang}
+          previousPhoto={prevPhoto}
+          nextPhoto={nextPhoto}
+          firstPhoto={firstPhoto}
+          lastPhoto={lastPhoto}
+          position={neighbors?.position}
+          total={neighbors?.total ?? 0}
           onPrev={animateToPrev}
           onNext={animateToNext}
         />

@@ -56,6 +56,19 @@ const CountsBody = Type.Object({
   year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
 });
 const CountsResponse = Type.Record(Type.String(), Type.Number());
+const NeighborsBody = Type.Object({
+  photoId: Type.String({ minLength: 1 }),
+  filter: Type.Optional(FilterSchema),
+  lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
+});
+const NeighborsResponse = Type.Object({
+  previous: Type.Optional(PhotoItem),
+  next: Type.Optional(PhotoItem),
+  first: Type.Optional(PhotoItem),
+  last: Type.Optional(PhotoItem),
+  position: Type.Optional(Type.Integer({ minimum: 1 })),
+  total: Type.Integer({ minimum: 0 }),
+});
 
 const TAGS = ["gallery-photos"];
 
@@ -179,6 +192,51 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
           return {};
+        }
+        throw error;
+      }
+    }
+  );
+
+  /**
+   * Prev / next / first / last photos within the filtered set,
+   * for the Photo modal's carousel + keyboard nav (#406).
+   */
+  fastify.post(
+    "/:galleryId/neighbors",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Adjacent + boundary photos within the filtered set",
+        params: GalleryIdParam,
+        body: NeighborsBody,
+        response: { 200: NeighborsResponse },
+      },
+    },
+    async (request) => {
+      try {
+        requireScopeMatches(request, request.params.galleryId);
+        await authorizer.authorizeGalleryView(
+          request.user.id,
+          request.params.galleryId
+        );
+        const result = await model.getGalleryPhotoNeighbors(
+          request.params.galleryId,
+          request.body.photoId,
+          { filter: request.body.filter, lang: request.body.lang }
+        );
+        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
+          maskCoordinates(
+            [result.previous, result.next, result.first, result.last]
+              .filter((p) => p !== undefined) as Parameters<
+              typeof maskCoordinates
+            >[0]
+          );
+        }
+        return result;
+      } catch (error) {
+        if (error instanceof AccessError || error instanceof NotFoundError) {
+          return { total: 0 };
         }
         throw error;
       }

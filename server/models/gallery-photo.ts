@@ -13,6 +13,7 @@ export default () => {
     getGalleryPhotos,
     queryGalleryPhotos,
     queryGalleryPhotoCounts,
+    getGalleryPhotoNeighbors,
     getGalleryPhoto,
     linkGalleryPhoto,
     unlinkGalleryPhoto,
@@ -56,6 +57,59 @@ const queryGalleryPhotos = async (
   return photos.filter(
     (photo) => matchesScope(photo, opts) && matchesFilter(opts.filter, photo)
   );
+};
+
+// Adjacent + boundary photos for the Photo modal's carousel +
+// keyboard nav (#406). Loads the gallery's photos via the same
+// SQL path, filters with the wire-shape evaluator, sorts by
+// timestamp, and returns the photo objects the modal needs to
+// render its prev / current / next slides plus the first / last
+// jumps. All four fields optional — empty filter set, photo at
+// boundary, or photo not in the filtered set each surface as a
+// missing field rather than an error.
+interface NeighborsOpts {
+  filter?: FilterShape;
+  lang?: string;
+}
+interface NeighborsResult {
+  previous?: Photo;
+  next?: Photo;
+  first?: Photo;
+  last?: Photo;
+  position?: number;
+  total: number;
+}
+const getGalleryPhotoNeighbors = async (
+  galleryId: string,
+  photoId: string,
+  opts: NeighborsOpts = {}
+): Promise<NeighborsResult> => {
+  logger.debug("Getting gallery photo neighbors", { galleryId, photoId });
+  const all = (await db.loadGalleryPhotos(galleryId, opts.lang)) as Photo[];
+  const filtered = all
+    .filter((p) => matchesFilter(opts.filter, p))
+    .sort((a, b) =>
+      a.taken.instant.timestamp.localeCompare(b.taken.instant.timestamp)
+    );
+  if (filtered.length === 0) return { total: 0 };
+  const first = filtered[0];
+  const last = filtered[filtered.length - 1];
+  const index = filtered.findIndex((p) => p.id === photoId);
+  if (index < 0) {
+    // Current photo not in filtered set — first / last still
+    // useful; previous / next undefined; position omitted.
+    return { first, last, total: filtered.length };
+  }
+  const previous = index > 0 ? filtered[index - 1] : undefined;
+  const next = index < filtered.length - 1 ? filtered[index + 1] : undefined;
+  return {
+    previous,
+    next,
+    first,
+    last,
+    position: index + 1,
+    total: filtered.length,
+  };
 };
 
 // Per-day photo counts for the Year heatmap. Returns

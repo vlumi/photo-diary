@@ -38,6 +38,20 @@ const getCounts = async (
     })
   );
 
+// Prev / next / first / last photos within the filtered set —
+// drives the Photo modal's carousel + keyboard nav (#406).
+const getNeighbors = async (
+  galleryId: string,
+  photoId: string,
+  opts: { filter?: ServerFilters; lang?: string } = {}
+) =>
+  unwrap(
+    api.POST("/api/v1/gallery-photos/{galleryId}/neighbors", {
+      params: { path: { galleryId } },
+      body: { photoId, ...opts },
+    })
+  );
+
 const link = async (galleryId: string, photoId: string): Promise<void> => {
   await unwrap(
     api.PUT("/api/v1/gallery-photos/{galleryId}/{photoId}", {
@@ -54,4 +68,4 @@ const unlink = async (galleryId: string, photoId: string): Promise<void> => {
   );
 };
 
-export default { get, query, getCounts, link, unlink };
+export default { get, query, getCounts, getNeighbors, link, unlink };

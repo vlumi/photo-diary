@@ -84,16 +84,16 @@ const GalleryModel = (galleryData: unknown) => {
       year?: number,
       month?: number,
       day?: number,
-      photo?: Photo
+      position?: number
     ): string => {
       const ymd = format.date({ year, month, day });
       if (!ymd) {
         return gallery.title || "";
       }
-      if (!photo) {
+      if (position === undefined) {
         return `${ymd} — ${gallery.title || ""}`;
       }
-      return `#${photo.index() + 1} — ${ymd} — ${gallery.title || ""}`;
+      return `#${position} — ${ymd} — ${gallery.title || ""}`;
     },
     description: (): string => gallery.description || "",
     hasIcon: (): boolean => !!gallery.icon,

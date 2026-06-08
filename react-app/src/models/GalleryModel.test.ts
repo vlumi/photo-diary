@@ -832,17 +832,15 @@ describe("With photos", () => {
       ]),
     };
   });
-  describe("title(year, month, day, photo)", () => {
-    test("empty.jpg in empty", () =>
-      expect(g.empty.title(2019, 10, 3, photos["empty.jpg"])).toBe(
-        "#1 — 2019-10-03 — "
-      ));
-    test("empty.jpg", () =>
-      expect(g.testing.title(2019, 10, 3, photos["empty.jpg"])).toBe(
+  describe("title(year, month, day, position)", () => {
+    test("position 1 in empty", () =>
+      expect(g.empty.title(2019, 10, 3, 1)).toBe("#1 — 2019-10-03 — "));
+    test("position 1 in testing", () =>
+      expect(g.testing.title(2019, 10, 3, 1)).toBe(
         "#1 — 2019-10-03 — gallery testing"
       ));
-    test("1.jpg", () =>
-      expect(g.testing.title(2020, 5, 27, photos["1.jpg"])).toBe(
+    test("position 2 in testing", () =>
+      expect(g.testing.title(2020, 5, 27, 2)).toBe(
         "#2 — 2020-05-27 — gallery testing"
       ));
   });
