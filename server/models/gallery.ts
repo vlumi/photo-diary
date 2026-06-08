@@ -7,6 +7,7 @@ import {
   type CropPixels,
 } from "../lib/gallery-icon.js";
 import { assertSlugId } from "../lib/id-shape.js";
+import { invalidateGallery } from "../lib/stats-cache.js";
 
 export default () => {
   return {
@@ -62,6 +63,7 @@ const deleteGallery = async (galleryId: string) => {
   }
   await db.deleteGallery(galleryId);
   await removeGalleryIcon(galleryId);
+  invalidateGallery(galleryId);
 };
 
 // Crop the source photo's display variant + write the icon file,

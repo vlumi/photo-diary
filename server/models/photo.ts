@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
+import { invalidateGallery } from "../lib/stats-cache.js";
 import {
   applyFilter,
   countryMismatch as isCountryMismatch,
@@ -19,6 +20,7 @@ export default () => {
     countAudits,
     countYearMonths,
     createPhoto,
+    invalidateStatsForPhoto,
     getPhoto,
     updatePhoto,
     deletePhoto,
@@ -225,9 +227,29 @@ const countYearMonths = async (
     .sort((a, b) => b.yearMonth.localeCompare(a.yearMonth));
 };
 
+// A photo's gallery membership at the moment of a mutation —
+// drives the stats-cache invalidation set. Resolved live (no
+// cache) because the link table can change between the lookup
+// and the actual write.
+const galleryIdsForPhoto = async (photoId: string): Promise<string[]> => {
+  const links = (await db.loadAllGalleryPhotoLinks()) as Array<{
+    photoId: string;
+    galleryId: string;
+  }>;
+  return links.filter((l) => l.photoId === photoId).map((l) => l.galleryId);
+};
+
+const invalidateStatsForPhoto = async (photoId: string): Promise<void> => {
+  for (const galleryId of await galleryIdsForPhoto(photoId)) {
+    invalidateGallery(galleryId);
+  }
+};
+
 const createPhoto = async (photo: { id: string } & Record<string, any>) => {
   logger.debug("Creating photo", { id: photo.id });
   await db.createPhoto(photo);
+  // Fresh photo isn't linked yet; the subsequent link call from the
+  // converter / admin UI will invalidate the receiving gallery.
 };
 
 const getPhoto = async (photoId: string) => {
@@ -256,6 +278,7 @@ const updatePhoto = async (
 ) => {
   logger.debug("Updating photo", { id: photoId });
   await db.updatePhoto(photoId, patch);
+  await invalidateStatsForPhoto(photoId);
 };
 
 // Cascade `gallery_photo` links before the row delete so the FK
@@ -263,6 +286,11 @@ const updatePhoto = async (
 // via FK ON DELETE CASCADE.
 const deletePhoto = async (photoId: string) => {
   logger.debug("Deleting photo", photoId);
+  // Resolve the affected galleries BEFORE the cascade nukes the
+  // link rows; invalidate AFTER the delete so concurrent stats
+  // requests don't repopulate the cache from stale rows.
+  const galleries = await galleryIdsForPhoto(photoId);
   await db.unlinkAllGalleries(photoId);
   await db.deletePhoto(photoId);
+  for (const galleryId of galleries) invalidateGallery(galleryId);
 };

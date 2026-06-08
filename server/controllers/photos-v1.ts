@@ -515,6 +515,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
       await db.clearGeocoded(photoId);
       await writeCoordSidecar(photoId, coords);
+      await model.invalidateStatsForPhoto(photoId);
       reply.status(204).send();
     }
   );
