@@ -9,6 +9,7 @@ import Navigation from "./Navigation";
 import Content from "./Content";
 
 import useKeyPress from "../../../lib/keypress";
+import useFilteredCalendar from "../../../lib/useFilteredCalendar";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
@@ -30,28 +31,29 @@ const Year = ({
   const navigate = useNavigate();
 
   const { t } = useTranslation();
+  const cal = useFilteredCalendar(gallery.id());
 
   const handlMoveToFirst = () => {
-    const firstYear = gallery.firstYear();
-    if (!gallery.isFirstYear(year) && firstYear) {
+    const firstYear = cal.firstYear();
+    if (!cal.isFirstYear(year) && firstYear !== undefined) {
       navigate(gallery.path(firstYear));
     }
   };
   const handlMoveToPrevious = () => {
-    const previousYear = gallery.previousYear(year);
-    if (!gallery.isFirstYear(year) && previousYear) {
+    const previousYear = cal.previousYear(year);
+    if (previousYear !== undefined) {
       navigate(gallery.path(previousYear));
     }
   };
   const handlMoveToNext = () => {
-    const nextYear = gallery.nextYear(year);
-    if (!gallery.isLastYear(year) && nextYear) {
+    const nextYear = cal.nextYear(year);
+    if (nextYear !== undefined) {
       navigate(gallery.path(nextYear));
     }
   };
   const handlMoveToLast = () => {
-    const lastYear = gallery.lastYear();
-    if (!gallery.isLastYear(year) && lastYear) {
+    const lastYear = cal.lastYear();
+    if (!cal.isLastYear(year) && lastYear !== undefined) {
       navigate(gallery.path(lastYear));
     }
   };

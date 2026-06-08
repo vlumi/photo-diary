@@ -17,7 +17,7 @@ import {
   useUserStore,
 } from "../../stores";
 import type { Gallery } from "../../models/GalleryModel";
-import type { Photo } from "../../models/PhotoModel";
+import PhotoModel, { type Photo } from "../../models/PhotoModel";
 
 const Root = styled.div`
   display: flex;
@@ -242,30 +242,39 @@ const Title = ({
 
   // Map scope: month if URL identifies a month (or a photo within one),
   // year if only year, whole gallery on Statistics. Empty array hides
-  // the button (also when the per-gallery hideMap flag is set).
-  const mapPhotos = React.useMemo(() => {
-    if (gallery.hideMap()) {
-      return [];
-    }
+  // the button (also when the per-gallery hideMap flag is set). The
+  // /query fetch returns photos that pass the active filter + scope;
+  // we then keep only the ones with coordinates for the map pins.
+  const mapScopeEnabled =
+    !gallery.hideMap() &&
+    (year !== undefined ||
+      (context === "stats" && year === undefined && month === undefined));
+  const mapScopeBody = React.useMemo(() => {
     if (year !== undefined && month !== undefined) {
-      return gallery
-        .flatMapDays(year, month, (d) => gallery.photos(year, month, d))
-        .filter(Boolean)
-        .filter((p) => p.hasCoordinates());
+      return { filter: serverFilters, year, month };
     }
     if (year !== undefined) {
-      return gallery
-        .flatMapMonths(year, (m) =>
-          gallery.flatMapDays(year, m, (d) => gallery.photos(year, m, d))
-        )
-        .filter(Boolean)
-        .filter((p) => p.hasCoordinates());
+      return { filter: serverFilters, year };
     }
-    if (context === "stats") {
-      return gallery.photos().filter((p) => p.hasCoordinates());
-    }
-    return [];
-  }, [gallery, year, month, context]);
+    return { filter: serverFilters };
+  }, [serverFilters, year, month]);
+  const { data: mapPhotosRaw } = useQuery({
+    queryKey: [
+      "gallery-photos-map",
+      gallery.id(),
+      mapScopeBody,
+    ],
+    queryFn: () => galleryPhotosService.query(gallery.id(), mapScopeBody),
+    enabled: mapScopeEnabled,
+    placeholderData: keepPreviousData,
+  });
+  const mapPhotos = React.useMemo(() => {
+    if (!mapScopeEnabled) return [];
+    return ((mapPhotosRaw ?? []) as Array<Record<string, unknown>>)
+      .map((raw) => PhotoModel(raw))
+      .filter((p): p is Photo => !!p)
+      .filter((p) => p.hasCoordinates());
+  }, [mapPhotosRaw, mapScopeEnabled]);
 
   const getRedirectPath = (gallery: Gallery, context: string): string => {
     switch (context) {

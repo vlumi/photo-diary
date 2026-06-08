@@ -167,19 +167,8 @@ const Gallery = ({
 
   const gallery = React.useMemo<GalleryT | undefined>(() => {
     if (!selectedGallery || !photos) return undefined;
-    const filteredPhotos = photos.filter((photo) =>
-      Object.values(filters).every(
-        (topicFilters) =>
-          !Object.keys(topicFilters).length ||
-          Object.values(topicFilters).every(
-            (categoryFilters) =>
-              !Object.keys(categoryFilters).length ||
-              Object.values(categoryFilters).some((filter) => filter(photo))
-          )
-      )
-    );
-    return selectedGallery.withPhotos(filteredPhotos);
-  }, [selectedGallery, photos, filters]);
+    return selectedGallery.withPhotos(photos);
+  }, [selectedGallery, photos]);
 
   // Load the persisted user preference once, against the current
   // manifest so a stale localStorage entry can't survive a theme

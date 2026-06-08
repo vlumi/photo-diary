@@ -7,6 +7,7 @@ import DayCell from "./DayCell";
 import Link from "../Link";
 
 import calendar from "../../../lib/calendar";
+import useFilteredCalendar from "../../../lib/useFilteredCalendar";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
@@ -87,6 +88,7 @@ const Month = ({
   theme,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
+  const cal = useFilteredCalendar(gallery.id());
 
   const tile = (
     <Root>
@@ -122,7 +124,7 @@ const Month = ({
     </Root>
   );
 
-  if (gallery.includesMonth(year, month)) {
+  if (cal.has(year, month)) {
     return (
       <MonthLink gallery={gallery} year={year} month={month}>
         {tile}
