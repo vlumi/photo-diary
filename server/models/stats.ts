@@ -1,414 +1,55 @@
-// Server-side stats aggregation. Loads the gallery's photos, applies
-// the filter (slice 2's evaluator), and builds the bucket maps the
-// `POST /api/v1/galleries/:galleryId/stats` endpoint returns.
+// Stats orchestration. Loads photos from the DB and runs them
+// through the pure `computeStats` aggregator in
+// `lib/stats-compute.ts`. Two flavours:
 //
-// Each category produces a `Record<key, count>` over the filtered
-// photo set. Bucket keys are stringified derived values; the
-// `<unknown>` bucket uses the literal string "unknown" to match
-// what the client's stats today already uses internally (clients
-// localise the label at render time). Cross-photo aggregates
-// (first / last / span / variety / peak shape) land in `summary`.
+//   - `getGalleryStats(galleryId, filter?, lang?)` — gallery-scoped,
+//     drives `POST /api/v1/galleries/:id/stats`.
+//   - `getGlobalStats(filter?, lang?)` — cross-gallery, drives
+//     `POST /api/v1/stats` (admin-only). Same compute logic; the
+//     only difference is which photos the DB layer hands us.
+//
+// Single-key cache per scope. The gallery flavour keys by gallery
+// id (plus lang for non-en); the global flavour keys by a
+// dedicated `:global` namespace. Filtered combinations bypass
+// cache and compute on demand.
 
 import db from "../db/index.js";
 import type { Photo } from "../db/sqlite3/schema.js";
-import * as derived from "../lib/photo-derived.js";
-import {
-  matchesFilter,
-  type FilterShape,
-} from "../lib/photo-filter-eval.js";
 import { cacheGet, cacheSet } from "../lib/stats-cache.js";
+import {
+  computeStats,
+  isUnfilteredBase,
+  type StatsResponse,
+} from "../lib/stats-compute.js";
+import type { FilterShape } from "../lib/photo-filter-eval.js";
 
 export default () => ({
   getGalleryStats,
+  getGlobalStats,
 });
 
-export const UNKNOWN_BUCKET = "unknown";
+// Re-export the response shape + types so controllers and tests
+// can stay model-rooted rather than reaching into lib/.
+export type {
+  BucketCounts,
+  PeakShape,
+  StatsResponse,
+  StatsSummary,
+  YearMonthCounts,
+} from "../lib/stats-compute.js";
+export { UNKNOWN_BUCKET } from "../lib/stats-compute.js";
 
-export type BucketCounts = Record<string, number>;
-export interface YearMonthCounts {
-  [year: string]: Record<string, number>;
-}
-export type PeakShape = "leader" | "tied" | "even";
-
-export interface StatsSummary {
-  first?: string;
-  last?: string;
-  spanDays: number;
-  spanYears: number;
-  spanMonths: number;
-  peakShape: Record<string, PeakShape>;
-  variety: Record<string, number>;
-}
-
-export interface StatsResponse {
-  total: number;
-  byCategory: Record<string, BucketCounts>;
-  byYearMonth: YearMonthCounts;
-  summary: StatsSummary;
-  daysInYear: Record<string, number>;
-  daysInYearMonth: YearMonthCounts;
-  // Display-side annotations. `byStateCountry` maps a state code
-  // (e.g. "jp-13") to its country code so the state table can
-  // render "Tokyo, JP" without a second lookup; `byCityCountry`
-  // does the same for the city key; `byCityLocalized` carries the
-  // localized city display name keyed by the same city key so a
-  // language switch is a label re-render, not a refetch.
-  byStateCountry: Record<string, string>;
-  byCityCountry: Record<string, string>;
-  byCityLocalized: Record<string, string>;
-  // Universe of bucket keys per category — computed from ALL
-  // photos in the gallery, regardless of filter. The client pads
-  // each filtered `byCategory[c]` map with 0 entries for keys
-  // present in the universe but missing in the filtered subset,
-  // so the filter UI's "add another value" affordance can still
-  // surface every possible value the user might union-add.
-  categoryValues: Record<string, string[]>;
-}
-
-const inc = (map: BucketCounts, key: string): void => {
-  map[key] = (map[key] ?? 0) + 1;
-};
-
-const bucketByString = (
-  photos: Photo[],
-  deriver: (photo: Photo) => string | undefined
-): BucketCounts => {
-  const out: BucketCounts = {};
-  for (const photo of photos) {
-    const value = deriver(photo);
-    inc(out, value ?? UNKNOWN_BUCKET);
-  }
-  return out;
-};
-
-const bucketByNumber = (
-  photos: Photo[],
-  deriver: (photo: Photo) => number | undefined
-): BucketCounts => {
-  const out: BucketCounts = {};
-  for (const photo of photos) {
-    const value = deriver(photo);
-    inc(out, value === undefined ? UNKNOWN_BUCKET : String(value));
-  }
-  return out;
-};
-
-const formatCamera = (photo: Photo): string | undefined =>
-  derived.formatGear(photo.camera?.make, photo.camera?.model);
-
-const formatLens = (photo: Photo): string | undefined =>
-  derived.formatGear(photo.lens?.make, photo.lens?.model);
-
-const geocodedCityKey = (photo: Photo): string | undefined => {
-  const cityEn = photo.geocoded?.cityEn ?? photo.geocoded?.city;
-  if (!cityEn) return undefined;
-  return JSON.stringify([
-    photo.geocoded?.countryCode ?? "",
-    photo.geocoded?.stateCode ?? "",
-    cityEn,
-  ]);
-};
-
-const cameraLensPairKey = (photo: Photo): string | undefined => {
-  const camera = formatCamera(photo);
-  const lens = formatLens(photo);
-  if (!camera && !lens) return undefined;
-  return JSON.stringify([camera ?? null, lens ?? null]);
-};
-
-const countDistinct = (
-  photos: Photo[],
-  deriver: (photo: Photo) => string | undefined
-): number => {
-  const set = new Set<string>();
-  for (const photo of photos) {
-    const value = deriver(photo);
-    if (value) set.add(value);
-  }
-  return set.size;
-};
-
-// Peak-shape classifier. Per the scoping doc: ≤1 leader within 1%
-// of max → "leader"; 2–3 within 1% → "tied"; ≥4 within 1% → "even".
-const NEAR_TIE_THRESHOLD = 0.01;
-const peakShape = (buckets: BucketCounts): PeakShape => {
-  const values = Object.values(buckets);
-  if (values.length === 0) return "leader";
-  const max = Math.max(...values);
-  if (max === 0) return "leader";
-  const tied = values.filter((v) => (max - v) / max <= NEAR_TIE_THRESHOLD)
-    .length;
-  if (tied <= 1) return "leader";
-  if (tied <= 3) return "tied";
-  return "even";
-};
-
-const buildByYearMonth = (photos: Photo[]): YearMonthCounts => {
-  const out: YearMonthCounts = {};
-  for (const photo of photos) {
-    const year = String(photo.taken.instant.year);
-    const month = String(photo.taken.instant.month);
-    if (!out[year]) out[year] = {};
-    out[year][month] = (out[year][month] ?? 0) + 1;
-  }
-  return out;
-};
-
-const daysInCalendarYear = (year: number): number => {
-  // Gregorian leap rule.
-  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  return leap ? 366 : 365;
-};
-const daysInCalendarMonth = (year: number, month: number): number => {
-  // month is 1-indexed; pass 0 of next month to get last day of this.
-  return new Date(year, month, 0).getDate();
-};
-
-const buildDaysInYear = (photos: Photo[]): Record<string, number> => {
-  const years = new Set<number>();
-  for (const photo of photos) years.add(photo.taken.instant.year);
-  const out: Record<string, number> = {};
-  for (const year of years) {
-    out[String(year)] = daysInCalendarYear(year);
-  }
-  return out;
-};
-
-const buildDaysInYearMonth = (photos: Photo[]): YearMonthCounts => {
-  const seen = new Map<number, Set<number>>();
-  for (const photo of photos) {
-    const year = photo.taken.instant.year;
-    const month = photo.taken.instant.month;
-    if (!seen.has(year)) seen.set(year, new Set());
-    seen.get(year)!.add(month);
-  }
-  const out: YearMonthCounts = {};
-  for (const [year, months] of seen.entries()) {
-    out[String(year)] = {};
-    for (const month of months) {
-      out[String(year)][String(month)] = daysInCalendarMonth(year, month);
-    }
-  }
-  return out;
-};
-
-const compareTimestamps = (a: Photo, b: Photo): number =>
-  a.taken.instant.timestamp.localeCompare(b.taken.instant.timestamp);
-
-const formatDate = (photo: Photo): string => {
-  const i = photo.taken.instant;
-  return `${i.year}-${String(i.month).padStart(2, "0")}-${String(
-    i.day
-  ).padStart(2, "0")}`;
-};
-
-const computeSpan = (
-  first: Photo | undefined,
-  last: Photo | undefined
-): { spanDays: number; spanYears: number; spanMonths: number } => {
-  if (!first || !last) return { spanDays: 0, spanYears: 0, spanMonths: 0 };
-  const firstDate = new Date(
-    first.taken.instant.year,
-    first.taken.instant.month - 1,
-    first.taken.instant.day
-  );
-  const lastDate = new Date(
-    last.taken.instant.year,
-    last.taken.instant.month - 1,
-    last.taken.instant.day
-  );
-  const ms = lastDate.getTime() - firstDate.getTime();
-  const spanDays = Math.max(0, Math.round(ms / (24 * 60 * 60 * 1000)));
-  const spanYears = Math.floor(spanDays / 365.25);
-  const spanMonths = Math.floor(spanDays / (365.25 / 12));
-  return { spanDays, spanYears, spanMonths };
-};
-
-const buildByCategory = (
-  photos: Photo[]
-): Record<string, BucketCounts> => ({
-  author: bucketByString(photos, (p) => p.taken.author),
-  country: bucketByString(photos, (p) => p.taken.location?.country),
-  state: bucketByString(photos, (p) => p.geocoded?.stateCode),
-  city: bucketByString(photos, geocodedCityKey),
-  year: bucketByNumber(photos, (p) => p.taken.instant.year),
-  month: bucketByNumber(photos, (p) => p.taken.instant.month),
-  weekday: bucketByNumber(photos, (p) =>
-    derived.weekday(
-      p.taken.instant.year,
-      p.taken.instant.month,
-      p.taken.instant.day
-    )
-  ),
-  hour: bucketByNumber(photos, (p) => p.taken.instant.hour),
-  cameraMake: bucketByString(photos, (p) => p.camera?.make),
-  camera: bucketByString(photos, formatCamera),
-  lens: bucketByString(photos, formatLens),
-  cameraLens: bucketByString(photos, cameraLensPairKey),
-  focalLength: bucketByNumber(photos, (p) => p.exposure?.focalLength),
-  focalLength35mmEquiv: bucketByNumber(photos, (p) =>
-    derived.focalLength35mmEquiv(
-      p.exposure?.focalLength,
-      p.camera?.make,
-      p.camera?.model,
-      p.exposure?.focalLength35mmEquiv
-    )
-  ),
-  aperture: bucketByNumber(photos, (p) => p.exposure?.aperture),
-  exposureTime: bucketByNumber(photos, (p) => p.exposure?.exposureTime),
-  iso: bucketByNumber(photos, (p) => p.exposure?.iso),
-  ev: bucketByNumber(photos, (p) =>
-    derived.exposureValue(p.exposure?.aperture, p.exposure?.exposureTime)
-  ),
-  lv: bucketByNumber(photos, (p) =>
-    derived.lightValue(
-      p.exposure?.aperture,
-      p.exposure?.exposureTime,
-      p.exposure?.iso
-    )
-  ),
-  resolution: bucketByNumber(photos, (p) =>
-    derived.resolution(
-      p.dimensions?.original?.width,
-      p.dimensions?.original?.height
-    )
-  ),
-  orientation: bucketByString(photos, (p) =>
-    derived.orientation(
-      p.dimensions?.original?.width,
-      p.dimensions?.original?.height
-    )
-  ),
-  aspectRatio: bucketByString(photos, (p) =>
-    derived.aspectRatio(
-      p.dimensions?.original?.width,
-      p.dimensions?.original?.height
-    )
-  ),
-});
-
-const buildAnnotations = (
-  photos: Photo[]
-): {
-  byStateCountry: Record<string, string>;
-  byCityCountry: Record<string, string>;
-  byCityLocalized: Record<string, string>;
-} => {
-  const byStateCountry: Record<string, string> = {};
-  const byCityCountry: Record<string, string> = {};
-  const byCityLocalized: Record<string, string> = {};
-  for (const photo of photos) {
-    const country = photo.geocoded?.countryCode;
-    const state = photo.geocoded?.stateCode;
-    if (state && country && !byStateCountry[state]) {
-      byStateCountry[state] = country;
-    }
-    const cityKey = geocodedCityKey(photo);
-    if (cityKey && country && !byCityCountry[cityKey]) {
-      byCityCountry[cityKey] = country;
-    }
-    if (cityKey && photo.geocoded?.city && !byCityLocalized[cityKey]) {
-      byCityLocalized[cityKey] = photo.geocoded.city;
-    }
-  }
-  return { byStateCountry, byCityCountry, byCityLocalized };
-};
-
-// Universe of bucket keys per category across the unfiltered
-// gallery. Same buckets `buildByCategory` produces, just collapsed
-// to a sorted key list so the wire payload stays small.
-const buildCategoryValues = (
-  photos: Photo[]
-): Record<string, string[]> => {
-  const all = buildByCategory(photos);
-  const out: Record<string, string[]> = {};
-  for (const [category, counts] of Object.entries(all)) {
-    out[category] = Object.keys(counts).sort();
-  }
-  return out;
-};
-
-export const computeStats = (
-  photos: Photo[],
-  filter?: FilterShape
-): StatsResponse => {
-  const filtered = filter
-    ? photos.filter((p) => matchesFilter(filter, p))
-    : photos;
-
-  const byCategory = buildByCategory(filtered);
-  const byYearMonth = buildByYearMonth(filtered);
-  const annotations = buildAnnotations(filtered);
-  // The universe always covers the gallery's full set so the
-  // filter UI keeps surfacing every value, even when the active
-  // filter narrows the count to zero for some of them.
-  const categoryValues = buildCategoryValues(photos);
-
-  const sorted = filtered.slice().sort(compareTimestamps);
-  const first = sorted[0];
-  const last = sorted[sorted.length - 1];
-  const { spanDays, spanYears, spanMonths } = computeSpan(first, last);
-
-  const summary: StatsSummary = {
-    first: first ? formatDate(first) : undefined,
-    last: last ? formatDate(last) : undefined,
-    spanDays,
-    spanYears,
-    spanMonths,
-    peakShape: {
-      year: peakShape(byCategory.year),
-      month: peakShape(byCategory.month),
-      weekday: peakShape(byCategory.weekday),
-      hour: peakShape(byCategory.hour),
-      camera: peakShape(byCategory.camera),
-      lens: peakShape(byCategory.lens),
-      cameraLens: peakShape(byCategory.cameraLens),
-    },
-    variety: {
-      author: countDistinct(filtered, (p) => p.taken.author),
-      country: countDistinct(filtered, (p) => p.taken.location?.country),
-      state: countDistinct(filtered, (p) => p.geocoded?.stateCode),
-      city: countDistinct(filtered, geocodedCityKey),
-      camera: countDistinct(filtered, formatCamera),
-      lens: countDistinct(filtered, formatLens),
-      cameraMake: countDistinct(filtered, (p) => p.camera?.make),
-      cameraLens: countDistinct(filtered, cameraLensPairKey),
-    },
-  };
-
-  return {
-    total: filtered.length,
-    byCategory,
-    byYearMonth,
-    summary,
-    daysInYear: buildDaysInYear(filtered),
-    daysInYearMonth: buildDaysInYearMonth(filtered),
-    byStateCountry: annotations.byStateCountry,
-    byCityCountry: annotations.byCityCountry,
-    byCityLocalized: annotations.byCityLocalized,
-    categoryValues,
-  };
-};
-
-const isUnfilteredBase = (filter?: FilterShape): boolean => {
-  if (!filter) return true;
-  for (const topic of Object.keys(filter)) {
-    const categories = filter[topic];
-    if (!categories) continue;
-    for (const category of Object.keys(categories)) {
-      const keys = categories[category];
-      if (Array.isArray(keys) && keys.length > 0) return false;
-    }
-  }
-  return true;
-};
-
-// Cache key includes lang because `byCityLocalized` differs per
-// language; en is the baseline (matches `loadGalleryPhotos` with
-// no lang argument) and shares the bare `galleryId` key so cache
-// hits accrue across requests without a language overlay.
-const cacheKey = (galleryId: string, lang?: string): string =>
+// Cache namespace builder. `en` / no-lang shares the bare key so
+// the most common path accrues hits across requests that don't
+// ask for a localized overlay.
+const galleryCacheKey = (galleryId: string, lang?: string): string =>
   !lang || lang === "en" ? galleryId : `${galleryId}:${lang}`;
+
+// Distinct namespace so a gallery named "global" can't collide
+// with the cross-gallery cache. Hostnames can't carry colons
+// (gallery ids are slug-shaped) so the prefix is collision-free.
+const globalCacheKey = (lang?: string): string =>
+  !lang || lang === "en" ? ":global" : `:global:${lang}`;
 
 const getGalleryStats = async (
   galleryId: string,
@@ -416,12 +57,28 @@ const getGalleryStats = async (
   lang?: string
 ): Promise<StatsResponse> => {
   const cacheable = isUnfilteredBase(filter);
-  const key = cacheKey(galleryId, lang);
+  const key = galleryCacheKey(galleryId, lang);
   if (cacheable) {
     const cached = cacheGet<StatsResponse>(key);
     if (cached) return cached;
   }
   const photos = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
+  const stats = computeStats(photos, filter);
+  if (cacheable) cacheSet(key, stats);
+  return stats;
+};
+
+const getGlobalStats = async (
+  filter?: FilterShape,
+  lang?: string
+): Promise<StatsResponse> => {
+  const cacheable = isUnfilteredBase(filter);
+  const key = globalCacheKey(lang);
+  if (cacheable) {
+    const cached = cacheGet<StatsResponse>(key);
+    if (cached) return cached;
+  }
+  const photos = (await db.loadPhotos(lang)) as Photo[];
   const stats = computeStats(photos, filter);
   if (cacheable) cacheSet(key, stats);
   return stats;

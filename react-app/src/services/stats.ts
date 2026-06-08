@@ -18,4 +18,13 @@ const getGalleryStats = async (
     })
   );
 
-export default { getGalleryStats };
+// Cross-gallery (admin-only) stats. Same response shape as the
+// gallery-scoped endpoint, so the client-side adapter +
+// collectTopics work unchanged regardless of scope.
+const getGlobalStats = async (
+  filter: ServerFilters,
+  lang?: string
+): Promise<GalleryStats> =>
+  unwrap(api.POST("/api/v1/stats", { body: { filter, lang } }));
+
+export default { getGalleryStats, getGlobalStats };

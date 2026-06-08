@@ -33,9 +33,38 @@ export const cacheSet = <T>(key: string, value: T): void => {
   cache.set(key, { value, storedAt: Date.now() });
 };
 
+// Gallery-scoped invalidation. Drops every cache entry whose key
+// matches `<galleryId>` or `<galleryId>:<lang>` — a multi-lang
+// instance accumulates separate cached responses per lang and
+// they all need to go on the same mutation.
 export const invalidateGallery = (galleryId: string): void => {
-  if (cache.delete(galleryId)) {
-    logger.debug("Stats cache: invalidated", { galleryId });
+  const prefix = `${galleryId}:`;
+  let dropped = 0;
+  for (const key of cache.keys()) {
+    if (key === galleryId || key.startsWith(prefix)) {
+      cache.delete(key);
+      dropped++;
+    }
+  }
+  if (dropped > 0) {
+    logger.debug("Stats cache: invalidated gallery", { galleryId, dropped });
+  }
+};
+
+// Global namespace invalidation. Drops every `:global` / `:global:lang`
+// entry. Photo writes call both this and `invalidateGallery` for the
+// linked galleries, since a single photo change shifts both views.
+export const invalidateGlobal = (): void => {
+  const prefix = ":global";
+  let dropped = 0;
+  for (const key of cache.keys()) {
+    if (key === prefix || key.startsWith(`${prefix}:`)) {
+      cache.delete(key);
+      dropped++;
+    }
+  }
+  if (dropped > 0) {
+    logger.debug("Stats cache: invalidated global", { dropped });
   }
 };
 

@@ -241,6 +241,66 @@ describe("cache", () => {
   });
 });
 
+describe("global (cross-gallery)", () => {
+  const postGlobal = async (
+    token: string | undefined,
+    body: Record<string, unknown> = {},
+    status = 200
+  ) =>
+    api
+      .post("/api/v1/stats/")
+      .set("Authorization", `Bearer ${token}`)
+      .send(body)
+      .expect(status);
+
+  test("admin → 200 covering every gallery's photos", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postGlobal(token);
+    // 5 photos in the fixture: gallery1photo, gallery12photo,
+    // gallery2photo, gallery3photo, orphanphoto.
+    expect(res.body.total).toBe(5);
+    // Countries from all photos, including the orphan's fi.
+    expect(Object.keys(res.body.byCategory.country).sort()).toEqual([
+      "fi",
+      "jp",
+      "nl",
+    ]);
+  });
+
+  test("guest blocked → 403 (auth-required, no admin bypass)", async () => {
+    await api.post("/api/v1/stats/").send({}).expect(403);
+  });
+
+  test("non-admin → 403", async () => {
+    const token = await loginUser(api, "plainuser");
+    await postGlobal(token, {}, 403);
+  });
+
+  test("filter narrows across every gallery", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postGlobal(token, {
+      filter: { general: { country: ["jp"] } },
+    });
+    // jp photos: gallery1photo, gallery2photo, gallery3photo = 3
+    expect(res.body.total).toBe(3);
+  });
+
+  test("photo update invalidates the global cache (next call sees the new value)", async () => {
+    const token = await loginUser(api, "admin");
+    const before = await postGlobal(token);
+    expect(before.body.byCategory.country.fi).toBe(1);
+    // Flip orphanphoto.jpg's country fi → nl.
+    await api
+      .put("/api/v1/photos/orphanphoto.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ taken: { location: { country: "nl" } } })
+      .expect(204);
+    const after = await postGlobal(token);
+    expect(after.body.byCategory.country.fi).toBeUndefined();
+    expect(after.body.byCategory.country.nl).toBe(2); // gallery12photo + orphanphoto
+  });
+});
+
 describe("unknown bucket", () => {
   test("photos with empty fields bucket under 'unknown'", async () => {
     const token = await loginUser(api, "admin");

@@ -1837,6 +1837,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Aggregated stats across all galleries (admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        lang?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            total: number;
+                            byCategory: {
+                                [key: string]: {
+                                    [key: string]: number;
+                                };
+                            };
+                            byYearMonth: {
+                                [key: string]: {
+                                    [key: string]: number;
+                                };
+                            };
+                            summary: {
+                                first?: string;
+                                last?: string;
+                                spanDays: number;
+                                spanYears: number;
+                                spanMonths: number;
+                                peakShape: {
+                                    [key: string]: string;
+                                };
+                                variety: {
+                                    [key: string]: number;
+                                };
+                            };
+                            daysInYear: {
+                                [key: string]: number;
+                            };
+                            daysInYearMonth: {
+                                [key: string]: {
+                                    [key: string]: number;
+                                };
+                            };
+                            byStateCountry: {
+                                [key: string]: string;
+                            };
+                            byCityCountry: {
+                                [key: string]: string;
+                            };
+                            byCityLocalized: {
+                                [key: string]: string;
+                            };
+                            categoryValues: {
+                                [key: string]: string[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
