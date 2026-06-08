@@ -73,6 +73,7 @@ interface Props {
   gallery: Gallery;
   year: number;
   month: number;
+  counts: Record<string, number>;
   maxCount: number;
   theme: ActiveTheme;
 }
@@ -81,6 +82,7 @@ const Month = ({
   gallery,
   year,
   month,
+  counts,
   maxCount,
   theme,
 }: Props): React.ReactElement => {
@@ -104,10 +106,10 @@ const Month = ({
                 {row.map((day, cellIndex) => (
                   <Day
                     key={cellIndex}
-                    gallery={gallery}
                     year={year}
                     month={month}
                     day={day}
+                    counts={counts}
                     maxCount={maxCount}
                     theme={theme}
                   />
