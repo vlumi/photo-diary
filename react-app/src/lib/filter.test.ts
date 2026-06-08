@@ -168,6 +168,57 @@ describe("removeCategory", () => {
     ).toStrictEqual({ settings: { aperture: { 2.8: ("dummy" as any) } } }));
 });
 
+describe("toServerFilters", () => {
+  const noop = () => true;
+  test("empty filters → empty object", () => {
+    expect(filter.toServerFilters({})).toEqual({});
+  });
+  test("extracts keys per topic / category", () => {
+    const filters = {
+      general: {
+        author: { Alice: noop, Bob: noop },
+        country: { jp: noop },
+      },
+      time: { year: { "2024": noop } },
+    };
+    expect(filter.toServerFilters(filters)).toEqual({
+      general: { author: ["Alice", "Bob"], country: ["jp"] },
+      time: { year: ["2024"] },
+    });
+  });
+  test("'unknown' key serialises to null", () => {
+    const filters = { general: { country: { unknown: noop, jp: noop } } };
+    expect(filter.toServerFilters(filters)).toEqual({
+      general: { country: [null, "jp"] },
+    });
+  });
+  test("empty inner key record drops the category", () => {
+    const filters = {
+      general: { author: {}, country: { jp: noop } },
+    };
+    expect(filter.toServerFilters(filters)).toEqual({
+      general: { country: ["jp"] },
+    });
+  });
+  test("topic with all-empty categories drops the topic", () => {
+    expect(filter.toServerFilters({ general: { author: {} } })).toEqual({});
+  });
+  test("compound JSON-encoded keys pass through (e.g. camera-lens)", () => {
+    const filters = {
+      gear: {
+        "camera-lens": {
+          '["FUJIFILM X-T5","FUJIFILM XF27mmF2.8"]': noop,
+        },
+      },
+    };
+    expect(filter.toServerFilters(filters)).toEqual({
+      gear: {
+        "camera-lens": ['["FUJIFILM X-T5","FUJIFILM XF27mmF2.8"]'],
+      },
+    });
+  });
+});
+
 describe("applyNewFilter", () => {
   let mockPhoto: any;
   beforeEach(() => {
