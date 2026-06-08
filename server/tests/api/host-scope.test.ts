@@ -1,16 +1,17 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { Agent } from "supertest";
+import { TEST_CONFIG, seedApiFixture } from "./fixture.js";
+
+vi.mock("../../lib/config/index.js", () => ({ default: TEST_CONFIG }));
 
 import { init } from "../../app.js";
-import dummyFactory from "../../db/dummy.js";
 import dbFacade from "../../db/index.js";
 import { createApi, loginUser } from "./helper.js";
 
-const db = dummyFactory();
 const { api } = createApi();
 
 beforeEach(async () => {
-  await db.init();
+  await seedApiFixture();
   // Pin two galleries to test hostnames. gallery3 stays unpinned so
   // we can exercise "off-scope gallery from a scoped host."
   await dbFacade.updateGallery("gallery1", {
