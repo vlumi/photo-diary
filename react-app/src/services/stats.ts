@@ -1,0 +1,21 @@
+import api, { unwrap } from "../lib/api";
+import type { paths } from "../lib/api-schema";
+
+import type { ServerFilters } from "../lib/filter";
+
+export type GalleryStats =
+  paths["/api/v1/galleries/{galleryId}/stats"]["post"]["responses"]["200"]["content"]["application/json"];
+
+const getGalleryStats = async (
+  galleryId: string,
+  filter: ServerFilters,
+  lang?: string
+): Promise<GalleryStats> =>
+  unwrap(
+    api.POST("/api/v1/galleries/{galleryId}/stats", {
+      params: { path: { galleryId } },
+      body: { filter, lang },
+    })
+  );
+
+export default { getGalleryStats };

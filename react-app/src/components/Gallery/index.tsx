@@ -309,6 +309,7 @@ const Gallery = ({
     if (isStats) {
       return (
         <Stats
+          galleryId={gallery.id()}
           photos={gallery.photos()}
           uniqueValues={uniqueValues}
           filters={filters}
