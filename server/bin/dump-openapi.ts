@@ -11,9 +11,9 @@
  * typed API client codegens against the committed file so the contract on
  * either side stays in lockstep.
  *
- * Boots the app (which initialises models against the dummy driver so the
- * server can start without a real DB) just long enough to call
- * `app.swagger()`, then exits.
+ * Boots the app against an in-memory SQLite DB (no on-disk state, no
+ * migration side-effects on the operator's instance) just long enough
+ * to call `app.swagger()`, then exits.
  */
 
 import { writeFileSync } from "node:fs";
@@ -32,8 +32,9 @@ const args = await yargs(hideBin(process.argv))
   .help()
   .parse();
 
-process.env.DB_DRIVER ??= "dummy";
 process.env.NODE_ENV ??= "test";
+process.env.DB_DRIVER ??= "sqlite3";
+process.env.DB_OPTS ??= ":memory:";
 
 const { app, init } = await import("../app.js");
 await init();

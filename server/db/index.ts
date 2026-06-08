@@ -13,7 +13,6 @@ import type {
 } from "./sqlite3/schema.js";
 
 const drivers = {
-  dummy: () => import("./dummy.js"),
   sqlite3: () => import("./sqlite3/index.js"),
 };
 
