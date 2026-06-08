@@ -5,7 +5,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import Topic from "./Topic";
 
-import stats, { type UniqueValues } from "../../../lib/stats";
+import stats from "../../../lib/stats";
 import filter from "../../../lib/filter";
 import { adaptServerStats } from "../../../lib/stats-adapter";
 import statsService from "../../../services/stats";
@@ -34,13 +34,13 @@ const Root = styled.div`
 
 interface Props {
   children?: React.ReactNode;
-  // Optional — when provided, stats come from the gallery-scoped
-  // server endpoint (single bucket aggregation, server cache).
-  // When absent (GlobalStats / cross-gallery views), falls back to
-  // the in-memory `collectStatistics` walk over `photos`.
+  // Scope selector. Provide `galleryId` for the gallery-scoped
+  // `/galleries/:id/stats` endpoint, or `globalScope` for the
+  // cross-gallery `/stats` endpoint (admin-only). Exactly one is
+  // required.
   galleryId?: string;
+  globalScope?: boolean;
   photos: Photo[];
-  uniqueValues: UniqueValues;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   lang: string;
@@ -52,8 +52,8 @@ interface Props {
 const Stats = ({
   children,
   galleryId,
+  globalScope = false,
   photos,
-  uniqueValues,
   filters,
   setFilters,
   lang,
@@ -65,42 +65,33 @@ const Stats = ({
 
   const { t } = useTranslation();
 
-  // Gallery-scoped path: server computes the buckets; client only
-  // renders. Filter + language flow into the query key so a chip
-  // toggle or language switch refetches (filtered combos bypass the
-  // server-side cache by design; unfiltered shares the per-gallery
-  // cache entry).
+  // Filter + language flow into the query key so a chip toggle or
+  // language switch refetches (filtered combos bypass the
+  // server-side cache by design; unfiltered shares the per-scope
+  // cache entry — per-gallery for galleryId, single `:global` key
+  // for globalScope).
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
   );
+  const scopeKey = galleryId ?? (globalScope ? "__global__" : undefined);
   const { data: serverStats } = useQuery({
-    queryKey: ["stats", galleryId, serverFilters, lang],
+    queryKey: ["stats", scopeKey, serverFilters, lang],
     queryFn: () =>
-      statsService.getGalleryStats(galleryId!, serverFilters, lang),
-    enabled: !!galleryId,
+      galleryId
+        ? statsService.getGalleryStats(galleryId, serverFilters, lang)
+        : statsService.getGlobalStats(serverFilters, lang),
+    enabled: !!scopeKey,
     // Hold the prior render while the new filter combo fetches —
     // a chip toggle gets an in-place update instead of unmounting
     // the whole topic tree behind a "Loading" placeholder.
     placeholderData: keepPreviousData,
   });
 
-  // Cross-gallery fallback (GlobalStats has no gallery context yet).
-  // Drops once a global-stats endpoint lands.
-  const [clientStats, setClientStats] = React.useState<unknown>(undefined);
-  React.useEffect(() => {
-    if (galleryId) return;
-    stats
-      .generate(photos, uniqueValues)
-      .then((d: unknown) => setClientStats(d));
-  }, [galleryId, photos, uniqueValues]);
-
-  const data = React.useMemo(() => {
-    if (galleryId) {
-      return serverStats ? adaptServerStats(serverStats) : undefined;
-    }
-    return clientStats;
-  }, [galleryId, serverStats, clientStats]);
+  const data = React.useMemo(
+    () => (serverStats ? adaptServerStats(serverStats) : undefined),
+    [serverStats]
+  );
 
   const mapPhotos = React.useMemo(
     () => (hideMap ? [] : photos.filter((photo) => photo.hasCoordinates())),
