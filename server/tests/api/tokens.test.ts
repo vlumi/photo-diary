@@ -1,3 +1,8 @@
+import { vi } from "vitest";
+import { TEST_CONFIG, seedApiFixture } from "./fixture.js";
+
+vi.mock("../../lib/config/index.js", () => ({ default: TEST_CONFIG }));
+
 import { init } from "../../app.js";
 import { _resetLoginRateLimitForTests } from "../../controllers/tokens-v1.js";
 import { createApi, loginUser, loginUserPair } from "./helper.js";
@@ -5,6 +10,7 @@ import { createApi, loginUser, loginUserPair } from "./helper.js";
 const { api } = createApi();
 
 beforeEach(async () => {
+  await seedApiFixture();
   await init();
   // The login throttle holds in-memory per-IP failure counts that persist
   // across tests (supertest always connects from 127.0.0.1, so every test
