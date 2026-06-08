@@ -12,6 +12,7 @@ import {
 import Root, { UpButton } from "../Navigation";
 import Link from "../Link";
 
+import useFilteredCalendar from "../../../lib/useFilteredCalendar";
 import type { Gallery } from "../../../models/GalleryModel";
 
 const Group = styled.div`
@@ -53,13 +54,14 @@ const Navigation = ({
   month,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
-  const prevVisibility = gallery.isFirstMonth(year, month) ? "hidden" : "";
-  const nextVisibility = gallery.isLastMonth(year, month) ? "hidden" : "";
+  const cal = useFilteredCalendar(gallery.id());
+  const prevVisibility = cal.isFirstMonth(year, month) ? "hidden" : "";
+  const nextVisibility = cal.isLastMonth(year, month) ? "hidden" : "";
 
-  const [firstYear, firstMonth] = gallery.firstMonth();
-  const [previousYear, previousMonth] = gallery.previousMonth(year, month);
-  const [nextYear, nextMonth] = gallery.nextMonth(year, month);
-  const [lastYear, lastMonth] = gallery.lastMonth();
+  const [firstYear, firstMonth] = cal.firstMonth();
+  const [previousYear, previousMonth] = cal.previousMonth(year, month);
+  const [nextYear, nextMonth] = cal.nextMonth(year, month);
+  const [lastYear, lastMonth] = cal.lastMonth();
   return (
     <Root>
       <UpButton

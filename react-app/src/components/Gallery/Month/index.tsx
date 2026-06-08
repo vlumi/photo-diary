@@ -9,6 +9,7 @@ import Navigation from "./Navigation";
 import Content from "./Content";
 
 import useKeyPress from "../../../lib/keypress";
+import useFilteredCalendar from "../../../lib/useFilteredCalendar";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
@@ -43,25 +44,30 @@ const Month = ({
   const navigate = useNavigate();
 
   const { t } = useTranslation();
+  const cal = useFilteredCalendar(gallery.id());
 
   const handlMoveToFirst = () => {
-    if (!gallery.isFirstMonth(year, month)) {
-      navigate(gallery.path(...gallery.firstMonth()));
+    const [y, m] = cal.firstMonth();
+    if (y !== undefined && m !== undefined && !cal.isFirstMonth(year, month)) {
+      navigate(gallery.path(y, m));
     }
   };
   const handlMoveToPrevious = () => {
-    if (!gallery.isFirstMonth(year, month)) {
-      navigate(gallery.path(...gallery.previousMonth(year, month)));
+    const [y, m] = cal.previousMonth(year, month);
+    if (y !== undefined && m !== undefined) {
+      navigate(gallery.path(y, m));
     }
   };
   const handlMoveToNext = () => {
-    if (!gallery.isLastMonth(year, month)) {
-      navigate(gallery.path(...gallery.nextMonth(year, month)));
+    const [y, m] = cal.nextMonth(year, month);
+    if (y !== undefined && m !== undefined) {
+      navigate(gallery.path(y, m));
     }
   };
   const handlMoveToLast = () => {
-    if (!gallery.isLastMonth(year, month)) {
-      navigate(gallery.path(...gallery.lastMonth()));
+    const [y, m] = cal.lastMonth();
+    if (y !== undefined && m !== undefined && !cal.isLastMonth(year, month)) {
+      navigate(gallery.path(y, m));
     }
   };
 
