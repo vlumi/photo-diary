@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import EpochAge from "../EpochAge";
 import EpochDayIndex from "../EpochDayIndex";
@@ -9,6 +10,12 @@ import Thumbnails from "../Thumbnails";
 import Link from "../Link";
 
 import calendar from "../../../lib/calendar";
+import filter from "../../../lib/filter";
+import galleryPhotosService from "../../../services/gallery-photos";
+import PhotoModel, {
+  type Photo as PhotoT,
+} from "../../../models/PhotoModel";
+import { useFiltersStore } from "../../../stores";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
@@ -85,6 +92,51 @@ const Content = ({
   modalActive,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
+
+  // Per-view fetch (#406): server returns the month's photos
+  // already filter-narrowed, so we group them by day client-side
+  // and skip the in-memory gallery.photos walk.
+  const filters = useFiltersStore((s) => s.filters);
+  const serverFilters = React.useMemo(
+    () => filter.toServerFilters(filters),
+    [filters]
+  );
+  const { data: photosRaw } = useQuery({
+    queryKey: [
+      "gallery-photos-month",
+      gallery.id(),
+      year,
+      month,
+      serverFilters,
+      lang,
+    ],
+    queryFn: () =>
+      galleryPhotosService.query(gallery.id(), {
+        filter: serverFilters,
+        year,
+        month,
+        lang,
+      }),
+    placeholderData: keepPreviousData,
+  });
+  const photosByDay = React.useMemo(() => {
+    const out: Record<number, PhotoT[]> = {};
+    for (const raw of (photosRaw ?? []) as Array<Record<string, unknown>>) {
+      const photo = PhotoModel(raw);
+      if (!photo) continue;
+      const d = photo.day();
+      if (!out[d]) out[d] = [];
+      out[d].push(photo);
+    }
+    return out;
+  }, [photosRaw]);
+  const daysWithPhotos = React.useMemo(
+    () =>
+      Object.keys(photosByDay)
+        .map(Number)
+        .sort((a, b) => a - b),
+    [photosByDay]
+  );
 
   // RAF defers past ScrollToPosition's setTimeout(0) — without that delay
   // the parent's scroll restore fires last and undoes this jump. While
@@ -164,7 +216,7 @@ const Content = ({
       <Thumbnails
         key={"" + year + month + d}
         gallery={gallery}
-        photos={gallery.photos(year, month, d)}
+        photos={photosByDay[d] ?? []}
         lang={lang}
         countryData={countryData}
         highlighted={isHighlighted}
@@ -191,7 +243,7 @@ const Content = ({
   return (
     <>
       {children}
-      <Root>{gallery.mapDays(year, month, renderDay)}</Root>
+      <Root>{daysWithPhotos.map(renderDay)}</Root>
     </>
   );
 };
