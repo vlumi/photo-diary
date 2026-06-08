@@ -718,3 +718,110 @@ describe("As publicuser", () => {
   });
 });
 
+
+// New filtered + scoped query endpoint (#406) — drives the
+// per-view fetch the public gallery viewer migrates to.
+describe("POST /:galleryId/query (filtered + scoped fetch)", () => {
+  const postQuery = (
+    token: string | undefined,
+    galleryId: string,
+    body: Record<string, unknown> = {},
+    status = 200
+  ) => {
+    const req = api
+      .post(`/api/v1/gallery-photos/${galleryId}/query`)
+      .send(body);
+    if (token) req.set("Authorization", `Bearer ${token}`);
+    return req.expect(status);
+  };
+
+  test("admin: empty body returns the whole gallery", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postQuery(token, "gallery1");
+    expect(res.body.length).toBe(2);
+  });
+
+  test("admin: year scope narrows the result", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postQuery(token, "gallery1", { year: 2018 });
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].id).toBe("gallery1photo.jpg");
+  });
+
+  test("admin: month + year scope narrows further", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postQuery(token, "gallery1", { year: 2020, month: 7 });
+    expect(res.body.length).toBe(1);
+  });
+
+  test("admin: filter wire shape narrows by country", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postQuery(token, "gallery1", {
+      filter: { general: { country: ["jp"] } },
+    });
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].id).toBe("gallery1photo.jpg");
+  });
+
+  test("filter + scope compose (AND)", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postQuery(token, "gallery1", {
+      year: 2020,
+      filter: { general: { country: ["jp"] } },
+    });
+    expect(res.body.length).toBe(0);
+  });
+
+  test("guest blocked from gallery1 → empty array (privacy collapse)", async () => {
+    const res = await postQuery(undefined, "gallery1");
+    expect(res.body).toEqual([]);
+  });
+
+  test(":guest grant on gallery3 → anon allowed", async () => {
+    const res = await postQuery(undefined, "gallery3");
+    expect(res.body.length).toBe(1);
+  });
+});
+
+describe("POST /:galleryId/counts (year heatmap)", () => {
+  const postCounts = (
+    token: string | undefined,
+    galleryId: string,
+    body: Record<string, unknown> = {},
+    status = 200
+  ) => {
+    const req = api
+      .post(`/api/v1/gallery-photos/${galleryId}/counts`)
+      .send(body);
+    if (token) req.set("Authorization", `Bearer ${token}`);
+    return req.expect(status);
+  };
+
+  test("admin: keyed by YYYY-MM-DD across every year photographed", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postCounts(token, "gallery1");
+    expect(res.body).toEqual({
+      "2018-05-04": 1,
+      "2020-07-04": 1,
+    });
+  });
+
+  test("admin: year scope narrows the bucket set", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postCounts(token, "gallery1", { year: 2018 });
+    expect(res.body).toEqual({ "2018-05-04": 1 });
+  });
+
+  test("filter narrows the bucket set", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postCounts(token, "gallery1", {
+      filter: { general: { country: ["jp"] } },
+    });
+    expect(res.body).toEqual({ "2018-05-04": 1 });
+  });
+
+  test("guest blocked from gallery1 → empty object", async () => {
+    const res = await postCounts(undefined, "gallery1");
+    expect(res.body).toEqual({});
+  });
+});
