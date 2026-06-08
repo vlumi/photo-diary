@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
-import { invalidateGallery } from "../lib/stats-cache.js";
+import { invalidateGallery, invalidateGlobal } from "../lib/stats-cache.js";
 import {
   applyFilter,
   countryMismatch as isCountryMismatch,
@@ -243,13 +243,18 @@ const invalidateStatsForPhoto = async (photoId: string): Promise<void> => {
   for (const galleryId of await galleryIdsForPhoto(photoId)) {
     invalidateGallery(galleryId);
   }
+  // Photo-level mutations also shift the cross-gallery (global)
+  // view, regardless of which galleries the photo is linked to.
+  invalidateGlobal();
 };
 
 const createPhoto = async (photo: { id: string } & Record<string, any>) => {
   logger.debug("Creating photo", { id: photo.id });
   await db.createPhoto(photo);
-  // Fresh photo isn't linked yet; the subsequent link call from the
-  // converter / admin UI will invalidate the receiving gallery.
+  // Fresh photo isn't linked to any gallery yet (gallery cache
+  // hits unchanged), but it IS in the cross-gallery catalogue —
+  // global stats must rebuild.
+  invalidateGlobal();
 };
 
 const getPhoto = async (photoId: string) => {
@@ -293,4 +298,5 @@ const deletePhoto = async (photoId: string) => {
   await db.unlinkAllGalleries(photoId);
   await db.deletePhoto(photoId);
   for (const galleryId of galleries) invalidateGallery(galleryId);
+  invalidateGlobal();
 };

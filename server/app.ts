@@ -176,7 +176,8 @@ await app.register(groupsV1.plugin, { prefix: "/api/v1/groups" });
 await app.register(groupGalleryV1.plugin, {
   prefix: "/api/v1/group-gallery",
 });
-await app.register(statsV1.plugin, { prefix: "/api/v1/galleries" });
+await app.register(statsV1.galleryPlugin, { prefix: "/api/v1/galleries" });
+await app.register(statsV1.globalPlugin, { prefix: "/api/v1/stats" });
 
 // Double-duty 404 handler: serve index.html for SPA routes so
 // React Router can resolve deep links (refreshing /m/photos, or

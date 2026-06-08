@@ -2,7 +2,7 @@ import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
-import { requireScopeMatches } from "../lib/host-scope.js";
+import { requireScopeMatches, requireUnscoped } from "../lib/host-scope.js";
 import statsFactory from "../models/stats.js";
 import type { FilterShape } from "../lib/photo-filter-eval.js";
 
@@ -61,13 +61,8 @@ const StatsResponse = Type.Object({
 
 const TAGS = ["stats"];
 
-const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
-  /**
-   * Aggregated stats for one gallery. Body carries the same filter
-   * shape `useFiltersStore` produces on the client (topic / category
-   * / keys). Empty body returns the unfiltered base — slice 4 will
-   * add a single-key cache for that case.
-   */
+// Gallery-scoped stats. Mounted at `/api/v1/galleries`.
+const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post(
     "/:galleryId/stats",
     {
@@ -95,4 +90,30 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 };
 
-export default { init, plugin };
+// Cross-gallery stats. Mounted at `/api/v1/stats`. Admin-only and
+// rejected on hostname-bound instances — same surface area as the
+// other unscoped admin routes.
+const globalPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
+  fastify.post(
+    "/",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Aggregated stats across all galleries (admin)",
+        body: StatsBody,
+        response: { 200: StatsResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      requireUnscoped(request);
+      await authorizer.authorizeAdmin(request.user.id);
+      return await model.getGlobalStats(
+        request.body.filter as FilterShape | undefined,
+        request.body.lang
+      );
+    }
+  );
+};
+
+export default { init, galleryPlugin, globalPlugin };
