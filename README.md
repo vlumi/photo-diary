@@ -418,16 +418,13 @@ Active milestones on the way to 1.0, plus the far-out 2.0 direction. Each bullet
 
 ## Backlog
 
-Ideas without a milestone yet — too far out to schedule, kept here so they don't get lost.
+Themes loosely held for later — full list lives as open issues without a milestone on [GitHub](https://github.com/vlumi/photo-diary/issues?q=is%3Aissue+is%3Aopen+no%3Amilestone).
 
-- **Dynamic display sizes** (#262) — pick the smallest rendition that covers the viewport, `srcset`-style.
-- **Photo license + original-size download** (#263) — license metadata on the photo row + a gated download path for `original/` bytes.
-- **Range filters for continuous variables** (#264) — time, focal length, aperture, etc. Coordinate-radius dropped in favour of place-categorical filtering after #246.
-- **Non-calendar gallery view** (#280) — alternative renderer for galleries that aren't date-shaped.
-- **Map modal: keep open across prev/next month/year navigation** (#321) — restores the cross-month/year geographic sweep that the inline-footer-map workflow had before the modal-isation in #313.
-- **Filter pills: edit value in place** (#342) — clicking an existing filter's value opens the same selector the topic-adder uses, so changing country=jp → fi takes two clicks instead of four.
-- **Decide how to handle location localization in Finnish** (#362) — open localization-policy question for FI exonyms.
-- **Expose subdivision-name data as a reusable resource** (#366) — pull out the per-language subdivision dataset for use beyond this app.
+- **Media delivery** — viewport-sized rendition selection, photo license metadata + gated original-bytes download.
+- **Filter & navigation UX** — range filters for continuous variables (time, focal length, aperture), edit-in-place filter pills, map modal that survives month / year navigation.
+- **Gallery shape** — alternative renderers for galleries that aren't calendar-shaped.
+- **Localization & data** — Finnish exonyms policy, per-language subdivision-name dataset as a reusable resource beyond this app.
+- **Admin convenience** — runtime-overridable instance defaults (`DEFAULT_GALLERY`, `DEFAULT_THEME`, beta feature toggles) editable from `/m/` without an `.env` round-trip.
 
 ## Version History
 
