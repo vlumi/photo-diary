@@ -1,17 +1,18 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { TEST_CONFIG, seedApiFixture } from "../api/fixture.js";
 
-import dbFactory from "../../db/dummy.js";
+vi.mock("../../lib/config/index.js", () => ({ default: TEST_CONFIG }));
+
 import CONST from "../../lib/constants.js";
 import { InvalidTokenError, TokenExpiredError } from "../../lib/errors.js";
 import tokenFactory from "../../models/token.js";
 
-const db = dbFactory();
 const model = tokenFactory();
 
 beforeEach(async () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-05-23T00:00:00Z"));
-  await db.init();
+  await seedApiFixture();
   await model.init();
 });
 

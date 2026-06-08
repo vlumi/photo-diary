@@ -1,13 +1,15 @@
-import { init } from "../../app.js";
-import dummyFactory from "../../db/dummy.js";
-import { createApi, loginUser } from "./helper.js";
+import { vi } from "vitest";
+import { TEST_CONFIG, seedApiFixture } from "./fixture.js";
 
-const db = dummyFactory();
+vi.mock("../../lib/config/index.js", () => ({ default: TEST_CONFIG }));
+
+import { init } from "../../app.js";
+import { createApi, loginUser } from "./helper.js";
 
 const { api } = createApi();
 
 beforeEach(async () => {
-  await db.init();
+  await seedApiFixture();
   await init();
 });
 
