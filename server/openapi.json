@@ -2846,6 +2846,163 @@
           }
         }
       }
+    },
+    "/api/v1/galleries/{galleryId}/stats": {
+      "post": {
+        "summary": "Aggregated stats for a gallery (gallery view)",
+        "tags": [
+          "stats"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filter": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "galleryId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "total",
+                    "byCategory",
+                    "byYearMonth",
+                    "summary",
+                    "daysInYear",
+                    "daysInYearMonth"
+                  ],
+                  "properties": {
+                    "total": {
+                      "type": "number"
+                    },
+                    "byCategory": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "byYearMonth": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "required": [
+                        "spanDays",
+                        "spanYears",
+                        "spanMonths",
+                        "peakShape",
+                        "variety"
+                      ],
+                      "properties": {
+                        "first": {
+                          "type": "string"
+                        },
+                        "last": {
+                          "type": "string"
+                        },
+                        "spanDays": {
+                          "type": "number"
+                        },
+                        "spanYears": {
+                          "type": "number"
+                        },
+                        "spanMonths": {
+                          "type": "number"
+                        },
+                        "peakShape": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "variety": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "daysInYear": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    "daysInYearMonth": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "tags": [
@@ -2880,6 +3037,10 @@
     {
       "name": "group-gallery",
       "description": "Group-level gallery grants (admin)"
+    },
+    {
+      "name": "stats",
+      "description": "Aggregated gallery stats"
     }
   ]
 }
