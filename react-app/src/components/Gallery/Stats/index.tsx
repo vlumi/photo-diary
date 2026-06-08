@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import Topic from "./Topic";
 
@@ -79,6 +79,10 @@ const Stats = ({
     queryFn: () =>
       statsService.getGalleryStats(galleryId!, serverFilters, lang),
     enabled: !!galleryId,
+    // Hold the prior render while the new filter combo fetches —
+    // a chip toggle gets an in-place update instead of unmounting
+    // the whole topic tree behind a "Loading" placeholder.
+    placeholderData: keepPreviousData,
   });
 
   // Cross-gallery fallback (GlobalStats has no gallery context yet).
