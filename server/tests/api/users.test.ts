@@ -1,13 +1,15 @@
-import { init } from "../../app.js";
-import dummyFactory from "../../db/dummy.js";
-import { createApi, loginUser } from "./helper.js";
+import { vi } from "vitest";
+import { TEST_CONFIG, seedApiFixture } from "./fixture.js";
 
-const db = dummyFactory();
+vi.mock("../../lib/config/index.js", () => ({ default: TEST_CONFIG }));
+
+import { init } from "../../app.js";
+import { createApi, loginUser } from "./helper.js";
 
 const { api } = createApi();
 
 beforeEach(async () => {
-  await db.init();
+  await seedApiFixture();
   await init();
 });
 
@@ -40,7 +42,9 @@ describe("As admin", () => {
     const response = await getUsers(token);
     const users = response.body;
     expect(users).toBeDefined();
-    expect(users.length).toBe(9);
+    // 9 named users in the fixture + `:guest` (seeded by
+    // migration 015 so the admin Users list always surfaces it).
+    expect(users.length).toBe(10);
     const admin = users.find((user: { id: string }) => user.id === "admin");
     expect(admin).toBeDefined();
     expect(admin.id).toBe("admin");
