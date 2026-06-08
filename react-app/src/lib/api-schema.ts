@@ -1189,6 +1189,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gallery-photos/{galleryId}/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Filtered + view-scoped photo fetch */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    galleryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        year?: number;
+                        month?: number;
+                        day?: number;
+                        lang?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        }[];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gallery-photos/{galleryId}/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Per-day photo counts (Year heatmap) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    galleryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        year?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gallery-photos/{galleryId}/{photoId}": {
         parameters: {
             query?: never;

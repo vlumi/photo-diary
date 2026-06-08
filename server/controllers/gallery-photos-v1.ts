@@ -27,6 +27,36 @@ const LangQuery = Type.Object({
 // Permissive — joined photo metadata, wider than the contract.
 const PhotoItem = Type.Object({}, { additionalProperties: true });
 const GalleryPhotosListResponse = Type.Array(PhotoItem);
+
+// Filter shape mirrors stats-v1.ts — same wire envelope.
+// `additionalProperties: true` so the evaluator can drop unknown
+// categories instead of rejecting the whole payload.
+const FilterKey = Type.Union([
+  Type.String(),
+  Type.Number(),
+  Type.Boolean(),
+  Type.Null(),
+]);
+const FilterCategory = Type.Array(FilterKey);
+const FilterTopic = Type.Record(Type.String(), FilterCategory, {
+  additionalProperties: true,
+});
+const FilterSchema = Type.Record(Type.String(), FilterTopic, {
+  additionalProperties: true,
+});
+const QueryBody = Type.Object({
+  filter: Type.Optional(FilterSchema),
+  year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
+  month: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
+  day: Type.Optional(Type.Integer({ minimum: 1, maximum: 31 })),
+  lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
+});
+const CountsBody = Type.Object({
+  filter: Type.Optional(FilterSchema),
+  year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
+});
+const CountsResponse = Type.Record(Type.String(), Type.Number());
+
 const TAGS = ["gallery-photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -65,6 +95,90 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
           return [];
+        }
+        throw error;
+      }
+    }
+  );
+
+  /**
+   * Per-view + filtered fetch (#406). Body carries the same
+   * FilterShape `useFiltersStore` produces on the client; optional
+   * year/month/day narrows to the calendar slice the public viewer
+   * is currently on. Same auth + privacy semantics as the
+   * unfiltered GET.
+   */
+  fastify.post(
+    "/:galleryId/query",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Filtered + view-scoped photo fetch",
+        params: GalleryIdParam,
+        body: QueryBody,
+        response: { 200: GalleryPhotosListResponse },
+      },
+    },
+    async (request) => {
+      try {
+        requireScopeMatches(request, request.params.galleryId);
+        await authorizer.authorizeGalleryView(
+          request.user.id,
+          request.params.galleryId
+        );
+        const photos = await model.queryGalleryPhotos(
+          request.params.galleryId,
+          {
+            filter: request.body.filter,
+            year: request.body.year,
+            month: request.body.month,
+            day: request.body.day,
+            lang: request.body.lang,
+          }
+        );
+        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
+          maskCoordinates(photos as Parameters<typeof maskCoordinates>[0]);
+        }
+        return photos;
+      } catch (error) {
+        if (error instanceof AccessError || error instanceof NotFoundError) {
+          return [];
+        }
+        throw error;
+      }
+    }
+  );
+
+  /**
+   * Per-day photo counts for the Year heatmap. Body carries the
+   * same filter wire-shape as `/query`; optional `year` narrows to
+   * a single year. Map keyed by `YYYY-MM-DD`.
+   */
+  fastify.post(
+    "/:galleryId/counts",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Per-day photo counts (Year heatmap)",
+        params: GalleryIdParam,
+        body: CountsBody,
+        response: { 200: CountsResponse },
+      },
+    },
+    async (request) => {
+      try {
+        requireScopeMatches(request, request.params.galleryId);
+        await authorizer.authorizeGalleryView(
+          request.user.id,
+          request.params.galleryId
+        );
+        return await model.queryGalleryPhotoCounts(
+          request.params.galleryId,
+          { filter: request.body.filter, year: request.body.year }
+        );
+      } catch (error) {
+        if (error instanceof AccessError || error instanceof NotFoundError) {
+          return {};
         }
         throw error;
       }
