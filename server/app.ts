@@ -21,6 +21,7 @@ import galleryPhotosV1 from "./controllers/gallery-photos-v1.js";
 import userGalleryV1 from "./controllers/user-gallery-v1.js";
 import groupsV1 from "./controllers/groups-v1.js";
 import groupGalleryV1 from "./controllers/group-gallery-v1.js";
+import statsV1 from "./controllers/stats-v1.js";
 
 import middleware from "./lib/middleware/index.js";
 import { NotFoundError } from "./lib/errors.js";
@@ -95,6 +96,7 @@ await app.register(fastifySwagger, {
         name: "group-gallery",
         description: "Group-level gallery grants (admin)",
       },
+      { name: "stats", description: "Aggregated gallery stats" },
     ],
     components: {
       securitySchemes: {
@@ -174,6 +176,7 @@ await app.register(groupsV1.plugin, { prefix: "/api/v1/groups" });
 await app.register(groupGalleryV1.plugin, {
   prefix: "/api/v1/group-gallery",
 });
+await app.register(statsV1.plugin, { prefix: "/api/v1/galleries" });
 
 // Double-duty 404 handler: serve index.html for SPA routes so
 // React Router can resolve deep links (refreshing /m/photos, or
@@ -198,6 +201,7 @@ export const init = async () => {
   await userGalleryV1.init();
   await groupsV1.init();
   await groupGalleryV1.init();
+  await statsV1.init();
   await app.ready();
   logger.debug("Initialize app done");
 };
