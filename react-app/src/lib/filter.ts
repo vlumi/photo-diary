@@ -128,6 +128,38 @@ const applyNewFilter = (
   return newFilters;
 };
 
+// Server wire shape: drop the FilterFn closures, extract just the
+// keys per (topic, category). Used by the upcoming stats endpoint
+// rewire — the server eval expects `null` for the "<unknown>"
+// bucket, so this serializer maps the client's `stats.UNKNOWN`
+// sentinel (the literal string "unknown") to `null` on the wire.
+// JSON-encoded compound keys (camera-lens, city) keep their string
+// form; the server eval parses them at predicate time.
+export type ServerFilterKey = string | null;
+export type ServerFilters = Record<
+  string,
+  Record<string, ServerFilterKey[]>
+>;
+
+const UNKNOWN_SENTINEL = "unknown";
+
+const toServerKey = (key: string): ServerFilterKey =>
+  key === UNKNOWN_SENTINEL ? null : key;
+
+const toServerFilters = (filters: Filters): ServerFilters => {
+  const out: ServerFilters = {};
+  for (const [topic, categories] of Object.entries(filters)) {
+    const topicOut: Record<string, ServerFilterKey[]> = {};
+    for (const [category, keyRecord] of Object.entries(categories)) {
+      const keys = Object.keys(keyRecord);
+      if (keys.length === 0) continue;
+      topicOut[category] = keys.map(toServerKey);
+    }
+    if (Object.keys(topicOut).length > 0) out[topic] = topicOut;
+  }
+  return out;
+};
+
 export default {
   topics,
   categories,
@@ -136,4 +168,5 @@ export default {
   newEmptyCategory,
   removeCategory,
   applyNewFilter,
+  toServerFilters,
 };
