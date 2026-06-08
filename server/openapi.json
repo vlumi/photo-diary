@@ -2926,7 +2926,8 @@
                     "daysInYearMonth",
                     "byStateCountry",
                     "byCityCountry",
-                    "byCityLocalized"
+                    "byCityLocalized",
+                    "categoryValues"
                   ],
                   "properties": {
                     "total": {
@@ -3020,6 +3021,15 @@
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
+                      }
+                    },
+                    "categoryValues": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       }
                     }
                   }

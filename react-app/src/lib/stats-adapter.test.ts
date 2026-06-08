@@ -19,6 +19,7 @@ const emptyServer: GalleryStats = {
   byStateCountry: {},
   byCityCountry: {},
   byCityLocalized: {},
+  categoryValues: {},
 };
 
 describe("adaptServerStats", () => {
@@ -103,6 +104,33 @@ describe("adaptServerStats", () => {
       '["jp","jp-13","Tokyo"]': "東京",
     });
     expect(out.count.byStateCountry).toEqual({ "jp-13": "jp" });
+  });
+
+  test("categoryValues universe pads filtered buckets with 0 counts", () => {
+    const server: GalleryStats = {
+      ...emptyServer,
+      total: 1,
+      byCategory: {
+        country: { jp: 1 },
+      },
+      categoryValues: {
+        country: ["fi", "jp", "us"],
+      },
+    };
+    expect(adaptServerStats(server).count.byCountry).toEqual({
+      fi: 0,
+      jp: 1,
+      us: 0,
+    });
+  });
+
+  test("categoryValues missing for a category → only the filtered keys appear", () => {
+    const server: GalleryStats = {
+      ...emptyServer,
+      byCategory: { country: { jp: 5 } },
+      // No `country` key in categoryValues — older fixtures shouldn't crash.
+    };
+    expect(adaptServerStats(server).count.byCountry).toEqual({ jp: 5 });
   });
 
   test("ISO date parsing tolerates malformed strings (defensively undefined)", () => {

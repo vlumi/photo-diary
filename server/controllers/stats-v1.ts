@@ -56,6 +56,7 @@ const StatsResponse = Type.Object({
   byStateCountry: Type.Record(Type.String(), Type.String()),
   byCityCountry: Type.Record(Type.String(), Type.String()),
   byCityLocalized: Type.Record(Type.String(), Type.String()),
+  categoryValues: Type.Record(Type.String(), Type.Array(Type.String())),
 });
 
 const TAGS = ["stats"];

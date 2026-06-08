@@ -18,6 +18,25 @@ type YearMonthCounts = Record<string, Record<string, number>>;
 const emptyCounts: Counts = {};
 const emptyYearMonth: YearMonthCounts = {};
 
+// Pad the filtered bucket map with zeros for every key in the
+// universe (computed by the server from the full unfiltered
+// gallery). Lets the filter UI surface "add this value" chips for
+// rows the active filter is currently excluding — multi-select
+// unions still need every possible value reachable from a click.
+const padWithUniverse = (
+  filtered: Counts | undefined,
+  universe: string[] | undefined
+): Counts => {
+  const out: Counts = {};
+  if (universe) {
+    for (const key of universe) out[key] = 0;
+  }
+  if (filtered) {
+    for (const [key, value] of Object.entries(filtered)) out[key] = value;
+  }
+  return out;
+};
+
 // Server emits ISO date strings ("2018-05-04"); the client's
 // summary code wants `{ year, month, day }` numerics.
 const parseIsoDate = (
@@ -77,46 +96,50 @@ export interface ClientStatsData {
   };
 }
 
-export const adaptServerStats = (server: GalleryStats): ClientStatsData => ({
-  count: {
-    total: server.total,
-    byTime: {
-      byYear: server.byCategory.year ?? emptyCounts,
-      byYearMonth: server.byYearMonth ?? emptyYearMonth,
-      byMonth: server.byCategory.month ?? emptyCounts,
-      byWeekday: server.byCategory.weekday ?? emptyCounts,
-      byHour: server.byCategory.hour ?? emptyCounts,
-      daysInYear: server.daysInYear ?? emptyCounts,
-      daysInYearMonth: server.daysInYearMonth ?? emptyYearMonth,
-      minDate: parseIsoDate(server.summary.first),
-      maxDate: parseIsoDate(server.summary.last),
-      days: server.summary.spanDays,
+export const adaptServerStats = (server: GalleryStats): ClientStatsData => {
+  const cv = server.categoryValues ?? {};
+  const pad = (category: string): Counts =>
+    padWithUniverse(server.byCategory[category], cv[category]);
+  return {
+    count: {
+      total: server.total,
+      byTime: {
+        byYear: pad("year"),
+        byYearMonth: server.byYearMonth ?? emptyYearMonth,
+        byMonth: pad("month"),
+        byWeekday: pad("weekday"),
+        byHour: pad("hour"),
+        daysInYear: server.daysInYear ?? emptyCounts,
+        daysInYearMonth: server.daysInYearMonth ?? emptyYearMonth,
+        minDate: parseIsoDate(server.summary.first),
+        maxDate: parseIsoDate(server.summary.last),
+        days: server.summary.spanDays,
+      },
+      byExposure: {
+        byFocalLength: pad("focalLength"),
+        byFocalLength35mmEquiv: pad("focalLength35mmEquiv"),
+        byAperture: pad("aperture"),
+        byExposureTime: pad("exposureTime"),
+        byIso: pad("iso"),
+        byExposureValue: pad("ev"),
+        byLightValue: pad("lv"),
+        byResolution: pad("resolution"),
+        byOrientation: pad("orientation"),
+        byAspectRatio: pad("aspectRatio"),
+      },
+      byGear: {
+        byCameraMake: pad("cameraMake"),
+        byCamera: pad("camera"),
+        byLens: pad("lens"),
+        byCameraLens: pad("cameraLens"),
+      },
+      byAuthor: pad("author"),
+      byCountry: pad("country"),
+      byState: pad("state"),
+      byStateCountry: server.byStateCountry ?? {},
+      byCity: pad("city"),
+      byCityCountry: server.byCityCountry ?? {},
+      byCityLocalized: server.byCityLocalized ?? {},
     },
-    byExposure: {
-      byFocalLength: server.byCategory.focalLength ?? emptyCounts,
-      byFocalLength35mmEquiv:
-        server.byCategory.focalLength35mmEquiv ?? emptyCounts,
-      byAperture: server.byCategory.aperture ?? emptyCounts,
-      byExposureTime: server.byCategory.exposureTime ?? emptyCounts,
-      byIso: server.byCategory.iso ?? emptyCounts,
-      byExposureValue: server.byCategory.ev ?? emptyCounts,
-      byLightValue: server.byCategory.lv ?? emptyCounts,
-      byResolution: server.byCategory.resolution ?? emptyCounts,
-      byOrientation: server.byCategory.orientation ?? emptyCounts,
-      byAspectRatio: server.byCategory.aspectRatio ?? emptyCounts,
-    },
-    byGear: {
-      byCameraMake: server.byCategory.cameraMake ?? emptyCounts,
-      byCamera: server.byCategory.camera ?? emptyCounts,
-      byLens: server.byCategory.lens ?? emptyCounts,
-      byCameraLens: server.byCategory.cameraLens ?? emptyCounts,
-    },
-    byAuthor: server.byCategory.author ?? emptyCounts,
-    byCountry: server.byCategory.country ?? emptyCounts,
-    byState: server.byCategory.state ?? emptyCounts,
-    byStateCountry: server.byStateCountry ?? {},
-    byCity: server.byCategory.city ?? emptyCounts,
-    byCityCountry: server.byCityCountry ?? {},
-    byCityLocalized: server.byCityLocalized ?? {},
-  },
-});
+  };
+};
