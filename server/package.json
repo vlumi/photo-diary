@@ -7,7 +7,7 @@
     "start": "NODE_ENV=dev tsx index.ts",
     "prod": "./bin/start-prod.sh",
     "dev": "NODE_ENV=dev tsx watch index.ts",
-    "test": "DB_DRIVER=dummy NODE_ENV=test DOTENV_CONFIG_QUIET=true vitest run",
+    "test": "NODE_ENV=test DOTENV_CONFIG_QUIET=true vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "docs:dump": "tsx bin/dump-openapi.ts",

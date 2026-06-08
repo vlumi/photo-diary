@@ -417,7 +417,9 @@ await yargs(hideBin(process.argv))
         | { latitude?: number | null; longitude?: number | null; altitude?: number | null }
         | undefined;
       if (incomingCoords) {
-        const before = readCurrentCoords(existing as Record<string, unknown>);
+        const before = readCurrentCoords(
+          existing as unknown as Record<string, unknown>
+        );
         coordChanged = coordsDiffer(before, incomingCoords);
         if (coordChanged) {
           nextCoords = mergeCoords(before, incomingCoords);
@@ -454,7 +456,9 @@ await yargs(hideBin(process.argv))
         console.error(`✗ Photo "${id}" doesn't exist.`);
         process.exit(1);
       }
-      const coords = readCurrentCoords(existing as Record<string, unknown>);
+      const coords = readCurrentCoords(
+        existing as unknown as Record<string, unknown>
+      );
       if (coords.latitude === null || coords.longitude === null) {
         console.error(
           `✗ Photo "${id}" has no coordinates; nothing to re-geocode.`

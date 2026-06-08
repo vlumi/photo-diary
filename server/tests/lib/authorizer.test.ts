@@ -37,8 +37,13 @@ const setup = (
   perGallery: Record<string, Record<string, { isEditor: boolean }>>
 ): void => {
   db.loadUser.mockImplementation(async (userId) => {
-    if (userId === ":guest") return { id: ":guest", is_admin: 0 };
-    return { id: userId, is_admin: globalAdmins.includes(userId) ? 1 : 0 };
+    const base = { name: "", password: "", secret: "" };
+    if (userId === ":guest") return { ...base, id: ":guest", is_admin: 0 };
+    return {
+      ...base,
+      id: userId,
+      is_admin: globalAdmins.includes(userId) ? 1 : 0,
+    };
   });
   db.resolveAccessLevel.mockImplementation(async (userId, galleryId) => {
     if (globalAdmins.includes(userId)) {

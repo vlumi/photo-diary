@@ -8,9 +8,14 @@ import { fileURLToPath } from "node:url";
 import processFile from "../process-file.js";
 import { imageSizeFromFile } from "image-size/fromFile";
 import db from "photo-diary-server/db/index.js";
-import dummyFactory from "photo-diary-server/db/dummy.js";
+import sqlite3Factory from "photo-diary-server/db/sqlite3/index.js";
 
-const dummy = dummyFactory();
+// _resetForTests is a sqlite3-driver test seam (not re-exported
+// through the dispatcher). Reach for it directly; both factory
+// calls share the same module-level :memory: connection.
+const sqlite3 = sqlite3Factory() as ReturnType<typeof sqlite3Factory> & {
+  _resetForTests: () => void;
+};
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(here, "fixtures");
@@ -22,7 +27,12 @@ beforeEach(async () => {
   for (const sub of ["inbox", "original", "display", "thumbnail"]) {
     await fs.promises.mkdir(path.join(rootDir, sub));
   }
-  await dummy.init();
+  sqlite3._resetForTests();
+  // Galleries the auto-link / sidecar tests target. The pre-#434
+  // dummy fixture preseeded these; with the real driver wiping the
+  // schema clean we recreate them in beforeEach.
+  await db.createGallery({ id: "gallery1", title: "gallery 1" });
+  await db.createGallery({ id: "gallery2", title: "gallery 2" });
 });
 
 afterEach(async () => {
@@ -109,11 +119,13 @@ test("processes a JPEG without EXIF, falling back to mtime for the id", async ()
   assert.equal(row.originalFilename, "photo.jpg");
   // EXIF-less so the parsed instant comes through as the "Invalid date" sentinel.
   assert.equal(row.taken.instant.timestamp, "Invalid date");
-  // Empty camera / lens / exposure shapes — values present but undefined.
-  assert.equal(row.camera.make, undefined);
-  assert.equal(row.camera.model, undefined);
-  assert.equal(row.lens.make, undefined);
-  assert.equal(row.lens.model, undefined);
+  // EXIF-less import: text columns default to empty string on the
+  // sqlite3 driver (TEXT NOT NULL DEFAULT ''); the numeric aperture
+  // stays undefined.
+  assert.equal(row.camera.make, "");
+  assert.equal(row.camera.model, "");
+  assert.equal(row.lens.make, "");
+  assert.equal(row.lens.model, "");
   assert.equal(row.exposure.aperture, undefined);
   assert.ok(row.dimensions.original.width > 0);
 });

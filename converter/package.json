@@ -10,7 +10,7 @@
     "dumpexif": "tsx bin/dump-exif.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "DB_DRIVER=dummy SECRET=test NODE_ENV=test tsx --test tests/**/*.test.ts"
+    "test": "DB_DRIVER=sqlite3 DB_OPTS=:memory: SECRET=test NODE_ENV=test tsx --test tests/**/*.test.ts"
   },
   "author": "Ville Misaki",
   "license": "MIT",

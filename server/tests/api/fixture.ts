@@ -1,20 +1,18 @@
-// Shared fixture for the API integration tests. Each test file
-// must `vi.mock("../../lib/config/index.js", () => ({ default:
-// TEST_CONFIG }))` at its own top level — `vi.mock` is hoisted
-// per file and can't live in this helper.
+// Shared fixture for the API + model integration tests. Each test
+// file must `vi.mock("../../lib/config/index.js", () => ({ default:
+// TEST_CONFIG }))` at its own top level — `vi.mock` is hoisted per
+// file and can't live in this helper.
 //
-// The fixture re-creates the exact shape `db/dummy.ts` synthesises
-// at module load, but inserts it into a real `:memory:` SQLite via
-// the sqlite3 driver so the controllers exercise actual SQL.
-// Mirrors `#433`'s `db/sqlite3/helper.ts` for the parity tests,
-// extended with the broader API-test fixture (users / galleries /
-// photos / ACL / links).
+// Inserts the standard API-test users / galleries / photos / ACL /
+// links into a real `:memory:` SQLite via the sqlite3 driver so the
+// controllers exercise actual SQL. Mirrors `db/sqlite3/helper.ts`
+// for the driver-level parity tests, extended with the broader
+// fixture data the API surface needs.
 //
-// `db` and `config` are dynamic-imported inside `seedApiFixture`
-// so the test file's `vi.mock` lands before the driver module
-// reads `config.DB_DRIVER` / `DB_OPTS`. A static `import db` here
-// would load the driver against the real config before the mock
-// applied.
+// `db` and `config` are dynamic-imported inside `seedApiFixture` so
+// the test file's `vi.mock` lands before the driver module reads
+// `config.DB_DRIVER` / `DB_OPTS`. A static `import db` here would
+// load the driver against the real config before the mock applied.
 
 export const TEST_CONFIG = {
   ENV: "test",

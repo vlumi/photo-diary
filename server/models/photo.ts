@@ -232,7 +232,10 @@ const createPhoto = async (photo: { id: string } & Record<string, any>) => {
 
 const getPhoto = async (photoId: string) => {
   logger.debug("Getting photo", photoId);
-  const row = (await db.loadPhoto(photoId)) as Record<string, unknown>;
+  const row = (await db.loadPhoto(photoId)) as unknown as Record<
+    string,
+    unknown
+  >;
   // Decorate with the photo's gallery membership the same way
   // listPhotos does. The drawer renders these as jump-link chips
   // so the operator can navigate from a single-photo view to the
