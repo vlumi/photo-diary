@@ -7,8 +7,6 @@ import DayCell from "./DayCell";
 import color from "../../../lib/color";
 import format from "../../../lib/format";
 
-import type { Gallery } from "../../../models/GalleryModel";
-
 type ActiveTheme = { get: (name: string) => string };
 
 const Some = styled(DayCell)``;
@@ -42,19 +40,19 @@ const getHeatColors = (theme: ActiveTheme): string[] => {
 };
 
 interface Props {
-  gallery: Gallery;
   year: number;
   month: number;
   day: number;
+  counts: Record<string, number>;
   maxCount: number;
   theme: ActiveTheme;
 }
 
 const Day = ({
-  gallery,
   year,
   month,
   day,
+  counts,
   maxCount,
   theme,
 }: Props): React.ReactElement => {
@@ -69,8 +67,12 @@ const Day = ({
     return day;
   };
 
-  const photoCount = gallery.countPhotos(year, month, day);
-  const heatColor = heatColors[Math.round((photoCount * 10) / maxCount)];
+  const key = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const photoCount = counts[key] ?? 0;
+  const heatColor =
+    maxCount === 0
+      ? heatColors[0]
+      : heatColors[Math.round((photoCount * 10) / maxCount)];
   const style = {
     backgroundColor: heatColor,
   };
