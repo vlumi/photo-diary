@@ -66,6 +66,8 @@ const NeighborsResponse = Type.Object({
   next: Type.Optional(PhotoItem),
   first: Type.Optional(PhotoItem),
   last: Type.Optional(PhotoItem),
+  position: Type.Optional(Type.Integer({ minimum: 1 })),
+  total: Type.Integer({ minimum: 0 }),
 });
 
 const TAGS = ["gallery-photos"];
@@ -234,7 +236,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return result;
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
-          return {};
+          return { total: 0 };
         }
         throw error;
       }

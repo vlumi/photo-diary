@@ -851,6 +851,8 @@ describe("POST /:galleryId/neighbors (photo modal navigation)", () => {
     expect(res.body.next).toBeUndefined();
     expect(res.body.first?.id).toBe("gallery1photo.jpg");
     expect(res.body.last?.id).toBe("gallery12photo.jpg");
+    expect(res.body.position).toBe(2);
+    expect(res.body.total).toBe(2);
   });
 
   test("first photo of set: previous undefined, next is the second", async () => {
@@ -860,6 +862,8 @@ describe("POST /:galleryId/neighbors (photo modal navigation)", () => {
     });
     expect(res.body.previous).toBeUndefined();
     expect(res.body.next?.id).toBe("gallery12photo.jpg");
+    expect(res.body.position).toBe(1);
+    expect(res.body.total).toBe(2);
   });
 
   test("filter narrows the navigation set", async () => {
@@ -873,6 +877,8 @@ describe("POST /:galleryId/neighbors (photo modal navigation)", () => {
     expect(res.body.last?.id).toBe("gallery1photo.jpg");
     expect(res.body.previous).toBeUndefined();
     expect(res.body.next).toBeUndefined();
+    expect(res.body.position).toBe(1);
+    expect(res.body.total).toBe(1);
   });
 
   test("current photo not in filtered set: first/last still surface", async () => {
@@ -882,17 +888,19 @@ describe("POST /:galleryId/neighbors (photo modal navigation)", () => {
       filter: { general: { country: ["jp"] } },
     });
     // The nl photo is the current — filter excludes it.
-    // first / last are the jp photo; no adjacency.
+    // first / last are the jp photo; no adjacency; position omitted.
     expect(res.body.first?.id).toBe("gallery1photo.jpg");
     expect(res.body.last?.id).toBe("gallery1photo.jpg");
     expect(res.body.previous).toBeUndefined();
     expect(res.body.next).toBeUndefined();
+    expect(res.body.position).toBeUndefined();
+    expect(res.body.total).toBe(1);
   });
 
-  test("guest blocked from gallery1 → empty object (privacy collapse)", async () => {
+  test("guest blocked from gallery1 → total:0 (privacy collapse)", async () => {
     const res = await postNeighbors(undefined, "gallery1", {
       photoId: "gallery1photo.jpg",
     });
-    expect(res.body).toEqual({});
+    expect(res.body).toEqual({ total: 0 });
   });
 });

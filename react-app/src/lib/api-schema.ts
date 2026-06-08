@@ -1346,6 +1346,8 @@ export interface paths {
                             last?: {
                                 [key: string]: unknown;
                             };
+                            position?: number;
+                            total: number;
                         };
                     };
                 };

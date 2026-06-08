@@ -448,16 +448,20 @@ const Photo = ({
       onClick={handleBackdropClick}
     >
       <title>
-        {gallery.title(year, month, day, photo)} — {t("nav-gallery")}
+        {gallery.title(year, month, day, neighbors?.position)} —{" "}
+        {t("nav-gallery")}
       </title>
       <Frame>
         <Navigation
           gallery={gallery}
-          year={year}
-          month={month}
-          day={day}
           photo={photo}
           lang={lang}
+          previousPhoto={prevPhoto}
+          nextPhoto={nextPhoto}
+          firstPhoto={firstPhoto}
+          lastPhoto={lastPhoto}
+          position={neighbors?.position}
+          total={neighbors?.total ?? 0}
           onPrev={animateToPrev}
           onNext={animateToNext}
         />

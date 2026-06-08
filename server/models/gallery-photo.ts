@@ -76,6 +76,8 @@ interface NeighborsResult {
   next?: Photo;
   first?: Photo;
   last?: Photo;
+  position?: number;
+  total: number;
 }
 const getGalleryPhotoNeighbors = async (
   galleryId: string,
@@ -89,18 +91,25 @@ const getGalleryPhotoNeighbors = async (
     .sort((a, b) =>
       a.taken.instant.timestamp.localeCompare(b.taken.instant.timestamp)
     );
-  if (filtered.length === 0) return {};
+  if (filtered.length === 0) return { total: 0 };
   const first = filtered[0];
   const last = filtered[filtered.length - 1];
   const index = filtered.findIndex((p) => p.id === photoId);
   if (index < 0) {
     // Current photo not in filtered set — first / last still
-    // useful; previous / next undefined.
-    return { first, last };
+    // useful; previous / next undefined; position omitted.
+    return { first, last, total: filtered.length };
   }
   const previous = index > 0 ? filtered[index - 1] : undefined;
   const next = index < filtered.length - 1 ? filtered[index + 1] : undefined;
-  return { previous, next, first, last };
+  return {
+    previous,
+    next,
+    first,
+    last,
+    position: index + 1,
+    total: filtered.length,
+  };
 };
 
 // Per-day photo counts for the Year heatmap. Returns

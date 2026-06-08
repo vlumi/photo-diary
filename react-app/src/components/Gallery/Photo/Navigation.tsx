@@ -30,13 +30,6 @@ const Group = styled.div`
   align-items: center;
   gap: 16px;
 `;
-// Two-line info block in the centre of the bar: date/time on the
-// primary line (the bit the user wants visible without opening the
-// metadata panel) and the photo's position (#N / total) on a
-// smaller secondary line. Without this the bar reads as empty
-// between the left and right control clusters — the breadcrumb's
-// `#N` sits in the Title bar above the modal, but the modal Frame
-// covers that, so we surface the same info here.
 const Centre = styled.div`
   flex: 0 1 auto;
   min-width: 0;
@@ -75,11 +68,14 @@ const NavLink = styled(Link, {
 
 interface Props {
   gallery: Gallery;
-  year: number;
-  month: number;
-  day: number;
   photo: Photo;
   lang: string;
+  previousPhoto?: Photo;
+  nextPhoto?: Photo;
+  firstPhoto?: Photo;
+  lastPhoto?: Photo;
+  position?: number;
+  total: number;
   // Optional: intercept the prev/next click and run the carousel slide
   // animation instead of letting the Link navigate directly. First /
   // Last buttons skip animation by design (jumping multiple photos
@@ -90,43 +86,27 @@ interface Props {
 
 const Navigation = ({
   gallery,
-  year,
-  month,
-  day,
   photo,
   lang,
+  previousPhoto,
+  nextPhoto,
+  firstPhoto,
+  lastPhoto,
+  position,
+  total,
   onPrev,
   onNext,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
-  const totalPhotos = gallery.photos().length;
-  const photoIndex = photo.index() + 1;
-  const positionLabel = `${new Intl.NumberFormat(lang).format(
-    photoIndex
-  )} / ${new Intl.NumberFormat(lang).format(totalPhotos)}`;
+  const positionLabel =
+    position !== undefined
+      ? `${new Intl.NumberFormat(lang).format(position)} / ${new Intl.NumberFormat(lang).format(total)}`
+      : "";
   const timestamp = photo.formatTimestamp();
 
-  const [firstYear, firstMonth, firstDay] = gallery.firstDay();
-  const [lastYear, lastMonth, lastDay] = gallery.lastDay();
+  const prevVisibility = !previousPhoto || previousPhoto.id() === photo.id() ? "hidden" : "";
+  const nextVisibility = !nextPhoto || nextPhoto.id() === photo.id() ? "hidden" : "";
 
-  const firstDayPhotos =
-    firstYear !== undefined && firstMonth !== undefined && firstDay !== undefined
-      ? gallery.photos(firstYear, firstMonth, firstDay)
-      : [];
-  const firstPhoto = firstDayPhotos[0];
-
-  const previousPhoto = gallery.previousPhoto(year, month, day, photo);
-  const nextPhoto = gallery.nextPhoto(year, month, day, photo);
-
-  const prevVisibility =
-    previousPhoto && previousPhoto === photo ? "hidden" : "";
-  const nextVisibility = nextPhoto && nextPhoto === photo ? "hidden" : "";
-
-  const lastDayPhotos =
-    lastYear !== undefined && lastMonth !== undefined && lastDay !== undefined
-      ? gallery.photos(lastYear, lastMonth, lastDay)
-      : [];
-  const lastPhoto = lastDayPhotos[lastDayPhotos.length - 1];
   return (
     <Root>
       <Group>

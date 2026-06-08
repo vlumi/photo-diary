@@ -2287,6 +2287,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": [
+                    "total"
+                  ],
                   "properties": {
                     "previous": {
                       "type": "object",
@@ -2307,6 +2310,14 @@
                       "type": "object",
                       "properties": {},
                       "additionalProperties": true
+                    },
+                    "position": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
                     }
                   }
                 }
