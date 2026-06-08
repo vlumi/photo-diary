@@ -2884,6 +2884,11 @@
                         }
                       }
                     }
+                  },
+                  "lang": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 8
                   }
                 }
               }
@@ -2918,7 +2923,10 @@
                     "byYearMonth",
                     "summary",
                     "daysInYear",
-                    "daysInYearMonth"
+                    "daysInYearMonth",
+                    "byStateCountry",
+                    "byCityCountry",
+                    "byCityLocalized"
                   ],
                   "properties": {
                     "total": {
@@ -2994,6 +3002,24 @@
                         "additionalProperties": {
                           "type": "number"
                         }
+                      }
+                    },
+                    "byStateCountry": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "byCityCountry": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "byCityLocalized": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
                       }
                     }
                   }

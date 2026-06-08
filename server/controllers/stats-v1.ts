@@ -32,6 +32,7 @@ const FilterSchema = Type.Record(Type.String(), FilterTopic, {
 
 const StatsBody = Type.Object({
   filter: Type.Optional(FilterSchema),
+  lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
 });
 
 const BucketCounts = Type.Record(Type.String(), Type.Number());
@@ -52,6 +53,9 @@ const StatsResponse = Type.Object({
   }),
   daysInYear: Type.Record(Type.String(), Type.Number()),
   daysInYearMonth: YearMonthCounts,
+  byStateCountry: Type.Record(Type.String(), Type.String()),
+  byCityCountry: Type.Record(Type.String(), Type.String()),
+  byCityLocalized: Type.Record(Type.String(), Type.String()),
 });
 
 const TAGS = ["stats"];
@@ -83,7 +87,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       );
       return await model.getGalleryStats(
         request.params.galleryId,
-        request.body.filter as FilterShape | undefined
+        request.body.filter as FilterShape | undefined,
+        request.body.lang
       );
     }
   );

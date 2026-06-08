@@ -154,6 +154,20 @@ describe("scope + host-scope", () => {
   });
 });
 
+describe("annotations", () => {
+  let token: string | undefined;
+  beforeAll(async () => {
+    token = await loginUser(api, "admin");
+  });
+
+  test("byStateCountry / byCityCountry / byCityLocalized are present", async () => {
+    const res = await postStats(token, "gallery1");
+    expect(res.body.byStateCountry).toEqual({});
+    expect(res.body.byCityCountry).toEqual({});
+    expect(res.body.byCityLocalized).toEqual({});
+  });
+});
+
 describe("cache", () => {
   test("subsequent unfiltered calls return the same cached object (no DB rebuild)", async () => {
     const token = await loginUser(api, "admin");
