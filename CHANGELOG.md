@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Server
+
+- Three new `POST` endpoints on `/api/v1/gallery-photos/<id>` — `/query` (filter-narrowed photo list, optionally scoped to year / month / day), `/counts` (per-day `YYYY-MM-DD` → count map for the Year heatmap), and `/neighbors` (previous / next / first / last plus 1-indexed position + total within the active filter, for the Photo modal's carousel and breadcrumb) — share the same FilterShape wire envelope as `/api/v1/stats` and gate on the same gallery-view ACL. (closes #406)
+
+### Frontend
+
+- Public gallery views fetch only what they render: Year consumes `/counts` for the heatmap, Month consumes `/query` for the day thumbnails, the Photo modal pulls prev / next / first / last + position / total from `/neighbors`, and the Title bar's map button fetches its in-scope pins from `/query` — all with the active filter applied server-side and `keepPreviousData` smoothing refetches across filter toggles. The legacy `gallery.withPhotos(filteredPhotos)` in-memory filter walk in `Gallery/index.tsx` is gone; filter changes no longer rebuild the whole gallery model. (closes #406)
+
 ## [0.14.0] - 2026-06-07
 
 ### Server
