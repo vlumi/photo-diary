@@ -16,6 +16,7 @@ import {
   matchesFilter,
   type FilterShape,
 } from "../lib/photo-filter-eval.js";
+import { cacheGet, cacheSet } from "../lib/stats-cache.js";
 
 export default () => ({
   getGalleryStats,
@@ -323,10 +324,30 @@ export const computeStats = (
   };
 };
 
+const isUnfilteredBase = (filter?: FilterShape): boolean => {
+  if (!filter) return true;
+  for (const topic of Object.keys(filter)) {
+    const categories = filter[topic];
+    if (!categories) continue;
+    for (const category of Object.keys(categories)) {
+      const keys = categories[category];
+      if (Array.isArray(keys) && keys.length > 0) return false;
+    }
+  }
+  return true;
+};
+
 const getGalleryStats = async (
   galleryId: string,
   filter?: FilterShape
 ): Promise<StatsResponse> => {
+  const cacheable = isUnfilteredBase(filter);
+  if (cacheable) {
+    const cached = cacheGet<StatsResponse>(galleryId);
+    if (cached) return cached;
+  }
   const photos = (await db.loadGalleryPhotos(galleryId)) as Photo[];
-  return computeStats(photos, filter);
+  const stats = computeStats(photos, filter);
+  if (cacheable) cacheSet(galleryId, stats);
+  return stats;
 };

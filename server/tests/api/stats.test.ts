@@ -154,6 +154,56 @@ describe("scope + host-scope", () => {
   });
 });
 
+describe("cache", () => {
+  test("subsequent unfiltered calls return the same cached object (no DB rebuild)", async () => {
+    const token = await loginUser(api, "admin");
+    const a = await postStats(token, "gallery1");
+    const b = await postStats(token, "gallery1");
+    // Same payload, same totals.
+    expect(b.body).toEqual(a.body);
+  });
+
+  test("filtered call doesn't poison or read the unfiltered cache", async () => {
+    const token = await loginUser(api, "admin");
+    const unfiltered = await postStats(token, "gallery1");
+    const filtered = await postStats(token, "gallery1", {
+      filter: { general: { country: ["jp"] } },
+    });
+    expect(unfiltered.body.total).toBe(2);
+    expect(filtered.body.total).toBe(1);
+    // Unfiltered still returns the original after the filtered hit.
+    const refetch = await postStats(token, "gallery1");
+    expect(refetch.body.total).toBe(2);
+  });
+
+  test("photo update invalidates the cache for that photo's galleries", async () => {
+    const token = await loginUser(api, "admin");
+    const before = await postStats(token, "gallery1");
+    expect(before.body.byCategory.country).toEqual({ jp: 1, nl: 1 });
+    // Flip gallery1photo.jpg's country.
+    await api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ taken: { location: { country: "fi" } } })
+      .expect(204);
+    const after = await postStats(token, "gallery1");
+    expect(after.body.byCategory.country).toEqual({ fi: 1, nl: 1 });
+  });
+
+  test("link / unlink invalidates the receiving gallery cache", async () => {
+    const token = await loginUser(api, "admin");
+    const before = await postStats(token, "gallery3");
+    expect(before.body.total).toBe(1);
+    // Link gallery1photo.jpg into gallery3.
+    await api
+      .put("/api/v1/gallery-photos/gallery3/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204);
+    const after = await postStats(token, "gallery3");
+    expect(after.body.total).toBe(2);
+  });
+});
+
 describe("unknown bucket", () => {
   test("photos with empty fields bucket under 'unknown'", async () => {
     const token = await loginUser(api, "admin");

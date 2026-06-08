@@ -272,6 +272,11 @@ export const seedApiFixture = async (): Promise<void> => {
   const driverFactory = (await import("../../db/sqlite3/index.js"))
     .default;
   driverFactory()._resetForTests();
+  // The stats cache lives in the worker process; flush so a
+  // previous test's gallery1 cache doesn't survive into the next
+  // seed.
+  const { _resetForTests } = await import("../../lib/stats-cache.js");
+  _resetForTests();
 
   for (const [key, value] of Object.entries(META)) {
     await db.createMeta({ key, value });
