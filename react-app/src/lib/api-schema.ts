@@ -1294,6 +1294,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gallery-photos/{galleryId}/neighbors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Adjacent + boundary photos within the filtered set */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    galleryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        photoId: string;
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        lang?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            previous?: {
+                                [key: string]: unknown;
+                            };
+                            next?: {
+                                [key: string]: unknown;
+                            };
+                            first?: {
+                                [key: string]: unknown;
+                            };
+                            last?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gallery-photos/{galleryId}/{photoId}": {
         parameters: {
             query?: never;

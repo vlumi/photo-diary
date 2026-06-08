@@ -825,3 +825,74 @@ describe("POST /:galleryId/counts (year heatmap)", () => {
     expect(res.body).toEqual({});
   });
 });
+
+describe("POST /:galleryId/neighbors (photo modal navigation)", () => {
+  const postNeighbors = (
+    token: string | undefined,
+    galleryId: string,
+    body: Record<string, unknown>,
+    status = 200
+  ) => {
+    const req = api
+      .post(`/api/v1/gallery-photos/${galleryId}/neighbors`)
+      .send(body);
+    if (token) req.set("Authorization", `Bearer ${token}`);
+    return req.expect(status);
+  };
+
+  test("middle photo: previous + next + first + last present", async () => {
+    // gallery1: gallery1photo.jpg (2018-05-04), gallery12photo.jpg (2020-07-04).
+    // Querying the second one → previous is the first, next is undefined.
+    const token = await loginUser(api, "admin");
+    const res = await postNeighbors(token, "gallery1", {
+      photoId: "gallery12photo.jpg",
+    });
+    expect(res.body.previous?.id).toBe("gallery1photo.jpg");
+    expect(res.body.next).toBeUndefined();
+    expect(res.body.first?.id).toBe("gallery1photo.jpg");
+    expect(res.body.last?.id).toBe("gallery12photo.jpg");
+  });
+
+  test("first photo of set: previous undefined, next is the second", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postNeighbors(token, "gallery1", {
+      photoId: "gallery1photo.jpg",
+    });
+    expect(res.body.previous).toBeUndefined();
+    expect(res.body.next?.id).toBe("gallery12photo.jpg");
+  });
+
+  test("filter narrows the navigation set", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postNeighbors(token, "gallery1", {
+      photoId: "gallery1photo.jpg",
+      filter: { general: { country: ["jp"] } },
+    });
+    // Only the jp photo matches; first + last = it, previous + next undefined.
+    expect(res.body.first?.id).toBe("gallery1photo.jpg");
+    expect(res.body.last?.id).toBe("gallery1photo.jpg");
+    expect(res.body.previous).toBeUndefined();
+    expect(res.body.next).toBeUndefined();
+  });
+
+  test("current photo not in filtered set: first/last still surface", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postNeighbors(token, "gallery1", {
+      photoId: "gallery12photo.jpg",
+      filter: { general: { country: ["jp"] } },
+    });
+    // The nl photo is the current — filter excludes it.
+    // first / last are the jp photo; no adjacency.
+    expect(res.body.first?.id).toBe("gallery1photo.jpg");
+    expect(res.body.last?.id).toBe("gallery1photo.jpg");
+    expect(res.body.previous).toBeUndefined();
+    expect(res.body.next).toBeUndefined();
+  });
+
+  test("guest blocked from gallery1 → empty object (privacy collapse)", async () => {
+    const res = await postNeighbors(undefined, "gallery1", {
+      photoId: "gallery1photo.jpg",
+    });
+    expect(res.body).toEqual({});
+  });
+});
