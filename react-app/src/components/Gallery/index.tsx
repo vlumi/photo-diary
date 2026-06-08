@@ -311,7 +311,6 @@ const Gallery = ({
         <Stats
           galleryId={gallery.id()}
           photos={gallery.photos()}
-          uniqueValues={uniqueValues}
           filters={filters}
           setFilters={setFilters}
           lang={lang}

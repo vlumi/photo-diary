@@ -157,8 +157,8 @@ const GlobalStats = (): React.ReactElement => {
     <>
       <Galleries photos={photos} galleries={galleries} lang={lang} />
       <Stats
+        globalScope
         photos={photos}
-        uniqueValues={uniqueValues}
         filters={filters}
         setFilters={setFilters}
         lang={lang}
