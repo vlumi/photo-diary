@@ -263,7 +263,7 @@ const processJsonSidecar = async (
       const incomingCoords = readIncomingCoords(photo);
       let coordChanged = false;
       if (incomingCoords) {
-        const existing = (await db.loadPhoto(targetId)) as Record<
+        const existing = (await db.loadPhoto(targetId)) as unknown as Record<
           string,
           unknown
         >;
