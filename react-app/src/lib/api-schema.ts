@@ -2087,6 +2087,9 @@ export interface paths {
                             categoryValues: {
                                 [key: string]: string[];
                             };
+                            byGallery: {
+                                [key: string]: number;
+                            };
                         };
                     };
                 };
@@ -2179,6 +2182,9 @@ export interface paths {
                             };
                             categoryValues: {
                                 [key: string]: string[];
+                            };
+                            byGallery: {
+                                [key: string]: number;
                             };
                         };
                     };

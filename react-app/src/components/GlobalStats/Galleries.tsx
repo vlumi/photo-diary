@@ -2,9 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import format from "../../lib/format";
-import type { Photo as PhotoT } from "../../models/PhotoModel";
+import filter from "../../lib/filter";
+import statsService from "../../services/stats";
+import { useFiltersStore } from "../../stores";
 
 interface Gallery {
   id: string;
@@ -12,7 +15,6 @@ interface Gallery {
 }
 
 interface Props {
-  photos: PhotoT[];
   galleries: Gallery[];
   lang: string;
 }
@@ -99,14 +101,29 @@ const RankCell = styled("th", {
   width: 1em;
 `;
 
+const ORPHAN_KEY = ":orphan";
+
+// Reads filter-aware per-gallery counts from the global stats
+// response (#446). Same queryKey as the sibling <Stats> component's
+// internal fetch, so TanStack dedupes — one network call for
+// both sections.
 const Galleries = ({
-  photos,
   galleries,
   lang,
 }: Props): React.ReactElement | null => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const formatNumber = format.number(lang);
+  const filters = useFiltersStore((s) => s.filters);
+  const serverFilters = React.useMemo(
+    () => filter.toServerFilters(filters),
+    [filters]
+  );
+  const { data: stats } = useQuery({
+    queryKey: ["stats", "__global__", serverFilters, lang],
+    queryFn: () => statsService.getGlobalStats(serverFilters, lang),
+    placeholderData: keepPreviousData,
+  });
 
   const titleById = React.useMemo(() => {
     const m = new Map<string, string>();
@@ -118,30 +135,21 @@ const Galleries = ({
   }, [galleries]);
 
   const { rows, orphanCount, total } = React.useMemo(() => {
-    const counts = new Map<string, number>();
-    let orphans = 0;
-    for (const photo of photos) {
-      const ids = photo.galleries();
-      if (ids.length === 0) {
-        orphans++;
-        continue;
-      }
-      for (const id of ids) {
-        counts.set(id, (counts.get(id) ?? 0) + 1);
-      }
-    }
+    const byGallery = stats?.byGallery ?? {};
+    const orphans = byGallery[ORPHAN_KEY] ?? 0;
     const collator = new Intl.Collator(lang, { sensitivity: "base" });
-    const ranked = [...counts.entries()]
+    const ranked = Object.entries(byGallery)
+      .filter(([id]) => id !== ORPHAN_KEY)
       .map(([id, count]) => ({
         id,
         count,
         title: titleById.get(id) ?? id,
       }))
       .sort((a, b) => b.count - a.count || collator.compare(a.title, b.title));
-    return { rows: ranked, orphanCount: orphans, total: photos.length };
-  }, [photos, titleById, lang]);
+    return { rows: ranked, orphanCount: orphans, total: stats?.total ?? 0 };
+  }, [stats, titleById, lang]);
 
-  if (rows.length === 0 && orphanCount === 0) {
+  if (!stats || (rows.length === 0 && orphanCount === 0)) {
     return null;
   }
 

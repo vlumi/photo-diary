@@ -3314,7 +3314,8 @@
                     "byStateCountry",
                     "byCityCountry",
                     "byCityLocalized",
-                    "categoryValues"
+                    "categoryValues",
+                    "byGallery"
                   ],
                   "properties": {
                     "total": {
@@ -3420,6 +3421,12 @@
                         "items": {
                           "type": "string"
                         }
+                      }
+                    },
+                    "byGallery": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
                       }
                     }
                   }
@@ -3501,7 +3508,8 @@
                     "byStateCountry",
                     "byCityCountry",
                     "byCityLocalized",
-                    "categoryValues"
+                    "categoryValues",
+                    "byGallery"
                   ],
                   "properties": {
                     "total": {
@@ -3607,6 +3615,12 @@
                         "items": {
                           "type": "string"
                         }
+                      }
+                    },
+                    "byGallery": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
                       }
                     }
                   }
