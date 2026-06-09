@@ -701,4 +701,17 @@ describe("Virtual galleries", () => {
       .expect(200);
     expect(gallery1.body).not.toEqual([]);
   });
+
+  test("cannot convert a real gallery to virtual while it's a source elsewhere", async () => {
+    // virt_a sources [gallery1]. Now try to make gallery1 virtual
+    // (sourced from gallery2). The check fires because gallery1 is
+    // already referenced as a source — the resulting chain would
+    // silently leave virt_a resolving to an empty photo set.
+    await createVirt(["gallery1"]);
+    await api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ sources: ["gallery2"] })
+      .expect(422);
+  });
 });
