@@ -64,6 +64,40 @@ const getFilterValues = async (galleryId: string, lang?: string) =>
     })
   );
 
+// One photo by id within a gallery context. Drives the Photo modal
+// mount under #532 phase 2 — replaces the in-memory `gallery.photo
+// (...)` lookup that needed the gallery's full photo array.
+const getOne = async (galleryId: string, photoId: string, lang?: string) =>
+  unwrap(
+    api.GET("/api/v1/gallery-photos/{galleryId}/{photoId}", {
+      params: {
+        path: { galleryId, photoId },
+        query: lang ? { lang } : undefined,
+      },
+    })
+  );
+
+// Pre-rename / camera-filename bookmark fallback. When a Photo URL's
+// id doesn't resolve to a real photo via the per-id endpoint, the
+// modal mount tries this lookup against the original camera filename
+// before redirecting to the month view.
+const getByOriginalFilename = async (
+  galleryId: string,
+  originalFilename: string,
+  lang?: string
+) =>
+  unwrap(
+    api.GET(
+      "/api/v1/gallery-photos/{galleryId}/by-original-filename/{originalFilename}",
+      {
+        params: {
+          path: { galleryId, originalFilename },
+          query: lang ? { lang } : undefined,
+        },
+      }
+    )
+  );
+
 const link = async (galleryId: string, photoId: string): Promise<void> => {
   await unwrap(
     api.PUT("/api/v1/gallery-photos/{galleryId}/{photoId}", {
@@ -86,6 +120,8 @@ export default {
   getCounts,
   getNeighbors,
   getFilterValues,
+  getOne,
+  getByOriginalFilename,
   link,
   unlink,
 };

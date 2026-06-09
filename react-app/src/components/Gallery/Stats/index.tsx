@@ -8,10 +8,11 @@ import Topic from "./Topic";
 import stats from "../../../lib/stats";
 import filter from "../../../lib/filter";
 import { adaptServerStats } from "../../../lib/stats-adapter";
+import galleryPhotosService from "../../../services/gallery-photos";
 import statsService from "../../../services/stats";
 import { useBetaStore } from "../../../stores";
 
-import type { Photo } from "../../../models/PhotoModel";
+import PhotoModel, { type Photo } from "../../../models/PhotoModel";
 import type { Filters as FiltersT } from "../../../lib/filter";
 
 interface CountryData {
@@ -40,7 +41,10 @@ interface Props {
   // required.
   galleryId?: string;
   globalScope?: boolean;
-  photos: Photo[];
+  // Required for globalScope (legacy photo-walking path until the
+  // global flavour migrates). For gallery-scoped, optional — the
+  // map fetch goes via /query against the gallery instead (#532).
+  photos?: Photo[];
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   lang: string;
@@ -93,10 +97,27 @@ const Stats = ({
     [serverStats]
   );
 
-  const mapPhotos = React.useMemo(
-    () => (hideMap ? [] : photos.filter((photo) => photo.hasCoordinates())),
-    [photos, hideMap]
-  );
+  // Map photos: for gallery scope, pull from /query with the active
+  // filter so we don't need the gallery's full photo array in memory
+  // (#532). For globalScope, keep the legacy in-prop walk — that
+  // surface still fetches the cross-gallery photo array.
+  const { data: mapPhotosRaw } = useQuery({
+    queryKey: ["gallery-photos-stats-map", galleryId, serverFilters],
+    queryFn: () =>
+      galleryPhotosService.query(galleryId as string, { filter: serverFilters }),
+    enabled: !!galleryId && !hideMap,
+    placeholderData: keepPreviousData,
+  });
+  const mapPhotos = React.useMemo(() => {
+    if (hideMap) return [];
+    if (galleryId) {
+      return ((mapPhotosRaw ?? []) as Array<Record<string, unknown>>)
+        .map((raw) => PhotoModel(raw))
+        .filter((p): p is Photo => !!p)
+        .filter((p) => p.hasCoordinates());
+    }
+    return (photos ?? []).filter((photo) => photo.hasCoordinates());
+  }, [galleryId, mapPhotosRaw, photos, hideMap]);
 
   // Memoize so unrelated re-renders (filter UI ticks, etc.) don't
   // re-run the topic build — it fans out into ~30 chart-data objects

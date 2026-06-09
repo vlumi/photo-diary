@@ -87,6 +87,7 @@ export default () => {
     unlinkAllGalleries,
     loadAllGalleryPhotoLinks,
     loadGalleryPhoto,
+    loadGalleryPhotoByOriginalFilename,
 
     loadPhotos,
     createPhoto,
@@ -715,6 +716,37 @@ const loadPhotosByOriginalFilename = async (originalFilename: string) => {
     .prepare(SCHEMA.photo.buildSelectQuery(["original_filename = ?"]))
     .all(originalFilename) as PhotoRow[];
   return rows.map((row, index) => SCHEMA.photo.mapRow(row, index));
+};
+// Gallery-scoped lookup by camera filename — drives the Photo
+// modal's fallback when the URL's id doesn't resolve to a real
+// photo. Returns the first row (operator's archive can in
+// principle have collisions; the modal lands on whichever the DB
+// returns first, and the caller redirects to its canonical URL).
+const loadGalleryPhotoByOriginalFilename = async (
+  galleryId: string,
+  originalFilename: string,
+  lang?: string
+) => {
+  const schema = SCHEMA.photo;
+  const stmt = db.prepare(
+    schema.buildSelectQuery([
+      "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
+      "original_filename = ?",
+    ])
+  );
+  const rows = stmt.all(galleryId, originalFilename) as PhotoRow[];
+  if (rows.length === 0) {
+    throw new NotFoundError();
+  }
+  const localized =
+    lang && lang !== "en"
+      ? (db
+        .prepare(
+          "SELECT * FROM photo_localized WHERE photo_id = ? AND lang = ?"
+        )
+        .get(rows[0].id, lang) as PhotoLocalizedRow | undefined)
+      : undefined;
+  return schema.mapRow(rows[0], 0, localized);
 };
 // Photo rows with no gallery_photo link — useful for `bin/photo.ts audit`.
 // The SPA doesn't surface orphan photos anywhere; they're a data-drift

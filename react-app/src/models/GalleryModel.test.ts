@@ -238,10 +238,19 @@ describe("Without photos", () => {
       expect(samples["all_photos"].path(2020, 5, 27)).toBe("/g/all_photos/2020/05/27"));
   });
   describe("lastPath", () => {
-    test("empty", () => expect(samples.empty.lastPath()).toBe("/g/empty"));
+    const emptyShape = {
+      includesPhotos: () => false,
+      lastDay: () =>
+        [undefined, undefined, undefined] as
+          | [number, number, number]
+          | [undefined, undefined, undefined],
+    };
+    test("empty", () =>
+      expect(samples.empty.lastPath(emptyShape)).toBe("/g/empty"));
     test("testing", () =>
-      expect(samples.testing.lastPath()).toBe("/g/testing"));
-    test("all_photos", () => expect(samples["all_photos"].lastPath()).toBe("/g/all_photos"));
+      expect(samples.testing.lastPath(emptyShape)).toBe("/g/testing"));
+    test("all_photos", () =>
+      expect(samples["all_photos"].lastPath(emptyShape)).toBe("/g/all_photos"));
   });
   describe("statsPath", () => {
     test("empty", () =>
@@ -845,15 +854,27 @@ describe("With photos", () => {
       ));
   });
   describe("lastPath", () => {
-    test("empty", () => expect(g.empty.lastPath()).toBe("/g/empty/2020/05"));
+    const populatedShape = {
+      includesPhotos: () => true,
+      lastDay: () => [2020, 5, 27] as [number, number, number],
+    };
+    test("empty", () =>
+      expect(g.empty.lastPath(populatedShape)).toBe("/g/empty/2020/05"));
     test("testing", () =>
-      expect(g.testing.lastPath()).toBe("/g/testing/2020/05"));
-    test("all", () => expect(g.all.lastPath()).toBe("/g/all_photos/2020"));
+      expect(g.testing.lastPath(populatedShape)).toBe("/g/testing/2020/05"));
+    test("all", () =>
+      expect(g.all.lastPath(populatedShape)).toBe("/g/all_photos/2020"));
+    // public has initialView "photo" — falls back to month-of-lastDay
+    // after #532 (pinning to a specific photo would need an extra fetch
+    // beyond /counts).
     test("public", () =>
-      expect(g.public.lastPath()).toBe("/g/all_photos/2020/05/27/1.jpg"));
-    test("daily", () => expect(g.daily.lastPath()).toBe("/g/all_photos/2020/05/27"));
+      expect(g.public.lastPath(populatedShape)).toBe("/g/all_photos/2020/05"));
+    test("daily", () =>
+      expect(g.daily.lastPath(populatedShape)).toBe("/g/all_photos/2020/05/27"));
     test("badInitial", () =>
-      expect(g.badInitial.lastPath()).toBe("/g/all_photos/2020/05"));
+      expect(g.badInitial.lastPath(populatedShape)).toBe(
+        "/g/all_photos/2020/05"
+      ));
   });
   describe("includesPhotos", () => {
     test("testing", () => expect(g.testing.includesPhotos()).toBe(true));

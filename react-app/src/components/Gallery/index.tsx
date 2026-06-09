@@ -29,6 +29,7 @@ import format from "../../lib/format";
 import { galleriesForHost } from "../../lib/host-scope";
 import stats, { type UniqueValues } from "../../lib/stats";
 import { buildUniqueValues } from "../../lib/uniqueValues";
+import { useGalleryCalendar } from "../../lib/useFilteredCalendar";
 import theme from "../../lib/theme";
 
 import {
@@ -132,34 +133,55 @@ const Gallery = ({
     !!galleryId &&
     !!galleriesQuery.data &&
     galleriesQuery.data.some((g) => g.id() === galleryId);
-  const photosQuery = useQuery({
-    queryKey: ["gallery-photos", galleryId, user?.id ?? null, lang],
-    queryFn: async () => {
-      const data = await galleryPhotosService.get(galleryId as string, lang);
-      return data
-        .map((photo) => PhotoModel(photo))
-        .filter((p): p is PhotoT => !!p);
-    },
-    enabled: galleryInList,
-  });
-  // Filter pill universe (#532). Tiny payload, server-cached. Lives
-  // alongside the photos query for now — once the gallery shape
-  // helpers (firstDay / lastDay / includesPhotos / lastPath) move
-  // off `photosByYmd` too, the full photos fetch can go.
+  // Filter pill universe (#532). Tiny payload, server-cached.
   const filterValuesQuery = useQuery({
     queryKey: ["gallery-filter-values", galleryId, user?.id ?? null, lang],
     queryFn: () => galleryPhotosService.getFilterValues(galleryId as string, lang),
     enabled: galleryInList,
   });
+  // Unfiltered gallery shape (#532): drives lastPath in the gallery
+  // list, the "no photos" check below, and the calendar boundary
+  // helpers that don't change with the active filter. Off /counts.
+  const galleryCalendar = useGalleryCalendar(galleryId ?? "");
+  // Modal photo lookup (#532 phase 2). Resolves the `photoId` URL
+  // param to its metadata via the per-id endpoint; on 404, falls
+  // back to the originalFilename endpoint (pre-rename / camera-
+  // filename bookmarks). Both run as separate queries so the
+  // common case pays for one round trip, not two.
+  const photoByIdQuery = useQuery({
+    queryKey: ["gallery-photo-by-id", galleryId, photoId, lang],
+    queryFn: () =>
+      galleryPhotosService.getOne(galleryId as string, photoId as string, lang),
+    enabled: !!photoId && galleryInList,
+    retry: false,
+  });
+  const photoByOriginalQuery = useQuery({
+    queryKey: ["gallery-photo-by-original", galleryId, photoId, lang],
+    queryFn: () =>
+      galleryPhotosService.getByOriginalFilename(
+        galleryId as string,
+        photoId as string,
+        lang
+      ),
+    enabled:
+      !!photoId && galleryInList && photoByIdQuery.isError,
+    retry: false,
+  });
+  const modalPhoto = React.useMemo<PhotoT | undefined>(() => {
+    if (!photoByIdQuery.data) return undefined;
+    return PhotoModel(photoByIdQuery.data) ?? undefined;
+  }, [photoByIdQuery.data]);
+  const modalPhotoByOriginal = React.useMemo<PhotoT | undefined>(() => {
+    if (!photoByOriginalQuery.data) return undefined;
+    return PhotoModel(photoByOriginalQuery.data) ?? undefined;
+  }, [photoByOriginalQuery.data]);
 
   const meta = metaQuery.data as Meta | undefined;
   const galleries = galleriesQuery.data;
-  const photos = photosQuery.data;
   const filterValues = filterValuesQuery.data;
   const error =
     metaQuery.error?.message ||
     galleriesQuery.error?.message ||
-    photosQuery.error?.message ||
     filterValuesQuery.error?.message ||
     "";
 
@@ -176,10 +198,10 @@ const Gallery = ({
     return buildUniqueValues(filterValues, lang, t, countryData);
   }, [filterValues, lang, t, countryData]);
 
-  const gallery = React.useMemo<GalleryT | undefined>(() => {
-    if (!selectedGallery || !photos) return undefined;
-    return selectedGallery.withPhotos(photos);
-  }, [selectedGallery, photos]);
+  // No more `withPhotos`: the gallery model is metadata-only after
+  // #532. Calendar shape comes from `useGalleryCalendar`; the modal's
+  // current photo + neighbors come from their own queries.
+  const gallery = selectedGallery;
 
   // Load the persisted user preference once, against the current
   // manifest so a stale localStorage entry can't survive a theme
@@ -310,7 +332,6 @@ const Gallery = ({
       return (
         <Stats
           galleryId={gallery.id()}
-          photos={gallery.photos()}
           filters={filters}
           setFilters={setFilters}
           lang={lang}
@@ -330,7 +351,7 @@ const Gallery = ({
         </Stats>
       );
     }
-    if (!gallery.includesPhotos()) {
+    if (galleryCalendar.ready && !galleryCalendar.includesPhotos()) {
       return (
         <Empty gallery={gallery}>
           <Title galleries={visibleGalleries} gallery={gallery} context={context} />
@@ -411,19 +432,19 @@ const Gallery = ({
         </Month>
       );
     }
-    const photo = gallery.photo(year, month, day, photoId);
+    // Per-id lookup pending: hold the previous Month/Photo render
+    // (or render Month while the modal mounts).
+    if (photoByIdQuery.isLoading) {
+      return <div>{t("loading")}</div>;
+    }
+    const photo = modalPhoto;
     if (!photo) {
-      // The URL points at an id this gallery doesn't have. Try the
-      // param as an `originalFilename` (camera filename) — covers
-      // pre-rename bookmarks and "shared the file name not the URL"
-      // from the operator's archive. If we find a match anywhere in
-      // the gallery, redirect to its canonical URL. Otherwise drop
-      // back to the month view rather than spinning on "Loading".
-      const byOriginal = gallery
-        .photos()
-        .find((p) => p.originalFilename() === photoId);
-      if (byOriginal) {
-        return <Navigate to={byOriginal.path(gallery)} replace />;
+      // Per-id 404'd. originalFilename fallback in flight?
+      if (photoByOriginalQuery.isLoading) {
+        return <div>{t("loading")}</div>;
+      }
+      if (modalPhotoByOriginal) {
+        return <Navigate to={modalPhotoByOriginal.path(gallery)} replace />;
       }
       return <Navigate to={gallery.path(year, month)} replace />;
     }
