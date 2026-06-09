@@ -1,5 +1,7 @@
 import api, { unwrap } from "../lib/api";
 
+import type { ServerFilters } from "../lib/filter";
+
 export type MissingField =
   | "taken"
   | "coords"
@@ -120,6 +122,19 @@ const getByIds = async (ids: string[]): Promise<PhotoRow[]> => {
   return result.photos;
 };
 
+// Cross-gallery filter-aware photo list (admin). Drives the
+// GlobalStats Location map's lazy fetch — same FilterShape wire
+// shape as the gallery-scoped /gallery-photos/<id>/query.
+interface QueryOpts {
+  filter?: ServerFilters;
+  year?: number;
+  month?: number;
+  day?: number;
+  lang?: string;
+}
+const query = async (opts: QueryOpts = {}) =>
+  unwrap(api.POST("/api/v1/photos/query", { body: opts }));
+
 // PhotoUpdateBody on the server only accepts the override fields
 // `bin/photo.ts update` exposes. EXIF-derived columns reject with 400.
 export interface PhotoUpdatePatch {
@@ -187,6 +202,7 @@ export default {
   getByIds,
   getAuditCounts,
   getYearMonths,
+  query,
   update,
   regeocode,
   remove,

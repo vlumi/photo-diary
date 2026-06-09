@@ -11,12 +11,14 @@ import {
   type MissingField,
   type PhotoFilter,
 } from "../lib/photo-filter.js";
+import type { FilterShape } from "../lib/photo-filter-eval.js";
 
 export default () => {
   return {
     init,
     getPhotos,
     listPhotos,
+    queryFilteredGlobal,
     countAudits,
     countYearMonths,
     createPhoto,
@@ -32,6 +34,24 @@ const init = async () => {};
 const getPhotos = async () => {
   logger.debug("Getting all photos");
   return await db.loadPhotos();
+};
+
+// Cross-gallery filtered photo list. Drives the GlobalStats map's
+// lazy fetch — filter applied server-side via the FilterShape
+// evaluator (#534), no pagination since the consumer wants the full
+// match set for the map pins. Symmetric with the per-gallery
+// `gallery-photo.queryGalleryPhotos`.
+const queryFilteredGlobal = async (
+  opts: {
+    filter?: FilterShape;
+    year?: number;
+    month?: number;
+    day?: number;
+    lang?: string;
+  } = {}
+) => {
+  logger.debug("Querying cross-gallery filtered photos", { opts });
+  return await db.queryFilteredPhotosGlobal(opts);
 };
 
 // Filtered + paginated list. Loads every row and applies predicates in

@@ -999,6 +999,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/photos/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Filter-aware cross-gallery photo list (admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        year?: number;
+                        month?: number;
+                        day?: number;
+                        lang?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        }[];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/photos/{photoId}": {
         parameters: {
             query?: never;
@@ -2191,6 +2243,51 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/filter-values": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Filter pill universe across all galleries (admin) */
+        get: {
+            parameters: {
+                query?: {
+                    lang?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            categoryValues: {
+                                [key: string]: string[];
+                            };
+                            byCityLocalized: {
+                                [key: string]: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

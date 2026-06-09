@@ -12,9 +12,11 @@ import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
 import photosService from "../../services/photos";
 import galleriesService from "../../services/galleries";
 import metaService from "../../services/meta";
+import statsService from "../../services/stats";
 import theme from "../../lib/theme";
+import filter from "../../lib/filter";
 import { type UniqueValues } from "../../lib/stats";
-import { buildUniqueValuesFromPhotos } from "../../lib/uniqueValues";
+import { buildUniqueValues } from "../../lib/uniqueValues";
 import config from "../../lib/config";
 import { useHostScope } from "../../lib/use-host-scope";
 import {
@@ -52,26 +54,6 @@ const Notice = styled.div`
   color: var(--inactive-color);
 `;
 
-// All-photos fetch is paginated under /api/v1/photos's existing
-// admin endpoint. pageSize is the server's maximum (500). The
-// queryFn loops over pages until the full set is in hand — fine
-// for current catalogue sizes; if the global instance ever grows
-// past tens of thousands the server-side stats aggregation in
-// #286 supersedes this.
-const PAGE_SIZE = 500;
-
-const fetchAllPhotos = async (): Promise<PhotoT[]> => {
-  const first = await photosService.list({}, 1, PAGE_SIZE);
-  const raw = [...first.photos];
-  const totalPages = Math.max(1, Math.ceil(first.total / PAGE_SIZE));
-  for (let page = 2; page <= totalPages; page++) {
-    const next = await photosService.list({}, page, PAGE_SIZE);
-    raw.push(...next.photos);
-  }
-  return raw
-    .map((photo) => PhotoModel(photo))
-    .filter((p): p is PhotoT => !!p);
-};
 
 const GlobalStats = (): React.ReactElement => {
   const { t } = useTranslation();
@@ -92,9 +74,40 @@ const GlobalStats = (): React.ReactElement => {
     ? theme.setTheme(themePreference)
     : theme.setTheme(meta?.defaultTheme ?? config.DEFAULT_THEME);
 
+  // Lazy + filter-aware fetch — only needed for Stats's globalScope
+  // map render now that the filter pill universe + the Galleries
+  // section both consume from server endpoints. Flag flips when the
+  // user expands the Stats Location modal (callback passed through
+  // Stats). Body mirrors gallery-photos/<id>/query so the server
+  // applies the active filter cross-gallery.
+  const [mapPhotosWanted, setMapPhotosWanted] = React.useState(false);
+  const serverFilters = React.useMemo(
+    () => filter.toServerFilters(filters),
+    [filters]
+  );
+  const photoQueryBody = React.useMemo(
+    () => ({ filter: serverFilters, lang }),
+    [serverFilters, lang]
+  );
   const photosQuery = useQuery({
-    queryKey: ["global-stats-photos", user?.id ?? null],
-    queryFn: fetchAllPhotos,
+    queryKey: [
+      "global-stats-photos",
+      user?.id ?? null,
+      photoQueryBody,
+    ],
+    queryFn: async () => {
+      const raw = (await photosService.query(photoQueryBody)) as Array<
+        Record<string, unknown>
+      >;
+      return raw
+        .map((photo) => PhotoModel(photo))
+        .filter((p): p is PhotoT => !!p);
+    },
+    enabled: !!user?.isAdmin() && mapPhotosWanted,
+  });
+  const filterValuesQuery = useQuery({
+    queryKey: ["global-filter-values", user?.id ?? null, lang],
+    queryFn: () => statsService.getGlobalFilterValues(lang),
     enabled: !!user?.isAdmin(),
   });
   const galleriesQuery = useQuery({
@@ -104,11 +117,20 @@ const GlobalStats = (): React.ReactElement => {
   });
 
   const photos = photosQuery.data;
+  const filterValues = filterValuesQuery.data;
   const galleries = galleriesQuery.data ?? [];
   const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
-    if (!photos || !countryData) return undefined;
-    return buildUniqueValuesFromPhotos(photos, lang, t, countryData);
-  }, [photos, lang, t, countryData]);
+    if (!filterValues || !countryData) return undefined;
+    return buildUniqueValues(filterValues, lang, t, countryData);
+  }, [filterValues, lang, t, countryData]);
+  const requestMapPhotos = React.useCallback(
+    () => setMapPhotosWanted(true),
+    []
+  );
+  const releaseMapPhotos = React.useCallback(
+    () => setMapPhotosWanted(false),
+    []
+  );
 
   const frame = (body: React.ReactNode): React.ReactElement => (
     <>
@@ -143,13 +165,20 @@ const GlobalStats = (): React.ReactElement => {
   if (hostScopeReady && isHostScoped) {
     return <Navigate to="/g" replace />;
   }
-  if (!countryData || photosQuery.isLoading || !photos || !uniqueValues) {
+  if (
+    !countryData ||
+    filterValuesQuery.isLoading ||
+    !filterValues ||
+    !uniqueValues
+  ) {
     return frame(<Notice>{t("loading")}</Notice>);
   }
-  if (photosQuery.isError) {
+  if (filterValuesQuery.isError || photosQuery.isError) {
     return frame(<Notice>{t("stats-global-load-error")}</Notice>);
   }
-  if (photos.length === 0) {
+  // Empty instance: filter universe has no years (any photo would
+  // contribute one). Cheap signal without fetching the photo array.
+  if ((filterValues.categoryValues.year ?? []).length === 0) {
     return frame(<Notice>{t("stats-global-empty")}</Notice>);
   }
 
@@ -159,6 +188,8 @@ const GlobalStats = (): React.ReactElement => {
       <Stats
         globalScope
         photos={photos}
+        onRequestPhotos={requestMapPhotos}
+        onClosePhotos={releaseMapPhotos}
         filters={filters}
         setFilters={setFilters}
         lang={lang}

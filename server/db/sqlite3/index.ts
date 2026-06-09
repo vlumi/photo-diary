@@ -83,9 +83,11 @@ export default () => {
 
     loadGalleryPhotos,
     queryFilteredPhotos,
+    queryFilteredPhotosGlobal,
     queryFilteredPhotoCounts,
     queryFilteredPhotoNeighbors,
     queryGalleryFilterValues,
+    queryGlobalFilterValues,
     linkGalleryPhoto,
     unlinkGalleryPhoto,
     unlinkAllPhotos,
@@ -550,6 +552,21 @@ const queryFilteredPhotos = async (
       matchesFilter(opts.filter, photo)
   );
 };
+// Cross-gallery counterpart of `queryFilteredPhotos`. Loads every
+// photo (no gallery scope) and applies the same FilterShape /
+// optional year/month/day predicate. Drives the GlobalStats Location
+// map's filter-aware photo set without needing to fan out per-gallery
+// queries.
+const queryFilteredPhotosGlobal = async (
+  opts: QueryFilteredOpts = {}
+): Promise<Photo[]> => {
+  const photos = (await loadPhotos(opts.lang)) as Photo[];
+  return photos.filter(
+    (photo) =>
+      matchesScope(photo, opts.year, opts.month, opts.day) &&
+      matchesFilter(opts.filter, photo)
+  );
+};
 
 interface CountsFilteredOpts {
   filter?: FilterShape;
@@ -630,11 +647,12 @@ interface FilterValuesResult {
   categoryValues: Record<string, string[]>;
   byCityLocalized: Record<string, string>;
 }
-const queryGalleryFilterValues = async (
-  galleryId: string,
-  lang?: string
-): Promise<FilterValuesResult> => {
-  const photos = (await loadGalleryPhotos(galleryId, lang)) as Photo[];
+// Shared projection from the photo set into the kebab-case
+// FilterShape universe. Used by both the gallery-scoped
+// `queryGalleryFilterValues` (#534) and the global cross-gallery
+// flavour (followup to #532). Photos array is already filtered to
+// the appropriate scope by the caller.
+const buildFilterValuesFromPhotos = (photos: Photo[]): FilterValuesResult => {
   const cv = buildCategoryValues(photos);
   const annotations = buildAnnotations(photos);
   const yearMonthSet = new Set<string>();
@@ -672,6 +690,19 @@ const queryGalleryFilterValues = async (
     },
     byCityLocalized: annotations.byCityLocalized,
   };
+};
+const queryGalleryFilterValues = async (
+  galleryId: string,
+  lang?: string
+): Promise<FilterValuesResult> => {
+  const photos = (await loadGalleryPhotos(galleryId, lang)) as Photo[];
+  return buildFilterValuesFromPhotos(photos);
+};
+const queryGlobalFilterValues = async (
+  lang?: string
+): Promise<FilterValuesResult> => {
+  const photos = (await loadPhotos(lang)) as Photo[];
+  return buildFilterValuesFromPhotos(photos);
 };
 
 const loadGalleryPhoto = async (
