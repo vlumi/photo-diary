@@ -68,17 +68,8 @@ const Content = ({
     }
     return max;
   }, [counts]);
-  // Month range (#399). Above the desktop breakpoint the year
-  // grid renders all 12 months so the calendar reads as a stable
-  // Jan–Dec shape regardless of where the active filter's photos
-  // fall; below it clips to the filtered first/last month so the
-  // operator's mobile scroll isn't padded with empty tiles. The
-  // 900px threshold matches the `Calendar` max-width — above that
-  // the full 4-col / 3-row grid fits without forcing a vertical
-  // re-flow. `useFilteredCalendar` gives the filter-aware bounds;
-  // empty bounds (an empty gallery, or one with no photos under
-  // the active filter) collapse to nothing on mobile and a 12-up
-  // empty grid on desktop.
+  // 900px matches the `Calendar` max-width — the full 4-col / 3-row
+  // grid fits without re-flow above it.
   const isWide = useMediaQuery("(min-width: 900px)");
   const cal = useFilteredCalendar(gallery.id());
   const months = React.useMemo(() => {
