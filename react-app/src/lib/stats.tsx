@@ -89,11 +89,14 @@ export interface StatsCategory {
   // renders the map from these. `photos` is empty until the user
   // requests it via `onRequestPhotos` (#532) — the inline card shows
   // `geotaggedCount` from the stats response so no /query fires until
-  // the modal opens.
+  // the modal opens. `onClosePhotos` fires when the user dismisses
+  // the modal, letting the parent disable the query so subsequent
+  // filter changes (with the modal still closed) don't refetch.
   photos?: Photo[];
   geotaggedCount?: number;
   totalCount?: number;
   onRequestPhotos?: () => void;
+  onClosePhotos?: () => void;
   kpi?: KpiItem[];
   charts?: ChartSpec[];
   tableColumns?: TableColumn[];
@@ -245,7 +248,8 @@ const collectTopics = (
   mapPhotos: Photo[] = [],
   hideMap = false,
   betaEnabled: BetaEnabled = {},
-  onRequestMapPhotos?: () => void
+  onRequestMapPhotos?: () => void,
+  onCloseMapPhotos?: () => void
 ): StatsTopic[] => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang, t);
@@ -770,6 +774,7 @@ const collectTopics = (
     geotaggedCount,
     totalCount: total,
     onRequestPhotos: onRequestMapPhotos,
+    onClosePhotos: onCloseMapPhotos,
   });
   const collectGeneral = () => {
     const count = data.count;

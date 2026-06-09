@@ -127,6 +127,10 @@ const GlobalStats = (): React.ReactElement => {
     () => setMapPhotosWanted(true),
     []
   );
+  const releaseMapPhotos = React.useCallback(
+    () => setMapPhotosWanted(false),
+    []
+  );
 
   const frame = (body: React.ReactNode): React.ReactElement => (
     <>
@@ -185,6 +189,7 @@ const GlobalStats = (): React.ReactElement => {
         globalScope
         photos={photos}
         onRequestPhotos={requestMapPhotos}
+        onClosePhotos={releaseMapPhotos}
         filters={filters}
         setFilters={setFilters}
         lang={lang}
