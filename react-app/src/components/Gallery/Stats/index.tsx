@@ -101,10 +101,16 @@ const Stats = ({
   // filter so we don't need the gallery's full photo array in memory
   // (#532). For globalScope, keep the legacy in-prop walk — that
   // surface still fetches the cross-gallery photo array.
+  // Same queryKey shape as Title's mapPhotos + Month/Content so
+  // TanStack dedupes when scope matches (Stats unscoped, Title in
+  // stats context unscoped — one network fetch shared).
+  const mapQueryBody = React.useMemo(
+    () => ({ filter: serverFilters, lang }),
+    [serverFilters, lang]
+  );
   const { data: mapPhotosRaw } = useQuery({
-    queryKey: ["gallery-photos-stats-map", galleryId, serverFilters],
-    queryFn: () =>
-      galleryPhotosService.query(galleryId as string, { filter: serverFilters }),
+    queryKey: ["gallery-photos-query", galleryId, mapQueryBody],
+    queryFn: () => galleryPhotosService.query(galleryId as string, mapQueryBody),
     enabled: !!galleryId && !hideMap,
     placeholderData: keepPreviousData,
   });

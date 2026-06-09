@@ -102,22 +102,15 @@ const Content = ({
     () => filter.toServerFilters(filters),
     [filters]
   );
+  // Shared queryKey shape with Title's map fetch and Stats's map
+  // fetch so identical scopes hit one network request.
+  const queryBody = React.useMemo(
+    () => ({ filter: serverFilters, year, month, lang }),
+    [serverFilters, year, month, lang]
+  );
   const { data: photosRaw } = useQuery({
-    queryKey: [
-      "gallery-photos-month",
-      gallery.id(),
-      year,
-      month,
-      serverFilters,
-      lang,
-    ],
-    queryFn: () =>
-      galleryPhotosService.query(gallery.id(), {
-        filter: serverFilters,
-        year,
-        month,
-        lang,
-      }),
+    queryKey: ["gallery-photos-query", gallery.id(), queryBody],
+    queryFn: () => galleryPhotosService.query(gallery.id(), queryBody),
     placeholderData: keepPreviousData,
   });
   const photosByDay = React.useMemo(() => {
