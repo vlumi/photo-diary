@@ -11,6 +11,7 @@ export default () => {
     queryGalleryPhotoCounts,
     getGalleryPhotoNeighbors,
     getGalleryPhoto,
+    getGalleryPhotoByOriginalFilename,
     linkGalleryPhoto,
     unlinkGalleryPhoto,
     unlinkAllPhotos,
@@ -77,6 +78,23 @@ const getGalleryPhoto = async (
 ) => {
   logger.debug("Getting photo", photoId, "from gallery", galleryId);
   return await db.loadGalleryPhoto(galleryId, photoId, lang);
+};
+const getGalleryPhotoByOriginalFilename = async (
+  galleryId: string,
+  originalFilename: string,
+  lang?: string
+) => {
+  logger.debug(
+    "Getting photo by original filename",
+    originalFilename,
+    "from gallery",
+    galleryId
+  );
+  return await db.loadGalleryPhotoByOriginalFilename(
+    galleryId,
+    originalFilename,
+    lang
+  );
 };
 const linkGalleryPhoto = async (galleryId: string, photoId: string) => {
   logger.debug("Linking photo", photoId, "to gallery", galleryId);

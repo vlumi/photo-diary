@@ -8,10 +8,11 @@ import Topic from "./Topic";
 import stats from "../../../lib/stats";
 import filter from "../../../lib/filter";
 import { adaptServerStats } from "../../../lib/stats-adapter";
+import galleryPhotosService from "../../../services/gallery-photos";
 import statsService from "../../../services/stats";
 import { useBetaStore } from "../../../stores";
 
-import type { Photo } from "../../../models/PhotoModel";
+import PhotoModel, { type Photo } from "../../../models/PhotoModel";
 import type { Filters as FiltersT } from "../../../lib/filter";
 
 interface CountryData {
@@ -40,7 +41,10 @@ interface Props {
   // required.
   galleryId?: string;
   globalScope?: boolean;
-  photos: Photo[];
+  // Required for globalScope (legacy photo-walking path until the
+  // global flavour migrates). For gallery-scoped, optional — the
+  // map fetch goes via /query against the gallery instead (#532).
+  photos?: Photo[];
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   lang: string;
@@ -93,9 +97,38 @@ const Stats = ({
     [serverStats]
   );
 
-  const mapPhotos = React.useMemo(
-    () => (hideMap ? [] : photos.filter((photo) => photo.hasCoordinates())),
-    [photos, hideMap]
+  // Map photos: lazy-fetch (#532). The Stats grid renders the
+  // Location card with a count from the server's geotaggedCount —
+  // /query only fires after the user opens the MapModal, then sticks
+  // (toggling closed doesn't re-fire). For globalScope, keep the
+  // legacy in-prop walk; that admin surface still fetches the
+  // cross-gallery photo array.
+  // Same queryKey shape as Title's mapPhotos + Month/Content so
+  // TanStack dedupes when scope matches.
+  const [mapPhotosRequested, setMapPhotosRequested] = React.useState(false);
+  const mapQueryBody = React.useMemo(
+    () => ({ filter: serverFilters, lang }),
+    [serverFilters, lang]
+  );
+  const { data: mapPhotosRaw } = useQuery({
+    queryKey: ["gallery-photos-query", galleryId, mapQueryBody],
+    queryFn: () => galleryPhotosService.query(galleryId as string, mapQueryBody),
+    enabled: !!galleryId && !hideMap && mapPhotosRequested,
+    placeholderData: keepPreviousData,
+  });
+  const mapPhotos = React.useMemo(() => {
+    if (hideMap) return [];
+    if (galleryId) {
+      return ((mapPhotosRaw ?? []) as Array<Record<string, unknown>>)
+        .map((raw) => PhotoModel(raw))
+        .filter((p): p is Photo => !!p)
+        .filter((p) => p.hasCoordinates());
+    }
+    return (photos ?? []).filter((photo) => photo.hasCoordinates());
+  }, [galleryId, mapPhotosRaw, photos, hideMap]);
+  const requestMapPhotos = React.useCallback(
+    () => setMapPhotosRequested(true),
+    []
   );
 
   // Memoize so unrelated re-renders (filter UI ticks, etc.) don't
@@ -112,10 +145,21 @@ const Stats = ({
             theme,
             mapPhotos,
             hideMap,
-            enabled
+            enabled,
+            requestMapPhotos
           )
         : [],
-    [data, lang, t, countryData, theme, mapPhotos, hideMap, enabled]
+    [
+      data,
+      lang,
+      t,
+      countryData,
+      theme,
+      mapPhotos,
+      hideMap,
+      enabled,
+      requestMapPhotos,
+    ]
   );
 
   if (!data) {

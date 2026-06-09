@@ -5,6 +5,7 @@ import type { GalleryStats } from "../services/stats";
 
 const emptyServer: GalleryStats = {
   total: 0,
+  geotaggedCount: 0,
   byCategory: {},
   byYearMonth: {},
   summary: {

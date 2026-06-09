@@ -249,21 +249,20 @@ const Title = ({
     !gallery.hideMap() &&
     (year !== undefined ||
       (context === "stats" && year === undefined && month === undefined));
+  // Body shape mirrors Month/Content's /query call so TanStack
+  // dedupes across both fetches when scope matches (Photo modal /
+  // Month view both render Title + Month/Content concurrently).
   const mapScopeBody = React.useMemo(() => {
     if (year !== undefined && month !== undefined) {
-      return { filter: serverFilters, year, month };
+      return { filter: serverFilters, year, month, lang };
     }
     if (year !== undefined) {
-      return { filter: serverFilters, year };
+      return { filter: serverFilters, year, lang };
     }
-    return { filter: serverFilters };
-  }, [serverFilters, year, month]);
+    return { filter: serverFilters, lang };
+  }, [serverFilters, year, month, lang]);
   const { data: mapPhotosRaw } = useQuery({
-    queryKey: [
-      "gallery-photos-map",
-      gallery.id(),
-      mapScopeBody,
-    ],
+    queryKey: ["gallery-photos-query", gallery.id(), mapScopeBody],
     queryFn: () => galleryPhotosService.query(gallery.id(), mapScopeBody),
     enabled: mapScopeEnabled,
     placeholderData: keepPreviousData,

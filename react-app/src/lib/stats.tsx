@@ -86,10 +86,14 @@ export interface StatsCategory {
   // hosts a map modal instead of the usual Summary/Charts/Table tile).
   kind?: "location";
   // `kind: "location"` carries its photo subset + counts; the modal
-  // renders the map from these.
+  // renders the map from these. `photos` is empty until the user
+  // requests it via `onRequestPhotos` (#532) — the inline card shows
+  // `geotaggedCount` from the stats response so no /query fires until
+  // the modal opens.
   photos?: Photo[];
   geotaggedCount?: number;
   totalCount?: number;
+  onRequestPhotos?: () => void;
   kpi?: KpiItem[];
   charts?: ChartSpec[];
   tableColumns?: TableColumn[];
@@ -240,7 +244,8 @@ const collectTopics = (
   theme: Theme,
   mapPhotos: Photo[] = [],
   hideMap = false,
-  betaEnabled: BetaEnabled = {}
+  betaEnabled: BetaEnabled = {},
+  onRequestMapPhotos?: () => void
 ): StatsTopic[] => {
   const formatNumber = format.number(lang);
   const formatExposure = format.exposure(lang, t);
@@ -753,13 +758,18 @@ const collectTopics = (
       }),
     };
   };
-  const collectLocation = (photos: Photo[], total: number): StatsCategory => ({
+  const collectLocation = (
+    photos: Photo[],
+    geotaggedCount: number,
+    total: number
+  ): StatsCategory => ({
     key: "location",
     title: t("stats-category-location"),
     kind: "location",
     photos,
-    geotaggedCount: photos.length,
+    geotaggedCount,
     totalCount: total,
+    onRequestPhotos: onRequestMapPhotos,
   });
   const collectGeneral = () => {
     const count = data.count;
@@ -787,8 +797,13 @@ const collectTopics = (
           )
         );
       }
-      if (mapPhotos.length > 0) {
-        categories.push(collectLocation(mapPhotos, total));
+      // Location card surfaces whenever the server reports any
+      // geotagged photos; the photo list itself is lazy (#532) —
+      // the inline card shows the count, the MapModal fetches
+      // pins on open via `onRequestPhotos`.
+      const geotaggedCount = count.geotaggedCount ?? 0;
+      if (geotaggedCount > 0) {
+        categories.push(collectLocation(mapPhotos, geotaggedCount, total));
       }
     }
     return {

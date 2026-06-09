@@ -53,6 +53,7 @@ const parseIsoDate = (
 export interface ClientStatsData {
   count: {
     total: number;
+    geotaggedCount: number;
     byTime: {
       byYear: Counts;
       byYearMonth: YearMonthCounts;
@@ -103,6 +104,7 @@ export const adaptServerStats = (server: GalleryStats): ClientStatsData => {
   return {
     count: {
       total: server.total,
+      geotaggedCount: server.geotaggedCount ?? 0,
       byTime: {
         byYear: pad("year"),
         byYearMonth: server.byYearMonth ?? emptyYearMonth,

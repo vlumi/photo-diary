@@ -2386,6 +2386,54 @@
         }
       }
     },
+    "/api/v1/gallery-photos/{galleryId}/by-original-filename/{originalFilename}": {
+      "get": {
+        "summary": "Look up a photo by its original camera filename",
+        "tags": [
+          "gallery-photos"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "lang",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "galleryId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "originalFilename",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/gallery-photos/{galleryId}/{photoId}": {
       "get": {
         "summary": "Get one photo's metadata in a gallery's context",
@@ -3257,6 +3305,7 @@
                   "type": "object",
                   "required": [
                     "total",
+                    "geotaggedCount",
                     "byCategory",
                     "byYearMonth",
                     "summary",
@@ -3269,6 +3318,9 @@
                   ],
                   "properties": {
                     "total": {
+                      "type": "number"
+                    },
+                    "geotaggedCount": {
                       "type": "number"
                     },
                     "byCategory": {
@@ -3440,6 +3492,7 @@
                   "type": "object",
                   "required": [
                     "total",
+                    "geotaggedCount",
                     "byCategory",
                     "byYearMonth",
                     "summary",
@@ -3452,6 +3505,9 @@
                   ],
                   "properties": {
                     "total": {
+                      "type": "number"
+                    },
+                    "geotaggedCount": {
                       "type": "number"
                     },
                     "byCategory": {

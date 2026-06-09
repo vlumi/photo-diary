@@ -255,6 +255,17 @@ export default {
   loadGalleryPhoto: async (galleryId: string, photoId: string, lang?: string) => {
     return await db.loadGalleryPhoto(galleryId, photoId, lang);
   },
+  loadGalleryPhotoByOriginalFilename: async (
+    galleryId: string,
+    originalFilename: string,
+    lang?: string
+  ) => {
+    return await db.loadGalleryPhotoByOriginalFilename(
+      galleryId,
+      originalFilename,
+      lang
+    );
+  },
   unlinkGalleryPhoto: async (galleryId: string, photoId: string) => {
     return await db.unlinkGalleryPhoto(galleryId, photoId);
   },

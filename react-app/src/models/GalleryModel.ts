@@ -126,24 +126,34 @@ const GalleryModel = (galleryData: unknown) => {
       }
       return parts.join("/");
     },
-    lastPath: (): string => {
-      if (!self.includesPhotos()) {
+    // Caller passes the gallery's calendar shape (see `useGalleryCalendar`)
+    // — the gallery model itself no longer carries the photo array
+    // that used to drive `firstDay`/`lastDay`/`includesPhotos`.
+    // `photo` initialView falls back to the month-of-lastDay path
+    // here; pinning to the specific last-photo URL would need an
+    // extra fetch beyond /counts, and the gallery list rendering N
+    // gallery cards shouldn't fan out N photo lookups.
+    lastPath: (shape: {
+      includesPhotos: () => boolean;
+      lastDay: () => [number, number, number] | [undefined, undefined, undefined];
+    }): string => {
+      if (!shape.includesPhotos()) {
         return self.path();
       }
-      const [year, month, day] = self.lastDay();
+      const [year, month, day] = shape.lastDay();
+      if (year === undefined || month === undefined || day === undefined) {
+        return self.path();
+      }
       const initialView = gallery.initialView || config.INITIAL_GALLERY_VIEW;
       switch (initialView) {
         case "year":
           return self.path(year);
+        case "day":
+          return self.path(year, month, day);
+        case "photo":
         default:
         case "month":
           return self.path(year, month);
-        case "day":
-          return self.path(year, month, day);
-        case "photo": {
-          const last = self.lastPhoto();
-          return last ? last.path(self) : self.path();
-        }
       }
     },
     statsPath: (): string => ["", "s", gallery.id].join("/"),

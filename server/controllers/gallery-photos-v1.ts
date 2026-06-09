@@ -21,6 +21,10 @@ const GalleryPhotoParams = Type.Object({
   galleryId: Type.String(),
   photoId: Type.String(),
 });
+const GalleryOriginalFilenameParams = Type.Object({
+  galleryId: Type.String(),
+  originalFilename: Type.String(),
+});
 // Picks the geocoded place / state / city / district from photo_localized
 // when set; falls back to the EN canonical on the photo row.
 const LangQuery = Type.Object({
@@ -281,6 +285,49 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
           return { categoryValues: {}, byCityLocalized: {} };
+        }
+        throw error;
+      }
+    }
+  );
+
+  /**
+   * Pre-rename / camera-filename bookmark fallback (#532). When a
+   * Photo URL's id doesn't resolve via the per-id endpoint, the
+   * modal mount falls back to this lookup against the camera-given
+   * original filename. Same auth + 404 semantics as the per-id
+   * endpoint.
+   */
+  fastify.get(
+    "/:galleryId/by-original-filename/:originalFilename",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Look up a photo by its original camera filename",
+        params: GalleryOriginalFilenameParams,
+        querystring: LangQuery,
+        response: { 200: PhotoItem },
+      },
+    },
+    async (request) => {
+      try {
+        requireScopeMatches(request, request.params.galleryId);
+        await authorizer.authorizeGalleryView(
+          request.user.id,
+          request.params.galleryId
+        );
+        const photo = await model.getGalleryPhotoByOriginalFilename(
+          request.params.galleryId,
+          request.params.originalFilename,
+          request.query.lang
+        );
+        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
+          maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
+        }
+        return photo;
+      } catch (error) {
+        if (error instanceof AccessError) {
+          throw new NotFoundError();
         }
         throw error;
       }
