@@ -1,5 +1,6 @@
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
+import { ValidationError } from "../lib/errors.js";
 import type { FilterShape } from "../lib/photo-filter-eval.js";
 import {
   cacheGet,
@@ -126,9 +127,26 @@ const getGalleryPhotoByOriginalFilename = async (
     lang
   );
 };
+// Virtual galleries are read-only (#22): membership is computed
+// live from the source galleries, so direct link/unlink ops on
+// the virtual id have no `gallery_photo` row to touch and would
+// silently no-op. Reject so the operator sees the structural
+// issue rather than a confusing "nothing happened".
+const rejectIfVirtual = async (
+  galleryId: string,
+  op: string
+): Promise<void> => {
+  if (await db.isVirtualGallery(galleryId)) {
+    throw new ValidationError(
+      `Cannot ${op} on a virtual gallery; modify a source gallery instead`,
+      { galleryId }
+    );
+  }
+};
 // Gallery membership changes shift the global stats' `byGallery`
 // counts too (#446), so link / unlink invalidate both scopes.
 const linkGalleryPhoto = async (galleryId: string, photoId: string) => {
+  await rejectIfVirtual(galleryId, "link a photo");
   logger.debug("Linking photo", photoId, "to gallery", galleryId);
   const result = await db.linkGalleryPhoto([galleryId], [photoId]);
   invalidateGallery(galleryId);
@@ -136,6 +154,7 @@ const linkGalleryPhoto = async (galleryId: string, photoId: string) => {
   return result;
 };
 const unlinkGalleryPhoto = async (galleryId: string, photoId: string) => {
+  await rejectIfVirtual(galleryId, "unlink a photo");
   logger.debug("Unlinking photo", photoId, "from gallery", galleryId);
   const result = await db.unlinkGalleryPhoto(galleryId, photoId);
   invalidateGallery(galleryId);
@@ -143,6 +162,7 @@ const unlinkGalleryPhoto = async (galleryId: string, photoId: string) => {
   return result;
 };
 const unlinkAllPhotos = async (galleryId: string) => {
+  await rejectIfVirtual(galleryId, "unlink all photos");
   logger.debug("Unlinking all photos from gallery", galleryId);
   const result = await db.unlinkAllPhotos(galleryId);
   invalidateGallery(galleryId);

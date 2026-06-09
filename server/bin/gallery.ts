@@ -53,7 +53,22 @@ const fieldOptions = (y: any) =>
     .option("hostname", {
       describe: "Regex for hostnames that default to this gallery",
       type: "string",
+    })
+    .option("source", {
+      describe:
+        "Make this a virtual gallery whose contents are the union of these source gallery ids. Repeat for multiple. Pass --source '' on update to convert a virtual gallery back to a real one.",
+      type: "string",
+      array: true,
     });
+
+// Parse `--source` flag values into a clean list. Yargs `array: true`
+// with explicit empty string passed once → ['']: treat that as "clear
+// the virtual mapping". Otherwise filter empties + trim.
+const parseSources = (raw: string[] | undefined): string[] | undefined => {
+  if (raw === undefined) return undefined;
+  if (raw.length === 1 && raw[0] === "") return [];
+  return raw.map((s) => s.trim()).filter((s) => s.length > 0);
+};
 
 await yargs(hideBin(process.argv))
   .scriptName("gallery.ts")
@@ -111,7 +126,15 @@ await yargs(hideBin(process.argv))
         initialView: argv.initial_view as string | undefined,
         hostname: argv.hostname as string | undefined,
       });
-      console.log(`✓ Created gallery "${galleryId}".`);
+      const sources = parseSources(argv.source as string[] | undefined);
+      if (sources && sources.length > 0) {
+        await db.upsertVirtualGallery(galleryId, sources);
+        console.log(
+          `✓ Created virtual gallery "${galleryId}" with sources: ${sources.join(", ")}.`
+        );
+      } else {
+        console.log(`✓ Created gallery "${galleryId}".`);
+      }
     }
   )
   .command(
@@ -144,7 +167,22 @@ await yargs(hideBin(process.argv))
       if ("initial_view" in argv) updates.initial_view = argv.initial_view as string;
       if ("hostname" in argv) updates.hostname = argv.hostname as string;
       await db.updateGallery(galleryId, updates);
-      console.log(`✓ Updated gallery "${galleryId}".`);
+      const sources = parseSources(argv.source as string[] | undefined);
+      if (sources !== undefined) {
+        if (sources.length === 0) {
+          await db.deleteVirtualGallery(galleryId);
+          console.log(
+            `✓ Updated gallery "${galleryId}" — converted to a real (non-virtual) gallery.`
+          );
+        } else {
+          await db.upsertVirtualGallery(galleryId, sources);
+          console.log(
+            `✓ Updated gallery "${galleryId}" with sources: ${sources.join(", ")}.`
+          );
+        }
+      } else {
+        console.log(`✓ Updated gallery "${galleryId}".`);
+      }
     }
   )
   .command(

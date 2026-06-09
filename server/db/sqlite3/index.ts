@@ -32,6 +32,7 @@ import schemaFactory, {
   type User,
   type UserGalleryRow,
   type UserRow,
+  type VirtualGalleryRow,
 } from "./schema.js";
 
 const SCHEMA = schemaFactory();
@@ -80,6 +81,10 @@ export default () => {
     loadGallery,
     updateGallery,
     deleteGallery,
+
+    upsertVirtualGallery,
+    deleteVirtualGallery,
+    isVirtualGallery,
 
     loadGalleryPhotos,
     queryFilteredPhotos,
@@ -449,11 +454,76 @@ const resolveHideMap = async (
   return guest?.hide_map;
 };
 
+// Virtual galleries: sibling `virtual_gallery` table holds the
+// JSON-encoded source list for any gallery whose contents are a
+// union of other galleries' photos (#22). Loaders below decorate
+// the base Gallery row with `sources` when the join hits.
+const parseSourcesJson = (raw: string): string[] => {
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((v): v is string => typeof v === "string")
+      : [];
+  } catch {
+    return [];
+  }
+};
+const loadAllVirtualGalleries = (): Map<string, string[]> => {
+  const rows = db
+    .prepare("SELECT gallery_id, sources FROM virtual_gallery")
+    .all() as VirtualGalleryRow[];
+  const out = new Map<string, string[]>();
+  for (const row of rows) {
+    out.set(row.gallery_id, parseSourcesJson(row.sources));
+  }
+  return out;
+};
+const loadVirtualGallerySources = (galleryId: string): string[] | undefined => {
+  const row = db
+    .prepare("SELECT sources FROM virtual_gallery WHERE gallery_id = ?")
+    .get(galleryId) as Pick<VirtualGalleryRow, "sources"> | undefined;
+  if (!row) return undefined;
+  return parseSourcesJson(row.sources);
+};
+// Resolves a galleryId to the list of source gallery IDs whose
+// `gallery_photo` rows make up its contents. Real gallery → [self].
+// Virtual gallery → its stored sources. Empty sources or missing
+// row treated as "no contents" (returns []).
+const resolveGallerySources = (galleryId: string): string[] => {
+  const sources = loadVirtualGallerySources(galleryId);
+  return sources === undefined ? [galleryId] : sources;
+};
+const isVirtualGallery = async (galleryId: string): Promise<boolean> => {
+  return loadVirtualGallerySources(galleryId) !== undefined;
+};
+const decorateGalleryWithSources = (
+  gallery: Gallery,
+  sourcesByGallery: Map<string, string[]>
+): Gallery => {
+  const sources = sourcesByGallery.get(gallery.id);
+  return sources === undefined ? gallery : { ...gallery, sources };
+};
+const upsertVirtualGallery = async (
+  galleryId: string,
+  sources: string[]
+): Promise<void> => {
+  db.prepare(
+    "INSERT INTO virtual_gallery (gallery_id, sources) VALUES (?, ?) " +
+      "ON CONFLICT(gallery_id) DO UPDATE SET sources=excluded.sources"
+  ).run(galleryId, JSON.stringify(sources));
+};
+const deleteVirtualGallery = async (galleryId: string): Promise<void> => {
+  db.prepare("DELETE FROM virtual_gallery WHERE gallery_id = ?").run(galleryId);
+};
+
 const loadGalleries = async () => {
   const rows = db
     .prepare(SCHEMA.gallery.buildSelectQuery())
     .all() as GalleryRow[];
-  return rows.map(SCHEMA.gallery.mapRow);
+  const sourcesByGallery = loadAllVirtualGalleries();
+  return rows
+    .map(SCHEMA.gallery.mapRow)
+    .map((g) => decorateGalleryWithSources(g, sourcesByGallery));
 };
 const createGallery = async (gallery: Gallery) => {
   db.prepare(SCHEMA.gallery.buildCreateQuery()).run(
@@ -465,7 +535,9 @@ const loadGallery = async (galleryId: string) => {
     .prepare(SCHEMA.gallery.buildSelectByIdQuery())
     .get(galleryId) as GalleryRow | undefined;
   if (!row) throw new NotFoundError();
-  return SCHEMA.gallery.mapRow(row);
+  const base = SCHEMA.gallery.mapRow(row);
+  const sources = loadVirtualGallerySources(galleryId);
+  return sources === undefined ? base : { ...base, sources };
 };
 const updateGallery = async (galleryId: string, gallery: GalleryInput) => {
   const { query, values } = SCHEMA.gallery.buildUpdateByIdQuery(gallery);
@@ -477,12 +549,21 @@ const deleteGallery = async (galleryId: string) =>
 
 const loadGalleryPhotos = async (galleryId: string, lang?: string) => {
   const schema = SCHEMA.photo;
+  const sources = resolveGallerySources(galleryId);
+  if (sources.length === 0) return [];
+  // Virtual galleries (#22) widen the gallery_id check from `= ?`
+  // to `IN (?, ?, …)`. Real galleries resolve to `[galleryId]`,
+  // producing the same single-id IN-clause — equivalent to the
+  // previous `gallery_id = ?` behaviour. DEDUPLICATION is already
+  // implicit in the photo `id IN (...)` outer membership: each
+  // photo row appears at most once in the result.
+  const placeholders = sources.map(() => "?").join(", ");
   const stmt = db.prepare(
     schema.buildSelectQuery([
-      "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
+      `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
     ])
   );
-  const rows = stmt.all(galleryId) as PhotoRow[];
+  const rows = stmt.all(...sources) as PhotoRow[];
   const localized =
     lang && lang !== "en"
       ? loadLocalizedFor(rows.map((r) => r.id), lang)
@@ -711,14 +792,19 @@ const loadGalleryPhoto = async (
   lang?: string
 ) => {
   const schema = SCHEMA.photo;
-  // buildSelectQuery joins with " AND " — entries are bare predicates.
+  const sources = resolveGallerySources(galleryId);
+  if (sources.length === 0) throw new NotFoundError();
+  // Virtual gallery aware (#22): widen membership check to the
+  // resolved source set. Same SQL shape — IN (?, ?, …) instead of
+  // = ?. The photo `id` predicate still pins to a single row.
+  const placeholders = sources.map(() => "?").join(", ");
   const stmt = db.prepare(
     schema.buildSelectQuery([
-      "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
+      `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
       "id = ?",
     ])
   );
-  const rows = stmt.all(galleryId, photoId) as PhotoRow[];
+  const rows = stmt.all(...sources, photoId) as PhotoRow[];
   if (rows.length === 0) {
     throw new NotFoundError();
   }
@@ -820,13 +906,16 @@ const loadGalleryPhotoByOriginalFilename = async (
   lang?: string
 ) => {
   const schema = SCHEMA.photo;
+  const sources = resolveGallerySources(galleryId);
+  if (sources.length === 0) throw new NotFoundError();
+  const placeholders = sources.map(() => "?").join(", ");
   const stmt = db.prepare(
     schema.buildSelectQuery([
-      "id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id = ?)",
+      `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
       "original_filename = ?",
     ])
   );
-  const rows = stmt.all(galleryId, originalFilename) as PhotoRow[];
+  const rows = stmt.all(...sources, originalFilename) as PhotoRow[];
   if (rows.length === 0) {
     throw new NotFoundError();
   }

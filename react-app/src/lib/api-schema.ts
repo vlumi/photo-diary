@@ -579,6 +579,7 @@ export interface paths {
                         /** @enum {string} */
                         initialView?: "year" | "month" | "day" | "photo";
                         hostname?: string;
+                        sources?: string[];
                     };
                 };
             };
@@ -657,6 +658,7 @@ export interface paths {
                         /** @enum {string} */
                         initialView?: "year" | "month" | "day" | "photo";
                         hostname?: string;
+                        sources?: string[];
                     };
                 };
             };
