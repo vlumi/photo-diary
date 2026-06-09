@@ -261,7 +261,7 @@ const buildByCategory = (
   ),
 });
 
-const buildAnnotations = (
+export const buildAnnotations = (
   photos: Photo[]
 ): {
   byStateCountry: Record<string, string>;
@@ -291,7 +291,7 @@ const buildAnnotations = (
 // Universe of bucket keys per category across the unfiltered set.
 // Same buckets `buildByCategory` produces, collapsed to a sorted
 // key list so the wire payload stays small.
-const buildCategoryValues = (
+export const buildCategoryValues = (
   photos: Photo[]
 ): Record<string, string[]> => {
   const all = buildByCategory(photos);
