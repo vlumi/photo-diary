@@ -14,6 +14,7 @@
 // cache and compute on demand.
 
 import db from "../db/index.js";
+import type { FilterValuesResult } from "../db/index.js";
 import type { Photo } from "../db/sqlite3/schema.js";
 import { cacheGet, cacheSet } from "../lib/stats-cache.js";
 import {
@@ -26,6 +27,7 @@ import type { FilterShape } from "../lib/photo-filter-eval.js";
 export default () => ({
   getGalleryStats,
   getGlobalStats,
+  getGlobalFilterValues,
 });
 
 // Re-export the response shape + types so controllers and tests
@@ -66,6 +68,25 @@ const getGalleryStats = async (
   const stats = computeStats(photos, filter);
   if (cacheable) cacheSet(key, stats);
   return stats;
+};
+
+// Global filter pill universe — cross-gallery flavour of the
+// gallery-scoped getGalleryFilterValues (#534). Drives the
+// `<GlobalStats>` filter sidebar without that page having to load
+// the entire photo array client-side. Cached under the same
+// `:global` namespace stats uses; photo writes that call
+// `invalidateGlobal()` sweep this entry alongside the stats one.
+const globalFilterValuesCacheKey = (lang?: string): string =>
+  !lang || lang === "en" ? ":global:fv" : `:global:fv:${lang}`;
+const getGlobalFilterValues = async (
+  lang?: string
+): Promise<FilterValuesResult> => {
+  const key = globalFilterValuesCacheKey(lang);
+  const cached = cacheGet<FilterValuesResult>(key);
+  if (cached) return cached;
+  const result = await db.queryGlobalFilterValues(lang);
+  cacheSet(key, result);
+  return result;
 };
 
 const getGlobalStats = async (

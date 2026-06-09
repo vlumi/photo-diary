@@ -27,4 +27,14 @@ const getGlobalStats = async (
 ): Promise<GalleryStats> =>
   unwrap(api.POST("/api/v1/stats", { body: { filter, lang } }));
 
-export default { getGalleryStats, getGlobalStats };
+// Cross-gallery filter pill universe (admin-only). Drives the
+// GlobalStats filter sidebar without needing the full photo array
+// client-side.
+const getGlobalFilterValues = async (lang?: string) =>
+  unwrap(
+    api.GET("/api/v1/filter-values", {
+      params: { query: lang ? { lang } : undefined },
+    })
+  );
+
+export default { getGalleryStats, getGlobalStats, getGlobalFilterValues };

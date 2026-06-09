@@ -45,6 +45,11 @@ interface Props {
   // global flavour migrates). For gallery-scoped, optional — the
   // map fetch goes via /query against the gallery instead (#532).
   photos?: Photo[];
+  // For globalScope: parent owns the photos fetch (lazy-loaded). Stats
+  // calls this when the user opens the MapModal so the parent can
+  // flip its own "wanted" flag and trigger the fetch. Ignored for
+  // gallery-scoped — Stats does its own /query lazy-fetch there.
+  onRequestPhotos?: () => void;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   lang: string;
@@ -58,6 +63,7 @@ const Stats = ({
   galleryId,
   globalScope = false,
   photos,
+  onRequestPhotos,
   filters,
   setFilters,
   lang,
@@ -126,10 +132,10 @@ const Stats = ({
     }
     return (photos ?? []).filter((photo) => photo.hasCoordinates());
   }, [galleryId, mapPhotosRaw, photos, hideMap]);
-  const requestMapPhotos = React.useCallback(
-    () => setMapPhotosRequested(true),
-    []
-  );
+  const requestMapPhotos = React.useCallback(() => {
+    setMapPhotosRequested(true);
+    onRequestPhotos?.();
+  }, [onRequestPhotos]);
 
   // Memoize so unrelated re-renders (filter UI ticks, etc.) don't
   // re-run the topic build — it fans out into ~30 chart-data objects

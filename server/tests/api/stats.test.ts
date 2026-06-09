@@ -312,3 +312,37 @@ describe("unknown bucket", () => {
     expect(res.body.byCategory.country).toEqual({ nl: 1, jp: 1 });
   });
 });
+
+describe("GET /api/v1/filter-values (global filter pill universe)", () => {
+  const getGlobalFV = (
+    token: string | undefined,
+    lang?: string,
+    status = 200
+  ) => {
+    const url = "/api/v1/filter-values/" + (lang ? `?lang=${lang}` : "");
+    const req = api.get(url);
+    if (token) req.set("Authorization", `Bearer ${token}`);
+    return req.expect(status);
+  };
+
+  test("admin: returns cross-gallery categoryValues + byCityLocalized", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await getGlobalFV(token);
+    expect(res.body.categoryValues).toBeDefined();
+    expect(res.body.byCityLocalized).toBeDefined();
+    // Fixture has photos in jp / nl / fi across all galleries +
+    // the orphan; universe spans them all.
+    expect(res.body.categoryValues.country).toEqual(
+      expect.arrayContaining(["jp", "nl", "fi"])
+    );
+  });
+
+  test("non-admin → 403", async () => {
+    const token = await loginUser(api, "plainuser");
+    await getGlobalFV(token, undefined, 403);
+  });
+
+  test("guest → 403 (admin route)", async () => {
+    await getGlobalFV(undefined, undefined, 403);
+  });
+});

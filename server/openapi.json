@@ -3630,6 +3630,62 @@
           }
         }
       }
+    },
+    "/api/v1/filter-values": {
+      "get": {
+        "summary": "Filter pill universe across all galleries (admin)",
+        "tags": [
+          "filter-values"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "lang",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "categoryValues",
+                    "byCityLocalized"
+                  ],
+                  "properties": {
+                    "categoryValues": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "byCityLocalized": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "tags": [

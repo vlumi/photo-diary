@@ -262,6 +262,11 @@ export default {
       lang
     )) as FilterValuesResult;
   },
+  queryGlobalFilterValues: async (
+    lang?: string
+  ): Promise<FilterValuesResult> => {
+    return (await db.queryGlobalFilterValues(lang)) as FilterValuesResult;
+  },
   linkGalleryPhoto: async (galleryIds: string[], photoIds: string[]) => {
     return await db.linkGalleryPhoto(galleryIds, photoIds);
   },
