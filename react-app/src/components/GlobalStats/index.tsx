@@ -14,7 +14,7 @@ import galleriesService from "../../services/galleries";
 import metaService from "../../services/meta";
 import theme from "../../lib/theme";
 import { type UniqueValues } from "../../lib/stats";
-import { buildUniqueValues } from "../../lib/uniqueValues";
+import { buildUniqueValuesFromPhotos } from "../../lib/uniqueValues";
 import config from "../../lib/config";
 import { useHostScope } from "../../lib/use-host-scope";
 import {
@@ -107,7 +107,7 @@ const GlobalStats = (): React.ReactElement => {
   const galleries = galleriesQuery.data ?? [];
   const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
     if (!photos || !countryData) return undefined;
-    return buildUniqueValues(photos, lang, t, countryData);
+    return buildUniqueValuesFromPhotos(photos, lang, t, countryData);
   }, [photos, lang, t, countryData]);
 
   const frame = (body: React.ReactNode): React.ReactElement => (

@@ -904,3 +904,36 @@ describe("POST /:galleryId/neighbors (photo modal navigation)", () => {
     expect(res.body).toEqual({ total: 0 });
   });
 });
+
+describe("GET /:galleryId/filter-values (filter pill universe)", () => {
+  const getFilterValues = (
+    token: string | undefined,
+    galleryId: string,
+    lang?: string,
+    status = 200
+  ) => {
+    const url =
+      `/api/v1/gallery-photos/${galleryId}/filter-values` +
+      (lang ? `?lang=${lang}` : "");
+    const req = api.get(url);
+    if (token) req.set("Authorization", `Bearer ${token}`);
+    return req.expect(status);
+  };
+
+  test("admin: returns categoryValues + byCityLocalized", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await getFilterValues(token, "gallery1");
+    expect(res.body.categoryValues).toBeDefined();
+    expect(res.body.byCityLocalized).toBeDefined();
+    // gallery1 has photos with countries jp + nl — both should
+    // surface in the unfiltered universe.
+    expect(res.body.categoryValues.country).toEqual(
+      expect.arrayContaining(["jp", "nl"])
+    );
+  });
+
+  test("guest blocked from gallery1 → empty universe (privacy collapse)", async () => {
+    const res = await getFilterValues(undefined, "gallery1");
+    expect(res.body).toEqual({ categoryValues: {}, byCityLocalized: {} });
+  });
+});

@@ -2327,6 +2327,65 @@
         }
       }
     },
+    "/api/v1/gallery-photos/{galleryId}/filter-values": {
+      "get": {
+        "summary": "Filter pill universe (per-category value set)",
+        "tags": [
+          "gallery-photos"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "lang",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "galleryId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "categoryValues",
+                    "byCityLocalized"
+                  ],
+                  "properties": {
+                    "categoryValues": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "byCityLocalized": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/gallery-photos/{galleryId}/{photoId}": {
       "get": {
         "summary": "Get one photo's metadata in a gallery's context",

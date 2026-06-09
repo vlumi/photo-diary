@@ -142,14 +142,25 @@ const Gallery = ({
     },
     enabled: galleryInList,
   });
+  // Filter pill universe (#532). Tiny payload, server-cached. Lives
+  // alongside the photos query for now — once the gallery shape
+  // helpers (firstDay / lastDay / includesPhotos / lastPath) move
+  // off `photosByYmd` too, the full photos fetch can go.
+  const filterValuesQuery = useQuery({
+    queryKey: ["gallery-filter-values", galleryId, user?.id ?? null, lang],
+    queryFn: () => galleryPhotosService.getFilterValues(galleryId as string, lang),
+    enabled: galleryInList,
+  });
 
   const meta = metaQuery.data as Meta | undefined;
   const galleries = galleriesQuery.data;
   const photos = photosQuery.data;
+  const filterValues = filterValuesQuery.data;
   const error =
     metaQuery.error?.message ||
     galleriesQuery.error?.message ||
     photosQuery.error?.message ||
+    filterValuesQuery.error?.message ||
     "";
 
   // The meta-to-config side-effect now lives in App.tsx so the
@@ -161,9 +172,9 @@ const Gallery = ({
 
   // Recomputes on language change too — display values are localised.
   const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
-    if (!photos || !countryData) return undefined;
-    return buildUniqueValues(photos, lang, t, countryData);
-  }, [photos, lang, t, countryData]);
+    if (!filterValues || !countryData) return undefined;
+    return buildUniqueValues(filterValues, lang, t, countryData);
+  }, [filterValues, lang, t, countryData]);
 
   const gallery = React.useMemo<GalleryT | undefined>(() => {
     if (!selectedGallery || !photos) return undefined;
