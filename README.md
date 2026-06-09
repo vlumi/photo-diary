@@ -9,7 +9,7 @@ Key features include:
 - Calendar-based views (year, month, day, photo)
   - Including map from embedded GPS information
 - Comprehensive photo statistics (time, gear, exposure settings, etc.)
-- Fast browsing — gallery content (apart from actual photos) loaded once at startup
+- Fast browsing — per-view fetch narrowed by the active filter, cached client-side so filter toggles update in place
 - User management and basic access control
 
 ## Contents
@@ -350,8 +350,7 @@ The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` sn
     - :public includes all photos added to galleries
   - Hostname-based default gallery selection — and `Host`-bound admin/read scope: a request to a hostname matching one or more `gallery.hostname` patterns is narrowed to that set, both reads and admin writes (cross-gallery work is unreachable from a virtual host)
 - SPA view
-  - Fast transition between views
-    - Pre-load current gallery
+  - Fast transition between views — per-view server fetch, TanStack Query cache, in-place refresh on filter toggles
   - Fast navigation to previous/next item
     - Left/right arrow keys
     - Swipe left/right
@@ -412,7 +411,7 @@ End-to-end flow from a new JPG arriving on the host to it being browsable in the
 
 Active milestones on the way to 1.0, plus the far-out 2.0 direction. Each bullet links the GitHub milestone for live status.
 
-- [**0.15 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): the larger architectural shifts. Hybrid galleries (#22), DB drivers beyond SQLite (#265), saved filters / sub-galleries (#285), server-side stats with language-agnostic values and a single-key base cache (#286), content localization for photo metadata (#281), per-language editing for place / title / description (#343), stats category evolution over time (#383), year view full Jan–Dec on wide screens (#399), per-view fetch + server-side filtering (#406), retire the dummy DB driver in favour of real `:memory:` sqlite (#434), Galleries section composes with the Filters sidebar (#446).
+- [**0.15 — Composition + scale**](https://github.com/vlumi/photo-diary/milestone/15): the larger architectural shifts. Hybrid galleries (#22), DB drivers beyond SQLite (#265), content localization for photo metadata (#281), saved filters / sub-galleries (#285), per-language editing for place / title / description (#343), stats category evolution over time (#383), year view full Jan–Dec on wide screens (#399), Galleries section composes with the Filters sidebar (#446), audit residue after bulk regeocode (#485).
 - [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283), `bin/photo.ts` subcommand-surface tidy (#376).
 - [**2.0 — Thin server, cloud-native direction**](https://github.com/vlumi/photo-diary/milestone/18) *(direction-setting, far out)*: shape may change significantly. Originals leave the server and live client-side or in cold storage; the converter's sharp pipeline becomes a local uploader bundled from the admin UI; all DB ops route through the API (no direct backdoor); storage backends behind a vendor-agnostic interface so S3-compatible / CDN deployments are an option. Vision and sub-ticket breakdown in #469. Likely diverges from today's self-hosted-monolith shape enough that it may end up being a different product line.
 
