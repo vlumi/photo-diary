@@ -11,7 +11,11 @@ import {
   BsXLg,
 } from "react-icons/bs";
 import { motion, useAnimationControls, type PanInfo } from "framer-motion";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import Navigation from "./Navigation";
 import Content from "./Content";
@@ -292,6 +296,30 @@ const Photo = ({
       }),
     placeholderData: keepPreviousData,
   });
+  // Prime the per-id query cache (Gallery/index.tsx reads from
+  // `["gallery-photo-by-id", galleryId, photoId, lang]`) with the
+  // neighbor photo objects, so prev/next navigation finds the new
+  // photo in cache the moment the URL changes. Without this the
+  // route re-render hits `isLoading` and renders a bare "Loading"
+  // text on the page background — a brief bright-white flash
+  // between modal frames.
+  const queryClient = useQueryClient();
+  React.useEffect(() => {
+    if (!neighbors) return;
+    const prime = (raw: unknown): void => {
+      if (!raw || typeof raw !== "object") return;
+      const id = (raw as { id?: unknown }).id;
+      if (typeof id !== "string" || !id) return;
+      queryClient.setQueryData(
+        ["gallery-photo-by-id", gallery.id(), id, lang],
+        raw
+      );
+    };
+    prime(neighbors.previous);
+    prime(neighbors.next);
+    prime(neighbors.first);
+    prime(neighbors.last);
+  }, [neighbors, queryClient, gallery, lang]);
   const prevPhoto = React.useMemo(
     () =>
       neighbors?.previous ? PhotoModel(neighbors.previous) : undefined,
