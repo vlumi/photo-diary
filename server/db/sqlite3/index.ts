@@ -5,6 +5,10 @@ import { NotFoundError } from "../../lib/errors.js";
 import config from "../../lib/config/index.js";
 import logger from "../../lib/logger.js";
 import { acceptLocalizedCity } from "../../lib/localized-script.js";
+import {
+  matchesFilter,
+  type FilterShape,
+} from "../../lib/photo-filter-eval.js";
 import { migrate } from "./migrate.js";
 
 import schemaFactory, {
@@ -16,6 +20,7 @@ import schemaFactory, {
   type GroupGalleryRow,
   type GroupRow,
   type MetaRow,
+  type Photo,
   type PhotoInput,
   type PhotoLocalizedRow,
   type PhotoRow,
@@ -73,6 +78,9 @@ export default () => {
     deleteGallery,
 
     loadGalleryPhotos,
+    queryFilteredPhotos,
+    queryFilteredPhotoCounts,
+    queryFilteredPhotoNeighbors,
     linkGalleryPhoto,
     unlinkGalleryPhoto,
     unlinkAllPhotos,
@@ -500,6 +508,110 @@ const loadAllGalleryPhotoLinks = async (): Promise<
     .all() as Array<{ gallery_id: string; photo_id: string }>;
   return rows.map((r) => ({ galleryId: r.gallery_id, photoId: r.photo_id }));
 };
+interface QueryFilteredOpts {
+  filter?: FilterShape;
+  year?: number;
+  month?: number;
+  day?: number;
+  lang?: string;
+}
+const matchesScope = (
+  photo: Photo,
+  year?: number,
+  month?: number,
+  day?: number
+): boolean => {
+  const instant = photo.taken.instant;
+  if (year !== undefined && instant.year !== year) return false;
+  if (month !== undefined && instant.month !== month) return false;
+  if (day !== undefined && instant.day !== day) return false;
+  return true;
+};
+// Load the gallery's photos via the same SQL path as
+// `loadGalleryPhotos`, then evaluate FilterShape + (year, month,
+// day) scope in JS. For SQLite the round-trip is free, so load-all-
+// and-filter is the right shape; the boundary moves here so the
+// model layer doesn't have to know which is which. A Postgres
+// driver can replace this body with a parameterised WHERE.
+const queryFilteredPhotos = async (
+  galleryId: string,
+  opts: QueryFilteredOpts = {}
+): Promise<Photo[]> => {
+  const photos = (await loadGalleryPhotos(galleryId, opts.lang)) as Photo[];
+  return photos.filter(
+    (photo) =>
+      matchesScope(photo, opts.year, opts.month, opts.day) &&
+      matchesFilter(opts.filter, photo)
+  );
+};
+
+interface CountsFilteredOpts {
+  filter?: FilterShape;
+  year?: number;
+}
+const queryFilteredPhotoCounts = async (
+  galleryId: string,
+  opts: CountsFilteredOpts = {}
+): Promise<Record<string, number>> => {
+  const photos = (await loadGalleryPhotos(galleryId)) as Photo[];
+  const out: Record<string, number> = {};
+  for (const photo of photos) {
+    const instant = photo.taken.instant;
+    if (opts.year !== undefined && instant.year !== opts.year) continue;
+    if (!matchesFilter(opts.filter, photo)) continue;
+    const key = `${instant.year}-${String(instant.month).padStart(
+      2,
+      "0"
+    )}-${String(instant.day).padStart(2, "0")}`;
+    out[key] = (out[key] ?? 0) + 1;
+  }
+  return out;
+};
+
+interface NeighborsFilteredOpts {
+  filter?: FilterShape;
+  lang?: string;
+}
+interface NeighborsResult {
+  previous?: Photo;
+  next?: Photo;
+  first?: Photo;
+  last?: Photo;
+  position?: number;
+  total: number;
+}
+const queryFilteredPhotoNeighbors = async (
+  galleryId: string,
+  photoId: string,
+  opts: NeighborsFilteredOpts = {}
+): Promise<NeighborsResult> => {
+  const all = (await loadGalleryPhotos(galleryId, opts.lang)) as Photo[];
+  const filtered = all
+    .filter((p) => matchesFilter(opts.filter, p))
+    .sort((a, b) =>
+      a.taken.instant.timestamp.localeCompare(b.taken.instant.timestamp)
+    );
+  if (filtered.length === 0) return { total: 0 };
+  const first = filtered[0];
+  const last = filtered[filtered.length - 1];
+  const index = filtered.findIndex((p) => p.id === photoId);
+  if (index < 0) {
+    // Current photo not in filtered set — first / last still
+    // useful; previous / next undefined; position omitted.
+    return { first, last, total: filtered.length };
+  }
+  const previous = index > 0 ? filtered[index - 1] : undefined;
+  const next = index < filtered.length - 1 ? filtered[index + 1] : undefined;
+  return {
+    previous,
+    next,
+    first,
+    last,
+    position: index + 1,
+    total: filtered.length,
+  };
+};
+
 const loadGalleryPhoto = async (
   galleryId: string,
   photoId: string,

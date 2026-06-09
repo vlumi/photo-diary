@@ -1,4 +1,5 @@
 import config from "../lib/config/index.js";
+import type { FilterShape } from "../lib/photo-filter-eval.js";
 import type {
   Gallery,
   GalleryInput,
@@ -11,6 +12,30 @@ import type {
   User,
   UserGalleryRow,
 } from "./sqlite3/schema.js";
+
+export interface QueryFilteredOpts {
+  filter?: FilterShape;
+  year?: number;
+  month?: number;
+  day?: number;
+  lang?: string;
+}
+export interface CountsFilteredOpts {
+  filter?: FilterShape;
+  year?: number;
+}
+export interface NeighborsFilteredOpts {
+  filter?: FilterShape;
+  lang?: string;
+}
+export interface NeighborsResult {
+  previous?: Photo;
+  next?: Photo;
+  first?: Photo;
+  last?: Photo;
+  position?: number;
+  total: number;
+}
 
 const drivers = {
   sqlite3: () => import("./sqlite3/index.js"),
@@ -197,6 +222,32 @@ export default {
 
   loadGalleryPhotos: async (galleryId: string, lang?: string) => {
     return await db.loadGalleryPhotos(galleryId, lang);
+  },
+  queryFilteredPhotos: async (
+    galleryId: string,
+    opts: QueryFilteredOpts = {}
+  ): Promise<Photo[]> => {
+    return (await db.queryFilteredPhotos(galleryId, opts)) as Photo[];
+  },
+  queryFilteredPhotoCounts: async (
+    galleryId: string,
+    opts: CountsFilteredOpts = {}
+  ): Promise<Record<string, number>> => {
+    return (await db.queryFilteredPhotoCounts(
+      galleryId,
+      opts
+    )) as Record<string, number>;
+  },
+  queryFilteredPhotoNeighbors: async (
+    galleryId: string,
+    photoId: string,
+    opts: NeighborsFilteredOpts = {}
+  ): Promise<NeighborsResult> => {
+    return (await db.queryFilteredPhotoNeighbors(
+      galleryId,
+      photoId,
+      opts
+    )) as NeighborsResult;
   },
   linkGalleryPhoto: async (galleryIds: string[], photoIds: string[]) => {
     return await db.linkGalleryPhoto(galleryIds, photoIds);
