@@ -168,6 +168,7 @@
     "manage-photos-result-page": "ページ {{page}} / {{pageCount}}",
     "manage-photos-empty": "条件に合う写真がありません。",
     "manage-photos-load-error": "写真の読み込みに失敗しました。",
+    "manage-photos-virtual-gallery-notice": "仮想ギャラリーはこの画面では管理できません — 内容はソースギャラリーの写真から構成されます。写真を管理するには、ソースギャラリーを選択してください:",
     "manage-photos-bulk-exit": "選択を解除",
     "manage-photos-filters-title": "フィルター",
     "manage-photos-filters-open": "フィルターを開く",

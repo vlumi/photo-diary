@@ -620,12 +620,28 @@ const Photos = (): React.ReactElement => {
   const galleries = React.useMemo(() => {
     const raw =
       (galleriesQuery.data as
-        | Array<{ id: string; title?: string }>
+        | Array<{ id: string; title?: string; sources?: string[] }>
         | undefined) ?? [];
     return raw.slice().sort((a, b) =>
       (a.title || a.id).localeCompare(b.title || b.id)
     );
   }, [galleriesQuery.data]);
+  // Virtual gallery (#22) is a membership-computed concept; the
+  // /m/photos page operates on real `gallery_photo` rows and the
+  // bulk actions (link/unlink/regeocode/delete) all target real
+  // galleries. If the operator's filter narrows to a virtual
+  // gallery we replace the photos body with a notice — the
+  // operator picks a source gallery instead.
+  const filteredVirtuals = React.useMemo(
+    () =>
+      galleries.filter(
+        (g) =>
+          filter.galleryIds?.includes(g.id) &&
+          Array.isArray(g.sources) &&
+          g.sources.length > 0
+      ),
+    [galleries, filter.galleryIds]
+  );
 
   const setSearchParam = (
     name: string,
@@ -922,6 +938,33 @@ const Photos = (): React.ReactElement => {
   };
 
   const renderBody = () => {
+    if (filteredVirtuals.length > 0) {
+      // Virtual gallery in the filter — no real `gallery_photo` rows
+      // to operate on. Offer the operator a way to jump to a source
+      // gallery instead (where bulk actions actually apply).
+      return (
+        <EmptyState>
+          <p>{t("manage-photos-virtual-gallery-notice")}</p>
+          <ul>
+            {filteredVirtuals.flatMap((v) =>
+              (v.sources ?? []).map((sourceId) => (
+                <li key={`${v.id}->${sourceId}`}>
+                  <button
+                    type="button"
+                    onClick={() => setSearchParam("gallery", [sourceId])}
+                  >
+                    {(
+                      galleries.find((g) => g.id === sourceId)?.title ??
+                      sourceId
+                    )}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        </EmptyState>
+      );
+    }
     if (isLoading) {
       return <EmptyState>{t("loading")}</EmptyState>;
     }

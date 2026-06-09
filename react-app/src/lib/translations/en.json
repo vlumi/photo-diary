@@ -168,6 +168,7 @@
     "manage-photos-result-page": "Page {{page}} / {{pageCount}}",
     "manage-photos-empty": "No photos match this filter.",
     "manage-photos-load-error": "Failed to load photos.",
+    "manage-photos-virtual-gallery-notice": "Virtual galleries can't be managed here — their contents come from source galleries' membership. Pick a source gallery to manage its photos:",
     "manage-photos-bulk-exit": "Clear selection",
     "manage-photos-filters-title": "Filters",
     "manage-photos-filters-open": "Open filters",
