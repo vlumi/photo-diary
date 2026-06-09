@@ -155,7 +155,7 @@ const GlobalStats = (): React.ReactElement => {
 
   return frame(
     <>
-      <Galleries photos={photos} galleries={galleries} lang={lang} />
+      <Galleries galleries={galleries} lang={lang} />
       <Stats
         globalScope
         photos={photos}

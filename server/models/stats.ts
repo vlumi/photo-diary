@@ -78,8 +78,29 @@ const getGlobalStats = async (
     const cached = cacheGet<StatsResponse>(key);
     if (cached) return cached;
   }
-  const photos = (await db.loadPhotos(lang)) as Photo[];
-  const stats = computeStats(photos, filter);
+  const [photos, links] = await Promise.all([
+    db.loadPhotos(lang) as Promise<Photo[]>,
+    db.loadAllGalleryPhotoLinks() as Promise<
+      Array<{ photoId: string; galleryId: string }>
+    >,
+  ]);
+  // Attach gallery membership so computeStats can produce
+  // byGallery (#446). Single pass over the link table builds the
+  // photoId → galleryIds map, then each photo gets its slice.
+  const galleriesByPhoto = new Map<string, string[]>();
+  for (const link of links) {
+    const list = galleriesByPhoto.get(link.photoId);
+    if (list) {
+      list.push(link.galleryId);
+    } else {
+      galleriesByPhoto.set(link.photoId, [link.galleryId]);
+    }
+  }
+  const decorated = photos.map((p) => ({
+    ...p,
+    galleries: galleriesByPhoto.get(p.id) ?? [],
+  })) as Photo[];
+  const stats = computeStats(decorated, filter);
   if (cacheable) cacheSet(key, stats);
   return stats;
 };

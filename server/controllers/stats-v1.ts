@@ -58,6 +58,7 @@ const StatsResponse = Type.Object({
   byCityCountry: Type.Record(Type.String(), Type.String()),
   byCityLocalized: Type.Record(Type.String(), Type.String()),
   categoryValues: Type.Record(Type.String(), Type.Array(Type.String())),
+  byGallery: BucketCounts,
 });
 
 const TAGS = ["stats"];

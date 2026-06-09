@@ -1,7 +1,12 @@
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 import type { FilterShape } from "../lib/photo-filter-eval.js";
-import { cacheGet, cacheSet, invalidateGallery } from "../lib/stats-cache.js";
+import {
+  cacheGet,
+  cacheSet,
+  invalidateGallery,
+  invalidateGlobal,
+} from "../lib/stats-cache.js";
 import type { FilterValuesResult } from "../db/index.js";
 
 export default () => {
@@ -121,22 +126,27 @@ const getGalleryPhotoByOriginalFilename = async (
     lang
   );
 };
+// Gallery membership changes shift the global stats' `byGallery`
+// counts too (#446), so link / unlink invalidate both scopes.
 const linkGalleryPhoto = async (galleryId: string, photoId: string) => {
   logger.debug("Linking photo", photoId, "to gallery", galleryId);
   const result = await db.linkGalleryPhoto([galleryId], [photoId]);
   invalidateGallery(galleryId);
+  invalidateGlobal();
   return result;
 };
 const unlinkGalleryPhoto = async (galleryId: string, photoId: string) => {
   logger.debug("Unlinking photo", photoId, "from gallery", galleryId);
   const result = await db.unlinkGalleryPhoto(galleryId, photoId);
   invalidateGallery(galleryId);
+  invalidateGlobal();
   return result;
 };
 const unlinkAllPhotos = async (galleryId: string) => {
   logger.debug("Unlinking all photos from gallery", galleryId);
   const result = await db.unlinkAllPhotos(galleryId);
   invalidateGallery(galleryId);
+  invalidateGlobal();
   return result;
 };
 const unlinkAllGalleries = async (photoId: string) => {
@@ -151,5 +161,6 @@ const unlinkAllGalleries = async (photoId: string) => {
     .map((l) => l.galleryId);
   const result = await db.unlinkAllGalleries(photoId);
   for (const galleryId of galleries) invalidateGallery(galleryId);
+  invalidateGlobal();
   return result;
 };

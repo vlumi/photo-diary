@@ -42,6 +42,13 @@ export interface StatsResponse {
   byCityCountry: Record<string, string>;
   byCityLocalized: Record<string, string>;
   categoryValues: Record<string, string[]>;
+  // Filtered photo counts per gallery — populated when the input
+  // photos carry a `galleries: string[]` field (cross-gallery /
+  // global stats). The `":orphan"` key counts photos linked to no
+  // gallery. Absent (empty object) for single-gallery stats — that
+  // scope is by definition one gallery, so the breakdown adds no
+  // information. (#446)
+  byGallery: BucketCounts;
 }
 
 const inc = (map: BucketCounts, key: string): void => {
@@ -363,6 +370,23 @@ export const computeStats = (
       geotaggedCount++;
     }
   }
+  // Per-gallery filtered counts for the Global Stats Galleries
+  // section (#446). Only meaningful when the input carries gallery
+  // membership — global stats decorates each photo with the joined
+  // `galleries` list before calling computeStats; gallery-scoped
+  // stats doesn't, so byGallery comes out empty there.
+  const byGallery: BucketCounts = {};
+  for (const p of filtered) {
+    const galleries = (p as Photo & { galleries?: string[] }).galleries;
+    if (!Array.isArray(galleries)) continue;
+    if (galleries.length === 0) {
+      byGallery[":orphan"] = (byGallery[":orphan"] ?? 0) + 1;
+      continue;
+    }
+    for (const galleryId of galleries) {
+      byGallery[galleryId] = (byGallery[galleryId] ?? 0) + 1;
+    }
+  }
   return {
     total: filtered.length,
     geotaggedCount,
@@ -375,6 +399,7 @@ export const computeStats = (
     byCityCountry: annotations.byCityCountry,
     byCityLocalized: annotations.byCityLocalized,
     categoryValues,
+    byGallery,
   };
 };
 
