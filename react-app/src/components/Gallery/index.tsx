@@ -339,7 +339,7 @@ const Gallery = ({
           theme={activeTheme}
           hideMap={gallery.hideMap()}
         >
-          <Title galleries={visibleGalleries} gallery={gallery} context={context} />
+          <Title galleries={visibleGalleries} gallery={gallery} context={context} lang={lang} />
           <Filters
             filters={filters}
             setFilters={setFilters}
@@ -354,7 +354,7 @@ const Gallery = ({
     if (galleryCalendar.ready && !galleryCalendar.includesPhotos()) {
       return (
         <Empty gallery={gallery}>
-          <Title galleries={visibleGalleries} gallery={gallery} context={context} />
+          <Title galleries={visibleGalleries} gallery={gallery} context={context} lang={lang} />
           <Filters
             filters={filters}
             setFilters={setFilters}
@@ -369,7 +369,7 @@ const Gallery = ({
     if (!year) {
       return (
         <Full gallery={gallery}>
-          <Title galleries={visibleGalleries} gallery={gallery} context={context} />
+          <Title galleries={visibleGalleries} gallery={gallery} context={context} lang={lang} />
           <Filters
             filters={filters}
             setFilters={setFilters}
@@ -389,6 +389,7 @@ const Gallery = ({
             gallery={gallery}
             context={context}
             year={year}
+            lang={lang}
           />
           <Filters
             filters={filters}
@@ -420,6 +421,7 @@ const Gallery = ({
             year={year}
             month={month}
             day={day || undefined}
+            lang={lang}
           />
           <Filters
             filters={filters}
