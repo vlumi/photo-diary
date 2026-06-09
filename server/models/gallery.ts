@@ -82,6 +82,21 @@ const applyVirtualSources = async (
     await db.deleteVirtualGallery(galleryId);
   } else {
     await validateSources(galleryId, sources);
+    // Preserve #22's design decision #4 (no chained virtuals) at
+    // *transition* time, not just at create time: if galleryId is
+    // already referenced as a source by some virtual gallery,
+    // turning it virtual now would silently break that referrer
+    // (resolveGallerySources doesn't recurse, so the referrer
+    // would resolve to an empty photo set). The referrer side is
+    // already protected by validateSources's `isVirtualGallery`
+    // check; this is the converse — block the transition that
+    // would make an existing referrer's source virtual.
+    if (await db.isReferencedAsSource(galleryId)) {
+      throw new ValidationError(
+        "Cannot convert a gallery to virtual while it is a source of another virtual gallery",
+        { galleryId }
+      );
+    }
     await db.upsertVirtualGallery(galleryId, sources);
   }
 };

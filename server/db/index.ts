@@ -237,6 +237,9 @@ export default {
   isVirtualGallery: async (galleryId: string): Promise<boolean> => {
     return (await db.isVirtualGallery(galleryId)) as boolean;
   },
+  isReferencedAsSource: async (galleryId: string): Promise<boolean> => {
+    return (await db.isReferencedAsSource(galleryId)) as boolean;
+  },
 
   loadGalleryPhotos: async (galleryId: string, lang?: string) => {
     return await db.loadGalleryPhotos(galleryId, lang);

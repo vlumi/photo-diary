@@ -85,6 +85,7 @@ export default () => {
     upsertVirtualGallery,
     deleteVirtualGallery,
     isVirtualGallery,
+    isReferencedAsSource,
 
     loadGalleryPhotos,
     queryFilteredPhotos,
@@ -497,6 +498,19 @@ const isVirtualGallery = async (galleryId: string): Promise<boolean> => {
   const row = db
     .prepare(
       "SELECT 1 FROM virtual_gallery_source WHERE gallery_id = ? LIMIT 1"
+    )
+    .get(galleryId);
+  return row !== undefined;
+};
+// True iff some virtual gallery references this id as a source.
+// Used to block "convert a real gallery to virtual" when it's
+// already in another virtual's source list, preserving the
+// "real galleries only as sources" invariant from #22's design
+// decision #4.
+const isReferencedAsSource = async (galleryId: string): Promise<boolean> => {
+  const row = db
+    .prepare(
+      "SELECT 1 FROM virtual_gallery_source WHERE source_id = ? LIMIT 1"
     )
     .get(galleryId);
   return row !== undefined;
