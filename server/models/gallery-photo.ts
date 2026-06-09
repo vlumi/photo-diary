@@ -1,7 +1,8 @@
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 import type { FilterShape } from "../lib/photo-filter-eval.js";
-import { invalidateGallery } from "../lib/stats-cache.js";
+import { cacheGet, cacheSet, invalidateGallery } from "../lib/stats-cache.js";
+import type { FilterValuesResult } from "../db/index.js";
 
 export default () => {
   return {
@@ -10,6 +11,7 @@ export default () => {
     queryGalleryPhotos,
     queryGalleryPhotoCounts,
     getGalleryPhotoNeighbors,
+    getGalleryFilterValues,
     getGalleryPhoto,
     getGalleryPhotoByOriginalFilename,
     linkGalleryPhoto,
@@ -71,6 +73,29 @@ const queryGalleryPhotoCounts = async (
   logger.debug("Querying photo counts from gallery", { galleryId, opts });
   return await db.queryFilteredPhotoCounts(galleryId, opts);
 };
+// Filter pill universe + city localized-label map (#534). The
+// driver owns the compute; this layer adds a one-key cache per
+// (gallery, lang) sharing the existing stats-cache machinery
+// (invalidateGallery sweeps `<galleryId>:*`, so the `:fv:`
+// entries get cleaned up on photo writes alongside the stats
+// entries).
+const filterValuesCacheKey = (galleryId: string, lang?: string): string =>
+  !lang || lang === "en"
+    ? `${galleryId}:fv`
+    : `${galleryId}:fv:${lang}`;
+const getGalleryFilterValues = async (
+  galleryId: string,
+  lang?: string
+): Promise<FilterValuesResult> => {
+  const key = filterValuesCacheKey(galleryId, lang);
+  const cached = cacheGet<FilterValuesResult>(key);
+  if (cached) return cached;
+  logger.debug("Computing filter values for gallery", { galleryId, lang });
+  const result = await db.queryGalleryFilterValues(galleryId, lang);
+  cacheSet(key, result);
+  return result;
+};
+
 const getGalleryPhoto = async (
   galleryId: string,
   photoId: string,

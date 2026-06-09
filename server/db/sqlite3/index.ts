@@ -9,6 +9,10 @@ import {
   matchesFilter,
   type FilterShape,
 } from "../../lib/photo-filter-eval.js";
+import {
+  buildAnnotations,
+  buildCategoryValues,
+} from "../../lib/stats-compute.js";
 import { migrate } from "./migrate.js";
 
 import schemaFactory, {
@@ -81,6 +85,7 @@ export default () => {
     queryFilteredPhotos,
     queryFilteredPhotoCounts,
     queryFilteredPhotoNeighbors,
+    queryGalleryFilterValues,
     linkGalleryPhoto,
     unlinkGalleryPhoto,
     unlinkAllPhotos,
@@ -610,6 +615,62 @@ const queryFilteredPhotoNeighbors = async (
     last,
     position: index + 1,
     total: filtered.length,
+  };
+};
+
+// Filter pill universe + city localized-label map for a gallery
+// (#534). Loads the gallery's photos and projects per-category
+// distinct values via the shared `buildCategoryValues`, then maps
+// stats's camelCase category names to the kebab-case shape the
+// FilterShape wire format + the client filter UI both use. Adds
+// the two categories `buildByCategory` doesn't bucket but the
+// pills want — `year-month` (derived from photo instants) and
+// `geotagged` (constant yes/no so the pill stays selectable).
+interface FilterValuesResult {
+  categoryValues: Record<string, string[]>;
+  byCityLocalized: Record<string, string>;
+}
+const queryGalleryFilterValues = async (
+  galleryId: string,
+  lang?: string
+): Promise<FilterValuesResult> => {
+  const photos = (await loadGalleryPhotos(galleryId, lang)) as Photo[];
+  const cv = buildCategoryValues(photos);
+  const annotations = buildAnnotations(photos);
+  const yearMonthSet = new Set<string>();
+  for (const p of photos) {
+    const i = p.taken.instant;
+    yearMonthSet.add(`${i.year}-${String(i.month).padStart(2, "0")}`);
+  }
+  const yearMonths = [...yearMonthSet].sort();
+  return {
+    categoryValues: {
+      author: cv.author ?? [],
+      country: cv.country ?? [],
+      state: cv.state ?? [],
+      city: cv.city ?? [],
+      geotagged: ["yes", "no"],
+      year: cv.year ?? [],
+      "year-month": yearMonths,
+      month: cv.month ?? [],
+      weekday: cv.weekday ?? [],
+      hour: cv.hour ?? [],
+      "camera-make": cv.cameraMake ?? [],
+      camera: cv.camera ?? [],
+      lens: cv.lens ?? [],
+      "camera-lens": cv.cameraLens ?? [],
+      "focal-length": cv.focalLength ?? [],
+      "focal-length-eq": cv.focalLength35mmEquiv ?? [],
+      aperture: cv.aperture ?? [],
+      "exposure-time": cv.exposureTime ?? [],
+      iso: cv.iso ?? [],
+      ev: cv.ev ?? [],
+      lv: cv.lv ?? [],
+      resolution: cv.resolution ?? [],
+      orientation: cv.orientation ?? [],
+      "aspect-ratio": cv.aspectRatio ?? [],
+    },
+    byCityLocalized: annotations.byCityLocalized,
   };
 };
 

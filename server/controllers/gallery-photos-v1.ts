@@ -6,11 +6,9 @@ import { AccessError, NotFoundError } from "../lib/errors.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/gallery-photo.js";
-import statsFactory from "../models/stats.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
-const stats = statsFactory();
 
 const init = async () => {
   await model.init();
@@ -278,7 +276,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
-        return await stats.getGalleryFilterValues(
+        return await model.getGalleryFilterValues(
           request.params.galleryId,
           request.query.lang
         );

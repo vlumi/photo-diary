@@ -36,6 +36,10 @@ export interface NeighborsResult {
   position?: number;
   total: number;
 }
+export interface FilterValuesResult {
+  categoryValues: Record<string, string[]>;
+  byCityLocalized: Record<string, string>;
+}
 
 const drivers = {
   sqlite3: () => import("./sqlite3/index.js"),
@@ -248,6 +252,15 @@ export default {
       photoId,
       opts
     )) as NeighborsResult;
+  },
+  queryGalleryFilterValues: async (
+    galleryId: string,
+    lang?: string
+  ): Promise<FilterValuesResult> => {
+    return (await db.queryGalleryFilterValues(
+      galleryId,
+      lang
+    )) as FilterValuesResult;
   },
   linkGalleryPhoto: async (galleryIds: string[], photoIds: string[]) => {
     return await db.linkGalleryPhoto(galleryIds, photoIds);
