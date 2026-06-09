@@ -128,6 +128,15 @@ export interface Gallery {
   theme: string;
   initialView: string;
   hostname: string;
+  // Virtual gallery sources (#22). Undefined for real galleries;
+  // populated array of source gallery IDs for a virtual gallery
+  // whose contents are the union of those sources' photos.
+  sources?: string[];
+}
+export interface VirtualGallerySourceRow {
+  gallery_id: string;
+  source_id: string;
+  ordinal: number;
 }
 export interface GalleryPhoto {
   galleryId: string;
@@ -927,6 +936,12 @@ const buildUpdateByIdQuery = (
   }
   const columnData = schema.mapToRow ? schema.mapToRow(cleaned) : cleaned;
   const columns = schema.columns.filter((column) => column in columnData);
+  if (columns.length === 0) {
+    // Patch had keys, but none mapped to a real column on this
+    // table (e.g. a virtual-gallery `sources`-only update on the
+    // gallery table). Caller handles the non-column side itself.
+    return { query: undefined, values: undefined };
+  }
   const cleanData = Object.fromEntries(
     columns.map((column) => [column, columnData[column]])
   );

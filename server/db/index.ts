@@ -224,6 +224,20 @@ export default {
     await db.deleteGallery(galleryId);
   },
 
+  // Virtual gallery (#22) plumbing.
+  upsertVirtualGallery: async (
+    galleryId: string,
+    sources: string[]
+  ): Promise<void> => {
+    await db.upsertVirtualGallery(galleryId, sources);
+  },
+  deleteVirtualGallery: async (galleryId: string): Promise<void> => {
+    await db.deleteVirtualGallery(galleryId);
+  },
+  isVirtualGallery: async (galleryId: string): Promise<boolean> => {
+    return (await db.isVirtualGallery(galleryId)) as boolean;
+  },
+
   loadGalleryPhotos: async (galleryId: string, lang?: string) => {
     return await db.loadGalleryPhotos(galleryId, lang);
   },

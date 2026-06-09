@@ -58,6 +58,13 @@ const GalleryFields = {
   theme: Type.Optional(StringEnum(GALLERY_THEMES)),
   initialView: Type.Optional(StringEnum(GALLERY_INITIAL_VIEWS)),
   hostname: Type.Optional(Type.String()),
+  // Virtual gallery (#22): non-empty array makes the gallery a
+  // virtual union of the listed source galleries; empty array
+  // turns a virtual gallery back into a real one (drops the
+  // virtual_gallery row); omitted leaves the type unchanged.
+  // Validation in the model layer (no self-reference, no chained
+  // virtual sources, every id must exist).
+  sources: Type.Optional(Type.Array(Type.String({ minLength: 1 }))),
 };
 const GalleryCreateBody = Type.Object({
   id: Type.String({ minLength: 1, pattern: ID_PATTERN_SOURCE }),
