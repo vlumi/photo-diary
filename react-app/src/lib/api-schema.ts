@@ -1359,6 +1359,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gallery-photos/{galleryId}/filter-values": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Filter pill universe (per-category value set) */
+        get: {
+            parameters: {
+                query?: {
+                    lang?: string;
+                };
+                header?: never;
+                path: {
+                    galleryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            categoryValues: {
+                                [key: string]: string[];
+                            };
+                            byCityLocalized: {
+                                [key: string]: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gallery-photos/{galleryId}/{photoId}": {
         parameters: {
             query?: never;

@@ -52,6 +52,18 @@ const getNeighbors = async (
     })
   );
 
+// Filter pill universe (#532). Returns categoryValues + city
+// localized-label map; shares the stats cache server-side, so a
+// warm cache costs nothing extra. Lets the gallery viewer skip the
+// full unfiltered photo fetch it previously did just to derive
+// these values client-side.
+const getFilterValues = async (galleryId: string, lang?: string) =>
+  unwrap(
+    api.GET("/api/v1/gallery-photos/{galleryId}/filter-values", {
+      params: { path: { galleryId }, query: lang ? { lang } : undefined },
+    })
+  );
+
 const link = async (galleryId: string, photoId: string): Promise<void> => {
   await unwrap(
     api.PUT("/api/v1/gallery-photos/{galleryId}/{photoId}", {
@@ -68,4 +80,12 @@ const unlink = async (galleryId: string, photoId: string): Promise<void> => {
   );
 };
 
-export default { get, query, getCounts, getNeighbors, link, unlink };
+export default {
+  get,
+  query,
+  getCounts,
+  getNeighbors,
+  getFilterValues,
+  link,
+  unlink,
+};

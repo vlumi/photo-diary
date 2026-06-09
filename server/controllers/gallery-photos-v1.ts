@@ -6,9 +6,11 @@ import { AccessError, NotFoundError } from "../lib/errors.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/gallery-photo.js";
+import statsFactory from "../models/stats.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
+const stats = statsFactory();
 
 const init = async () => {
   await model.init();
@@ -68,6 +70,10 @@ const NeighborsResponse = Type.Object({
   last: Type.Optional(PhotoItem),
   position: Type.Optional(Type.Integer({ minimum: 1 })),
   total: Type.Integer({ minimum: 0 }),
+});
+const FilterValuesResponse = Type.Object({
+  categoryValues: Type.Record(Type.String(), Type.Array(Type.String())),
+  byCityLocalized: Type.Record(Type.String(), Type.String()),
 });
 
 const TAGS = ["gallery-photos"];
@@ -237,6 +243,44 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
           return { total: 0 };
+        }
+        throw error;
+      }
+    }
+  );
+
+  /**
+   * Filter pill universe (#532): the gallery's per-category value
+   * set, plus the city localized-label map. Subset of `/stats` —
+   * shares the stats cache, same invalidation hooks. Drives the
+   * Filters sidebar in the gallery viewer without the client having
+   * to fetch the gallery's full photo array.
+   */
+  fastify.get(
+    "/:galleryId/filter-values",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Filter pill universe (per-category value set)",
+        params: GalleryIdParam,
+        querystring: LangQuery,
+        response: { 200: FilterValuesResponse },
+      },
+    },
+    async (request) => {
+      try {
+        requireScopeMatches(request, request.params.galleryId);
+        await authorizer.authorizeGalleryView(
+          request.user.id,
+          request.params.galleryId
+        );
+        return await stats.getGalleryFilterValues(
+          request.params.galleryId,
+          request.query.lang
+        );
+      } catch (error) {
+        if (error instanceof AccessError || error instanceof NotFoundError) {
+          return { categoryValues: {}, byCityLocalized: {} };
         }
         throw error;
       }

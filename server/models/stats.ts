@@ -26,6 +26,7 @@ import type { FilterShape } from "../lib/photo-filter-eval.js";
 export default () => ({
   getGalleryStats,
   getGlobalStats,
+  getGalleryFilterValues,
 });
 
 // Re-export the response shape + types so controllers and tests
@@ -66,6 +67,69 @@ const getGalleryStats = async (
   const stats = computeStats(photos, filter);
   if (cacheable) cacheSet(key, stats);
   return stats;
+};
+
+// Subset of the gallery's unfiltered stats — the universe the filter
+// pill UI needs to render every selectable value (#532). Projection
+// off `getGalleryStats` so the existing stats cache + invalidation
+// hooks naturally apply; a cold gallery mount pays one stats compute
+// then every subsequent visit serves out of cache. Filter pills want
+// the universe across the unfiltered set, never the active filter's
+// narrowed view, so this never takes a filter arg.
+//
+// Stats internally buckets by camelCase category names; the filter
+// pill UI + FilterShape wire format use kebab-case (see
+// PhotoModel.uniqueValues() and photo-filter-eval.ts). This method
+// maps to the kebab-case shape the filter side expects, and adds the
+// two categories stats doesn't bucket but the pills want — `year-
+// month` (derived from `byYearMonth`'s keys) and `geotagged` (binary;
+// surfaces both yes/no so the pill is always selectable).
+export interface FilterValuesResponse {
+  categoryValues: Record<string, string[]>;
+  byCityLocalized: Record<string, string>;
+}
+const getGalleryFilterValues = async (
+  galleryId: string,
+  lang?: string
+): Promise<FilterValuesResponse> => {
+  const stats = await getGalleryStats(galleryId, undefined, lang);
+  const cv = stats.categoryValues;
+  const yearMonths: string[] = [];
+  for (const [year, months] of Object.entries(stats.byYearMonth ?? {})) {
+    for (const month of Object.keys(months)) {
+      yearMonths.push(`${year}-${month}`);
+    }
+  }
+  yearMonths.sort();
+  return {
+    categoryValues: {
+      author: cv.author ?? [],
+      country: cv.country ?? [],
+      state: cv.state ?? [],
+      city: cv.city ?? [],
+      geotagged: ["yes", "no"],
+      year: cv.year ?? [],
+      "year-month": yearMonths,
+      month: cv.month ?? [],
+      weekday: cv.weekday ?? [],
+      hour: cv.hour ?? [],
+      "camera-make": cv.cameraMake ?? [],
+      camera: cv.camera ?? [],
+      lens: cv.lens ?? [],
+      "camera-lens": cv.cameraLens ?? [],
+      "focal-length": cv.focalLength ?? [],
+      "focal-length-eq": cv.focalLength35mmEquiv ?? [],
+      aperture: cv.aperture ?? [],
+      "exposure-time": cv.exposureTime ?? [],
+      iso: cv.iso ?? [],
+      ev: cv.ev ?? [],
+      lv: cv.lv ?? [],
+      resolution: cv.resolution ?? [],
+      orientation: cv.orientation ?? [],
+      "aspect-ratio": cv.aspectRatio ?? [],
+    },
+    byCityLocalized: stats.byCityLocalized,
+  };
 };
 
 const getGlobalStats = async (
