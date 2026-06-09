@@ -433,10 +433,12 @@ describe("collectTopics", () => {
     expect(topics[5].categories.length).toBe(2);
   });
 
-  test("With map photos appends location category to general", () => {
+  test("With geotaggedCount > 0 appends location category to general", () => {
     const mapPhotos = [{}, {}, {}] as any[];
+    const data = baseData();
+    data.count.geotaggedCount = 3;
     const topics = stats.collectTopics(
-      baseData(),
+      data,
       "en",
       mockT,
       mockCountryData,
@@ -452,12 +454,16 @@ describe("collectTopics", () => {
       geotaggedCount: 3,
       totalCount: 2,
     });
+    // photos array is still propagated for the MapModal once
+    // the parent's lazy fetch populates it.
     expect((topics[0].categories[3] as any).photos).toBe(mapPhotos);
   });
 
-  test("Empty mapPhotos array does not emit location category", () => {
+  test("geotaggedCount=0 does not emit location category", () => {
+    const data = baseData();
+    data.count.geotaggedCount = 0;
     const topics = stats.collectTopics(
-      baseData(),
+      data,
       "en",
       mockT,
       mockCountryData,

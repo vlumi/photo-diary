@@ -97,13 +97,15 @@ const Stats = ({
     [serverStats]
   );
 
-  // Map photos: for gallery scope, pull from /query with the active
-  // filter so we don't need the gallery's full photo array in memory
-  // (#532). For globalScope, keep the legacy in-prop walk — that
-  // surface still fetches the cross-gallery photo array.
+  // Map photos: lazy-fetch (#532). The Stats grid renders the
+  // Location card with a count from the server's geotaggedCount —
+  // /query only fires after the user opens the MapModal, then sticks
+  // (toggling closed doesn't re-fire). For globalScope, keep the
+  // legacy in-prop walk; that admin surface still fetches the
+  // cross-gallery photo array.
   // Same queryKey shape as Title's mapPhotos + Month/Content so
-  // TanStack dedupes when scope matches (Stats unscoped, Title in
-  // stats context unscoped — one network fetch shared).
+  // TanStack dedupes when scope matches.
+  const [mapPhotosRequested, setMapPhotosRequested] = React.useState(false);
   const mapQueryBody = React.useMemo(
     () => ({ filter: serverFilters, lang }),
     [serverFilters, lang]
@@ -111,7 +113,7 @@ const Stats = ({
   const { data: mapPhotosRaw } = useQuery({
     queryKey: ["gallery-photos-query", galleryId, mapQueryBody],
     queryFn: () => galleryPhotosService.query(galleryId as string, mapQueryBody),
-    enabled: !!galleryId && !hideMap,
+    enabled: !!galleryId && !hideMap && mapPhotosRequested,
     placeholderData: keepPreviousData,
   });
   const mapPhotos = React.useMemo(() => {
@@ -124,6 +126,10 @@ const Stats = ({
     }
     return (photos ?? []).filter((photo) => photo.hasCoordinates());
   }, [galleryId, mapPhotosRaw, photos, hideMap]);
+  const requestMapPhotos = React.useCallback(
+    () => setMapPhotosRequested(true),
+    []
+  );
 
   // Memoize so unrelated re-renders (filter UI ticks, etc.) don't
   // re-run the topic build — it fans out into ~30 chart-data objects
@@ -139,10 +145,21 @@ const Stats = ({
             theme,
             mapPhotos,
             hideMap,
-            enabled
+            enabled,
+            requestMapPhotos
           )
         : [],
-    [data, lang, t, countryData, theme, mapPhotos, hideMap, enabled]
+    [
+      data,
+      lang,
+      t,
+      countryData,
+      theme,
+      mapPhotos,
+      hideMap,
+      enabled,
+      requestMapPhotos,
+    ]
   );
 
   if (!data) {

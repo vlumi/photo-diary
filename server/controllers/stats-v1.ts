@@ -40,6 +40,7 @@ const YearMonthCounts = Type.Record(Type.String(), BucketCounts);
 
 const StatsResponse = Type.Object({
   total: Type.Number(),
+  geotaggedCount: Type.Number(),
   byCategory: Type.Record(Type.String(), BucketCounts),
   byYearMonth: YearMonthCounts,
   summary: Type.Object({

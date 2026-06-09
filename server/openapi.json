@@ -3305,6 +3305,7 @@
                   "type": "object",
                   "required": [
                     "total",
+                    "geotaggedCount",
                     "byCategory",
                     "byYearMonth",
                     "summary",
@@ -3317,6 +3318,9 @@
                   ],
                   "properties": {
                     "total": {
+                      "type": "number"
+                    },
+                    "geotaggedCount": {
                       "type": "number"
                     },
                     "byCategory": {
@@ -3488,6 +3492,7 @@
                   "type": "object",
                   "required": [
                     "total",
+                    "geotaggedCount",
                     "byCategory",
                     "byYearMonth",
                     "summary",
@@ -3500,6 +3505,9 @@
                   ],
                   "properties": {
                     "total": {
+                      "type": "number"
+                    },
+                    "geotaggedCount": {
                       "type": "number"
                     },
                     "byCategory": {

@@ -226,8 +226,16 @@ const Category = ({
   const hasSummaryExtras = !!category.summaryExtras;
   const isLocation = category.kind === "location";
   const hasExpandableContent = hasTable || hasSummaryExtras || isLocation;
+  // Location category lazy-fetches its photo list (#532): the
+  // inline card shows the count from /stats; the MapModal triggers
+  // the /query fetch via the parent's onRequestPhotos callback.
+  // Fires unconditionally on each open (TanStack dedupes; once the
+  // parent flips the `requested` flag it stays flipped).
   const openModal = hasExpandableContent
-    ? () => setModalOpen(true)
+    ? () => {
+        if (isLocation) category.onRequestPhotos?.();
+        setModalOpen(true);
+      }
     : undefined;
   return (
     <Root

@@ -2043,6 +2043,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             total: number;
+                            geotaggedCount: number;
                             byCategory: {
                                 [key: string]: {
                                     [key: string]: number;
@@ -2135,6 +2136,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             total: number;
+                            geotaggedCount: number;
                             byCategory: {
                                 [key: string]: {
                                     [key: string]: number;

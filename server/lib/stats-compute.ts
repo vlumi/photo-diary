@@ -32,6 +32,7 @@ export interface StatsSummary {
 
 export interface StatsResponse {
   total: number;
+  geotaggedCount: number;
   byCategory: Record<string, BucketCounts>;
   byYearMonth: YearMonthCounts;
   summary: StatsSummary;
@@ -349,8 +350,22 @@ export const computeStats = (
     },
   };
 
+  // Count of filtered photos with usable coordinates. Drives the
+  // Stats Location card's inline "N geotagged" so the card stays
+  // populated even though the photo list itself fetches lazily
+  // when the user opens the MapModal (#532).
+  let geotaggedCount = 0;
+  for (const p of filtered) {
+    if (
+      typeof p.taken.location?.coordinates?.latitude === "number" &&
+      typeof p.taken.location?.coordinates?.longitude === "number"
+    ) {
+      geotaggedCount++;
+    }
+  }
   return {
     total: filtered.length,
+    geotaggedCount,
     byCategory,
     byYearMonth,
     summary,
