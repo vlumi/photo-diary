@@ -133,9 +133,10 @@ export interface Gallery {
   // whose contents are the union of those sources' photos.
   sources?: string[];
 }
-export interface VirtualGalleryRow {
+export interface VirtualGallerySourceRow {
   gallery_id: string;
-  sources: string;
+  source_id: string;
+  ordinal: number;
 }
 export interface GalleryPhoto {
   galleryId: string;

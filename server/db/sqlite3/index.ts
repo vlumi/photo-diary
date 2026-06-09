@@ -32,7 +32,7 @@ import schemaFactory, {
   type User,
   type UserGalleryRow,
   type UserRow,
-  type VirtualGalleryRow,
+  type VirtualGallerySourceRow,
 } from "./schema.js";
 
 const SCHEMA = schemaFactory();
@@ -454,36 +454,36 @@ const resolveHideMap = async (
   return guest?.hide_map;
 };
 
-// Virtual galleries: sibling `virtual_gallery` table holds the
-// JSON-encoded source list for any gallery whose contents are a
-// union of other galleries' photos (#22). Loaders below decorate
-// the base Gallery row with `sources` when the join hits.
-const parseSourcesJson = (raw: string): string[] => {
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed)
-      ? parsed.filter((v): v is string => typeof v === "string")
-      : [];
-  } catch {
-    return [];
-  }
-};
+// Virtual galleries: sibling `virtual_gallery_source` junction
+// table holds one row per (virtual, source) pair, ordered by
+// `ordinal` to preserve the operator's input order (#22). A
+// gallery is virtual iff it has at least one row here. Loaders
+// below decorate the base Gallery row with `sources` when present.
 const loadAllVirtualGalleries = (): Map<string, string[]> => {
   const rows = db
-    .prepare("SELECT gallery_id, sources FROM virtual_gallery")
-    .all() as VirtualGalleryRow[];
+    .prepare(
+      "SELECT gallery_id, source_id, ordinal FROM virtual_gallery_source ORDER BY gallery_id, ordinal"
+    )
+    .all() as VirtualGallerySourceRow[];
   const out = new Map<string, string[]>();
   for (const row of rows) {
-    out.set(row.gallery_id, parseSourcesJson(row.sources));
+    const list = out.get(row.gallery_id);
+    if (list) {
+      list.push(row.source_id);
+    } else {
+      out.set(row.gallery_id, [row.source_id]);
+    }
   }
   return out;
 };
 const loadVirtualGallerySources = (galleryId: string): string[] | undefined => {
-  const row = db
-    .prepare("SELECT sources FROM virtual_gallery WHERE gallery_id = ?")
-    .get(galleryId) as Pick<VirtualGalleryRow, "sources"> | undefined;
-  if (!row) return undefined;
-  return parseSourcesJson(row.sources);
+  const rows = db
+    .prepare(
+      "SELECT source_id FROM virtual_gallery_source WHERE gallery_id = ? ORDER BY ordinal"
+    )
+    .all(galleryId) as Pick<VirtualGallerySourceRow, "source_id">[];
+  if (rows.length === 0) return undefined;
+  return rows.map((r) => r.source_id);
 };
 // Resolves a galleryId to the list of source gallery IDs whose
 // `gallery_photo` rows make up its contents. Real gallery → [self].
@@ -494,7 +494,12 @@ const resolveGallerySources = (galleryId: string): string[] => {
   return sources === undefined ? [galleryId] : sources;
 };
 const isVirtualGallery = async (galleryId: string): Promise<boolean> => {
-  return loadVirtualGallerySources(galleryId) !== undefined;
+  const row = db
+    .prepare(
+      "SELECT 1 FROM virtual_gallery_source WHERE gallery_id = ? LIMIT 1"
+    )
+    .get(galleryId);
+  return row !== undefined;
 };
 const decorateGalleryWithSources = (
   gallery: Gallery,
@@ -503,17 +508,31 @@ const decorateGalleryWithSources = (
   const sources = sourcesByGallery.get(gallery.id);
   return sources === undefined ? gallery : { ...gallery, sources };
 };
+// Replace the source set atomically — DELETE existing rows then
+// INSERT each in input order. better-sqlite3's `transaction(fn)`
+// wraps the body in BEGIN/COMMIT.
 const upsertVirtualGallery = async (
   galleryId: string,
   sources: string[]
 ): Promise<void> => {
-  db.prepare(
-    "INSERT INTO virtual_gallery (gallery_id, sources) VALUES (?, ?) " +
-      "ON CONFLICT(gallery_id) DO UPDATE SET sources=excluded.sources"
-  ).run(galleryId, JSON.stringify(sources));
+  const del = db.prepare(
+    "DELETE FROM virtual_gallery_source WHERE gallery_id = ?"
+  );
+  const ins = db.prepare(
+    "INSERT INTO virtual_gallery_source (gallery_id, source_id, ordinal) VALUES (?, ?, ?)"
+  );
+  const replace = db.transaction((gid: string, list: string[]) => {
+    del.run(gid);
+    list.forEach((sourceId, i) => {
+      ins.run(gid, sourceId, i);
+    });
+  });
+  replace(galleryId, sources);
 };
 const deleteVirtualGallery = async (galleryId: string): Promise<void> => {
-  db.prepare("DELETE FROM virtual_gallery WHERE gallery_id = ?").run(galleryId);
+  db.prepare(
+    "DELETE FROM virtual_gallery_source WHERE gallery_id = ?"
+  ).run(galleryId);
 };
 
 const loadGalleries = async () => {
