@@ -168,6 +168,7 @@
     "manage-photos-result-page": "Sivu {{page}} / {{pageCount}}",
     "manage-photos-empty": "Suodatin ei vastaa yhtään valokuvaa.",
     "manage-photos-load-error": "Valokuvien lataus epäonnistui.",
+    "manage-photos-virtual-gallery-notice": "Virtuaaligallerioita ei voi hallita täältä — niiden sisältö tulee lähdegallerioiden valokuvista. Valitse lähdegalleria hallitaksesi sen valokuvia:",
     "manage-photos-bulk-exit": "Tyhjennä valinta",
     "manage-photos-filters-title": "Suodattimet",
     "manage-photos-filters-open": "Avaa suodattimet",
