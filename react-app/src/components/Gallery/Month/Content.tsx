@@ -12,6 +12,7 @@ import Link from "../Link";
 import calendar from "../../../lib/calendar";
 import filter from "../../../lib/filter";
 import galleryPhotosService from "../../../services/gallery-photos";
+import { useGalleryCalendar } from "../../../lib/useFilteredCalendar";
 import PhotoModel, {
   type Photo as PhotoT,
 } from "../../../models/PhotoModel";
@@ -156,7 +157,13 @@ const Content = ({
     return () => cancelAnimationFrame(handle);
   }, [day, year, month, modalActive]);
 
-  if (!gallery.includesMonth(year, month)) {
+  // Unfiltered "does this gallery have any photos in this month at
+  // all" check — drives the explicit Empty state for URLs that
+  // point at a month outside the gallery's calendar. Distinct from
+  // "filter excludes everything in this month", which just renders
+  // no day chips.
+  const galleryCal = useGalleryCalendar(gallery.id());
+  if (galleryCal.ready && !galleryCal.has(year, month)) {
     return (
       <>
         {children}

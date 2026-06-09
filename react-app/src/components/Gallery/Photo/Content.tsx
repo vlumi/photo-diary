@@ -259,10 +259,6 @@ const Content = ({
     return () => el.removeEventListener("wheel", onWheel);
   }, [setZoom]);
 
-  if (!gallery.includesPhoto(year, month, day, photo)) {
-    return <i>Empty</i>;
-  }
-
   const path = `${config.PHOTO_ROOT_URL}display/${photo.id()}`;
 
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
