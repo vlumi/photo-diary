@@ -7,6 +7,8 @@ import Month from "./Month";
 import calendar from "../../../lib/calendar";
 import filter from "../../../lib/filter";
 import galleryPhotosService from "../../../services/gallery-photos";
+import useFilteredCalendar from "../../../lib/useFilteredCalendar";
+import useMediaQuery from "../../../lib/useMediaQuery";
 import { useFiltersStore } from "../../../stores";
 
 import type { Gallery } from "../../../models/GalleryModel";
@@ -66,24 +68,32 @@ const Content = ({
     }
     return max;
   }, [counts]);
+  // 900px matches the `Calendar` max-width — the full 4-col / 3-row
+  // grid fits without re-flow above it.
+  const isWide = useMediaQuery("(min-width: 900px)");
+  const cal = useFilteredCalendar(gallery.id());
+  const months = React.useMemo(() => {
+    if (isWide) return calendar.months(year);
+    const [firstYear, firstMonth] = cal.firstMonth();
+    const [lastYear, lastMonth] = cal.lastMonth();
+    return calendar.months(year, firstYear, firstMonth, lastYear, lastMonth);
+  }, [isWide, cal, year]);
   return (
     <>
       {children}
       <Root>
         <Calendar>
-          {calendar
-            .months(year, ...gallery.firstMonth(), ...gallery.lastMonth())
-            .map((month) => (
-              <Month
-                key={month}
-                gallery={gallery}
-                year={year}
-                month={month}
-                counts={counts}
-                maxCount={maxCount}
-                theme={theme}
-              />
-            ))}
+          {months.map((month) => (
+            <Month
+              key={month}
+              gallery={gallery}
+              year={year}
+              month={month}
+              counts={counts}
+              maxCount={maxCount}
+              theme={theme}
+            />
+          ))}
         </Calendar>
       </Root>
     </>
