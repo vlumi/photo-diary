@@ -83,6 +83,7 @@ export default () => {
 
     loadGalleryPhotos,
     queryFilteredPhotos,
+    queryFilteredPhotosGlobal,
     queryFilteredPhotoCounts,
     queryFilteredPhotoNeighbors,
     queryGalleryFilterValues,
@@ -545,6 +546,21 @@ const queryFilteredPhotos = async (
   opts: QueryFilteredOpts = {}
 ): Promise<Photo[]> => {
   const photos = (await loadGalleryPhotos(galleryId, opts.lang)) as Photo[];
+  return photos.filter(
+    (photo) =>
+      matchesScope(photo, opts.year, opts.month, opts.day) &&
+      matchesFilter(opts.filter, photo)
+  );
+};
+// Cross-gallery counterpart of `queryFilteredPhotos`. Loads every
+// photo (no gallery scope) and applies the same FilterShape /
+// optional year/month/day predicate. Drives the GlobalStats Location
+// map's filter-aware photo set without needing to fan out per-gallery
+// queries.
+const queryFilteredPhotosGlobal = async (
+  opts: QueryFilteredOpts = {}
+): Promise<Photo[]> => {
+  const photos = (await loadPhotos(opts.lang)) as Photo[];
   return photos.filter(
     (photo) =>
       matchesScope(photo, opts.year, opts.month, opts.day) &&

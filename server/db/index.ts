@@ -233,6 +233,11 @@ export default {
   ): Promise<Photo[]> => {
     return (await db.queryFilteredPhotos(galleryId, opts)) as Photo[];
   },
+  queryFilteredPhotosGlobal: async (
+    opts: QueryFilteredOpts = {}
+  ): Promise<Photo[]> => {
+    return (await db.queryFilteredPhotosGlobal(opts)) as Photo[];
+  },
   queryFilteredPhotoCounts: async (
     galleryId: string,
     opts: CountsFilteredOpts = {}

@@ -230,6 +230,31 @@ const PhotosByIdsResponse = Type.Object({
   photos: Type.Array(PhotoItem),
 });
 
+// FilterShape body — mirrors `/api/v1/gallery-photos/<id>/query`.
+// Same `additionalProperties: true` so the evaluator can drop
+// unknown categories instead of rejecting the whole payload.
+const FilterKey = Type.Union([
+  Type.String(),
+  Type.Number(),
+  Type.Boolean(),
+  Type.Null(),
+]);
+const FilterCategory = Type.Array(FilterKey);
+const FilterTopic = Type.Record(Type.String(), FilterCategory, {
+  additionalProperties: true,
+});
+const FilterSchema = Type.Record(Type.String(), FilterTopic, {
+  additionalProperties: true,
+});
+const QueryBody = Type.Object({
+  filter: Type.Optional(FilterSchema),
+  year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
+  month: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
+  day: Type.Optional(Type.Integer({ minimum: 1, maximum: 31 })),
+  lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
+});
+const PhotosQueryResponse = Type.Array(PhotoItem);
+
 const TAGS = ["photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -402,6 +427,36 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         if (row) photos.push(row);
       }
       return { photos };
+    }
+  );
+
+  /**
+   * Cross-gallery filter-aware photo list. Drives GlobalStats's
+   * lazy Location map — same FilterShape wire envelope as the
+   * gallery-scoped `/api/v1/gallery-photos/<id>/query`. Admin-only,
+   * rejected on hostname-bound instances (cross-gallery surface).
+   */
+  fastify.post(
+    "/query",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Filter-aware cross-gallery photo list (admin)",
+        body: QueryBody,
+        response: { 200: PhotosQueryResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      requireUnscoped(request);
+      await authorizer.authorizeAdmin(request.user.id);
+      return await model.queryFilteredGlobal({
+        filter: request.body.filter,
+        year: request.body.year,
+        month: request.body.month,
+        day: request.body.day,
+        lang: request.body.lang,
+      });
     }
   );
 
