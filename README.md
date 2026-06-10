@@ -43,7 +43,7 @@ The three pieces communicate via the shared filesystem and SQLite DB rather than
 
 Quickstart for a single personal instance. For the full production layout (multi-version code under `/opt/`, per-instance dirs under `/var/`, nginx vhosts, atomic upgrades, backup) see [Multi-Instance Deployment](#multi-instance-deployment) below; for an in-repo dev setup without an instance dir at all, see [Dev Mode](#dev-mode).
 
-1. **Prerequisites + install.** Node.js 22 or newer (npm 10+ recommended for workspaces). From the repo root, `npm run setup` installs every workspace ([server](server), [converter](converter), [react-app](react-app)) and builds the frontend into [server](server)/`build/`.
+1. **Prerequisites + install.** Node.js 22 or newer (npm 10+ recommended for workspaces) and [pm2](https://pm2.keymetrics.io/) installed globally (`npm install -g pm2`) — the per-instance `start-prod.sh` scripts and the `bin/instance.ts` upgrade / `--cycle` flows shell out to it. From the repo root, `npm run setup` installs every workspace ([server](server), [converter](converter), [react-app](react-app)) and builds the frontend into [server](server)/`build/`.
 2. **Bootstrap the instance directory** with [`bin/instance.ts`](bin/instance.ts). It creates the dir tree (`photos/{inbox,original,display,thumbnail}/`), generates `.env` with a fresh random `SECRET`, links `code` to this checkout, and surfaces operator shortcuts at `<instance>/bin/{photo,gallery,user,access}.ts`:
 
    ```sh
