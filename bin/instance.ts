@@ -480,6 +480,23 @@ for (const d of REQUIRED_DIRS) {
   log(`  ${present ? "✓" : "✗"} ${d}`);
 }
 
+// 6b. Tooling — pm2 is a prerequisite for the prod start scripts and
+// the upgrade / --cycle pm2-cycle paths. Surface its presence here so
+// a missing binary reads as a setup gap, not a transient cycle failure.
+log();
+log("Tools:");
+{
+  const res = spawnSync("pm2", ["--version"], { encoding: "utf8" });
+  const version = res.status === 0 ? res.stdout.trim() : null;
+  if (version) {
+    log(`  ✓ pm2 ${version}`);
+  } else {
+    log("  ✗ pm2 not found on PATH");
+    log("    Install with: npm install -g pm2");
+    log("    pm2 manages the server + converter processes; start-prod.sh and the upgrade / --cycle flows require it.");
+  }
+}
+
 // 7. Next steps
 log();
 if (mode === "new") {
