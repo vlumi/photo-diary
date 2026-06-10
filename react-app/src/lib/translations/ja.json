@@ -518,6 +518,8 @@
     "stats-location-count-geotagged": "{{count}}枚あり",
     "stats-location-count-not-geotagged": "{{count}}枚なし",
     "stats-location-see-on-map": "地図で表示",
+    "map-locate-me": "現在地に移動",
+    "map-locate-me-denied": "位置情報の利用が許可されていません",
     "stats-topic-time": "時間分布",
     "stats-category-year": "年",
     "stats-category-year-month": "年月",

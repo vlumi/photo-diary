@@ -518,6 +518,8 @@
     "stats-location-count-geotagged": "{{count}} sijaintitiedollista",
     "stats-location-count-not-geotagged": "{{count}} ilman sijaintia",
     "stats-location-see-on-map": "Näytä kartalla",
+    "map-locate-me": "Keskitä nykyiseen sijaintiini",
+    "map-locate-me-denied": "Sijaintilupa evätty",
     "stats-topic-time": "Ajankohta",
     "stats-category-year": "Vuosi",
     "stats-category-year-month": "Vuosi ja kuukausi",

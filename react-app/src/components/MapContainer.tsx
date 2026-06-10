@@ -1,5 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { useTranslation } from "react-i18next";
+import { BsGeoAltFill } from "react-icons/bs";
 import Leaflet, { type LatLngExpression } from "leaflet";
 import {
   MapContainer as Map,
@@ -28,6 +30,7 @@ const Root = styled("div", { shouldForwardProp: (prop) => prop !== "$height" })<
   height: ${(props) => (props.$height ? props.$height : 400)}px;
   padding: 0;
   margin: 0;
+  position: relative;
 `;
 const PopupContent = styled.span`
   text-align: center;
@@ -76,11 +79,104 @@ const Refit = ({
   return null;
 };
 
+// "You are here" marker. Inline-styled DivIcon so no extra CSS
+// asset / scoping needed; visually distinct from the default
+// photo-pin marker (blue dot + halo vs leaflet's blue droplet).
+const userPositionIcon = Leaflet.divIcon({
+  className: "",
+  html:
+    '<div style="width:16px;height:16px;border-radius:50%;' +
+    "background:#1f7aff;border:3px solid #fff;" +
+    'box-shadow:0 0 0 2px rgba(31,122,255,0.55);"></div>',
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+});
+const LocateButtonOverlay = styled.button`
+  position: absolute;
+  top: 80px;
+  left: 10px;
+  z-index: 1000;
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  &:hover:not(:disabled) {
+    background: #f4f4f4;
+  }
+  &:disabled {
+    color: #aaa;
+    cursor: not-allowed;
+  }
+`;
+const LocateControl = ({
+  onLocated,
+}: {
+  onLocated: (pos: LatLngExpression) => void;
+}): React.ReactElement | null => {
+  const map = useMap();
+  const { t } = useTranslation();
+  const [status, setStatus] = React.useState<"idle" | "pending" | "denied">(
+    "idle"
+  );
+  // Geolocation requires a secure context (HTTPS / localhost). On
+  // an unsecured dev origin the API exists but rejects every call —
+  // hide the button rather than offer a dead control.
+  if (
+    typeof window === "undefined" ||
+    !navigator.geolocation ||
+    !window.isSecureContext
+  ) {
+    return null;
+  }
+  const locate = () => {
+    setStatus("pending");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords: LatLngExpression = [
+          pos.coords.latitude,
+          pos.coords.longitude,
+        ];
+        onLocated(coords);
+        map.setView(coords, Math.max(map.getZoom(), 14), { animate: true });
+        setStatus("idle");
+      },
+      (err) => {
+        setStatus(err.code === err.PERMISSION_DENIED ? "denied" : "idle");
+      },
+      { timeout: 10_000, maximumAge: 60_000 }
+    );
+  };
+  const label = String(
+    status === "denied" ? t("map-locate-me-denied") : t("map-locate-me")
+  );
+  return (
+    <LocateButtonOverlay
+      type="button"
+      onClick={locate}
+      disabled={status !== "idle"}
+      aria-label={label}
+      title={label}
+    >
+      <BsGeoAltFill aria-hidden />
+    </LocateButtonOverlay>
+  );
+};
+
 interface Props {
   positions: Photo[];
   height?: number;
   maxZoom?: number;
   drawLine?: boolean;
+  // Show the "Locate me" overlay button (#545). Defaults off — only
+  // surfaces on MapModal, not on per-photo metadata-panel maps.
+  showLocate?: boolean;
 }
 
 const MapContainer = ({
@@ -88,7 +184,10 @@ const MapContainer = ({
   height,
   maxZoom,
   drawLine,
+  showLocate,
 }: Props): React.ReactElement => {
+  const [userPosition, setUserPosition] =
+    React.useState<LatLngExpression | undefined>(undefined);
   if (photos.length === 0) {
     return <></>;
   }
@@ -127,6 +226,12 @@ const MapContainer = ({
           maxZoom={resolvedMaxZoom}
           positionKey={positionKey}
         />
+        {showLocate && (
+          <LocateControl onLocated={(pos) => setUserPosition(pos)} />
+        )}
+        {userPosition && (
+          <Marker position={userPosition} icon={userPositionIcon} />
+        )}
         <TileLayer
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

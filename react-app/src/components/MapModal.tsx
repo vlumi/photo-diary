@@ -116,6 +116,7 @@ const MapModal = ({
             height={height}
             maxZoom={18}
             drawLine={drawLine}
+            showLocate
           />
         </MapArea>
       </ModalBox>
