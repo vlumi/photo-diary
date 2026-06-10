@@ -187,6 +187,7 @@ const EvolutionChart = ({
           options={{
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
             plugins: {
               legend: { position: "bottom", labels: { boxWidth: 12 } },
               tooltip: { mode: "index", intersect: false },
