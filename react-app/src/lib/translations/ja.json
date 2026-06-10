@@ -439,6 +439,7 @@
     "photo-author": "撮影者",
     "manage-this-photo": "この写真を管理",
     "set-as-gallery-icon": "ギャラリーのアイコンに設定",
+    "metadata-taken": "撮影日時",
     "metadata-camera": "カメラ",
     "metadata-focal-eq": "（{{value}}㎜換算）",
     "metadata-lens": "レンズ",

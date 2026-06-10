@@ -439,6 +439,7 @@
     "photo-author": "Valokuvaaja",
     "manage-this-photo": "Hallinnoi tätä kuvaa",
     "set-as-gallery-icon": "Aseta gallerian kuvakkeeksi",
+    "metadata-taken": "Otettu",
     "metadata-camera": "Kamera",
     "metadata-focal-eq": "({{value}}㎜ vast.)",
     "metadata-lens": "Objektiivi",

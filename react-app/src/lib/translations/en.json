@@ -439,6 +439,7 @@
     "photo-author": "Photo author",
     "manage-this-photo": "Manage this photo",
     "set-as-gallery-icon": "Set as gallery icon",
+    "metadata-taken": "Taken",
     "metadata-camera": "Camera",
     "metadata-focal-eq": "({{value}}㎜ eq.)",
     "metadata-lens": "Lens",

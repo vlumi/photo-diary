@@ -243,7 +243,9 @@ const MetadataPanel = ({
       exposureValue ? `EV${formatExposure.ev(exposureValue)}` : "",
       lightValue ? `LV${formatExposure.ev(lightValue)}` : "",
     ].filter(Boolean);
+    const timestamp = photo.formatTimestamp();
     const tableRows: Array<[string, string]> = [
+      ...(timestamp ? ([[t("metadata-taken"), timestamp]] as Array<[string, string]>) : []),
       ...(camera ? ([[t("metadata-camera"), camera]] as Array<[string, string]>) : []),
       ...(lens ? ([[t("metadata-lens"), lens]] as Array<[string, string]>) : []),
       ...(settingParts.length > 0

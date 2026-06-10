@@ -41,18 +41,11 @@ const Centre = styled.div`
   color: var(--header-color);
   text-align: center;
 `;
-const TimestampLine = styled.div`
-  font-size: 0.55em;
+const PositionLine = styled.div`
+  font-size: 0.6em;
   font-weight: 600;
   letter-spacing: 0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-`;
-const PositionLine = styled.div`
-  font-size: 0.45em;
-  color: var(--header-sub-color);
+  color: var(--header-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -102,7 +95,6 @@ const Navigation = ({
     position !== undefined
       ? `${new Intl.NumberFormat(lang).format(position)} / ${new Intl.NumberFormat(lang).format(total)}`
       : "";
-  const timestamp = photo.formatTimestamp();
 
   const prevVisibility = !previousPhoto || previousPhoto.id() === photo.id() ? "hidden" : "";
   const nextVisibility = !nextPhoto || nextPhoto.id() === photo.id() ? "hidden" : "";
@@ -134,7 +126,6 @@ const Navigation = ({
         </NavLink>
       </Group>
       <Centre>
-        <TimestampLine>{timestamp}</TimestampLine>
         <PositionLine aria-label={t("nav-photo-position")}>
           {positionLabel}
         </PositionLine>
