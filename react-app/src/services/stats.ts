@@ -37,4 +37,24 @@ const getGlobalFilterValues = async (lang?: string) =>
     })
   );
 
-export default { getGalleryStats, getGlobalStats, getGlobalFilterValues };
+// Per-bucket time-series for the trend chart in the category
+// modal. Lazy — fired when the user opens a trendable category.
+const getGalleryEvolution = async (
+  galleryId: string,
+  category: string,
+  filter: ServerFilters,
+  lang?: string
+) =>
+  unwrap(
+    api.POST("/api/v1/galleries/{galleryId}/stats/evolution", {
+      params: { path: { galleryId } },
+      body: { category, filter, lang },
+    })
+  );
+
+export default {
+  getGalleryStats,
+  getGlobalStats,
+  getGlobalFilterValues,
+  getGalleryEvolution,
+};

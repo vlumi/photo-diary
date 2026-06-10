@@ -193,6 +193,7 @@ const Stats = ({
           <Topic
             key={topic.key}
             topic={topic}
+            galleryId={galleryId}
             filters={filters}
             setFilters={setFilters}
             theme={theme}

@@ -34,6 +34,21 @@ const StatsBody = Type.Object({
   filter: Type.Optional(FilterSchema),
   lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
 });
+const EvolutionBody = Type.Object({
+  category: Type.String({ minLength: 1 }),
+  filter: Type.Optional(FilterSchema),
+  lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
+});
+const EvolutionResponse = Type.Object({
+  yearMonths: Type.Array(Type.String()),
+  buckets: Type.Record(
+    Type.String(),
+    Type.Object({
+      counts: Type.Array(Type.Number()),
+      cumulative: Type.Array(Type.Number()),
+    })
+  ),
+});
 
 const BucketCounts = Type.Record(Type.String(), Type.Number());
 const YearMonthCounts = Type.Record(Type.String(), BucketCounts);
@@ -85,6 +100,35 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
       );
       return await model.getGalleryStats(
         request.params.galleryId,
+        request.body.filter as FilterShape | undefined,
+        request.body.lang
+      );
+    }
+  );
+
+  // Per-bucket time-series for the trend chart (#383). Lazy on the
+  // client — only fires when a trendable category's modal opens.
+  fastify.post(
+    "/:galleryId/stats/evolution",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Per-bucket time-series for a trendable category",
+        params: GalleryIdParam,
+        body: EvolutionBody,
+        response: { 200: EvolutionResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      requireScopeMatches(request, request.params.galleryId);
+      await authorizer.authorizeGalleryView(
+        request.user.id,
+        request.params.galleryId
+      );
+      return await model.getGalleryEvolution(
+        request.params.galleryId,
+        request.body.category,
         request.body.filter as FilterShape | undefined,
         request.body.lang
       );
