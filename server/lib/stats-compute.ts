@@ -280,6 +280,7 @@ export interface EvolutionResult {
   buckets: Record<string, { counts: number[]; cumulative: number[] }>;
 }
 const EVOLUTION_BUCKETERS: Record<string, (p: Photo) => unknown> = {
+  author: (p) => p.taken.author,
   country: (p) => p.taken.location?.country,
   cameraMake: (p) => p.camera?.make,
   camera: formatCamera,
@@ -296,6 +297,19 @@ const EVOLUTION_BUCKETERS: Record<string, (p: Photo) => unknown> = {
   aperture: (p) => p.exposure?.aperture,
   exposureTime: (p) => p.exposure?.exposureTime,
   iso: (p) => p.exposure?.iso,
+  ev: (p) =>
+    derived.exposureValue(p.exposure?.aperture, p.exposure?.exposureTime),
+  lv: (p) =>
+    derived.lightValue(
+      p.exposure?.aperture,
+      p.exposure?.exposureTime,
+      p.exposure?.iso
+    ),
+  resolution: (p) =>
+    derived.resolution(
+      p.dimensions?.original?.width,
+      p.dimensions?.original?.height
+    ),
   orientation: (p) =>
     derived.orientation(
       p.dimensions?.original?.width,

@@ -136,6 +136,9 @@ const TableModal = ({
     "aperture",
     "exposure-time",
     "iso",
+    "ev",
+    "lv",
+    "resolution",
   ]);
   const formatter = format.categoryValue(lang, t, countryData)(category.key);
   const labelForBucket = (raw: string): string => {

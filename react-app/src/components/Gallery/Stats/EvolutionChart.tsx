@@ -13,6 +13,7 @@ import { useFiltersStore } from "../../../stores";
 // keys are camelCase. Categories absent from this map don't render
 // the chart (the category modal opens without it).
 const CATEGORY_KEY_TO_SERVER: Record<string, string> = {
+  author: "author",
   country: "country",
   "camera-make": "cameraMake",
   camera: "camera",
@@ -23,6 +24,9 @@ const CATEGORY_KEY_TO_SERVER: Record<string, string> = {
   aperture: "aperture",
   "exposure-time": "exposureTime",
   iso: "iso",
+  ev: "ev",
+  lv: "lv",
+  resolution: "resolution",
   orientation: "orientation",
   "aspect-ratio": "aspectRatio",
 };
