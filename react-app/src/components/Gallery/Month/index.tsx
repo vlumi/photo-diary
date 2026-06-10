@@ -94,7 +94,7 @@ const Month = ({
   return (
     <>
       <title>
-        {gallery.title(year, month, day)} — {t("nav-gallery")}
+        {gallery.breadcrumb({ year, month, day, lang })} — {t("nav-gallery")}
       </title>
       <Navigation gallery={gallery} year={year} month={month} />
       <Swipeable onSwiped={handleSwipe}>

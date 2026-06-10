@@ -108,7 +108,8 @@ interface Props {
 }
 
 const ListBody = ({ galleries }: Props): React.ReactElement => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
   const isAdmin = !!user?.isAdmin();
@@ -120,7 +121,7 @@ const ListBody = ({ galleries }: Props): React.ReactElement => {
     const url = `${config.PHOTO_ROOT_URL}${gallery.icon()}`;
     return (
       <IconContainer>
-        <Icon src={url} alt={gallery.title()} />
+        <Icon src={url} alt={gallery.title(lang)} />
       </IconContainer>
     );
   };
@@ -137,11 +138,11 @@ const ListBody = ({ galleries }: Props): React.ReactElement => {
             $color={activeTheme.get("header-color")}
             $background={activeTheme.get("header-background")}
           >
-            {gallery.title()}
+            {gallery.title(lang)}
           </GalleryTitle>
           {renderIcon(gallery)}
-          {gallery.description() && (
-            <Description>{gallery.description()}</Description>
+          {gallery.description(lang) && (
+            <Description>{gallery.description(lang)}</Description>
           )}
         </Gallery>
       </Link>

@@ -106,32 +106,45 @@ describe("Without photos", () => {
       expect(samples.testing.title()).toBe("gallery testing"));
     test("all_photos", () => expect(samples["all_photos"].title()).toBe("all photos"));
   });
-  describe("title(year)", () => {
-    test("empty", () => expect(samples.empty.title(2020)).toBe("2020 — "));
-    test("testing", () =>
-      expect(samples.testing.title(2020)).toBe("2020 — gallery testing"));
-    test("all_photos", () =>
-      expect(samples["all_photos"].title(2020)).toBe("2020 — all photos"));
-  });
-  describe("title(year, month)", () => {
+  describe("breadcrumb({year})", () => {
     test("empty", () =>
-      expect(samples.empty.title(2020, 5)).toBe("2020-05 — "));
+      expect(samples.empty.breadcrumb({ year: 2020 })).toBe("2020 — "));
     test("testing", () =>
-      expect(samples.testing.title(2020, 5)).toBe("2020-05 — gallery testing"));
-    test("all_photos", () =>
-      expect(samples["all_photos"].title(2020, 5)).toBe("2020-05 — all photos"));
-  });
-  describe("title(year, month, day)", () => {
-    test("empty", () =>
-      expect(samples.empty.title(2020, 5, 27)).toBe("2020-05-27 — "));
-    test("testing", () =>
-      expect(samples.testing.title(2020, 5, 27)).toBe(
-        "2020-05-27 — gallery testing"
+      expect(samples.testing.breadcrumb({ year: 2020 })).toBe(
+        "2020 — gallery testing"
       ));
     test("all_photos", () =>
-      expect(samples["all_photos"].title(2020, 5, 27)).toBe(
-        "2020-05-27 — all photos"
+      expect(samples["all_photos"].breadcrumb({ year: 2020 })).toBe(
+        "2020 — all photos"
       ));
+  });
+  describe("breadcrumb({year, month})", () => {
+    test("empty", () =>
+      expect(samples.empty.breadcrumb({ year: 2020, month: 5 })).toBe(
+        "2020-05 — "
+      ));
+    test("testing", () =>
+      expect(samples.testing.breadcrumb({ year: 2020, month: 5 })).toBe(
+        "2020-05 — gallery testing"
+      ));
+    test("all_photos", () =>
+      expect(samples["all_photos"].breadcrumb({ year: 2020, month: 5 })).toBe(
+        "2020-05 — all photos"
+      ));
+  });
+  describe("breadcrumb({year, month, day})", () => {
+    test("empty", () =>
+      expect(
+        samples.empty.breadcrumb({ year: 2020, month: 5, day: 27 })
+      ).toBe("2020-05-27 — "));
+    test("testing", () =>
+      expect(
+        samples.testing.breadcrumb({ year: 2020, month: 5, day: 27 })
+      ).toBe("2020-05-27 — gallery testing"));
+    test("all_photos", () =>
+      expect(
+        samples["all_photos"].breadcrumb({ year: 2020, month: 5, day: 27 })
+      ).toBe("2020-05-27 — all photos"));
   });
   describe("description", () => {
     test("empty", () => expect(samples.empty.description()).toBe(""));
@@ -841,17 +854,19 @@ describe("With photos", () => {
       ]),
     };
   });
-  describe("title(year, month, day, position)", () => {
+  describe("breadcrumb({year, month, day, position})", () => {
     test("position 1 in empty", () =>
-      expect(g.empty.title(2019, 10, 3, 1)).toBe("#1 — 2019-10-03 — "));
+      expect(
+        g.empty.breadcrumb({ year: 2019, month: 10, day: 3, position: 1 })
+      ).toBe("#1 — 2019-10-03 — "));
     test("position 1 in testing", () =>
-      expect(g.testing.title(2019, 10, 3, 1)).toBe(
-        "#1 — 2019-10-03 — gallery testing"
-      ));
+      expect(
+        g.testing.breadcrumb({ year: 2019, month: 10, day: 3, position: 1 })
+      ).toBe("#1 — 2019-10-03 — gallery testing"));
     test("position 2 in testing", () =>
-      expect(g.testing.title(2020, 5, 27, 2)).toBe(
-        "#2 — 2020-05-27 — gallery testing"
-      ));
+      expect(
+        g.testing.breadcrumb({ year: 2020, month: 5, day: 27, position: 2 })
+      ).toBe("#2 — 2020-05-27 — gallery testing"));
   });
   describe("lastPath", () => {
     const populatedShape = {

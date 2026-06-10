@@ -168,8 +168,8 @@ const MetadataPanel = ({
   // (place is most-specific, but ja geocoded reads broad → narrow,
   // so a prepended place would jump specific → broad → narrow).
   const renderOperatorPlace = () => {
-    if (gallery.hideMap() || !photo.hasPlace()) return null;
-    return <Row>{photo.place()}</Row>;
+    if (gallery.hideMap() || !photo.hasPlace(lang)) return null;
+    return <Row>{photo.place(lang)}</Row>;
   };
   // Address row: geocoded city/state/country with locale-aware flag
   // position. Falls back to operator country name + flag when there's
@@ -340,9 +340,9 @@ const MetadataPanel = ({
         </CloseButton>
       </Header>
       <Body>
-        {photo.title() && <Title>{photo.title()}</Title>}
-        {photo.description() && (
-          <Description>{photo.description()}</Description>
+        {photo.title(lang) && <Title>{photo.title(lang)}</Title>}
+        {photo.description(lang) && (
+          <Description>{photo.description(lang)}</Description>
         )}
         {renderEpochInfo()}
         {renderOperatorPlace()}

@@ -9,6 +9,9 @@ interface GalleryData {
   id: string;
   title?: string;
   description?: string;
+  titleLocalized?: Record<string, string>;
+  descriptionLocalized?: Record<string, string>;
+  defaultLanguage?: string | null;
   icon?: string;
   epoch?: Date | string;
   epochType?: string;
@@ -80,22 +83,38 @@ const GalleryModel = (galleryData: unknown) => {
       return GalleryModel({ ...(galleryData as object), photos });
     },
     id: (): string => gallery.id,
-    title: (
-      year?: number,
-      month?: number,
-      day?: number,
-      position?: number
-    ): string => {
-      const ymd = format.date({ year, month, day });
-      if (!ymd) {
-        return gallery.title || "";
-      }
-      if (position === undefined) {
-        return `${ymd} — ${gallery.title || ""}`;
-      }
-      return `#${position} — ${ymd} — ${gallery.title || ""}`;
+    // Plain (resolved) title — overlay map looked up against `lang`,
+    // falls through to canonical when no overlay is set. Pass no
+    // lang to get the canonical column verbatim (admin / API
+    // contexts where the localized maps are surfaced separately).
+    title: (lang?: string): string => {
+      const overlay = lang ? gallery.titleLocalized?.[lang] : undefined;
+      return (overlay && overlay.length > 0 ? overlay : gallery.title) || "";
     },
-    description: (): string => gallery.description || "",
+    // Breadcrumb-formatted title for date-scoped views: prefixes the
+    // resolved title with `YYYY[-MM[-DD]]` (and `#<position>` when
+    // both date + position are known). Empty `opts` returns the
+    // bare title, equivalent to `title(lang)`.
+    breadcrumb: (opts: {
+      year?: number;
+      month?: number;
+      day?: number;
+      position?: number;
+      lang?: string;
+    } = {}): string => {
+      const { year, month, day, position, lang } = opts;
+      const overlay = lang ? gallery.titleLocalized?.[lang] : undefined;
+      const base = (overlay && overlay.length > 0 ? overlay : gallery.title) || "";
+      const ymd = format.date({ year, month, day });
+      if (!ymd) return base;
+      if (position === undefined) return `${ymd} — ${base}`;
+      return `#${position} — ${ymd} — ${base}`;
+    },
+    description: (lang?: string): string => {
+      const overlay = lang ? gallery.descriptionLocalized?.[lang] : undefined;
+      return (overlay && overlay.length > 0 ? overlay : gallery.description) || "";
+    },
+    defaultLanguage: (): string | null => gallery.defaultLanguage ?? null,
     hasIcon: (): boolean => !!gallery.icon,
     icon: (): string => gallery.icon || "",
     hasEpoch: (): boolean => !!epochDate(),

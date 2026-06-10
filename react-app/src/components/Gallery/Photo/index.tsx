@@ -476,8 +476,14 @@ const Photo = ({
       onClick={handleBackdropClick}
     >
       <title>
-        {gallery.title(year, month, day, neighbors?.position)} —{" "}
-        {t("nav-gallery")}
+        {gallery.breadcrumb({
+          year,
+          month,
+          day,
+          position: neighbors?.position,
+          lang,
+        })}{" "}
+        — {t("nav-gallery")}
       </title>
       <Frame>
         <Navigation

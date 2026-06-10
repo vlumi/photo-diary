@@ -309,7 +309,7 @@ const Title = ({
           </UnavailableOption>
           {galleries.map((gallery) => (
             <TitleOption key={gallery.id()} value={gallery.id()}>
-              {gallery.title()}
+              {gallery.title(lang)}
             </TitleOption>
           ))}
         </GallerySelect>
@@ -320,13 +320,13 @@ const Title = ({
         <GallerySelect value={gallery.id()} onChange={changeHandler}>
           {galleries.map((gallery) => (
             <TitleOption key={gallery.id()} value={gallery.id()}>
-              {gallery.title()}
+              {gallery.title(lang)}
             </TitleOption>
           ))}
         </GallerySelect>
       );
     }
-    return <GalleryCrumb>{gallery.title()}</GalleryCrumb>;
+    return <GalleryCrumb>{gallery.title(lang)}</GalleryCrumb>;
   };
 
   const switchTo = (target: string) => {
