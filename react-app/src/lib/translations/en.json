@@ -518,6 +518,8 @@
     "stats-location-count-geotagged": "{{count}} geotagged",
     "stats-location-count-not-geotagged": "{{count}} not geotagged",
     "stats-location-see-on-map": "See on map",
+    "map-locate-me": "Center on my current position",
+    "map-locate-me-denied": "Location permission denied",
     "stats-topic-time": "Time",
     "stats-category-year": "Year",
     "stats-category-year-month": "Year and Month",
