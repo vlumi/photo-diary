@@ -20,6 +20,10 @@
 - Global Stats Galleries section honours the Filters sidebar. The section now reads the per-gallery filtered counts off `/stats`'s new `byGallery` field instead of walking the cross-gallery photo array client-side. Same queryKey as the sibling `<Stats globalScope>` fetch, so TanStack dedupes — one network call for both sections. Empty `byGallery` (no galleries hit by the active filter) hides the section. (closes #446)
 - GlobalStats no longer fetches the full cross-gallery photo array at mount. The filter pill universe comes from the new global `/filter-values` endpoint; the empty-instance signal reads off the response's `categoryValues.year`. The Location map fetch is lazy via the new `POST /api/v1/photos/query` (gated on `mapPhotosWanted`, flipped when the user opens the MapModal) and now respects the active filter chips — toggling the country filter narrows the map pins to match. Brief empty-map flash on first open while the fetch completes; subsequent opens hit the TanStack cache. The legacy paginated `fetchAllPhotos` and `buildUniqueValuesFromPhotos` photo-walking helpers are gone. (followup to #532)
 
+### Tooling
+
+- `bin/instance.ts upgrade` runs the pm2 cycle (`pm2 delete <instance> <instance>-converter` → `start-prod.sh` server → `start-prod.sh` converter → `pm2 save`) directly instead of printing the commands for the operator to copy-paste. Confirmation prompt on a TTY (via `@inquirer/prompts`), pre-cycle sanity check via `pm2 jlist` (both processes expected to be online before the switch), post-cycle `pm2 jlist` + `GET /api/v1/meta` probe to confirm the new version is actually serving. Non-TTY runs and `--print-only` keep the previous instruction-printing behaviour; `--auto` skips the prompt for cron / batch usage. Rollback steps still print after every path. Closes #546.
+
 ## [0.14.0] - 2026-06-07
 
 ### Server
