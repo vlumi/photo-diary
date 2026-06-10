@@ -161,6 +161,7 @@ The generated `.env` covers the required keys. Optional per-instance frontend de
 ```sh
 DEFAULT_GALLERY=dailybw
 DEFAULT_THEME=grayscale
+DEFAULT_LANGUAGE=fi         # operator's primary; falls back to `en` if missing
 BETA_FEATURE_REGIONS=user   # `user` (default) | `on` | `off`
 ```
 

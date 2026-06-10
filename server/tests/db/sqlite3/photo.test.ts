@@ -262,6 +262,81 @@ describe("photo_localized", () => {
   });
 });
 
+describe("operator-set localized fields", () => {
+  beforeAll(async () => {
+    await driver.createPhoto({
+      id: "ph-opt-loc",
+      title: "Sunset",
+      description: "Long day at the lake.",
+      taken: { location: { place: "Lake" } },
+    });
+  });
+
+  test("updatePhoto persists titleLocalized / descriptionLocalized / placeLocalized", async () => {
+    await driver.updatePhoto("ph-opt-loc", {
+      titleLocalized: { ja: "夕日", fi: "Auringonlasku" },
+      descriptionLocalized: { ja: "湖で長い一日。" },
+      taken: { location: { placeLocalized: { ja: "湖" } } },
+    });
+    const photo = (await driver.loadPhoto("ph-opt-loc")) as {
+      title: string;
+      description: string;
+      titleLocalized: Record<string, string>;
+      descriptionLocalized: Record<string, string>;
+      taken: { location: { place: string; placeLocalized: Record<string, string> } };
+    };
+    // Canonical columns stay untouched.
+    expect(photo.title).toBe("Sunset");
+    expect(photo.description).toBe("Long day at the lake.");
+    expect(photo.taken.location.place).toBe("Lake");
+    // Overlay maps populated.
+    expect(photo.titleLocalized).toEqual({ ja: "夕日", fi: "Auringonlasku" });
+    expect(photo.descriptionLocalized).toEqual({ ja: "湖で長い一日。" });
+    expect(photo.taken.location.placeLocalized).toEqual({ ja: "湖" });
+  });
+
+  test("empty string in localized map clears that column", async () => {
+    await driver.updatePhoto("ph-opt-loc", {
+      titleLocalized: { ja: "" },
+    });
+    const photo = (await driver.loadPhoto("ph-opt-loc")) as {
+      titleLocalized: Record<string, string>;
+    };
+    // Empty string → NULL → dropped from the map.
+    expect(photo.titleLocalized).toEqual({ fi: "Auringonlasku" });
+  });
+
+  test("omitting a lang leaves that overlay row untouched", async () => {
+    // Add a third language explicitly, then make an unrelated update.
+    await driver.updatePhoto("ph-opt-loc", {
+      titleLocalized: { en: "Sunset over the lake" },
+    });
+    await driver.updatePhoto("ph-opt-loc", {
+      description: "Edited canonical only.",
+    });
+    const photo = (await driver.loadPhoto("ph-opt-loc")) as {
+      description: string;
+      titleLocalized: Record<string, string>;
+    };
+    expect(photo.description).toBe("Edited canonical only.");
+    expect(photo.titleLocalized).toEqual({
+      fi: "Auringonlasku",
+      en: "Sunset over the lake",
+    });
+  });
+
+  test("photo with no localized rows has empty overlay maps", async () => {
+    const photo = (await driver.loadPhoto("ph-min")) as {
+      titleLocalized: Record<string, string>;
+      descriptionLocalized: Record<string, string>;
+      taken: { location: { placeLocalized: Record<string, string> } };
+    };
+    expect(photo.titleLocalized).toEqual({});
+    expect(photo.descriptionLocalized).toEqual({});
+    expect(photo.taken.location.placeLocalized).toEqual({});
+  });
+});
+
 describe("loadOrphanUserGalleryRows", () => {
   test("returns user_gallery rows whose user or gallery is gone", async () => {
     // Set up users + galleries, then nuke one each.

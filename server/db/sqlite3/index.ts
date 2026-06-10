@@ -18,6 +18,7 @@ import { migrate } from "./migrate.js";
 import schemaFactory, {
   type Gallery,
   type GalleryInput,
+  type GalleryLocalizedRow,
   type GalleryPhoto,
   type GalleryRow,
   type Group,
@@ -554,28 +555,99 @@ const loadGalleries = async () => {
     .prepare(SCHEMA.gallery.buildSelectQuery())
     .all() as GalleryRow[];
   const sourcesByGallery = loadAllVirtualGalleries();
+  const localizedByGallery = loadGalleryLocalizedFor(rows.map((r) => r.id));
   return rows
-    .map(SCHEMA.gallery.mapRow)
+    .map((row) => SCHEMA.gallery.mapRow(row, localizedByGallery.get(row.id)))
     .map((g) => decorateGalleryWithSources(g, sourcesByGallery));
 };
 const createGallery = async (gallery: Gallery) => {
   db.prepare(SCHEMA.gallery.buildCreateQuery()).run(
     SCHEMA.gallery.mapInsert(gallery)
   );
+  // Localized overlay rows from the same payload — symmetrical with
+  // updateGallery. CLI / API creates without overlay maps stay no-op.
+  const perLang = new Map<string, { title?: string | null; description?: string | null }>();
+  const merge = (
+    map: Record<string, string | undefined> | undefined,
+    field: "title" | "description"
+  ) => {
+    if (!map) return;
+    for (const [lang, value] of Object.entries(map)) {
+      if (value === undefined) continue;
+      const entry = perLang.get(lang) ?? {};
+      entry[field] = value === "" ? null : value;
+      perLang.set(lang, entry);
+    }
+  };
+  merge(gallery.titleLocalized, "title");
+  merge(gallery.descriptionLocalized, "description");
+  for (const [lang, fields] of perLang) {
+    upsertGalleryLocalizedFields(gallery.id, lang, fields);
+  }
 };
 const loadGallery = async (galleryId: string) => {
   const row = db
     .prepare(SCHEMA.gallery.buildSelectByIdQuery())
     .get(galleryId) as GalleryRow | undefined;
   if (!row) throw new NotFoundError();
-  const base = SCHEMA.gallery.mapRow(row);
+  const localizedRows = db
+    .prepare("SELECT * FROM gallery_localized WHERE gallery_id = ?")
+    .all(galleryId) as GalleryLocalizedRow[];
+  const base = SCHEMA.gallery.mapRow(row, localizedRows);
   const sources = loadVirtualGallerySources(galleryId);
   return sources === undefined ? base : { ...base, sources };
 };
 const updateGallery = async (galleryId: string, gallery: GalleryInput) => {
   const { query, values } = SCHEMA.gallery.buildUpdateByIdQuery(gallery);
-  if (!query || !values) return;
-  db.prepare(query).run([...values, galleryId]);
+  if (query && values) {
+    db.prepare(query).run([...values, galleryId]);
+  }
+  // Per-language overlays for title / description. Same semantics
+  // as the photo path: empty string clears, missing lang leaves the
+  // existing column.
+  const perLang = new Map<string, { title?: string | null; description?: string | null }>();
+  const merge = (
+    map: Record<string, string | undefined> | undefined,
+    field: "title" | "description"
+  ) => {
+    if (!map) return;
+    for (const [lang, value] of Object.entries(map)) {
+      if (value === undefined) continue;
+      const entry = perLang.get(lang) ?? {};
+      entry[field] = value === "" ? null : value;
+      perLang.set(lang, entry);
+    }
+  };
+  merge(gallery.titleLocalized, "title");
+  merge(gallery.descriptionLocalized, "description");
+  for (const [lang, fields] of perLang) {
+    upsertGalleryLocalizedFields(galleryId, lang, fields);
+  }
+};
+const upsertGalleryLocalizedFields = (
+  galleryId: string,
+  lang: string,
+  fields: { title?: string | null; description?: string | null }
+): void => {
+  const cols: string[] = [];
+  const vals: unknown[] = [];
+  if (fields.title !== undefined) {
+    cols.push("title");
+    vals.push(fields.title);
+  }
+  if (fields.description !== undefined) {
+    cols.push("description");
+    vals.push(fields.description);
+  }
+  if (cols.length === 0) return;
+  const colList = cols.join(", ");
+  const placeholders = cols.map(() => "?").join(", ");
+  const updates = cols.map((c) => `${c} = excluded.${c}`).join(", ");
+  db.prepare(
+    `INSERT INTO gallery_localized (gallery_id, lang, ${colList})
+     VALUES (?, ?, ${placeholders})
+     ON CONFLICT (gallery_id, lang) DO UPDATE SET ${updates}`
+  ).run(galleryId, lang, ...vals);
 };
 const deleteGallery = async (galleryId: string) =>
   deleteById(SCHEMA.gallery, galleryId);
@@ -597,12 +669,9 @@ const loadGalleryPhotos = async (galleryId: string, lang?: string) => {
     ])
   );
   const rows = stmt.all(...sources) as PhotoRow[];
-  const localized =
-    lang && lang !== "en"
-      ? loadLocalizedFor(rows.map((r) => r.id), lang)
-      : new Map<string, PhotoLocalizedRow>();
+  const localized = loadLocalizedFor(rows.map((r) => r.id));
   return rows.map((row, index) =>
-    schema.mapRow(row, index, localized.get(row.id))
+    schema.mapRow(row, index, localized.get(row.id), lang)
   );
 };
 const linkGalleryPhoto = async (
@@ -841,15 +910,10 @@ const loadGalleryPhoto = async (
   if (rows.length === 0) {
     throw new NotFoundError();
   }
-  const localized =
-    lang && lang !== "en"
-      ? (db
-        .prepare(
-          "SELECT * FROM photo_localized WHERE photo_id = ? AND lang = ?"
-        )
-        .get(photoId, lang) as PhotoLocalizedRow | undefined)
-      : undefined;
-  return schema.mapRow(rows[0], 0, localized);
+  const localizedRows = db
+    .prepare("SELECT * FROM photo_localized WHERE photo_id = ?")
+    .all(photoId) as PhotoLocalizedRow[];
+  return schema.mapRow(rows[0], 0, localizedRows, lang);
 };
 const unlinkGalleryPhoto = async (galleryId: string, photoId: string) => {
   db.prepare(SCHEMA.galleryPhoto.buildDeleteByIdQuery()).run([
@@ -868,59 +932,84 @@ const unlinkAllGalleries = async (photoId: string) => {
   ]);
 };
 
-// English is the canonical reverse-geocoded language stored on the
-// photo row directly. For other languages, we load the matching
-// photo_localized row(s) for the requested ids and merge per-photo
-// in mapRow (which takes the localized row as an optional third arg).
+// Load every photo_localized row for the requested ids, grouped by
+// photo_id. mapRow consumes the array to (a) build the per-field
+// `titleLocalized` / `descriptionLocalized` / `placeLocalized` maps
+// for operator-set fields and (b) pick the EN-canonical overlay for
+// `geocoded.city` when a `lang` argument is also passed. Returns an
+// empty Map for empty input; photos without any localized rows are
+// simply absent from the result.
 const loadLocalizedFor = (
-  photoIds: string[],
-  lang: string
-): Map<string, PhotoLocalizedRow> => {
+  photoIds: string[]
+): Map<string, PhotoLocalizedRow[]> => {
   if (photoIds.length === 0) return new Map();
   const placeholders = photoIds.map(() => "?").join(",");
   const rows = db
     .prepare(
-      `SELECT * FROM photo_localized
-        WHERE lang = ? AND photo_id IN (${placeholders})`
+      `SELECT * FROM photo_localized WHERE photo_id IN (${placeholders})`
     )
-    .all(lang, ...photoIds) as PhotoLocalizedRow[];
-  const byId = new Map<string, PhotoLocalizedRow>();
-  for (const r of rows) byId.set(r.photo_id, r);
+    .all(...photoIds) as PhotoLocalizedRow[];
+  const byId = new Map<string, PhotoLocalizedRow[]>();
+  for (const r of rows) {
+    const list = byId.get(r.photo_id);
+    if (list) list.push(r);
+    else byId.set(r.photo_id, [r]);
+  }
+  return byId;
+};
+// Gallery analogue — gallery_localized rows grouped by gallery_id.
+// Returns empty Map for empty input; galleries without overlays are
+// absent from the result. mapRow surfaces the `titleLocalized` and
+// `descriptionLocalized` maps from the array.
+const loadGalleryLocalizedFor = (
+  galleryIds: string[]
+): Map<string, GalleryLocalizedRow[]> => {
+  if (galleryIds.length === 0) return new Map();
+  const placeholders = galleryIds.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT * FROM gallery_localized WHERE gallery_id IN (${placeholders})`
+    )
+    .all(...galleryIds) as GalleryLocalizedRow[];
+  const byId = new Map<string, GalleryLocalizedRow[]>();
+  for (const r of rows) {
+    const list = byId.get(r.gallery_id);
+    if (list) list.push(r);
+    else byId.set(r.gallery_id, [r]);
+  }
   return byId;
 };
 
 const loadPhotos = async (lang?: string) => {
   const rows = db.prepare(SCHEMA.photo.buildSelectQuery()).all() as PhotoRow[];
-  const localized =
-    lang && lang !== "en"
-      ? loadLocalizedFor(
-        rows.map((r) => r.id),
-        lang
-      )
-      : new Map<string, PhotoLocalizedRow>();
+  const localized = loadLocalizedFor(rows.map((r) => r.id));
   return rows.map((row, index) =>
-    SCHEMA.photo.mapRow(row, index, localized.get(row.id))
+    SCHEMA.photo.mapRow(row, index, localized.get(row.id), lang)
   );
 };
 const createPhoto = async (photo: PhotoInput) => {
   db.prepare(SCHEMA.photo.buildCreateQuery()).run(
     SCHEMA.photo.mapInsert(photo)
   );
+  // Process localized overlays from the same payload — symmetrical
+  // with updatePhoto. Most creates (converter intake) don't include
+  // these, so the loop is a no-op there.
+  const photoId = photo.id;
+  if (!photoId) return;
+  const perLang = collectPhotoLocalizedPatch(photo);
+  for (const [lang, fields] of perLang) {
+    upsertPhotoLocalizedFields(photoId, lang, fields);
+  }
 };
 const loadPhoto = async (photoId: string, lang?: string) => {
   const row = db.prepare(SCHEMA.photo.buildSelectByIdQuery()).get(photoId) as
     | PhotoRow
     | undefined;
   if (!row) throw new NotFoundError();
-  const localized =
-    lang && lang !== "en"
-      ? (db
-        .prepare(
-          "SELECT * FROM photo_localized WHERE photo_id = ? AND lang = ?"
-        )
-        .get(photoId, lang) as PhotoLocalizedRow | undefined)
-      : undefined;
-  return SCHEMA.photo.mapRow(row, 0, localized);
+  const localizedRows = db
+    .prepare("SELECT * FROM photo_localized WHERE photo_id = ?")
+    .all(photoId) as PhotoLocalizedRow[];
+  return SCHEMA.photo.mapRow(row, 0, localizedRows, lang);
 };
 const loadPhotosByOriginalFilename = async (originalFilename: string) => {
   const rows = db
@@ -952,15 +1041,10 @@ const loadGalleryPhotoByOriginalFilename = async (
   if (rows.length === 0) {
     throw new NotFoundError();
   }
-  const localized =
-    lang && lang !== "en"
-      ? (db
-        .prepare(
-          "SELECT * FROM photo_localized WHERE photo_id = ? AND lang = ?"
-        )
-        .get(rows[0].id, lang) as PhotoLocalizedRow | undefined)
-      : undefined;
-  return schema.mapRow(rows[0], 0, localized);
+  const localizedRows = db
+    .prepare("SELECT * FROM photo_localized WHERE photo_id = ?")
+    .all(rows[0].id) as PhotoLocalizedRow[];
+  return schema.mapRow(rows[0], 0, localizedRows, lang);
 };
 // Photo rows with no gallery_photo link — useful for `bin/photo.ts audit`.
 // The SPA doesn't surface orphan photos anywhere; they're a data-drift
@@ -1056,8 +1140,69 @@ const loadOrphanUserGalleryRows = async (): Promise<
 };
 const updatePhoto = async (photoId: string, photo: PhotoInput) => {
   const { query, values } = SCHEMA.photo.buildUpdateByIdQuery(photo);
-  if (!query || !values) return;
-  db.prepare(query).run([...values, photoId]);
+  if (query && values) {
+    db.prepare(query).run([...values, photoId]);
+  }
+  // Per-language overlays for operator-set fields. Each map is
+  // {lang: value}; empty string clears that column (NULL in DB);
+  // omitting a lang leaves the existing column unchanged; an empty
+  // map is a no-op. Mixed cols per row — title may exist in `ja`
+  // while description does not, and the row carries the column the
+  // request touched.
+  const perLang = collectPhotoLocalizedPatch(photo);
+  for (const [lang, fields] of perLang) {
+    upsertPhotoLocalizedFields(photoId, lang, fields);
+  }
+};
+const collectPhotoLocalizedPatch = (
+  photo: PhotoInput
+): Map<string, { title?: string | null; description?: string | null; place?: string | null }> => {
+  const byLang = new Map<string, { title?: string | null; description?: string | null; place?: string | null }>();
+  const merge = (
+    map: Record<string, string | undefined> | undefined,
+    field: "title" | "description" | "place"
+  ) => {
+    if (!map) return;
+    for (const [lang, value] of Object.entries(map)) {
+      if (value === undefined) continue;
+      const entry = byLang.get(lang) ?? {};
+      entry[field] = value === "" ? null : value;
+      byLang.set(lang, entry);
+    }
+  };
+  merge(photo.titleLocalized, "title");
+  merge(photo.descriptionLocalized, "description");
+  merge(photo.taken?.location?.placeLocalized, "place");
+  return byLang;
+};
+const upsertPhotoLocalizedFields = (
+  photoId: string,
+  lang: string,
+  fields: { title?: string | null; description?: string | null; place?: string | null }
+): void => {
+  const cols: string[] = [];
+  const vals: unknown[] = [];
+  if (fields.title !== undefined) {
+    cols.push("title");
+    vals.push(fields.title);
+  }
+  if (fields.description !== undefined) {
+    cols.push("description");
+    vals.push(fields.description);
+  }
+  if (fields.place !== undefined) {
+    cols.push("place");
+    vals.push(fields.place);
+  }
+  if (cols.length === 0) return;
+  const colList = cols.join(", ");
+  const placeholders = cols.map(() => "?").join(", ");
+  const updates = cols.map((c) => `${c} = excluded.${c}`).join(", ");
+  db.prepare(
+    `INSERT INTO photo_localized (photo_id, lang, ${colList})
+     VALUES (?, ?, ${placeholders})
+     ON CONFLICT (photo_id, lang) DO UPDATE SET ${updates}`
+  ).run(photoId, lang, ...vals);
 };
 // Re-key a photo across photo + gallery_photo. The FK on gallery_photo
 // is RESTRICT (no ON UPDATE CASCADE), so we toggle foreign_keys off

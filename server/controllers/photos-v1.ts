@@ -43,9 +43,17 @@ const PhotoIdParam = Type.Object({ photoId: Type.String() });
 // always carry them (older / phoneless bodies, GPS off).
 // `additionalProperties: false` at each nested level rejects
 // unknown writes with 400.
+// Per-language overlay map for one operator-set field. Keyed by
+// lang code, values are strings; empty string clears the overlay
+// (sets the column to NULL). Validators for the lang key shape
+// stay loose — anything the client sends round-trips back; admin
+// UI constrains the choices.
+const LocalizedMap = Type.Record(Type.String(), Type.String());
 const PhotoOverridesFields = {
   title: Type.Optional(Type.String()),
   description: Type.Optional(Type.String()),
+  titleLocalized: Type.Optional(LocalizedMap),
+  descriptionLocalized: Type.Optional(LocalizedMap),
   taken: Type.Optional(
     Type.Object(
       {
@@ -55,6 +63,7 @@ const PhotoOverridesFields = {
             {
               country: Type.Optional(Type.String()),
               place: Type.Optional(Type.String()),
+              placeLocalized: Type.Optional(LocalizedMap),
               coordinates: Type.Optional(
                 Type.Object(
                   {

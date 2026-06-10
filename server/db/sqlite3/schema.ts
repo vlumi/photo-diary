@@ -55,6 +55,16 @@ export interface GalleryRow {
   theme: string;
   initial_view: string;
   hostname: string;
+  // Operator-set primary language for the canonical `title` /
+  // `description` columns. NULL means "use the instance
+  // DEFAULT_LANGUAGE". See migration 021.
+  default_language: string | null;
+}
+export interface GalleryLocalizedRow {
+  gallery_id: string;
+  lang: string;
+  title: string | null;
+  description: string | null;
 }
 export interface GalleryPhotoRow {
   gallery_id: string;
@@ -108,6 +118,11 @@ export interface PhotoLocalizedRow {
   lang: string;
   geocoded_city: string | null;
   geocoded_address: string | null;
+  // Operator-set overlays for the canonical photo columns. NULL when
+  // the row exists only for the geocoded overlay. See migration 021.
+  title: string | null;
+  description: string | null;
+  place: string | null;
 }
 
 // App-side shapes (what mapRow returns / mapInsert and mapToRow take).
@@ -128,6 +143,17 @@ export interface Gallery {
   theme: string;
   initialView: string;
   hostname: string;
+  // Operator-set primary language for the canonical title /
+  // description columns. NULL falls back to the instance default
+  // (`DEFAULT_LANGUAGE` in .env). Metadata only — the server does
+  // not resolve overlays against it; the client picks a display
+  // language using this as one of its fallbacks.
+  defaultLanguage?: string | null;
+  // Per-language overlays for title / description. Keyed by lang
+  // code (e.g. `ja`, `fi`); empty `{}` when no overlay rows exist.
+  // Canonical fields above stay the universal fallback.
+  titleLocalized?: Record<string, string>;
+  descriptionLocalized?: Record<string, string>;
   // Virtual gallery sources (#22). Undefined for real galleries;
   // populated array of source gallery IDs for a virtual gallery
   // whose contents are the union of those sources' photos.
@@ -148,6 +174,13 @@ export interface Photo {
   index: number;
   title: string;
   description: string;
+  // Per-language overlays for the canonical title / description columns.
+  // Keyed by lang code (e.g. `ja`, `fi`); empty `{}` when no overlay rows
+  // exist. The placeLocalized companion lives next to its canonical at
+  // `taken.location.placeLocalized` below. Canonical columns stay the
+  // universal fallback — client resolves `titleLocalized[lang] ?? title`.
+  titleLocalized?: Record<string, string>;
+  descriptionLocalized?: Record<string, string>;
   taken: {
     instant: {
       timestamp: string;
@@ -162,6 +195,7 @@ export interface Photo {
     location: {
       country: string | undefined;
       place: string;
+      placeLocalized?: Record<string, string>;
       coordinates: {
         latitude: number | null;
         longitude: number | null;
@@ -367,7 +401,10 @@ export default () => {
         buildDeleteQuery(SCHEMA.groupGallery, conditions),
     },
     gallery: {
-      mapRow: (row: GalleryRow): Gallery => ({
+      mapRow: (
+        row: GalleryRow,
+        localized?: GalleryLocalizedRow[]
+      ): Gallery => ({
         id: toString(row.id),
         title: toString(row.title),
         description: toString(row.description),
@@ -378,6 +415,9 @@ export default () => {
         theme: toString(row.theme),
         initialView: toString(row.initial_view),
         hostname: toString(row.hostname),
+        defaultLanguage: row.default_language ?? null,
+        titleLocalized: buildLocalizedMap(localized, "title"),
+        descriptionLocalized: buildLocalizedMap(localized, "description"),
       }),
       mapInsert: (gallery: Gallery): unknown[] => [
         gallery.id,
@@ -390,6 +430,7 @@ export default () => {
         gallery.theme,
         gallery.initialView,
         gallery.hostname,
+        gallery.defaultLanguage ?? null,
       ],
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.gallery),
@@ -421,14 +462,22 @@ export default () => {
         buildDeleteQuery(SCHEMA.galleryPhoto, conditions),
     },
     photo: {
-      // `localized` (optional) is the photo_localized row for the
-      // requesting language. When present, its non-null fields take
-      // precedence over the English columns on `row`. Callers that
-      // don't need localized data omit it; mapRow returns English.
+      // `localizedRows` (optional) is all photo_localized rows for the
+      // photo across every language. Two consumers:
+      //   - `lang` (optional) requests an EN-canonical-overlay for
+      //     `geocoded.city` (Nominatim's localized label). Falls back
+      //     to English when the script doesn't match the requested
+      //     language or no row exists.
+      //   - The operator-set `titleLocalized` / `descriptionLocalized`
+      //     / `placeLocalized` maps are built from every row's column,
+      //     regardless of `lang` — the client resolves
+      //     `titleLocalized[lang] ?? title` itself. (Operator-set
+      //     canonical isn't tied to English the way geocoded is.)
       mapRow: (
         row: PhotoRow,
         index: number,
-        localized?: PhotoLocalizedRow
+        localizedRows?: PhotoLocalizedRow[],
+        lang?: string
       ): Photo => {
         const taken = new Date(toString(row.taken).substring(0, 19));
         const normalizeCountry = (country: string | null) =>
@@ -437,6 +486,9 @@ export default () => {
           loc: string | null | undefined,
           en: string | null
         ): string | undefined => loc ?? en ?? undefined;
+        const langRow = lang
+          ? localizedRows?.find((r) => r.lang === lang)
+          : undefined;
         // Per-lang validation rejects values whose script doesn't
         // match the language (Nominatim falls back to local OSM
         // labels when no localized form exists). Falls through to en.
@@ -444,7 +496,7 @@ export default () => {
           loc: string | null | undefined,
           en: string | null
         ): string | undefined =>
-          acceptLocalizedCity(loc, localized?.lang ?? "")
+          acceptLocalizedCity(loc, langRow?.lang ?? "")
             ? pick(loc, en)
             : en ?? undefined;
 
@@ -454,6 +506,8 @@ export default () => {
           index,
           title: toString(row.title),
           description: toString(row.description),
+          titleLocalized: buildLocalizedMap(localizedRows, "title"),
+          descriptionLocalized: buildLocalizedMap(localizedRows, "description"),
           taken: {
             instant: {
               timestamp: toString(row.taken),
@@ -468,6 +522,7 @@ export default () => {
             location: {
               country: normalizeCountry(row.country_code),
               place: toString(row.place),
+              placeLocalized: buildLocalizedMap(localizedRows, "place"),
               coordinates: {
                 latitude: row.coord_lat,
                 longitude: row.coord_lon,
@@ -511,11 +566,10 @@ export default () => {
             // photo column, never `photo_localized`.
             countryCode: normalizeCountry(row.geocoded_country_code),
             stateCode: row.geocoded_state_code ?? undefined,
-            city: pickLocalizedCity(localized?.geocoded_city, row.geocoded_city),
+            city: pickLocalizedCity(langRow?.geocoded_city, row.geocoded_city),
             cityEn: row.geocoded_city ?? undefined,
             address: (() => {
-              const raw =
-                localized?.geocoded_address ?? row.geocoded_address;
+              const raw = langRow?.geocoded_address ?? row.geocoded_address;
               if (!raw) return undefined;
               try {
                 return JSON.parse(raw) as Record<string, unknown>;
@@ -656,7 +710,26 @@ const galleryMapToRow = (
   if ("theme" in gallery) result.theme = gallery.theme;
   if ("initialView" in gallery) result.initial_view = gallery.initialView;
   if ("hostname" in gallery) result.hostname = gallery.hostname;
+  if ("defaultLanguage" in gallery)
+    result.default_language = gallery.defaultLanguage;
   return result;
+};
+
+// Collapse a list of `*_localized` rows into a `{lang: value}` map for
+// a specific column. Rows with NULL in the target column are skipped
+// (the row may exist for another field's overlay — e.g. a photo's
+// geocoded_city row has no operator-set title yet).
+const buildLocalizedMap = <T extends { lang: string }>(
+  rows: T[] | undefined,
+  field: keyof T
+): Record<string, string> => {
+  const map: Record<string, string> = {};
+  if (!rows) return map;
+  for (const row of rows) {
+    const value = row[field];
+    if (typeof value === "string" && value !== "") map[row.lang] = value;
+  }
+  return map;
 };
 const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
@@ -819,6 +892,7 @@ const SCHEMA = {
       "theme",
       "initial_view",
       "hostname",
+      "default_language",
     ],
     primaryKey: ["id"],
     order: ["id ASC"],

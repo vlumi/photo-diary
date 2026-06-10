@@ -570,6 +570,13 @@ export interface paths {
                         id: string;
                         title?: string;
                         description?: string;
+                        titleLocalized?: {
+                            [key: string]: string;
+                        };
+                        descriptionLocalized?: {
+                            [key: string]: string;
+                        };
+                        defaultLanguage?: string | null;
                         icon?: string;
                         epoch?: string;
                         /** @enum {string} */
@@ -649,6 +656,13 @@ export interface paths {
                     "application/json": {
                         title?: string;
                         description?: string;
+                        titleLocalized?: {
+                            [key: string]: string;
+                        };
+                        descriptionLocalized?: {
+                            [key: string]: string;
+                        };
+                        defaultLanguage?: string | null;
                         icon?: string;
                         epoch?: string;
                         /** @enum {string} */
@@ -813,11 +827,20 @@ export interface paths {
                         id: string;
                         title?: string;
                         description?: string;
+                        titleLocalized?: {
+                            [key: string]: string;
+                        };
+                        descriptionLocalized?: {
+                            [key: string]: string;
+                        };
                         taken?: {
                             author?: string;
                             location?: {
                                 country?: string;
                                 place?: string;
+                                placeLocalized?: {
+                                    [key: string]: string;
+                                };
                                 coordinates?: {
                                     latitude?: number | null;
                                     longitude?: number | null;
@@ -1100,11 +1123,20 @@ export interface paths {
                     "application/json": {
                         title?: string;
                         description?: string;
+                        titleLocalized?: {
+                            [key: string]: string;
+                        };
+                        descriptionLocalized?: {
+                            [key: string]: string;
+                        };
                         taken?: {
                             author?: string;
                             location?: {
                                 country?: string;
                                 place?: string;
+                                placeLocalized?: {
+                                    [key: string]: string;
+                                };
                                 coordinates?: {
                                     latitude?: number | null;
                                     longitude?: number | null;

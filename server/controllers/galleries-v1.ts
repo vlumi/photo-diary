@@ -46,12 +46,23 @@ const GalleryItemResponse = Type.Object(
   { id: Type.String(), hideMap: Type.Boolean() },
   { additionalProperties: true }
 );
+// Per-language overlay map. Keyed by lang code, values are strings;
+// empty string clears the overlay row column.
+const LocalizedMap = Type.Record(Type.String(), Type.String());
 // camelCase to match the Gallery model shape (`epochType`, `initialView`).
 // All non-id fields optional; PUT body drops `id` since it comes from
 // the URL.
 const GalleryFields = {
   title: Type.Optional(Type.String()),
   description: Type.Optional(Type.String()),
+  titleLocalized: Type.Optional(LocalizedMap),
+  descriptionLocalized: Type.Optional(LocalizedMap),
+  // Operator-set primary language for the canonical title /
+  // description. Metadata only — server doesn't resolve overlays
+  // against it; the admin UI labels the canonical input with it,
+  // and the client uses it as one of the language-resolution
+  // fallbacks. NULL falls back to instance DEFAULT_LANGUAGE.
+  defaultLanguage: Type.Optional(Type.Union([Type.String(), Type.Null()])),
   icon: Type.Optional(Type.String()),
   epoch: Type.Optional(Type.String()),
   epochType: Type.Optional(StringEnum(GALLERY_EPOCH_TYPES)),
