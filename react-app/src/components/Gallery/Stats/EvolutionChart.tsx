@@ -32,6 +32,15 @@ export const isTrendable = (categoryKey: string): boolean =>
 const Root = styled.div`
   margin: 12px 0 18px;
 `;
+// Fixed-height wrapper so chart.js's `responsive: true` +
+// `maintainAspectRatio: false` has a bound to size into. Without
+// it, the canvas natural-sizes, drives its parent's height up,
+// triggers a re-render, and grows the chart unboundedly.
+const ChartBox = styled.div`
+  position: relative;
+  height: 280px;
+  width: 100%;
+`;
 const Title = styled.h3`
   font-size: 0.85em;
   text-transform: uppercase;
@@ -172,23 +181,24 @@ const EvolutionChart = ({
   return (
     <Root>
       <Title>{t("stats-evolution-title", { category: categoryTitle })}</Title>
-      <Line
-        data={{ labels: yearMonths, datasets }}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: "bottom", labels: { boxWidth: 12 } },
-            tooltip: { mode: "index", intersect: false },
-          },
-          scales: {
-            x: { ticks: { maxTicksLimit: 12, autoSkip: true } },
-            y: { beginAtZero: true },
-          },
-          interaction: { mode: "nearest", axis: "x", intersect: false },
-        }}
-        height={280}
-      />
+      <ChartBox>
+        <Line
+          data={{ labels: yearMonths, datasets }}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: "bottom", labels: { boxWidth: 12 } },
+              tooltip: { mode: "index", intersect: false },
+            },
+            scales: {
+              x: { ticks: { maxTicksLimit: 12, autoSkip: true } },
+              y: { beginAtZero: true },
+            },
+            interaction: { mode: "nearest", axis: "x", intersect: false },
+          }}
+        />
+      </ChartBox>
     </Root>
   );
 };
