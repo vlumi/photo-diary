@@ -54,12 +54,12 @@ const Notice = styled.div`
   padding: 8px 0;
 `;
 
-// Distinct hues for up to ~20 lines. Beyond `MAX_LINES` (the
-// long tail) is dropped from the chart rather than aggregated —
-// for high-cardinality continuous variables (shutter, focal,
-// aperture) the "other" bucket would dominate every other line
-// without saying anything useful. The full distribution still
-// lives in the donut + table above.
+// Distinct hues for up to 15 lines. Beyond `MAX_LINES` (the long
+// tail) is dropped rather than aggregated — for high-cardinality
+// continuous variables (shutter, focal, aperture) an "other"
+// bucket would dominate without saying anything useful. 15 keeps
+// the tooltip readable inside the chart's vertical bound; the
+// full distribution lives in the donut + table above.
 const COLOURS = [
   "#1f77b4",
   "#ff7f0e",
@@ -76,11 +76,6 @@ const COLOURS = [
   "#98df8a",
   "#ff9896",
   "#c5b0d5",
-  "#c49c94",
-  "#f7b6d2",
-  "#c7c7c7",
-  "#dbdb8d",
-  "#9edae5",
 ];
 const MAX_LINES = COLOURS.length;
 
