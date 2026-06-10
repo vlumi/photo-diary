@@ -250,9 +250,16 @@ const argv = yargs(hideBin(process.argv))
         })
         .option("print-only", {
           describe:
-            "Upgrade only: never run the pm2 cycle; just print the instructions (the pre-#546 behaviour). Wins over --auto if both are set.",
+            "Upgrade only: never run the pm2 cycle; just print the instructions (the pre-cycle-automation behaviour). Wins over --auto if both are set.",
           type: "boolean",
           default: false,
+        })
+        .option("cycle", {
+          describe:
+            "Force a pm2 cycle in doctor mode (same code as upgrade-mode cycling: jlist sanity → confirm → delete + start-prod x2 + save → /meta probe). For in-version code updates — typically a `git pull` against the code root the `code` symlink already points at. No-op in upgrade mode (which already cycles).",
+          type: "boolean",
+          default: false,
+          alias: "restart",
         })
   )
   .alias("help", "h")
@@ -265,6 +272,7 @@ const fix = argv.fix;
 const quiet = argv.quiet;
 const auto = argv.auto as boolean;
 const printOnly = argv["print-only"] as boolean;
+const cycle = argv.cycle as boolean;
 
 const log: typeof console.log = (...args) => {
   if (!quiet) console.log(...args);
@@ -483,9 +491,21 @@ if (mode === "new") {
   log(`  ./bin/gallery.ts create ${instanceName} --title "${instanceName}"`);
   log("  ./bin/user.ts make-admin <username>");
 } else if (mode === "upgrade") {
+  await runPm2Cycle("upgrade");
+} else {
+  log("Instance state OK.");
+  if (cycle) {
+    log();
+    await runPm2Cycle("restart");
+  }
+}
+
+async function runPm2Cycle(kind: "upgrade" | "restart"): Promise<void> {
   const converterName = `${instanceName}-converter`;
+  const verb = kind === "upgrade" ? "Upgrade" : "Restart";
+  const summary = kind === "upgrade" ? "pick up the new version" : "pick up the latest code";
   const printInstructions = () => {
-    log("Upgrade prepared. Next — cycle pm2 to pick up the new version:");
+    log(`${verb} prepared. Next — cycle pm2 to ${summary}:`);
     log();
     log(`  pm2 delete ${instanceName} ${converterName}`);
     log(`  cd ${instanceDir}`);
@@ -501,6 +521,7 @@ if (mode === "new") {
     );
   };
   const printRollback = () => {
+    if (kind !== "upgrade") return;
     log("─".repeat(60));
     log("Rollback — ONLY if the steps above didn't work:");
     log();
@@ -512,7 +533,7 @@ if (mode === "new") {
   };
 
   // Decide between three paths:
-  //   --print-only          → today's behaviour, never run the cycle
+  //   --print-only          → never run the cycle
   //   --auto                → run unattended (CI / cron)
   //   TTY + interactive     → prompt to confirm, run on yes, fall back to
   //                           printed instructions on no
@@ -528,7 +549,7 @@ if (mode === "new") {
   } else {
     // Sanity-check pm2 state up front so the confirmation prompt has
     // a clear picture: both processes are expected to be online with
-    // the OLD code (the upgrade is happening WHILE they're serving).
+    // the previous code (the cycle is happening WHILE they're serving).
     const before = pm2Jlist();
     const serverBefore = pm2Status(before, instanceName);
     const converterBefore = pm2Status(before, converterName);
@@ -556,7 +577,7 @@ if (mode === "new") {
     log();
     try {
       runCycle = await confirm({
-        message: `Cycle pm2 (${instanceName} + ${converterName}) to pick up the new version?`,
+        message: `Cycle pm2 (${instanceName} + ${converterName}) to ${summary}?`,
         default: true,
       });
     } catch {
@@ -575,64 +596,62 @@ if (mode === "new") {
     printInstructions();
     log();
     printRollback();
-  } else {
-    log();
-    log("Cycling pm2 …");
-    const ok =
-      runStep("pm2 delete", "pm2", ["delete", instanceName, converterName]) &&
-      runStep(
-        "start server",
-        "./code/server/bin/start-prod.sh",
-        [],
-        instanceDir
-      ) &&
-      runStep(
-        "start converter",
-        "./code/converter/bin/start-prod.sh",
-        [],
-        instanceDir
-      ) &&
-      runStep("pm2 save", "pm2", ["save"]);
-    if (!ok) {
-      console.error("✗ Cycle aborted. See output above; rollback instructions:");
+    return;
+  }
+  log();
+  log("Cycling pm2 …");
+  const ok =
+    runStep("pm2 delete", "pm2", ["delete", instanceName, converterName]) &&
+    runStep(
+      "start server",
+      "./code/server/bin/start-prod.sh",
+      [],
+      instanceDir
+    ) &&
+    runStep(
+      "start converter",
+      "./code/converter/bin/start-prod.sh",
+      [],
+      instanceDir
+    ) &&
+    runStep("pm2 save", "pm2", ["save"]);
+  if (!ok) {
+    console.error("✗ Cycle aborted. See output above; rollback instructions:");
+    console.error();
+    printRollback();
+    process.exit(1);
+  }
+  // Post-cycle sanity: both processes back online, server actually
+  // serving on its declared port.
+  const after = pm2Jlist();
+  const serverAfter = pm2Status(after, instanceName);
+  const converterAfter = pm2Status(after, converterName);
+  log();
+  log("pm2 state after cycle:");
+  log(`  ${serverAfter === "online" ? "✓" : "✗"} ${instanceName}: ${serverAfter ?? "(missing)"}`);
+  log(
+    `  ${converterAfter === "online" ? "✓" : "✗"} ${converterName}: ${converterAfter ?? "(missing)"}`
+  );
+  const envForProbe = parseEnv(fs.readFileSync(envPath, "utf8"));
+  const portStr = envForProbe.PORT;
+  const port = portStr ? Number(portStr) : NaN;
+  if (Number.isFinite(port)) {
+    const served = await probeMeta(port);
+    log(
+      `  ${served ? "✓" : "✗"} GET http://127.0.0.1:${port}/api/v1/meta ${served ? "responded" : "didn't respond within 5s"}`
+    );
+    if (!served) {
       console.error();
-      printRollback();
+      console.error(
+        "✗ Server is up in pm2 but not answering on its port — review pm2 logs."
+      );
       process.exit(1);
     }
-    // Post-cycle sanity: both processes back online, server actually
-    // serving on its declared port.
-    const after = pm2Jlist();
-    const serverAfter = pm2Status(after, instanceName);
-    const converterAfter = pm2Status(after, converterName);
-    log();
-    log("pm2 state after cycle:");
-    log(`  ${serverAfter === "online" ? "✓" : "✗"} ${instanceName}: ${serverAfter ?? "(missing)"}`);
+  } else {
     log(
-      `  ${converterAfter === "online" ? "✓" : "✗"} ${converterName}: ${converterAfter ?? "(missing)"}`
+      `  ! PORT not parseable from .env (${portStr ?? "missing"}); skipping HTTP probe`
     );
-    const envForProbe = parseEnv(fs.readFileSync(envPath, "utf8"));
-    const portStr = envForProbe.PORT;
-    const port = portStr ? Number(portStr) : NaN;
-    if (Number.isFinite(port)) {
-      const served = await probeMeta(port);
-      log(
-        `  ${served ? "✓" : "✗"} GET http://127.0.0.1:${port}/api/v1/meta ${served ? "responded" : "didn't respond within 5s"}`
-      );
-      if (!served) {
-        console.error();
-        console.error(
-          "✗ Server is up in pm2 but not answering on its port — review pm2 logs."
-        );
-        process.exit(1);
-      }
-    } else {
-      log(
-        `  ! PORT not parseable from .env (${portStr ?? "missing"}); skipping HTTP probe`
-      );
-    }
-    log();
-    log("✓ Upgrade complete.");
   }
-} else {
-  log("Instance state OK.");
+  log();
+  log(`✓ ${verb} complete.`);
 }

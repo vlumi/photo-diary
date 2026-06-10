@@ -23,6 +23,7 @@
 ### Tooling
 
 - `bin/instance.ts upgrade` runs the pm2 cycle (`pm2 delete <instance> <instance>-converter` → `start-prod.sh` server → `start-prod.sh` converter → `pm2 save`) directly instead of printing the commands for the operator to copy-paste. Confirmation prompt on a TTY (via `@inquirer/prompts`), pre-cycle sanity check via `pm2 jlist` (both processes expected to be online before the switch), post-cycle `pm2 jlist` + `GET /api/v1/meta` probe to confirm the new version is actually serving. Non-TTY runs and `--print-only` keep the previous instruction-printing behaviour; `--auto` skips the prompt for cron / batch usage. Rollback steps still print after every path. Closes #546.
+- `bin/instance.ts` gains a `--cycle` flag (alias `--restart`) that fires the same pm2-cycle code path in doctor mode, skipping the symlink flip and DB backup. For times when the code on disk has changed but the resolved version hasn't — typically a `git pull` against a code root the instance's `code` symlink already points at. Same flag composition as the upgrade-mode cycle (TTY-confirm by default, `--auto` for unattended, `--print-only` to fall back to printed instructions). Closes #551.
 
 ## [0.14.0] - 2026-06-07
 
