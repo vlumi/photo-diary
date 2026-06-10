@@ -80,3 +80,61 @@ describe("gallery CRUD", () => {
     );
   });
 });
+
+describe("gallery localized + defaultLanguage", () => {
+  test("defaultLanguage round-trips through create + update", async () => {
+    await driver.createGallery(
+      mkGallery({ id: "g-lang", title: "Maisemia", defaultLanguage: "fi" })
+    );
+    let row = (await driver.loadGallery("g-lang")) as {
+      defaultLanguage: string | null;
+    };
+    expect(row.defaultLanguage).toBe("fi");
+    await driver.updateGallery("g-lang", { defaultLanguage: null });
+    row = (await driver.loadGallery("g-lang")) as { defaultLanguage: string | null };
+    expect(row.defaultLanguage).toBeNull();
+  });
+
+  test("update writes title / description overlays, load reads them as maps", async () => {
+    await driver.createGallery(
+      mkGallery({ id: "g-loc", title: "Landscapes", description: "Scenic shots." })
+    );
+    await driver.updateGallery("g-loc", {
+      titleLocalized: { fi: "Maisemia", ja: "風景" },
+      descriptionLocalized: { fi: "Maisemakuvia." },
+    });
+    const row = (await driver.loadGallery("g-loc")) as {
+      title: string;
+      description: string;
+      titleLocalized: Record<string, string>;
+      descriptionLocalized: Record<string, string>;
+    };
+    expect(row.title).toBe("Landscapes");
+    expect(row.description).toBe("Scenic shots.");
+    expect(row.titleLocalized).toEqual({ fi: "Maisemia", ja: "風景" });
+    expect(row.descriptionLocalized).toEqual({ fi: "Maisemakuvia." });
+  });
+
+  test("empty string in overlay map clears that column", async () => {
+    await driver.createGallery(mkGallery({ id: "g-clear" }));
+    await driver.updateGallery("g-clear", {
+      titleLocalized: { fi: "Otsikko" },
+    });
+    await driver.updateGallery("g-clear", {
+      titleLocalized: { fi: "" },
+    });
+    const row = (await driver.loadGallery("g-clear")) as {
+      titleLocalized: Record<string, string>;
+    };
+    expect(row.titleLocalized).toEqual({});
+  });
+
+  test("gallery without overlays returns empty maps", async () => {
+    const row = (await driver.loadGallery("g-min")) as {
+      titleLocalized: Record<string, string>;
+      descriptionLocalized: Record<string, string>;
+    };
+    expect(row.titleLocalized).toEqual({});
+    expect(row.descriptionLocalized).toEqual({});
+  });
+});

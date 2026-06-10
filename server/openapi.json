@@ -701,6 +701,28 @@
                   "description": {
                     "type": "string"
                   },
+                  "titleLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "descriptionLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "defaultLanguage": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "icon": {
                     "type": "string"
                   },
@@ -833,6 +855,28 @@
                   },
                   "description": {
                     "type": "string"
+                  },
+                  "titleLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "descriptionLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "defaultLanguage": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "icon": {
                     "type": "string"
@@ -1318,6 +1362,18 @@
                   "description": {
                     "type": "string"
                   },
+                  "titleLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "descriptionLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
                   "taken": {
                     "type": "object",
                     "properties": {
@@ -1332,6 +1388,12 @@
                           },
                           "place": {
                             "type": "string"
+                          },
+                          "placeLocalized": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
                           },
                           "coordinates": {
                             "type": "object",
@@ -1928,6 +1990,18 @@
                   "description": {
                     "type": "string"
                   },
+                  "titleLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "descriptionLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
                   "taken": {
                     "type": "object",
                     "properties": {
@@ -1942,6 +2016,12 @@
                           },
                           "place": {
                             "type": "string"
+                          },
+                          "placeLocalized": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
                           },
                           "coordinates": {
                             "type": "object",

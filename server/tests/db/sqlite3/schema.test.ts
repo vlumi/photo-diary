@@ -160,10 +160,11 @@ describe("Gallery", () => {
     "theme",
     "initial_view",
     "hostname",
+    "default_language",
   ].join(",");
   test("Build create query", () =>
     expect(schema.gallery.buildCreateQuery()).toBe(
-      `INSERT INTO gallery (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO gallery (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.gallery.buildSelectByIdQuery()).toBe(

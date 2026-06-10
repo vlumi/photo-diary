@@ -29,10 +29,16 @@ const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
 // Each key is optional; the SPA falls back to `lib/config.ts`.
 const envDefaults = (): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
-  const { DEFAULT_GALLERY, DEFAULT_THEME, INITIAL_GALLERY_VIEW, FIRST_WEEKDAY } =
-    process.env;
+  const {
+    DEFAULT_GALLERY,
+    DEFAULT_THEME,
+    DEFAULT_LANGUAGE,
+    INITIAL_GALLERY_VIEW,
+    FIRST_WEEKDAY,
+  } = process.env;
   if (DEFAULT_GALLERY) out.defaultGallery = DEFAULT_GALLERY;
   if (DEFAULT_THEME) out.defaultTheme = DEFAULT_THEME;
+  if (DEFAULT_LANGUAGE) out.defaultLanguage = DEFAULT_LANGUAGE;
   if (INITIAL_GALLERY_VIEW) out.initialGalleryView = INITIAL_GALLERY_VIEW;
   if (FIRST_WEEKDAY) out.firstWeekday = FIRST_WEEKDAY;
   // `BETA_FEATURE_<NAME>=user|on|off` → betaFeatures[name] = mode.
