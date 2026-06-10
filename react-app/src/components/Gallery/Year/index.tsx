@@ -30,7 +30,8 @@ const Year = ({
 }: Props): React.ReactElement => {
   const navigate = useNavigate();
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const cal = useFilteredCalendar(gallery.id());
 
   const handlMoveToFirst = () => {
@@ -81,7 +82,7 @@ const Year = ({
   return (
     <>
       <title>
-        {gallery.title(year)} — {t("nav-gallery")}
+        {gallery.breadcrumb({ year, lang })} — {t("nav-gallery")}
       </title>
       <Navigation gallery={gallery} year={year} />
       <Swipeable onSwiped={handleSwipe}>

@@ -31,6 +31,7 @@ interface Coordinates {
 interface Location {
   country?: string;
   place?: string;
+  placeLocalized?: Record<string, string>;
   coordinates?: Coordinates;
 }
 
@@ -68,6 +69,8 @@ export interface PhotoData {
   originalFilename?: string;
   title?: string;
   description?: string;
+  titleLocalized?: Record<string, string>;
+  descriptionLocalized?: Record<string, string>;
   taken: Taken;
   dimensions: PhotoDataDimensions;
   camera?: Gear;
@@ -120,12 +123,29 @@ const PhotoModel = (photoData: unknown) => {
 
   const round = (value: number): number => Math.round(value * 2) / 2;
 
+  // Resolve a localized overlay map against the requested lang.
+  // Falls through to the canonical column when the lang has no
+  // overlay (or `lang` is omitted). Empty strings in the overlay
+  // are treated as "not set" — server returns them as NULL
+  // (cleared), but a stale client cache might carry an empty
+  // string that shouldn't shadow the canonical.
+  const pickLocalized = (
+    canonical: string | undefined,
+    map: Record<string, string> | undefined,
+    lang: string | undefined
+  ): string | undefined => {
+    const overlay = lang && map ? map[lang] : undefined;
+    return overlay && overlay.length > 0 ? overlay : canonical;
+  };
+
   const self = {
     id: (): string => photo.id,
     index: (): number => photo.index,
     originalFilename: (): string | undefined => photo.originalFilename,
-    title: (): string | undefined => photo.title,
-    description: (): string | undefined => photo.description,
+    title: (lang?: string): string | undefined =>
+      pickLocalized(photo.title, photo.titleLocalized, lang),
+    description: (lang?: string): string | undefined =>
+      pickLocalized(photo.description, photo.descriptionLocalized, lang),
     author: (): string | undefined => photo.taken.author,
     galleries: (): string[] => photo.galleries ?? [],
 
@@ -293,8 +313,18 @@ const PhotoModel = (photoData: unknown) => {
       self.hasCountry() && self.countryCode()
         ? format.countryName(lang, countryData, t)(self.countryCode() as string)
         : "",
-    hasPlace: (): boolean => !!photo.taken.location?.place,
-    place: (): string | undefined => photo.taken.location?.place,
+    hasPlace: (lang?: string): boolean =>
+      !!pickLocalized(
+        photo.taken.location?.place,
+        photo.taken.location?.placeLocalized,
+        lang
+      ),
+    place: (lang?: string): string | undefined =>
+      pickLocalized(
+        photo.taken.location?.place,
+        photo.taken.location?.placeLocalized,
+        lang
+      ),
     hasGeocodedCity: (): boolean => !!photo.geocoded?.city,
     geocodedCity: (): string | undefined => photo.geocoded?.city,
     geocodedCityEn: (): string | undefined =>

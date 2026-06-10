@@ -1,5 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { BsFillHouseFill } from "react-icons/bs";
 
 import Root from "./Navigation";
@@ -15,6 +16,8 @@ interface Props {
 }
 
 const Empty = ({ children, gallery }: Props): React.ReactElement => {
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
   const [redirect, setRedirect] = React.useState<string | undefined>(undefined);
 
   useKeyPress("Escape", () => {
@@ -36,7 +39,7 @@ const Empty = ({ children, gallery }: Props): React.ReactElement => {
   }
   return (
     <>
-      <title>{gallery.title()}</title>
+      <title>{gallery.title(lang)}</title>
       <Root>
         <Link>
           <span className="title">

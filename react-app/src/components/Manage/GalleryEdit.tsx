@@ -232,6 +232,7 @@ const GalleryEdit = (): React.ReactElement => {
   });
 
   const [form, setForm] = React.useState<FormState>(EMPTY_FORM);
+  const [original, setOriginal] = React.useState<FormState>(EMPTY_FORM);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
   // `?openIcon=<photoId>` arrives from the "Set as gallery icon"
@@ -263,14 +264,16 @@ const GalleryEdit = (): React.ReactElement => {
 
   React.useEffect(() => {
     if (data) {
-      setForm(fromGalleryData(data as GalleryData));
+      const next = fromGalleryData(data as GalleryData);
+      setForm(next);
+      setOriginal(next);
       setSaveError(null);
     }
   }, [data]);
 
   const updateMutation = useMutation({
     mutationFn: () =>
-      galleriesService.update(galleryId, toPatch(form, isAdmin)),
+      galleriesService.update(galleryId, toPatch(form, original, isAdmin)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gallery", galleryId] });
       queryClient.invalidateQueries({ queryKey: ["manage-galleries"] });
@@ -298,6 +301,16 @@ const GalleryEdit = (): React.ReactElement => {
   const setField = (key: keyof FormState, value: string): void => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
+  const setLocalized = (
+    key: "titleLocalized" | "descriptionLocalized",
+    lang: string,
+    value: string
+  ): void => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [lang]: value },
+    }));
+  };
   const handleSave = (): void => {
     setSaveError(null);
     updateMutation.mutate();
@@ -309,7 +322,7 @@ const GalleryEdit = (): React.ReactElement => {
   const handleCancelEdit = (): void => {
     // Discard pending edits — reset the form back to the
     // server's current value before flipping out of edit mode.
-    if (data) setForm(fromGalleryData(data as GalleryData));
+    if (data) setForm(original);
     setSaveError(null);
     setEditing(false);
   };
@@ -369,6 +382,7 @@ const GalleryEdit = (): React.ReactElement => {
           <GalleryFormFields
             form={form}
             setField={setField}
+            setLocalized={setLocalized}
             galleryId={galleryId}
             photos={(data as GalleryData | undefined)?.photos ?? []}
             iconSource={
