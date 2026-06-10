@@ -137,14 +137,19 @@ const query = async (opts: QueryOpts = {}) =>
 
 // PhotoUpdateBody on the server only accepts the override fields
 // `bin/photo.ts update` exposes. EXIF-derived columns reject with 400.
+// `*Localized` maps are per-language overlay rows; empty string in any
+// entry clears that column, omitting a lang leaves it untouched.
 export interface PhotoUpdatePatch {
   title?: string;
   description?: string;
+  titleLocalized?: Record<string, string>;
+  descriptionLocalized?: Record<string, string>;
   taken?: {
     author?: string;
     location?: {
       country?: string;
       place?: string;
+      placeLocalized?: Record<string, string>;
       coordinates?: {
         latitude?: number | null;
         longitude?: number | null;

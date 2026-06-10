@@ -130,6 +130,16 @@ const GalleryCreate = (): React.ReactElement => {
   const setField = (key: keyof FormState, value: string): void => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
+  const setLocalized = (
+    key: "titleLocalized" | "descriptionLocalized",
+    lang: string,
+    value: string
+  ): void => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [lang]: value },
+    }));
+  };
   const handleSave = (): void => {
     if (!idValid) return;
     setSaveError(null);
@@ -167,7 +177,11 @@ const GalleryCreate = (): React.ReactElement => {
         </Field>
       </IdSection>
 
-      <GalleryFormFields form={form} setField={setField} />
+      <GalleryFormFields
+        form={form}
+        setField={setField}
+        setLocalized={setLocalized}
+      />
 
       <Footer>
         <ButtonSecondary type="button" onClick={handleCancel}>

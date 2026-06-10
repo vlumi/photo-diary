@@ -24,6 +24,7 @@ import { isCountrySentinel } from "../../lib/country-sentinel";
 import { useLangStore } from "../../stores";
 import CountrySelect from "./CountrySelect";
 import EditableMap from "./EditableMap.lazy";
+import LocalizedInputs, { SUPPORTED_LANGS } from "./LocalizedInputs";
 
 // In-flow editor panel — replaces the photos sidebar's filter
 // contents when a photo is open. The grid stays clickable so an
@@ -356,6 +357,8 @@ interface PhotoData {
   id: string;
   title?: string;
   description?: string;
+  titleLocalized?: Record<string, string>;
+  descriptionLocalized?: Record<string, string>;
   originalFilename?: string;
   taken?: {
     author?: string;
@@ -363,6 +366,7 @@ interface PhotoData {
     location?: {
       country?: string;
       place?: string;
+      placeLocalized?: Record<string, string>;
       coordinates?: {
         latitude?: number | null;
         longitude?: number | null;
@@ -520,6 +524,9 @@ const CopyButton = ({
 interface FormState {
   title: string;
   description: string;
+  titleLocalized: Record<string, string>;
+  descriptionLocalized: Record<string, string>;
+  placeLocalized: Record<string, string>;
   author: string;
   country: string;
   place: string;
@@ -535,9 +542,15 @@ interface FormState {
   aperture: string;
 }
 
+const emptyLocalized = (): Record<string, string> =>
+  Object.fromEntries(SUPPORTED_LANGS.map((l) => [l, ""]));
+
 const emptyForm = (): FormState => ({
   title: "",
   description: "",
+  titleLocalized: emptyLocalized(),
+  descriptionLocalized: emptyLocalized(),
+  placeLocalized: emptyLocalized(),
   author: "",
   country: "",
   place: "",
@@ -556,9 +569,20 @@ const emptyForm = (): FormState => ({
 const numField = (v: number | null | undefined): string =>
   v !== undefined && v !== null ? String(v) : "";
 
+const localizedFrom = (
+  map: Record<string, string> | undefined
+): Record<string, string> => {
+  const out: Record<string, string> = {};
+  for (const lang of SUPPORTED_LANGS) out[lang] = map?.[lang] ?? "";
+  return out;
+};
+
 const formFrom = (p: PhotoData): FormState => ({
   title: p.title ?? "",
   description: p.description ?? "",
+  titleLocalized: localizedFrom(p.titleLocalized),
+  descriptionLocalized: localizedFrom(p.descriptionLocalized),
+  placeLocalized: localizedFrom(p.taken?.location?.placeLocalized),
   author: p.taken?.author ?? "",
   country: p.taken?.location?.country ?? "",
   place: p.taken?.location?.place ?? "",
@@ -573,6 +597,22 @@ const formFrom = (p: PhotoData): FormState => ({
   focalLength35mmEquiv: numField(p.exposure?.focalLength35mmEquiv),
   aperture: numField(p.exposure?.aperture),
 });
+
+// Diff per-language overlay maps. Returns only the entries the user
+// touched; empty string in any entry forwards as-is so the server
+// clears that column (NULL in the row). Unchanged entries are dropped.
+const localizedPatch = (
+  origMap: Record<string, string>,
+  curMap: Record<string, string>
+): Record<string, string> | undefined => {
+  const out: Record<string, string> = {};
+  for (const lang of SUPPORTED_LANGS) {
+    const o = (origMap[lang] ?? "").trim();
+    const c = (curMap[lang] ?? "").trim();
+    if (o !== c) out[lang] = c;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+};
 
 // Reduce a form state to the changed fields, shaped to PhotoUpdatePatch.
 // Empty-string trims to undefined so the server doesn't reject the
@@ -589,6 +629,16 @@ const patchFrom = (
   if (trim(current.description) !== trim(original.description)) {
     patch.description = trim(current.description);
   }
+  const titleLocPatch = localizedPatch(
+    original.titleLocalized,
+    current.titleLocalized
+  );
+  if (titleLocPatch) patch.titleLocalized = titleLocPatch;
+  const descLocPatch = localizedPatch(
+    original.descriptionLocalized,
+    current.descriptionLocalized
+  );
+  if (descLocPatch) patch.descriptionLocalized = descLocPatch;
   const takenLocation: NonNullable<
     NonNullable<PhotoUpdatePatch["taken"]>["location"]
   > = {};
@@ -598,6 +648,11 @@ const patchFrom = (
   if (trim(current.place) !== trim(original.place)) {
     takenLocation.place = trim(current.place);
   }
+  const placeLocPatch = localizedPatch(
+    original.placeLocalized,
+    current.placeLocalized
+  );
+  if (placeLocPatch) takenLocation.placeLocalized = placeLocPatch;
   // Coordinates: empty → null (clears the field server-side),
   // valid number → parsed, invalid → skip.
   const coordPatch = (
@@ -803,6 +858,15 @@ const PhotoDrawer = (): React.ReactElement => {
 
   const setField = <K extends keyof FormState>(key: K, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+  const setLocalizedField = (
+    key: "titleLocalized" | "descriptionLocalized" | "placeLocalized",
+    lang: string,
+    value: string
+  ) =>
+    setForm((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [lang]: value },
+    }));
 
   // The form-state keys that came from EXIF originally. The drawer
   // gates these behind an unlock when `exifAtIntake` is missing,
@@ -946,6 +1010,10 @@ const PhotoDrawer = (): React.ReactElement => {
               onChange={(e) => setField("title", e.target.value)}
               $highlight={highlight.title}
             />
+            <LocalizedInputs
+              value={form.titleLocalized}
+              onChange={(lang, val) => setLocalizedField("titleLocalized", lang, val)}
+            />
             {highlight.title && (
               <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
             )}
@@ -956,6 +1024,13 @@ const PhotoDrawer = (): React.ReactElement => {
               value={form.description}
               onChange={(e) => setField("description", e.target.value)}
               $highlight={highlight.description}
+            />
+            <LocalizedInputs
+              value={form.descriptionLocalized}
+              onChange={(lang, val) =>
+                setLocalizedField("descriptionLocalized", lang, val)
+              }
+              multiline
             />
             {highlight.description && (
               <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
@@ -993,6 +1068,12 @@ const PhotoDrawer = (): React.ReactElement => {
                 value={form.place}
                 onChange={(e) => setField("place", e.target.value)}
                 $highlight={highlight.place}
+              />
+              <LocalizedInputs
+                value={form.placeLocalized}
+                onChange={(lang, val) =>
+                  setLocalizedField("placeLocalized", lang, val)
+                }
               />
               {highlight.place && (
                 <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>

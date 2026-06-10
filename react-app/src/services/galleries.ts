@@ -25,6 +25,9 @@ export type InitialView = "year" | "month" | "day" | "photo";
 export interface GalleryUpdatePatch {
   title?: string;
   description?: string;
+  titleLocalized?: Record<string, string>;
+  descriptionLocalized?: Record<string, string>;
+  defaultLanguage?: string | null;
   icon?: string;
   epoch?: string;
   epochType?: EpochType;
