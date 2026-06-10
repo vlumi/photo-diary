@@ -100,6 +100,17 @@ describe("loadPhotosByOriginalFilename", () => {
       await driver.loadPhotosByOriginalFilename("never.jpg")
     ).toEqual([]);
   });
+
+  test("filename match is case-insensitive", async () => {
+    await driver.createPhoto({
+      id: "ph-of-upper",
+      originalFilename: "IMG_9999.JPG",
+    });
+    const rows = (await driver.loadPhotosByOriginalFilename(
+      "img_9999.jpg"
+    )) as Array<{ id: string }>;
+    expect(rows.map((r) => r.id)).toContain("ph-of-upper");
+  });
 });
 
 describe("renamePhoto", () => {

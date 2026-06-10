@@ -1011,9 +1011,17 @@ const loadPhoto = async (photoId: string, lang?: string) => {
     .all(photoId) as PhotoLocalizedRow[];
   return SCHEMA.photo.mapRow(row, 0, localizedRows, lang);
 };
+// Filename matching is case-insensitive: cameras vary on extension
+// case (Fuji writes `.JPG`, others `.jpg`), and operator-generated
+// JSON sidecars often normalize to lowercase. A case-sensitive `=`
+// match meant the sidecar would miss its existing row and create a
+// phantom photo with the lowercase-id form alongside the real
+// uppercase-original_filename row.
 const loadPhotosByOriginalFilename = async (originalFilename: string) => {
   const rows = db
-    .prepare(SCHEMA.photo.buildSelectQuery(["original_filename = ?"]))
+    .prepare(
+      SCHEMA.photo.buildSelectQuery(["original_filename = ? COLLATE NOCASE"])
+    )
     .all(originalFilename) as PhotoRow[];
   return rows.map((row, index) => SCHEMA.photo.mapRow(row, index));
 };
@@ -1034,7 +1042,7 @@ const loadGalleryPhotoByOriginalFilename = async (
   const stmt = db.prepare(
     schema.buildSelectQuery([
       `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
-      "original_filename = ?",
+      "original_filename = ? COLLATE NOCASE",
     ])
   );
   const rows = stmt.all(...sources, originalFilename) as PhotoRow[];

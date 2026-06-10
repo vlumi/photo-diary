@@ -113,12 +113,23 @@ const linkToGallery = async (photoId: string, galleryId: string | null) => {
   logger.info(`[${photoId}] Ensured link to gallery "${galleryId}"`);
 };
 
+// Normalize the file extension to lowercase. Cameras vary (Fuji
+// emits `.JPG`, others `.jpg`); operator-generated JSON sidecars
+// usually reference the lowercase form. Without normalization,
+// `loadPhotosByOriginalFilename` would miss the existing row and
+// the sidecar pipeline would create a phantom photo.
+const normalizeExtension = (filename: string): string => {
+  const dot = filename.lastIndexOf(".");
+  if (dot < 0) return filename;
+  return filename.slice(0, dot) + filename.slice(dot).toLowerCase();
+};
+
 const processJpeg = async (
   relPath: string,
   rootDir: string,
   galleryId: string | null
 ): Promise<void> => {
-  const originalFilename = path.basename(relPath);
+  const originalFilename = normalizeExtension(path.basename(relPath));
   const originalPath = path.join(rootDir, DIR_INBOX, relPath);
   const stat = await fs.promises.stat(originalPath);
   if (stat.size === 0) {
