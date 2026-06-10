@@ -520,7 +520,6 @@
     "stats-location-see-on-map": "Näytä kartalla",
     "stats-evolution-title": "{{category}} ajan myötä (kumulatiivinen)",
     "stats-evolution-empty": "Suodatin ei vastaa yhtään valokuvaa.",
-    "stats-evolution-other": "Muut ({{count}})",
     "map-locate-me": "Keskitä nykyiseen sijaintiini",
     "map-locate-me-denied": "Sijaintilupa evätty",
     "stats-topic-time": "Ajankohta",

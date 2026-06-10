@@ -54,9 +54,12 @@ const Notice = styled.div`
   padding: 8px 0;
 `;
 
-// Distinct hues for up to ~10 lines. Buckets beyond `MAX_LINES`
-// merge into one "other" line so a 200-lens catalogue doesn't
-// render an unreadable rainbow.
+// Distinct hues for up to ~20 lines. Beyond `MAX_LINES` (the
+// long tail) is dropped from the chart rather than aggregated —
+// for high-cardinality continuous variables (shutter, focal,
+// aperture) the "other" bucket would dominate every other line
+// without saying anything useful. The full distribution still
+// lives in the donut + table above.
 const COLOURS = [
   "#1f77b4",
   "#ff7f0e",
@@ -68,8 +71,17 @@ const COLOURS = [
   "#7f7f7f",
   "#bcbd22",
   "#17becf",
+  "#aec7e8",
+  "#ffbb78",
+  "#98df8a",
+  "#ff9896",
+  "#c5b0d5",
+  "#c49c94",
+  "#f7b6d2",
+  "#c7c7c7",
+  "#dbdb8d",
+  "#9edae5",
 ];
-const OTHER_COLOUR = "#999";
 const MAX_LINES = COLOURS.length;
 
 interface Props {
@@ -140,44 +152,19 @@ const EvolutionChart = ({
       series,
       total: series.cumulative[series.cumulative.length - 1] ?? 0,
     }))
-    .sort((a, b) => b.total - a.total);
-  const top = ranked.slice(0, MAX_LINES);
-  const rest = ranked.slice(MAX_LINES);
-  const otherCumulative =
-    rest.length > 0
-      ? yearMonths.map((_, i) =>
-          rest.reduce((sum, r) => sum + (r.series.cumulative[i] ?? 0), 0)
-        )
-      : null;
-  const datasets = [
-    ...top.map((entry, i) => ({
-      label: labelFor ? labelFor(entry.key) : entry.key,
-      data: entry.series.cumulative,
-      borderColor: COLOURS[i],
-      backgroundColor: COLOURS[i],
-      tension: 0,
-      stepped: "after" as const,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      borderWidth: 2,
-    })),
-    ...(otherCumulative
-      ? [
-          {
-            label: t("stats-evolution-other", { count: rest.length }),
-            data: otherCumulative,
-            borderColor: OTHER_COLOUR,
-            backgroundColor: OTHER_COLOUR,
-            tension: 0,
-            stepped: "after" as const,
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            borderWidth: 2,
-            borderDash: [4, 4],
-          },
-        ]
-      : []),
-  ];
+    .sort((a, b) => b.total - a.total)
+    .slice(0, MAX_LINES);
+  const datasets = ranked.map((entry, i) => ({
+    label: labelFor ? labelFor(entry.key) : entry.key,
+    data: entry.series.cumulative,
+    borderColor: COLOURS[i],
+    backgroundColor: COLOURS[i],
+    tension: 0,
+    stepped: "after" as const,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    borderWidth: 2,
+  }));
   return (
     <Root>
       <Title>{t("stats-evolution-title", { category: categoryTitle })}</Title>
