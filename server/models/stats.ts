@@ -18,14 +18,17 @@ import type { FilterValuesResult } from "../db/index.js";
 import type { Photo } from "../db/sqlite3/schema.js";
 import { cacheGet, cacheSet } from "../lib/stats-cache.js";
 import {
+  buildEvolution,
   computeStats,
   isUnfilteredBase,
+  type EvolutionResult,
   type StatsResponse,
 } from "../lib/stats-compute.js";
 import type { FilterShape } from "../lib/photo-filter-eval.js";
 
 export default () => ({
   getGalleryStats,
+  getGalleryEvolution,
   getGlobalStats,
   getGlobalFilterValues,
 });
@@ -68,6 +71,20 @@ const getGalleryStats = async (
   const stats = computeStats(photos, filter);
   if (cacheable) cacheSet(key, stats);
   return stats;
+};
+
+// Per-bucket time-series for the trend chart (#383). Lazy on
+// the client — only fires when the user opens the modal for a
+// trendable category. No cache layer yet; the compute is one
+// photo walk + one fan-out, fast at current scale.
+const getGalleryEvolution = async (
+  galleryId: string,
+  category: string,
+  filter?: FilterShape,
+  lang?: string
+): Promise<EvolutionResult> => {
+  const photos = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
+  return buildEvolution(photos, category, filter);
 };
 
 // Global filter pill universe — cross-gallery flavour of the

@@ -518,6 +518,8 @@
     "stats-location-count-geotagged": "{{count}} sijaintitiedollista",
     "stats-location-count-not-geotagged": "{{count}} ilman sijaintia",
     "stats-location-see-on-map": "Näytä kartalla",
+    "stats-evolution-title": "{{category}} ajan myötä (kumulatiivinen)",
+    "stats-evolution-empty": "Suodatin ei vastaa yhtään valokuvaa.",
     "map-locate-me": "Keskitä nykyiseen sijaintiini",
     "map-locate-me-denied": "Sijaintilupa evätty",
     "stats-topic-time": "Ajankohta",

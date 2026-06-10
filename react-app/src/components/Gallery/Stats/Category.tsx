@@ -198,6 +198,7 @@ const renderLocationCounts = (
 interface Props {
   topic: StatsTopic;
   category: StatsCategory;
+  galleryId?: string;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
@@ -208,6 +209,7 @@ interface Props {
 const Category = ({
   topic,
   category,
+  galleryId,
   filters,
   setFilters,
   theme,
@@ -283,9 +285,12 @@ const Category = ({
         <TableModal
           topic={topic}
           category={category}
+          galleryId={galleryId}
           filters={filters}
           setFilters={setFilters}
           theme={theme}
+          lang={lang}
+          countryData={countryData}
           onClose={() => setModalOpen(false)}
         />
       )}

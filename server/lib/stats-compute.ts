@@ -268,6 +268,103 @@ const buildByCategory = (
   ),
 });
 
+// Cumulative time series per bucket for the trend chart (#383).
+// Server hands the client a chart-ready shape: a sorted yearMonths
+// X axis, plus per-bucket parallel arrays of monthly counts +
+// running cumulative totals. Categories that aren't already a time
+// axis (year / month / weekday / hour) or unreasonably high-
+// cardinality (state / city — operator's call, see ticket) are the
+// trendable set.
+export interface EvolutionResult {
+  yearMonths: string[];
+  buckets: Record<string, { counts: number[]; cumulative: number[] }>;
+}
+const EVOLUTION_BUCKETERS: Record<string, (p: Photo) => unknown> = {
+  author: (p) => p.taken.author,
+  country: (p) => p.taken.location?.country,
+  cameraMake: (p) => p.camera?.make,
+  camera: formatCamera,
+  lens: formatLens,
+  cameraLens: cameraLensPairKey,
+  focalLength: (p) => p.exposure?.focalLength,
+  focalLength35mmEquiv: (p) =>
+    derived.focalLength35mmEquiv(
+      p.exposure?.focalLength,
+      p.camera?.make,
+      p.camera?.model,
+      p.exposure?.focalLength35mmEquiv
+    ),
+  aperture: (p) => p.exposure?.aperture,
+  exposureTime: (p) => p.exposure?.exposureTime,
+  iso: (p) => p.exposure?.iso,
+  ev: (p) =>
+    derived.exposureValue(p.exposure?.aperture, p.exposure?.exposureTime),
+  lv: (p) =>
+    derived.lightValue(
+      p.exposure?.aperture,
+      p.exposure?.exposureTime,
+      p.exposure?.iso
+    ),
+  resolution: (p) =>
+    derived.resolution(
+      p.dimensions?.original?.width,
+      p.dimensions?.original?.height
+    ),
+  orientation: (p) =>
+    derived.orientation(
+      p.dimensions?.original?.width,
+      p.dimensions?.original?.height
+    ),
+  aspectRatio: (p) =>
+    derived.aspectRatio(
+      p.dimensions?.original?.width,
+      p.dimensions?.original?.height
+    ),
+};
+export const EVOLUTION_CATEGORIES = Object.keys(EVOLUTION_BUCKETERS);
+export const buildEvolution = (
+  photos: Photo[],
+  category: string,
+  filter?: FilterShape
+): EvolutionResult => {
+  const getter = EVOLUTION_BUCKETERS[category];
+  if (!getter) return { yearMonths: [], buckets: {} };
+  const filtered = filter
+    ? photos.filter((p) => matchesFilter(filter, p))
+    : photos;
+  // Discover the full year-month axis from the filtered set.
+  const ymSet = new Set<string>();
+  // Per-(bucket, ym) running count.
+  const monthlyCounts: Record<string, Record<string, number>> = {};
+  for (const photo of filtered) {
+    const i = photo.taken.instant;
+    const ym = `${i.year}-${String(i.month).padStart(2, "0")}`;
+    ymSet.add(ym);
+    const raw = getter(photo);
+    const key =
+      raw === undefined || raw === null || raw === ""
+        ? UNKNOWN_BUCKET
+        : String(raw);
+    if (!monthlyCounts[key]) monthlyCounts[key] = {};
+    monthlyCounts[key][ym] = (monthlyCounts[key][ym] ?? 0) + 1;
+  }
+  const yearMonths = [...ymSet].sort();
+  const buckets: EvolutionResult["buckets"] = {};
+  for (const [key, perMonth] of Object.entries(monthlyCounts)) {
+    const counts: number[] = [];
+    const cumulative: number[] = [];
+    let running = 0;
+    for (const ym of yearMonths) {
+      const c = perMonth[ym] ?? 0;
+      counts.push(c);
+      running += c;
+      cumulative.push(running);
+    }
+    buckets[key] = { counts, cumulative };
+  }
+  return { yearMonths, buckets };
+};
+
 export const buildAnnotations = (
   photos: Photo[]
 ): {

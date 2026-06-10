@@ -3,11 +3,17 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
 import Charts from "./Charts";
+import EvolutionChart, { isTrendable } from "./EvolutionChart";
 import Table from "./Table";
 
+import format from "../../../lib/format";
 import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
 import type { Filters as FiltersT } from "../../../lib/filter";
 import type { StatsTopic, StatsCategory, SortMode } from "../../../lib/stats";
+
+interface CountryData {
+  getName(code: string, lang: string): string | undefined;
+}
 
 type ActiveTheme = { get: (name: string) => string };
 
@@ -97,21 +103,49 @@ const ScrollArea = styled.div`
 interface Props {
   topic: StatsTopic;
   category: StatsCategory;
+  galleryId?: string;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
+  lang: string;
+  countryData: CountryData;
   onClose: () => void;
 }
 
 const TableModal = ({
   topic,
   category,
+  galleryId,
   filters,
   setFilters,
   theme,
+  lang,
+  countryData,
   onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
+  // Server's evolution endpoint returns bucket keys as strings.
+  // Wrap `format.categoryValue` so numeric categories (focal-length,
+  // exposure-time, etc.) parse before formatting — otherwise the
+  // chart legend / tooltip shows the raw "0.004" instead of
+  // "1/250 s". Country uses the same formatter pipeline (codes
+  // → localized names).
+  const NUMERIC_TRENDABLE = new Set([
+    "focal-length",
+    "focal-length-eq",
+    "aperture",
+    "exposure-time",
+    "iso",
+    "ev",
+    "lv",
+    "resolution",
+  ]);
+  const formatter = format.categoryValue(lang, t, countryData)(category.key);
+  const labelForBucket = (raw: string): string => {
+    if (raw === "" || raw === "unknown") return String(t("stats-unknown"));
+    const typed = NUMERIC_TRENDABLE.has(category.key) ? Number(raw) : raw;
+    return formatter(typed);
+  };
   // "Top" is the default: the user typically lands here from the
   // inline view's top-10 list, so opening to the same ordering is the
   // less-jarring landing. "By value" is the alternate reading.
@@ -171,6 +205,14 @@ const TableModal = ({
         </Header>
         <ScrollArea>
           <Charts category={category} sortMode={sortMode} />
+          {galleryId && isTrendable(category.key) && (
+            <EvolutionChart
+              galleryId={galleryId}
+              categoryKey={category.key}
+              categoryTitle={category.title}
+              labelFor={labelForBucket}
+            />
+          )}
           <Table
             topic={topic}
             category={category}
