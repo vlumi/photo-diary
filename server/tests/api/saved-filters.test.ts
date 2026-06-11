@@ -172,6 +172,64 @@ describe("As admin", () => {
   });
 });
 
+describe("Public viewer (saved filter as pseudo-gallery)", () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await loginUser(api, "admin");
+  });
+
+  test("/api/v1/galleries returns saved-filter galleries alongside real ones", async () => {
+    await create(token, "gallery1", {
+      id: "japan-only",
+      title: "Japan only",
+      definition: { filter: { general: { country: ["jp"] } } },
+    });
+    const listed = await api
+      .get("/api/v1/galleries")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const ids = (listed.body as Array<{ id: string; type?: string }>).map(
+      (g) => g.id
+    );
+    expect(ids).toContain("japan-only");
+    const found = (
+      listed.body as Array<{ id: string; type?: string }>
+    ).find((g) => g.id === "japan-only");
+    expect(found?.type).toBe("saved_filter");
+  });
+
+  test("GET /galleries/<sf-id>/photos returns source photos narrowed by baseline", async () => {
+    // gallery1's photos: gallery1photo (country=jp), gallery12photo (country=nl)
+    // Baseline filter country=jp → only gallery1photo passes.
+    await create(token, "gallery1", {
+      id: "jp-on-gallery1",
+      definition: { filter: { general: { country: ["jp"] } } },
+    });
+    const res = await api
+      .get("/api/v1/gallery-photos/jp-on-gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const ids = (res.body as Array<{ id: string }>).map((p) => p.id);
+    expect(ids).toEqual(["gallery1photo.jpg"]);
+  });
+
+  test("baseline dateRange intersects with the request body's range", async () => {
+    // Baseline restricts to 2018; an empty user filter on the saved
+    // filter id should yield exactly the 2018 photo.
+    await create(token, "gallery1", {
+      id: "year-2018",
+      definition: { dateRange: { from: "2018-01-01", to: "2018-12-31" } },
+    });
+    const res = await api
+      .post("/api/v1/gallery-photos/year-2018/query")
+      .set("Authorization", `Bearer ${token}`)
+      .send({})
+      .expect(200);
+    const ids = (res.body as Array<{ id: string }>).map((p) => p.id);
+    expect(ids).toEqual(["gallery1photo.jpg"]);
+  });
+});
+
 describe("ACL", () => {
   test("guest can list public-gallery saved filters but not mutate", async () => {
     // Seed a filter on gallery3 (the public `:guest`-readable one).
