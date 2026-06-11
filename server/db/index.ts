@@ -8,6 +8,7 @@ import type {
   MetaRow,
   Photo,
   PhotoInput,
+  SavedFilter,
   SessionRow,
   User,
   UserGalleryRow,
@@ -242,6 +243,35 @@ export default {
   },
   isReferencedAsSource: async (galleryId: string): Promise<boolean> => {
     return (await db.isReferencedAsSource(galleryId)) as boolean;
+  },
+
+  // Saved filters (#285).
+  loadSavedFilters: async (galleryId: string): Promise<SavedFilter[]> => {
+    return (await db.loadSavedFilters(galleryId)) as SavedFilter[];
+  },
+  loadSavedFilter: async (
+    galleryId: string,
+    id: string
+  ): Promise<SavedFilter> => {
+    return (await db.loadSavedFilter(galleryId, id)) as SavedFilter;
+  },
+  createSavedFilter: async (filter: SavedFilter): Promise<void> => {
+    await db.createSavedFilter(filter);
+  },
+  updateSavedFilter: async (
+    galleryId: string,
+    id: string,
+    patch: Partial<
+      Pick<SavedFilter, "title" | "description" | "definition" | "ordinal">
+    > & {
+      titleLocalized?: Record<string, string | undefined>;
+      descriptionLocalized?: Record<string, string | undefined>;
+    }
+  ): Promise<void> => {
+    await db.updateSavedFilter(galleryId, id, patch);
+  },
+  deleteSavedFilter: async (galleryId: string, id: string): Promise<void> => {
+    await db.deleteSavedFilter(galleryId, id);
   },
 
   loadGalleryPhotos: async (galleryId: string, lang?: string) => {

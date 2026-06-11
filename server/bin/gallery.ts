@@ -388,5 +388,184 @@ await yargs(hideBin(process.argv))
       }
     }
   )
+  .command(
+    "filter",
+    "Manage a gallery's saved filters (sub-galleries on a single source)",
+    (y) =>
+      y
+        .demandCommand(1, "Specify a sub-subcommand: list, add, remove, update")
+        .command(
+          "list <gallery>",
+          "Print every saved filter on a gallery as a table",
+          (y2) =>
+            y2.positional("gallery", {
+              describe: "Gallery id",
+              type: "string",
+              demandOption: true,
+            }),
+          async (argv) => {
+            const galleryId = argv.gallery as string;
+            const filters = (await db.loadSavedFilters(galleryId)) as Array<{
+              id: string;
+              title: string;
+              ordinal: number;
+              definition: Record<string, unknown>;
+            }>;
+            if (filters.length === 0) {
+              console.log("(no saved filters)");
+              return;
+            }
+            const rows: string[][] = [["id", "title", "ordinal", "definition"]];
+            for (const f of filters) {
+              rows.push([
+                f.id,
+                f.title,
+                String(f.ordinal),
+                JSON.stringify(f.definition),
+              ]);
+            }
+            console.log(formatTable(rows));
+          }
+        )
+        .command(
+          "add <gallery> <id>",
+          "Create a saved filter on a gallery (definition is a JSON string)",
+          (y2) =>
+            y2
+              .positional("gallery", {
+                describe: "Gallery id",
+                type: "string",
+                demandOption: true,
+              })
+              .positional("id", {
+                describe: "Saved-filter id (slug shape)",
+                type: "string",
+                demandOption: true,
+              })
+              .option("title", {
+                describe: "Display title (optional)",
+                type: "string",
+              })
+              .option("description", {
+                describe: "Display description (optional)",
+                type: "string",
+              })
+              .option("definition", {
+                describe:
+                  "JSON string for the filter envelope: `{filter?, dateRange?}`",
+                type: "string",
+                demandOption: true,
+              })
+              .option("ordinal", {
+                describe: "Display order index (default 0)",
+                type: "number",
+              }),
+          async (argv) => {
+            const galleryId = argv.gallery as string;
+            const filterId = argv.id as string;
+            let definition: Record<string, unknown>;
+            try {
+              definition = JSON.parse(argv.definition as string) as Record<
+                string,
+                unknown
+              >;
+            } catch (err) {
+              console.error(
+                `✗ --definition is not valid JSON: ${(err as Error).message}`
+              );
+              process.exit(1);
+            }
+            await db.createSavedFilter({
+              id: filterId,
+              galleryId,
+              title: (argv.title as string | undefined) ?? "",
+              description: (argv.description as string | undefined) ?? "",
+              titleLocalized: {},
+              descriptionLocalized: {},
+              definition,
+              ordinal: (argv.ordinal as number | undefined) ?? 0,
+            });
+            console.log(
+              `✓ Created saved filter "${filterId}" on gallery "${galleryId}".`
+            );
+          }
+        )
+        .command(
+          "remove <gallery> <id>",
+          "Delete a saved filter from a gallery",
+          (y2) =>
+            y2
+              .positional("gallery", {
+                describe: "Gallery id",
+                type: "string",
+                demandOption: true,
+              })
+              .positional("id", {
+                describe: "Saved-filter id",
+                type: "string",
+                demandOption: true,
+              }),
+          async (argv) => {
+            const galleryId = argv.gallery as string;
+            const filterId = argv.id as string;
+            await db.deleteSavedFilter(galleryId, filterId);
+            console.log(
+              `✓ Deleted saved filter "${filterId}" from gallery "${galleryId}".`
+            );
+          }
+        )
+        .command(
+          "update <gallery> <id>",
+          "Update an existing saved filter (any of --title / --definition / --ordinal)",
+          (y2) =>
+            y2
+              .positional("gallery", {
+                describe: "Gallery id",
+                type: "string",
+                demandOption: true,
+              })
+              .positional("id", {
+                describe: "Saved-filter id",
+                type: "string",
+                demandOption: true,
+              })
+              .option("title", { type: "string" })
+              .option("description", { type: "string" })
+              .option("definition", {
+                describe: "JSON string replacing the filter envelope",
+                type: "string",
+              })
+              .option("ordinal", { type: "number" }),
+          async (argv) => {
+            const galleryId = argv.gallery as string;
+            const filterId = argv.id as string;
+            const patch: {
+              title?: string;
+              description?: string;
+              definition?: Record<string, unknown>;
+              ordinal?: number;
+            } = {};
+            if ("title" in argv) patch.title = argv.title as string;
+            if ("description" in argv) patch.description = argv.description as string;
+            if ("ordinal" in argv) patch.ordinal = argv.ordinal as number;
+            if ("definition" in argv && argv.definition !== undefined) {
+              try {
+                patch.definition = JSON.parse(
+                  argv.definition as string
+                ) as Record<string, unknown>;
+              } catch (err) {
+                console.error(
+                  `✗ --definition is not valid JSON: ${(err as Error).message}`
+                );
+                process.exit(1);
+              }
+            }
+            await db.updateSavedFilter(galleryId, filterId, patch);
+            console.log(
+              `✓ Updated saved filter "${filterId}" on gallery "${galleryId}".`
+            );
+          }
+        )
+  )
   .demandCommand(1)
   .parseAsync();

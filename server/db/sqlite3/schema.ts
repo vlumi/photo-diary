@@ -169,6 +169,38 @@ export interface VirtualGallerySourceRow {
   source_id: string;
   ordinal: number;
 }
+export interface SavedFilterRow {
+  id: string;
+  gallery_id: string;
+  title: string;
+  description: string;
+  // JSON string — parsed into `SavedFilter.definition` by mapRow.
+  // Wire shape: `{ filter?: FilterShape, dateRange?: DateRange }`.
+  definition: string;
+  ordinal: number;
+}
+export interface SavedFilterLocalizedRow {
+  gallery_id: string;
+  filter_id: string;
+  lang: string;
+  title: string | null;
+  description: string | null;
+}
+// App-side shape of a saved filter row. `definition` is parsed
+// from the stored JSON; the controller / client passes it back
+// verbatim as the body of `/query` / `/counts` / `/neighbors`
+// when applying the filter. `*Localized` mirror the gallery
+// localization shape — empty `{}` when no overlays exist.
+export interface SavedFilter {
+  id: string;
+  galleryId: string;
+  title: string;
+  description: string;
+  titleLocalized: Record<string, string>;
+  descriptionLocalized: Record<string, string>;
+  definition: Record<string, unknown>;
+  ordinal: number;
+}
 export interface GalleryPhoto {
   galleryId: string;
   photoId: string;
@@ -724,7 +756,7 @@ const galleryMapToRow = (
 // a specific column. Rows with NULL in the target column are skipped
 // (the row may exist for another field's overlay — e.g. a photo's
 // geocoded_city row has no operator-set title yet).
-const buildLocalizedMap = <T extends { lang: string }>(
+export const buildLocalizedMap = <T extends { lang: string }>(
   rows: T[] | undefined,
   field: keyof T
 ): Record<string, string> => {
