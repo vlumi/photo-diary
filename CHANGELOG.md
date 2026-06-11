@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-06-11
+
+### Bug fixes
+
+- Body fields typed as `T | null` were silently coerced to `0` / `false` by Ajv's default `coerceTypes: 'array'` — the union's null branch never got considered. Affected `hideMap` on `PUT /api/v1/{user,group}-gallery/...` (selecting "Default" persisted `0` / Show, and operators couldn't restore it to NULL via the UI) and `latitude` / `longitude` / `altitude` on `PUT /api/v1/photos/:id` (sending null silently wrote `0` instead of clearing). New `BooleanOrNull()` / `NumberOrNull()` helpers in `lib/schema-utils.ts` use `Type.Unsafe<T | null>({ type: ["X", "null"] })` to sidestep the coercion. The broader `setValidatorCompiler(TypeBoxValidatorCompiler)` migration that resolves the class of bug is filed against 0.16 as #571.
+
 ## [0.15] - 2026-06-11
 
 ### Server
