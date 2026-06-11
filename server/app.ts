@@ -16,6 +16,7 @@ import metaV1 from "./controllers/meta-v1.js";
 import tokensV1 from "./controllers/tokens-v1.js";
 import usersV1 from "./controllers/users-v1.js";
 import galleriesV1 from "./controllers/galleries-v1.js";
+import savedFiltersV1 from "./controllers/saved-filters-v1.js";
 import photosV1 from "./controllers/photos-v1.js";
 import galleryPhotosV1 from "./controllers/gallery-photos-v1.js";
 import userGalleryV1 from "./controllers/user-gallery-v1.js";
@@ -166,6 +167,7 @@ await app.register(metaV1.plugin, { prefix: "/api/v1/meta" });
 await app.register(tokensV1.plugin, { prefix: "/api/v1/tokens" });
 await app.register(usersV1.plugin, { prefix: "/api/v1/users" });
 await app.register(galleriesV1.plugin, { prefix: "/api/v1/galleries" });
+await app.register(savedFiltersV1.plugin, { prefix: "/api/v1/galleries" });
 await app.register(photosV1.plugin, { prefix: "/api/v1/photos" });
 await app.register(galleryPhotosV1.plugin, {
   prefix: "/api/v1/gallery-photos",
@@ -201,6 +203,7 @@ export const init = async () => {
   logger.debug("Initialize app start");
   await tokensV1.init();
   await galleriesV1.init();
+  await savedFiltersV1.init();
   await photosV1.init();
   await galleryPhotosV1.init();
   await userGalleryV1.init();

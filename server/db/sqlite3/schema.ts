@@ -169,6 +169,26 @@ export interface VirtualGallerySourceRow {
   source_id: string;
   ordinal: number;
 }
+export interface SavedFilterRow {
+  id: string;
+  gallery_id: string;
+  title: string;
+  // JSON string — parsed into `SavedFilter.definition` by mapRow.
+  // Wire shape: `{ filter?: FilterShape, dateRange?: DateRange }`.
+  definition: string;
+  ordinal: number;
+}
+// App-side shape of a saved filter row. `definition` is parsed
+// from the stored JSON; the controller / client passes it back
+// verbatim as the body of `/query` / `/counts` / `/neighbors`
+// when applying the filter.
+export interface SavedFilter {
+  id: string;
+  galleryId: string;
+  title: string;
+  definition: Record<string, unknown>;
+  ordinal: number;
+}
 export interface GalleryPhoto {
   galleryId: string;
   photoId: string;

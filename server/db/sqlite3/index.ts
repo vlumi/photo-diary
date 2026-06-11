@@ -31,6 +31,8 @@ import schemaFactory, {
   type PhotoInput,
   type PhotoLocalizedRow,
   type PhotoRow,
+  type SavedFilter,
+  type SavedFilterRow,
   type SessionRow,
   type User,
   type UserGalleryRow,
@@ -89,6 +91,12 @@ export default () => {
     deleteVirtualGallery,
     isVirtualGallery,
     isReferencedAsSource,
+
+    loadSavedFilters,
+    loadSavedFilter,
+    createSavedFilter,
+    updateSavedFilter,
+    deleteSavedFilter,
 
     loadGalleryPhotos,
     queryFilteredPhotos,
@@ -550,6 +558,95 @@ const deleteVirtualGallery = async (galleryId: string): Promise<void> => {
   db.prepare(
     "DELETE FROM virtual_gallery_source WHERE gallery_id = ?"
   ).run(galleryId);
+};
+
+// Saved filters / sub-galleries (#285). One row per (gallery, id)
+// pair; `definition` is a JSON string holding the same `filter` +
+// `dateRange` envelope the per-view endpoints already accept, so
+// applying a saved filter is just unmarshalling and forwarding.
+const mapSavedFilterRow = (row: SavedFilterRow): SavedFilter => ({
+  id: row.id,
+  galleryId: row.gallery_id,
+  title: row.title,
+  ordinal: row.ordinal,
+  definition: (() => {
+    try {
+      return JSON.parse(row.definition) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  })(),
+});
+const loadSavedFilters = async (galleryId: string): Promise<SavedFilter[]> => {
+  const rows = db
+    .prepare(
+      `SELECT id, gallery_id, title, definition, ordinal
+       FROM saved_filter
+       WHERE gallery_id = ?
+       ORDER BY ordinal, id`
+    )
+    .all(galleryId) as SavedFilterRow[];
+  return rows.map(mapSavedFilterRow);
+};
+const loadSavedFilter = async (
+  galleryId: string,
+  id: string
+): Promise<SavedFilter> => {
+  const row = db
+    .prepare(
+      `SELECT id, gallery_id, title, definition, ordinal
+       FROM saved_filter
+       WHERE gallery_id = ? AND id = ?`
+    )
+    .get(galleryId, id) as SavedFilterRow | undefined;
+  if (!row) throw new NotFoundError();
+  return mapSavedFilterRow(row);
+};
+const createSavedFilter = async (
+  filter: SavedFilter
+): Promise<void> => {
+  db.prepare(
+    `INSERT INTO saved_filter (id, gallery_id, title, definition, ordinal)
+     VALUES (?, ?, ?, ?, ?)`
+  ).run(
+    filter.id,
+    filter.galleryId,
+    filter.title,
+    JSON.stringify(filter.definition ?? {}),
+    filter.ordinal
+  );
+};
+const updateSavedFilter = async (
+  galleryId: string,
+  id: string,
+  patch: Partial<Pick<SavedFilter, "title" | "definition" | "ordinal">>
+): Promise<void> => {
+  const updates: string[] = [];
+  const values: unknown[] = [];
+  if ("title" in patch && patch.title !== undefined) {
+    updates.push("title = ?");
+    values.push(patch.title);
+  }
+  if ("definition" in patch && patch.definition !== undefined) {
+    updates.push("definition = ?");
+    values.push(JSON.stringify(patch.definition));
+  }
+  if ("ordinal" in patch && patch.ordinal !== undefined) {
+    updates.push("ordinal = ?");
+    values.push(patch.ordinal);
+  }
+  if (updates.length === 0) return;
+  db.prepare(
+    `UPDATE saved_filter SET ${updates.join(", ")} WHERE gallery_id = ? AND id = ?`
+  ).run(...values, galleryId, id);
+};
+const deleteSavedFilter = async (
+  galleryId: string,
+  id: string
+): Promise<void> => {
+  db.prepare(
+    "DELETE FROM saved_filter WHERE gallery_id = ? AND id = ?"
+  ).run(galleryId, id);
 };
 
 const loadGalleries = async () => {

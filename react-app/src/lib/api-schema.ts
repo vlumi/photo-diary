@@ -765,6 +765,222 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/galleries/{galleryId}/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List saved filters for a gallery */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    galleryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            galleryId: string;
+                            title: string;
+                            definition: {
+                                filter?: {
+                                    [key: string]: {
+                                        [key: string]: (string | number | boolean | null)[];
+                                    };
+                                };
+                                dateRange?: {
+                                    from?: string;
+                                    to?: string;
+                                };
+                            } & {
+                                [key: string]: unknown;
+                            };
+                            ordinal: number;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a saved filter */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    galleryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        id: string;
+                        title?: string;
+                        definition: {
+                            filter?: {
+                                [key: string]: {
+                                    [key: string]: (string | number | boolean | null)[];
+                                };
+                            };
+                            dateRange?: {
+                                from?: string;
+                                to?: string;
+                            };
+                        } & {
+                            [key: string]: unknown;
+                        };
+                        ordinal?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/galleries/{galleryId}/filters/{filterId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one saved filter by id */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    galleryId: string;
+                    filterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            galleryId: string;
+                            title: string;
+                            definition: {
+                                filter?: {
+                                    [key: string]: {
+                                        [key: string]: (string | number | boolean | null)[];
+                                    };
+                                };
+                                dateRange?: {
+                                    from?: string;
+                                    to?: string;
+                                };
+                            } & {
+                                [key: string]: unknown;
+                            };
+                            ordinal: number;
+                        };
+                    };
+                };
+            };
+        };
+        /** Update a saved filter (partial) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    galleryId: string;
+                    filterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        title?: string;
+                        definition?: {
+                            filter?: {
+                                [key: string]: {
+                                    [key: string]: (string | number | boolean | null)[];
+                                };
+                            };
+                            dateRange?: {
+                                from?: string;
+                                to?: string;
+                            };
+                        } & {
+                            [key: string]: unknown;
+                        };
+                        ordinal?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        /** Delete a saved filter */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    galleryId: string;
+                    filterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/photos": {
         parameters: {
             query?: never;
