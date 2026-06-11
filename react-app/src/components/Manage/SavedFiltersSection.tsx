@@ -16,6 +16,18 @@ import savedFiltersService, {
   type SavedFilterUpdatePatch,
 } from "../../services/saved-filters";
 import type { ServerFilters } from "../../lib/filter";
+import { useGalleryCalendar } from "../../lib/useFilteredCalendar";
+
+// Format a [year, month, day] tuple from useGalleryCalendar into a
+// YYYY-MM-DD string for the native <input type="date"> value. Returns
+// "" when the day is unknown (gallery is empty or not loaded).
+const formatYmd = (
+  day: [number, number, number] | [undefined, undefined, undefined]
+): string => {
+  const [y, m, d] = day;
+  if (y === undefined || m === undefined || d === undefined) return "";
+  return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+};
 
 // One section under the Gallery edit page that lists / creates /
 // edits saved filters (#285). Date range gets its own from / to
@@ -202,14 +214,16 @@ interface FormState {
 const emptyLocalized = (): Record<string, string> =>
   Object.fromEntries(SUPPORTED_LANGS.map((l) => [l, ""]));
 
-const blankForm = (): FormState => ({
+const blankForm = (
+  galleryExtremes?: { from: string; to: string }
+): FormState => ({
   id: "",
   title: "",
   description: "",
   titleLocalized: emptyLocalized(),
   descriptionLocalized: emptyLocalized(),
-  dateFrom: "",
-  dateTo: "",
+  dateFrom: galleryExtremes?.from ?? "",
+  dateTo: galleryExtremes?.to ?? "",
   filterJson: "",
   ordinal: "0",
 });
@@ -286,15 +300,36 @@ const localizedPatch = (
 
 interface Props {
   galleryId: string;
+  // Gallery's `default_language` — passed to LocalizedInputs as
+  // `primary` so the matching overlay row is hidden (canonical
+  // input carries that language). Same pattern as the gallery
+  // edit form's localized fields.
+  defaultLanguage?: string;
 }
-const SavedFiltersSection = ({ galleryId }: Props): React.ReactElement => {
+const SavedFiltersSection = ({
+  galleryId,
+  defaultLanguage,
+}: Props): React.ReactElement => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = React.useState<string | "__new__" | null>(
     null
   );
-  const [form, setForm] = React.useState<FormState>(blankForm);
-  const [original, setOriginal] = React.useState<FormState>(blankForm);
+  const galleryCalendar = useGalleryCalendar(galleryId);
+  // Pre-fill the date range with the gallery's earliest / latest
+  // photo dates so the operator sees the maximum range as the
+  // default — the native `<input type="date">` also opens its
+  // calendar on the seeded month, anchoring the picker to the
+  // gallery's content rather than today.
+  const galleryExtremes = React.useMemo(
+    () => ({
+      from: formatYmd(galleryCalendar.firstDay()),
+      to: formatYmd(galleryCalendar.lastDay()),
+    }),
+    [galleryCalendar]
+  );
+  const [form, setForm] = React.useState<FormState>(() => blankForm());
+  const [original, setOriginal] = React.useState<FormState>(() => blankForm());
   const [formError, setFormError] = React.useState<string | null>(null);
 
   const filtersQuery = useQuery({
@@ -339,7 +374,7 @@ const SavedFiltersSection = ({ galleryId }: Props): React.ReactElement => {
   });
 
   const openCreate = () => {
-    const fresh = blankForm();
+    const fresh = blankForm(galleryExtremes);
     setForm(fresh);
     setOriginal(fresh);
     setFormError(null);
@@ -450,6 +485,7 @@ const SavedFiltersSection = ({ galleryId }: Props): React.ReactElement => {
         <LocalizedInputs
           value={form.titleLocalized}
           onChange={(lang, val) => setLocalized("titleLocalized", lang, val)}
+          primary={defaultLanguage}
         />
       </Field>
       <Field>
@@ -464,6 +500,7 @@ const SavedFiltersSection = ({ galleryId }: Props): React.ReactElement => {
             setLocalized("descriptionLocalized", lang, val)
           }
           multiline
+          primary={defaultLanguage}
         />
       </Field>
       <FieldRow>
