@@ -144,6 +144,16 @@ const Topic = ({
         return;
       }
       const category = categoryElement.getAttribute("data-key");
+      // Date range has no discrete value — picking the bare
+      // `date-range` option just activates the pill (the dedicated
+      // input controls live in <DateRangePill /> alongside the
+      // other Time chips). Skips the FilterShape mutation that
+      // applies to the regular value-bearing categories.
+      if (category === "date-range") {
+        setCategorySelector({});
+        if (dateRange === undefined) setDateRange({});
+        return;
+      }
       const value = event.target.value;
       if (!topic || !category || !value) {
         return;
@@ -165,34 +175,46 @@ const Topic = ({
             <NewCategory value="">Select...</NewCategory>
             {filter
               .categories(topic)
-              // `date-range` is structurally different (no discrete
-              // values to pick); it's added from the top-level
-              // Filters topic adder which activates the dedicated
-              // pill. Hide from this per-category adder.
-              .filter((category) => category !== "date-range")
               .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
               .filter(isBetaAllowed)
-              .map((category) => (
-              <NewCategoryGroup
-                key={`${topic}:${category}`}
-                label={t(`stats-category-${category}`)}
-                data-type="category"
-                data-key={category}
-              >
-                {uniqueValues[topic][category]
-                  .filter(
-                    (value) => !alreadyFilteredValue(topic, category, value)
-                  )
-                  .map((value) => (
-                    <NewValue
-                      key={`${topic}:${category}:${value.key}`}
-                      value={value.key}
-                    >
-                      {value.value}
-                    </NewValue>
-                  ))}
-              </NewCategoryGroup>
-            ))}
+              .filter(
+                (category) =>
+                  // Hide date-range when the pill is already active —
+                  // there's only one of it.
+                  !(category === "date-range" && dateRange !== undefined)
+              )
+              .map((category) =>
+                category === "date-range" ? (
+                  <NewCategory
+                    key={`${topic}:${category}`}
+                    value={category}
+                    data-type="category"
+                    data-key={category}
+                  >
+                    {t(`stats-category-${category}`)}
+                  </NewCategory>
+                ) : (
+                  <NewCategoryGroup
+                    key={`${topic}:${category}`}
+                    label={t(`stats-category-${category}`)}
+                    data-type="category"
+                    data-key={category}
+                  >
+                    {uniqueValues[topic][category]
+                      .filter(
+                        (value) => !alreadyFilteredValue(topic, category, value)
+                      )
+                      .map((value) => (
+                        <NewValue
+                          key={`${topic}:${category}:${value.key}`}
+                          value={value.key}
+                        >
+                          {value.value}
+                        </NewValue>
+                      ))}
+                  </NewCategoryGroup>
+                )
+              )}
           </NewCategories>
           <BsFillXCircleFill onClick={handleToggleAddCategoryClick} />
         </>
