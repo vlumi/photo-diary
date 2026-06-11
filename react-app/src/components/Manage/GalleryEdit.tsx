@@ -12,6 +12,7 @@ import {
 
 import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
+import SavedFiltersSection from "./SavedFiltersSection";
 import GalleryFormFields, {
   EMPTY_FORM,
   fromGalleryData,
@@ -444,6 +445,7 @@ const GalleryEdit = (): React.ReactElement => {
             <SummaryLabel>{t("manage-gallery-field-hostname")}</SummaryLabel>
             <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
           </Summary>
+          <SavedFiltersSection galleryId={galleryId} />
           <Footer>
             {isAdmin && (
               <ButtonDanger
