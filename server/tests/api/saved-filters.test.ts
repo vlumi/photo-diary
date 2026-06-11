@@ -142,6 +142,28 @@ describe("As admin", () => {
     await create(token, "no-such-gallery", { id: "x", definition: {} }, 422);
   });
 
+  test("source gallery must be type='real' (rejects hybrid)", async () => {
+    // Promote gallery1 to hybrid by adding it a source. Then attempt
+    // to attach a saved filter to it — should 422.
+    await api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ sources: ["gallery2"] })
+      .expect(204);
+    await create(token, "gallery1", { id: "x", definition: {} }, 422);
+  });
+
+  test("source gallery must be type='real' (rejects saved_filter)", async () => {
+    // Create a saved filter on gallery1 (a real gallery), then try to
+    // chain another saved filter off it. Chained saved filters are
+    // rejected by the same "real source only" rule.
+    await create(token, "gallery1", {
+      id: "first-sf",
+      definition: { filter: {} },
+    });
+    await create(token, "first-sf", { id: "chained", definition: {} }, 422);
+  });
+
   test("id can't collide with an existing gallery id", async () => {
     // gallery2 exists in the fixture; using its id as a filter id
     // would shadow it in the public viewer's title-bar selector.

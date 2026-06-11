@@ -49,10 +49,16 @@ const createSavedFilter = async (
 ): Promise<void> => {
   assertSlugId(body.id);
   logger.debug("Creating saved filter", { sourceGalleryId, id: body.id });
-  // Source gallery must exist. Surface as ValidationError rather than
-  // letting the gallery_saved_filter FK throw a SQLITE_CONSTRAINT.
+  // Source gallery must exist + be a real gallery. Mirrors the hybrid
+  // gallery's "sources point at real galleries only" rule from #22 /
+  // migration 020 — chaining saved filters off hybrids or other saved
+  // filters runs into the same composition / cycle issues. The
+  // resolver in the driver doesn't recurse, so the query path would
+  // return zero photos for non-real sources anyway; reject up-front
+  // with a clear error instead.
+  let source: { type?: string };
   try {
-    await db.loadGallery(sourceGalleryId);
+    source = (await db.loadGallery(sourceGalleryId)) as { type?: string };
   } catch (err) {
     if (err instanceof NotFoundError) {
       throw new ValidationError("Source gallery does not exist", {
@@ -60,6 +66,12 @@ const createSavedFilter = async (
       });
     }
     throw err;
+  }
+  if ((source.type ?? "real") !== "real") {
+    throw new ValidationError(
+      "Saved filters can only be attached to real galleries",
+      { sourceGalleryId, sourceType: source.type ?? "real" }
+    );
   }
   // The saved filter id IS a gallery id in the unified namespace —
   // reject if anything (real / hybrid / other saved-filter gallery)
