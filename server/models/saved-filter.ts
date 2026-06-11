@@ -16,24 +16,28 @@ export default () => ({
 
 const init = async () => {};
 
-const getSavedFilters = async (galleryId: string): Promise<SavedFilter[]> => {
-  logger.debug("Listing saved filters", { galleryId });
-  // FK ON DELETE CASCADE means rows only exist for existing galleries
-  // — but the gallery may still be a virtual gallery whose `sources`
-  // resolve at /query time; we don't try to constrain that here.
-  return await db.loadSavedFilters(galleryId);
+// `sourceGalleryId` is the gallery the saved filter is anchored to —
+// the source whose photos it narrows. The saved filter's own id is a
+// gallery id in its own right (unified namespace; collision-checked
+// at create).
+
+const getSavedFilters = async (
+  sourceGalleryId: string
+): Promise<SavedFilter[]> => {
+  logger.debug("Listing saved filters", { sourceGalleryId });
+  return await db.loadSavedFilters(sourceGalleryId);
 };
 
 const getSavedFilter = async (
-  galleryId: string,
+  sourceGalleryId: string,
   id: string
 ): Promise<SavedFilter> => {
-  logger.debug("Loading saved filter", { galleryId, id });
-  return await db.loadSavedFilter(galleryId, id);
+  logger.debug("Loading saved filter", { sourceGalleryId, id });
+  return await db.loadSavedFilter(sourceGalleryId, id);
 };
 
 const createSavedFilter = async (
-  galleryId: string,
+  sourceGalleryId: string,
   body: {
     id: string;
     title?: string;
@@ -41,31 +45,37 @@ const createSavedFilter = async (
     titleLocalized?: Record<string, string>;
     descriptionLocalized?: Record<string, string>;
     definition: Record<string, unknown>;
-    ordinal?: number;
   }
 ): Promise<void> => {
   assertSlugId(body.id);
-  logger.debug("Creating saved filter", { galleryId, id: body.id });
-  // The gallery must exist — FK would reject otherwise, but surface
-  // a cleaner error than a SQLITE_CONSTRAINT for the API consumer.
+  logger.debug("Creating saved filter", { sourceGalleryId, id: body.id });
+  // Source gallery must exist + be a real gallery. Mirrors the hybrid
+  // gallery's "sources point at real galleries only" rule from #22 /
+  // migration 020 — chaining saved filters off hybrids or other saved
+  // filters runs into the same composition / cycle issues. The
+  // resolver in the driver doesn't recurse, so the query path would
+  // return zero photos for non-real sources anyway; reject up-front
+  // with a clear error instead.
+  let source: { type?: string };
   try {
-    await db.loadGallery(galleryId);
+    source = (await db.loadGallery(sourceGalleryId)) as { type?: string };
   } catch (err) {
     if (err instanceof NotFoundError) {
       throw new ValidationError("Source gallery does not exist", {
-        galleryId,
+        sourceGalleryId,
       });
     }
     throw err;
   }
-  // Saved filters surface alongside real galleries in the public
-  // viewer's title-bar selector — id collisions across the two
-  // namespaces would shadow one another. Reject if any gallery
-  // (including this one's source) carries the proposed id. The
-  // (gallery_id, id) primary key on saved_filter still allows
-  // cross-gallery collisions between saved filters, which is
-  // fine (a filter named "spring" can exist on both gallery A
-  // and gallery B — they're addressed at different URLs).
+  if ((source.type ?? "real") !== "real") {
+    throw new ValidationError(
+      "Saved filters can only be attached to real galleries",
+      { sourceGalleryId, sourceType: source.type ?? "real" }
+    );
+  }
+  // The saved filter id IS a gallery id in the unified namespace —
+  // reject if anything (real / hybrid / other saved-filter gallery)
+  // already owns the id.
   try {
     await db.loadGallery(body.id);
     throw new ValidationError(
@@ -75,49 +85,37 @@ const createSavedFilter = async (
   } catch (err) {
     if (!(err instanceof NotFoundError)) throw err;
   }
-  // Reject duplicate id within the same gallery up-front for the
-  // same friendlier-error reason.
-  try {
-    await db.loadSavedFilter(galleryId, body.id);
-    throw new ValidationError(
-      "Saved filter with this id already exists in this gallery",
-      { galleryId, id: body.id }
-    );
-  } catch (err) {
-    if (!(err instanceof NotFoundError)) throw err;
-  }
   await db.createSavedFilter({
     id: body.id,
-    galleryId,
+    sourceGalleryId,
     title: body.title ?? "",
     description: body.description ?? "",
     titleLocalized: body.titleLocalized ?? {},
     descriptionLocalized: body.descriptionLocalized ?? {},
     definition: body.definition,
-    ordinal: body.ordinal ?? 0,
   });
 };
 
 const updateSavedFilter = async (
-  galleryId: string,
+  sourceGalleryId: string,
   id: string,
   patch: Partial<
-    Pick<SavedFilter, "title" | "description" | "definition" | "ordinal">
+    Pick<SavedFilter, "title" | "description" | "definition">
   > & {
     titleLocalized?: Record<string, string | undefined>;
     descriptionLocalized?: Record<string, string | undefined>;
   }
 ): Promise<void> => {
-  logger.debug("Updating saved filter", { galleryId, id });
-  await db.loadSavedFilter(galleryId, id);
-  await db.updateSavedFilter(galleryId, id, patch);
+  logger.debug("Updating saved filter", { sourceGalleryId, id });
+  await db.loadSavedFilter(sourceGalleryId, id);
+  await db.updateSavedFilter(sourceGalleryId, id, patch);
 };
 
 const deleteSavedFilter = async (
-  galleryId: string,
+  sourceGalleryId: string,
   id: string
 ): Promise<void> => {
-  logger.debug("Deleting saved filter", { galleryId, id });
-  await db.loadSavedFilter(galleryId, id);
-  await db.deleteSavedFilter(galleryId, id);
+  logger.debug("Deleting saved filter", { sourceGalleryId, id });
+  await db.loadSavedFilter(sourceGalleryId, id);
+  await db.deleteSavedFilter(sourceGalleryId, id);
 };

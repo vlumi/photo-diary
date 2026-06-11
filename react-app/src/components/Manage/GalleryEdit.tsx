@@ -190,6 +190,7 @@ interface GalleryData {
   initialView?: string;
   hostname?: string;
   defaultLanguage?: string;
+  type?: "real" | "hybrid" | "saved_filter";
   photos?: Array<{ id: string }>;
 }
 
@@ -457,10 +458,12 @@ const GalleryEdit = (): React.ReactElement => {
             <SummaryLabel>{t("manage-gallery-field-hostname")}</SummaryLabel>
             <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
           </Summary>
-          <SavedFiltersSection
-            galleryId={galleryId}
-            defaultLanguage={gallery.defaultLanguage}
-          />
+          {(gallery.type ?? "real") === "real" && (
+            <SavedFiltersSection
+              galleryId={galleryId}
+              defaultLanguage={gallery.defaultLanguage}
+            />
+          )}
           <Footer>
             {isAdmin && (
               <ButtonDanger

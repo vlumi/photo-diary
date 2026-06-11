@@ -13,13 +13,12 @@ export interface SavedFilterDefinition {
 }
 export interface SavedFilter {
   id: string;
-  galleryId: string;
+  sourceGalleryId: string;
   title: string;
   description: string;
   titleLocalized: Record<string, string>;
   descriptionLocalized: Record<string, string>;
   definition: SavedFilterDefinition;
-  ordinal: number;
 }
 
 const list = async (galleryId: string): Promise<SavedFilter[]> =>
@@ -43,7 +42,6 @@ export interface SavedFilterCreateBody {
   titleLocalized?: Record<string, string>;
   descriptionLocalized?: Record<string, string>;
   definition: SavedFilterDefinition;
-  ordinal?: number;
 }
 const create = async (
   galleryId: string,
@@ -63,7 +61,6 @@ export interface SavedFilterUpdatePatch {
   titleLocalized?: Record<string, string>;
   descriptionLocalized?: Record<string, string>;
   definition?: SavedFilterDefinition;
-  ordinal?: number;
 }
 const update = async (
   galleryId: string,

@@ -87,13 +87,12 @@ describe("As admin", () => {
     expect(listed.body.length).toBe(1);
     expect(listed.body[0]).toMatchObject({
       id: "japan-2024",
-      galleryId: "gallery1",
+      sourceGalleryId: "gallery1",
       title: "Japan 2024",
       description: "Spring trip across Honshu",
       titleLocalized: {},
       descriptionLocalized: {},
       definition,
-      ordinal: 0,
     });
     const one = await get(token, "gallery1", "japan-2024");
     expect(one.body.id).toBe("japan-2024");
@@ -143,6 +142,28 @@ describe("As admin", () => {
     await create(token, "no-such-gallery", { id: "x", definition: {} }, 422);
   });
 
+  test("source gallery must be type='real' (rejects hybrid)", async () => {
+    // Promote gallery1 to hybrid by adding it a source. Then attempt
+    // to attach a saved filter to it — should 422.
+    await api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ sources: ["gallery2"] })
+      .expect(204);
+    await create(token, "gallery1", { id: "x", definition: {} }, 422);
+  });
+
+  test("source gallery must be type='real' (rejects saved_filter)", async () => {
+    // Create a saved filter on gallery1 (a real gallery), then try to
+    // chain another saved filter off it. Chained saved filters are
+    // rejected by the same "real source only" rule.
+    await create(token, "gallery1", {
+      id: "first-sf",
+      definition: { filter: {} },
+    });
+    await create(token, "first-sf", { id: "chained", definition: {} }, 422);
+  });
+
   test("id can't collide with an existing gallery id", async () => {
     // gallery2 exists in the fixture; using its id as a filter id
     // would shadow it in the public viewer's title-bar selector.
@@ -170,6 +191,64 @@ describe("As admin", () => {
     expect(one.body.definition).toEqual({
       dateRange: { from: "2020-01-01" },
     });
+  });
+});
+
+describe("Public viewer (saved filter as pseudo-gallery)", () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await loginUser(api, "admin");
+  });
+
+  test("/api/v1/galleries returns saved-filter galleries alongside real ones", async () => {
+    await create(token, "gallery1", {
+      id: "japan-only",
+      title: "Japan only",
+      definition: { filter: { general: { country: ["jp"] } } },
+    });
+    const listed = await api
+      .get("/api/v1/galleries")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const ids = (listed.body as Array<{ id: string; type?: string }>).map(
+      (g) => g.id
+    );
+    expect(ids).toContain("japan-only");
+    const found = (
+      listed.body as Array<{ id: string; type?: string }>
+    ).find((g) => g.id === "japan-only");
+    expect(found?.type).toBe("saved_filter");
+  });
+
+  test("GET /galleries/<sf-id>/photos returns source photos narrowed by baseline", async () => {
+    // gallery1's photos: gallery1photo (country=jp), gallery12photo (country=nl)
+    // Baseline filter country=jp → only gallery1photo passes.
+    await create(token, "gallery1", {
+      id: "jp-on-gallery1",
+      definition: { filter: { general: { country: ["jp"] } } },
+    });
+    const res = await api
+      .get("/api/v1/gallery-photos/jp-on-gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const ids = (res.body as Array<{ id: string }>).map((p) => p.id);
+    expect(ids).toEqual(["gallery1photo.jpg"]);
+  });
+
+  test("baseline dateRange intersects with the request body's range", async () => {
+    // Baseline restricts to 2018; an empty user filter on the saved
+    // filter id should yield exactly the 2018 photo.
+    await create(token, "gallery1", {
+      id: "year-2018",
+      definition: { dateRange: { from: "2018-01-01", to: "2018-12-31" } },
+    });
+    const res = await api
+      .post("/api/v1/gallery-photos/year-2018/query")
+      .set("Authorization", `Bearer ${token}`)
+      .send({})
+      .expect(200);
+    const ids = (res.body as Array<{ id: string }>).map((p) => p.id);
+    expect(ids).toEqual(["gallery1photo.jpg"]);
   });
 });
 

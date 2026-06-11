@@ -62,15 +62,18 @@ const ParamsOne = Type.Object({
   filterId: Type.String(),
 });
 
+// Saved filters live as galleries of type='saved_filter' (#285).
+// `id` is a gallery id in its own right (collision-checked against
+// every other gallery on create); `sourceGalleryId` points at the
+// gallery the saved filter is anchored to.
 const SavedFilterResponse = Type.Object({
   id: Type.String(),
-  galleryId: Type.String(),
+  sourceGalleryId: Type.String(),
   title: Type.String(),
   description: Type.String(),
   titleLocalized: LocalizedMap,
   descriptionLocalized: LocalizedMap,
   definition: SavedFilterDefinition,
-  ordinal: Type.Integer(),
 });
 const SavedFiltersListResponse = Type.Array(SavedFilterResponse);
 
@@ -82,7 +85,6 @@ const CreateBody = Type.Object(
     titleLocalized: Type.Optional(LocalizedMap),
     descriptionLocalized: Type.Optional(LocalizedMap),
     definition: SavedFilterDefinition,
-    ordinal: Type.Optional(Type.Integer()),
   },
   { additionalProperties: false }
 );
@@ -93,7 +95,6 @@ const UpdateBody = Type.Object(
     titleLocalized: Type.Optional(LocalizedMap),
     descriptionLocalized: Type.Optional(LocalizedMap),
     definition: Type.Optional(SavedFilterDefinition),
-    ordinal: Type.Optional(Type.Integer()),
   },
   { additionalProperties: false }
 );

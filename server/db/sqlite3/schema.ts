@@ -44,6 +44,13 @@ export interface GroupGalleryRow {
   is_editor: number;
   hide_map: number | null;
 }
+// Three flavours of gallery row. `real` rows have photos linked via
+// `gallery_photo`; `hybrid` rows have sources in `virtual_gallery_source`
+// and union those sources' photos; `saved_filter` rows have a single
+// source + a stored filter in `gallery_saved_filter`, presented to
+// readers as a narrowed view of the source.
+export type GalleryType = "real" | "hybrid" | "saved_filter";
+
 export interface GalleryRow {
   id: string;
   title: string;
@@ -61,6 +68,7 @@ export interface GalleryRow {
   // from `.env DEFAULT_LANGUAGE` (server create path) or 'en' as
   // the column default.
   default_language: string;
+  type: GalleryType;
 }
 export interface GalleryLocalizedRow {
   gallery_id: string;
@@ -159,47 +167,50 @@ export interface Gallery {
   // Canonical fields above stay the universal fallback.
   titleLocalized?: Record<string, string>;
   descriptionLocalized?: Record<string, string>;
-  // Virtual gallery sources (#22). Undefined for real galleries;
-  // populated array of source gallery IDs for a virtual gallery
-  // whose contents are the union of those sources' photos.
+  // Discriminates how the gallery's photos are resolved at read
+  // time. See `GalleryType`.
+  type: GalleryType;
+  // Hybrid galleries only: source gallery IDs whose photos union
+  // into this one. Undefined for real and saved-filter galleries.
   sources?: string[];
+  // Saved-filter galleries only: source gallery + the stored
+  // baseline filter applied on top of the source's photos. The
+  // public read path merges this into incoming /query / /counts
+  // bodies (filter union per category, dateRange intersection).
+  // Undefined for real and hybrid galleries.
+  savedFilter?: {
+    sourceGalleryId: string;
+    definition: Record<string, unknown>;
+  };
 }
 export interface VirtualGallerySourceRow {
   gallery_id: string;
   source_id: string;
   ordinal: number;
 }
-export interface SavedFilterRow {
-  id: string;
+// Side table for saved-filter galleries. Storage shape only — the
+// app layer projects this onto `Gallery.savedFilter` and exposes the
+// admin DTO `SavedFilter` below.
+export interface GallerySavedFilterRow {
   gallery_id: string;
-  title: string;
-  description: string;
-  // JSON string — parsed into `SavedFilter.definition` by mapRow.
-  // Wire shape: `{ filter?: FilterShape, dateRange?: DateRange }`.
+  source_gallery_id: string;
+  // JSON string. Wire shape: `{ filter?: FilterShape, dateRange?: DateRange }`.
   definition: string;
-  ordinal: number;
 }
-export interface SavedFilterLocalizedRow {
-  gallery_id: string;
-  filter_id: string;
-  lang: string;
-  title: string | null;
-  description: string | null;
-}
-// App-side shape of a saved filter row. `definition` is parsed
-// from the stored JSON; the controller / client passes it back
-// verbatim as the body of `/query` / `/counts` / `/neighbors`
-// when applying the filter. `*Localized` mirror the gallery
-// localization shape — empty `{}` when no overlays exist.
+// Admin / public DTO for a saved-filter gallery. Carries the
+// gallery's identifying fields plus the source pointer and parsed
+// definition — what /galleries/:gallery/filters endpoints accept
+// and return. Title / description / *Localized are projected from
+// the underlying gallery row + gallery_localized; `sourceGalleryId`
+// from gallery_saved_filter.
 export interface SavedFilter {
   id: string;
-  galleryId: string;
+  sourceGalleryId: string;
   title: string;
   description: string;
   titleLocalized: Record<string, string>;
   descriptionLocalized: Record<string, string>;
   definition: Record<string, unknown>;
-  ordinal: number;
 }
 export interface GalleryPhoto {
   galleryId: string;
@@ -455,6 +466,7 @@ export default () => {
         defaultLanguage: row.default_language || "en",
         titleLocalized: buildLocalizedMap(localized, "title"),
         descriptionLocalized: buildLocalizedMap(localized, "description"),
+        type: row.type ?? "real",
       }),
       mapInsert: (gallery: Gallery): unknown[] => [
         gallery.id,
@@ -468,6 +480,7 @@ export default () => {
         gallery.initialView,
         gallery.hostname,
         gallery.defaultLanguage || "en",
+        gallery.type ?? "real",
       ],
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.gallery),
@@ -749,6 +762,7 @@ const galleryMapToRow = (
   if ("hostname" in gallery) result.hostname = gallery.hostname;
   if ("defaultLanguage" in gallery)
     result.default_language = gallery.defaultLanguage;
+  if ("type" in gallery) result.type = gallery.type;
   return result;
 };
 
@@ -930,10 +944,18 @@ const SCHEMA = {
       "initial_view",
       "hostname",
       "default_language",
+      "type",
     ],
     primaryKey: ["id"],
     order: ["id ASC"],
     mapToRow: galleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
+  },
+  gallerySavedFilter: {
+    table: "gallery_saved_filter",
+    columns: ["gallery_id", "source_gallery_id", "definition"],
+    primaryKey: ["gallery_id"],
+    order: ["gallery_id ASC"],
+    mapToRow: (): Record<string, unknown> => ({}),
   },
   galleryPhoto: {
     table: "gallery_photo",
