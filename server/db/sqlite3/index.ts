@@ -18,6 +18,7 @@ import {
 import { migrate } from "./migrate.js";
 
 import schemaFactory, {
+  buildLocalizedMap,
   type Gallery,
   type GalleryInput,
   type GalleryLocalizedRow,
@@ -32,6 +33,7 @@ import schemaFactory, {
   type PhotoLocalizedRow,
   type PhotoRow,
   type SavedFilter,
+  type SavedFilterLocalizedRow,
   type SavedFilterRow,
   type SessionRow,
   type User,
@@ -564,10 +566,18 @@ const deleteVirtualGallery = async (galleryId: string): Promise<void> => {
 // pair; `definition` is a JSON string holding the same `filter` +
 // `dateRange` envelope the per-view endpoints already accept, so
 // applying a saved filter is just unmarshalling and forwarding.
-const mapSavedFilterRow = (row: SavedFilterRow): SavedFilter => ({
+// Localized title / description live in `saved_filter_localized`,
+// mirroring the gallery localization shape from #281.
+const mapSavedFilterRow = (
+  row: SavedFilterRow,
+  localized?: SavedFilterLocalizedRow[]
+): SavedFilter => ({
   id: row.id,
   galleryId: row.gallery_id,
   title: row.title,
+  description: row.description,
+  titleLocalized: buildLocalizedMap(localized, "title"),
+  descriptionLocalized: buildLocalizedMap(localized, "description"),
   ordinal: row.ordinal,
   definition: (() => {
     try {
@@ -577,16 +587,41 @@ const mapSavedFilterRow = (row: SavedFilterRow): SavedFilter => ({
     }
   })(),
 });
+const loadSavedFilterLocalizedFor = (
+  galleryId: string,
+  filterIds: string[]
+): Map<string, SavedFilterLocalizedRow[]> => {
+  if (filterIds.length === 0) return new Map();
+  const placeholders = filterIds.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT gallery_id, filter_id, lang, title, description
+       FROM saved_filter_localized
+       WHERE gallery_id = ? AND filter_id IN (${placeholders})`
+    )
+    .all(galleryId, ...filterIds) as SavedFilterLocalizedRow[];
+  const byId = new Map<string, SavedFilterLocalizedRow[]>();
+  for (const r of rows) {
+    const list = byId.get(r.filter_id);
+    if (list) list.push(r);
+    else byId.set(r.filter_id, [r]);
+  }
+  return byId;
+};
 const loadSavedFilters = async (galleryId: string): Promise<SavedFilter[]> => {
   const rows = db
     .prepare(
-      `SELECT id, gallery_id, title, definition, ordinal
+      `SELECT id, gallery_id, title, description, definition, ordinal
        FROM saved_filter
        WHERE gallery_id = ?
        ORDER BY ordinal, id`
     )
     .all(galleryId) as SavedFilterRow[];
-  return rows.map(mapSavedFilterRow);
+  const localized = loadSavedFilterLocalizedFor(
+    galleryId,
+    rows.map((r) => r.id)
+  );
+  return rows.map((row) => mapSavedFilterRow(row, localized.get(row.id)));
 };
 const loadSavedFilter = async (
   galleryId: string,
@@ -594,38 +629,120 @@ const loadSavedFilter = async (
 ): Promise<SavedFilter> => {
   const row = db
     .prepare(
-      `SELECT id, gallery_id, title, definition, ordinal
+      `SELECT id, gallery_id, title, description, definition, ordinal
        FROM saved_filter
        WHERE gallery_id = ? AND id = ?`
     )
     .get(galleryId, id) as SavedFilterRow | undefined;
   if (!row) throw new NotFoundError();
-  return mapSavedFilterRow(row);
+  const localized = db
+    .prepare(
+      `SELECT gallery_id, filter_id, lang, title, description
+       FROM saved_filter_localized
+       WHERE gallery_id = ? AND filter_id = ?`
+    )
+    .all(galleryId, id) as SavedFilterLocalizedRow[];
+  return mapSavedFilterRow(row, localized);
+};
+// Per-language overlay upsert — same shape + semantics as the
+// gallery / photo localized writers: missing key leaves the column
+// alone; empty string clears it (sets NULL); both columns NULL
+// keeps the row in place (harmless empty entry, GC'd by FK cascade
+// on saved filter delete).
+const upsertSavedFilterLocalized = (
+  galleryId: string,
+  filterId: string,
+  lang: string,
+  fields: { title?: string | null; description?: string | null }
+): void => {
+  const cols: string[] = [];
+  const vals: unknown[] = [];
+  if (fields.title !== undefined) {
+    cols.push("title");
+    vals.push(fields.title);
+  }
+  if (fields.description !== undefined) {
+    cols.push("description");
+    vals.push(fields.description);
+  }
+  if (cols.length === 0) return;
+  const colList = cols.join(", ");
+  const placeholders = cols.map(() => "?").join(", ");
+  const updates = cols.map((c) => `${c} = excluded.${c}`).join(", ");
+  db.prepare(
+    `INSERT INTO saved_filter_localized (gallery_id, filter_id, lang, ${colList})
+     VALUES (?, ?, ?, ${placeholders})
+     ON CONFLICT (gallery_id, filter_id, lang) DO UPDATE SET ${updates}`
+  ).run(galleryId, filterId, lang, ...vals);
+};
+const applyLocalizedPatch = (
+  galleryId: string,
+  filterId: string,
+  titleMap?: Record<string, string | undefined>,
+  descMap?: Record<string, string | undefined>
+): void => {
+  const perLang = new Map<
+    string,
+    { title?: string | null; description?: string | null }
+  >();
+  const merge = (
+    map: Record<string, string | undefined> | undefined,
+    field: "title" | "description"
+  ) => {
+    if (!map) return;
+    for (const [lang, value] of Object.entries(map)) {
+      if (value === undefined) continue;
+      const entry = perLang.get(lang) ?? {};
+      entry[field] = value === "" ? null : value;
+      perLang.set(lang, entry);
+    }
+  };
+  merge(titleMap, "title");
+  merge(descMap, "description");
+  for (const [lang, fields] of perLang) {
+    upsertSavedFilterLocalized(galleryId, filterId, lang, fields);
+  }
 };
 const createSavedFilter = async (
   filter: SavedFilter
 ): Promise<void> => {
   db.prepare(
-    `INSERT INTO saved_filter (id, gallery_id, title, definition, ordinal)
-     VALUES (?, ?, ?, ?, ?)`
+    `INSERT INTO saved_filter (id, gallery_id, title, description, definition, ordinal)
+     VALUES (?, ?, ?, ?, ?, ?)`
   ).run(
     filter.id,
     filter.galleryId,
     filter.title,
+    filter.description,
     JSON.stringify(filter.definition ?? {}),
     filter.ordinal
+  );
+  applyLocalizedPatch(
+    filter.galleryId,
+    filter.id,
+    filter.titleLocalized,
+    filter.descriptionLocalized
   );
 };
 const updateSavedFilter = async (
   galleryId: string,
   id: string,
-  patch: Partial<Pick<SavedFilter, "title" | "definition" | "ordinal">>
+  patch: Partial<
+    Pick<SavedFilter, "title" | "description" | "definition" | "ordinal">
+  > & {
+    titleLocalized?: Record<string, string | undefined>;
+    descriptionLocalized?: Record<string, string | undefined>;
+  }
 ): Promise<void> => {
   const updates: string[] = [];
   const values: unknown[] = [];
   if ("title" in patch && patch.title !== undefined) {
     updates.push("title = ?");
     values.push(patch.title);
+  }
+  if ("description" in patch && patch.description !== undefined) {
+    updates.push("description = ?");
+    values.push(patch.description);
   }
   if ("definition" in patch && patch.definition !== undefined) {
     updates.push("definition = ?");
@@ -635,10 +752,17 @@ const updateSavedFilter = async (
     updates.push("ordinal = ?");
     values.push(patch.ordinal);
   }
-  if (updates.length === 0) return;
-  db.prepare(
-    `UPDATE saved_filter SET ${updates.join(", ")} WHERE gallery_id = ? AND id = ?`
-  ).run(...values, galleryId, id);
+  if (updates.length > 0) {
+    db.prepare(
+      `UPDATE saved_filter SET ${updates.join(", ")} WHERE gallery_id = ? AND id = ?`
+    ).run(...values, galleryId, id);
+  }
+  applyLocalizedPatch(
+    galleryId,
+    id,
+    patch.titleLocalized,
+    patch.descriptionLocalized
+  );
 };
 const deleteSavedFilter = async (
   galleryId: string,

@@ -37,6 +37,9 @@ const createSavedFilter = async (
   body: {
     id: string;
     title?: string;
+    description?: string;
+    titleLocalized?: Record<string, string>;
+    descriptionLocalized?: Record<string, string>;
     definition: Record<string, unknown>;
     ordinal?: number;
   }
@@ -71,6 +74,9 @@ const createSavedFilter = async (
     id: body.id,
     galleryId,
     title: body.title ?? "",
+    description: body.description ?? "",
+    titleLocalized: body.titleLocalized ?? {},
+    descriptionLocalized: body.descriptionLocalized ?? {},
     definition: body.definition,
     ordinal: body.ordinal ?? 0,
   });
@@ -79,7 +85,12 @@ const createSavedFilter = async (
 const updateSavedFilter = async (
   galleryId: string,
   id: string,
-  patch: Partial<Pick<SavedFilter, "title" | "definition" | "ordinal">>
+  patch: Partial<
+    Pick<SavedFilter, "title" | "description" | "definition" | "ordinal">
+  > & {
+    titleLocalized?: Record<string, string | undefined>;
+    descriptionLocalized?: Record<string, string | undefined>;
+  }
 ): Promise<void> => {
   logger.debug("Updating saved filter", { galleryId, id });
   await db.loadSavedFilter(galleryId, id);

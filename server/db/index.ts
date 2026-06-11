@@ -261,7 +261,12 @@ export default {
   updateSavedFilter: async (
     galleryId: string,
     id: string,
-    patch: Partial<Pick<SavedFilter, "title" | "definition" | "ordinal">>
+    patch: Partial<
+      Pick<SavedFilter, "title" | "description" | "definition" | "ordinal">
+    > & {
+      titleLocalized?: Record<string, string | undefined>;
+      descriptionLocalized?: Record<string, string | undefined>;
+    }
   ): Promise<void> => {
     await db.updateSavedFilter(galleryId, id, patch);
   },

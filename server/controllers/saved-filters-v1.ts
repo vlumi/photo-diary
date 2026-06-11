@@ -50,6 +50,12 @@ const SavedFilterDefinition = Type.Object(
   { additionalProperties: true }
 );
 
+// Localized title / description overlays mirror the gallery
+// localization shape from #281 — `{lang: value}`. Empty string in
+// any entry clears that overlay row; omitting a lang leaves its
+// existing column untouched; an empty map is a no-op on update.
+const LocalizedMap = Type.Record(Type.String(), Type.String());
+
 const ParamsList = Type.Object({ galleryId: Type.String() });
 const ParamsOne = Type.Object({
   galleryId: Type.String(),
@@ -60,6 +66,9 @@ const SavedFilterResponse = Type.Object({
   id: Type.String(),
   galleryId: Type.String(),
   title: Type.String(),
+  description: Type.String(),
+  titleLocalized: LocalizedMap,
+  descriptionLocalized: LocalizedMap,
   definition: SavedFilterDefinition,
   ordinal: Type.Integer(),
 });
@@ -69,6 +78,9 @@ const CreateBody = Type.Object(
   {
     id: Type.String({ minLength: 1, pattern: ID_PATTERN_SOURCE }),
     title: Type.Optional(Type.String()),
+    description: Type.Optional(Type.String()),
+    titleLocalized: Type.Optional(LocalizedMap),
+    descriptionLocalized: Type.Optional(LocalizedMap),
     definition: SavedFilterDefinition,
     ordinal: Type.Optional(Type.Integer()),
   },
@@ -77,6 +89,9 @@ const CreateBody = Type.Object(
 const UpdateBody = Type.Object(
   {
     title: Type.Optional(Type.String()),
+    description: Type.Optional(Type.String()),
+    titleLocalized: Type.Optional(LocalizedMap),
+    descriptionLocalized: Type.Optional(LocalizedMap),
     definition: Type.Optional(SavedFilterDefinition),
     ordinal: Type.Optional(Type.Integer()),
   },

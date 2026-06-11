@@ -794,6 +794,13 @@ export interface paths {
                             id: string;
                             galleryId: string;
                             title: string;
+                            description: string;
+                            titleLocalized: {
+                                [key: string]: string;
+                            };
+                            descriptionLocalized: {
+                                [key: string]: string;
+                            };
                             definition: {
                                 filter?: {
                                     [key: string]: {
@@ -829,6 +836,13 @@ export interface paths {
                     "application/json": {
                         id: string;
                         title?: string;
+                        description?: string;
+                        titleLocalized?: {
+                            [key: string]: string;
+                        };
+                        descriptionLocalized?: {
+                            [key: string]: string;
+                        };
                         definition: {
                             filter?: {
                                 [key: string]: {
@@ -892,6 +906,13 @@ export interface paths {
                             id: string;
                             galleryId: string;
                             title: string;
+                            description: string;
+                            titleLocalized: {
+                                [key: string]: string;
+                            };
+                            descriptionLocalized: {
+                                [key: string]: string;
+                            };
                             definition: {
                                 filter?: {
                                     [key: string]: {
@@ -926,6 +947,13 @@ export interface paths {
                 content: {
                     "application/json": {
                         title?: string;
+                        description?: string;
+                        titleLocalized?: {
+                            [key: string]: string;
+                        };
+                        descriptionLocalized?: {
+                            [key: string]: string;
+                        };
                         definition?: {
                             filter?: {
                                 [key: string]: {

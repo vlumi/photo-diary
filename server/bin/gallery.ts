@@ -446,6 +446,10 @@ await yargs(hideBin(process.argv))
                 describe: "Display title (optional)",
                 type: "string",
               })
+              .option("description", {
+                describe: "Display description (optional)",
+                type: "string",
+              })
               .option("definition", {
                 describe:
                   "JSON string for the filter envelope: `{filter?, dateRange?}`",
@@ -475,6 +479,9 @@ await yargs(hideBin(process.argv))
               id: filterId,
               galleryId,
               title: (argv.title as string | undefined) ?? "",
+              description: (argv.description as string | undefined) ?? "",
+              titleLocalized: {},
+              descriptionLocalized: {},
               definition,
               ordinal: (argv.ordinal as number | undefined) ?? 0,
             });
@@ -523,6 +530,7 @@ await yargs(hideBin(process.argv))
                 demandOption: true,
               })
               .option("title", { type: "string" })
+              .option("description", { type: "string" })
               .option("definition", {
                 describe: "JSON string replacing the filter envelope",
                 type: "string",
@@ -533,10 +541,12 @@ await yargs(hideBin(process.argv))
             const filterId = argv.id as string;
             const patch: {
               title?: string;
+              description?: string;
               definition?: Record<string, unknown>;
               ordinal?: number;
             } = {};
             if ("title" in argv) patch.title = argv.title as string;
+            if ("description" in argv) patch.description = argv.description as string;
             if ("ordinal" in argv) patch.ordinal = argv.ordinal as number;
             if ("definition" in argv && argv.definition !== undefined) {
               try {

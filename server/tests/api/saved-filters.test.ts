@@ -80,6 +80,7 @@ describe("As admin", () => {
     await create(token, "gallery1", {
       id: "japan-2024",
       title: "Japan 2024",
+      description: "Spring trip across Honshu",
       definition,
     });
     const listed = await list(token, "gallery1");
@@ -88,6 +89,9 @@ describe("As admin", () => {
       id: "japan-2024",
       galleryId: "gallery1",
       title: "Japan 2024",
+      description: "Spring trip across Honshu",
+      titleLocalized: {},
+      descriptionLocalized: {},
       definition,
       ordinal: 0,
     });
@@ -95,14 +99,38 @@ describe("As admin", () => {
     expect(one.body.id).toBe("japan-2024");
     await update(token, "gallery1", "japan-2024", {
       title: "Trip — Japan 2024",
+      description: "March 2024",
       definition: { dateRange: { from: "2024-03-01" } },
     });
     const after = await get(token, "gallery1", "japan-2024");
     expect(after.body.title).toBe("Trip — Japan 2024");
+    expect(after.body.description).toBe("March 2024");
     expect(after.body.definition).toEqual({ dateRange: { from: "2024-03-01" } });
     await remove(token, "gallery1", "japan-2024");
     const empty = await list(token, "gallery1");
     expect(empty.body).toEqual([]);
+  });
+
+  test("localized title / description round-trip", async () => {
+    await create(token, "gallery1", {
+      id: "loc-test",
+      title: "Landscapes",
+      description: "Scenic shots.",
+      titleLocalized: { fi: "Maisemia", ja: "風景" },
+      descriptionLocalized: { fi: "Maisemakuvia." },
+      definition: { filter: {} },
+    });
+    const after = await get(token, "gallery1", "loc-test");
+    expect(after.body.titleLocalized).toEqual({ fi: "Maisemia", ja: "風景" });
+    expect(after.body.descriptionLocalized).toEqual({ fi: "Maisemakuvia." });
+    // Empty string clears that lang's overlay column.
+    await update(token, "gallery1", "loc-test", {
+      titleLocalized: { ja: "" },
+    });
+    const cleared = await get(token, "gallery1", "loc-test");
+    expect(cleared.body.titleLocalized).toEqual({ fi: "Maisemia" });
+    // Canonical untouched by overlay edits.
+    expect(cleared.body.title).toBe("Landscapes");
   });
 
   test("duplicate id within the same gallery → 4xx", async () => {

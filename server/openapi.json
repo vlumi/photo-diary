@@ -1094,6 +1094,9 @@
                       "id",
                       "galleryId",
                       "title",
+                      "description",
+                      "titleLocalized",
+                      "descriptionLocalized",
                       "definition",
                       "ordinal"
                     ],
@@ -1106,6 +1109,21 @@
                       },
                       "title": {
                         "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "titleLocalized": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "descriptionLocalized": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "string"
+                        }
                       },
                       "definition": {
                         "type": "object",
@@ -1186,6 +1204,21 @@
                   },
                   "title": {
                     "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "titleLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "descriptionLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   },
                   "definition": {
                     "type": "object",
@@ -1298,6 +1331,9 @@
                     "id",
                     "galleryId",
                     "title",
+                    "description",
+                    "titleLocalized",
+                    "descriptionLocalized",
                     "definition",
                     "ordinal"
                   ],
@@ -1310,6 +1346,21 @@
                     },
                     "title": {
                       "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "titleLocalized": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "descriptionLocalized": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
                     },
                     "definition": {
                       "type": "object",
@@ -1380,6 +1431,21 @@
                 "properties": {
                   "title": {
                     "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "titleLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "descriptionLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   },
                   "definition": {
                     "type": "object",
