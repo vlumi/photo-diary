@@ -245,33 +245,37 @@ export default {
     return (await db.isReferencedAsSource(galleryId)) as boolean;
   },
 
-  // Saved filters (#285).
-  loadSavedFilters: async (galleryId: string): Promise<SavedFilter[]> => {
-    return (await db.loadSavedFilters(galleryId)) as SavedFilter[];
+  // Saved filters (#285): pseudo-galleries of type='saved_filter'
+  // anchored to a source gallery + a stored baseline. `sourceGalleryId`
+  // identifies which gallery owns the saved filter for listing /
+  // routing purposes; the saved filter's own id is a gallery id in
+  // its own right (unified namespace).
+  loadSavedFilters: async (sourceGalleryId: string): Promise<SavedFilter[]> => {
+    return (await db.loadSavedFilters(sourceGalleryId)) as SavedFilter[];
   },
   loadSavedFilter: async (
-    galleryId: string,
+    sourceGalleryId: string,
     id: string
   ): Promise<SavedFilter> => {
-    return (await db.loadSavedFilter(galleryId, id)) as SavedFilter;
+    return (await db.loadSavedFilter(sourceGalleryId, id)) as SavedFilter;
   },
   createSavedFilter: async (filter: SavedFilter): Promise<void> => {
     await db.createSavedFilter(filter);
   },
   updateSavedFilter: async (
-    galleryId: string,
+    sourceGalleryId: string,
     id: string,
     patch: Partial<
-      Pick<SavedFilter, "title" | "description" | "definition" | "ordinal">
+      Pick<SavedFilter, "title" | "description" | "definition">
     > & {
       titleLocalized?: Record<string, string | undefined>;
       descriptionLocalized?: Record<string, string | undefined>;
     }
   ): Promise<void> => {
-    await db.updateSavedFilter(galleryId, id, patch);
+    await db.updateSavedFilter(sourceGalleryId, id, patch);
   },
-  deleteSavedFilter: async (galleryId: string, id: string): Promise<void> => {
-    await db.deleteSavedFilter(galleryId, id);
+  deleteSavedFilter: async (sourceGalleryId: string, id: string): Promise<void> => {
+    await db.deleteSavedFilter(sourceGalleryId, id);
   },
 
   loadGalleryPhotos: async (galleryId: string, lang?: string) => {

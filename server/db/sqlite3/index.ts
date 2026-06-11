@@ -32,9 +32,8 @@ import schemaFactory, {
   type PhotoInput,
   type PhotoLocalizedRow,
   type PhotoRow,
+  type GallerySavedFilterRow,
   type SavedFilter,
-  type SavedFilterLocalizedRow,
-  type SavedFilterRow,
   type SessionRow,
   type User,
   type UserGalleryRow,
@@ -468,6 +467,89 @@ const resolveHideMap = async (
   return guest?.hide_map;
 };
 
+// Resolves a gallery id to the pieces the read path needs:
+//
+//   - `sources`: list of real-gallery ids whose `gallery_photo`
+//     rows make up the gallery's contents. Real gallery → [self];
+//     hybrid → its stored sources (virtual_gallery_source); saved
+//     filter → [source_gallery_id] from gallery_saved_filter.
+//
+//   - `baseline`: filter + dateRange stored on a saved-filter
+//     gallery. Applied on top of the source's photos so the gallery
+//     reads as a narrowed view. Undefined for real and hybrid.
+//
+// Every read path (load photos / counts / neighbors / filter values)
+// goes through this resolver — type dispatch lives here, downstream
+// callers stay uniform.
+interface GalleryRef {
+  sources: string[];
+  baseline?: { filter?: FilterShape; dateRange?: DateRange };
+}
+const resolveGalleryRef = (galleryId: string): GalleryRef => {
+  const savedFilter = loadGallerySavedFilterRow(galleryId);
+  if (savedFilter) {
+    let baseline: { filter?: FilterShape; dateRange?: DateRange } = {};
+    try {
+      baseline = JSON.parse(savedFilter.definition) as {
+        filter?: FilterShape;
+        dateRange?: DateRange;
+      };
+    } catch {
+      // Malformed JSON shouldn't happen (writes go through
+      // JSON.stringify) but if it does, treat as empty baseline.
+    }
+    return {
+      sources: [savedFilter.source_gallery_id],
+      baseline: {
+        filter: baseline.filter,
+        dateRange: baseline.dateRange,
+      },
+    };
+  }
+  const virtual = loadVirtualGallerySources(galleryId);
+  if (virtual !== undefined) return { sources: virtual };
+  return { sources: [galleryId] };
+};
+// Drop photos that fail the saved-filter gallery's baseline. No-op
+// when called against a real or hybrid gallery (`ref.baseline`
+// absent).
+const applyBaseline = (photos: Photo[], ref: GalleryRef): Photo[] => {
+  if (!ref.baseline) return photos;
+  const { filter, dateRange } = ref.baseline;
+  return photos.filter(
+    (p) => matchesDateRange(dateRange, p) && matchesFilter(filter, p)
+  );
+};
+// Single-photo baseline check. NotFoundError-style: returns true if
+// the photo is part of the saved filter's effective set.
+const photoPassesBaseline = (photo: Photo, ref: GalleryRef): boolean => {
+  if (!ref.baseline) return true;
+  return (
+    matchesDateRange(ref.baseline.dateRange, photo) &&
+    matchesFilter(ref.baseline.filter, photo)
+  );
+};
+
+const loadGallerySavedFilterRow = (
+  galleryId: string
+): GallerySavedFilterRow | undefined => {
+  return db
+    .prepare(
+      "SELECT gallery_id, source_gallery_id, definition FROM gallery_saved_filter WHERE gallery_id = ?"
+    )
+    .get(galleryId) as GallerySavedFilterRow | undefined;
+};
+const loadAllGallerySavedFilters = (): Map<string, GallerySavedFilterRow> => {
+  const rows = db
+    .prepare(
+      "SELECT gallery_id, source_gallery_id, definition FROM gallery_saved_filter"
+    )
+    .all() as GallerySavedFilterRow[];
+  const out = new Map<string, GallerySavedFilterRow>();
+  for (const r of rows) out.set(r.gallery_id, r);
+  return out;
+};
+
 // Virtual galleries: sibling `virtual_gallery_source` junction
 // table holds one row per (virtual, source) pair, ordered by
 // `ordinal` to preserve the operator's input order (#22). A
@@ -499,14 +581,6 @@ const loadVirtualGallerySources = (galleryId: string): string[] | undefined => {
   if (rows.length === 0) return undefined;
   return rows.map((r) => r.source_id);
 };
-// Resolves a galleryId to the list of source gallery IDs whose
-// `gallery_photo` rows make up its contents. Real gallery → [self].
-// Virtual gallery → its stored sources. Empty sources or missing
-// row treated as "no contents" (returns []).
-const resolveGallerySources = (galleryId: string): string[] => {
-  const sources = loadVirtualGallerySources(galleryId);
-  return sources === undefined ? [galleryId] : sources;
-};
 const isVirtualGallery = async (galleryId: string): Promise<boolean> => {
   const row = db
     .prepare(
@@ -535,6 +609,27 @@ const decorateGalleryWithSources = (
   const sources = sourcesByGallery.get(gallery.id);
   return sources === undefined ? gallery : { ...gallery, sources };
 };
+const decorateGalleryWithSavedFilter = (
+  gallery: Gallery,
+  byGallery: Map<string, GallerySavedFilterRow>
+): Gallery => {
+  if (gallery.type !== "saved_filter") return gallery;
+  const row = byGallery.get(gallery.id);
+  if (!row) return gallery;
+  let definition: Record<string, unknown> = {};
+  try {
+    definition = JSON.parse(row.definition) as Record<string, unknown>;
+  } catch {
+    // Stale / malformed JSON — fall through to empty definition.
+  }
+  return {
+    ...gallery,
+    savedFilter: {
+      sourceGalleryId: row.source_gallery_id,
+      definition,
+    },
+  };
+};
 // Replace the source set atomically — DELETE existing rows then
 // INSERT each in input order. better-sqlite3's `transaction(fn)`
 // wraps the body in BEGIN/COMMIT.
@@ -548,147 +643,147 @@ const upsertVirtualGallery = async (
   const ins = db.prepare(
     "INSERT INTO virtual_gallery_source (gallery_id, source_id, ordinal) VALUES (?, ?, ?)"
   );
+  const stampType = db.prepare(
+    "UPDATE gallery SET type = 'hybrid' WHERE id = ?"
+  );
   const replace = db.transaction((gid: string, list: string[]) => {
     del.run(gid);
     list.forEach((sourceId, i) => {
       ins.run(gid, sourceId, i);
     });
+    stampType.run(gid);
   });
   replace(galleryId, sources);
 };
 const deleteVirtualGallery = async (galleryId: string): Promise<void> => {
-  db.prepare(
-    "DELETE FROM virtual_gallery_source WHERE gallery_id = ?"
-  ).run(galleryId);
+  // Drop the sources and revert the gallery to a plain real gallery so
+  // `type` stays in sync with side-table presence.
+  const tx = db.transaction((gid: string) => {
+    db.prepare(
+      "DELETE FROM virtual_gallery_source WHERE gallery_id = ?"
+    ).run(gid);
+    db.prepare("UPDATE gallery SET type = 'real' WHERE id = ?").run(gid);
+  });
+  tx(galleryId);
 };
 
-// Saved filters / sub-galleries (#285). One row per (gallery, id)
-// pair; `definition` is a JSON string holding the same `filter` +
-// `dateRange` envelope the per-view endpoints already accept, so
-// applying a saved filter is just unmarshalling and forwarding.
-// Localized title / description live in `saved_filter_localized`,
-// mirroring the gallery localization shape from #281.
-const mapSavedFilterRow = (
-  row: SavedFilterRow,
-  localized?: SavedFilterLocalizedRow[]
-): SavedFilter => ({
-  id: row.id,
-  galleryId: row.gallery_id,
-  title: row.title,
-  description: row.description,
-  titleLocalized: buildLocalizedMap(localized, "title"),
-  descriptionLocalized: buildLocalizedMap(localized, "description"),
-  ordinal: row.ordinal,
-  definition: (() => {
-    try {
-      return JSON.parse(row.definition) as Record<string, unknown>;
-    } catch {
-      return {};
-    }
-  })(),
-});
-const loadSavedFilterLocalizedFor = (
-  galleryId: string,
-  filterIds: string[]
-): Map<string, SavedFilterLocalizedRow[]> => {
-  if (filterIds.length === 0) return new Map();
-  const placeholders = filterIds.map(() => "?").join(",");
-  const rows = db
-    .prepare(
-      `SELECT gallery_id, filter_id, lang, title, description
-       FROM saved_filter_localized
-       WHERE gallery_id = ? AND filter_id IN (${placeholders})`
-    )
-    .all(galleryId, ...filterIds) as SavedFilterLocalizedRow[];
-  const byId = new Map<string, SavedFilterLocalizedRow[]>();
-  for (const r of rows) {
-    const list = byId.get(r.filter_id);
-    if (list) list.push(r);
-    else byId.set(r.filter_id, [r]);
+// Saved filters live as galleries of `type='saved_filter'` (#285).
+// The saved-filter id IS the gallery id. Title / description /
+// localized maps come from the gallery row + gallery_localized;
+// source + definition come from the side table gallery_saved_filter.
+// CRUD here writes both atomically; the model layer enforces the
+// id-uniqueness invariants (no collision with other gallery ids,
+// source gallery exists, slug shape).
+const mapSavedFilterGalleryRow = (
+  galleryRow: GalleryRow,
+  sfRow: GallerySavedFilterRow,
+  localized?: GalleryLocalizedRow[]
+): SavedFilter => {
+  let parsed: Record<string, unknown> = {};
+  try {
+    parsed = JSON.parse(sfRow.definition) as Record<string, unknown>;
+  } catch {
+    // Malformed JSON shouldn't be reachable through the write path
+    // (createSavedFilter always JSON.stringify's), but guard against
+    // a stale row from outside.
   }
-  return byId;
+  return {
+    id: galleryRow.id,
+    sourceGalleryId: sfRow.source_gallery_id,
+    title: galleryRow.title,
+    description: galleryRow.description,
+    titleLocalized: buildLocalizedMap(localized, "title"),
+    descriptionLocalized: buildLocalizedMap(localized, "description"),
+    definition: parsed,
+  };
 };
-const loadSavedFilters = async (galleryId: string): Promise<SavedFilter[]> => {
-  // Sort by id ASC, matching the gallery list's ordering. The
-  // dormant `ordinal` column stays for now (a follow-up drops it
-  // and reworks the schema); operators pick id slugs they want to
-  // sort by, no separate ordinal control needed.
+const loadSavedFilters = async (sourceGalleryId: string): Promise<SavedFilter[]> => {
+  // Fetch saved-filter galleries pointing at this source. Sort by
+  // gallery id ASC, matching the gallery list's natural order.
   const rows = db
     .prepare(
-      `SELECT id, gallery_id, title, description, definition, ordinal
-       FROM saved_filter
-       WHERE gallery_id = ?
-       ORDER BY id ASC`
+      `SELECT g.id, g.title, g.description, g.icon, g.icon_source, g.epoch,
+              g.epoch_type, g.theme, g.initial_view, g.hostname,
+              g.default_language, g.type,
+              sf.gallery_id, sf.source_gallery_id, sf.definition
+       FROM gallery_saved_filter sf
+       JOIN gallery g ON g.id = sf.gallery_id
+       WHERE sf.source_gallery_id = ? AND g.type = 'saved_filter'
+       ORDER BY g.id ASC`
     )
-    .all(galleryId) as SavedFilterRow[];
-  const localized = loadSavedFilterLocalizedFor(
-    galleryId,
-    rows.map((r) => r.id)
+    .all(sourceGalleryId) as Array<GalleryRow & GallerySavedFilterRow>;
+  const localized = loadGalleryLocalizedFor(rows.map((r) => r.id));
+  return rows.map((row) =>
+    mapSavedFilterGalleryRow(
+      row,
+      {
+        gallery_id: row.gallery_id,
+        source_gallery_id: row.source_gallery_id,
+        definition: row.definition,
+      },
+      localized.get(row.id)
+    )
   );
-  return rows.map((row) => mapSavedFilterRow(row, localized.get(row.id)));
 };
 const loadSavedFilter = async (
-  galleryId: string,
+  sourceGalleryId: string,
   id: string
 ): Promise<SavedFilter> => {
-  const row = db
-    .prepare(
-      `SELECT id, gallery_id, title, description, definition, ordinal
-       FROM saved_filter
-       WHERE gallery_id = ? AND id = ?`
-    )
-    .get(galleryId, id) as SavedFilterRow | undefined;
-  if (!row) throw new NotFoundError();
+  const galleryRow = db
+    .prepare(SCHEMA.gallery.buildSelectByIdQuery())
+    .get(id) as GalleryRow | undefined;
+  if (!galleryRow || galleryRow.type !== "saved_filter") {
+    throw new NotFoundError();
+  }
+  const sfRow = loadGallerySavedFilterRow(id);
+  if (!sfRow || sfRow.source_gallery_id !== sourceGalleryId) {
+    throw new NotFoundError();
+  }
   const localized = db
-    .prepare(
-      `SELECT gallery_id, filter_id, lang, title, description
-       FROM saved_filter_localized
-       WHERE gallery_id = ? AND filter_id = ?`
-    )
-    .all(galleryId, id) as SavedFilterLocalizedRow[];
-  return mapSavedFilterRow(row, localized);
+    .prepare("SELECT * FROM gallery_localized WHERE gallery_id = ?")
+    .all(id) as GalleryLocalizedRow[];
+  return mapSavedFilterGalleryRow(galleryRow, sfRow, localized);
 };
-// Per-language overlay upsert — same shape + semantics as the
-// gallery / photo localized writers: missing key leaves the column
-// alone; empty string clears it (sets NULL); both columns NULL
-// keeps the row in place (harmless empty entry, GC'd by FK cascade
-// on saved filter delete).
-const upsertSavedFilterLocalized = (
-  galleryId: string,
-  filterId: string,
-  lang: string,
-  fields: { title?: string | null; description?: string | null }
-): void => {
-  const cols: string[] = [];
-  const vals: unknown[] = [];
-  if (fields.title !== undefined) {
-    cols.push("title");
-    vals.push(fields.title);
+// Write the gallery row (type='saved_filter') + the gallery_saved_filter
+// side row + any localized overlays in one transaction so a halfway
+// state can't leak. Source gallery existence and id-collision checks
+// belong to the model layer.
+const createSavedFilter = async (filter: SavedFilter): Promise<void> => {
+  // Inherit the default_language from the source so the canonical
+  // title / description sit in the same language. Other gallery-shape
+  // columns get safe defaults — saved-filter pseudo-galleries don't
+  // carry their own icon / theme / epoch (icon is a follow-up).
+  const sourceRow = db
+    .prepare(SCHEMA.gallery.buildSelectByIdQuery())
+    .get(filter.sourceGalleryId) as GalleryRow | undefined;
+  if (!sourceRow) {
+    throw new NotFoundError();
   }
-  if (fields.description !== undefined) {
-    cols.push("description");
-    vals.push(fields.description);
-  }
-  if (cols.length === 0) return;
-  const colList = cols.join(", ");
-  const placeholders = cols.map(() => "?").join(", ");
-  const updates = cols.map((c) => `${c} = excluded.${c}`).join(", ");
-  db.prepare(
-    `INSERT INTO saved_filter_localized (gallery_id, filter_id, lang, ${colList})
-     VALUES (?, ?, ?, ${placeholders})
-     ON CONFLICT (gallery_id, filter_id, lang) DO UPDATE SET ${updates}`
-  ).run(galleryId, filterId, lang, ...vals);
-};
-const applyLocalizedPatch = (
-  galleryId: string,
-  filterId: string,
-  titleMap?: Record<string, string | undefined>,
-  descMap?: Record<string, string | undefined>
-): void => {
-  const perLang = new Map<
-    string,
-    { title?: string | null; description?: string | null }
-  >();
+  const insert = db.transaction(() => {
+    db.prepare(SCHEMA.gallery.buildCreateQuery()).run(
+      SCHEMA.gallery.mapInsert({
+        id: filter.id,
+        title: filter.title,
+        description: filter.description,
+        icon: "",
+        iconSource: null,
+        epoch: "",
+        epochType: "",
+        theme: "",
+        initialView: "",
+        hostname: "",
+        defaultLanguage: sourceRow.default_language || "en",
+        type: "saved_filter",
+      })
+    );
+    db.prepare(
+      "INSERT INTO gallery_saved_filter (gallery_id, source_gallery_id, definition) VALUES (?, ?, ?)"
+    ).run(filter.id, filter.sourceGalleryId, JSON.stringify(filter.definition ?? {}));
+  });
+  insert();
+  // Localized overlays go to gallery_localized via the gallery path
+  // (reused, since saved filter IS a gallery now).
+  const perLang = new Map<string, { title?: string | null; description?: string | null }>();
   const merge = (
     map: Record<string, string | undefined> | undefined,
     field: "title" | "description"
@@ -701,80 +796,69 @@ const applyLocalizedPatch = (
       perLang.set(lang, entry);
     }
   };
-  merge(titleMap, "title");
-  merge(descMap, "description");
+  merge(filter.titleLocalized, "title");
+  merge(filter.descriptionLocalized, "description");
   for (const [lang, fields] of perLang) {
-    upsertSavedFilterLocalized(galleryId, filterId, lang, fields);
+    upsertGalleryLocalizedFields(filter.id, lang, fields);
   }
 };
-const createSavedFilter = async (
-  filter: SavedFilter
-): Promise<void> => {
-  db.prepare(
-    `INSERT INTO saved_filter (id, gallery_id, title, description, definition, ordinal)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(
-    filter.id,
-    filter.galleryId,
-    filter.title,
-    filter.description,
-    JSON.stringify(filter.definition ?? {}),
-    filter.ordinal
-  );
-  applyLocalizedPatch(
-    filter.galleryId,
-    filter.id,
-    filter.titleLocalized,
-    filter.descriptionLocalized
-  );
-};
 const updateSavedFilter = async (
-  galleryId: string,
+  sourceGalleryId: string,
   id: string,
   patch: Partial<
-    Pick<SavedFilter, "title" | "description" | "definition" | "ordinal">
+    Pick<SavedFilter, "title" | "description" | "definition">
   > & {
     titleLocalized?: Record<string, string | undefined>;
     descriptionLocalized?: Record<string, string | undefined>;
   }
 ): Promise<void> => {
-  const updates: string[] = [];
-  const values: unknown[] = [];
-  if ("title" in patch && patch.title !== undefined) {
-    updates.push("title = ?");
-    values.push(patch.title);
+  // Verify the row exists + belongs to this source; matches the
+  // loadSavedFilter check so updates can't drift across sources.
+  await loadSavedFilter(sourceGalleryId, id);
+  // Canonical title / description are gallery columns.
+  if (patch.title !== undefined || patch.description !== undefined) {
+    const galleryPatch: GalleryInput = {};
+    if (patch.title !== undefined) galleryPatch.title = patch.title;
+    if (patch.description !== undefined)
+      galleryPatch.description = patch.description;
+    const { query, values } = SCHEMA.gallery.buildUpdateByIdQuery(galleryPatch);
+    if (query && values) {
+      db.prepare(query).run([...values, id]);
+    }
   }
-  if ("description" in patch && patch.description !== undefined) {
-    updates.push("description = ?");
-    values.push(patch.description);
-  }
-  if ("definition" in patch && patch.definition !== undefined) {
-    updates.push("definition = ?");
-    values.push(JSON.stringify(patch.definition));
-  }
-  if ("ordinal" in patch && patch.ordinal !== undefined) {
-    updates.push("ordinal = ?");
-    values.push(patch.ordinal);
-  }
-  if (updates.length > 0) {
+  if (patch.definition !== undefined) {
     db.prepare(
-      `UPDATE saved_filter SET ${updates.join(", ")} WHERE gallery_id = ? AND id = ?`
-    ).run(...values, galleryId, id);
+      "UPDATE gallery_saved_filter SET definition = ? WHERE gallery_id = ?"
+    ).run(JSON.stringify(patch.definition), id);
   }
-  applyLocalizedPatch(
-    galleryId,
-    id,
-    patch.titleLocalized,
-    patch.descriptionLocalized
-  );
+  // Localized overlays via the gallery path.
+  const perLang = new Map<string, { title?: string | null; description?: string | null }>();
+  const merge = (
+    map: Record<string, string | undefined> | undefined,
+    field: "title" | "description"
+  ) => {
+    if (!map) return;
+    for (const [lang, value] of Object.entries(map)) {
+      if (value === undefined) continue;
+      const entry = perLang.get(lang) ?? {};
+      entry[field] = value === "" ? null : value;
+      perLang.set(lang, entry);
+    }
+  };
+  merge(patch.titleLocalized, "title");
+  merge(patch.descriptionLocalized, "description");
+  for (const [lang, fields] of perLang) {
+    upsertGalleryLocalizedFields(id, lang, fields);
+  }
 };
 const deleteSavedFilter = async (
-  galleryId: string,
+  sourceGalleryId: string,
   id: string
 ): Promise<void> => {
-  db.prepare(
-    "DELETE FROM saved_filter WHERE gallery_id = ? AND id = ?"
-  ).run(galleryId, id);
+  // ON DELETE CASCADE on gallery_saved_filter + gallery_localized
+  // tears down the side rows when the gallery goes.
+  await loadSavedFilter(sourceGalleryId, id);
+  db.prepare("DELETE FROM gallery WHERE id = ?").run(id);
 };
 
 const loadGalleries = async () => {
@@ -782,10 +866,12 @@ const loadGalleries = async () => {
     .prepare(SCHEMA.gallery.buildSelectQuery())
     .all() as GalleryRow[];
   const sourcesByGallery = loadAllVirtualGalleries();
+  const savedFiltersByGallery = loadAllGallerySavedFilters();
   const localizedByGallery = loadGalleryLocalizedFor(rows.map((r) => r.id));
   return rows
     .map((row) => SCHEMA.gallery.mapRow(row, localizedByGallery.get(row.id)))
-    .map((g) => decorateGalleryWithSources(g, sourcesByGallery));
+    .map((g) => decorateGalleryWithSources(g, sourcesByGallery))
+    .map((g) => decorateGalleryWithSavedFilter(g, savedFiltersByGallery));
 };
 const createGallery = async (gallery: Gallery) => {
   db.prepare(SCHEMA.gallery.buildCreateQuery()).run(
@@ -820,9 +906,29 @@ const loadGallery = async (galleryId: string) => {
   const localizedRows = db
     .prepare("SELECT * FROM gallery_localized WHERE gallery_id = ?")
     .all(galleryId) as GalleryLocalizedRow[];
-  const base = SCHEMA.gallery.mapRow(row, localizedRows);
-  const sources = loadVirtualGallerySources(galleryId);
-  return sources === undefined ? base : { ...base, sources };
+  let gallery = SCHEMA.gallery.mapRow(row, localizedRows);
+  if (gallery.type === "hybrid") {
+    const sources = loadVirtualGallerySources(galleryId);
+    if (sources !== undefined) gallery = { ...gallery, sources };
+  } else if (gallery.type === "saved_filter") {
+    const sfRow = loadGallerySavedFilterRow(galleryId);
+    if (sfRow) {
+      let definition: Record<string, unknown> = {};
+      try {
+        definition = JSON.parse(sfRow.definition) as Record<string, unknown>;
+      } catch {
+        // Stale / malformed JSON — fall through to empty definition.
+      }
+      gallery = {
+        ...gallery,
+        savedFilter: {
+          sourceGalleryId: sfRow.source_gallery_id,
+          definition,
+        },
+      };
+    }
+  }
+  return gallery;
 };
 const updateGallery = async (galleryId: string, gallery: GalleryInput) => {
   const { query, values } = SCHEMA.gallery.buildUpdateByIdQuery(gallery);
@@ -881,25 +987,25 @@ const deleteGallery = async (galleryId: string) =>
 
 const loadGalleryPhotos = async (galleryId: string, lang?: string) => {
   const schema = SCHEMA.photo;
-  const sources = resolveGallerySources(galleryId);
-  if (sources.length === 0) return [];
-  // Virtual galleries (#22) widen the gallery_id check from `= ?`
+  const ref = resolveGalleryRef(galleryId);
+  if (ref.sources.length === 0) return [];
+  // Hybrid galleries (#22) widen the gallery_id check from `= ?`
   // to `IN (?, ?, …)`. Real galleries resolve to `[galleryId]`,
-  // producing the same single-id IN-clause — equivalent to the
-  // previous `gallery_id = ?` behaviour. DEDUPLICATION is already
-  // implicit in the photo `id IN (...)` outer membership: each
-  // photo row appears at most once in the result.
-  const placeholders = sources.map(() => "?").join(", ");
+  // producing the same single-id IN-clause. Saved-filter galleries
+  // resolve to `[source_gallery_id]` + a baseline applied below in
+  // JS — the SQL load is identical to a real source.
+  const placeholders = ref.sources.map(() => "?").join(", ");
   const stmt = db.prepare(
     schema.buildSelectQuery([
       `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
     ])
   );
-  const rows = stmt.all(...sources) as PhotoRow[];
+  const rows = stmt.all(...ref.sources) as PhotoRow[];
   const localized = loadLocalizedFor(rows.map((r) => r.id));
-  return rows.map((row, index) =>
+  const photos = rows.map((row, index) =>
     schema.mapRow(row, index, localized.get(row.id), lang)
   );
+  return applyBaseline(photos, ref);
 };
 const linkGalleryPhoto = async (
   galleryIds: string[],
@@ -1129,26 +1235,30 @@ const loadGalleryPhoto = async (
   lang?: string
 ) => {
   const schema = SCHEMA.photo;
-  const sources = resolveGallerySources(galleryId);
-  if (sources.length === 0) throw new NotFoundError();
-  // Virtual gallery aware (#22): widen membership check to the
-  // resolved source set. Same SQL shape — IN (?, ?, …) instead of
-  // = ?. The photo `id` predicate still pins to a single row.
-  const placeholders = sources.map(() => "?").join(", ");
+  const ref = resolveGalleryRef(galleryId);
+  if (ref.sources.length === 0) throw new NotFoundError();
+  const placeholders = ref.sources.map(() => "?").join(", ");
   const stmt = db.prepare(
     schema.buildSelectQuery([
       `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
       "id = ?",
     ])
   );
-  const rows = stmt.all(...sources, photoId) as PhotoRow[];
+  const rows = stmt.all(...ref.sources, photoId) as PhotoRow[];
   if (rows.length === 0) {
     throw new NotFoundError();
   }
   const localizedRows = db
     .prepare("SELECT * FROM photo_localized WHERE photo_id = ?")
     .all(photoId) as PhotoLocalizedRow[];
-  return schema.mapRow(rows[0], 0, localizedRows, lang);
+  const photo = schema.mapRow(rows[0], 0, localizedRows, lang);
+  // Saved-filter galleries: a photo that's in the source but
+  // excluded by the baseline reads as NotFound on the saved filter,
+  // matching how the photo list behaves.
+  if (!photoPassesBaseline(photo, ref)) {
+    throw new NotFoundError();
+  }
+  return photo;
 };
 const unlinkGalleryPhoto = async (galleryId: string, photoId: string) => {
   db.prepare(SCHEMA.galleryPhoto.buildDeleteByIdQuery()).run([
@@ -1271,23 +1381,27 @@ const loadGalleryPhotoByOriginalFilename = async (
   lang?: string
 ) => {
   const schema = SCHEMA.photo;
-  const sources = resolveGallerySources(galleryId);
-  if (sources.length === 0) throw new NotFoundError();
-  const placeholders = sources.map(() => "?").join(", ");
+  const ref = resolveGalleryRef(galleryId);
+  if (ref.sources.length === 0) throw new NotFoundError();
+  const placeholders = ref.sources.map(() => "?").join(", ");
   const stmt = db.prepare(
     schema.buildSelectQuery([
       `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
       "original_filename = ? COLLATE NOCASE",
     ])
   );
-  const rows = stmt.all(...sources, originalFilename) as PhotoRow[];
+  const rows = stmt.all(...ref.sources, originalFilename) as PhotoRow[];
   if (rows.length === 0) {
     throw new NotFoundError();
   }
   const localizedRows = db
     .prepare("SELECT * FROM photo_localized WHERE photo_id = ?")
     .all(rows[0].id) as PhotoLocalizedRow[];
-  return schema.mapRow(rows[0], 0, localizedRows, lang);
+  const photo = schema.mapRow(rows[0], 0, localizedRows, lang);
+  if (!photoPassesBaseline(photo, ref)) {
+    throw new NotFoundError();
+  }
+  return photo;
 };
 // Photo rows with no gallery_photo link — useful for `bin/photo.ts audit`.
 // The SPA doesn't surface orphan photos anywhere; they're a data-drift

@@ -49,34 +49,67 @@ const authorizeAdmin = async (userId: string): Promise<void> => {
 // is now strictly admin.
 const authorizeView = authorizeAdmin;
 
+// Saved-filter pseudo-galleries (#285) inherit view + editor access
+// from their source gallery: if the user can view / edit the source,
+// they can view / edit the saved filter. A direct grant on the saved
+// filter extends access (e.g., expose a slice to a user who has no
+// rights on the source) but never narrows — having source access
+// always passes. Real and hybrid galleries take the direct grant
+// check only.
+const loadSourceFor = async (
+  galleryId: string
+): Promise<string | undefined> => {
+  try {
+    const gallery = (await db.loadGallery(galleryId)) as {
+      type?: string;
+      savedFilter?: { sourceGalleryId: string };
+    };
+    if (gallery.type === "saved_filter" && gallery.savedFilter) {
+      return gallery.savedFilter.sourceGalleryId;
+    }
+  } catch {
+    // Missing gallery falls through to direct-check semantics; the
+    // caller's resolve() will throw NotFound / AccessError for it.
+  }
+  return undefined;
+};
+
 const authorizeGalleryView = async (
   userId: string,
   galleryId: string
 ): Promise<string> => {
-  const { hasAccess } = await resolve(userId, galleryId);
-  if (!hasAccess) {
-    throw new AccessError(undefined, { userId, galleryId, required: "view" });
+  const direct = await resolve(userId, galleryId);
+  if (direct.hasAccess) return galleryId;
+  const source = await loadSourceFor(galleryId);
+  if (source !== undefined) {
+    const inherited = await resolve(userId, source);
+    if (inherited.hasAccess) return galleryId;
   }
-  return galleryId;
+  throw new AccessError(undefined, { userId, galleryId, required: "view" });
 };
 
 // Gallery-editor tier. Backed by the `is_editor` flag on
 // `user_gallery` / `group_gallery`. Global admins implicitly
-// pass — they can do everything an editor can.
+// pass — they can do everything an editor can. Saved-filter
+// galleries inherit editor from their source on the same
+// extend-never-narrow rule as view.
 const authorizeGalleryEditor = async (
   userId: string,
   galleryId: string
 ): Promise<string> => {
   if (await isGlobalAdmin(userId)) return galleryId;
-  const { isEditor } = await resolve(userId, galleryId);
-  if (!isEditor) {
-    throw new AccessError(undefined, {
-      userId,
-      galleryId,
-      required: "gallery-editor",
-    });
+  const direct = await resolve(userId, galleryId);
+  if (direct.isEditor) return galleryId;
+  const source = await loadSourceFor(galleryId);
+  if (source !== undefined) {
+    const inherited = await resolve(userId, source);
+    if (inherited.isEditor) return galleryId;
   }
-  return galleryId;
+  throw new AccessError(undefined, {
+    userId,
+    galleryId,
+    required: "gallery-editor",
+  });
 };
 
 // Photo-level editor check: the user is allowed to edit the

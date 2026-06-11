@@ -87,13 +87,12 @@ describe("As admin", () => {
     expect(listed.body.length).toBe(1);
     expect(listed.body[0]).toMatchObject({
       id: "japan-2024",
-      galleryId: "gallery1",
+      sourceGalleryId: "gallery1",
       title: "Japan 2024",
       description: "Spring trip across Honshu",
       titleLocalized: {},
       descriptionLocalized: {},
       definition,
-      ordinal: 0,
     });
     const one = await get(token, "gallery1", "japan-2024");
     expect(one.body.id).toBe("japan-2024");
