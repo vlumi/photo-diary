@@ -149,23 +149,32 @@ export class HttpError extends Error {
 // openapi-fetch only leaves `data` undefined when parsing or the request
 // itself failed, both of which would also fail `response.ok`.
 export const unwrap = async <T>(
-  call: Promise<{ data?: T; response: Response }>
+  call: Promise<{ data?: T; error?: unknown; response: Response }>
 ): Promise<T> => {
-  const { data, response } = await call;
+  const { data, error, response } = await call;
   if (!response.ok) {
     // Server's error handler returns `{ error: "<message>" }` on
-    // typed AppError throws (lib/middleware/error-handler.ts), so
-    // surface the message to the caller instead of a generic
-    // "Request failed: 422". Falls back to the status code when
-    // the body isn't JSON or doesn't carry an `error` field.
+    // typed AppError throws (lib/middleware/error-handler.ts).
+    // openapi-fetch parses the body for non-2xx into its `error`
+    // slot first; fall back to re-reading the response body if
+    // openapi-fetch didn't surface anything (e.g. unschematized
+    // error responses on some endpoints).
     let message = `Request failed: ${response.status}`;
-    try {
-      const body = (await response.clone().json()) as { error?: string };
-      if (typeof body.error === "string" && body.error.length > 0) {
-        message = body.error;
+    const fromOpenApi =
+      error && typeof error === "object" && "error" in error
+        ? (error as { error?: unknown }).error
+        : undefined;
+    if (typeof fromOpenApi === "string" && fromOpenApi.length > 0) {
+      message = fromOpenApi;
+    } else {
+      try {
+        const body = (await response.clone().json()) as { error?: string };
+        if (typeof body.error === "string" && body.error.length > 0) {
+          message = body.error;
+        }
+      } catch {
+        // Body wasn't JSON — keep the fallback.
       }
-    } catch {
-      // Body wasn't JSON — keep the fallback.
     }
     throw new HttpError(message, response.status);
   }
