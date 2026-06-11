@@ -12,6 +12,8 @@ import {
 
 import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
+import { languageNameIn } from "./LocalizedInputs";
+import SavedFiltersSection from "./SavedFiltersSection";
 import GalleryFormFields, {
   EMPTY_FORM,
   fromGalleryData,
@@ -187,6 +189,7 @@ interface GalleryData {
   theme?: string;
   initialView?: string;
   hostname?: string;
+  defaultLanguage?: string;
   photos?: Array<{ id: string }>;
 }
 
@@ -216,7 +219,7 @@ const parseIconSource = (raw?: string | null): ParsedIconSource | null => {
 };
 
 const GalleryEdit = (): React.ReactElement => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const params = useParams();
   const galleryId = params.galleryId as string;
@@ -441,9 +444,23 @@ const GalleryEdit = (): React.ReactElement => {
             <SummaryValue>{renderValue(gallery.epoch)}</SummaryValue>
             <SummaryLabel>{t("manage-gallery-field-epoch-type")}</SummaryLabel>
             <SummaryValue>{renderValue(gallery.epochType)}</SummaryValue>
+            <SummaryLabel>
+              {t("manage-gallery-field-default-language")}
+            </SummaryLabel>
+            <SummaryValue>
+              {renderValue(
+                gallery.defaultLanguage
+                  ? languageNameIn(gallery.defaultLanguage, i18n.language)
+                  : undefined
+              )}
+            </SummaryValue>
             <SummaryLabel>{t("manage-gallery-field-hostname")}</SummaryLabel>
             <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
           </Summary>
+          <SavedFiltersSection
+            galleryId={galleryId}
+            defaultLanguage={gallery.defaultLanguage}
+          />
           <Footer>
             {isAdmin && (
               <ButtonDanger

@@ -609,12 +609,16 @@ const loadSavedFilterLocalizedFor = (
   return byId;
 };
 const loadSavedFilters = async (galleryId: string): Promise<SavedFilter[]> => {
+  // Sort by id ASC, matching the gallery list's ordering. The
+  // dormant `ordinal` column stays for now (a follow-up drops it
+  // and reworks the schema); operators pick id slugs they want to
+  // sort by, no separate ordinal control needed.
   const rows = db
     .prepare(
       `SELECT id, gallery_id, title, description, definition, ordinal
        FROM saved_filter
        WHERE gallery_id = ?
-       ORDER BY ordinal, id`
+       ORDER BY id ASC`
     )
     .all(galleryId) as SavedFilterRow[];
   const localized = loadSavedFilterLocalizedFor(

@@ -143,6 +143,12 @@ describe("As admin", () => {
     await create(token, "no-such-gallery", { id: "x", definition: {} }, 422);
   });
 
+  test("id can't collide with an existing gallery id", async () => {
+    // gallery2 exists in the fixture; using its id as a filter id
+    // would shadow it in the public viewer's title-bar selector.
+    await create(token, "gallery1", { id: "gallery2", definition: {} }, 422);
+  });
+
   test("non-slug id rejected", async () => {
     await create(token, "gallery1", { id: "Has Spaces", definition: {} }, 400);
   });
