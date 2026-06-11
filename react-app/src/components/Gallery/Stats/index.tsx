@@ -10,7 +10,7 @@ import filter from "../../../lib/filter";
 import { adaptServerStats } from "../../../lib/stats-adapter";
 import galleryPhotosService from "../../../services/gallery-photos";
 import statsService from "../../../services/stats";
-import { useBetaStore } from "../../../stores";
+import { useBetaStore, useFiltersStore } from "../../../stores";
 
 import PhotoModel, { type Photo } from "../../../models/PhotoModel";
 import type { Filters as FiltersT } from "../../../lib/filter";
@@ -83,17 +83,18 @@ const Stats = ({
   // server-side cache by design; unfiltered shares the per-scope
   // cache entry — per-gallery for galleryId, single `:global` key
   // for globalScope).
+  const dateRange = useFiltersStore((s) => s.dateRange);
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
   );
   const scopeKey = galleryId ?? (globalScope ? "__global__" : undefined);
   const { data: serverStats } = useQuery({
-    queryKey: ["stats", scopeKey, serverFilters, lang],
+    queryKey: ["stats", scopeKey, serverFilters, dateRange, lang],
     queryFn: () =>
       galleryId
-        ? statsService.getGalleryStats(galleryId, serverFilters, lang)
-        : statsService.getGlobalStats(serverFilters, lang),
+        ? statsService.getGalleryStats(galleryId, serverFilters, lang, dateRange)
+        : statsService.getGlobalStats(serverFilters, lang, dateRange),
     enabled: !!scopeKey,
     // Hold the prior render while the new filter combo fetches —
     // a chip toggle gets an in-place update instead of unmounting
@@ -116,8 +117,8 @@ const Stats = ({
   // TanStack dedupes when scope matches.
   const [mapModalOpen, setMapModalOpen] = React.useState(false);
   const mapQueryBody = React.useMemo(
-    () => ({ filter: serverFilters, lang }),
-    [serverFilters, lang]
+    () => ({ filter: serverFilters, dateRange, lang }),
+    [serverFilters, dateRange, lang]
   );
   const { data: mapPhotosRaw } = useQuery({
     queryKey: ["gallery-photos-query", galleryId, mapQueryBody],

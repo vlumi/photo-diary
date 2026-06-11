@@ -115,13 +115,15 @@ const Galleries = ({
   const navigate = useNavigate();
   const formatNumber = format.number(lang);
   const filters = useFiltersStore((s) => s.filters);
+  const dateRange = useFiltersStore((s) => s.dateRange);
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
   );
   const { data: stats } = useQuery({
-    queryKey: ["stats", "__global__", serverFilters, lang],
-    queryFn: () => statsService.getGlobalStats(serverFilters, lang),
+    queryKey: ["stats", "__global__", serverFilters, dateRange, lang],
+    queryFn: () =>
+      statsService.getGlobalStats(serverFilters, lang, dateRange),
     placeholderData: keepPreviousData,
   });
 

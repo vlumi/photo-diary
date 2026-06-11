@@ -7,6 +7,7 @@ import {
   BsFillPlusCircleFill,
 } from "react-icons/bs";
 
+import DateRangePill from "./DateRangePill";
 import Topic from "./Topic";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
@@ -148,6 +149,7 @@ const Filters = ({
         <BsFillFunnelFill />
       </FilterTitle>
       <FilterContainer>
+        <DateRangePill />
         {filter
           .topics()
           .filter((topic) => topic in filters)

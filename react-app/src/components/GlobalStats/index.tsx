@@ -64,6 +64,7 @@ const GlobalStats = (): React.ReactElement => {
   const countryData = useLangStore((s) => s.countryData);
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
+  const dateRange = useFiltersStore((s) => s.dateRange);
   const themePreference = useThemePreferenceStore((s) => s.preference);
   const metaQuery = useQuery({
     queryKey: ["meta"],
@@ -86,8 +87,8 @@ const GlobalStats = (): React.ReactElement => {
     [filters]
   );
   const photoQueryBody = React.useMemo(
-    () => ({ filter: serverFilters, lang }),
-    [serverFilters, lang]
+    () => ({ filter: serverFilters, dateRange, lang }),
+    [serverFilters, dateRange, lang]
   );
   const photosQuery = useQuery({
     queryKey: [

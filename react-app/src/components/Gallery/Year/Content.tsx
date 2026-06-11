@@ -45,6 +45,7 @@ const Content = ({
   theme,
 }: Props): React.ReactElement => {
   const filters = useFiltersStore((s) => s.filters);
+  const dateRange = useFiltersStore((s) => s.dateRange);
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -53,10 +54,17 @@ const Content = ({
   // keeps the heatmap painted while a year / filter change refetches —
   // a chip toggle gets an in-place update, not a loader flash.
   const { data: counts = EMPTY_COUNTS } = useQuery({
-    queryKey: ["gallery-photo-counts", gallery.id(), year, serverFilters],
+    queryKey: [
+      "gallery-photo-counts",
+      gallery.id(),
+      year,
+      serverFilters,
+      dateRange,
+    ],
     queryFn: () =>
       galleryPhotosService.getCounts(gallery.id(), {
         filter: serverFilters,
+        dateRange,
         year,
       }),
     placeholderData: keepPreviousData,

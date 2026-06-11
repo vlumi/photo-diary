@@ -2,6 +2,7 @@ import api, { unwrap } from "../lib/api";
 import type { paths } from "../lib/api-schema";
 
 import type { ServerFilters } from "../lib/filter";
+import type { DateRange } from "../stores/filters";
 
 export type GalleryStats =
   paths["/api/v1/galleries/{galleryId}/stats"]["post"]["responses"]["200"]["content"]["application/json"];
@@ -9,12 +10,13 @@ export type GalleryStats =
 const getGalleryStats = async (
   galleryId: string,
   filter: ServerFilters,
-  lang?: string
+  lang?: string,
+  dateRange?: DateRange
 ): Promise<GalleryStats> =>
   unwrap(
     api.POST("/api/v1/galleries/{galleryId}/stats", {
       params: { path: { galleryId } },
-      body: { filter, lang },
+      body: { filter, dateRange, lang },
     })
   );
 
@@ -23,9 +25,10 @@ const getGalleryStats = async (
 // collectTopics work unchanged regardless of scope.
 const getGlobalStats = async (
   filter: ServerFilters,
-  lang?: string
+  lang?: string,
+  dateRange?: DateRange
 ): Promise<GalleryStats> =>
-  unwrap(api.POST("/api/v1/stats", { body: { filter, lang } }));
+  unwrap(api.POST("/api/v1/stats", { body: { filter, dateRange, lang } }));
 
 // Cross-gallery filter pill universe (admin-only). Drives the
 // GlobalStats filter sidebar without needing the full photo array
@@ -43,12 +46,13 @@ const getGalleryEvolution = async (
   galleryId: string,
   category: string,
   filter: ServerFilters,
-  lang?: string
+  lang?: string,
+  dateRange?: DateRange
 ) =>
   unwrap(
     api.POST("/api/v1/galleries/{galleryId}/stats/evolution", {
       params: { path: { galleryId } },
-      body: { category, filter, lang },
+      body: { category, filter, dateRange, lang },
     })
   );
 
