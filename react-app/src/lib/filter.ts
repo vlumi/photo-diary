@@ -18,7 +18,7 @@ const categories = (category: string): string[] => {
     case "general":
       return ["author", "country", "state", "city", "geotagged"];
     case "time":
-      return ["year", "year-month", "month", "weekday", "hour"];
+      return ["date-range", "year", "year-month", "month", "weekday", "hour"];
     case "gear":
       return ["camera-make", "camera", "lens", "camera-lens"];
     case "settings":

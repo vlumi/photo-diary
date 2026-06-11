@@ -227,3 +227,30 @@ export const matchesFilter = (
   }
   return true;
 };
+
+// Date-range filter — separate from the topic/category/key matrix
+// of `FilterShape` because the predicate is structurally different
+// (continuous range, not discrete-key OR). Both `from` and `to` are
+// `YYYY-MM-DD` strings; inclusive on both ends. Either bound may be
+// omitted for a half-open range (`from` only → "since"; `to` only →
+// "until"). Empty / undefined range or both bounds missing → no
+// constraint, all photos pass. (#264)
+export interface DateRange {
+  from?: string;
+  to?: string;
+}
+export const matchesDateRange = (
+  range: DateRange | undefined | null,
+  photo: Photo
+): boolean => {
+  if (!range) return true;
+  const { from, to } = range;
+  if (!from && !to) return true;
+  const instant = photo.taken.instant;
+  if (!instant) return false;
+  const ymd =
+    `${instant.year}-${String(instant.month).padStart(2, "0")}-${String(instant.day).padStart(2, "0")}`;
+  if (from && ymd < from) return false;
+  if (to && ymd > to) return false;
+  return true;
+};

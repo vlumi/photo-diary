@@ -101,6 +101,7 @@ const EvolutionChart = ({
 }: Props): React.ReactElement | null => {
   const { t } = useTranslation();
   const filters = useFiltersStore((s) => s.filters);
+  const dateRange = useFiltersStore((s) => s.dateRange);
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -112,9 +113,16 @@ const EvolutionChart = ({
       galleryId,
       serverCategory,
       serverFilters,
+      dateRange,
     ],
     queryFn: () =>
-      statsService.getGalleryEvolution(galleryId, serverCategory, serverFilters),
+      statsService.getGalleryEvolution(
+        galleryId,
+        serverCategory,
+        serverFilters,
+        undefined,
+        dateRange
+      ),
     enabled: !!serverCategory,
     placeholderData: keepPreviousData,
   });

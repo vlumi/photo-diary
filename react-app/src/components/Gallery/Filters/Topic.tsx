@@ -1,13 +1,17 @@
 import React from "react";
+import { useParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 
 import Category from "./Category";
+import DateRangePill from "./DateRangePill";
+import seedDateRangeFromUrl from "./seedDateRange";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import stats, { type UniqueValues } from "../../../lib/stats";
 import type { BetaFeature } from "../../../stores/beta";
+import { useFiltersStore } from "../../../stores";
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -83,6 +87,13 @@ const Topic = ({
   const [categorySelector, setCategorySelector] = React.useState<
     Record<string, boolean>
   >({});
+  const dateRange = useFiltersStore((s) => s.dateRange);
+  const setDateRange = useFiltersStore((s) => s.setDateRange);
+  const { year, month, day } = useParams<{
+    year?: string;
+    month?: string;
+    day?: string;
+  }>();
 
   const { t } = useTranslation();
 
@@ -99,6 +110,12 @@ const Topic = ({
     }
     const newFilters = filter.removeTopic(filters, topic);
     setFilters(newFilters);
+    // Removing the Time topic chip also clears the date-range
+    // pill — it visually lives inside Time, so the X button on
+    // the topic wrapper is the natural "drop everything time".
+    if (topic === "time") {
+      setDateRange(undefined);
+    }
   };
 
   const handleToggleAddCategoryClick = (event: React.MouseEvent) => {
@@ -134,6 +151,18 @@ const Topic = ({
         return;
       }
       const category = categoryElement.getAttribute("data-key");
+      // Date range has no discrete value — picking the bare
+      // `date-range` option just activates the pill (the dedicated
+      // input controls live in <DateRangePill /> alongside the
+      // other Time chips). Skips the FilterShape mutation that
+      // applies to the regular value-bearing categories.
+      if (category === "date-range") {
+        setCategorySelector({});
+        if (dateRange === undefined) {
+          setDateRange(seedDateRangeFromUrl(year, month, day));
+        }
+        return;
+      }
       const value = event.target.value;
       if (!topic || !category || !value) {
         return;
@@ -157,27 +186,44 @@ const Topic = ({
               .categories(topic)
               .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
               .filter(isBetaAllowed)
-              .map((category) => (
-              <NewCategoryGroup
-                key={`${topic}:${category}`}
-                label={t(`stats-category-${category}`)}
-                data-type="category"
-                data-key={category}
-              >
-                {uniqueValues[topic][category]
-                  .filter(
-                    (value) => !alreadyFilteredValue(topic, category, value)
-                  )
-                  .map((value) => (
-                    <NewValue
-                      key={`${topic}:${category}:${value.key}`}
-                      value={value.key}
-                    >
-                      {value.value}
-                    </NewValue>
-                  ))}
-              </NewCategoryGroup>
-            ))}
+              .filter(
+                (category) =>
+                  // Hide date-range when the pill is already active —
+                  // there's only one of it.
+                  !(category === "date-range" && dateRange !== undefined)
+              )
+              .map((category) =>
+                category === "date-range" ? (
+                  <NewCategory
+                    key={`${topic}:${category}`}
+                    value={category}
+                    data-type="category"
+                    data-key={category}
+                  >
+                    {t(`stats-category-${category}`)}
+                  </NewCategory>
+                ) : (
+                  <NewCategoryGroup
+                    key={`${topic}:${category}`}
+                    label={t(`stats-category-${category}`)}
+                    data-type="category"
+                    data-key={category}
+                  >
+                    {uniqueValues[topic][category]
+                      .filter(
+                        (value) => !alreadyFilteredValue(topic, category, value)
+                      )
+                      .map((value) => (
+                        <NewValue
+                          key={`${topic}:${category}:${value.key}`}
+                          value={value.key}
+                        >
+                          {value.value}
+                        </NewValue>
+                      ))}
+                  </NewCategoryGroup>
+                )
+              )}
           </NewCategories>
           <BsFillXCircleFill onClick={handleToggleAddCategoryClick} />
         </>
@@ -192,23 +238,26 @@ const Topic = ({
         <Title>{t(`stats-topic-${topic}`)}</Title>
         <BsFillXCircleFill />
       </TopicBox>
-      {filter
-        .categories(topic)
-        .filter((category) => category in filters[topic])
-        .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
-        .filter(isBetaAllowed)
-        .map((category) => (
-          <Category
-            key={`filter:${topic}:${category}`}
-            topic={topic}
-            category={category}
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
-        ))}
+      {topic === "time" && dateRange !== undefined ? <DateRangePill /> : null}
+      {topic in filters
+        ? filter
+            .categories(topic)
+            .filter((category) => category in filters[topic])
+            .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
+            .filter(isBetaAllowed)
+            .map((category) => (
+              <Category
+                key={`filter:${topic}:${category}`}
+                topic={topic}
+                category={category}
+                filters={filters}
+                setFilters={setFilters}
+                uniqueValues={uniqueValues}
+                lang={lang}
+                countryData={countryData}
+              />
+            ))
+        : null}
       {renderCategoryAdder(topic)}
     </Root>
   );

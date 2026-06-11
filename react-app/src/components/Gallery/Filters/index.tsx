@@ -1,4 +1,5 @@
 import React from "react";
+import { useParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,7 +12,8 @@ import Topic from "./Topic";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import type { UniqueValues } from "../../../lib/stats";
-import { useBetaStore } from "../../../stores";
+import { useBetaStore, useFiltersStore } from "../../../stores";
+import seedDateRangeFromUrl from "./seedDateRange";
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -84,12 +86,27 @@ const Filters = ({
 
   const { t } = useTranslation();
 
-  const alreadyFilteredCategory = (topic: string, category: string): boolean =>
-    topic in filters && category in filters[topic];
+  const setDateRange = useFiltersStore((s) => s.setDateRange);
+  const dateRange = useFiltersStore((s) => s.dateRange);
+  const { year, month, day } = useParams<{
+    year?: string;
+    month?: string;
+    day?: string;
+  }>();
+
+  const alreadyFilteredCategory = (topic: string, category: string): boolean => {
+    // Date range lives in its own store slot, not in the filters
+    // matrix — already-active means the pill is rendered.
+    if (topic === "time" && category === "date-range") {
+      return dateRange !== undefined;
+    }
+    return topic in filters && category in filters[topic];
+  };
 
   const handleToggleAddTopicClick = () => {
     setTopicSelector(!topicSelector);
   };
+
   const renderTopicAdder = () => {
     const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
       const topicElement = (
@@ -101,6 +118,16 @@ const Filters = ({
       const topic = topicElement.getAttribute("data-key");
       const category = event.target.value;
       if (!topic || !category) {
+        return;
+      }
+      // Date range isn't a discrete-value category — activate the
+      // dedicated pill instead of adding to the FilterShape matrix.
+      // Seeds from / to from the URL's year / month / day so the
+      // native date picker opens on the currently-viewed slice
+      // rather than today's calendar.
+      if (topic === "time" && category === "date-range") {
+        setDateRange(seedDateRangeFromUrl(year, month, day));
+        setTopicSelector(false);
         return;
       }
       const newFilters = filter.newEmptyCategory(filters, topic, category);
@@ -150,7 +177,13 @@ const Filters = ({
       <FilterContainer>
         {filter
           .topics()
-          .filter((topic) => topic in filters)
+          // Time topic also renders when the date-range pill is
+          // active even if no discrete time category is in
+          // `filters` — the pill visually sits inside Time, so
+          // its activation surfaces the topic block.
+          .filter((topic) =>
+            topic in filters || (topic === "time" && dateRange !== undefined)
+          )
           .map((topic) => (
             <Topic
               key={`filter:${topic}`}

@@ -6,7 +6,9 @@ import config from "../../lib/config/index.js";
 import logger from "../../lib/logger.js";
 import { acceptLocalizedCity } from "../../lib/localized-script.js";
 import {
+  matchesDateRange,
   matchesFilter,
+  type DateRange,
   type FilterShape,
 } from "../../lib/photo-filter-eval.js";
 import {
@@ -701,6 +703,7 @@ const loadAllGalleryPhotoLinks = async (): Promise<
 };
 interface QueryFilteredOpts {
   filter?: FilterShape;
+  dateRange?: DateRange;
   year?: number;
   month?: number;
   day?: number;
@@ -732,6 +735,7 @@ const queryFilteredPhotos = async (
   return photos.filter(
     (photo) =>
       matchesScope(photo, opts.year, opts.month, opts.day) &&
+      matchesDateRange(opts.dateRange, photo) &&
       matchesFilter(opts.filter, photo)
   );
 };
@@ -747,12 +751,14 @@ const queryFilteredPhotosGlobal = async (
   return photos.filter(
     (photo) =>
       matchesScope(photo, opts.year, opts.month, opts.day) &&
+      matchesDateRange(opts.dateRange, photo) &&
       matchesFilter(opts.filter, photo)
   );
 };
 
 interface CountsFilteredOpts {
   filter?: FilterShape;
+  dateRange?: DateRange;
   year?: number;
 }
 const queryFilteredPhotoCounts = async (
@@ -764,6 +770,7 @@ const queryFilteredPhotoCounts = async (
   for (const photo of photos) {
     const instant = photo.taken.instant;
     if (opts.year !== undefined && instant.year !== opts.year) continue;
+    if (!matchesDateRange(opts.dateRange, photo)) continue;
     if (!matchesFilter(opts.filter, photo)) continue;
     const key = `${instant.year}-${String(instant.month).padStart(
       2,
@@ -776,6 +783,7 @@ const queryFilteredPhotoCounts = async (
 
 interface NeighborsFilteredOpts {
   filter?: FilterShape;
+  dateRange?: DateRange;
   lang?: string;
 }
 interface NeighborsResult {
@@ -793,7 +801,9 @@ const queryFilteredPhotoNeighbors = async (
 ): Promise<NeighborsResult> => {
   const all = (await loadGalleryPhotos(galleryId, opts.lang)) as Photo[];
   const filtered = all
-    .filter((p) => matchesFilter(opts.filter, p))
+    .filter(
+      (p) => matchesDateRange(opts.dateRange, p) && matchesFilter(opts.filter, p)
+    )
     .sort((a, b) =>
       a.taken.instant.timestamp.localeCompare(b.taken.instant.timestamp)
     );

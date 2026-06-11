@@ -98,6 +98,7 @@ const Content = ({
   // already filter-narrowed, so we group them by day client-side
   // and skip the in-memory gallery.photos walk.
   const filters = useFiltersStore((s) => s.filters);
+  const dateRange = useFiltersStore((s) => s.dateRange);
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -105,8 +106,8 @@ const Content = ({
   // Shared queryKey shape with Title's map fetch and Stats's map
   // fetch so identical scopes hit one network request.
   const queryBody = React.useMemo(
-    () => ({ filter: serverFilters, year, month, lang }),
-    [serverFilters, year, month, lang]
+    () => ({ filter: serverFilters, dateRange, year, month, lang }),
+    [serverFilters, dateRange, year, month, lang]
   );
   const { data: photosRaw } = useQuery({
     queryKey: ["gallery-photos-query", gallery.id(), queryBody],

@@ -1,5 +1,5 @@
 import config from "../lib/config/index.js";
-import type { FilterShape } from "../lib/photo-filter-eval.js";
+import type { DateRange, FilterShape } from "../lib/photo-filter-eval.js";
 import type {
   Gallery,
   GalleryInput,
@@ -15,6 +15,7 @@ import type {
 
 export interface QueryFilteredOpts {
   filter?: FilterShape;
+  dateRange?: DateRange;
   year?: number;
   month?: number;
   day?: number;
@@ -22,10 +23,12 @@ export interface QueryFilteredOpts {
 }
 export interface CountsFilteredOpts {
   filter?: FilterShape;
+  dateRange?: DateRange;
   year?: number;
 }
 export interface NeighborsFilteredOpts {
   filter?: FilterShape;
+  dateRange?: DateRange;
   lang?: string;
 }
 export interface NeighborsResult {

@@ -11,7 +11,10 @@ import {
   type MissingField,
   type PhotoFilter,
 } from "../lib/photo-filter.js";
-import type { FilterShape } from "../lib/photo-filter-eval.js";
+import type {
+  DateRange,
+  FilterShape,
+} from "../lib/photo-filter-eval.js";
 
 export default () => {
   return {
@@ -44,6 +47,7 @@ const getPhotos = async () => {
 const queryFilteredGlobal = async (
   opts: {
     filter?: FilterShape;
+    dateRange?: DateRange;
     year?: number;
     month?: number;
     day?: number;

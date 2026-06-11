@@ -1049,6 +1049,10 @@ export interface paths {
                                 [key: string]: (string | number | boolean | null)[];
                             };
                         };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
                         year?: number;
                         month?: number;
                         day?: number;
@@ -1302,6 +1306,10 @@ export interface paths {
                                 [key: string]: (string | number | boolean | null)[];
                             };
                         };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
                         year?: number;
                         month?: number;
                         day?: number;
@@ -1356,6 +1364,10 @@ export interface paths {
                                 [key: string]: (string | number | boolean | null)[];
                             };
                         };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
                         year?: number;
                     };
                 };
@@ -1407,6 +1419,10 @@ export interface paths {
                             [key: string]: {
                                 [key: string]: (string | number | boolean | null)[];
                             };
+                        };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
                         };
                         lang?: string;
                     };
@@ -2116,6 +2132,10 @@ export interface paths {
                                 [key: string]: (string | number | boolean | null)[];
                             };
                         };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
                         lang?: string;
                     };
                 };
@@ -2215,6 +2235,10 @@ export interface paths {
                                 [key: string]: (string | number | boolean | null)[];
                             };
                         };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
                         lang?: string;
                     };
                 };
@@ -2269,6 +2293,10 @@ export interface paths {
                             [key: string]: {
                                 [key: string]: (string | number | boolean | null)[];
                             };
+                        };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
                         };
                         lang?: string;
                     };

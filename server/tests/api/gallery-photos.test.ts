@@ -772,6 +772,51 @@ describe("POST /:galleryId/query (filtered + scoped fetch)", () => {
     expect(res.body.length).toBe(0);
   });
 
+  test("dateRange narrows by inclusive YYYY-MM-DD bounds", async () => {
+    const token = await loginUser(api, "admin");
+    // Half-open `from` only — everything since 2020-01-01
+    const sinceRes = await postQuery(token, "gallery1", {
+      dateRange: { from: "2020-01-01" },
+    });
+    expect(sinceRes.body.map((p: { id: string }) => p.id).sort()).toEqual([
+      "gallery12photo.jpg",
+    ]);
+    // Half-open `to` only — everything up to 2019-12-31
+    const untilRes = await postQuery(token, "gallery1", {
+      dateRange: { to: "2019-12-31" },
+    });
+    expect(untilRes.body.map((p: { id: string }) => p.id).sort()).toEqual([
+      "gallery1photo.jpg",
+    ]);
+    // Both bounds — inclusive on both sides
+    const closedRes = await postQuery(token, "gallery1", {
+      dateRange: { from: "2018-01-01", to: "2018-12-31" },
+    });
+    expect(closedRes.body.length).toBe(1);
+    expect(closedRes.body[0].id).toBe("gallery1photo.jpg");
+  });
+
+  test("dateRange composes with filter (AND)", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postQuery(token, "gallery1", {
+      dateRange: { from: "2020-01-01" },
+      filter: { general: { country: ["jp"] } },
+    });
+    // 2020 photo isn't `jp`; 2018 photo is `jp` but outside the range.
+    expect(res.body.length).toBe(0);
+  });
+
+  test("empty dateRange is a no-op", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postQuery(token, "gallery1", { dateRange: {} });
+    expect(res.body.length).toBe(2);
+  });
+
+  test("malformed date string → 400", async () => {
+    const token = await loginUser(api, "admin");
+    await postQuery(token, "gallery1", { dateRange: { from: "2020/01/01" } }, 400);
+  });
+
   test("guest blocked from gallery1 → empty array (privacy collapse)", async () => {
     const res = await postQuery(undefined, "gallery1");
     expect(res.body).toEqual([]);

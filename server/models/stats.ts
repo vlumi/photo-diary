@@ -24,7 +24,17 @@ import {
   type EvolutionResult,
   type StatsResponse,
 } from "../lib/stats-compute.js";
-import type { FilterShape } from "../lib/photo-filter-eval.js";
+import {
+  matchesDateRange,
+  type DateRange,
+  type FilterShape,
+} from "../lib/photo-filter-eval.js";
+
+// Date-range bypass-cache check sibling to `isUnfilteredBase`.
+// Either bound present → dateRange is constraining; treat the
+// request as filtered so cached unfiltered results don't shadow it.
+const isDateRangeUnbounded = (range?: DateRange): boolean =>
+  !range || (!range.from && !range.to);
 
 export default () => ({
   getGalleryStats,
@@ -59,15 +69,22 @@ const globalCacheKey = (lang?: string): string =>
 const getGalleryStats = async (
   galleryId: string,
   filter?: FilterShape,
-  lang?: string
+  lang?: string,
+  dateRange?: DateRange
 ): Promise<StatsResponse> => {
-  const cacheable = isUnfilteredBase(filter);
+  const cacheable = isUnfilteredBase(filter) && isDateRangeUnbounded(dateRange);
   const key = galleryCacheKey(galleryId, lang);
   if (cacheable) {
     const cached = cacheGet<StatsResponse>(key);
     if (cached) return cached;
   }
-  const photos = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
+  const loaded = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
+  // Pre-filter by date range so `computeStats` stays a pure
+  // FilterShape evaluator — keeps the range filter local to model
+  // / driver layers rather than threading into every aggregator.
+  const photos = isDateRangeUnbounded(dateRange)
+    ? loaded
+    : loaded.filter((p) => matchesDateRange(dateRange, p));
   const stats = computeStats(photos, filter);
   if (cacheable) cacheSet(key, stats);
   return stats;
@@ -81,9 +98,13 @@ const getGalleryEvolution = async (
   galleryId: string,
   category: string,
   filter?: FilterShape,
-  lang?: string
+  lang?: string,
+  dateRange?: DateRange
 ): Promise<EvolutionResult> => {
-  const photos = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
+  const loaded = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
+  const photos = isDateRangeUnbounded(dateRange)
+    ? loaded
+    : loaded.filter((p) => matchesDateRange(dateRange, p));
   return buildEvolution(photos, category, filter);
 };
 
@@ -108,9 +129,10 @@ const getGlobalFilterValues = async (
 
 const getGlobalStats = async (
   filter?: FilterShape,
-  lang?: string
+  lang?: string,
+  dateRange?: DateRange
 ): Promise<StatsResponse> => {
-  const cacheable = isUnfilteredBase(filter);
+  const cacheable = isUnfilteredBase(filter) && isDateRangeUnbounded(dateRange);
   const key = globalCacheKey(lang);
   if (cacheable) {
     const cached = cacheGet<StatsResponse>(key);
@@ -138,7 +160,10 @@ const getGlobalStats = async (
     ...p,
     galleries: galleriesByPhoto.get(p.id) ?? [],
   })) as Photo[];
-  const stats = computeStats(decorated, filter);
+  const ranged = isDateRangeUnbounded(dateRange)
+    ? decorated
+    : decorated.filter((p) => matchesDateRange(dateRange, p));
+  const stats = computeStats(ranged, filter);
   if (cacheable) cacheSet(key, stats);
   return stats;
 };

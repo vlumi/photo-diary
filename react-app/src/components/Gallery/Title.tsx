@@ -207,6 +207,7 @@ const Title = ({
   // dedupes (one network call shared between this breadcrumb and
   // the modal's Navigation bar).
   const filters = useFiltersStore((s) => s.filters);
+  const dateRange = useFiltersStore((s) => s.dateRange);
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -217,10 +218,12 @@ const Title = ({
       gallery.id(),
       photo?.id(),
       serverFilters,
+      dateRange,
     ],
     queryFn: () =>
       galleryPhotosService.getNeighbors(gallery.id(), photo!.id(), {
         filter: serverFilters,
+        dateRange,
       }),
     enabled: !!photo,
     placeholderData: keepPreviousData,
@@ -254,13 +257,13 @@ const Title = ({
   // Month view both render Title + Month/Content concurrently).
   const mapScopeBody = React.useMemo(() => {
     if (year !== undefined && month !== undefined) {
-      return { filter: serverFilters, year, month, lang };
+      return { filter: serverFilters, dateRange, year, month, lang };
     }
     if (year !== undefined) {
-      return { filter: serverFilters, year, lang };
+      return { filter: serverFilters, dateRange, year, lang };
     }
-    return { filter: serverFilters, lang };
-  }, [serverFilters, year, month, lang]);
+    return { filter: serverFilters, dateRange, lang };
+  }, [serverFilters, dateRange, year, month, lang]);
   const { data: mapPhotosRaw } = useQuery({
     queryKey: ["gallery-photos-query", gallery.id(), mapScopeBody],
     queryFn: () => galleryPhotosService.query(gallery.id(), mapScopeBody),

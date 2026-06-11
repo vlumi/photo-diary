@@ -24,6 +24,7 @@ describe("categories", () => {
     ]));
   test("time", () =>
     expect(filter.categories("time")).toStrictEqual([
+      "date-range",
       "year",
       "year-month",
       "month",

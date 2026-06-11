@@ -4,7 +4,10 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import authorizerFactory from "../lib/authorizer.js";
 import { requireScopeMatches, requireUnscoped } from "../lib/host-scope.js";
 import statsFactory from "../models/stats.js";
-import type { FilterShape } from "../lib/photo-filter-eval.js";
+import type {
+  DateRange,
+  FilterShape,
+} from "../lib/photo-filter-eval.js";
 
 const authorizer = authorizerFactory();
 const model = statsFactory();
@@ -29,14 +32,23 @@ const FilterTopic = Type.Record(Type.String(), FilterCategory, {
 const FilterSchema = Type.Record(Type.String(), FilterTopic, {
   additionalProperties: true,
 });
+const DateRangeSchema = Type.Object(
+  {
+    from: Type.Optional(Type.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
+    to: Type.Optional(Type.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
+  },
+  { additionalProperties: false }
+);
 
 const StatsBody = Type.Object({
   filter: Type.Optional(FilterSchema),
+  dateRange: Type.Optional(DateRangeSchema),
   lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
 });
 const EvolutionBody = Type.Object({
   category: Type.String({ minLength: 1 }),
   filter: Type.Optional(FilterSchema),
+  dateRange: Type.Optional(DateRangeSchema),
   lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
 });
 const EvolutionResponse = Type.Object({
@@ -101,7 +113,8 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
       return await model.getGalleryStats(
         request.params.galleryId,
         request.body.filter as FilterShape | undefined,
-        request.body.lang
+        request.body.lang,
+        request.body.dateRange as DateRange | undefined
       );
     }
   );
@@ -130,7 +143,8 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.params.galleryId,
         request.body.category,
         request.body.filter as FilterShape | undefined,
-        request.body.lang
+        request.body.lang,
+        request.body.dateRange as DateRange | undefined
       );
     }
   );
@@ -156,7 +170,8 @@ const globalPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
       await authorizer.authorizeAdmin(request.user.id);
       return await model.getGlobalStats(
         request.body.filter as FilterShape | undefined,
-        request.body.lang
+        request.body.lang,
+        request.body.dateRange as DateRange | undefined
       );
     }
   );

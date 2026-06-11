@@ -6,6 +6,7 @@ import galleryPhotosService from "../services/gallery-photos";
 import { useFiltersStore } from "../stores";
 
 import type { ServerFilters } from "./filter";
+import type { DateRange } from "../stores/filters";
 
 export interface FilteredCalendar {
   ready: boolean;
@@ -175,12 +176,22 @@ const buildCalendar = (
 
 const useCalendarFromCounts = (
   galleryId: string,
-  serverFilters: ServerFilters
+  serverFilters: ServerFilters,
+  dateRange?: DateRange
 ): FilteredCalendar => {
   const { data: counts } = useQuery({
-    queryKey: ["gallery-photo-counts", galleryId, undefined, serverFilters],
+    queryKey: [
+      "gallery-photo-counts",
+      galleryId,
+      undefined,
+      serverFilters,
+      dateRange,
+    ],
     queryFn: () =>
-      galleryPhotosService.getCounts(galleryId, { filter: serverFilters }),
+      galleryPhotosService.getCounts(galleryId, {
+        filter: serverFilters,
+        dateRange,
+      }),
     placeholderData: keepPreviousData,
   });
   return React.useMemo<FilteredCalendar>(
@@ -192,15 +203,16 @@ const useCalendarFromCounts = (
 // Filter-aware calendar. Drives the in-gallery nav chrome
 // (prev/next month + year skips, heatmap month-tile clickability)
 // so empty-under-filter buckets stay hidden. One query per
-// (gallery, filter) tuple — shared via TanStack across every
-// component that calls the hook with the same active filter.
+// (gallery, filter, dateRange) tuple — shared via TanStack across
+// every component that calls the hook with the same active filter.
 const useFilteredCalendar = (galleryId: string): FilteredCalendar => {
   const filters = useFiltersStore((s) => s.filters);
+  const dateRange = useFiltersStore((s) => s.dateRange);
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
   );
-  return useCalendarFromCounts(galleryId, serverFilters);
+  return useCalendarFromCounts(galleryId, serverFilters, dateRange);
 };
 
 // Unfiltered gallery shape — `firstDay`/`lastDay`/`includesPhotos`/

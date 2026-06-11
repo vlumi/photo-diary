@@ -255,8 +255,16 @@ const FilterTopic = Type.Record(Type.String(), FilterCategory, {
 const FilterSchema = Type.Record(Type.String(), FilterTopic, {
   additionalProperties: true,
 });
+const DateRangeSchema = Type.Object(
+  {
+    from: Type.Optional(Type.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
+    to: Type.Optional(Type.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
+  },
+  { additionalProperties: false }
+);
 const QueryBody = Type.Object({
   filter: Type.Optional(FilterSchema),
+  dateRange: Type.Optional(DateRangeSchema),
   year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
   month: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
   day: Type.Optional(Type.Integer({ minimum: 1, maximum: 31 })),
@@ -461,6 +469,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       await authorizer.authorizeAdmin(request.user.id);
       return await model.queryFilteredGlobal({
         filter: request.body.filter,
+        dateRange: request.body.dateRange,
         year: request.body.year,
         month: request.body.month,
         day: request.body.day,

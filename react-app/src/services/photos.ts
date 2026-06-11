@@ -1,6 +1,7 @@
 import api, { unwrap } from "../lib/api";
 
 import type { ServerFilters } from "../lib/filter";
+import type { DateRange } from "../stores/filters";
 
 export type MissingField =
   | "taken"
@@ -127,6 +128,7 @@ const getByIds = async (ids: string[]): Promise<PhotoRow[]> => {
 // shape as the gallery-scoped /gallery-photos/<id>/query.
 interface QueryOpts {
   filter?: ServerFilters;
+  dateRange?: DateRange;
   year?: number;
   month?: number;
   day?: number;
