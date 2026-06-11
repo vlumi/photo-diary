@@ -1,10 +1,12 @@
 import React from "react";
+import { useParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 
 import Category from "./Category";
 import DateRangePill from "./DateRangePill";
+import seedDateRangeFromUrl from "./seedDateRange";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import stats, { type UniqueValues } from "../../../lib/stats";
@@ -87,6 +89,11 @@ const Topic = ({
   >({});
   const dateRange = useFiltersStore((s) => s.dateRange);
   const setDateRange = useFiltersStore((s) => s.setDateRange);
+  const { year, month, day } = useParams<{
+    year?: string;
+    month?: string;
+    day?: string;
+  }>();
 
   const { t } = useTranslation();
 
@@ -151,7 +158,9 @@ const Topic = ({
       // applies to the regular value-bearing categories.
       if (category === "date-range") {
         setCategorySelector({});
-        if (dateRange === undefined) setDateRange({});
+        if (dateRange === undefined) {
+          setDateRange(seedDateRangeFromUrl(year, month, day));
+        }
         return;
       }
       const value = event.target.value;
