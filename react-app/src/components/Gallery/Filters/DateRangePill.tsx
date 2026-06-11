@@ -5,28 +5,28 @@ import { BsFillXCircleFill } from "react-icons/bs";
 
 import { useFiltersStore, type DateRange } from "../../../stores/filters";
 
+// Mirrors Category's wrapper styling so the pill reads as a peer
+// of Year / Month / Weekday inside the Time topic — same rounding,
+// padding, margin, no extra border (the original border-1 made the
+// edges look fuzzier than the other pills).
 const Pill = styled.div`
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  margin: 2px 2px;
-  border-radius: 12px;
-  background: var(--header-background);
+  padding: 2px 5px;
+  margin: 0 5px;
+  border-radius: 15px;
+  background-color: var(--header-background);
   color: var(--header-color);
-  border: 1px solid var(--inactive-color);
-  font-size: 0.85em;
 `;
 const Label = styled.span`
+  padding: 0 5px;
   font-style: italic;
-  font-size: 0.85em;
-  color: var(--inactive-color);
-  padding: 0 4px;
 `;
 const DateInput = styled.input`
   font: inherit;
-  font-size: 0.85em;
+  font-size: 0.9em;
   padding: 1px 4px;
+  margin: 0 2px;
   background: var(--primary-background);
   color: var(--primary-color);
   border: 1px solid var(--inactive-color);
@@ -34,10 +34,6 @@ const DateInput = styled.input`
 `;
 const ClearIcon = styled(BsFillXCircleFill)`
   cursor: pointer;
-  color: var(--inactive-color);
-  &:hover {
-    color: var(--header-color);
-  }
 `;
 
 // Date-range filter pill. Shown iff `useFiltersStore.dateRange` is
