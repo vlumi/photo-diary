@@ -801,7 +801,15 @@ const PhotoDrawer = (): React.ReactElement => {
   }, []);
   const countryNameFor = (lang: string): string | undefined => {
     const code = form.country;
-    if (!code || !countryData || isCountrySentinel(code)) return undefined;
+    if (!code) return undefined;
+    if (isCountrySentinel(code)) {
+      // i18next has every supported language's resources loaded at
+      // module init (en / fi / ja are bundled, not async); the
+      // explicit `lng` option pulls the right translation regardless
+      // of the active UI language.
+      return String(t("country-sentinel-label", { lng: lang }));
+    }
+    if (!countryData) return undefined;
     return (
       countryData.getName(code, lang, { select: "alias" }) ||
       countryData.getName(code, lang) ||
