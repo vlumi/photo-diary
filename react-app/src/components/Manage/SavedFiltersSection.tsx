@@ -208,7 +208,6 @@ interface FormState {
   dateFrom: string;
   dateTo: string;
   filterJson: string;
-  ordinal: string;
 }
 
 const emptyLocalized = (): Record<string, string> =>
@@ -225,7 +224,6 @@ const blankForm = (
   dateFrom: galleryExtremes?.from ?? "",
   dateTo: galleryExtremes?.to ?? "",
   filterJson: "",
-  ordinal: "0",
 });
 
 const formFromSaved = (f: SavedFilter): FormState => {
@@ -249,14 +247,12 @@ const formFromSaved = (f: SavedFilter): FormState => {
     dateFrom: f.definition?.dateRange?.from ?? "",
     dateTo: f.definition?.dateRange?.to ?? "",
     filterJson,
-    ordinal: String(f.ordinal ?? 0),
   };
 };
 
 interface BuildResult {
   ok: true;
   definition: SavedFilterDefinition;
-  ordinal: number;
 }
 interface BuildError {
   ok: false;
@@ -278,11 +274,7 @@ const buildDefinition = (form: FormState): BuildResult | BuildError => {
     if (form.dateFrom) definition.dateRange.from = form.dateFrom;
     if (form.dateTo) definition.dateRange.to = form.dateTo;
   }
-  const ordinal = Number(form.ordinal || "0");
-  if (!Number.isFinite(ordinal)) {
-    return { ok: false, reason: "Ordinal must be a number" };
-  }
-  return { ok: true, definition, ordinal };
+  return { ok: true, definition };
 };
 
 const localizedPatch = (
@@ -413,7 +405,6 @@ const SavedFiltersSection = ({
           form.descriptionLocalized
         ),
         definition: built.definition,
-        ordinal: built.ordinal,
       });
     } else if (editingId) {
       updateMutation.mutate({
@@ -433,7 +424,6 @@ const SavedFiltersSection = ({
             form.descriptionLocalized
           ),
           definition: built.definition,
-          ordinal: built.ordinal,
         },
       });
     }

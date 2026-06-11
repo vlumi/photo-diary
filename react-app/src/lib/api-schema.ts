@@ -792,7 +792,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            galleryId: string;
+                            sourceGalleryId: string;
                             title: string;
                             description: string;
                             titleLocalized: {
@@ -814,7 +814,6 @@ export interface paths {
                             } & {
                                 [key: string]: unknown;
                             };
-                            ordinal: number;
                         }[];
                     };
                 };
@@ -856,7 +855,6 @@ export interface paths {
                         } & {
                             [key: string]: unknown;
                         };
-                        ordinal?: number;
                     };
                 };
             };
@@ -904,7 +902,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             id: string;
-                            galleryId: string;
+                            sourceGalleryId: string;
                             title: string;
                             description: string;
                             titleLocalized: {
@@ -926,7 +924,6 @@ export interface paths {
                             } & {
                                 [key: string]: unknown;
                             };
-                            ordinal: number;
                         };
                     };
                 };
@@ -967,7 +964,6 @@ export interface paths {
                         } & {
                             [key: string]: unknown;
                         };
-                        ordinal?: number;
                     };
                 };
             };

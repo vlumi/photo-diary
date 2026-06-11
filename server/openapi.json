@@ -1092,19 +1092,18 @@
                     "type": "object",
                     "required": [
                       "id",
-                      "galleryId",
+                      "sourceGalleryId",
                       "title",
                       "description",
                       "titleLocalized",
                       "descriptionLocalized",
-                      "definition",
-                      "ordinal"
+                      "definition"
                     ],
                     "properties": {
                       "id": {
                         "type": "string"
                       },
-                      "galleryId": {
+                      "sourceGalleryId": {
                         "type": "string"
                       },
                       "title": {
@@ -1169,9 +1168,6 @@
                           }
                         },
                         "additionalProperties": true
-                      },
-                      "ordinal": {
-                        "type": "integer"
                       }
                     }
                   }
@@ -1264,9 +1260,6 @@
                       }
                     },
                     "additionalProperties": true
-                  },
-                  "ordinal": {
-                    "type": "integer"
                   }
                 },
                 "additionalProperties": false
@@ -1329,19 +1322,18 @@
                   "type": "object",
                   "required": [
                     "id",
-                    "galleryId",
+                    "sourceGalleryId",
                     "title",
                     "description",
                     "titleLocalized",
                     "descriptionLocalized",
-                    "definition",
-                    "ordinal"
+                    "definition"
                   ],
                   "properties": {
                     "id": {
                       "type": "string"
                     },
-                    "galleryId": {
+                    "sourceGalleryId": {
                       "type": "string"
                     },
                     "title": {
@@ -1406,9 +1398,6 @@
                         }
                       },
                       "additionalProperties": true
-                    },
-                    "ordinal": {
-                      "type": "integer"
                     }
                   }
                 }
@@ -1491,9 +1480,6 @@
                       }
                     },
                     "additionalProperties": true
-                  },
-                  "ordinal": {
-                    "type": "integer"
                   }
                 },
                 "additionalProperties": false
