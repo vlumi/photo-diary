@@ -9,6 +9,7 @@ import {
   requireUnscoped,
 } from "../lib/host-scope.js";
 import { writeCoordSidecar } from "../lib/inbox-sidecar.js";
+import { NumberOrNull } from "../lib/schema-utils.js";
 import {
   coordsDiffer,
   mergeCoords,
@@ -67,15 +68,9 @@ const PhotoOverridesFields = {
               coordinates: Type.Optional(
                 Type.Object(
                   {
-                    latitude: Type.Optional(
-                      Type.Union([Type.Number(), Type.Null()])
-                    ),
-                    longitude: Type.Optional(
-                      Type.Union([Type.Number(), Type.Null()])
-                    ),
-                    altitude: Type.Optional(
-                      Type.Union([Type.Number(), Type.Null()])
-                    ),
+                    latitude: Type.Optional(NumberOrNull()),
+                    longitude: Type.Optional(NumberOrNull()),
+                    altitude: Type.Optional(NumberOrNull()),
                   },
                   { additionalProperties: false }
                 )

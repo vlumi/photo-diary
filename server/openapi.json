@@ -3354,13 +3354,9 @@
                     "type": "boolean"
                   },
                   "hideMap": {
-                    "anyOf": [
-                      {
-                        "type": "boolean"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "boolean",
+                      "null"
                     ]
                   }
                 },
@@ -3861,13 +3857,9 @@
                     "type": "boolean"
                   },
                   "hideMap": {
-                    "anyOf": [
-                      {
-                        "type": "boolean"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "boolean",
+                      "null"
                     ]
                   }
                 },
