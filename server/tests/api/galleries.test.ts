@@ -563,10 +563,7 @@ describe("Mutations as admin", () => {
       .send({ theme: "grayscale", initialView: "year", epochType: "birthday" })
       .expect(204));
 
-  test("Switching defaultLanguage shuffles canonical and overlays", async () => {
-    // Set up gallery1 with en as the primary, a fi overlay, and an
-    // existing en overlay (shouldn't matter — the shuffle treats the
-    // canonical column as the source of truth for the old default).
+  test("defaultLanguage change is purely metadata — canonical and overlays stay put", async () => {
     await api
       .put("/api/v1/galleries/gallery1")
       .set("Authorization", `Bearer ${token}`)
@@ -574,30 +571,27 @@ describe("Mutations as admin", () => {
         title: "Landscapes",
         description: "Scenic shots.",
         defaultLanguage: "en",
-        titleLocalized: { fi: "Maisemia", ja: "" },
-        descriptionLocalized: { fi: "Maisemakuvia.", ja: "" },
+        titleLocalized: { fi: "Maisemia" },
+        descriptionLocalized: { fi: "Maisemakuvia." },
       })
       .expect(204);
-
-    // Switch primary to fi. Expected:
-    //   - canonical title    "Landscapes"  → en overlay
-    //   - fi overlay         "Maisemia"    → canonical
-    //   - fi overlay row dropped (now redundant with canonical)
     await api
       .put("/api/v1/galleries/gallery1")
       .set("Authorization", `Bearer ${token}`)
       .send({ defaultLanguage: "fi" })
       .expect(204);
-
     const after = await api
       .get("/api/v1/galleries/gallery1")
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(after.body.defaultLanguage).toBe("fi");
-    expect(after.body.title).toBe("Maisemia");
-    expect(after.body.description).toBe("Maisemakuvia.");
-    expect(after.body.titleLocalized).toEqual({ en: "Landscapes" });
-    expect(after.body.descriptionLocalized).toEqual({ en: "Scenic shots." });
+    // Canonical column is untouched — the operator is expected to
+    // rotate content manually if they want it to match the new
+    // primary's language.
+    expect(after.body.title).toBe("Landscapes");
+    expect(after.body.description).toBe("Scenic shots.");
+    expect(after.body.titleLocalized).toEqual({ fi: "Maisemia" });
+    expect(after.body.descriptionLocalized).toEqual({ fi: "Maisemakuvia." });
   });
 });
 
