@@ -10,7 +10,10 @@ import {
 } from "../../services/galleries";
 import ThemePicker from "../ThemePicker";
 import IconCropper from "./IconCropper";
-import LocalizedInputs, { SUPPORTED_LANGS } from "./LocalizedInputs";
+import LocalizedInputs, {
+  SUPPORTED_LANGS,
+  languageNameIn,
+} from "./LocalizedInputs";
 import config from "../../lib/config";
 
 // Enum values must mirror server's GalleryUpdateBody. Kept inline
@@ -344,7 +347,7 @@ const GalleryFormFields = ({
           >
             {SUPPORTED_LANGS.map((lang) => (
               <option key={lang} value={lang}>
-                {lang}
+                {languageNameIn(lang, form.defaultLanguage)}
               </option>
             ))}
           </Select>

@@ -9,6 +9,24 @@ import styled from "@emotion/styled";
 export const SUPPORTED_LANGS = ["en", "fi", "ja"] as const;
 export type SupportedLang = (typeof SUPPORTED_LANGS)[number];
 
+// Return the human-readable name of `lang` rendered in `displayLang`.
+// The gallery's "Primary language" dropdown uses this to render its
+// options in the language being configured (so the operator always
+// reads `English / Finnish / Japanese` in the gallery's own primary,
+// not in their personal UI lang). Falls back to the bare code if
+// `Intl.DisplayNames` doesn't recognise the lang.
+export const languageNameIn = (
+  lang: string,
+  displayLang: string
+): string => {
+  try {
+    const dn = new Intl.DisplayNames([displayLang], { type: "language" });
+    return dn.of(lang) ?? lang;
+  } catch {
+    return lang;
+  }
+};
+
 const Stack = styled.div`
   display: flex;
   flex-direction: column;
