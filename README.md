@@ -80,7 +80,7 @@ Quickstart for a single personal instance. For the full production layout (multi
 Mirror the prod layout with a dev "instance" inside the repo. The init script wires it up the same way as a real deploy, but with the `code` symlink pointing at the live source:
 
 ```sh
-./bin/instance.ts dev --base .
+./bin/instance.ts dev
 ```
 
 That gives you `<repo>/dev/` with `.env`, `photos/{inbox,…,thumbnail}/`, `code → <repo>` (the `dev/` path is gitignored, so the bootstrapped state won't pollute the repo). Each of server, converter, and react-app has a `bin/start-dev.sh` wrapper — run them in the foreground (tsx watch / vite, no pm2):
@@ -151,10 +151,10 @@ Repeat this block for each new version you want to land on this host.
 The `bin/instance.ts` script handles directory creation, `.env` generation (with a fresh random `SECRET`), the `code` symlink, and the per-instance `bin/` shortcuts in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary/0.14.0/bin/instance.ts dailybw
+/opt/photo-diary/0.14.0/bin/instance.ts /var/photo-diary/dailybw
 ```
 
-That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The script can be invoked from any working directory; the instance dir is derived from the name (and the `--base <dir>` flag, default `/var/photo-diary`, if you want instances under a different parent). Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
+That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The positional is the instance directory; it's resolved via `path.resolve()` against cwd, so `dailybw` and `./dailybw` both mean `<cwd>/dailybw`, while `../sibling` and absolute paths resolve as expected. To pin a logical name different from the dir basename, pass `--name`. Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
 
 The generated `.env` covers the required keys. Optional per-instance frontend defaults can be added — these flow through `/api/v1/meta` to the frontend on boot:
 
@@ -183,10 +183,10 @@ Re-run `bin/instance.ts` from the new version of the code, then **delete + start
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.14.0/bin/instance.ts dailybw          # backs up the DB, flips the symlink
-pm2 delete dailybw dailybw-converter                    # drop cached metadata
+/opt/photo-diary/0.14.0/bin/instance.ts /var/photo-diary/dailybw    # backs up the DB, flips the symlink
+pm2 delete dailybw dailybw-converter                                # drop cached metadata
 cd /var/photo-diary/dailybw
-./code/server/bin/start-prod.sh                         # migration runner applies any schema bumps
+./code/server/bin/start-prod.sh                                     # migration runner applies any schema bumps
 ./code/converter/bin/start-prod.sh
 pm2 save
 ```
