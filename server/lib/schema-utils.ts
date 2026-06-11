@@ -13,3 +13,15 @@ import { Type } from "typebox";
 // site.
 export const StringEnum = <T extends string>(values: readonly T[]) =>
   Type.Unsafe<T>({ type: "string", enum: [...values] });
+
+// Fastify's default Ajv config (`coerceTypes: 'array'`) silently
+// coerces `null` to `false` against `Type.Boolean()` — even inside a
+// `Type.Union([Type.Boolean(), Type.Null()])`, because Ajv coerces
+// before evaluating the union's alternatives. The JSON Schema we want
+// (a plain `type: ["boolean", "null"]`) sidesteps the coercion, but
+// TypeBox 1.x doesn't have a sugar for the multi-type form. Drop
+// straight to JSON Schema via `Type.Unsafe`. The TS-side type stays
+// `boolean | null`, so callers keep their type safety at the
+// destructure site.
+export const BooleanOrNull = () =>
+  Type.Unsafe<boolean | null>({ type: ["boolean", "null"] });

@@ -3,6 +3,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
+import { BooleanOrNull } from "../lib/schema-utils.js";
 import modelFactory from "../models/group-gallery.js";
 
 const authorizer = authorizerFactory();
@@ -33,7 +34,7 @@ const RowsResponse = Type.Array(RowResponse);
 const UpsertBody = Type.Object(
   {
     isEditor: Type.Boolean(),
-    hideMap: Type.Optional(Type.Union([Type.Boolean(), Type.Null()])),
+    hideMap: Type.Optional(BooleanOrNull()),
   },
   { additionalProperties: false }
 );

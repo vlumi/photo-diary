@@ -102,6 +102,35 @@ describe("As admin", () => {
     expect(after.body).toStrictEqual({ id: "gallery2", hideMap: false });
   });
 
+  test("Upsert with hideMap=null persists NULL (inherit)", async () => {
+    const auth = await adminAuth();
+    await setupGroup(auth);
+    // Seed with hideMap=true (hide).
+    await api
+      .put("/api/v1/group-gallery/family/gallery2")
+      .set("Authorization", auth)
+      .send({ isEditor: false, hideMap: true })
+      .expect(204);
+    let result = await api
+      .get("/api/v1/group-gallery")
+      .query({ groupId: "family", galleryId: "gallery2" })
+      .set("Authorization", auth)
+      .expect(200);
+    expect(result.body[0].hide_map).toBe(1);
+    // Move back to inherit by sending hideMap=null.
+    await api
+      .put("/api/v1/group-gallery/family/gallery2")
+      .set("Authorization", auth)
+      .send({ isEditor: false, hideMap: null })
+      .expect(204);
+    result = await api
+      .get("/api/v1/group-gallery")
+      .query({ groupId: "family", galleryId: "gallery2" })
+      .set("Authorization", auth)
+      .expect(200);
+    expect(result.body[0].hide_map).toBeNull();
+  });
+
   test("List filters by groupId / galleryId", async () => {
     const auth = await adminAuth();
     await setupGroup(auth);
