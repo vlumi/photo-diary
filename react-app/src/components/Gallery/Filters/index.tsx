@@ -8,7 +8,6 @@ import {
   BsFillPlusCircleFill,
 } from "react-icons/bs";
 
-import DateRangePill from "./DateRangePill";
 import Topic from "./Topic";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
@@ -209,10 +208,15 @@ const Filters = ({
         <BsFillFunnelFill />
       </FilterTitle>
       <FilterContainer>
-        <DateRangePill />
         {filter
           .topics()
-          .filter((topic) => topic in filters)
+          // Time topic also renders when the date-range pill is
+          // active even if no discrete time category is in
+          // `filters` — the pill visually sits inside Time, so
+          // its activation surfaces the topic block.
+          .filter((topic) =>
+            topic in filters || (topic === "time" && dateRange !== undefined)
+          )
           .map((topic) => (
             <Topic
               key={`filter:${topic}`}

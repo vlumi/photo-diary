@@ -4,10 +4,12 @@ import { useTranslation } from "react-i18next";
 import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
 
 import Category from "./Category";
+import DateRangePill from "./DateRangePill";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import stats, { type UniqueValues } from "../../../lib/stats";
 import type { BetaFeature } from "../../../stores/beta";
+import { useFiltersStore } from "../../../stores";
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -83,6 +85,8 @@ const Topic = ({
   const [categorySelector, setCategorySelector] = React.useState<
     Record<string, boolean>
   >({});
+  const dateRange = useFiltersStore((s) => s.dateRange);
+  const setDateRange = useFiltersStore((s) => s.setDateRange);
 
   const { t } = useTranslation();
 
@@ -99,6 +103,12 @@ const Topic = ({
     }
     const newFilters = filter.removeTopic(filters, topic);
     setFilters(newFilters);
+    // Removing the Time topic chip also clears the date-range
+    // pill — it visually lives inside Time, so the X button on
+    // the topic wrapper is the natural "drop everything time".
+    if (topic === "time") {
+      setDateRange(undefined);
+    }
   };
 
   const handleToggleAddCategoryClick = (event: React.MouseEvent) => {
@@ -197,23 +207,26 @@ const Topic = ({
         <Title>{t(`stats-topic-${topic}`)}</Title>
         <BsFillXCircleFill />
       </TopicBox>
-      {filter
-        .categories(topic)
-        .filter((category) => category in filters[topic])
-        .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
-        .filter(isBetaAllowed)
-        .map((category) => (
-          <Category
-            key={`filter:${topic}:${category}`}
-            topic={topic}
-            category={category}
-            filters={filters}
-            setFilters={setFilters}
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
-        ))}
+      {topic === "time" && dateRange !== undefined ? <DateRangePill /> : null}
+      {topic in filters
+        ? filter
+            .categories(topic)
+            .filter((category) => category in filters[topic])
+            .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
+            .filter(isBetaAllowed)
+            .map((category) => (
+              <Category
+                key={`filter:${topic}:${category}`}
+                topic={topic}
+                category={category}
+                filters={filters}
+                setFilters={setFilters}
+                uniqueValues={uniqueValues}
+                lang={lang}
+                countryData={countryData}
+              />
+            ))
+        : null}
       {renderCategoryAdder(topic)}
     </Root>
   );
