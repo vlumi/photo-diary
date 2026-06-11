@@ -1,13 +1,9 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { BsFillXCircleFill, BsFillPlusCircleFill } from "react-icons/bs";
+import { BsFillXCircleFill } from "react-icons/bs";
 
-import {
-  isEmptyDateRange,
-  useFiltersStore,
-  type DateRange,
-} from "../../../stores/filters";
+import { useFiltersStore, type DateRange } from "../../../stores/filters";
 
 const Pill = styled.div`
   display: inline-flex;
@@ -43,49 +39,20 @@ const ClearIcon = styled(BsFillXCircleFill)`
     color: var(--header-color);
   }
 `;
-const AddIcon = styled(BsFillPlusCircleFill)`
-  cursor: pointer;
-  margin: 0 5px;
-  color: var(--header-color);
-  &:hover {
-    color: var(--inactive-color);
-  }
-`;
 
-// Date-range filter UI sibling to the topic/category/key filter
-// pills. Lives in the store as `useFiltersStore.dateRange` and
-// flows into every per-view / stats query body as a top-level
-// `dateRange` field (#264). Both bounds independent — operator
-// can leave either side open for "since X" / "until Y" half-open
-// ranges. Native `<input type="date">` for now; a fancier picker
-// can come later.
-const DateRangePill = (): React.ReactElement => {
+// Date-range filter pill. Shown iff `useFiltersStore.dateRange` is
+// defined — activation lives in the Time-topic adder dropdown
+// (`Filters/index.tsx`), not in this component, so the filter bar
+// has a single "+" entry point. Cleared via the X button on the
+// pill, which deactivates back to undefined.
+const DateRangePill = (): React.ReactElement | null => {
   const { t } = useTranslation();
   const dateRange = useFiltersStore((s) => s.dateRange);
   const setDateRange = useFiltersStore((s) => s.setDateRange);
-  const [shown, setShown] = React.useState<boolean>(!isEmptyDateRange(dateRange));
 
-  React.useEffect(() => {
-    // External setters (e.g. saved-filter activation) can drop a
-    // range in; surface the pill if a range becomes active.
-    if (!isEmptyDateRange(dateRange) && !shown) setShown(true);
-  }, [dateRange, shown]);
-
-  if (!shown) {
-    return (
-      <AddIcon
-        onClick={() => setShown(true)}
-        aria-label={t("filters-date-range-add")}
-        title={t("filters-date-range-add")}
-      />
-    );
-  }
+  if (!dateRange) return null;
 
   const set = (next: DateRange) => setDateRange(next);
-  const handleClear = () => {
-    setDateRange({});
-    setShown(false);
-  };
   return (
     <Pill>
       <Label>{t("filters-date-range-from")}</Label>
@@ -105,7 +72,7 @@ const DateRangePill = (): React.ReactElement => {
         }
       />
       <ClearIcon
-        onClick={handleClear}
+        onClick={() => setDateRange(undefined)}
         aria-label={t("filters-date-range-clear")}
         title={t("filters-date-range-clear")}
       />

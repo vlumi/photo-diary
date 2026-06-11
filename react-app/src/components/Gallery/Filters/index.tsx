@@ -1,4 +1,5 @@
 import React from "react";
+import { useParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,7 +13,41 @@ import Topic from "./Topic";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import type { UniqueValues } from "../../../lib/stats";
-import { useBetaStore } from "../../../stores";
+import { useBetaStore, useFiltersStore } from "../../../stores";
+import { type DateRange } from "../../../stores/filters";
+
+// Pre-fill the date-range pill based on the URL's year / month /
+// day when the operator activates it from the Time-topic adder.
+// Browser native `<input type="date">` doesn't expose a "default
+// month" attribute, so the only way to anchor the calendar to the
+// currently-viewed slice is to seed the inputs themselves. The
+// operator can clear / adjust from there.
+const seedDateRangeFromUrl = (
+  year?: string,
+  month?: string,
+  day?: string
+): DateRange => {
+  if (year && month && day) {
+    const ymd = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    return { from: ymd, to: ymd };
+  }
+  if (year && month) {
+    const m = month.padStart(2, "0");
+    const lastDay = new Date(
+      Number(year),
+      Number(month),
+      0
+    ).getDate();
+    return {
+      from: `${year}-${m}-01`,
+      to: `${year}-${m}-${String(lastDay).padStart(2, "0")}`,
+    };
+  }
+  if (year) {
+    return { from: `${year}-01-01`, to: `${year}-12-31` };
+  }
+  return {};
+};
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -85,12 +120,27 @@ const Filters = ({
 
   const { t } = useTranslation();
 
-  const alreadyFilteredCategory = (topic: string, category: string): boolean =>
-    topic in filters && category in filters[topic];
+  const setDateRange = useFiltersStore((s) => s.setDateRange);
+  const dateRange = useFiltersStore((s) => s.dateRange);
+  const { year, month, day } = useParams<{
+    year?: string;
+    month?: string;
+    day?: string;
+  }>();
+
+  const alreadyFilteredCategory = (topic: string, category: string): boolean => {
+    // Date range lives in its own store slot, not in the filters
+    // matrix — already-active means the pill is rendered.
+    if (topic === "time" && category === "date-range") {
+      return dateRange !== undefined;
+    }
+    return topic in filters && category in filters[topic];
+  };
 
   const handleToggleAddTopicClick = () => {
     setTopicSelector(!topicSelector);
   };
+
   const renderTopicAdder = () => {
     const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
       const topicElement = (
@@ -102,6 +152,16 @@ const Filters = ({
       const topic = topicElement.getAttribute("data-key");
       const category = event.target.value;
       if (!topic || !category) {
+        return;
+      }
+      // Date range isn't a discrete-value category — activate the
+      // dedicated pill instead of adding to the FilterShape matrix.
+      // Seeds from / to from the URL's year / month / day so the
+      // native date picker opens on the currently-viewed slice
+      // rather than today's calendar.
+      if (topic === "time" && category === "date-range") {
+        setDateRange(seedDateRangeFromUrl(year, month, day));
+        setTopicSelector(false);
         return;
       }
       const newFilters = filter.newEmptyCategory(filters, topic, category);

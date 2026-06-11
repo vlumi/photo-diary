@@ -155,6 +155,11 @@ const Topic = ({
             <NewCategory value="">Select...</NewCategory>
             {filter
               .categories(topic)
+              // `date-range` is structurally different (no discrete
+              // values to pick); it's added from the top-level
+              // Filters topic adder which activates the dedicated
+              // pill. Hide from this per-category adder.
+              .filter((category) => category !== "date-range")
               .filter((category) => !(hideMap && LOCATION_CATEGORIES.has(category)))
               .filter(isBetaAllowed)
               .map((category) => (
