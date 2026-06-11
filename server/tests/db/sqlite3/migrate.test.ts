@@ -33,7 +33,7 @@ describe("migrate", () => {
   test("fresh DB runs every migration and lands at the highest version", () => {
     const db = open();
     migrate(db);
-    expect(schemaVersion(db)).toBe(21);
+    expect(schemaVersion(db)).toBe(22);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "gallery",
@@ -80,7 +80,17 @@ describe("migrate", () => {
     db.exec(`
       CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);
       INSERT INTO meta VALUES ('schema_version', '1');
-      CREATE TABLE gallery (id TEXT PRIMARY KEY);
+      CREATE TABLE gallery (
+        id TEXT PRIMARY KEY,
+        title TEXT,
+        description TEXT,
+        icon TEXT,
+        epoch TEXT,
+        epoch_type TEXT,
+        theme TEXT,
+        initial_view TEXT,
+        hostname TEXT
+      );
       CREATE TABLE user (id TEXT PRIMARY KEY, password TEXT, secret TEXT);
       CREATE TABLE acl (
         user_id TEXT,
@@ -105,7 +115,7 @@ describe("migrate", () => {
 
     migrate(db);
 
-    expect(schemaVersion(db)).toBe(21);
+    expect(schemaVersion(db)).toBe(22);
     expect(gallerPhotoFkRefs(db).sort()).toEqual(["gallery", "photo"]);
     const rows = db.prepare("SELECT * FROM gallery_photo").all();
     expect(rows).toEqual([{ gallery_id: "g1", photo_id: "p1" }]);

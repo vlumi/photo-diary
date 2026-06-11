@@ -27,7 +27,7 @@ export interface GalleryUpdatePatch {
   description?: string;
   titleLocalized?: Record<string, string>;
   descriptionLocalized?: Record<string, string>;
-  defaultLanguage?: string | null;
+  defaultLanguage?: string;
   icon?: string;
   epoch?: string;
   epochType?: EpochType;

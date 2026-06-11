@@ -103,6 +103,14 @@ const applyVirtualSources = async (
 const createGallery = async (gallery: { id: string } & Record<string, any>) => {
   assertSlugId(gallery.id);
   logger.debug("Creating gallery", { id: gallery.id });
+  // Default the gallery's primary language from `.env DEFAULT_LANGUAGE`
+  // when the caller didn't specify one — operator's preference at the
+  // instance level becomes the seed for every new gallery, with `en`
+  // as the final fallback. Existing galleries opt in by setting their
+  // own value through the admin UI / API.
+  if (!gallery.defaultLanguage) {
+    gallery.defaultLanguage = process.env.DEFAULT_LANGUAGE || "en";
+  }
   const sources = gallery.sources as string[] | undefined;
   await db.createGallery(gallery);
   await applyVirtualSources(gallery.id, sources);
@@ -116,12 +124,77 @@ const getGallery = async (galleryId: string) => {
     photos: galleryPhotos,
   };
 };
+// Move localized content around when the operator switches the
+// gallery's primary language so the canonical column always carries
+// the new default's text. Shuffle (per field — title and description
+// independent):
+//   1. old canonical → old-default-language's overlay row
+//   2. new default's overlay → new canonical
+//   3. drop the new default's overlay row (now redundant)
+//
+// Reads from `existing` (pre-patch state) so the operator's
+// in-flight edits in the same request don't compete with the
+// shuffle: the patch wins for the OLD layout, then the shuffle
+// reshapes for the NEW layout.
+const shuffleDefaultLanguage = async (
+  galleryId: string,
+  oldDefault: string,
+  newDefault: string,
+  existing: { title?: string; description?: string }
+): Promise<void> => {
+  const current = (await db.loadGallery(galleryId)) as {
+    title?: string;
+    description?: string;
+    titleLocalized?: Record<string, string>;
+    descriptionLocalized?: Record<string, string>;
+  };
+  const newCanonicalTitle = current.titleLocalized?.[newDefault] ?? "";
+  const newCanonicalDesc = current.descriptionLocalized?.[newDefault] ?? "";
+  // Patch may have already updated canonical; prefer the live row
+  // values so we capture whatever just landed.
+  const oldCanonicalTitle = current.title ?? existing.title ?? "";
+  const oldCanonicalDesc = current.description ?? existing.description ?? "";
+  await db.updateGallery(galleryId, {
+    title: newCanonicalTitle,
+    description: newCanonicalDesc,
+    titleLocalized: {
+      [oldDefault]: oldCanonicalTitle,
+      [newDefault]: "",
+    },
+    descriptionLocalized: {
+      [oldDefault]: oldCanonicalDesc,
+      [newDefault]: "",
+    },
+  });
+};
+
 const updateGallery = async (
   galleryId: string,
   patch: Record<string, any>
 ) => {
   logger.debug("Updating gallery", { id: galleryId });
+  // Capture the pre-patch state so the default-language shuffle
+  // (below) can find the old canonical even if the patch overwrites
+  // it as part of the same request.
+  let existing:
+    | { defaultLanguage?: string; title?: string; description?: string }
+    | undefined;
+  if (patch.defaultLanguage) {
+    existing = (await db.loadGallery(galleryId)) as typeof existing;
+  }
   await db.updateGallery(galleryId, patch);
+  if (
+    existing &&
+    patch.defaultLanguage &&
+    patch.defaultLanguage !== existing.defaultLanguage
+  ) {
+    await shuffleDefaultLanguage(
+      galleryId,
+      existing.defaultLanguage ?? "en",
+      patch.defaultLanguage,
+      existing
+    );
+  }
   if ("sources" in patch) {
     await applyVirtualSources(galleryId, patch.sources as string[] | undefined);
     // Virtual gallery contents shift = stats caches go stale.

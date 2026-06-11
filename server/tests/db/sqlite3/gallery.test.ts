@@ -24,6 +24,7 @@ describe("gallery CRUD", () => {
       title: "Sample",
       description: "desc",
       icon: "icon.png",
+      defaultLanguage: "en",
       epoch: "2024-01-01",
       epochType: "birthday",
       theme: "blue",
@@ -87,12 +88,26 @@ describe("gallery localized + defaultLanguage", () => {
       mkGallery({ id: "g-lang", title: "Maisemia", defaultLanguage: "fi" })
     );
     let row = (await driver.loadGallery("g-lang")) as {
-      defaultLanguage: string | null;
+      defaultLanguage: string;
     };
     expect(row.defaultLanguage).toBe("fi");
-    await driver.updateGallery("g-lang", { defaultLanguage: null });
-    row = (await driver.loadGallery("g-lang")) as { defaultLanguage: string | null };
-    expect(row.defaultLanguage).toBeNull();
+    await driver.updateGallery("g-lang", { defaultLanguage: "ja" });
+    row = (await driver.loadGallery("g-lang")) as { defaultLanguage: string };
+    expect(row.defaultLanguage).toBe("ja");
+  });
+
+  test("createGallery without defaultLanguage falls back to 'en' via column default", async () => {
+    // Driver-level test: model-layer createGallery applies the .env
+    // default before reaching the DB. Here we bypass the model and
+    // hit the driver directly to verify the column's own DEFAULT
+    // takes over when the insert omits the field — the safety net
+    // for any code path that reaches the driver without going
+    // through the model.
+    await driver.createGallery({ id: "g-col-default" } as any);
+    const row = (await driver.loadGallery("g-col-default")) as {
+      defaultLanguage: string;
+    };
+    expect(row.defaultLanguage).toBe("en");
   });
 
   test("update writes title / description overlays, load reads them as maps", async () => {
