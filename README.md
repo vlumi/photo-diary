@@ -103,13 +103,13 @@ Directory layout:
 ```text
 /opt/photo-diary/                       # parent dir, owned by the deploy user (see below)
   0.11.0/                               #   each version unpacked into its own subdir
-  0.15.0/                               #   so different instances can run different versions
+  0.15.1/                               #   so different instances can run different versions
                                         #   and upgrades are atomic (flip a symlink)
 
 /var/photo-diary/
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
-    code -> /opt/photo-diary/0.15.0      # symlink to the code version this instance runs
+    code -> /opt/photo-diary/0.15.1      # symlink to the code version this instance runs
     db.sqlite3                          # auto-created on first server start
     photos/
       inbox/  original/  display/  thumbnail/
@@ -136,7 +136,7 @@ sudo install -d -o "$USER" /opt/photo-diary /var/photo-diary
 GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` (no rename step), then run `npm run setup` to install everything and build the bundled frontend:
 
 ```sh
-V=0.15.0
+V=0.15.1
 mkdir -p "/opt/photo-diary/$V"
 curl -L "https://github.com/vlumi/photo-diary/archive/refs/tags/v$V.tar.gz" \
   | tar xz -C "/opt/photo-diary/$V" --strip-components=1
@@ -151,7 +151,7 @@ Repeat this block for each new version you want to land on this host.
 The `bin/instance.ts` script handles directory creation, `.env` generation (with a fresh random `SECRET`), the `code` symlink, and the per-instance `bin/` shortcuts in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary/0.15.0/bin/instance.ts /var/photo-diary/dailybw
+/opt/photo-diary/0.15.1/bin/instance.ts /var/photo-diary/dailybw
 ```
 
 That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The positional is the instance directory; it's resolved via `path.resolve()` against cwd, so `dailybw` and `./dailybw` both mean `<cwd>/dailybw`, while `../sibling` and absolute paths resolve as expected. To pin a logical name different from the dir basename, pass `--name`. Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
@@ -183,7 +183,7 @@ Re-run `bin/instance.ts` from the new version of the code, then **delete + start
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.15.0/bin/instance.ts /var/photo-diary/dailybw    # backs up the DB, flips the symlink
+/opt/photo-diary/0.15.1/bin/instance.ts /var/photo-diary/dailybw    # backs up the DB, flips the symlink
 pm2 delete dailybw dailybw-converter                                # drop cached metadata
 cd /var/photo-diary/dailybw
 ./code/server/bin/start-prod.sh                                     # migration runner applies any schema bumps
@@ -460,9 +460,9 @@ After the hiatus, a burst of releases that modernized the stack, formalized the 
 - **0.10** (May 2026) — UI/UX polish across the calendar and Stats views: photo modal with touch-tracking swipe + controlled zoom, Stats Location card with map-in-modal, clickable title-bar breadcrumb with gallery/stats segmented control, Day merged into Month, seven new themes, server-side logout via refresh-token sessions.
 - **0.11** (May 2026) — Reverse-geocoded place hierarchy: converter intake fetches structured Nominatim data, a backfill daemon fills the historical archive, and audit surfaces operator-vs-geocoded drift. Converter hardens around filename collisions and stub flows; operator scripts gain `audit` subcommands and a `bin/meta.ts`.
 - **0.12** (May 2026) — Geocoded location surfaces across the app: per-language city / state / country in the MetadataPanel, City + State filter categories, Stats Places + State topics, per-language city overlay JSON. Converter intake flows JSON sidecars + recursive subdirs. Beta-gated 35mm-equivalent focal length.
-- **0.13** (Jun 2026) — Admin frontend bundle. Full `/m/*` surface — dashboard, Photos grid with faceted filters + edit drawer + multi-select bulk actions + audit chips, Galleries CRUD, Users + Groups + Access pages — behind `user.is_admin`. Stats splits into `/s/` with a global stats page. Mutation API hardens with TypeBox-validated bodies + field-locked overrides; virtual-host scope narrows reads + writes to a bound gallery; ACL gains user groups. Theme picker becomes a swatch grid with six new built-in themes.
-- **0.14** (Jun 2026) — Admin UI polish. Slug-shaped ids, mutable `user.name` + renamed `group.name`, per-photo bulk Edit-fields modal, bulk Regeocode, dashboard audit-count tiles, filter-sidebar timeline strip with shift-range month picking, gallery-icon cropper, Inbox surface revamp, gallery-editor tier, `xx` sentinel for international waters. Mobile / small-screen pass: scrollable tables, dual pagers with 44px touch targets, Access table redesign, frosted-glass floating `BulkActions` bar, long-press + drag-to-range touch multi-select with edge auto-scroll.
-- **0.15** (Jun 2026) — Composition + scale. Hybrid galleries unioning multiple sources, saved filters as pseudo-galleries layered on a real source, per-language overlays for photo + gallery metadata, date-range filter on per-view + stats endpoints, stats category evolution over time. Public viewer goes lazy: per-view `/query` / `/counts` / `/neighbors` endpoints replace the full-array fetch, filter-values endpoints feed the pill universe. `bin/instance.ts` auto-cycles pm2 on upgrades, takes the positional as a path with `--name` for the logical name.
+- **0.13** (Jun 2026) — Admin frontend bundle. Full `/m/*` surface (dashboard, Photos, Galleries, Users, Groups, Access) behind `user.is_admin`. TypeBox-validated mutations, virtual-host scope, ACL groups, six new themes.
+- **0.14** (Jun 2026) — Admin UI polish. Slug-shaped ids, bulk Edit-fields, bulk Regeocode, dashboard audit tiles, filter-sidebar timeline strip, gallery-icon cropper, gallery-editor tier, mobile pass across the admin surface.
+- **0.15** (Jun 2026) — Composition + scale. Hybrid galleries, saved filters as pseudo-galleries, per-language metadata, date-range filter, stats evolution. Public viewer goes lazy via per-view `/query`/`/counts`/`/neighbors` endpoints. `bin/instance.ts` auto-cycles pm2 on upgrades.
 
 See the [Roadmap](#roadmap) for what's in flight after 0.15.
   
