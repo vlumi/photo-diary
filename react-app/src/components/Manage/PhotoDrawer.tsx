@@ -22,10 +22,13 @@ import photosService, {
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 import { isCountrySentinel } from "../../lib/country-sentinel";
-import { useLangStore } from "../../stores";
+import { ensureAllCountryLocales, useLangStore } from "../../stores";
 import CountrySelect from "./CountrySelect";
 import EditableMap from "./EditableMap.lazy";
-import LocalizedInputs, { SUPPORTED_LANGS } from "./LocalizedInputs";
+import LocalizedInputs, {
+  LocalizedReadout,
+  SUPPORTED_LANGS,
+} from "./LocalizedInputs";
 
 // In-flow editor panel — replaces the photos sidebar's filter
 // contents when a photo is open. The grid stays clickable so an
@@ -789,6 +792,22 @@ const PhotoDrawer = (): React.ReactElement => {
   const [original, setOriginal] = React.useState<FormState>(emptyForm);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  // Country-name readout shows the active country across every
+  // supported language — preload all locale dictionaries on mount so
+  // the labels resolve immediately when the country dropdown changes.
+  const countryData = useLangStore((s) => s.countryData);
+  React.useEffect(() => {
+    void ensureAllCountryLocales();
+  }, []);
+  const countryNameFor = (lang: string): string | undefined => {
+    const code = form.country;
+    if (!code || !countryData || isCountrySentinel(code)) return undefined;
+    return (
+      countryData.getName(code, lang, { select: "alias" }) ||
+      countryData.getName(code, lang) ||
+      undefined
+    );
+  };
   // Per-photo unlock toggle for EXIF-derived fields when the photo
   // has no `exifAtIntake` blob (#416). Resets when the open photo
   // changes — the operator must consciously re-acknowledge "no
@@ -1077,6 +1096,10 @@ const PhotoDrawer = (): React.ReactElement => {
                 value={form.country}
                 onChange={(code) => setField("country", code)}
                 highlight={highlight.country}
+              />
+              <LocalizedReadout
+                resolve={countryNameFor}
+                primary={primaryLang}
               />
               {highlight.country && (
                 <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
