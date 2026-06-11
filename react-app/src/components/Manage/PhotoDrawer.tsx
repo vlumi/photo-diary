@@ -1104,6 +1104,7 @@ const PhotoDrawer = (): React.ReactElement => {
                 value={form.country}
                 onChange={(code) => setField("country", code)}
                 highlight={highlight.country}
+                lang={primaryLang}
               />
               <LocalizedReadout
                 resolve={countryNameFor}

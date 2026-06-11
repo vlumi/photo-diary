@@ -292,7 +292,7 @@ const GalleryFormFields = ({
   onIconChanged,
   hostnameEditable = true,
 }: Props): React.ReactElement => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [cropperOpen, setCropperOpen] = React.useState(false);
   const canCrop = !!galleryId && !!photos;
   React.useEffect(() => {
@@ -347,7 +347,7 @@ const GalleryFormFields = ({
           >
             {SUPPORTED_LANGS.map((lang) => (
               <option key={lang} value={lang}>
-                {languageNameIn(lang, form.defaultLanguage)}
+                {languageNameIn(lang, i18n.language)}
               </option>
             ))}
           </Select>
