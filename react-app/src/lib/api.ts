@@ -153,7 +153,21 @@ export const unwrap = async <T>(
 ): Promise<T> => {
   const { data, response } = await call;
   if (!response.ok) {
-    throw new HttpError(`Request failed: ${response.status}`, response.status);
+    // Server's error handler returns `{ error: "<message>" }` on
+    // typed AppError throws (lib/middleware/error-handler.ts), so
+    // surface the message to the caller instead of a generic
+    // "Request failed: 422". Falls back to the status code when
+    // the body isn't JSON or doesn't carry an `error` field.
+    let message = `Request failed: ${response.status}`;
+    try {
+      const body = (await response.clone().json()) as { error?: string };
+      if (typeof body.error === "string" && body.error.length > 0) {
+        message = body.error;
+      }
+    } catch {
+      // Body wasn't JSON — keep the fallback.
+    }
+    throw new HttpError(message, response.status);
   }
   return data as T;
 };

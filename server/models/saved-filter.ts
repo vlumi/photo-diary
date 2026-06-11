@@ -58,9 +58,25 @@ const createSavedFilter = async (
     }
     throw err;
   }
+  // Saved filters surface alongside real galleries in the public
+  // viewer's title-bar selector — id collisions across the two
+  // namespaces would shadow one another. Reject if any gallery
+  // (including this one's source) carries the proposed id. The
+  // (gallery_id, id) primary key on saved_filter still allows
+  // cross-gallery collisions between saved filters, which is
+  // fine (a filter named "spring" can exist on both gallery A
+  // and gallery B — they're addressed at different URLs).
+  try {
+    await db.loadGallery(body.id);
+    throw new ValidationError(
+      "Saved filter id collides with an existing gallery id",
+      { id: body.id }
+    );
+  } catch (err) {
+    if (!(err instanceof NotFoundError)) throw err;
+  }
   // Reject duplicate id within the same gallery up-front for the
-  // same friendlier-error reason. Cross-gallery collisions are fine
-  // (id is (gallery_id, id) primary key).
+  // same friendlier-error reason.
   try {
     await db.loadSavedFilter(galleryId, body.id);
     throw new ValidationError(
