@@ -186,7 +186,6 @@
     "manage-saved-filter-field-date-to": "終了日",
     "manage-saved-filter-field-filter-json": "フィルター（JSON）",
     "manage-saved-filter-field-filter-json-hint": "FilterShape: topic → category → 値の配列。離散フィルター不要なら空のままで。",
-    "manage-saved-filter-field-ordinal": "表示順",
     "manage-saved-filter-button-save": "保存",
     "manage-saved-filter-button-cancel": "キャンセル",
     "filters-date-range-from": "開始",

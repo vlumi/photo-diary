@@ -186,7 +186,6 @@
     "manage-saved-filter-field-date-to": "Loppupäivä",
     "manage-saved-filter-field-filter-json": "Suodatin (JSON)",
     "manage-saved-filter-field-filter-json-hint": "FilterShape: aihe → kategoria → arvojen lista. Jätä tyhjäksi jos ei diskreettejä suodattimia.",
-    "manage-saved-filter-field-ordinal": "Järjestys",
     "manage-saved-filter-button-save": "Tallenna",
     "manage-saved-filter-button-cancel": "Peruuta",
     "filters-date-range-from": "alkaen",

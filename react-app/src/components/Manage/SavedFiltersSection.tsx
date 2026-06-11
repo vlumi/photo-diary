@@ -533,14 +533,6 @@ const SavedFiltersSection = ({
         />
         <FieldHint>{t("manage-saved-filter-field-filter-json-hint")}</FieldHint>
       </Field>
-      <Field>
-        <FieldLabel>{t("manage-saved-filter-field-ordinal")}</FieldLabel>
-        <Input
-          type="number"
-          value={form.ordinal}
-          onChange={(e) => setField("ordinal", e.target.value)}
-        />
-      </Field>
       {formError && <ErrorBanner>{formError}</ErrorBanner>}
       <FormFooter>
         <ButtonSecondary type="button" onClick={closeForm}>

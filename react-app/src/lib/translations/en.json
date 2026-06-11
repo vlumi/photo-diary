@@ -186,7 +186,6 @@
     "manage-saved-filter-field-date-to": "Date to",
     "manage-saved-filter-field-filter-json": "Filter (JSON)",
     "manage-saved-filter-field-filter-json-hint": "FilterShape: topic → category → array of values. Leave blank for no discrete filters.",
-    "manage-saved-filter-field-ordinal": "Display order",
     "manage-saved-filter-button-save": "Save",
     "manage-saved-filter-button-cancel": "Cancel",
     "filters-date-range-from": "from",
