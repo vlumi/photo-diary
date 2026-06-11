@@ -103,6 +103,14 @@ const applyVirtualSources = async (
 const createGallery = async (gallery: { id: string } & Record<string, any>) => {
   assertSlugId(gallery.id);
   logger.debug("Creating gallery", { id: gallery.id });
+  // Default the gallery's primary language from `.env DEFAULT_LANGUAGE`
+  // when the caller didn't specify one — operator's preference at the
+  // instance level becomes the seed for every new gallery, with `en`
+  // as the final fallback. Existing galleries opt in by setting their
+  // own value through the admin UI / API.
+  if (!gallery.defaultLanguage) {
+    gallery.defaultLanguage = process.env.DEFAULT_LANGUAGE || "en";
+  }
   const sources = gallery.sources as string[] | undefined;
   await db.createGallery(gallery);
   await applyVirtualSources(gallery.id, sources);
@@ -121,6 +129,12 @@ const updateGallery = async (
   patch: Record<string, any>
 ) => {
   logger.debug("Updating gallery", { id: galleryId });
+  // `defaultLanguage` changes just flip the column. No data is
+  // moved between canonical and the gallery_localized overlays:
+  // the operator does any content rotation manually (e.g. swap
+  // title strings between canonical and the overlay rows). The
+  // UI labels the canonical input with the active default so the
+  // operator can see what they're editing.
   await db.updateGallery(galleryId, patch);
   if ("sources" in patch) {
     await applyVirtualSources(galleryId, patch.sources as string[] | undefined);

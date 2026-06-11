@@ -9,6 +9,24 @@ import styled from "@emotion/styled";
 export const SUPPORTED_LANGS = ["en", "fi", "ja"] as const;
 export type SupportedLang = (typeof SUPPORTED_LANGS)[number];
 
+// Return the human-readable name of `lang` rendered in `displayLang`.
+// The gallery's "Primary language" dropdown uses this to render its
+// options in the language being configured (so the operator always
+// reads `English / Finnish / Japanese` in the gallery's own primary,
+// not in their personal UI lang). Falls back to the bare code if
+// `Intl.DisplayNames` doesn't recognise the lang.
+export const languageNameIn = (
+  lang: string,
+  displayLang: string
+): string => {
+  try {
+    const dn = new Intl.DisplayNames([displayLang], { type: "language" });
+    return dn.of(lang) ?? lang;
+  } catch {
+    return lang;
+  }
+};
+
 const Stack = styled.div`
   display: flex;
   flex-direction: column;
@@ -56,6 +74,13 @@ const TextArea = styled.textarea`
   font-size: 0.9em;
   resize: vertical;
 `;
+const ReadoutValue = styled.span`
+  font-size: 0.85em;
+  color: var(--inactive-color);
+  align-self: center;
+  word-break: break-word;
+  min-width: 0;
+`;
 
 interface Props {
   value: Record<string, string>;
@@ -93,6 +118,36 @@ const LocalizedInputs = ({
               onChange={(e) => onChange(lang, e.target.value)}
             />
           )}
+        </Row>
+      ))}
+    </Stack>
+  );
+};
+
+// Read-only sibling for surfaces that derive a localized value from
+// a non-localized canonical (e.g. ISO country code → localized
+// country name). Same visual stack as the editable inputs above so
+// the operator reads it as "alternative-language rendering of the
+// field above"; non-primary languages only, missing values rendered
+// as a faint em-dash.
+export const LocalizedReadout = ({
+  resolve,
+  langs = SUPPORTED_LANGS,
+  primary,
+}: {
+  resolve: (lang: string) => string | undefined;
+  langs?: readonly string[];
+  primary?: string | null;
+}): React.ReactElement | null => {
+  const rendered = primary ? langs.filter((l) => l !== primary) : langs;
+  const anyValue = rendered.some((l) => resolve(l));
+  if (!anyValue) return null;
+  return (
+    <Stack>
+      {rendered.map((lang) => (
+        <Row key={lang}>
+          <LangLabel>{lang}</LangLabel>
+          <ReadoutValue>{resolve(lang) ?? "—"}</ReadoutValue>
         </Row>
       ))}
     </Stack>

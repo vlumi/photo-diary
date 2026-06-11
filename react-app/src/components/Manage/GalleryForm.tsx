@@ -10,7 +10,10 @@ import {
 } from "../../services/galleries";
 import ThemePicker from "../ThemePicker";
 import IconCropper from "./IconCropper";
-import LocalizedInputs, { SUPPORTED_LANGS } from "./LocalizedInputs";
+import LocalizedInputs, {
+  SUPPORTED_LANGS,
+  languageNameIn,
+} from "./LocalizedInputs";
 import config from "../../lib/config";
 
 // Enum values must mirror server's GalleryUpdateBody. Kept inline
@@ -45,7 +48,10 @@ export const EMPTY_FORM: FormState = {
   description: "",
   titleLocalized: emptyLocalized(),
   descriptionLocalized: emptyLocalized(),
-  defaultLanguage: "",
+  // Server-side `createGallery` will override with `.env DEFAULT_LANGUAGE`
+  // if the API caller omits this, but the form always renders a value
+  // since the column is now NOT NULL.
+  defaultLanguage: "en",
   icon: "",
   epoch: "",
   epochType: "",
@@ -59,7 +65,7 @@ interface GalleryData {
   description?: string;
   titleLocalized?: Record<string, string>;
   descriptionLocalized?: Record<string, string>;
-  defaultLanguage?: string | null;
+  defaultLanguage?: string;
   icon?: string;
   epoch?: string;
   epochType?: string;
@@ -81,7 +87,7 @@ export const fromGalleryData = (g: GalleryData): FormState => ({
   description: g.description ?? "",
   titleLocalized: localizedFrom(g.titleLocalized),
   descriptionLocalized: localizedFrom(g.descriptionLocalized),
-  defaultLanguage: g.defaultLanguage ?? "",
+  defaultLanguage: g.defaultLanguage ?? "en",
   icon: g.icon ?? "",
   epoch: g.epoch ?? "",
   epochType: g.epochType ?? "",
@@ -143,8 +149,8 @@ export const toPatch = (
     form.descriptionLocalized
   );
   if (descPatch) patch.descriptionLocalized = descPatch;
-  if (form.defaultLanguage !== original.defaultLanguage) {
-    patch.defaultLanguage = form.defaultLanguage || null;
+  if (form.defaultLanguage && form.defaultLanguage !== original.defaultLanguage) {
+    patch.defaultLanguage = form.defaultLanguage;
   }
   return patch;
 };
@@ -286,7 +292,7 @@ const GalleryFormFields = ({
   onIconChanged,
   hostnameEditable = true,
 }: Props): React.ReactElement => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [cropperOpen, setCropperOpen] = React.useState(false);
   const canCrop = !!galleryId && !!photos;
   React.useEffect(() => {
@@ -339,12 +345,9 @@ const GalleryFormFields = ({
             value={form.defaultLanguage}
             onChange={(e) => setField("defaultLanguage", e.target.value)}
           >
-            <option value="">
-              {t("manage-gallery-default-language-instance")}
-            </option>
             {SUPPORTED_LANGS.map((lang) => (
               <option key={lang} value={lang}>
-                {lang}
+                {languageNameIn(lang, i18n.language)}
               </option>
             ))}
           </Select>

@@ -56,9 +56,11 @@ export interface GalleryRow {
   initial_view: string;
   hostname: string;
   // Operator-set primary language for the canonical `title` /
-  // `description` columns. NULL means "use the instance
-  // DEFAULT_LANGUAGE". See migration 021.
-  default_language: string | null;
+  // `description` columns. Always set since migration 022 — NULLs
+  // backfill to 'en' on upgrade, and new galleries take the value
+  // from `.env DEFAULT_LANGUAGE` (server create path) or 'en' as
+  // the column default.
+  default_language: string;
 }
 export interface GalleryLocalizedRow {
   gallery_id: string;
@@ -144,11 +146,14 @@ export interface Gallery {
   initialView: string;
   hostname: string;
   // Operator-set primary language for the canonical title /
-  // description columns. NULL falls back to the instance default
-  // (`DEFAULT_LANGUAGE` in .env). Metadata only — the server does
-  // not resolve overlays against it; the client picks a display
-  // language using this as one of its fallbacks.
-  defaultLanguage?: string | null;
+  // description columns. Always set (NOT NULL from migration 022).
+  // Drives the canonical/overlay shuffle on change: when the
+  // operator switches this, the server copies the old canonical
+  // into the old default's overlay slot and pulls the new default's
+  // overlay into canonical. The client uses it to label the
+  // canonical input and as a fallback when the viewer has no UI
+  // language preference.
+  defaultLanguage: string;
   // Per-language overlays for title / description. Keyed by lang
   // code (e.g. `ja`, `fi`); empty `{}` when no overlay rows exist.
   // Canonical fields above stay the universal fallback.
@@ -415,7 +420,7 @@ export default () => {
         theme: toString(row.theme),
         initialView: toString(row.initial_view),
         hostname: toString(row.hostname),
-        defaultLanguage: row.default_language ?? null,
+        defaultLanguage: row.default_language || "en",
         titleLocalized: buildLocalizedMap(localized, "title"),
         descriptionLocalized: buildLocalizedMap(localized, "description"),
       }),
@@ -430,7 +435,7 @@ export default () => {
         gallery.theme,
         gallery.initialView,
         gallery.hostname,
-        gallery.defaultLanguage ?? null,
+        gallery.defaultLanguage || "en",
       ],
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.gallery),

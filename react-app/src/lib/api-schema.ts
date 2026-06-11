@@ -576,7 +576,7 @@ export interface paths {
                         descriptionLocalized?: {
                             [key: string]: string;
                         };
-                        defaultLanguage?: string | null;
+                        defaultLanguage?: string;
                         icon?: string;
                         epoch?: string;
                         /** @enum {string} */
@@ -662,7 +662,7 @@ export interface paths {
                         descriptionLocalized?: {
                             [key: string]: string;
                         };
-                        defaultLanguage?: string | null;
+                        defaultLanguage?: string;
                         icon?: string;
                         epoch?: string;
                         /** @enum {string} */

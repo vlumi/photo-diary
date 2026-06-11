@@ -11,7 +11,7 @@ interface GalleryData {
   description?: string;
   titleLocalized?: Record<string, string>;
   descriptionLocalized?: Record<string, string>;
-  defaultLanguage?: string | null;
+  defaultLanguage?: string;
   icon?: string;
   epoch?: Date | string;
   epochType?: string;
@@ -114,7 +114,7 @@ const GalleryModel = (galleryData: unknown) => {
       const overlay = lang ? gallery.descriptionLocalized?.[lang] : undefined;
       return (overlay && overlay.length > 0 ? overlay : gallery.description) || "";
     },
-    defaultLanguage: (): string | null => gallery.defaultLanguage ?? null,
+    defaultLanguage: (): string => gallery.defaultLanguage ?? "en",
     hasIcon: (): boolean => !!gallery.icon,
     icon: (): string => gallery.icon || "",
     hasEpoch: (): boolean => !!epochDate(),

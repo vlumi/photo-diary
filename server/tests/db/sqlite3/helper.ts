@@ -34,5 +34,6 @@ export const mkGallery = (partial: Partial<Gallery> & { id: string }): Gallery =
   theme: "",
   initialView: "",
   hostname: "",
+  defaultLanguage: "en",
   ...partial,
 });

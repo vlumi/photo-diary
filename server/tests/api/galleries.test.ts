@@ -562,6 +562,37 @@ describe("Mutations as admin", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({ theme: "grayscale", initialView: "year", epochType: "birthday" })
       .expect(204));
+
+  test("defaultLanguage change is purely metadata — canonical and overlays stay put", async () => {
+    await api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        title: "Landscapes",
+        description: "Scenic shots.",
+        defaultLanguage: "en",
+        titleLocalized: { fi: "Maisemia" },
+        descriptionLocalized: { fi: "Maisemakuvia." },
+      })
+      .expect(204);
+    await api
+      .put("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ defaultLanguage: "fi" })
+      .expect(204);
+    const after = await api
+      .get("/api/v1/galleries/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(after.body.defaultLanguage).toBe("fi");
+    // Canonical column is untouched — the operator is expected to
+    // rotate content manually if they want it to match the new
+    // primary's language.
+    expect(after.body.title).toBe("Landscapes");
+    expect(after.body.description).toBe("Scenic shots.");
+    expect(after.body.titleLocalized).toEqual({ fi: "Maisemia" });
+    expect(after.body.descriptionLocalized).toEqual({ fi: "Maisemakuvia." });
+  });
 });
 
 

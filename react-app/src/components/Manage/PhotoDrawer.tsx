@@ -14,6 +14,7 @@ import {
 } from "react-icons/bs";
 
 import galleriesService from "../../services/galleries";
+import metaService from "../../services/meta";
 import photosService, {
   type MissingField,
   type PhotoUpdatePatch,
@@ -21,10 +22,13 @@ import photosService, {
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 import { isCountrySentinel } from "../../lib/country-sentinel";
-import { useLangStore } from "../../stores";
+import { ensureAllCountryLocales, useLangStore } from "../../stores";
 import CountrySelect from "./CountrySelect";
 import EditableMap from "./EditableMap.lazy";
-import LocalizedInputs, { SUPPORTED_LANGS } from "./LocalizedInputs";
+import LocalizedInputs, {
+  LocalizedReadout,
+  SUPPORTED_LANGS,
+} from "./LocalizedInputs";
 
 // In-flow editor panel — replaces the photos sidebar's filter
 // contents when a photo is open. The grid stays clickable so an
@@ -761,6 +765,20 @@ const PhotoDrawer = (): React.ReactElement => {
     queryKey: ["galleries"],
     queryFn: galleriesService.getAll,
   });
+  // Instance default language drives which lang the canonical column
+  // is treated as. Photos can be in multiple galleries with different
+  // `default_language` values, so there's no single per-photo answer;
+  // the instance default is the safest bet — the operator's typical
+  // working language at the deployment level. The matching overlay
+  // row is then hidden on each Localized field (canonical input
+  // carries that language).
+  const metaQuery = useQuery({
+    queryKey: ["meta"],
+    queryFn: () => metaService.getAll(),
+  });
+  const primaryLang =
+    ((metaQuery.data as { defaultLanguage?: string } | undefined)
+      ?.defaultLanguage as string | undefined) ?? "en";
   const galleryById = React.useMemo(() => {
     const map = new Map<string, { id: string; title?: string }>();
     const rows = galleriesQuery.data as
@@ -774,6 +792,30 @@ const PhotoDrawer = (): React.ReactElement => {
   const [original, setOriginal] = React.useState<FormState>(emptyForm);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  // Country-name readout shows the active country across every
+  // supported language — preload all locale dictionaries on mount so
+  // the labels resolve immediately when the country dropdown changes.
+  const countryData = useLangStore((s) => s.countryData);
+  React.useEffect(() => {
+    void ensureAllCountryLocales();
+  }, []);
+  const countryNameFor = (lang: string): string | undefined => {
+    const code = form.country;
+    if (!code) return undefined;
+    if (isCountrySentinel(code)) {
+      // i18next has every supported language's resources loaded at
+      // module init (en / fi / ja are bundled, not async); the
+      // explicit `lng` option pulls the right translation regardless
+      // of the active UI language.
+      return String(t("country-sentinel-label", { lng: lang }));
+    }
+    if (!countryData) return undefined;
+    return (
+      countryData.getName(code, lang, { select: "alias" }) ||
+      countryData.getName(code, lang) ||
+      undefined
+    );
+  };
   // Per-photo unlock toggle for EXIF-derived fields when the photo
   // has no `exifAtIntake` blob (#416). Resets when the open photo
   // changes — the operator must consciously re-acknowledge "no
@@ -1003,7 +1045,9 @@ const PhotoDrawer = (): React.ReactElement => {
         <Section>
           <SectionTitle>{t("manage-photo-section-content")}</SectionTitle>
           <Field>
-            <FieldLabel>{t("manage-photo-field-title")}</FieldLabel>
+            <FieldLabel>
+              {t("manage-photo-field-title")} ({primaryLang})
+            </FieldLabel>
             <Input
               type="text"
               value={form.title}
@@ -1013,13 +1057,16 @@ const PhotoDrawer = (): React.ReactElement => {
             <LocalizedInputs
               value={form.titleLocalized}
               onChange={(lang, val) => setLocalizedField("titleLocalized", lang, val)}
+              primary={primaryLang}
             />
             {highlight.title && (
               <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
             )}
           </Field>
           <Field>
-            <FieldLabel>{t("manage-photo-field-description")}</FieldLabel>
+            <FieldLabel>
+              {t("manage-photo-field-description")} ({primaryLang})
+            </FieldLabel>
             <TextArea
               value={form.description}
               onChange={(e) => setField("description", e.target.value)}
@@ -1031,6 +1078,7 @@ const PhotoDrawer = (): React.ReactElement => {
                 setLocalizedField("descriptionLocalized", lang, val)
               }
               multiline
+              primary={primaryLang}
             />
             {highlight.description && (
               <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
@@ -1056,13 +1104,20 @@ const PhotoDrawer = (): React.ReactElement => {
                 value={form.country}
                 onChange={(code) => setField("country", code)}
                 highlight={highlight.country}
+                lang={primaryLang}
+              />
+              <LocalizedReadout
+                resolve={countryNameFor}
+                primary={primaryLang}
               />
               {highlight.country && (
                 <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>
               )}
             </Field>
             <Field>
-              <FieldLabel>{t("manage-photo-field-place")}</FieldLabel>
+              <FieldLabel>
+                {t("manage-photo-field-place")} ({primaryLang})
+              </FieldLabel>
               <Input
                 type="text"
                 value={form.place}
@@ -1074,6 +1129,7 @@ const PhotoDrawer = (): React.ReactElement => {
                 onChange={(lang, val) =>
                   setLocalizedField("placeLocalized", lang, val)
                 }
+                primary={primaryLang}
               />
               {highlight.place && (
                 <FieldHint>{t("manage-photo-filter-match-hint")}</FieldHint>

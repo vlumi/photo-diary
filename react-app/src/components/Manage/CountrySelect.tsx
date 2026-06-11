@@ -88,6 +88,12 @@ interface Props {
   highlight?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  // Render names in this language instead of the user's UI lang.
+  // PhotoDrawer / BulkActions pass the instance's primary language
+  // (from `/api/v1/meta`) so the canonical country label stays
+  // stable across operator-language switches. Falls back to the
+  // lang store's active lang when omitted.
+  lang?: string;
 }
 
 const CountrySelect = ({
@@ -96,9 +102,11 @@ const CountrySelect = ({
   highlight,
   disabled,
   placeholder,
+  lang: langProp,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
-  const lang = useLangStore((s) => s.lang);
+  const storeLang = useLangStore((s) => s.lang);
+  const lang = langProp ?? storeLang;
   const countryData = useLangStore((s) => s.countryData);
   const [filter, setFilter] = React.useState("");
   const [open, setOpen] = React.useState(false);
@@ -172,17 +180,17 @@ const CountrySelect = ({
     );
   }, [names, filter]);
 
+  const sentinelLabel = String(
+    langProp ? t("country-sentinel-label", { lng: lang }) : t("country-sentinel-label")
+  );
+
   const display = React.useMemo(() => {
     if (!value) return "";
-    if (isCountrySentinel(value)) {
-      return String(t("country-sentinel-label"));
-    }
+    if (isCountrySentinel(value)) return sentinelLabel;
     const upper = value.toUpperCase();
     const name = names[upper];
     return name ? `${name} (${upper.toUpperCase()})` : upper.toUpperCase();
-  }, [value, names, t]);
-
-  const sentinelLabel = String(t("country-sentinel-label"));
+  }, [value, names, sentinelLabel]);
   const sentinelMatches = React.useMemo(() => {
     const needle = filter.trim().toLowerCase();
     if (!needle) return true;

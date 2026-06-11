@@ -58,11 +58,13 @@ const GalleryFields = {
   titleLocalized: Type.Optional(LocalizedMap),
   descriptionLocalized: Type.Optional(LocalizedMap),
   // Operator-set primary language for the canonical title /
-  // description. Metadata only — server doesn't resolve overlays
-  // against it; the admin UI labels the canonical input with it,
-  // and the client uses it as one of the language-resolution
-  // fallbacks. NULL falls back to instance DEFAULT_LANGUAGE.
-  defaultLanguage: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  // description. Changing this triggers the canonical/overlay
+  // shuffle in the model layer (see `shuffleDefaultLanguage`):
+  // old canonical → old-default's overlay slot; new default's
+  // overlay → canonical; drop the new default's overlay row.
+  // Omitted on create → server uses `.env DEFAULT_LANGUAGE` or
+  // falls through to `en`.
+  defaultLanguage: Type.Optional(Type.String({ minLength: 1 })),
   icon: Type.Optional(Type.String()),
   epoch: Type.Optional(Type.String()),
   epochType: Type.Optional(StringEnum(GALLERY_EPOCH_TYPES)),

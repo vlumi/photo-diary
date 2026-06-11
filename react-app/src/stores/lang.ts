@@ -28,6 +28,18 @@ const loadCountryData = async (lang: string) => {
   return countryData;
 };
 
+// Force-load every supported country-name dictionary into the shared
+// `countryData` singleton. Used by the admin UI's country-localized
+// read-out — operator wants to see the country name across every
+// language regardless of the active UI lang. Each loader's chunk
+// stays under the dynamic-import pattern; we just trigger them all.
+// Re-renders the consuming component once the last locale lands by
+// nudging the store's `countryData` reference.
+export const ensureAllCountryLocales = async (): Promise<void> => {
+  await Promise.all(Object.keys(countryLoaders).map((lang) => loadCountryData(lang)));
+  useLangStore.setState({ countryData });
+};
+
 // `localStorage` is guarded for test environments / SSR where it may not
 // be defined when the module first loads.
 const storedLang =
