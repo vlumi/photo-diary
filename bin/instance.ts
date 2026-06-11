@@ -19,12 +19,16 @@
  *   `code` symlink, then run doctor.
  *
  * Usage:
- *   ./code/bin/instance.ts <name> [--base <dir>] [--fix]
+ *   ./code/bin/instance.ts <dir> [--name <name>] [--fix]
  *
- * Where `<name>` is the instance directory name under `<base>` (default
- * `/var/photo-diary`). The script always treats its own code root as the
- * target version — invoke from the version of the code you want the
- * instance to run.
+ * Where the positional is the instance directory, resolved via
+ * `path.resolve()` against cwd: `dev` and `./dev` both mean `<cwd>/dev`,
+ * `../sibling` and `/var/photo-diary/blue` resolve as expected.
+ * `instance.ts .` is the same as omitting the positional inside an
+ * existing instance dir. `--name` overrides the instance's logical name
+ * (defaults to the dir basename); honored on bootstrap and on re-runs.
+ * The script always treats its own code root as the target version —
+ * invoke from the version of the code you want the instance to run.
  */
 
 import { spawnSync } from "node:child_process";
@@ -147,6 +151,27 @@ const appendMissingKeys = (
   return missing.map((m) => m.key);
 };
 
+// Set / replace a single key in an existing .env. Used by --name on
+// doctor / upgrade re-runs to write through to INSTANCE_NAME without
+// touching the rest of the file. Preserves comments, blank lines, and
+// the line surrounding the replaced key. Appends with a one-line
+// comment when the key is absent.
+const setEnvKey = (filePath: string, key: string, value: string): void => {
+  const content = fs.readFileSync(filePath, "utf8");
+  const lines = content.split("\n");
+  let found = false;
+  const out = lines.map((line) => {
+    const eq = line.indexOf("=");
+    if (eq < 0) return line;
+    const k = line.slice(0, eq).trim();
+    if (k.startsWith("#") || k !== key) return line;
+    found = true;
+    return `${key}=${value}`;
+  });
+  if (!found) out.push(`${key}=${value}`);
+  fs.writeFileSync(filePath, out.join("\n"));
+};
+
 // ---- args ----------------------------------------------------------------
 
 // An instance dir is recognisable by the combination of `.env` + the `code`
@@ -215,19 +240,19 @@ const argv = yargs(hideBin(process.argv))
   .scriptName("instance.ts")
   .locale("en")
   .command(
-    "$0 [name]",
+    "$0 [dir]",
     "Bootstrap, doctor, or upgrade a Photo Diary instance directory",
     (y) =>
       y
-        .positional("name", {
+        .positional("dir", {
           describe:
-            "Instance directory name under --base. May be omitted when run from inside an existing instance dir; in that case the dir is inferred from cwd and the logical name is read from .env's INSTANCE_NAME.",
+            "Instance directory, resolved against cwd via path.resolve(). `dev` and `./dev` both mean `<cwd>/dev`; `../sibling` and absolute paths resolve as expected. May be omitted when run from inside an existing instance dir; in that case the dir is inferred from cwd and the logical name is read from .env's INSTANCE_NAME.",
           type: "string",
         })
-        .option("base", {
-          describe: "Parent directory for the instance dir",
+        .option("name", {
+          describe:
+            "Override the instance's logical name (pm2 process label, default `path.basename(dir)`). Honored on bootstrap and on re-runs — writes through to .env's INSTANCE_NAME.",
           type: "string",
-          default: "/var/photo-diary",
         })
         .option("fix", {
           describe:
@@ -266,8 +291,8 @@ const argv = yargs(hideBin(process.argv))
   .strict()
   .parseSync();
 
-const positional = argv.name as string | undefined;
-const baseFlag = argv.base;
+const positional = argv.dir as string | undefined;
+const nameFlag = argv.name as string | undefined;
 const fix = argv.fix;
 const quiet = argv.quiet;
 const auto = argv.auto as boolean;
@@ -282,16 +307,20 @@ const log: typeof console.log = (...args) => {
 // else (path resolution, locating .env, locating the `code` symlink). The
 // *logical* instance name (used for pm2 process labels, display) comes
 // from `.env`'s INSTANCE_NAME below; only the dir matters for paths.
+// path.resolve() handles every form uniformly: bare names (`dev`),
+// dot-relative (`./dev`, `../sibling`), and absolute paths all reduce
+// to a single absolute target. No parent-dir flag to disentangle from
+// the positional — the path itself says where the instance lives.
 let instanceDir: string;
 let inferredFromCwd = false;
 if (positional) {
-  instanceDir = path.resolve(String(baseFlag), positional);
+  instanceDir = path.resolve(positional);
 } else if (looksLikeInstanceDir(process.cwd())) {
   instanceDir = process.cwd();
   inferredFromCwd = true;
 } else {
   console.error(
-    "Error: no <name> given and cwd is not an instance dir (no `.env` + `code` symlink)."
+    "Error: no <name-or-path> given and cwd is not an instance dir (no `.env` + `code` symlink)."
   );
   console.error("Run with --help for usage.");
   process.exit(1);
@@ -301,12 +330,18 @@ const envPath = path.join(instanceDir, ".env");
 const codeLinkPath = path.join(instanceDir, "code");
 const instanceBinDir = path.join(instanceDir, "bin");
 
-// Logical name: prefer `.env`'s INSTANCE_NAME (the pm2 process label),
-// fall back to the dir's basename when there's no .env yet or the key
-// is missing. The default `bin/instance.ts` template seeds INSTANCE_NAME
-// equal to the dir name, so for the common case the two match — but
-// operators may legitimately set them apart.
+// Logical name (the pm2 process label) resolution order:
+//
+//   1. `--name <value>` if passed. Wins everywhere — bootstrap seeds
+//      .env with it, doctor/upgrade re-runs write it through to
+//      INSTANCE_NAME below.
+//   2. `.env`'s INSTANCE_NAME (the bootstrap default seeds this to
+//      `path.basename(instanceDir)`, so for the common case the dir
+//      and the name match).
+//   3. `path.basename(instanceDir)` — last-resort fallback for runs
+//      before .env exists, or rows where the key drifted.
 const instanceName = (() => {
+  if (nameFlag) return nameFlag;
   try {
     return (
       parseEnv(fs.readFileSync(envPath, "utf8")).INSTANCE_NAME ??
@@ -378,6 +413,13 @@ if (mode === "new") {
     console.warn("✗ .env is missing values for:");
     for (const m of missing) console.warn(`    ${m.key} (${m.description})`);
     console.warn("  Re-run with --fix to append defaults, or edit manually.");
+  }
+  // --name on re-runs writes through to .env. The bootstrap path
+  // already wrote `instanceName` into the freshly-templated file
+  // above; this branch updates an existing row.
+  if (nameFlag && existing.INSTANCE_NAME !== nameFlag) {
+    setEnvKey(envPath, "INSTANCE_NAME", nameFlag);
+    log(`✓ Set INSTANCE_NAME=${nameFlag} in .env`);
   }
 }
 
