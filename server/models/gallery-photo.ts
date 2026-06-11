@@ -1,7 +1,10 @@
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 import { ValidationError } from "../lib/errors.js";
-import type { FilterShape } from "../lib/photo-filter-eval.js";
+import type {
+  DateRange,
+  FilterShape,
+} from "../lib/photo-filter-eval.js";
 import {
   cacheGet,
   cacheSet,
@@ -39,6 +42,7 @@ const getGalleryPhotos = async (galleryId: string, lang?: string) => {
 // lives in the driver (#529) so this stays a thin wrapper.
 interface QueryOpts {
   filter?: FilterShape;
+  dateRange?: DateRange;
   year?: number;
   month?: number;
   day?: number;
@@ -54,6 +58,7 @@ const queryGalleryPhotos = async (galleryId: string, opts: QueryOpts = {}) => {
 // (#529) and returns the response shape the controller serializes.
 interface NeighborsOpts {
   filter?: FilterShape;
+  dateRange?: DateRange;
   lang?: string;
 }
 const getGalleryPhotoNeighbors = async (
@@ -70,6 +75,7 @@ const getGalleryPhotoNeighbors = async (
 // year-scoped) photo set. Driver owns the aggregation (#529).
 interface CountsOpts {
   filter?: FilterShape;
+  dateRange?: DateRange;
   year?: number;
 }
 const queryGalleryPhotoCounts = async (

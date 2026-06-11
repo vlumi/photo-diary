@@ -48,8 +48,20 @@ const FilterTopic = Type.Record(Type.String(), FilterCategory, {
 const FilterSchema = Type.Record(Type.String(), FilterTopic, {
   additionalProperties: true,
 });
+// Date-range filter — sibling of `filter` rather than embedded in
+// FilterShape because the predicate is continuous, not discrete
+// (#264). Either `from` or `to` may be omitted for a half-open
+// range; YYYY-MM-DD strings, inclusive on both ends.
+const DateRangeSchema = Type.Object(
+  {
+    from: Type.Optional(Type.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
+    to: Type.Optional(Type.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
+  },
+  { additionalProperties: false }
+);
 const QueryBody = Type.Object({
   filter: Type.Optional(FilterSchema),
+  dateRange: Type.Optional(DateRangeSchema),
   year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
   month: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
   day: Type.Optional(Type.Integer({ minimum: 1, maximum: 31 })),
@@ -57,12 +69,14 @@ const QueryBody = Type.Object({
 });
 const CountsBody = Type.Object({
   filter: Type.Optional(FilterSchema),
+  dateRange: Type.Optional(DateRangeSchema),
   year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
 });
 const CountsResponse = Type.Record(Type.String(), Type.Number());
 const NeighborsBody = Type.Object({
   photoId: Type.String({ minLength: 1 }),
   filter: Type.Optional(FilterSchema),
+  dateRange: Type.Optional(DateRangeSchema),
   lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
 });
 const NeighborsResponse = Type.Object({
@@ -151,6 +165,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.params.galleryId,
           {
             filter: request.body.filter,
+            dateRange: request.body.dateRange,
             year: request.body.year,
             month: request.body.month,
             day: request.body.day,
@@ -195,7 +210,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         );
         return await model.queryGalleryPhotoCounts(
           request.params.galleryId,
-          { filter: request.body.filter, year: request.body.year }
+          {
+            filter: request.body.filter,
+            dateRange: request.body.dateRange,
+            year: request.body.year,
+          }
         );
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
@@ -231,7 +250,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         const result = await model.getGalleryPhotoNeighbors(
           request.params.galleryId,
           request.body.photoId,
-          { filter: request.body.filter, lang: request.body.lang }
+          {
+            filter: request.body.filter,
+            dateRange: request.body.dateRange,
+            lang: request.body.lang,
+          }
         );
         if (await shouldHideMap(request.user.id, request.params.galleryId)) {
           maskCoordinates(
