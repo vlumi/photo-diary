@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.15] - 2026-06-11
+
 ### Server
 
 - `bin/instance.ts` positional is the instance directory, resolved via `path.resolve()` against cwd — `dev` and `./dev` both mean `<cwd>/dev`; `../sibling` and absolute paths resolve as expected. `--base` is gone (the positional itself encodes the parent). New `--name <name>` overrides the logical instance name (default: dir basename); honored on bootstrap and on re-runs (writes through to `INSTANCE_NAME` in `.env`). Part of #537.
