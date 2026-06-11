@@ -124,6 +124,45 @@ describe("As admin", () => {
       .expect(200);
     expect(result.body.length).toBe(0);
   });
+  test("Upsert with hideMap=null persists NULL (inherit)", async () => {
+    // Seed with hideMap=true (hide) so we can verify the move back to null.
+    await api
+      .put("/api/v1/user-gallery/plainuser/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ isEditor: false, hideMap: true })
+      .expect(204);
+    let result = await api
+      .get("/api/v1/user-gallery")
+      .query({ userId: "plainuser", galleryId: "gallery1" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(result.body[0].hide_map).toBe(1);
+    // Move back to inherit by sending hideMap=null.
+    await api
+      .put("/api/v1/user-gallery/plainuser/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ isEditor: false, hideMap: null })
+      .expect(204);
+    result = await api
+      .get("/api/v1/user-gallery")
+      .query({ userId: "plainuser", galleryId: "gallery1" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(result.body[0].hide_map).toBeNull();
+  });
+  test("Upsert with hideMap omitted persists NULL (default on insert)", async () => {
+    await api
+      .put("/api/v1/user-gallery/plainuser/gallery1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ isEditor: false })
+      .expect(204);
+    const result = await api
+      .get("/api/v1/user-gallery")
+      .query({ userId: "plainuser", galleryId: "gallery1" })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(result.body[0].hide_map).toBeNull();
+  });
   test("Upsert with invalid isEditor → 400", () =>
     api
       .put("/api/v1/user-gallery/plainuser/gallery1")

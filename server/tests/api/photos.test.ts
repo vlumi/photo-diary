@@ -500,6 +500,43 @@ describe("Mutations as admin", () => {
         },
       })
       .expect(204));
+  test("Update accepts null coordinates (clears, doesn't silently 0)", async () => {
+    // Seed with non-zero coordinates so we can tell a NULL-write apart
+    // from the silent-0 coercion the prior `Type.Union([Number, Null])`
+    // shape used to produce.
+    await api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        taken: {
+          location: {
+            coordinates: { latitude: 48.85, longitude: 2.35, altitude: 100 },
+          },
+        },
+      })
+      .expect(204);
+    // Clear all three with null.
+    await api
+      .put("/api/v1/photos/gallery1photo.jpg")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        taken: {
+          location: {
+            coordinates: {
+              latitude: null,
+              longitude: null,
+              altitude: null,
+            },
+          },
+        },
+      })
+      .expect(204);
+    const after = await getPhoto(token, "gallery1photo.jpg");
+    const coords = after.body.taken?.location?.coordinates;
+    expect(coords?.latitude).toBeNull();
+    expect(coords?.longitude).toBeNull();
+    expect(coords?.altitude).toBeNull();
+  });
   test("Update accepts operator-set focal-35mm-equiv", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
