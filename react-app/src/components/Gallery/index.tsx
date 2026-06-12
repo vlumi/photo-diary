@@ -38,6 +38,7 @@ import {
   useFiltersStore,
   useScrollStore,
   useThemePreferenceStore,
+  useTitleMapModalStore,
 } from "../../stores";
 
 interface Meta {
@@ -104,6 +105,15 @@ const Gallery = ({
       window.removeEventListener("scroll", handleScroll);
     };
   }, [location, setScroll]);
+
+  // Photo modal mount auto-closes the title-bar map (#321) — both
+  // can't compete for the screen, and the photo's own
+  // MetadataPanel map is a separate, pin-centric component anyway.
+  const closeTitleMap = useTitleMapModalStore((s) => s.close);
+  const photoIdFromUrl = useParams().photoId;
+  React.useEffect(() => {
+    if (photoIdFromUrl) closeTitleMap();
+  }, [photoIdFromUrl, closeTitleMap]);
 
   const context = isStats ? "stats" : "gallery";
 

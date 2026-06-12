@@ -50,10 +50,14 @@ const getPolyline = (positions: LatLngExpression[]) => {
 
 // react-leaflet's `<MapContainer>` uses `center`, `zoom`, and
 // `bounds` only as the initial setup; prop changes after mount
-// don't move the view. The metadata panel keeps the map mounted
-// while the user navigates between photos, so we need to push
-// the new coordinates into Leaflet's instance manually when the
-// position changes.
+// don't move the view. Two consumers keep the map mounted across
+// position changes:
+//
+//   - MetadataPanel pins to a single photo's coords; navigating
+//     between photos changes `singlePoint` and we re-`setView`.
+//   - Title-bar MapModal (#321) stays open across year/month nav.
+//     `boundsLatLngs` covers the new scope's pin set and we call
+//     `fitBounds` to refit.
 //
 // Re-runs only when `positionKey` actually changes (a stable
 // primitive derived from the coordinates), not on every parent
@@ -61,19 +65,29 @@ const getPolyline = (positions: LatLngExpression[]) => {
 // the map view would animate on every render.
 const Refit = ({
   singlePoint,
+  boundsLatLngs,
   maxZoom,
   positionKey,
 }: {
   singlePoint: LatLngExpression | undefined;
+  boundsLatLngs: LatLngExpression[] | undefined;
   maxZoom: number;
   positionKey: string;
 }): null => {
   const map = useMap();
   const pointRef = React.useRef(singlePoint);
   pointRef.current = singlePoint;
+  const boundsRef = React.useRef(boundsLatLngs);
+  boundsRef.current = boundsLatLngs;
   React.useEffect(() => {
     if (pointRef.current) {
       map.setView(pointRef.current, maxZoom, { animate: false });
+      return;
+    }
+    if (boundsRef.current && boundsRef.current.length > 0) {
+      map.fitBounds(Leaflet.latLngBounds(boundsRef.current), {
+        animate: false,
+      });
     }
   }, [map, positionKey, maxZoom]);
   return null;
@@ -223,6 +237,7 @@ const MapContainer = ({
       >
         <Refit
           singlePoint={center}
+          boundsLatLngs={singlePhoto ? undefined : positions}
           maxZoom={resolvedMaxZoom}
           positionKey={positionKey}
         />

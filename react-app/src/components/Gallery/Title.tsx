@@ -14,6 +14,7 @@ import galleryPhotosService from "../../services/gallery-photos";
 import {
   useFiltersStore,
   useLastGalleryPathStore,
+  useTitleMapModalStore,
   useUserStore,
 } from "../../stores";
 import type { Gallery } from "../../models/GalleryModel";
@@ -196,7 +197,14 @@ const Title = ({
   lang,
 }: Props): React.ReactElement => {
   const navigate = useNavigate();
-  const [mapOpen, setMapOpen] = React.useState(false);
+  // MapModal open state lives in a Zustand store so the modal
+  // survives URL-driven Title remounts during prev/next month and
+  // year nav (#321). Auto-closers below (gallery switch, context
+  // flip) call `closeMap()` explicitly; Photo-modal mount triggers
+  // it from Gallery/index.tsx.
+  const mapOpen = useTitleMapModalStore((s) => s.isOpen);
+  const openMap = useTitleMapModalStore((s) => s.open);
+  const closeMap = useTitleMapModalStore((s) => s.close);
 
   const { t } = useTranslation();
   const user = useUserStore((s) => s.user);
@@ -298,6 +306,10 @@ const Title = ({
         (gallery) => gallery.id() === event.target.value
       );
       if (targetGallery && gallery.id() !== targetGallery.id()) {
+        // Different gallery means different spatial extent. Drop the
+        // map state so the new gallery starts from a clean opt-in
+        // rather than inheriting the previous gallery's pin set.
+        closeMap();
         navigate(getRedirectPath(targetGallery, context));
       }
     };
@@ -336,6 +348,11 @@ const Title = ({
 
   const switchTo = (target: string) => {
     if (target === context) return;
+    // Context flip (Gallery / Stats / Manage) closes the map — the
+    // new surface has its own affordances (Stats has its own
+    // Location card; Manage is non-spatial) and inheriting the
+    // open state across the flip is just visual noise.
+    closeMap();
     // Stats → Gallery: prefer the remembered last-gallery URL for this
     // gallery so the user lands back on the year/month/day they left
     // from. Falls through to `getRedirectPath` if nothing's been
@@ -349,7 +366,9 @@ const Title = ({
   };
 
   useKeyPress("m", () => {
-    if (mapPhotos.length > 0) setMapOpen((o) => !o);
+    if (mapPhotos.length === 0) return;
+    if (mapOpen) closeMap();
+    else openMap();
   });
   useKeyPress("g", () => switchTo("gallery"));
   useKeyPress("s", () => switchTo("stats"));
@@ -464,7 +483,7 @@ const Title = ({
         {mapPhotos.length > 0 && (
           <MapButton
             type="button"
-            onClick={() => setMapOpen(true)}
+            onClick={openMap}
             aria-label={String(t("stats-location-see-on-map"))}
             title={`${t("stats-location-see-on-map")} (m)`}
           >
@@ -478,7 +497,7 @@ const Title = ({
           title={String(t("stats-category-location"))}
           photos={mapPhotos}
           drawLine={context !== "stats"}
-          onClose={() => setMapOpen(false)}
+          onClose={closeMap}
         />
       )}
     </Root>
