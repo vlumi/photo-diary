@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { BsImages, BsPlus, BsShieldLock } from "react-icons/bs";
 
+import GalleryTypeIcon from "./GalleryTypeIcon";
+import config from "../../lib/config";
 import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
 
@@ -95,6 +97,34 @@ const Mono = styled.span`
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.9em;
 `;
+// 32px square cover thumbnail in the leading cell. `object-fit:
+// cover` keeps tall / wide icons centered without distortion;
+// the placeholder Box keeps row heights consistent when an
+// icon's missing.
+const IconCell = styled.td`
+  padding: 8px 0 8px 12px;
+  width: 32px;
+`;
+const IconImg = styled.img`
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--inactive-color);
+  background: var(--header-background);
+  display: block;
+`;
+const IconPlaceholder = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px dashed var(--inactive-color);
+`;
+const IdCell = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+`;
 const Actions = styled.div`
   display: inline-flex;
   gap: 6px;
@@ -124,6 +154,10 @@ interface GalleryRow {
   title?: string;
   hostname?: string;
   theme?: string;
+  icon?: string;
+  epoch?: string;
+  epochType?: string;
+  type?: "real" | "hybrid" | "saved_filter";
 }
 
 const Galleries = (): React.ReactElement => {
@@ -167,8 +201,10 @@ const Galleries = (): React.ReactElement => {
           <Table>
             <thead>
             <tr>
+              <Th></Th>
               <Th>{t("manage-galleries-col-id")}</Th>
               <Th>{t("manage-galleries-col-title")}</Th>
+              <Th>{t("manage-galleries-col-epoch")}</Th>
               <Th>{t("manage-galleries-col-hostname")}</Th>
               <Th>{t("manage-galleries-col-theme")}</Th>
               <Th></Th>
@@ -177,10 +213,25 @@ const Galleries = (): React.ReactElement => {
           <tbody>
             {rows.map((g) => (
               <Row key={g.id} onClick={() => navigate(`/m/g/${g.id}`)}>
+                <IconCell>
+                  {g.icon ? (
+                    <IconImg
+                      src={`${config.PHOTO_ROOT_URL}${g.icon}`}
+                      alt=""
+                      loading="lazy"
+                    />
+                  ) : (
+                    <IconPlaceholder aria-hidden />
+                  )}
+                </IconCell>
                 <Td>
-                  <Mono>{g.id}</Mono>
+                  <IdCell>
+                    <GalleryTypeIcon type={g.type} />
+                    <Mono>{g.id}</Mono>
+                  </IdCell>
                 </Td>
                 <Td>{g.title || ""}</Td>
+                <Td>{g.epoch ? g.epoch.substring(0, 10) : ""}</Td>
                 <Td>
                   <Mono>{g.hostname || ""}</Mono>
                 </Td>
