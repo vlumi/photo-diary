@@ -258,12 +258,53 @@ describe("Without photos", () => {
           | [number, number, number]
           | [undefined, undefined, undefined],
     };
+    const populatedShape = {
+      includesPhotos: () => true,
+      lastDay: () =>
+        [2024, 3, 15] as
+          | [number, number, number]
+          | [undefined, undefined, undefined],
+    };
     test("empty", () =>
       expect(samples.empty.lastPath(emptyShape)).toBe("/g/empty"));
     test("testing", () =>
       expect(samples.testing.lastPath(emptyShape)).toBe("/g/testing"));
     test("all_photos", () =>
       expect(samples["all_photos"].lastPath(emptyShape)).toBe("/g/all_photos"));
+    test("populated + initialView=month → /g/<id>/YYYY/MM", () =>
+      expect(samples.testing.lastPath(populatedShape)).toBe(
+        "/g/testing/2024/03"
+      ));
+    test("populated + initialView=year → /g/<id>/YYYY", () =>
+      expect(samples["all_photos"].lastPath(populatedShape)).toBe(
+        "/g/all_photos/2024"
+      ));
+    test("populated + initialView=day → /g/<id>/YYYY/MM/DD", () =>
+      expect(samples.daily.lastPath(populatedShape)).toBe(
+        "/g/all_photos/2024/03/15"
+      ));
+    test("populated + initialView=photo without lastPhotoId → month-of-lastDay fallback", () =>
+      expect(samples.photo_view.lastPath(populatedShape)).toBe(
+        "/g/all_photos/2024/03"
+      ));
+    test("populated + initialView=photo with lastPhotoId → full photo URL", () =>
+      expect(
+        samples.photo_view.lastPath({
+          ...populatedShape,
+          lastPhotoId: "shot-42.jpg",
+        })
+      ).toBe("/g/all_photos/2024/03/15/shot-42.jpg"));
+    test("populated + initialView=day ignores lastPhotoId", () =>
+      expect(
+        samples.daily.lastPath({
+          ...populatedShape,
+          lastPhotoId: "shot-42.jpg",
+        })
+      ).toBe("/g/all_photos/2024/03/15"));
+    test("populated + unknown initialView → month fallback", () =>
+      expect(samples.badInitial.lastPath(populatedShape)).toBe(
+        "/g/all_photos/2024/03"
+      ));
   });
   describe("statsPath", () => {
     test("empty", () =>
