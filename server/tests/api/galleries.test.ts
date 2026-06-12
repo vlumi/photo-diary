@@ -231,6 +231,50 @@ describe("As admin", () => {
   test("Get invalid", async () => {
     await expectGalleryUnavailable(token, "invalid");
   });
+  test("Reorder galleries (admin) → list order follows", async () => {
+    await api
+      .post("/api/v1/galleries/_order")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ids: ["gallery3", "gallery1", "gallery2"] })
+      .expect(204);
+    const result = await getGalleries(token);
+    const ids = (result.body as Array<{ id: string }>).map((g) => g.id);
+    expect(ids).toEqual(["gallery3", "gallery1", "gallery2"]);
+    await api
+      .post("/api/v1/galleries/_order")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ids: ["gallery1", "gallery2", "gallery3"] })
+      .expect(204);
+  });
+  test("Reorder rejects an incomplete id list (422)", async () => {
+    await api
+      .post("/api/v1/galleries/_order")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ids: ["gallery1", "gallery2"] })
+      .expect(422);
+  });
+  test("Reorder rejects an unknown id (422)", async () => {
+    await api
+      .post("/api/v1/galleries/_order")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ids: ["gallery1", "gallery2", "gallery3", "ghost"] })
+      .expect(422);
+  });
+  test("Reorder rejects duplicates (422)", async () => {
+    await api
+      .post("/api/v1/galleries/_order")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ids: ["gallery1", "gallery1", "gallery2"] })
+      .expect(422);
+  });
+  test("Reorder requires admin (403 for plain user)", async () => {
+    const plainToken = await loginUser(api, "plainuser");
+    await api
+      .post("/api/v1/galleries/_order")
+      .set("Authorization", `Bearer ${plainToken}`)
+      .send({ ids: ["gallery1", "gallery2", "gallery3"] })
+      .expect(403);
+  });
 });
 
 describe("As gallery1admin", () => {

@@ -69,6 +69,10 @@ export interface GalleryRow {
   // the column default.
   default_language: string;
   type: GalleryType;
+  // Operator-curated sort index (#585). Drives the primary sort
+  // for `loadGalleries`; id is the tiebreak. Untouched rows
+  // (all-zero) preserve the id-ASC order they had before.
+  ordinal: number;
 }
 export interface GalleryLocalizedRow {
   gallery_id: string;
@@ -170,6 +174,9 @@ export interface Gallery {
   // Discriminates how the gallery's photos are resolved at read
   // time. See `GalleryType`.
   type: GalleryType;
+  // Operator-curated sort index (#585). 0 by default; lower comes
+  // first. Tiebreak is gallery id ASC.
+  ordinal: number;
   // Hybrid galleries only: source gallery IDs whose photos union
   // into this one. Undefined for real and saved-filter galleries.
   sources?: string[];
@@ -467,6 +474,7 @@ export default () => {
         titleLocalized: buildLocalizedMap(localized, "title"),
         descriptionLocalized: buildLocalizedMap(localized, "description"),
         type: row.type ?? "real",
+        ordinal: row.ordinal ?? 0,
       }),
       mapInsert: (gallery: Gallery): unknown[] => [
         gallery.id,
@@ -481,6 +489,7 @@ export default () => {
         gallery.hostname,
         gallery.defaultLanguage || "en",
         gallery.type ?? "real",
+        gallery.ordinal ?? 0,
       ],
 
       buildCreateQuery: () => buildCreateQuery(SCHEMA.gallery),
@@ -763,6 +772,7 @@ const galleryMapToRow = (
   if ("defaultLanguage" in gallery)
     result.default_language = gallery.defaultLanguage;
   if ("type" in gallery) result.type = gallery.type;
+  if ("ordinal" in gallery) result.ordinal = gallery.ordinal;
   return result;
 };
 
@@ -945,9 +955,13 @@ const SCHEMA = {
       "hostname",
       "default_language",
       "type",
+      "ordinal",
     ],
     primaryKey: ["id"],
-    order: ["id ASC"],
+    // Operator-curated sort (#585) — `ordinal` is the primary key
+    // and `id` the tiebreak so all-zero (untouched) rows preserve
+    // their previous id-ASC order.
+    order: ["ordinal ASC", "id ASC"],
     mapToRow: galleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
   },
   gallerySavedFilter: {

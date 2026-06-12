@@ -98,4 +98,16 @@ const setIcon = async (
     })
   ) as Promise<{ icon: string }>;
 
-export default { getAll, get, update, create, remove, setIcon };
+// Apply operator-curated gallery order (#585). `ids` must cover
+// every current gallery exactly once — server rejects partial lists
+// with 422 so callers don't accidentally strand untouched galleries
+// at ordinal 0.
+const reorder = async (ids: string[]): Promise<void> => {
+  await unwrap(
+    api.POST("/api/v1/galleries/_order", {
+      body: { ids },
+    })
+  );
+};
+
+export default { getAll, get, update, create, remove, setIcon, reorder };

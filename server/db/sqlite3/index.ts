@@ -83,6 +83,7 @@ export default () => {
     deleteGroupGallery,
 
     loadGalleries,
+    setGalleryOrder,
     createGallery,
     loadGallery,
     updateGallery,
@@ -774,6 +775,7 @@ const createSavedFilter = async (filter: SavedFilter): Promise<void> => {
         hostname: "",
         defaultLanguage: sourceRow.default_language || "en",
         type: "saved_filter",
+        ordinal: 0,
       })
     );
     db.prepare(
@@ -984,6 +986,20 @@ const upsertGalleryLocalizedFields = (
 };
 const deleteGallery = async (galleryId: string) =>
   deleteById(SCHEMA.gallery, galleryId);
+
+// Apply an operator-curated gallery order (#585). Caller has
+// already validated that `ids` covers exactly the gallery id set,
+// so this just stamps each row's ordinal by position. Single
+// transaction so a half-applied reorder can't leak.
+const setGalleryOrder = async (ids: string[]): Promise<void> => {
+  const stmt = db.prepare("UPDATE gallery SET ordinal = ? WHERE id = ?");
+  const tx = db.transaction((list: string[]) => {
+    list.forEach((id, idx) => {
+      stmt.run(idx, id);
+    });
+  });
+  tx(ids);
+};
 
 const loadGalleryPhotos = async (galleryId: string, lang?: string) => {
   const schema = SCHEMA.photo;

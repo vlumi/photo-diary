@@ -19,6 +19,7 @@ export default () => {
     updateGallery,
     deleteGallery,
     setGalleryIcon,
+    setGalleryOrder,
   };
 };
 
@@ -178,4 +179,34 @@ const setGalleryIcon = async (
   const iconSource = JSON.stringify({ photoId: sourcePhotoId, crop });
   await db.updateGallery(galleryId, { icon: iconPath, iconSource });
   return iconPath;
+};
+
+// Apply an operator-curated order across every visible gallery (#585).
+// The input must contain exactly the current gallery id set — no
+// missing ids (would leave them stranded at ordinal 0) and no extras
+// (typo / stale client). Ordinals are reassigned by position: 0, 1,
+// 2, … so the operator's drop-on-row gets the literal slot they
+// picked.
+const setGalleryOrder = async (ids: string[]): Promise<void> => {
+  logger.debug("Reordering galleries", { count: ids.length });
+  const galleries = (await db.loadGalleries()) as Array<{ id: string }>;
+  const existing = new Set(galleries.map((g) => g.id));
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (!existing.has(id)) {
+      throw new ValidationError("Unknown gallery id in order list", { id });
+    }
+    if (seen.has(id)) {
+      throw new ValidationError("Duplicate gallery id in order list", { id });
+    }
+    seen.add(id);
+  }
+  if (seen.size !== existing.size) {
+    const missing = [...existing].filter((id) => !seen.has(id));
+    throw new ValidationError(
+      "Order list must include every gallery exactly once",
+      { missing }
+    );
+  }
+  await db.setGalleryOrder(ids);
 };

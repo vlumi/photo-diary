@@ -288,6 +288,8 @@
     "manage-gallery-type-hybrid": "Hybridigalleria",
     "manage-gallery-type-saved-filter": "Tallennettu suodatin",
     "manage-gallery-epoch-today": "Tänään",
+    "manage-galleries-drag-handle": "Vedä järjestääksesi uudelleen",
+    "manage-galleries-sort-by-id": "Järjestä tunnisteen mukaan",
     "manage-gallery-load-error": "Gallerian lataus epäonnistui.",
     "manage-gallery-save-error": "Tallennus epäonnistui",
     "manage-gallery-section-content": "Sisältö",

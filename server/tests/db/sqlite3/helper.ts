@@ -36,5 +36,6 @@ export const mkGallery = (partial: Partial<Gallery> & { id: string }): Gallery =
   hostname: "",
   defaultLanguage: "en",
   type: "real",
+  ordinal: 0,
   ...partial,
 });
