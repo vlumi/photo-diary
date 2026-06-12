@@ -10,9 +10,14 @@ import {
   BsTrash,
 } from "react-icons/bs";
 
+import EpochAge from "../Gallery/EpochAge";
+import EpochDayIndex from "../Gallery/EpochDayIndex";
+import GalleryModel from "../../models/GalleryModel";
+import config from "../../lib/config";
 import galleriesService from "../../services/galleries";
 import { useUserStore } from "../../stores";
 import { languageNameIn } from "./LocalizedInputs";
+import GalleryTypeIcon from "./GalleryTypeIcon";
 import SavedFiltersSection from "./SavedFiltersSection";
 import GalleryFormFields, {
   EMPTY_FORM,
@@ -35,9 +40,41 @@ const TitleRow = styled.div`
   flex-wrap: wrap;
   margin: 0 0 16px;
 `;
+// Left half of TitleRow: cover thumbnail (when present) +
+// title-block (id + epoch-today line). Lays the visual identity
+// of the gallery in one place so the operator immediately knows
+// which gallery they're on.
+const IdentityCluster = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+`;
+const HeaderIconImg = styled.img`
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--inactive-color);
+  background: var(--header-background);
+  flex: 0 0 auto;
+`;
+const HeaderTitleBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+`;
 const Title = styled.h2`
   margin: 0;
   font-size: 1.2em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+`;
+const EpochNow = styled.div`
+  font-size: 0.85em;
+  color: var(--inactive-color);
+  margin-top: 2px;
 `;
 const SiblingNav = styled.nav`
   display: inline-flex;
@@ -348,10 +385,86 @@ const GalleryEdit = (): React.ReactElement => {
       <SummaryEmpty>{t("manage-gallery-summary-empty")}</SummaryEmpty>
     );
 
+  // Compute today's date through the gallery's epoch scheme — reuses
+  // the public viewer's per-day chip components so the rendering
+  // stays in sync with how visitors see dates (#569). Requires a
+  // Gallery model instance since EpochAge / EpochDayIndex read via
+  // gallery.epochYmd() / .hasEpoch().
+  const today = new Date();
+  const todayY = today.getFullYear();
+  const todayM = today.getMonth() + 1;
+  const todayD = today.getDate();
+  // Strip photos before constructing the model — the admin endpoint
+  // returns raw photo POJOs, but GalleryModel expects already-built
+  // PhotoModel instances and chokes on `.year()` etc. We only need
+  // the model for its epoch math, so the empty array suffices.
+  const galleryModel = GalleryModel({ ...gallery, photos: [] });
+  const renderEpochNow = (): React.ReactNode => {
+    if (!galleryModel || !gallery.epoch || !gallery.epochType) return null;
+    switch (gallery.epochType) {
+      case "birthday":
+        return (
+          <EpochNow>
+            {t("manage-gallery-epoch-today")}:{" "}
+            <EpochAge
+              gallery={galleryModel}
+              year={todayY}
+              month={todayM}
+              day={todayD}
+              separator=" "
+            />
+          </EpochNow>
+        );
+      case "1-index":
+        return (
+          <EpochNow>
+            {t("manage-gallery-epoch-today")}:{" "}
+            <EpochDayIndex
+              gallery={galleryModel}
+              year={todayY}
+              month={todayM}
+              day={todayD}
+              lang={i18n.language}
+            />
+          </EpochNow>
+        );
+      case "0-index":
+        return (
+          <EpochNow>
+            {t("manage-gallery-epoch-today")}:{" "}
+            <EpochDayIndex
+              gallery={galleryModel}
+              year={todayY}
+              month={todayM}
+              day={todayD}
+              lang={i18n.language}
+              start={0}
+            />
+          </EpochNow>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Root>
       <TitleRow>
-        <Title>{galleryId}</Title>
+        <IdentityCluster>
+          {gallery.icon && (
+            <HeaderIconImg
+              src={`${config.PHOTO_ROOT_URL}${gallery.icon}`}
+              alt=""
+            />
+          )}
+          <HeaderTitleBlock>
+            <Title>
+              <GalleryTypeIcon type={gallery.type} />
+              {galleryId}
+            </Title>
+            {renderEpochNow()}
+          </HeaderTitleBlock>
+        </IdentityCluster>
         <SiblingNav aria-label={String(t("manage-gallery-nav-group"))}>
           <SiblingLink
             onClick={() => navigate(`/m/photos?gallery=${galleryId}`)}
