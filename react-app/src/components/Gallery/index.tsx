@@ -150,8 +150,13 @@ const Gallery = ({
   // common case pays for one round trip, not two.
   const photoByIdQuery = useQuery({
     queryKey: ["gallery-photo-by-id", galleryId, photoId, lang],
-    queryFn: () =>
-      galleryPhotosService.getOne(galleryId as string, photoId as string, lang),
+    queryFn: ({ signal }) =>
+      galleryPhotosService.getOne(
+        galleryId as string,
+        photoId as string,
+        lang,
+        signal
+      ),
     enabled: !!photoId && galleryInList,
     retry: false,
   });
