@@ -3,7 +3,10 @@ import path from "node:path";
 import { readFileSync } from "node:fs";
 
 import Fastify from "fastify";
-import { type TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
+import {
+  TypeBoxValidatorCompiler,
+  type TypeBoxTypeProvider,
+} from "@fastify/type-provider-typebox";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyCompress from "@fastify/compress";
 import fastifyStatic from "@fastify/static";
@@ -63,6 +66,14 @@ export const app = Fastify({
   // `requestLogger` (below) emits the structured per-response line.
   disableRequestLogging: true,
 }).withTypeProvider<TypeBoxTypeProvider>();
+
+// Replace Fastify's default Ajv-based validator with TypeBox's own
+// Compile/Check. TypeBox emits the same JSON Schema TypeBox-typed
+// routes are authored against, validates with no `coerceTypes` —
+// what the schema says is what the handler sees. Avoids the class
+// of bug fixed locally in #570 (`null` against `Type.Union([X,
+// Null])` coerced to the non-null branch's default). Closes #571.
+app.setValidatorCompiler(TypeBoxValidatorCompiler);
 
 const STATIC_DIR =
   process.env.STATIC_DIR ?? path.join(import.meta.dirname, "build");

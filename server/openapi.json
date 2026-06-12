@@ -1873,21 +1873,33 @@
                             "type": "object",
                             "properties": {
                               "latitude": {
-                                "type": [
-                                  "number",
-                                  "null"
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "longitude": {
-                                "type": [
-                                  "number",
-                                  "null"
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "altitude": {
-                                "type": [
-                                  "number",
-                                  "null"
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               }
                             },
@@ -2503,21 +2515,33 @@
                             "type": "object",
                             "properties": {
                               "latitude": {
-                                "type": [
-                                  "number",
-                                  "null"
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "longitude": {
-                                "type": [
-                                  "number",
-                                  "null"
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "altitude": {
-                                "type": [
-                                  "number",
-                                  "null"
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               }
                             },
@@ -3330,9 +3354,13 @@
                     "type": "boolean"
                   },
                   "hideMap": {
-                    "type": [
-                      "boolean",
-                      "null"
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 },
@@ -3833,9 +3861,13 @@
                     "type": "boolean"
                   },
                   "hideMap": {
-                    "type": [
-                      "boolean",
-                      "null"
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 },
