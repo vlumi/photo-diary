@@ -130,6 +130,7 @@ const GalleryModel = (galleryData: unknown) => {
     hasTheme: (): boolean => !!gallery.theme,
     theme: (): string | undefined => gallery.theme,
     hideMap: (): boolean => !!gallery.hideMap,
+    initialView: (): string | undefined => gallery.initialView,
     matchesHostname: (hostname: string): boolean => {
       const regex = hostnameRegex();
       if (!regex) {
@@ -148,13 +149,15 @@ const GalleryModel = (galleryData: unknown) => {
     // Caller passes the gallery's calendar shape (see `useGalleryCalendar`)
     // — the gallery model itself no longer carries the photo array
     // that used to drive `firstDay`/`lastDay`/`includesPhotos`.
-    // `photo` initialView falls back to the month-of-lastDay path
-    // here; pinning to the specific last-photo URL would need an
-    // extra fetch beyond /counts, and the gallery list rendering N
-    // gallery cards shouldn't fan out N photo lookups.
+    // `photo` initialView resolves to the actual last-photo URL when
+    // the caller supplies `lastPhotoId` (e.g. <Full> can afford the
+    // extra /query fetch for one gallery). Without it — typically
+    // the gallery picker rendering N cards — fall back to the
+    // month-of-lastDay path so we don't fan out N photo lookups.
     lastPath: (shape: {
       includesPhotos: () => boolean;
       lastDay: () => [number, number, number] | [undefined, undefined, undefined];
+      lastPhotoId?: string;
     }): string => {
       if (!shape.includesPhotos()) {
         return self.path();
@@ -170,6 +173,10 @@ const GalleryModel = (galleryData: unknown) => {
         case "day":
           return self.path(year, month, day);
         case "photo":
+          if (shape.lastPhotoId) {
+            return `${self.path(year, month, day)}/${shape.lastPhotoId}`;
+          }
+          return self.path(year, month);
         default:
         case "month":
           return self.path(year, month);
