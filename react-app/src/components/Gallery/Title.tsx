@@ -220,11 +220,13 @@ const Title = ({
       serverFilters,
       dateRange,
     ],
-    queryFn: () =>
-      galleryPhotosService.getNeighbors(gallery.id(), photo!.id(), {
-        filter: serverFilters,
-        dateRange,
-      }),
+    queryFn: ({ signal }) =>
+      galleryPhotosService.getNeighbors(
+        gallery.id(),
+        photo!.id(),
+        { filter: serverFilters, dateRange },
+        signal
+      ),
     enabled: !!photo,
     placeholderData: keepPreviousData,
   });

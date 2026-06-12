@@ -290,10 +290,13 @@ const Photo = ({
       photo.id(),
       serverFilters,
     ],
-    queryFn: () =>
-      galleryPhotosService.getNeighbors(gallery.id(), photo.id(), {
-        filter: serverFilters,
-      }),
+    queryFn: ({ signal }) =>
+      galleryPhotosService.getNeighbors(
+        gallery.id(),
+        photo.id(),
+        { filter: serverFilters },
+        signal
+      ),
     placeholderData: keepPreviousData,
   });
   // Prime the per-id query cache (Gallery/index.tsx reads from

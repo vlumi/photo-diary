@@ -41,16 +41,21 @@ const getCounts = async (
   );
 
 // Prev / next / first / last photos within the filtered set —
-// drives the Photo modal's carousel + keyboard nav (#406).
+// drives the Photo modal's carousel + keyboard nav (#406). `signal`
+// lets TanStack's per-query AbortController cancel in-flight
+// requests when the user blasts through prev/next faster than the
+// network responds (#577).
 const getNeighbors = async (
   galleryId: string,
   photoId: string,
-  opts: { filter?: ServerFilters; dateRange?: DateRange; lang?: string } = {}
+  opts: { filter?: ServerFilters; dateRange?: DateRange; lang?: string } = {},
+  signal?: AbortSignal
 ) =>
   unwrap(
     api.POST("/api/v1/gallery-photos/{galleryId}/neighbors", {
       params: { path: { galleryId } },
       body: { photoId, ...opts },
+      signal,
     })
   );
 
@@ -69,13 +74,19 @@ const getFilterValues = async (galleryId: string, lang?: string) =>
 // One photo by id within a gallery context. Drives the Photo modal
 // mount under #532 phase 2 — replaces the in-memory `gallery.photo
 // (...)` lookup that needed the gallery's full photo array.
-const getOne = async (galleryId: string, photoId: string, lang?: string) =>
+const getOne = async (
+  galleryId: string,
+  photoId: string,
+  lang?: string,
+  signal?: AbortSignal
+) =>
   unwrap(
     api.GET("/api/v1/gallery-photos/{galleryId}/{photoId}", {
       params: {
         path: { galleryId, photoId },
         query: lang ? { lang } : undefined,
       },
+      signal,
     })
   );
 
