@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-06-12
+
+### Bug fixes
+
+- `<Full>` now resolves the actual last photo when a gallery has `initialView: "photo"`; previously fell through to the month-of-lastDay view because the in-memory photo array was dropped in #532 and the new `lastPath` couldn't synthesize the URL. `<Full>` does one extra `/query` against the last day to pick the id; picker callers (N gallery cards) still take the month fallback to avoid fan-out. Closes #578.
+- Photo modal's neighbors + per-id queries now wire `AbortSignal` through `getNeighbors` / `getOne`, so rapid prev/next nav cancels in-flight fetches instead of racing them. Closes #577 (partial — placeholder-data tightening deferred for a typing issue).
+
+### Server
+
+- `setValidatorCompiler(TypeBoxValidatorCompiler)` replaces Fastify's default Ajv across every endpoint, removing the `coerceTypes` path that silently turned `null` into `false` / `0` / `""` against `Type.Union([X, Null])` schemas. The local `BooleanOrNull` / `NumberOrNull` workarounds from 0.15.1 retire — callers go back to plain `Type.Union([Type.X(), Type.Null()])`. The latent `FilterKey` coercion (silent stringification of every alternative) is fixed as a side effect; downstream filter eval was already forgiving so no user-visible change beyond schema-and-runtime alignment. Closes #571.
+
+### Frontend
+
+- The `/m/*` admin surface and `/s` global stats are now lazy-loaded — public visitors drop ~615 kB / ~172 kB gzipped off the main bundle (1 MB → 387 kB raw, 287 kB → 115 kB gzipped). Admin pages fan out into per-page chunks loaded on demand. Closes #573.
+
 ## [0.15.1] - 2026-06-11
 
 ### Bug fixes

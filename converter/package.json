@@ -35,5 +35,5 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.1"
   },
-  "version": "0.15.1"
+  "version": "0.15.2"
 }
