@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
-import ThemePicker from "./ThemePicker";
+import theme from "../lib/theme";
 import { useHostScope } from "../lib/use-host-scope";
 import token from "../lib/token";
 import tokenService from "../services/tokens";
@@ -15,6 +15,7 @@ import {
   useChangePasswordModalStore,
   useBetaStore,
   useThemePreferenceStore,
+  useThemePickerModalStore,
 } from "../stores";
 import { BETA_FEATURES } from "../stores/beta";
 
@@ -96,16 +97,15 @@ const BetaToggle = styled.label`
     color: var(--header-color);
   }
 `;
-const ThemeBlock = styled.div`
+const ThemeMenuItem = styled(MenuItem)`
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 14px;
-  color: var(--primary-color);
-  font: inherit;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
 `;
-const ThemeBlockLabel = styled.span`
-  font-size: 0.95em;
+const ThemeMenuValue = styled.span`
+  color: var(--inactive-color);
+  font-size: 0.9em;
 `;
 
 // Profile icon in the top-right of the top menu. Anonymous (outlined) when
@@ -128,41 +128,19 @@ const UserMenu = (): React.ReactElement => {
     (f) => betaModes[f] === "user"
   );
   const themePreference = useThemePreferenceStore((s) => s.preference);
-  const setThemePreference = useThemePreferenceStore((s) => s.setPreference);
+  const openThemeModal = useThemePickerModalStore((s) => s.open);
+  // Resolve the committed theme's display name for the menu item's
+  // value suffix. `null` means "Follow gallery default" — fall back to
+  // the i18n label. An unknown id (renamed / removed theme) falls back
+  // to the raw id rather than blanking the menu item.
+  const themeLabel = (() => {
+    if (themePreference === null) return t("theme-follow-default");
+    const entry = theme.manifest.find((e) => e.id === themePreference);
+    return entry?.displayName ?? themePreference;
+  })();
 
   const [isOpen, setIsOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
-
-  // Hover-preview model: hovering a swatch applies the theme live (via
-  // the same store the rest of the app reads), moving away or closing
-  // the picker restores the committed value. `committedTheme` mirrors
-  // what the user clicked; sync it from the store only when the picker
-  // opens, so previewing during hover doesn't move the active outline.
-  const [committedTheme, setCommittedTheme] = React.useState<string | null>(
-    themePreference
-  );
-  const prevIsOpenRef = React.useRef(isOpen);
-  React.useEffect(() => {
-    if (isOpen && !prevIsOpenRef.current) {
-      setCommittedTheme(themePreference);
-    } else if (!isOpen && prevIsOpenRef.current) {
-      if (themePreference !== committedTheme) {
-        setThemePreference(committedTheme);
-      }
-    }
-    prevIsOpenRef.current = isOpen;
-  }, [isOpen, themePreference, committedTheme, setThemePreference]);
-
-  const onSwatchEnter = (id: string | null) => setThemePreference(id);
-  const onGridLeave = () => {
-    if (themePreference !== committedTheme) {
-      setThemePreference(committedTheme);
-    }
-  };
-  const onSwatchClick = (id: string | null) => {
-    setCommittedTheme(id);
-    setThemePreference(id);
-  };
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -267,18 +245,17 @@ const UserMenu = (): React.ReactElement => {
               {t("stats-menu-entry")}
             </MenuItem>
           )}
-          <ThemeBlock>
-            <ThemeBlockLabel>{t("theme-label")}</ThemeBlockLabel>
-            <ThemePicker
-              value={committedTheme}
-              onChange={onSwatchClick}
-              onPreview={(id) => {
-                if (id === null) onGridLeave();
-                else onSwatchEnter(id);
-              }}
-              defaultLabel={String(t("theme-follow-default"))}
-            />
-          </ThemeBlock>
+          <ThemeMenuItem
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setIsOpen(false);
+              openThemeModal();
+            }}
+          >
+            <span>{t("theme-label")}</span>
+            <ThemeMenuValue>{themeLabel}</ThemeMenuValue>
+          </ThemeMenuItem>
           {userBetaFeatures.map((f) => (
             <BetaToggle key={f}>
               <input

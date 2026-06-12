@@ -17,6 +17,7 @@ import Gallery from "./components/Gallery";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
+import ThemePickerModal from "./components/ThemePickerModal";
 
 // Admin surface (`/m/*`) + cross-gallery stats (`/s`) are gated on
 // `user.isAdmin()` at runtime — public visitors never see them. Lazy-
@@ -167,6 +168,7 @@ const App = (): React.ReactElement => {
       <Notifications />
       <LoginModal />
       <ChangePasswordModal />
+      <ThemePickerModal />
       <Router>
         <TopMenu />
         <ScrollToPosition>
