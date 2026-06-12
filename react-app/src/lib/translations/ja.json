@@ -288,6 +288,8 @@
     "manage-gallery-type-hybrid": "ハイブリッドギャラリー",
     "manage-gallery-type-saved-filter": "保存済みフィルター",
     "manage-gallery-epoch-today": "今日",
+    "manage-galleries-drag-handle": "ドラッグして並べ替え",
+    "manage-galleries-sort-by-id": "IDで並べ替え",
     "manage-gallery-load-error": "ギャラリーの読み込みに失敗しました。",
     "manage-gallery-save-error": "保存に失敗しました",
     "manage-gallery-section-content": "内容",

@@ -288,6 +288,8 @@
     "manage-gallery-type-hybrid": "Hybrid gallery",
     "manage-gallery-type-saved-filter": "Saved filter",
     "manage-gallery-epoch-today": "Today",
+    "manage-galleries-drag-handle": "Drag to reorder",
+    "manage-galleries-sort-by-id": "Sort by id",
     "manage-gallery-load-error": "Failed to load gallery.",
     "manage-gallery-save-error": "Failed to save changes",
     "manage-gallery-section-content": "Content",

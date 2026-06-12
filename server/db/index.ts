@@ -215,6 +215,9 @@ export default {
   loadGalleries: async () => {
     return await db.loadGalleries();
   },
+  setGalleryOrder: async (ids: string[]): Promise<void> => {
+    await db.setGalleryOrder(ids);
+  },
   createGallery: async (gallery: GalleryInput) => {
     await db.createGallery(gallery as Gallery);
   },

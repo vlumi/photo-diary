@@ -31,6 +31,7 @@ describe("gallery CRUD", () => {
       initialView: "month",
       hostname: "^sample\\.",
       type: "real",
+      ordinal: 0,
     });
     const row = (await driver.loadGallery("g-full")) as {
       title: string;

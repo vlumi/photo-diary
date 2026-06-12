@@ -162,14 +162,15 @@ describe("Gallery", () => {
     "hostname",
     "default_language",
     "type",
+    "ordinal",
   ].join(",");
   test("Build create query", () =>
     expect(schema.gallery.buildCreateQuery()).toBe(
-      `INSERT INTO gallery (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO gallery (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.gallery.buildSelectByIdQuery()).toBe(
-      `SELECT ${cols} FROM gallery WHERE id = ? ORDER BY id ASC`
+      `SELECT ${cols} FROM gallery WHERE id = ? ORDER BY ordinal ASC,id ASC`
     ));
   test("Build update by id query: nothing", () =>
     expect(schema.gallery.buildUpdateByIdQuery({})).toStrictEqual({
@@ -231,11 +232,11 @@ describe("Gallery", () => {
     ));
   test("Build select all query", () =>
     expect(schema.gallery.buildSelectQuery()).toBe(
-      `SELECT ${cols} FROM gallery ORDER BY id ASC`
+      `SELECT ${cols} FROM gallery ORDER BY ordinal ASC,id ASC`
     ));
   test("Build select by condition query", () =>
     expect(schema.gallery.buildSelectQuery(["id = ?"])).toBe(
-      `SELECT ${cols} FROM gallery WHERE id = ? ORDER BY id ASC`
+      `SELECT ${cols} FROM gallery WHERE id = ? ORDER BY ordinal ASC,id ASC`
     ));
   test("Build delete all query", () =>
     expect(schema.gallery.buildDeleteQuery()).toBe("DELETE FROM gallery"));

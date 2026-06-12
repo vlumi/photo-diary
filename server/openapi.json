@@ -790,6 +790,47 @@
         }
       }
     },
+    "/api/v1/galleries/_order": {
+      "post": {
+        "summary": "Reorder galleries (admin)",
+        "tags": [
+          "galleries"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ids"
+                ],
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/galleries/{galleryId}": {
       "get": {
         "summary": "Get one gallery (with photos)",

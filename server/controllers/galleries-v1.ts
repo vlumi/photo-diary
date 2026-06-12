@@ -145,6 +145,33 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 
   /**
+   * Apply operator-curated gallery sort order (#585). Body is an
+   * ordered list of gallery ids covering exactly the current
+   * gallery set. Admin-only. Underscore-prefix path keeps the
+   * literal segment off the slug-id namespace (`assertSlugId`
+   * rejects ids starting with anything other than [a-z0-9]).
+   */
+  fastify.post(
+    "/_order",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Reorder galleries (admin)",
+        body: Type.Object(
+          { ids: Type.Array(Type.String({ minLength: 1 })) },
+          { additionalProperties: false }
+        ),
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request, reply) => {
+      await authorizer.authorizeAdmin(request.user.id);
+      await model.setGalleryOrder(request.body.ids);
+      reply.status(204).send();
+    }
+  );
+
+  /**
    * Create a new gallery.
    */
   fastify.post(
