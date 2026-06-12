@@ -14,26 +14,52 @@ import "./App.css";
 import ScrollToPosition from "./components/ScrollToPosition";
 import TopMenu from "./components/TopMenu";
 import Gallery from "./components/Gallery";
-import Manage from "./components/Manage";
-import ManagePlaceholder from "./components/Manage/Placeholder";
-import ManagePhotos from "./components/Manage/Photos";
-import ManagePhotoDrawer from "./components/Manage/PhotoDrawer";
-import ManageGalleries from "./components/Manage/Galleries";
-import ManageGalleryEdit from "./components/Manage/GalleryEdit";
-import ManageGalleryCreate from "./components/Manage/GalleryCreate";
-import ManageDashboard from "./components/Manage/Dashboard";
-import ManageUsers from "./components/Manage/Users";
-import ManageUserEdit from "./components/Manage/UserEdit";
-import ManageUserCreate from "./components/Manage/UserCreate";
-import ManageGroups from "./components/Manage/Groups";
-import ManageGroupEdit from "./components/Manage/GroupEdit";
-import ManageGroupCreate from "./components/Manage/GroupCreate";
-import ManageGalleryAccess from "./components/Manage/GalleryAccess";
-import ManageAccess from "./components/Manage/Access";
-import GlobalStats from "./components/GlobalStats";
 import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
+
+// Admin surface (`/m/*`) + cross-gallery stats (`/s`) are gated on
+// `user.isAdmin()` at runtime — public visitors never see them. Lazy-
+// load the whole subtree so the admin bundle isn't paid for on every
+// gallery view. Per-page chunks of Manage co-bundle via Rollup's
+// shared-chunk hoisting (one Manage entry, the per-page components
+// follow via their dynamic-import edges into the Manage shell).
+const Manage = React.lazy(() => import("./components/Manage"));
+const ManagePhotos = React.lazy(() => import("./components/Manage/Photos"));
+const ManagePhotoDrawer = React.lazy(
+  () => import("./components/Manage/PhotoDrawer")
+);
+const ManageGalleries = React.lazy(
+  () => import("./components/Manage/Galleries")
+);
+const ManageGalleryEdit = React.lazy(
+  () => import("./components/Manage/GalleryEdit")
+);
+const ManageGalleryCreate = React.lazy(
+  () => import("./components/Manage/GalleryCreate")
+);
+const ManageDashboard = React.lazy(
+  () => import("./components/Manage/Dashboard")
+);
+const ManageUsers = React.lazy(() => import("./components/Manage/Users"));
+const ManageUserEdit = React.lazy(
+  () => import("./components/Manage/UserEdit")
+);
+const ManageUserCreate = React.lazy(
+  () => import("./components/Manage/UserCreate")
+);
+const ManageGroups = React.lazy(() => import("./components/Manage/Groups"));
+const ManageGroupEdit = React.lazy(
+  () => import("./components/Manage/GroupEdit")
+);
+const ManageGroupCreate = React.lazy(
+  () => import("./components/Manage/GroupCreate")
+);
+const ManageGalleryAccess = React.lazy(
+  () => import("./components/Manage/GalleryAccess")
+);
+const ManageAccess = React.lazy(() => import("./components/Manage/Access"));
+const GlobalStats = React.lazy(() => import("./components/GlobalStats"));
 
 import config from "./lib/config";
 import metaService from "./services/meta";
@@ -147,45 +173,50 @@ const App = (): React.ReactElement => {
           {!countryDataReady ? (
             <div>{t("loading")}</div>
           ) : (
-            <Routes>
-              <Route
-                path="/s/:galleryId"
-                element={<Gallery isStats={true} />}
-              />
-              <Route path="/s" element={<GlobalStats />} />
-              <Route
-                path="/g/:galleryId/:year/:month/:day/:photoId"
-                element={<Gallery />}
-              />
-              <Route
-                path="/g/:galleryId/:year?/:month?/:day?"
-                element={<Gallery />}
-              />
-              <Route path="/g" element={<Gallery />} />
-              <Route path="/m" element={<Manage />}>
-                <Route index element={<ManageDashboard />} />
-                <Route path="users" element={<ManageUsers />} />
-                <Route path="users/new" element={<ManageUserCreate />} />
-                <Route path="users/:userId" element={<ManageUserEdit />} />
-                <Route path="groups" element={<ManageGroups />} />
-                <Route path="groups/new" element={<ManageGroupCreate />} />
-                <Route path="groups/:groupId" element={<ManageGroupEdit />} />
-                <Route path="access" element={<ManageAccess />} />
-                <Route path="galleries" element={<ManageGalleries />} />
+            <React.Suspense fallback={<div>{t("loading")}</div>}>
+              <Routes>
                 <Route
-                  path="galleries/new"
-                  element={<ManageGalleryCreate />}
+                  path="/s/:galleryId"
+                  element={<Gallery isStats={true} />}
                 />
-                <Route path="photos" element={<ManagePhotos />}>
-                  <Route path=":photoId" element={<ManagePhotoDrawer />} />
+                <Route path="/s" element={<GlobalStats />} />
+                <Route
+                  path="/g/:galleryId/:year/:month/:day/:photoId"
+                  element={<Gallery />}
+                />
+                <Route
+                  path="/g/:galleryId/:year?/:month?/:day?"
+                  element={<Gallery />}
+                />
+                <Route path="/g" element={<Gallery />} />
+                <Route path="/m" element={<Manage />}>
+                  <Route index element={<ManageDashboard />} />
+                  <Route path="users" element={<ManageUsers />} />
+                  <Route path="users/new" element={<ManageUserCreate />} />
+                  <Route path="users/:userId" element={<ManageUserEdit />} />
+                  <Route path="groups" element={<ManageGroups />} />
+                  <Route path="groups/new" element={<ManageGroupCreate />} />
+                  <Route
+                    path="groups/:groupId"
+                    element={<ManageGroupEdit />}
+                  />
+                  <Route path="access" element={<ManageAccess />} />
+                  <Route path="galleries" element={<ManageGalleries />} />
+                  <Route
+                    path="galleries/new"
+                    element={<ManageGalleryCreate />}
+                  />
+                  <Route path="photos" element={<ManagePhotos />}>
+                    <Route path=":photoId" element={<ManagePhotoDrawer />} />
+                  </Route>
+                  <Route path="g/:galleryId">
+                    <Route index element={<ManageGalleryEdit />} />
+                    <Route path="access" element={<ManageGalleryAccess />} />
+                  </Route>
                 </Route>
-                <Route path="g/:galleryId">
-                  <Route index element={<ManageGalleryEdit />} />
-                  <Route path="access" element={<ManageGalleryAccess />} />
-                </Route>
-              </Route>
-              <Route path="/" element={<Gallery smartLanding />} />
-            </Routes>
+                <Route path="/" element={<Gallery smartLanding />} />
+              </Routes>
+            </React.Suspense>
           )}
         </ScrollToPosition>
         <Footer>
