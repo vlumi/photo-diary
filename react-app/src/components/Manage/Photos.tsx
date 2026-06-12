@@ -8,7 +8,11 @@ import {
 } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { BsCheck, BsFunnel, BsXLg } from "react-icons/bs";
 
 import photosService, {
@@ -578,6 +582,12 @@ const Photos = (): React.ReactElement => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["manage-photos", filter, page, PAGE_SIZE, photoIdFocus],
     queryFn: () => photosService.list(filter, page, PAGE_SIZE, photoIdFocus),
+    // Hold the previous grid while a chip toggle / page flip / drawer
+    // open refetches under a new key — without this the whole grid
+    // unmounts to "loading" between renders (#574). isLoading still
+    // fires on the very first mount; from then on cache misses paint
+    // the previous data + refetch in the background.
+    placeholderData: keepPreviousData,
   });
 
   // Filter for the sidebar timeline — strip dateFrom / dateTo so
@@ -593,6 +603,7 @@ const Photos = (): React.ReactElement => {
   const timelineQuery = useQuery({
     queryKey: ["manage-photos-year-months", timelineFilter],
     queryFn: () => photosService.getYearMonths(timelineFilter),
+    placeholderData: keepPreviousData,
   });
 
   // After photoIdFocus resolves a non-1 page, write it back to the

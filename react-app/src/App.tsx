@@ -18,6 +18,7 @@ import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 import ThemePickerModal from "./components/ThemePickerModal";
+import GlobalFetchIndicator from "./components/GlobalFetchIndicator";
 
 // Admin surface (`/m/*`) + cross-gallery stats (`/s`) are gated on
 // `user.isAdmin()` at runtime — public visitors never see them. Lazy-
@@ -165,6 +166,7 @@ const App = (): React.ReactElement => {
       <title>Photo diary</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="robots" content="noindex" />
+      <GlobalFetchIndicator />
       <Notifications />
       <LoginModal />
       <ChangePasswordModal />

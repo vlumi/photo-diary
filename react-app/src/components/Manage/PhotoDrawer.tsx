@@ -2,7 +2,12 @@ import React from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   BsArrowClockwise,
   BsBookmarkStar,
@@ -755,6 +760,12 @@ const PhotoDrawer = (): React.ReactElement => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["manage-photo", id],
     queryFn: () => photosService.get(id) as Promise<PhotoData>,
+    // Keep the previous drawer's data painted while a different
+    // photo's row is opened — the parent grid stays put thanks to
+    // keepPreviousData on `manage-photos`, and the drawer mirroring
+    // that keeps the transition smooth instead of flashing "loading"
+    // mid-swap (#574).
+    placeholderData: keepPreviousData,
   });
 
   // Galleries fetched once for the whole drawer to resolve the
