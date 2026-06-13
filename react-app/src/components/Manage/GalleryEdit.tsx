@@ -28,6 +28,7 @@ import {
 } from "../../stores/filters";
 import { languageNameIn } from "./LocalizedInputs";
 import GalleryTypeIcon from "./GalleryTypeIcon";
+import GallerySourcesSection from "./GallerySourcesSection";
 import SavedFiltersSection from "./SavedFiltersSection";
 import VirtualGalleryFilterSection from "./VirtualGalleryFilterSection";
 import GalleryFormFields, {
@@ -630,6 +631,16 @@ const GalleryEdit = (): React.ReactElement => {
             }}
             hostnameEditable={isAdmin}
           />
+          {gallery.type !== "saved_filter" ? (
+            <GallerySourcesSection
+              galleryId={galleryId}
+              editing
+              sources={form.sources}
+              setSources={(sources) =>
+                setForm((prev) => ({ ...prev, sources }))
+              }
+            />
+          ) : null}
           {gallery.type === "saved_filter" && gallery.savedFilter ? (
             <VirtualGalleryFilterSection
               galleryId={galleryId}
@@ -695,6 +706,13 @@ const GalleryEdit = (): React.ReactElement => {
             <SummaryLabel>{t("manage-gallery-field-hostname")}</SummaryLabel>
             <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
           </Summary>
+          {gallery.type === "hybrid" ? (
+            <GallerySourcesSection
+              galleryId={galleryId}
+              editing={false}
+              sources={form.sources}
+            />
+          ) : null}
           {(gallery.type ?? "real") === "real" && (
             <SavedFiltersSection galleryId={galleryId} />
           )}
