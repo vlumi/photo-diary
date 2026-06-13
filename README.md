@@ -428,41 +428,21 @@ Themes loosely held for later — full list lives as open issues without a miles
 
 ## Version History
 
-Photo Diary is the third structural take on a long-running personal photo-gallery side project. The first ([pod.vlumi.net](https://web.archive.org/web/20131208222413/http://pod.vlumi.net/), 2004) was a calendar-grid view with one photo per day — initially Perl/CGI, later rewritten in Ruby/eruby (.rhtml) on Apache. The second ([github.com/vlumi/gallery](https://github.com/vlumi/gallery), 2012) stayed on the Ruby/eruby + Apache base, with SQLite for metadata, jQuery + Colorbox for the photo lightbox, Hammer.js for touch gestures, and a `bin/admin.rb` CLI for ingest (RMagick + exifr for thumbnailing and EXIF). It introduced multi-gallery support (one photo can belong to many galleries, virtual-host → gallery mapping), schema versioning, and per-gallery statistics — most of the conceptual surface Photo Diary still has.
+Third structural take on a long-running personal photo-gallery side project — predecessors at [pod.vlumi.net](https://web.archive.org/web/20131208222413/http://pod.vlumi.net/) (2004, Perl/CGI then Ruby) and [github.com/vlumi/gallery](https://github.com/vlumi/gallery) (2012, Ruby/eruby + Apache + SQLite). One-line themes per release; see [CHANGELOG.md](CHANGELOG.md) for the detail.
 
-Major release themes follow — see [CHANGELOG.md](CHANGELOG.md) for per-version detail.
-
-### 2020 — foundations
-
-Initial release and rapid follow-ups that established the core gallery, auth/ACL, map, stats, and filter model. The shape the app still has today was laid down here.
-
-- **0.1** (Jul 2020) — Initial release. Read-only calendar views (year/month/day/photo), separate front-end and back-end API, abstract DAO layer.
-- **0.2** (Jul 2020) — New SQLite schema with auth/ACL, embedded map with markers, EN/FI/JP localization, operator scripts for adding users/galleries/photos.
-- **0.3** (Jul 2020) — Per-gallery statistics view; map markers chronologically connected; stats moved client-side.
-- **0.4** (Aug 2020) — Photo property filters across gallery + stats. Migrated to styled-components, broader unit-test coverage.
-
-### 2021–2022 — maintenance
-
-A versioned API surface, instance-level metadata, and dependency catch-ups. Then a long pause.
-
-- **0.5** (Dec 2021) — `/api/v1` versioned API, instance metadata table, CDN-aware photo URL, gallery list with name/description from meta.
-- **0.5.1** (May 2022) — Aspect-ratio stats, react-scripts 5.
-
-### 2026 — modernization & multi-instance
-
-After the hiatus, a burst of releases that modernized the stack, formalized the multi-instance deploy story, and tightened privacy and security.
-
-- **0.6** (May 2026) — Modernization sweep: Express 5, Node 26, ESM + TypeScript everywhere, better-sqlite3, React 19, Vite. Stats page gains a map with marker clustering; converter moves from ImageMagick to sharp.
-- **0.7** (May 2026) — Multi-instance deploy pattern: versioned code under `/opt/`, per-instance dirs under `/var/`, atomic upgrades via `code`-symlink flip. Privacy `hide_map` cascade, helmet + login rate limit, npm workspaces.
-- **0.8** (May 2026) — Backend framework swap to Fastify + TypeBox + OpenAPI / Swagger UI + typed error hierarchy. Frontend adopts `openapi-fetch`, TanStack Query, Zustand, and code-splits Stats + Photo out of the main bundle.
-- **0.9** (May 2026) — Privacy hardening (collapsed 403/404 distinctions), JWT expiration, self-service password change, global 401 → login-modal handling, toast notifications, profile-icon UserMenu.
-- **0.10** (May 2026) — UI/UX polish across the calendar and Stats views: photo modal with touch-tracking swipe + controlled zoom, Stats Location card with map-in-modal, clickable title-bar breadcrumb with gallery/stats segmented control, Day merged into Month, seven new themes, server-side logout via refresh-token sessions.
-- **0.11** (May 2026) — Reverse-geocoded place hierarchy: converter intake fetches structured Nominatim data, a backfill daemon fills the historical archive, and audit surfaces operator-vs-geocoded drift. Converter hardens around filename collisions and stub flows; operator scripts gain `audit` subcommands and a `bin/meta.ts`.
-- **0.12** (May 2026) — Geocoded location surfaces across the app: per-language city / state / country in the MetadataPanel, City + State filter categories, Stats Places + State topics, per-language city overlay JSON. Converter intake flows JSON sidecars + recursive subdirs. Beta-gated 35mm-equivalent focal length.
-- **0.13** (Jun 2026) — Admin frontend bundle. Full `/m/*` surface (dashboard, Photos, Galleries, Users, Groups, Access) behind `user.is_admin`. TypeBox-validated mutations, virtual-host scope, ACL groups, six new themes.
-- **0.14** (Jun 2026) — Admin UI polish. Slug-shaped ids, bulk Edit-fields, bulk Regeocode, dashboard audit tiles, filter-sidebar timeline strip, gallery-icon cropper, gallery-editor tier, mobile pass across the admin surface.
-- **0.15** (Jun 2026) — Composition + scale. Hybrid galleries, saved filters as pseudo-galleries, per-language metadata, date-range filter, stats evolution. Public viewer goes lazy via per-view `/query`/`/counts`/`/neighbors` endpoints. `bin/instance.ts` auto-cycles pm2 on upgrades.
-- **0.16** (Jun 2026) — Filter & viewing UX polish. Filter widget redesigned around an inline strip + per-category modal cards with faceted counts; range filters for the continuous exposure variables (focal length, aperture, shutter, ISO, EV, LV); strip value chunks jump the modal straight to their category. Stats evolution chart redrawn as a stacked area of per-period counts with a month/year toggle and a theme-driven palette. Map modal persists across prev/next nav. Saved-filter editor consolidates onto each virtual gallery's own page via a shared `<Builder>`; hybrid gallery sources get an admin-UI surface; saved filters carry numeric ranges. City filter dedupe + localised qualifier, modal scroll fix on iPhone-width screens.
+- **0.1–0.4** (Jul–Aug 2020) — Calendar views, auth/ACL, embedded map, per-gallery stats, photo property filters.
+- **0.5 / 0.5.1** (Dec 2021 / May 2022) — `/api/v1` versioned surface + instance metadata; aspect-ratio stats. Then a long pause.
+- **0.6** (May 2026) — Modernization sweep: Express 5, Node 26, ESM + TypeScript, better-sqlite3, React 19, Vite; Stats map with clustering; converter on sharp.
+- **0.7** (May 2026) — Multi-instance deploy pattern (versioned code under `/opt/`, per-instance dirs under `/var/`, atomic symlink-flip upgrades); privacy `hide_map` cascade, helmet, npm workspaces.
+- **0.8** (May 2026) — Fastify + TypeBox + OpenAPI on the backend; `openapi-fetch`, TanStack Query, Zustand on the frontend; Stats + Photo code-split out of the main bundle.
+- **0.9** (May 2026) — Privacy hardening (403/404 collapsed), JWT expiration, self-service password change, global 401 handling, toast notifications.
+- **0.10** (May 2026) — Photo modal with swipe + controlled zoom, Stats Location card with map-in-modal, clickable breadcrumb, Day merged into Month, seven new themes.
+- **0.11** (May 2026) — Reverse-geocoded place hierarchy: structured Nominatim data on intake, backfill daemon, operator-vs-geocoded audit; converter hardens around filename collisions.
+- **0.12** (May 2026) — Geocoded surfaces across the app: per-language city / state / country in MetadataPanel, new filter categories and Stats topics, beta-gated 35mm-eq focal length.
+- **0.13** (Jun 2026) — Admin frontend bundle (`/m/*`) behind `user.is_admin`: dashboard, Photos, Galleries, Users, Groups, Access; TypeBox-validated mutations, ACL groups, six new themes.
+- **0.14** (Jun 2026) — Admin UI polish: slug ids, bulk Edit / Regeocode, dashboard audit tiles, filter-sidebar timeline, gallery-icon cropper, gallery-editor tier, mobile pass.
+- **0.15** (Jun 2026) — Composition + scale: hybrid galleries, saved filters as pseudo-galleries, per-language metadata, date-range filter, stats evolution chart; per-view `/query`/`/counts`/`/neighbors` endpoints.
+- **0.16** (Jun 2026) — Filter & viewing UX polish: redesigned filter widget (inline strip + per-category modal cards with faceted counts), continuous-variable range filters, stacked-area evolution chart, virtual-gallery edit page + hybrid-source admin UI, persistent map modal.
 
 See the [Roadmap](#roadmap) for what's in flight after 0.16.
   
