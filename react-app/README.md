@@ -53,28 +53,37 @@ Country names come from [`i18n-iso-countries`](https://www.npmjs.com/package/i18
 - `src/index.tsx` — entry, mounts `<App>` inside `React.StrictMode`
 - `src/App.tsx` — routes (`react-router-dom` 7), top menu, country-locale registration, persisted-user bootstrap
 - `src/components/` — UI components
-  - `Gallery/` — gallery shell + `Year/Month/Day/Photo/Filters/Stats` sub-views
-  - `MapContainer.tsx` — Leaflet map wrapper used by the various Footer components
-  - `TopMenu.tsx`, `Login.tsx`, `Logout.tsx` — auth-aware top bar
+  - `Gallery/` — gallery shell + `Year/Month/Photo/Filters/Stats` sub-views (Day was folded into Month in 0.10)
+  - `Manage/` — admin surface: `Galleries`, `Users`, `Groups`, `Access`, `GalleryEdit`/`GalleryForm`, `GalleryAccess`, `Photos`, `PhotoDrawer`, `Dashboard`
+  - `GlobalStats/` — instance-wide stats view
+  - `MapContainer.tsx` (+ `.lazy.tsx`) — Leaflet wrapper, lazy-loaded across consumers
+  - `TopMenu.tsx`, `Login.tsx`, `UserMenu.tsx` — auth-aware top bar
 - `src/models/` — `PhotoModel`, `GalleryModel`, `UserModel` (functional constructors returning typed closures)
 - `src/services/` — thin `fetch` wrappers around the server's `/api/v1/*` endpoints
-- `src/lib/` — pure helpers (`calendar`, `collection`, `color`, `config`, `filter`, `format`, `i18n`, `stats`, `theme`, `keypress`, `scroll`, `token`, `api`)
+- `src/lib/` — pure helpers and hooks (`api`, `api-schema`, `calendar`, `collection`, `color`, `config`, `country-sentinel`, `crop-factors.json`, `filter`, `format`, `host-scope` / `use-host-scope`, `i18n`, `id-shape`, `keypress`, `stats` / `stats-adapter`, `theme`, `token`, `uniqueValues`, `useBodyScrollLock`, `useFilteredCalendar`, `useMediaQuery`)
   - `stats.tsx` is the largest module — aggregates photo statistics into chart-ready data and table rows
+  - `api-schema.ts` is regenerated from the server's OpenAPI dump via `npm run api:codegen`; don't edit by hand
+- `src/stores/` — Zustand stores (filter, dateRange, numericRanges, etc.); `useWireNumericRanges` strips the client-only anchor field before wire submission
 - `src/setupTests.ts` — vitest setup (registers `@testing-library/jest-dom` matchers)
 
 ## Bundle shape
 
-Production build produces four JS chunks plus a single small entry CSS file and one large per-chunk CSS file for the map:
+Production build splits across many chunks (Manage admin views, GalleryForm, Photos drawer, etc. are individually lazy). Approximate current sizes — rerun `npm run build` for ground truth:
 
 | Chunk | Raw | gzipped | What |
 | --- | --- | --- | --- |
-| `index-*.js` (main) | ~429 kB | ~136 kB | React + react-dom, react-router, i18next, i18n-iso-countries runtime, Emotion, our `src/` code (gallery shell + calendar views) |
-| `MapContainer-*.js` | ~198 kB | ~60 kB | Leaflet + react-leaflet + leaflet.markercluster — shared lazy chunk loaded on first map render |
-| `Stats-*.js` | ~210 kB | ~72 kB | chart.js + react-chartjs-2 + the stats-aggregation src — loaded on `/g/:id/stats` only |
-| `Photo-*.js` | ~7 kB | ~3 kB | single-photo view src — loaded when opening a photo |
-| `en-*.js` / `fi-*.js` / `ja-*.js` | ~4–6 kB | ~2–3 kB | country-name dictionaries from `i18n-iso-countries`, one chunk per language, fetched when that language is first activated |
+| `index-*.js` (main) | ~361 kB | ~108 kB | React + react-dom, react-router, i18next, i18n-iso-countries runtime, Zustand, our `src/` code (gallery shell + calendar views) |
+| `Stats-*.js` | ~234 kB | ~79 kB | chart.js + react-chartjs-2 + the stats-aggregation src — loaded on `/g/:id/stats` only |
+| `api-*.js` | ~192 kB | ~56 kB | shared openapi-fetch typed client + generated `api-schema.ts` |
+| `marker-icon-2x-*.js` + `MapContainer-*.js` | ~200 kB | ~62 kB | Leaflet + react-leaflet + leaflet.markercluster — shared lazy chunk loaded on first map render |
+| `Photo-*.js` | ~140 kB | ~45 kB | single-photo view src — loaded when opening a photo |
+| `Galleries-*.js` | ~50 kB | ~16 kB | Manage admin Galleries list |
+| `emotion-styled.browser.esm-*.js` | ~40 kB | ~16 kB | Emotion styled runtime |
+| `GalleryForm-*.js` | ~34 kB | ~10 kB | gallery create/edit form (real / hybrid / saved-filter) |
+| `Photos-*.js` | ~33 kB | ~10 kB | Manage admin Photos drawer |
+| `en-*.js` / `fi-*.js` / `ja-*.js` | ~3–17 kB | ~2–7 kB | country-name dictionaries from `i18n-iso-countries`, one chunk per language, fetched on first activation |
 | `index-*.css` (main) | ~0.4 kB | ~0.2 kB | global tokens + body resets from `App.css` (see "CSS approach" below) |
-| `MapContainer-*.css` | ~17 kB | ~7 kB | leaflet + markercluster stylesheets, follows the MapContainer JS chunk |
+| `MapContainer-*.css` + `marker-icon-2x-*.css` | ~17 kB | ~7 kB | leaflet + markercluster stylesheets, follow the MapContainer JS chunks |
 
 Code-splitting boundaries live in [`components/Gallery/index.tsx`](src/components/Gallery/index.tsx) (`Stats` + `Photo` via `React.lazy`) and [`components/MapContainer.lazy.tsx`](src/components/MapContainer.lazy.tsx) (a wrapper that swaps every `MapContainer` import for one shared lazy chunk so leaflet is downloaded only when a map actually renders). Suspense boundaries in each consumer give the map a fixed-height placeholder so the page doesn't reflow when the chunk arrives.
 

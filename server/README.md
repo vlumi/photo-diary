@@ -6,7 +6,7 @@ This server implements the RESTful API of the Photo Diary
 
 - [Node.js](https://nodejs.org) 22 or newer; npm 10+ recommended
 - Dependencies (see `package.json` for the full list)
-  - [Express](https://expressjs.com/) 5
+  - [Fastify](https://fastify.dev/) 5 with `@fastify/type-provider-typebox` — routes are TypeBox-validated and the OpenAPI dump comes from the same schemas
   - [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) for the default SQLite driver
   - [jose](https://github.com/panva/jose) for JWT signing/verification
   - [tsx](https://github.com/privatenumber/tsx) as the TypeScript runtime (no separate build step)
@@ -76,13 +76,13 @@ cd /var/photo-diary/dailybw
 ./bin/<name>.ts [options]   # via the per-instance bin/ symlinks created by instance.ts
 ```
 
-The per-instance `bin/` directory (`<instance>/bin/{photo,photo-rename,photo-geocode,gallery,user,access,meta}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognise them as TS source and apply the server's tsconfig via realpath.
+The per-instance `bin/` directory (`<instance>/bin/{photo,photo-rename,photo-geocode,gallery,user,group,meta}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognise them as TS source and apply the server's tsconfig via realpath.
 
 #### `instance.ts <name> [--base <dir>] [--fix]`
 
 Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. Default base is `/var/photo-diary`. Mode is auto-detected from existing state:
 
-- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root, and creates the per-instance `bin/{photo,gallery,group,user,meta}.ts` shortcuts.
+- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root, and creates the per-instance `bin/{photo,photo-rename,photo-geocode,gallery,user,group,meta}.ts` shortcuts.
 - **Doctor** — instance exists, `code` already points at this script's root. Reports missing `.env` keys with `✓`/`✗` markers. Refreshes any missing `bin/` shortcuts. Add `--fix` to append defaults to `.env`.
 - **Upgrade** — `code` points at a different version. Backs up the DB to `db.sqlite3.pre-<new-version>` and flips the symlink. Refreshes `bin/` shortcuts.
 
@@ -109,7 +109,7 @@ Examples:
 
 ```sh
 ./bin/user.ts make-admin alice                    # alice becomes global admin
-./bin/user.ts grant :guest :all                   # public visitors can view everything
+./bin/user.ts grant :guest dailybw                # public visitors can view the dailybw gallery
 ./bin/user.ts grant bob travel --editor           # bob can edit photos in the travel gallery
 ./bin/user.ts hide-map :guest dailybw hide        # hide map for guests on one gallery
 ./bin/user.ts access alice                        # what alice can actually see / edit, and why
@@ -232,9 +232,9 @@ A user's effective access is the union of:
 2. The `group_gallery` rows of every group they belong to (`user_group` join).
 3. `:guest`'s grants — the anonymous-visitor floor. Even a logged-in user with no direct or group grants still gets whatever `:guest` is allowed.
 
-The sentinel gallery **`:all`** is a wildcard target — a grant of `(subject, :all, …)` applies to every real gallery the instance owns. Use it for "anyone authenticated can view everything" patterns (`./bin/user.ts grant :guest :all`).
+There's no wildcard grant target — `gallery_id` on `user_gallery` / `group_gallery` is always a real gallery ID. (The old `:all` / `:public` pseudo-galleries were retired in migration 012, which promoted `(user, :all, admin)` rows to the new `user.is_admin` flag and fanned `:public` grants out to per-gallery rows.) "Anyone-can-see" patterns are expressed by granting on each specific gallery — typically as `:guest` rows, so every user inherits them.
 
-The `hide_map` column on `user_gallery` / `group_gallery` is an independent per-row override of the gallery's map-visibility default — three states (hide / show / inherit-from-gallery) that resolve through the same cascade as the access grant.
+The `hide_map` column on `user_gallery` / `group_gallery` is an independent per-row override of the gallery's map-visibility default — three states (hide / show / inherit-from-gallery) that resolve through the same cascade as the access grant. The cascade uses the sentinel target `:all` as a "per-user default" row inside `hide_map` only (it's not a grantable gallery target).
 
 The authorization primitives live in [`server/lib/authorizer.ts`](lib/authorizer.ts):
 
@@ -283,11 +283,26 @@ A bracketed `[unscoped]` suffix means the route is also rejected on hostname-bou
   - `GET` — Galleries the caller can see **[user]** (filtered by access map)
   - `POST` — Create a gallery **[admin]**
   - `GET ../:galleryId` — Read a gallery + its photos **[gallery/view]**
-  - `PUT ../:galleryId` — Update gallery settings **[gallery/editor]** (editors cannot set `hostname`)
+  - `PUT ../:galleryId` — Update gallery settings; non-empty `sources` stamps the gallery hybrid, empty reverts to real **[gallery/editor]** (editors cannot set `hostname`)
   - `DELETE ../:galleryId` — Delete a gallery **[admin]**
   - `PUT ../:galleryId/icon` — Crop + render the gallery icon from one of its photos **[gallery/editor]**
+  - `POST ../:galleryId/stats` — Aggregated stats for the gallery; body `{filter?, dateRange?, numericRanges?, lang?}` **[gallery/view]**
+  - `POST ../:galleryId/stats/evolution` — Per-bucket time-series for a trendable category; same body shape plus `category` **[gallery/view]**
+  - `GET ../:galleryId/filters` / `POST` — List + create saved filters that source from this gallery **[gallery/editor]**
+  - `GET ../:galleryId/filters/:filterId` / `PUT` / `DELETE` — Read / update / delete a saved filter **[gallery/editor]**
+- `/gallery-photos`
+  - `GET ../:galleryId` — List photos in a gallery **[gallery/view]**
+  - `POST ../:galleryId/query` — Per-view filtered fetch (year/month/day scope + filter + dateRange + numericRanges) **[gallery/view]**
+  - `POST ../:galleryId/counts` — Per-day photo counts for the Year heatmap **[gallery/view]**
+  - `POST ../:galleryId/neighbors` — Prev / next / first / last photos within the filtered set **[gallery/view]**
+  - `POST ../:galleryId/filter-values` — Filter widget universe + filter-aware counts per category **[gallery/view]**
+  - `GET ../:galleryId/:photoId` — One photo by id within a gallery context **[gallery/view]**
+  - `GET ../:galleryId/by-original-filename/:filename` — Pre-rename / camera-filename fallback **[gallery/view]**
+  - `PUT ../:galleryId/:photoId` — Link a photo into a gallery **[admin]**
+  - `DELETE ../:galleryId/:photoId` — Unlink **[gallery/editor]**
 - `/photos`
   - `GET` — Cross-gallery photo list (paginated, filterable) **[admin]**
+  - `POST ../query` — Cross-gallery filtered fetch (same body shape as the gallery-scoped flavour) **[admin]**
   - `GET ../:photoId` — Read a single photo **[gallery/view]** on any gallery it's linked to (orphans require **[admin]**)
   - `PUT ../:photoId` — Update photo data (title, location, exposure, …) **[gallery/editor]** on any gallery it's linked to (orphans **[admin]**)
   - `POST ../:photoId/regeocode` — Clear `geocoded_*` columns and drop a coord sidecar for the converter daemon **[gallery/editor]** on any of the photo's galleries
@@ -295,57 +310,17 @@ A bracketed `[unscoped]` suffix means the route is also rejected on hostname-bou
   - `GET ../audit-counts` — Per-predicate tallies for the dashboard tiles **[admin]**
   - `GET ../year-months` — Per-(year, month) bucket counts for the filter timeline **[admin]**
   - `DELETE ../:photoId` — Delete a photo row **[admin]**
-- `/gallery-photos`
-  - `PUT ../:galleryId/:photoId` — Link a photo into a gallery **[admin]**
-  - `DELETE ../:galleryId/:photoId` — Unlink **[gallery/editor]**
+- `/stats` **[unscoped]**
+  - `POST` — Cross-gallery aggregated stats; admin-only **[admin]**
+- `/filter-values` **[unscoped]**
+  - `POST` — Cross-gallery filter widget universe + counts; admin-only **[admin]**
 
 The OpenAPI dump at `/api/v1/docs` (or `server/openapi.json` checked in) is the authoritative request / response shape for every route.
 
 ### Entities
 
-TBD
-
-- `session`
-- `user`
-- `galleries`
-- `gallery`
-- `photos`
-- `photo`
+Wire shapes are generated from TypeBox-validated route handlers. See [server/openapi.json](openapi.json) (or `/api/v1/docs` on a running instance) for the authoritative schemas.
 
 ## Internal API
 
-### DB API
-
-- Meta
-  - `loadMetas()` – Load all metadata
-  - `createMeta(user)` – Create a metadata with the given properties
-  - `loadMeta(key)` – Load the metadata
-  - `updateMeta(key, meta)` – Update the metadata with the new properties
-  - `deleteMeta(key)` – Delete the metadata
-- User
-  - `loadUsers()` – Load all users
-  - `createUser(user)` – Create a user with the given properties
-  - `loadUser(userId)` – Load the user
-  - `updateUser(userId, user)` – Update the user with the new properties
-  - `deleteUser(userId)` – Delete the user
-- ACL
-  - `loadUserAccessControl(userId)` – Load ACL for the user, with default values from :guest
-- Gallery
-  - `loadGalleries()` – Load all galleries
-  - `createGallery(gallery)` – Create a gallery with the properties
-  - `loadGallery(galleryId)` – Load the gallery
-  - `updateGallery(galleryId, gallery)` – Update the gallery with the new properties
-  - `deleteGallery(galleryId)` – Delete the gallery
-- Gallery-Photo
-  - `loadGalleryPhotos(galleryId)` – Load all photos linked to the gallery
-  - `linkGalleryPhoto(galleryIds, photoIds)` – Link the photo to galleries
-  - `loadGalleryPhoto(galleryId, photoId)` – Load the photo in the gallery context
-  - `unlinkGalleryPhoto(galleryId, photoId)` Unlink the photo from the gallery
-  - `unlinkAllPhotos(galleryId)` – Unlink all photos from the gallery
-  - `unlinkAllGalleries(photoId)` – Unlink the photo from all galleries
-- Photo
-  - `loadPhotos()` – Load all photos
-  - `createPhoto(photo)` – Create a photo with the properties
-  - `loadPhoto(photoId)` – Load the photo
-  - `updatePhoto(photoId, photo)` – Update the photo with the new properties
-  - `deletePhoto(photoId)` – Delete the photo
+The DB layer abstracts over driver implementations (`server/db/sqlite3/`, `server/db/dummy/`). The public surface is the union of methods exported from [server/db/index.ts](db/index.ts) — those are the calls models invoke. Driver internals (SQL, prepared statements, helper functions like `applyBaseline` for saved-filter galleries) live inside each driver subdirectory.
