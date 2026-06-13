@@ -103,13 +103,13 @@ Directory layout:
 ```text
 /opt/photo-diary/                       # parent dir, owned by the deploy user (see below)
   0.11.0/                               #   each version unpacked into its own subdir
-  0.15.2/                               #   so different instances can run different versions
+  0.16.0/                               #   so different instances can run different versions
                                         #   and upgrades are atomic (flip a symlink)
 
 /var/photo-diary/
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
-    code -> /opt/photo-diary/0.15.2      # symlink to the code version this instance runs
+    code -> /opt/photo-diary/0.16.0      # symlink to the code version this instance runs
     db.sqlite3                          # auto-created on first server start
     photos/
       inbox/  original/  display/  thumbnail/
@@ -136,7 +136,7 @@ sudo install -d -o "$USER" /opt/photo-diary /var/photo-diary
 GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` (no rename step), then run `npm run setup` to install everything and build the bundled frontend:
 
 ```sh
-V=0.15.2
+V=0.16.0
 mkdir -p "/opt/photo-diary/$V"
 curl -L "https://github.com/vlumi/photo-diary/archive/refs/tags/v$V.tar.gz" \
   | tar xz -C "/opt/photo-diary/$V" --strip-components=1
@@ -151,7 +151,7 @@ Repeat this block for each new version you want to land on this host.
 The `bin/instance.ts` script handles directory creation, `.env` generation (with a fresh random `SECRET`), the `code` symlink, and the per-instance `bin/` shortcuts in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary/0.15.2/bin/instance.ts /var/photo-diary/dailybw
+/opt/photo-diary/0.16.0/bin/instance.ts /var/photo-diary/dailybw
 ```
 
 That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The positional is the instance directory; it's resolved via `path.resolve()` against cwd, so `dailybw` and `./dailybw` both mean `<cwd>/dailybw`, while `../sibling` and absolute paths resolve as expected. To pin a logical name different from the dir basename, pass `--name`. Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
@@ -183,7 +183,7 @@ Re-run `bin/instance.ts` from the new version of the code, then **delete + start
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.15.2/bin/instance.ts /var/photo-diary/dailybw    # backs up the DB, flips the symlink
+/opt/photo-diary/0.16.0/bin/instance.ts /var/photo-diary/dailybw    # backs up the DB, flips the symlink
 pm2 delete dailybw dailybw-converter                                # drop cached metadata
 cd /var/photo-diary/dailybw
 ./code/server/bin/start-prod.sh                                     # migration runner applies any schema bumps
@@ -412,7 +412,6 @@ End-to-end flow from a new JPG arriving on the host to it being browsable in the
 
 Active milestones on the way to 1.0, plus the far-out 2.0 direction. Each bullet links the GitHub milestone for live status.
 
-- [**0.16 — Filter & viewing UX polish**](https://github.com/vlumi/photo-diary/milestone/16): range filters for continuous values beyond date (#264), edit-in-place filter pills (#342), map modal that survives prev/next navigation (#321), stats-chart bucket snapping (#549), filter widget full redesign (#560), saved-filter editor sharing the new filter-builder component (#563).
 - [**0.17 — Per-photo metadata + admin polish**](https://github.com/vlumi/photo-diary/milestone/17): per-photo visibility flag (#480), license metadata + download control (#263), runtime-overridable `.env` defaults from `/m/` (#513), viewport-sized rendition selection (#262), Finnish location-localization policy (#362), subdivision-name dataset (#366), audit revisit after bulk regeocode (#485), `bin/instance.ts` `--edit` mode + interactive prompts (#537), admin user bootstrap during instance creation (#557).
 - [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4): test-coverage gap analysis (#194), frontend security audit (#217), end-to-end UI test suite (#261), documentation overhaul (#283), `bin/photo.ts` subcommand-surface tidy (#376).
 - [**2.0 — Thin server, cloud-native direction**](https://github.com/vlumi/photo-diary/milestone/18) *(direction-setting, far out)*: shape may change significantly. Originals leave the server and live client-side or in cold storage; the converter's sharp pipeline becomes a local uploader bundled from the admin UI; all DB ops route through the API (no direct backdoor); storage backends behind a vendor-agnostic interface so S3-compatible / CDN deployments are an option. Vision and sub-ticket breakdown in #469. Likely diverges from today's self-hosted-monolith shape enough that it may end up being a different product line.
@@ -463,6 +462,7 @@ After the hiatus, a burst of releases that modernized the stack, formalized the 
 - **0.13** (Jun 2026) — Admin frontend bundle. Full `/m/*` surface (dashboard, Photos, Galleries, Users, Groups, Access) behind `user.is_admin`. TypeBox-validated mutations, virtual-host scope, ACL groups, six new themes.
 - **0.14** (Jun 2026) — Admin UI polish. Slug-shaped ids, bulk Edit-fields, bulk Regeocode, dashboard audit tiles, filter-sidebar timeline strip, gallery-icon cropper, gallery-editor tier, mobile pass across the admin surface.
 - **0.15** (Jun 2026) — Composition + scale. Hybrid galleries, saved filters as pseudo-galleries, per-language metadata, date-range filter, stats evolution. Public viewer goes lazy via per-view `/query`/`/counts`/`/neighbors` endpoints. `bin/instance.ts` auto-cycles pm2 on upgrades.
+- **0.16** (Jun 2026) — Filter & viewing UX polish. Filter widget redesigned around an inline strip + per-category modal cards with faceted counts; range filters for the continuous exposure variables (focal length, aperture, shutter, ISO, EV, LV); strip value chunks jump the modal straight to their category. Stats evolution chart redrawn as a stacked area of per-period counts with a month/year toggle and a theme-driven palette. Map modal persists across prev/next nav. Saved-filter editor consolidates onto each virtual gallery's own page via a shared `<Builder>`; hybrid gallery sources get an admin-UI surface; saved filters carry numeric ranges. City filter dedupe + localised qualifier, modal scroll fix on iPhone-width screens.
 
-See the [Roadmap](#roadmap) for what's in flight after 0.15.
+See the [Roadmap](#roadmap) for what's in flight after 0.16.
   

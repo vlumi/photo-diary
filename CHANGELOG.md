@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-06-13
+
 ### Frontend
 
 - Tapping an active filter value chunk in the strip now opens the modal scrolled straight to that category's card (and expands its topic if it was collapsed) — the old in-place "click to edit" workflow #342 originally asked for, in the new modal-driven shape. The × on each chunk still removes; the rest of the strip still opens the modal at the top. Closes #342.
@@ -584,6 +586,19 @@
 
 ## Initial commit - 2020-07-04
 
+[0.16.0]: https://github.com/vlumi/photo-diary/compare/v0.15.2...v0.16.0
+[0.15.2]: https://github.com/vlumi/photo-diary/compare/v0.15.1...v0.15.2
+[0.15.1]: https://github.com/vlumi/photo-diary/compare/v0.15.0...v0.15.1
+[0.15]: https://github.com/vlumi/photo-diary/compare/v0.14.0...v0.15.0
+[0.14.0]: https://github.com/vlumi/photo-diary/compare/v0.13.0...v0.14.0
+[0.13.0]: https://github.com/vlumi/photo-diary/compare/v0.12.1...v0.13.0
+[0.12.1]: https://github.com/vlumi/photo-diary/compare/v0.12.0...v0.12.1
+[0.12.0]: https://github.com/vlumi/photo-diary/compare/v0.11.0...v0.12.0
+[0.11.0]: https://github.com/vlumi/photo-diary/compare/v0.10.0...v0.11.0
+[0.10.0]: https://github.com/vlumi/photo-diary/compare/v0.9.1...v0.10.0
+[0.9.1]: https://github.com/vlumi/photo-diary/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/vlumi/photo-diary/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/vlumi/photo-diary/compare/v0.7.4...v0.8.0
 [0.7.4]: https://github.com/vlumi/photo-diary/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/vlumi/photo-diary/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/vlumi/photo-diary/compare/v0.7.1...v0.7.2
