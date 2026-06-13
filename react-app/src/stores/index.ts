@@ -11,3 +11,4 @@ export { useBetaStore } from "./beta";
 export { useThemePreferenceStore } from "./theme-preference";
 export { useThemePickerModalStore } from "./theme-picker-modal";
 export { useTitleMapModalStore } from "./title-map-modal";
+export { useEvolutionGranularityStore } from "./evolution-granularity";
