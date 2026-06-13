@@ -6,8 +6,15 @@ import "chart.js/auto";
 import { Line } from "react-chartjs-2";
 
 import statsService from "../../../services/stats";
+import color from "../../../lib/color";
 import filter from "../../../lib/filter";
-import { useFiltersStore } from "../../../stores";
+import type theme from "../../../lib/theme";
+import {
+  useFiltersStore,
+  useEvolutionGranularityStore,
+} from "../../../stores";
+
+type ActiveTheme = ReturnType<(typeof theme)["setTheme"]>;
 
 // Client uses kebab-case category keys; server's EVOLUTION_BUCKETERS
 // keys are camelCase. Categories absent from this map don't render
@@ -45,12 +52,40 @@ const ChartBox = styled.div`
   height: 280px;
   width: 100%;
 `;
+const Header = styled.div`
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  flex-wrap: wrap;
+`;
 const Title = styled.h3`
   font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--inactive-color);
-  margin: 0 0 8px;
+  margin: 0;
+`;
+const Toggle = styled.div`
+  display: inline-flex;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  overflow: hidden;
+`;
+const ToggleButton = styled.button<{ active: boolean }>`
+  font: inherit;
+  font-size: 0.8em;
+  padding: 2px 8px;
+  border: none;
+  cursor: pointer;
+  background: ${({ active }) =>
+    active ? "var(--header-background)" : "var(--primary-background)"};
+  color: ${({ active }) =>
+    active ? "var(--header-color)" : "var(--inactive-color)"};
+  &:hover {
+    color: var(--primary-color);
+  }
 `;
 const Notice = styled.div`
   font-size: 0.85em;
@@ -58,48 +93,90 @@ const Notice = styled.div`
   padding: 8px 0;
 `;
 
-// Distinct hues for up to 15 lines. Beyond `MAX_LINES` (the long
-// tail) is dropped rather than aggregated — for high-cardinality
-// continuous variables (shutter, focal, aperture) an "other"
-// bucket would dominate without saying anything useful. 15 keeps
-// the tooltip readable inside the chart's vertical bound; the
-// full distribution lives in the donut + table above.
-const COLOURS = [
-  "#1f77b4",
-  "#ff7f0e",
-  "#2ca02c",
-  "#d62728",
-  "#9467bd",
-  "#8c564b",
-  "#e377c2",
-  "#7f7f7f",
-  "#bcbd22",
-  "#17becf",
-  "#aec7e8",
-  "#ffbb78",
-  "#98df8a",
-  "#ff9896",
-  "#c5b0d5",
-];
-const MAX_LINES = COLOURS.length;
+const TOOLTIP_TOP_N = 10;
+// Golden-ratio conjugate — picking gradient stops at this stride
+// (modulo length) puts adjacent dataset indices at maximally far
+// positions in the palette, so two near-indexed bands don't end
+// up indistinguishable. Coprime-clamped against the palette
+// length so the stride visits every stop exactly once.
+const PHI_INV = 0.6180339887498949;
+const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+const goldenCoprimeStride = (n: number): number => {
+  if (n <= 2) return 1;
+  let stride = Math.max(1, Math.round(n * PHI_INV));
+  while (stride > 1 && gcd(stride, n) !== 1) stride--;
+  return stride;
+};
 
 interface Props {
   galleryId: string;
   categoryKey: string;
   categoryTitle: string;
+  theme: ActiveTheme;
   // Label resolver — categories like country need their bucket
   // keys ("jp", "fi") localized for the legend. Defaults to the
   // raw key when the category doesn't carry localized labels.
   labelFor?: (bucketKey: string) => string;
 }
 
+// Compare two bucket entries by natural order: numeric when both
+// keys parse as numbers, alphabetic otherwise. `labelFor`-derived
+// display label takes precedence so country chips sort by their
+// localised name rather than raw "jp" / "fi" codes.
+const compareByLabel = (
+  a: { key: string; label: string },
+  b: { key: string; label: string }
+): number => {
+  const na = Number(a.key);
+  const nb = Number(b.key);
+  if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+  return a.label.localeCompare(b.label);
+};
+
+// Collapse year-month series ("2024-01", "2024-02", …) into year
+// buckets ("2024", "2025", …) by summing the counts within each
+// year. Server only emits the per-month shape; year view is a
+// pure client-side aggregation, no extra round trip.
+const aggregateByYear = (
+  yearMonths: string[],
+  buckets: Record<string, { counts: number[] }>
+): { labels: string[]; buckets: Record<string, number[]> } => {
+  const yearOrder: string[] = [];
+  const yearIndex = new Map<string, number>();
+  const monthToYearIdx = new Array<number>(yearMonths.length);
+  for (let i = 0; i < yearMonths.length; i++) {
+    const year = yearMonths[i].slice(0, 4);
+    let idx = yearIndex.get(year);
+    if (idx === undefined) {
+      idx = yearOrder.length;
+      yearIndex.set(year, idx);
+      yearOrder.push(year);
+    }
+    monthToYearIdx[i] = idx;
+  }
+  const out: Record<string, number[]> = {};
+  for (const [key, series] of Object.entries(buckets)) {
+    const yearly = new Array<number>(yearOrder.length).fill(0);
+    for (let i = 0; i < series.counts.length; i++) {
+      yearly[monthToYearIdx[i]] += series.counts[i];
+    }
+    out[key] = yearly;
+  }
+  return { labels: yearOrder, buckets: out };
+};
+
 const EvolutionChart = ({
   galleryId,
   categoryKey,
   categoryTitle,
+  theme,
   labelFor,
 }: Props): React.ReactElement | null => {
   const { t } = useTranslation();
+  const granularity = useEvolutionGranularityStore((s) => s.granularity);
+  const setGranularity = useEvolutionGranularityStore(
+    (s) => s.setGranularity
+  );
   const filters = useFiltersStore((s) => s.filters);
   const dateRange = useFiltersStore((s) => s.dateRange);
   const serverFilters = React.useMemo(
@@ -131,9 +208,11 @@ const EvolutionChart = ({
   if (isLoading || !data) {
     return (
       <Root>
-        <Title>
-          {t("stats-evolution-title", { category: categoryTitle })}
-        </Title>
+        <Header>
+          <Title>
+            {t("stats-evolution-title", { category: categoryTitle })}
+          </Title>
+        </Header>
         <Notice>{t("loading")}</Notice>
       </Root>
     );
@@ -143,52 +222,170 @@ const EvolutionChart = ({
   if (yearMonths.length === 0 || bucketEntries.length === 0) {
     return (
       <Root>
-        <Title>
-          {t("stats-evolution-title", { category: categoryTitle })}
-        </Title>
+        <Header>
+          <Title>
+            {t("stats-evolution-title", { category: categoryTitle })}
+          </Title>
+        </Header>
         <Notice>{t("stats-evolution-empty")}</Notice>
       </Root>
     );
   }
-  // Rank buckets by their final cumulative — the "biggest at the
-  // end" buckets are the most readable lines. Anything past
-  // MAX_LINES folds into "other".
-  const ranked = bucketEntries
-    .map(([key, series]) => ({
+  const aggregated =
+    granularity === "year"
+      ? aggregateByYear(yearMonths, buckets)
+      : {
+          labels: yearMonths,
+          buckets: Object.fromEntries(
+            bucketEntries.map(([k, v]) => [k, v.counts])
+          ),
+        };
+  const aggregatedEntries = Object.entries(aggregated.buckets);
+  // Per-period counts (not cumulative) so a bucket's band is fat
+  // when actually shot and zero outside. Sorted by natural value
+  // order so adjacent bands carry adjacent values (e.g. ISO 200
+  // next to 400, not next to whichever happened to have the
+  // largest total). Drawn stacked so each band's height reads
+  // directly as the period's count and the topmost line is the
+  // overall total.
+  const ordered = aggregatedEntries
+    .map(([key, counts]) => ({
       key,
-      series,
-      total: series.cumulative[series.cumulative.length - 1] ?? 0,
+      label: labelFor ? labelFor(key) : key,
+      counts,
     }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, MAX_LINES);
-  const datasets = ranked.map((entry, i) => ({
-    label: labelFor ? labelFor(entry.key) : entry.key,
-    data: entry.series.cumulative,
-    borderColor: COLOURS[i],
-    backgroundColor: COLOURS[i],
-    tension: 0,
-    stepped: "after" as const,
-    pointRadius: 0,
-    pointHoverRadius: 4,
-    borderWidth: 2,
-  }));
+    .sort(compareByLabel);
+  // Categories whose keys form a linear scale (focal length,
+  // aperture, exposure time, ISO, EV, LV, …) read more naturally
+  // as a hue ramp than a categorical palette — adjacent bucket =
+  // adjacent colour. Same `colorGradient` helper the other Stats
+  // charts use, against the same theme endpoints, for visual
+  // consistency. The "unknown" bucket is excluded from the
+  // numeric check (one missing-value photo would otherwise flip
+  // the whole category back to categorical) and rendered grey.
+  const UNKNOWN_KEY = "unknown";
+  const numericKeys = ordered.filter((e) => e.key !== UNKNOWN_KEY);
+  const isLinear =
+    numericKeys.length > 1 &&
+    numericKeys.every((entry) => !Number.isNaN(Number(entry.key)));
+  // Both branches read from the same theme-driven gradient. Linear
+  // categories step through it in natural order so the ramp reads
+  // as a value scale; categorical hop through it at a golden-ratio
+  // coprime stride so adjacent dataset indices land far apart on
+  // the palette (no "two adjacent lenses look identical").
+  const paletteSize = ordered.length;
+  const palette =
+    paletteSize > 0
+      ? color.colorGradient(
+          theme.get("header-background"),
+          theme.get("header-color"),
+          paletteSize
+        )
+      : [];
+  const numericIndex = new Map<string, number>();
+  if (isLinear) {
+    numericKeys.forEach((e, idx) => numericIndex.set(e.key, idx));
+  }
+  const stride = isLinear ? 1 : goldenCoprimeStride(paletteSize);
+  const colourFor = (entry: { key: string }, i: number): string => {
+    if (entry.key === UNKNOWN_KEY) {
+      return "hsl(0, 0%, 55%)";
+    }
+    if (palette.length === 0) return "hsl(0, 0%, 50%)";
+    if (isLinear) {
+      const idx = numericIndex.get(entry.key) ?? 0;
+      return palette[idx];
+    }
+    return palette[(i * stride) % palette.length];
+  };
+  const datasets = ordered.map((entry, i) => {
+    const colour = colourFor(entry, i);
+    return {
+      label: entry.label,
+      data: entry.counts,
+      borderColor: colour,
+      backgroundColor: colour,
+      fill: true,
+      tension: 0,
+      pointRadius: 0,
+      pointHoverRadius: 3,
+      borderWidth: 1,
+    };
+  });
+  // Top-N rank per x cached for the current hover — filter narrows
+  // the tooltip to the largest contributors at that period, and
+  // the afterBody footer reports how many smaller bands were
+  // hidden.
+  let hiddenCount = 0;
   return (
     <Root>
-      <Title>{t("stats-evolution-title", { category: categoryTitle })}</Title>
+      <Header>
+        <Title>
+          {t("stats-evolution-title", { category: categoryTitle })}
+        </Title>
+        <Toggle role="group" aria-label={String(t("stats-evolution-granularity-label"))}>
+          <ToggleButton
+            type="button"
+            active={granularity === "month"}
+            onClick={() => setGranularity("month")}
+          >
+            {t("stats-evolution-granularity-month")}
+          </ToggleButton>
+          <ToggleButton
+            type="button"
+            active={granularity === "year"}
+            onClick={() => setGranularity("year")}
+          >
+            {t("stats-evolution-granularity-year")}
+          </ToggleButton>
+        </Toggle>
+      </Header>
       <ChartBox>
         <Line
-          data={{ labels: yearMonths, datasets }}
+          data={{ labels: aggregated.labels, datasets }}
           options={{
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
             plugins: {
-              legend: { position: "bottom", labels: { boxWidth: 12 } },
-              tooltip: { mode: "index", intersect: false },
+              legend: { display: false },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+                itemSort: (a, b) => (b.parsed.y ?? 0) - (a.parsed.y ?? 0),
+                filter: (item, idx, items) => {
+                  if (idx === 0) {
+                    const nonZero = items.filter(
+                      (it) => (it.parsed.y ?? 0) > 0
+                    ).length;
+                    hiddenCount = Math.max(0, nonZero - TOOLTIP_TOP_N);
+                  }
+                  if ((item.parsed.y ?? 0) <= 0) return false;
+                  const rank = items
+                    .map((it, i) => ({ i, y: it.parsed.y ?? 0 }))
+                    .filter((r) => r.y > 0)
+                    .sort((a, b) => b.y - a.y)
+                    .findIndex((r) => r.i === idx);
+                  return rank >= 0 && rank < TOOLTIP_TOP_N;
+                },
+                callbacks: {
+                  afterBody: () =>
+                    hiddenCount > 0
+                      ? String(
+                          t("stats-evolution-tooltip-more", {
+                            count: hiddenCount,
+                          })
+                        )
+                      : "",
+                },
+              },
             },
             scales: {
-              x: { ticks: { maxTicksLimit: 12, autoSkip: true } },
-              y: { beginAtZero: true },
+              x: {
+                ticks: { maxTicksLimit: 12, autoSkip: true },
+                stacked: true,
+              },
+              y: { beginAtZero: true, stacked: true },
             },
             interaction: { mode: "nearest", axis: "x", intersect: false },
           }}

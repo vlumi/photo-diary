@@ -5,6 +5,7 @@
 ### Frontend
 
 - Filter widget redesigned: the topic/category/value nested-`<select>` adders retire in favour of an inline strip (italic "Category: value" chunks with hover-X) that opens a centered modal of per-category cards. Each card shows the top values by photo count under the active filter; a "Show all N" sub-modal browses the natural-sort universe for picking values that don't currently match. Active filters always render; inactive 0-count chips dim rather than disappear so multi-select expansion stays one click away. Strip + modal both expose a one-click "Clear all". Closes #560.
+- Stats evolution chart redrawn as a stacked area: bands carry per-period counts (not cumulative), datasets sit in natural numeric / alphabetic order so adjacent bands hold adjacent values, and the topmost line traces the total per period. A month/year granularity toggle (persisted via `localStorage`) collapses the x-axis when a per-month resolution is too noisy. The tooltip narrows to the top 10 contributors at the hovered period with a `+ N more` footer. Linear-scale categories (focal length / aperture / exposure time / ISO / EV / LV / resolution) step through the same `colorGradient(header-background, header-color)` palette the other Stats charts use; categorical ones (lens, camera, country, …) hop through it at a golden-ratio coprime stride so adjacent dataset indices land far apart on the palette. Closes #549.
 
 ### Server
 

@@ -210,6 +210,7 @@ const TableModal = ({
               galleryId={galleryId}
               categoryKey={category.key}
               categoryTitle={category.title}
+              theme={theme}
               labelFor={labelForBucket}
             />
           )}
