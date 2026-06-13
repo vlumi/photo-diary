@@ -42,16 +42,12 @@ const renderFilterValue = (
     );
   }
   if (category === "city") {
+    // `fallbackLabel` is the deduped display label built by
+    // `format.buildCityLabels` in `buildUniqueValues` — no
+    // qualifier when the display is unique, localised region
+    // (or country) qualifier when it isn't. Use it verbatim;
+    // only prepend the country flag.
     const parsed = format.parseCityKey(rawKey);
-    const cityLabel = format.cityName(
-      lang,
-      parsed.country,
-      parsed.city,
-      parsed.city
-    );
-    const qualified = parsed.state
-      ? `${cityLabel}, ${parsed.state}`
-      : cityLabel;
     return (
       <>
         {parsed.country && countryData.isValid(parsed.country) ? (
@@ -59,7 +55,7 @@ const renderFilterValue = (
             <FlagIcon code={parsed.country} />{" "}
           </>
         ) : null}
-        {qualified}
+        {fallbackLabel}
       </>
     );
   }
