@@ -38,6 +38,10 @@ export interface FormState {
   theme: string;
   initialView: string;
   hostname: string;
+  // Hybrid gallery sources (#22 / #568). Carried as an ordered list
+  // of source gallery ids. Empty array means "real gallery"; the
+  // server's `applyVirtualSources` stamps the type accordingly.
+  sources: string[];
 }
 
 const emptyLocalized = (): Record<string, string> =>
@@ -58,6 +62,7 @@ export const EMPTY_FORM: FormState = {
   theme: "",
   initialView: "",
   hostname: "",
+  sources: [],
 };
 
 interface GalleryData {
@@ -72,6 +77,7 @@ interface GalleryData {
   theme?: string;
   initialView?: string;
   hostname?: string;
+  sources?: string[];
 }
 
 const localizedFrom = (
@@ -94,6 +100,7 @@ export const fromGalleryData = (g: GalleryData): FormState => ({
   theme: g.theme ?? "",
   initialView: g.initialView ?? "",
   hostname: g.hostname ?? "",
+  sources: g.sources ? [...g.sources] : [],
 });
 
 // Diff localized maps relative to the original form state. Emits only
@@ -151,6 +158,17 @@ export const toPatch = (
   if (descPatch) patch.descriptionLocalized = descPatch;
   if (form.defaultLanguage && form.defaultLanguage !== original.defaultLanguage) {
     patch.defaultLanguage = form.defaultLanguage;
+  }
+  // `sources` round-trips only when the operator touches it — the
+  // server treats the field as "leave unchanged when absent",
+  // "stamp hybrid" when non-empty, "revert to real" when explicitly
+  // an empty array. Sending the array verbatim each save would
+  // re-stamp the type on every PUT.
+  const sourcesChanged =
+    form.sources.length !== original.sources.length ||
+    form.sources.some((s, i) => s !== original.sources[i]);
+  if (sourcesChanged) {
+    patch.sources = [...form.sources];
   }
   return patch;
 };

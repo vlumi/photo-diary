@@ -34,6 +34,11 @@ export interface GalleryUpdatePatch {
   theme?: Theme;
   initialView?: InitialView;
   hostname?: string;
+  // Hybrid gallery sources (#22 / #568). Non-empty stamps the
+  // gallery as `type='hybrid'`; an empty array reverts to `'real'`.
+  // Each entry is a source gallery id; the model layer enforces
+  // "must be a real gallery" and "no self-reference".
+  sources?: string[];
 }
 
 export interface GalleryCreateBody extends GalleryUpdatePatch {
