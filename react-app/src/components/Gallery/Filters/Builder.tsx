@@ -9,14 +9,11 @@ import stats, {
   type UniqueValues,
   type UniqueValueEntry,
 } from "../../../lib/stats";
-import {
-  useFiltersStore,
-  useBetaStore,
-  useFilterModalStore,
-} from "../../../stores";
+import { useBetaStore, useFilterModalStore } from "../../../stores";
 import {
   type DateRange,
   type NumericRange,
+  type NumericRanges,
 } from "../../../stores/filters";
 import type { BetaFeature } from "../../../stores/beta";
 import renderFilterValue from "./renderFilterValue";
@@ -55,23 +52,57 @@ const TopicSection = styled.section`
   flex-direction: column;
   gap: 8px;
 `;
-const TopicLabel = styled.h3`
+const TopicLabel = styled.button`
   margin: 0;
+  font: inherit;
   font-size: 1em;
   font-weight: 600;
   opacity: 0.85;
+  border: none;
   border-bottom: 1px solid var(--inactive-color);
-  padding-bottom: 4px;
+  padding: 0 0 4px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  &:hover {
+    opacity: 1;
+  }
+`;
+const Caret = styled.span<{ open: boolean }>`
+  display: inline-block;
+  font-size: 0.7em;
+  transition: transform 0.15s ease;
+  transform: rotate(${({ open }) => (open ? "90deg" : "0deg")});
+`;
+// Active-filter count next to a topic header — visible even when
+// the topic is collapsed so the operator can see at a glance which
+// sections carry settings.
+const TopicCount = styled.span`
+  display: inline-block;
+  font-size: 0.75em;
+  font-weight: 600;
+  padding: 1px 7px;
+  margin-left: 4px;
+  border-radius: 10px;
+  background: var(--primary-color);
+  color: var(--primary-background);
 `;
 const CardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 10px;
 `;
-const Card = styled.div`
-  border: 1px solid var(--inactive-color);
+const Card = styled.div<{ active?: boolean }>`
+  border: ${({ active }) =>
+    active
+      ? "2px solid var(--primary-color)"
+      : "1px solid var(--inactive-color)"};
+  padding: ${({ active }) => (active ? "7px 9px" : "8px 10px")};
   border-radius: 6px;
-  padding: 8px 10px;
   background: var(--primary-background);
   display: flex;
   flex-direction: column;
@@ -202,15 +233,23 @@ const TextButton = styled.button`
 `;
 const ClearButton = styled.button`
   font: inherit;
+  font-size: 1em;
   background: none;
-  border: none;
-  color: var(--inactive-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 50%;
+  color: var(--primary-color);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  padding: 2px;
+  justify-content: center;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
   &:hover {
-    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: var(--primary-background);
   }
 `;
 const FooterButton = styled.button`
@@ -268,6 +307,21 @@ interface Props {
   lang: string;
   countryData: CountryData;
   hideMap: boolean;
+  // Filter state lives outside the Builder so the same component
+  // can drive the live filter widget (bound to `useFiltersStore`)
+  // and the saved-filter admin editor (bound to local form state).
+  // Numeric ranges are optional — when omitted (e.g. saved-filter
+  // mode, which doesn't yet persist them) the numeric range cards
+  // don't render.
+  filters: FiltersT;
+  setFilters: (filters: FiltersT) => void;
+  dateRange: DateRange | undefined;
+  setDateRange: (dateRange: DateRange | undefined) => void;
+  numericRanges?: NumericRanges;
+  setNumericRange?: (
+    category: string,
+    range: NumericRange | undefined
+  ) => void;
 }
 
 const buildEntriesByCategory = (
@@ -287,21 +341,59 @@ const Builder = ({
   lang,
   countryData,
   hideMap,
+  filters,
+  setFilters,
+  dateRange,
+  setDateRange,
+  numericRanges,
+  setNumericRange,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
-  const filters = useFiltersStore((s) => s.filters);
-  const setFilters = useFiltersStore((s) => s.setFilters);
-  const dateRange = useFiltersStore((s) => s.dateRange);
-  const setDateRange = useFiltersStore((s) => s.setDateRange);
-  const numericRanges = useFiltersStore((s) => s.numericRanges);
-  const setNumericRange = useFiltersStore((s) => s.setNumericRange);
   const enabled = useBetaStore((s) => s.enabled);
+  const showNumericRanges = !!setNumericRange;
+  const numericRangesView: NumericRanges = numericRanges ?? {};
+  const setNumericRangeNoop = (
+    _category: string,
+    _range: NumericRange | undefined
+  ): void => {};
+  const setNumericRangeBound = setNumericRange ?? setNumericRangeNoop;
   const isBetaAllowed = (category: string): boolean => {
     const required = BETA_CATEGORIES[category];
     return !required || enabled[required];
   };
 
   const [search, setSearch] = React.useState<Record<string, string>>({});
+  // Per-topic collapsed state. Topics open by default iff they have
+  // any active filter under them — dateRange (under "time") or any
+  // discrete value or numeric range whose category lives in that
+  // topic. Operator toggles by clicking the topic header.
+  const topicActiveCount = (topic: string): number => {
+    let count = 0;
+    if (filters[topic]) {
+      for (const cat of Object.keys(filters[topic])) {
+        const keys = Object.keys(filters[topic][cat] ?? {});
+        if (keys.length > 0) count += 1;
+      }
+    }
+    if (topic === "time" && dateRange !== undefined) count += 1;
+    if (numericRanges) {
+      const cats = filter.categories(topic);
+      for (const c of cats) {
+        if (numericRanges[c]) count += 1;
+      }
+    }
+    return count;
+  };
+  const topicHasActive = (topic: string): boolean => topicActiveCount(topic) > 0;
+  const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>(
+    () => {
+      const out: Record<string, boolean> = {};
+      for (const topic of filter.topics()) out[topic] = !topicHasActive(topic);
+      return out;
+    }
+  );
+  const toggleTopic = (topic: string) =>
+    setCollapsed((prev) => ({ ...prev, [topic]: !prev[topic] }));
   // `${topic}:${category}` of the card whose full-list sub-modal is
   // open; null when no sub-modal is showing. Drives the "browse all
   // values" overlay so the operator can scan the universe in natural
@@ -383,7 +475,7 @@ const Builder = ({
   // a contiguous fill. × clears.
   const formatCategoryValue = format.categoryValue(lang, t, countryData);
   const renderNumericRangeCard = (topic: string, category: string) => {
-    const range: NumericRange | undefined = numericRanges[category];
+    const range: NumericRange | undefined = numericRangesView[category];
     const entries = entriesByCategory[category] ?? [];
     const numericValues = Array.from(
       new Set(
@@ -411,7 +503,7 @@ const Builder = ({
         !range ||
         (range.min === undefined && range.max === undefined)
       ) {
-        setNumericRange(category, {
+        setNumericRangeBound(category, {
           min: value,
           max: value,
           anchor: "min",
@@ -424,13 +516,13 @@ const Builder = ({
         min !== undefined && max !== undefined && min === max;
       // Tap on the single-anchor chip clears the filter.
       if (singleAnchor && value === min) {
-        setNumericRange(category, undefined);
+        setNumericRangeBound(category, undefined);
         return;
       }
       // From single-anchor, any other chip extends to a full range
       // bracketing the two; anchor stays where it was.
       if (singleAnchor && min !== undefined) {
-        setNumericRange(category, {
+        setNumericRangeBound(category, {
           min: Math.min(min, value),
           max: Math.max(min, value),
           anchor: min === Math.min(min, value) ? "min" : "max",
@@ -441,11 +533,11 @@ const Builder = ({
       // min as anchor; tapping the max endpoint designates max as
       // anchor. The range itself stays the same.
       if (value === min) {
-        setNumericRange(category, { ...range, anchor: "min" });
+        setNumericRangeBound(category, { ...range, anchor: "min" });
         return;
       }
       if (value === max) {
-        setNumericRange(category, { ...range, anchor: "max" });
+        setNumericRangeBound(category, { ...range, anchor: "max" });
         return;
       }
       // Any other chip moves the free end (the non-anchored
@@ -455,7 +547,7 @@ const Builder = ({
       // well-ordered but its value remains the same chip.
       const fixed = anchorValue;
       if (fixed === undefined) {
-        setNumericRange(category, {
+        setNumericRangeBound(category, {
           min: value,
           max: value,
           anchor: "min",
@@ -464,20 +556,20 @@ const Builder = ({
       }
       const lo = Math.min(fixed, value);
       const hi = Math.max(fixed, value);
-      setNumericRange(category, {
+      setNumericRangeBound(category, {
         min: lo,
         max: hi,
         anchor: fixed === lo ? "min" : "max",
       });
     };
     return (
-      <Card key={`card:${topic}:${category}`}>
+      <Card key={`card:${topic}:${category}`} active={range !== undefined}>
         <CardHeader>
           <CardTitle>{t(`stats-category-${category}`)}</CardTitle>
           {range !== undefined ? (
             <ClearButton
               type="button"
-              onClick={() => setNumericRange(category, undefined)}
+              onClick={() => setNumericRangeBound(category, undefined)}
               aria-label={String(t("filters-numeric-range-clear"))}
               title={String(t("filters-numeric-range-clear"))}
             >
@@ -540,7 +632,7 @@ const Builder = ({
   const renderDateRangeCard = () => {
     const range: DateRange | undefined = dateRange;
     return (
-      <Card key="card:time:date-range">
+      <Card key="card:time:date-range" active={range !== undefined}>
         <CardHeader>
           <CardTitle>{t("stats-category-date-range")}</CardTitle>
           {range !== undefined ? (
@@ -623,7 +715,7 @@ const Builder = ({
     const moreAvailable = !term && allEntries.length > chips.length;
 
     return (
-      <Card key={`card:${topic}:${category}`}>
+      <Card key={`card:${topic}:${category}`} active={active.length > 0}>
         <CardHeader>
           <CardTitle>{t(`stats-category-${category}`)}</CardTitle>
         </CardHeader>
@@ -769,16 +861,29 @@ const Builder = ({
         if (categories.length === 0) return null;
         return (
           <TopicSection key={`topic:${topic}`}>
-            <TopicLabel>{t(`stats-topic-${topic}`)}</TopicLabel>
-            <CardGrid>
+            <TopicLabel
+              type="button"
+              onClick={() => toggleTopic(topic)}
+              aria-expanded={!collapsed[topic]}
+            >
+              <Caret open={!collapsed[topic]}>▶</Caret>
+              {t(`stats-topic-${topic}`)}
+              {topicActiveCount(topic) > 0 ? (
+                <TopicCount>{topicActiveCount(topic)}</TopicCount>
+              ) : null}
+            </TopicLabel>
+            {collapsed[topic] ? null : <CardGrid>
               {categories.map((category) => {
                 if (category === "date-range") return renderDateRangeCard();
                 if (NUMERIC_RANGE_CATEGORIES.has(category)) {
+                  if (!showNumericRanges) {
+                    return renderValueCard(topic, category);
+                  }
                   return renderNumericRangeCard(topic, category);
                 }
                 return renderValueCard(topic, category);
               })}
-            </CardGrid>
+            </CardGrid>}
           </TopicSection>
         );
       })}

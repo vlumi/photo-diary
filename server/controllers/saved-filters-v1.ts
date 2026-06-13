@@ -40,10 +40,19 @@ const DateRangeSchema = Type.Object(
   },
   { additionalProperties: false }
 );
+const NumericRangeSchema = Type.Object(
+  {
+    min: Type.Optional(Type.Number()),
+    max: Type.Optional(Type.Number()),
+  },
+  { additionalProperties: false }
+);
+const NumericRangesSchema = Type.Record(Type.String(), NumericRangeSchema);
 const SavedFilterDefinition = Type.Object(
   {
     filter: Type.Optional(FilterSchema),
     dateRange: Type.Optional(DateRangeSchema),
+    numericRanges: Type.Optional(NumericRangesSchema),
   },
   // Forward-compat: future filter kinds extend the JSON without
   // forcing a schema migration.

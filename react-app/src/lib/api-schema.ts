@@ -851,6 +851,12 @@ export interface paths {
                                     from?: string;
                                     to?: string;
                                 };
+                                numericRanges?: {
+                                    [key: string]: {
+                                        min?: number;
+                                        max?: number;
+                                    };
+                                };
                             } & {
                                 [key: string]: unknown;
                             };
@@ -891,6 +897,12 @@ export interface paths {
                             dateRange?: {
                                 from?: string;
                                 to?: string;
+                            };
+                            numericRanges?: {
+                                [key: string]: {
+                                    min?: number;
+                                    max?: number;
+                                };
                             };
                         } & {
                             [key: string]: unknown;
@@ -961,6 +973,12 @@ export interface paths {
                                     from?: string;
                                     to?: string;
                                 };
+                                numericRanges?: {
+                                    [key: string]: {
+                                        min?: number;
+                                        max?: number;
+                                    };
+                                };
                             } & {
                                 [key: string]: unknown;
                             };
@@ -1000,6 +1018,12 @@ export interface paths {
                             dateRange?: {
                                 from?: string;
                                 to?: string;
+                            };
+                            numericRanges?: {
+                                [key: string]: {
+                                    min?: number;
+                                    max?: number;
+                                };
                             };
                         } & {
                             [key: string]: unknown;

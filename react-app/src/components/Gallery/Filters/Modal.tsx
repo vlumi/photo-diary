@@ -99,6 +99,7 @@ const FilterModal = ({
   const dateRange = useFiltersStore((s) => s.dateRange);
   const setDateRange = useFiltersStore((s) => s.setDateRange);
   const numericRanges = useFiltersStore((s) => s.numericRanges);
+  const setNumericRange = useFiltersStore((s) => s.setNumericRange);
   const setNumericRanges = useFiltersStore((s) => s.setNumericRanges);
   const hasFilters =
     Object.keys(filters).length > 0 ||
@@ -165,6 +166,12 @@ const FilterModal = ({
           lang={lang}
           countryData={countryData}
           hideMap={hideMap}
+          filters={filters}
+          setFilters={setFilters}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          numericRanges={numericRanges}
+          setNumericRange={setNumericRange}
         />
       </Frame>
     </Backdrop>

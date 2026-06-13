@@ -19,6 +19,7 @@ import { useUserStore } from "../../stores";
 import { languageNameIn } from "./LocalizedInputs";
 import GalleryTypeIcon from "./GalleryTypeIcon";
 import SavedFiltersSection from "./SavedFiltersSection";
+import VirtualGalleryFilterSection from "./VirtualGalleryFilterSection";
 import GalleryFormFields, {
   EMPTY_FORM,
   fromGalleryData,
@@ -229,6 +230,19 @@ interface GalleryData {
   defaultLanguage?: string;
   type?: "real" | "hybrid" | "saved_filter";
   photos?: Array<{ id: string }>;
+  // Decorated by the server for `saved_filter` galleries: which
+  // gallery owns the saved filter and its stored `{filter, dateRange}`
+  // envelope. Used by `<VirtualGalleryFilterSection>` to surface the
+  // parent and mount the shared filter builder.
+  savedFilter?: {
+    sourceGalleryId: string;
+    definition?: {
+      filter?: Record<string, unknown>;
+      dateRange?: { from?: string; to?: string };
+      numericRanges?: Record<string, { min?: number; max?: number }>;
+      [key: string]: unknown;
+    };
+  };
 }
 
 interface ParsedIconSource {
@@ -572,11 +586,15 @@ const GalleryEdit = (): React.ReactElement => {
             <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
           </Summary>
           {(gallery.type ?? "real") === "real" && (
-            <SavedFiltersSection
-              galleryId={galleryId}
-              defaultLanguage={gallery.defaultLanguage}
-            />
+            <SavedFiltersSection galleryId={galleryId} />
           )}
+          {gallery.type === "saved_filter" && gallery.savedFilter ? (
+            <VirtualGalleryFilterSection
+              galleryId={galleryId}
+              sourceGalleryId={gallery.savedFilter.sourceGalleryId}
+              definition={gallery.savedFilter.definition}
+            />
+          ) : null}
           <Footer>
             {isAdmin && (
               <ButtonDanger

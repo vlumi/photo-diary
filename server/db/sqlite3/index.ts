@@ -485,19 +485,21 @@ const resolveHideMap = async (
 // Every read path (load photos / counts / neighbors / filter values)
 // goes through this resolver — type dispatch lives here, downstream
 // callers stay uniform.
+interface BaselineShape {
+  filter?: FilterShape;
+  dateRange?: DateRange;
+  numericRanges?: NumericRanges;
+}
 interface GalleryRef {
   sources: string[];
-  baseline?: { filter?: FilterShape; dateRange?: DateRange };
+  baseline?: BaselineShape;
 }
 const resolveGalleryRef = (galleryId: string): GalleryRef => {
   const savedFilter = loadGallerySavedFilterRow(galleryId);
   if (savedFilter) {
-    let baseline: { filter?: FilterShape; dateRange?: DateRange } = {};
+    let baseline: BaselineShape = {};
     try {
-      baseline = JSON.parse(savedFilter.definition) as {
-        filter?: FilterShape;
-        dateRange?: DateRange;
-      };
+      baseline = JSON.parse(savedFilter.definition) as BaselineShape;
     } catch {
       // Malformed JSON shouldn't happen (writes go through
       // JSON.stringify) but if it does, treat as empty baseline.
@@ -507,6 +509,7 @@ const resolveGalleryRef = (galleryId: string): GalleryRef => {
       baseline: {
         filter: baseline.filter,
         dateRange: baseline.dateRange,
+        numericRanges: baseline.numericRanges,
       },
     };
   }
@@ -519,9 +522,12 @@ const resolveGalleryRef = (galleryId: string): GalleryRef => {
 // absent).
 const applyBaseline = (photos: Photo[], ref: GalleryRef): Photo[] => {
   if (!ref.baseline) return photos;
-  const { filter, dateRange } = ref.baseline;
+  const { filter, dateRange, numericRanges } = ref.baseline;
   return photos.filter(
-    (p) => matchesDateRange(dateRange, p) && matchesFilter(filter, p)
+    (p) =>
+      matchesDateRange(dateRange, p) &&
+      matchesNumericRanges(numericRanges, p) &&
+      matchesFilter(filter, p)
   );
 };
 // Single-photo baseline check. NotFoundError-style: returns true if
@@ -530,6 +536,7 @@ const photoPassesBaseline = (photo: Photo, ref: GalleryRef): boolean => {
   if (!ref.baseline) return true;
   return (
     matchesDateRange(ref.baseline.dateRange, photo) &&
+    matchesNumericRanges(ref.baseline.numericRanges, photo) &&
     matchesFilter(ref.baseline.filter, photo)
   );
 };

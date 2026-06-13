@@ -146,6 +146,32 @@ const UNKNOWN_SENTINEL = "unknown";
 const toServerKey = (key: string): ServerFilterKey =>
   key === UNKNOWN_SENTINEL ? null : key;
 
+// Inverse of `toServerFilters` for hydrating local edit state from
+// a stored / loaded ServerFilters envelope (e.g. saved-filter
+// definitions, URL state). The reconstructed closures match what
+// `applyNewFilter` would produce — `photo.matches(category, key)`
+// against the same normalized key shape, so the resulting Filters
+// tree behaves identically to one the operator built chip-by-chip.
+const fromServerFilters = (server: ServerFilters | undefined): Filters => {
+  const out: Filters = {};
+  if (!server) return out;
+  for (const [topic, cats] of Object.entries(server)) {
+    if (!cats) continue;
+    const topicOut: Record<string, Record<string, FilterFn>> = {};
+    for (const [category, keys] of Object.entries(cats)) {
+      if (!Array.isArray(keys) || keys.length === 0) continue;
+      const catOut: Record<string, FilterFn> = {};
+      for (const k of keys) {
+        const keyStr = k === null ? UNKNOWN_SENTINEL : String(k);
+        catOut[keyStr] = (photo) => photo.matches(category, k === null ? undefined : keyStr);
+      }
+      topicOut[category] = catOut;
+    }
+    if (Object.keys(topicOut).length > 0) out[topic] = topicOut;
+  }
+  return out;
+};
+
 const toServerFilters = (filters: Filters): ServerFilters => {
   const out: ServerFilters = {};
   for (const [topic, categories] of Object.entries(filters)) {
@@ -169,4 +195,5 @@ export default {
   removeCategory,
   applyNewFilter,
   toServerFilters,
+  fromServerFilters,
 };

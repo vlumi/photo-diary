@@ -1206,6 +1206,21 @@
                               }
                             },
                             "additionalProperties": false
+                          },
+                          "numericRanges": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "object",
+                              "properties": {
+                                "min": {
+                                  "type": "number"
+                                },
+                                "max": {
+                                  "type": "number"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
                           }
                         },
                         "additionalProperties": true
@@ -1298,6 +1313,21 @@
                           }
                         },
                         "additionalProperties": false
+                      },
+                      "numericRanges": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "properties": {
+                            "min": {
+                              "type": "number"
+                            },
+                            "max": {
+                              "type": "number"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
                       }
                     },
                     "additionalProperties": true
@@ -1436,6 +1466,21 @@
                             }
                           },
                           "additionalProperties": false
+                        },
+                        "numericRanges": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "min": {
+                                "type": "number"
+                              },
+                              "max": {
+                                "type": "number"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
                         }
                       },
                       "additionalProperties": true
@@ -1518,6 +1563,21 @@
                           }
                         },
                         "additionalProperties": false
+                      },
+                      "numericRanges": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "properties": {
+                            "min": {
+                              "type": "number"
+                            },
+                            "max": {
+                              "type": "number"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
                       }
                     },
                     "additionalProperties": true

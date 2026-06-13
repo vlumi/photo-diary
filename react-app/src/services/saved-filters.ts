@@ -1,14 +1,16 @@
 import api, { unwrap } from "../lib/api";
 
 import type { ServerFilters } from "../lib/filter";
-import type { DateRange } from "../stores/filters";
+import type { DateRange, NumericRanges } from "../stores/filters";
 
 // Wire shape the server's `definition` JSON envelope carries —
-// FilterShape + optional dateRange, matching the per-view endpoints
-// (`/query`, `/counts`, `/neighbors`) the saved filter applies to.
+// FilterShape + optional dateRange + optional numericRanges,
+// matching the per-view endpoints (`/query`, `/counts`,
+// `/neighbors`) the saved filter applies to.
 export interface SavedFilterDefinition {
   filter?: ServerFilters;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   [key: string]: unknown;
 }
 export interface SavedFilter {
