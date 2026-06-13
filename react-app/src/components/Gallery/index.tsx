@@ -67,6 +67,10 @@ const globalStyles = (theme: ActiveTheme) => css`
     --photo-frame-mat: ${theme.get("photo-frame-mat")};
     --photo-frame-border: ${theme.get("photo-frame-border")};
     filter: ${theme.get("filter")};
+    overflow-x: hidden;
+  }
+  body {
+    overflow-x: hidden;
   }
 `;
 

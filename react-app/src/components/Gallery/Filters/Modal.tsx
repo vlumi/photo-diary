@@ -29,12 +29,13 @@ const Frame = styled.div`
   border-radius: 8px;
   padding: 18px 20px;
   width: 100%;
-  max-width: 1100px;
+  max-width: min(1100px, calc(100vw - 40px));
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   margin: auto 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow-x: hidden;
 `;
 const Header = styled.div`
   display: flex;

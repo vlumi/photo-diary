@@ -57,6 +57,7 @@ const Card = styled.div`
   flex-direction: column;
   gap: 6px;
   min-height: 60px;
+  min-width: 0;
 `;
 const CardHeader = styled.div`
   display: flex;
@@ -87,9 +88,7 @@ const Chips = styled.div`
   overflow-y: auto;
 `;
 const Chip = styled.button<{ active?: boolean; dim?: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  display: inline-block;
   font: inherit;
   font-size: 0.9em;
   padding: 2px 8px;
@@ -101,6 +100,13 @@ const Chip = styled.button<{ active?: boolean; dim?: boolean }>`
   color: ${({ active }) =>
     active ? "var(--header-color)" : "var(--primary-color)"};
   opacity: ${({ dim }) => (dim ? 0.45 : 1)};
+  max-width: 100%;
+  text-align: left;
+  white-space: normal;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  vertical-align: top;
   &:hover {
     border-color: var(--primary-color);
     opacity: 1;
@@ -190,12 +196,13 @@ const SubFrame = styled.div`
   border-radius: 8px;
   padding: 14px 16px;
   width: 100%;
-  max-width: 640px;
+  max-width: min(640px, calc(100vw - 40px));
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   margin: auto 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-x: hidden;
 `;
 const SubChips = styled.div`
   display: flex;
