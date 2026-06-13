@@ -213,6 +213,7 @@
     "filters-add-more": "Add more",
     "filters-open": "Open filters",
     "filters-remove-value": "Remove",
+    "filters-edit-value": "Edit",
     "filters-search-placeholder": "Search…",
     "filters-hidden-count": "+ {{count}} more — search to find",
     "filters-show-all": "Show all {{count}}",

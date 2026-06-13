@@ -213,6 +213,7 @@
     "filters-add-more": "Lisää",
     "filters-open": "Avaa suodattimet",
     "filters-remove-value": "Poista",
+    "filters-edit-value": "Muokkaa",
     "filters-search-placeholder": "Hae…",
     "filters-hidden-count": "+ {{count}} muuta — hae löytääksesi",
     "filters-show-all": "Näytä kaikki {{count}}",

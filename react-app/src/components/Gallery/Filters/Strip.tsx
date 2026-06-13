@@ -159,6 +159,7 @@ const FilterStrip = ({
   const setNumericRange = useFiltersStore((s) => s.setNumericRange);
   const setNumericRanges = useFiltersStore((s) => s.setNumericRanges);
   const openModal = useFilterModalStore((s) => s.open);
+  const openAtCategory = useFilterModalStore((s) => s.openAtCategory);
 
   type ActiveChunk =
     | {
@@ -237,7 +238,15 @@ const FilterStrip = ({
           return (
             <Chunk key={`chunk:date-range`}>
               <CatLabel>{t("stats-category-date-range")}:</CatLabel>
-              <ValueChunk>
+              <ValueChunk
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openAtCategory("date-range");
+                }}
+                role="button"
+                aria-label={String(t("filters-edit-value"))}
+                title={String(t("filters-edit-value"))}
+              >
                 <span>{dateRangeLabel(dateRange as DateRange, t)}</span>
                 <span
                   className="remove"
@@ -261,7 +270,15 @@ const FilterStrip = ({
           return (
             <Chunk key={`chunk:numeric-range:${chunk.category}`}>
               <CatLabel>{t(`stats-category-${chunk.category}`)}:</CatLabel>
-              <ValueChunk onClick={stop}>
+              <ValueChunk
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openAtCategory(chunk.category);
+                }}
+                role="button"
+                aria-label={String(t("filters-edit-value"))}
+                title={String(t("filters-edit-value"))}
+              >
                 <span>
                   {numericRangeLabel(chunk.range, chunk.category, formatValue, t)}
                 </span>
@@ -287,7 +304,15 @@ const FilterStrip = ({
                 const label = lookupValueLabel(uniqueValues, topic, category, rawKey);
                 return (
                   <React.Fragment key={`v:${topic}:${category}:${rawKey}`}>
-                    <ValueChunk onClick={stop}>
+                    <ValueChunk
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openAtCategory(category);
+                      }}
+                      role="button"
+                      aria-label={String(t("filters-edit-value"))}
+                      title={String(t("filters-edit-value"))}
+                    >
                       <span>
                         {renderFilterValue(category, rawKey, label, lang, t, countryData)}
                       </span>

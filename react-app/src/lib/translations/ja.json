@@ -213,6 +213,7 @@
     "filters-add-more": "追加",
     "filters-open": "フィルターを開く",
     "filters-remove-value": "削除",
+    "filters-edit-value": "編集",
     "filters-search-placeholder": "検索…",
     "filters-hidden-count": "+ 他{{count}}件 — 検索してください",
     "filters-show-all": "全{{count}}件を表示",
