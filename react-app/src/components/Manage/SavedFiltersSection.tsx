@@ -29,11 +29,12 @@ const Section = styled.section`
   margin-bottom: 20px;
 `;
 const SectionTitle = styled.h3`
-  margin: 0 0 4px;
-  font-size: 0.75em;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--inactive-color);
+  margin: 12px 0 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--inactive-color);
+  font-size: 1.05em;
+  font-weight: 600;
+  color: var(--primary-color);
 `;
 const Notice = styled.p`
   margin: 0;
