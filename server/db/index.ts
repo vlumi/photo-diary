@@ -42,6 +42,7 @@ export interface NeighborsResult {
 }
 export interface FilterValuesResult {
   categoryValues: Record<string, string[]>;
+  categoryCounts: Record<string, Record<string, number>>;
   byCityLocalized: Record<string, string>;
 }
 
@@ -317,17 +318,27 @@ export default {
   },
   queryGalleryFilterValues: async (
     galleryId: string,
-    lang?: string
+    lang?: string,
+    filter?: FilterShape,
+    dateRange?: DateRange
   ): Promise<FilterValuesResult> => {
     return (await db.queryGalleryFilterValues(
       galleryId,
-      lang
+      lang,
+      filter,
+      dateRange
     )) as FilterValuesResult;
   },
   queryGlobalFilterValues: async (
-    lang?: string
+    lang?: string,
+    filter?: FilterShape,
+    dateRange?: DateRange
   ): Promise<FilterValuesResult> => {
-    return (await db.queryGlobalFilterValues(lang)) as FilterValuesResult;
+    return (await db.queryGlobalFilterValues(
+      lang,
+      filter,
+      dateRange
+    )) as FilterValuesResult;
   },
   linkGalleryPhoto: async (galleryIds: string[], photoIds: string[]) => {
     return await db.linkGalleryPhoto(galleryIds, photoIds);

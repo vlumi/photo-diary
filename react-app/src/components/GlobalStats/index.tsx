@@ -5,7 +5,7 @@ import styled from "@emotion/styled";
 import { useQuery } from "@tanstack/react-query";
 import { BsHouseFill, BsBarChartLine } from "react-icons/bs";
 
-import Filters from "../Gallery/Filters";
+import Filters, { FilterModal } from "../Gallery/Filters";
 import Stats from "../Gallery/Stats";
 import Galleries from "./Galleries";
 import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
@@ -107,8 +107,15 @@ const GlobalStats = (): React.ReactElement => {
     enabled: !!user?.isAdmin() && mapPhotosWanted,
   });
   const filterValuesQuery = useQuery({
-    queryKey: ["global-filter-values", user?.id ?? null, lang],
-    queryFn: () => statsService.getGlobalFilterValues(lang),
+    queryKey: [
+      "global-filter-values",
+      user?.id ?? null,
+      lang,
+      serverFilters,
+      dateRange,
+    ],
+    queryFn: () =>
+      statsService.getGlobalFilterValues(serverFilters, lang, dateRange),
     enabled: !!user?.isAdmin(),
   });
   const galleriesQuery = useQuery({
@@ -199,14 +206,17 @@ const GlobalStats = (): React.ReactElement => {
         hideMap={false}
       >
         <Filters
-          filters={filters}
-          setFilters={setFilters}
           uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
-          hideMap={false}
         />
       </Stats>
+      <FilterModal
+        uniqueValues={uniqueValues}
+        lang={lang}
+        countryData={countryData}
+        hideMap={false}
+      />
     </>
   );
 };

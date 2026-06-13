@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Filter widget redesigned: the topic/category/value nested-`<select>` adders retire in favour of an inline strip (italic "Category: value" chunks with hover-X) that opens a centered modal of per-category cards. Each card shows the top values by photo count under the active filter; a "Show all N" sub-modal browses the natural-sort universe for picking values that don't currently match. Active filters always render; inactive 0-count chips dim rather than disappear so multi-select expansion stays one click away. Strip + modal both expose a one-click "Clear all". Closes #560.
+
+### Server
+
+- `/api/v1/gallery-photos/<id>/filter-values` and `/api/v1/filter-values` move from GET to POST so the active filter + dateRange can travel as the body; responses gain `categoryCounts` (per-value photo counts under the active filter) alongside the existing `categoryValues` universe.
+
 ## [0.15.2] - 2026-06-12
 
 ### Bug fixes

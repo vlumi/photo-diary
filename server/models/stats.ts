@@ -117,14 +117,19 @@ const getGalleryEvolution = async (
 const globalFilterValuesCacheKey = (lang?: string): string =>
   !lang || lang === "en" ? ":global:fv" : `:global:fv:${lang}`;
 const getGlobalFilterValues = async (
-  lang?: string
+  lang?: string,
+  filter?: FilterShape,
+  dateRange?: DateRange
 ): Promise<FilterValuesResult> => {
-  const key = globalFilterValuesCacheKey(lang);
-  const cached = cacheGet<FilterValuesResult>(key);
-  if (cached) return cached;
-  const result = await db.queryGlobalFilterValues(lang);
-  cacheSet(key, result);
-  return result;
+  if (isUnfilteredBase(filter) && isDateRangeUnbounded(dateRange)) {
+    const key = globalFilterValuesCacheKey(lang);
+    const cached = cacheGet<FilterValuesResult>(key);
+    if (cached) return cached;
+    const result = await db.queryGlobalFilterValues(lang);
+    cacheSet(key, result);
+    return result;
+  }
+  return await db.queryGlobalFilterValues(lang, filter, dateRange);
 };
 
 const getGlobalStats = async (

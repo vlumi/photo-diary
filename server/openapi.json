@@ -3080,20 +3080,68 @@
       }
     },
     "/api/v1/gallery-photos/{galleryId}/filter-values": {
-      "get": {
+      "post": {
         "summary": "Filter pill universe (per-category value set)",
         "tags": [
           "gallery-photos"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filter": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "dateRange": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      "to": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "lang": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 8
+                  }
+                }
+              }
+            }
+          }
+        },
         "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "lang",
-            "required": false
-          },
           {
             "schema": {
               "type": "string"
@@ -3112,6 +3160,7 @@
                   "type": "object",
                   "required": [
                     "categoryValues",
+                    "categoryCounts",
                     "byCityLocalized"
                   ],
                   "properties": {
@@ -3121,6 +3170,15 @@
                         "type": "array",
                         "items": {
                           "type": "string"
+                        }
+                      }
+                    },
+                    "categoryCounts": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "number"
                         }
                       }
                     },
@@ -4546,21 +4604,67 @@
       }
     },
     "/api/v1/filter-values": {
-      "get": {
+      "post": {
         "summary": "Filter pill universe across all galleries (admin)",
         "tags": [
           "filter-values"
         ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "lang",
-            "required": false
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filter": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "dateRange": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      "to": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "lang": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 8
+                  }
+                }
+              }
+            }
           }
-        ],
+        },
         "security": [
           {
             "bearer": []
@@ -4575,6 +4679,7 @@
                   "type": "object",
                   "required": [
                     "categoryValues",
+                    "categoryCounts",
                     "byCityLocalized"
                   ],
                   "properties": {
@@ -4584,6 +4689,15 @@
                         "type": "array",
                         "items": {
                           "type": "string"
+                        }
+                      }
+                    },
+                    "categoryCounts": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "number"
                         }
                       }
                     },

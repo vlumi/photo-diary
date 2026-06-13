@@ -406,6 +406,22 @@ export const buildCategoryValues = (
   return out;
 };
 
+// Per-value photo counts per category. Drives the filter widget's
+// top-N sort — operator sees the most-photographed values first
+// without paying the cost of fetching the full /stats response just
+// to pick filter values. Same buckets as `buildByCategory`, exposed
+// as `{category: {key: count}}`.
+export const buildCategoryCounts = (
+  photos: Photo[]
+): Record<string, Record<string, number>> => {
+  const all = buildByCategory(photos);
+  const out: Record<string, Record<string, number>> = {};
+  for (const [category, counts] of Object.entries(all)) {
+    out[category] = { ...counts };
+  }
+  return out;
+};
+
 export const computeStats = (
   photos: Photo[],
   filter?: FilterShape

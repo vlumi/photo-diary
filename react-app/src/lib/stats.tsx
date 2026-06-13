@@ -214,6 +214,11 @@ export interface StatsTopic {
 export interface UniqueValueEntry {
   key: string | number;
   value: string;
+  // Photo count for this value in the unfiltered gallery (or
+  // the global set on GlobalStats). Drives the filter widget's
+  // top-N sort. Optional so the StatsTable / other
+  // consumers don't break if they pass entries without counts.
+  count?: number;
 }
 // Indexed by topic → category → entries[{key, value}].
 // Topics: general / time / gear / exposure. Categories: author /
