@@ -16,7 +16,7 @@ import { useGalleryCalendar } from "../../../lib/useFilteredCalendar";
 import PhotoModel, {
   type Photo as PhotoT,
 } from "../../../models/PhotoModel";
-import { useFiltersStore } from "../../../stores";
+import { useFiltersStore, useWireNumericRanges } from "../../../stores";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
@@ -99,6 +99,7 @@ const Content = ({
   // and skip the in-memory gallery.photos walk.
   const filters = useFiltersStore((s) => s.filters);
   const dateRange = useFiltersStore((s) => s.dateRange);
+  const wireNumericRanges = useWireNumericRanges();
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -106,8 +107,15 @@ const Content = ({
   // Shared queryKey shape with Title's map fetch and Stats's map
   // fetch so identical scopes hit one network request.
   const queryBody = React.useMemo(
-    () => ({ filter: serverFilters, dateRange, year, month, lang }),
-    [serverFilters, dateRange, year, month, lang]
+    () => ({
+      filter: serverFilters,
+      dateRange,
+      numericRanges: wireNumericRanges,
+      year,
+      month,
+      lang,
+    }),
+    [serverFilters, dateRange, wireNumericRanges, year, month, lang]
   );
   const { data: photosRaw } = useQuery({
     queryKey: ["gallery-photos-query", gallery.id(), queryBody],

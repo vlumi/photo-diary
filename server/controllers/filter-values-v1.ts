@@ -35,9 +35,18 @@ const DateRangeSchema = Type.Object(
   },
   { additionalProperties: false }
 );
+const NumericRangeSchema = Type.Object(
+  {
+    min: Type.Optional(Type.Number()),
+    max: Type.Optional(Type.Number()),
+  },
+  { additionalProperties: false }
+);
+const NumericRangesSchema = Type.Record(Type.String(), NumericRangeSchema);
 const RequestBody = Type.Object({
   filter: Type.Optional(FilterSchema),
   dateRange: Type.Optional(DateRangeSchema),
+  numericRanges: Type.Optional(NumericRangesSchema),
   lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
 });
 const FilterValuesResponse = Type.Object({
@@ -71,7 +80,8 @@ const globalPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
       return await stats.getGlobalFilterValues(
         request.body.lang,
         request.body.filter,
-        request.body.dateRange
+        request.body.dateRange,
+        request.body.numericRanges
       );
     }
   );

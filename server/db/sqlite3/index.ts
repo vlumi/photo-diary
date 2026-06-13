@@ -8,8 +8,10 @@ import { acceptLocalizedCity } from "../../lib/localized-script.js";
 import {
   matchesDateRange,
   matchesFilter,
+  matchesNumericRanges,
   type DateRange,
   type FilterShape,
+  type NumericRanges,
 } from "../../lib/photo-filter-eval.js";
 import {
   buildAnnotations,
@@ -1052,6 +1054,7 @@ const loadAllGalleryPhotoLinks = async (): Promise<
 interface QueryFilteredOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   year?: number;
   month?: number;
   day?: number;
@@ -1084,6 +1087,7 @@ const queryFilteredPhotos = async (
     (photo) =>
       matchesScope(photo, opts.year, opts.month, opts.day) &&
       matchesDateRange(opts.dateRange, photo) &&
+      matchesNumericRanges(opts.numericRanges, photo) &&
       matchesFilter(opts.filter, photo)
   );
 };
@@ -1100,6 +1104,7 @@ const queryFilteredPhotosGlobal = async (
     (photo) =>
       matchesScope(photo, opts.year, opts.month, opts.day) &&
       matchesDateRange(opts.dateRange, photo) &&
+      matchesNumericRanges(opts.numericRanges, photo) &&
       matchesFilter(opts.filter, photo)
   );
 };
@@ -1107,6 +1112,7 @@ const queryFilteredPhotosGlobal = async (
 interface CountsFilteredOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   year?: number;
 }
 const queryFilteredPhotoCounts = async (
@@ -1119,6 +1125,7 @@ const queryFilteredPhotoCounts = async (
     const instant = photo.taken.instant;
     if (opts.year !== undefined && instant.year !== opts.year) continue;
     if (!matchesDateRange(opts.dateRange, photo)) continue;
+    if (!matchesNumericRanges(opts.numericRanges, photo)) continue;
     if (!matchesFilter(opts.filter, photo)) continue;
     const key = `${instant.year}-${String(instant.month).padStart(
       2,
@@ -1132,6 +1139,7 @@ const queryFilteredPhotoCounts = async (
 interface NeighborsFilteredOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   lang?: string;
 }
 interface NeighborsResult {
@@ -1150,7 +1158,10 @@ const queryFilteredPhotoNeighbors = async (
   const all = (await loadGalleryPhotos(galleryId, opts.lang)) as Photo[];
   const filtered = all
     .filter(
-      (p) => matchesDateRange(opts.dateRange, p) && matchesFilter(opts.filter, p)
+      (p) =>
+        matchesDateRange(opts.dateRange, p) &&
+        matchesNumericRanges(opts.numericRanges, p) &&
+        matchesFilter(opts.filter, p)
     )
     .sort((a, b) =>
       a.taken.instant.timestamp.localeCompare(b.taken.instant.timestamp)
@@ -1223,7 +1234,8 @@ const isGeotagged = (photo: Photo): boolean => {
 const buildFilterValuesFromPhotos = (
   photos: Photo[],
   filter?: FilterShape,
-  dateRange?: DateRange
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
 ): FilterValuesResult => {
   const cv = buildCategoryValues(photos);
   const annotations = buildAnnotations(photos);
@@ -1235,12 +1247,16 @@ const buildFilterValuesFromPhotos = (
   const noFilter = !filter || Object.keys(filter).length === 0;
   const noDateRange =
     !dateRange || (!dateRange.from && !dateRange.to);
+  const noNumericRanges =
+    !numericRanges || Object.keys(numericRanges).length === 0;
   const subset =
-    noFilter && noDateRange
+    noFilter && noDateRange && noNumericRanges
       ? photos
       : photos.filter(
         (p) =>
-          matchesFilter(filter, p) && matchesDateRange(dateRange, p)
+          matchesFilter(filter, p) &&
+          matchesDateRange(dateRange, p) &&
+          matchesNumericRanges(numericRanges, p)
       );
   const cc = buildCategoryCounts(subset);
   const yearMonthCounts: Record<string, number> = {};
@@ -1310,18 +1326,20 @@ const queryGalleryFilterValues = async (
   galleryId: string,
   lang?: string,
   filter?: FilterShape,
-  dateRange?: DateRange
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
 ): Promise<FilterValuesResult> => {
   const photos = (await loadGalleryPhotos(galleryId, lang)) as Photo[];
-  return buildFilterValuesFromPhotos(photos, filter, dateRange);
+  return buildFilterValuesFromPhotos(photos, filter, dateRange, numericRanges);
 };
 const queryGlobalFilterValues = async (
   lang?: string,
   filter?: FilterShape,
-  dateRange?: DateRange
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
 ): Promise<FilterValuesResult> => {
   const photos = (await loadPhotos(lang)) as Photo[];
-  return buildFilterValuesFromPhotos(photos, filter, dateRange);
+  return buildFilterValuesFromPhotos(photos, filter, dateRange, numericRanges);
 };
 
 const loadGalleryPhoto = async (

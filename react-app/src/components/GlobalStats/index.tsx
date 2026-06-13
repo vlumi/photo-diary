@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styled from "@emotion/styled";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { BsHouseFill, BsBarChartLine } from "react-icons/bs";
 
 import Filters, { FilterModal } from "../Gallery/Filters";
@@ -24,6 +24,7 @@ import {
   useLangStore,
   useThemePreferenceStore,
   useUserStore,
+  useWireNumericRanges,
 } from "../../stores";
 
 const Header = styled.div`
@@ -65,6 +66,7 @@ const GlobalStats = (): React.ReactElement => {
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
   const dateRange = useFiltersStore((s) => s.dateRange);
+  const wireNumericRanges = useWireNumericRanges();
   const themePreference = useThemePreferenceStore((s) => s.preference);
   const metaQuery = useQuery({
     queryKey: ["meta"],
@@ -87,8 +89,13 @@ const GlobalStats = (): React.ReactElement => {
     [filters]
   );
   const photoQueryBody = React.useMemo(
-    () => ({ filter: serverFilters, dateRange, lang }),
-    [serverFilters, dateRange, lang]
+    () => ({
+      filter: serverFilters,
+      dateRange,
+      numericRanges: wireNumericRanges,
+      lang,
+    }),
+    [serverFilters, dateRange, wireNumericRanges, lang]
   );
   const photosQuery = useQuery({
     queryKey: [
@@ -113,10 +120,17 @@ const GlobalStats = (): React.ReactElement => {
       lang,
       serverFilters,
       dateRange,
+      wireNumericRanges,
     ],
     queryFn: () =>
-      statsService.getGlobalFilterValues(serverFilters, lang, dateRange),
+      statsService.getGlobalFilterValues(
+        serverFilters,
+        lang,
+        dateRange,
+        wireNumericRanges
+      ),
     enabled: !!user?.isAdmin(),
+    placeholderData: keepPreviousData,
   });
   const galleriesQuery = useQuery({
     queryKey: ["global-stats-galleries", user?.id ?? null],

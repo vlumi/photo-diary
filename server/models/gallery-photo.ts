@@ -4,6 +4,7 @@ import { ValidationError } from "../lib/errors.js";
 import type {
   DateRange,
   FilterShape,
+  NumericRanges,
 } from "../lib/photo-filter-eval.js";
 import {
   cacheGet,
@@ -43,6 +44,7 @@ const getGalleryPhotos = async (galleryId: string, lang?: string) => {
 interface QueryOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   year?: number;
   month?: number;
   day?: number;
@@ -59,6 +61,7 @@ const queryGalleryPhotos = async (galleryId: string, opts: QueryOpts = {}) => {
 interface NeighborsOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   lang?: string;
 }
 const getGalleryPhotoNeighbors = async (
@@ -76,6 +79,7 @@ const getGalleryPhotoNeighbors = async (
 interface CountsOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   year?: number;
 }
 const queryGalleryPhotoCounts = async (
@@ -99,15 +103,18 @@ const getGalleryFilterValues = async (
   galleryId: string,
   lang?: string,
   filter?: FilterShape,
-  dateRange?: DateRange
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
 ): Promise<FilterValuesResult> => {
   const noFilter = !filter || Object.keys(filter).length === 0;
   const noDateRange =
     !dateRange || (!dateRange.from && !dateRange.to);
+  const noNumericRanges =
+    !numericRanges || Object.keys(numericRanges).length === 0;
   // Only the unfiltered universe (the cold-start view) hits the
   // shared stats cache; filter-aware queries change per toggle and
   // would churn the cache otherwise.
-  if (noFilter && noDateRange) {
+  if (noFilter && noDateRange && noNumericRanges) {
     const key = filterValuesCacheKey(galleryId, lang);
     const cached = cacheGet<FilterValuesResult>(key);
     if (cached) return cached;
@@ -125,7 +132,8 @@ const getGalleryFilterValues = async (
     galleryId,
     lang,
     filter,
-    dateRange
+    dateRange,
+    numericRanges
   );
 };
 

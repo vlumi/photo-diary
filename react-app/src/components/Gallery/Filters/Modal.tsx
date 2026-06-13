@@ -98,20 +98,33 @@ const FilterModal = ({
   const setFilters = useFiltersStore((s) => s.setFilters);
   const dateRange = useFiltersStore((s) => s.dateRange);
   const setDateRange = useFiltersStore((s) => s.setDateRange);
+  const numericRanges = useFiltersStore((s) => s.numericRanges);
+  const setNumericRanges = useFiltersStore((s) => s.setNumericRanges);
   const hasFilters =
-    Object.keys(filters).length > 0 || dateRange !== undefined;
+    Object.keys(filters).length > 0 ||
+    dateRange !== undefined ||
+    Object.keys(numericRanges).length > 0;
   const clearAll = () => {
     setFilters({});
     setDateRange(undefined);
+    setNumericRanges({});
   };
 
   React.useEffect(() => {
     if (!isOpen) return;
+    // Capture-phase listener with stopImmediatePropagation so the
+    // Esc that closes the modal doesn't also fire the underlying
+    // Month/Year nav's swipe handler (which treats Esc / arrow keys
+    // as navigation). See the `useKeyPress` footgun in AGENTS.md.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        close();
+      }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [isOpen, close]);
 
   if (!isOpen) return null;

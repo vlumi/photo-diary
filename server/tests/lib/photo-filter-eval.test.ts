@@ -3,7 +3,9 @@ import { describe, expect, test } from "vitest";
 import type { Photo } from "../../db/sqlite3/schema.js";
 import {
   matchesFilter,
+  matchesNumericRanges,
   type FilterShape,
+  type NumericRanges,
 } from "../../lib/photo-filter-eval.js";
 
 // Compact factory: every test starts from a baseline photo and
@@ -311,5 +313,109 @@ describe("null = <unknown> bucket", () => {
       },
     });
     expect(matchesFilter({ general: { country: ["jp"] } }, photo)).toBe(false);
+  });
+});
+
+describe("matchesNumericRanges", () => {
+  test("no ranges / empty ranges → match", () => {
+    const photo = makePhoto();
+    expect(matchesNumericRanges(undefined, photo)).toBe(true);
+    expect(matchesNumericRanges(null, photo)).toBe(true);
+    expect(matchesNumericRanges({}, photo)).toBe(true);
+  });
+
+  test("entry with no bounds → category skipped", () => {
+    const photo = makePhoto();
+    const ranges: NumericRanges = { "focal-length": {} };
+    expect(matchesNumericRanges(ranges, photo)).toBe(true);
+  });
+
+  test("focal-length within range → match", () => {
+    const photo = makePhoto(); // focalLength: 27
+    expect(
+      matchesNumericRanges({ "focal-length": { min: 10, max: 200 } }, photo)
+    ).toBe(true);
+    expect(
+      matchesNumericRanges({ "focal-length": { min: 27, max: 27 } }, photo)
+    ).toBe(true);
+    expect(
+      matchesNumericRanges({ "focal-length": { min: 27 } }, photo)
+    ).toBe(true);
+    expect(
+      matchesNumericRanges({ "focal-length": { max: 27 } }, photo)
+    ).toBe(true);
+  });
+
+  test("focal-length outside range → no match", () => {
+    const photo = makePhoto(); // focalLength: 27
+    expect(
+      matchesNumericRanges({ "focal-length": { min: 50, max: 200 } }, photo)
+    ).toBe(false);
+    expect(
+      matchesNumericRanges({ "focal-length": { max: 20 } }, photo)
+    ).toBe(false);
+  });
+
+  test("aperture / iso / exposure-time / ev / lv all evaluate", () => {
+    const photo = makePhoto(); // aperture 5.6, iso 200, exposureTime 1/250
+    expect(
+      matchesNumericRanges({ aperture: { min: 5.6, max: 5.6 } }, photo)
+    ).toBe(true);
+    expect(
+      matchesNumericRanges({ iso: { min: 100, max: 400 } }, photo)
+    ).toBe(true);
+    expect(
+      matchesNumericRanges(
+        { "exposure-time": { min: 1 / 500, max: 1 / 100 } },
+        photo
+      )
+    ).toBe(true);
+    expect(
+      matchesNumericRanges({ aperture: { min: 8 } }, photo)
+    ).toBe(false);
+  });
+
+  test("AND across categories — all must match", () => {
+    const photo = makePhoto(); // focalLength 27, aperture 5.6
+    expect(
+      matchesNumericRanges(
+        {
+          "focal-length": { min: 10, max: 50 },
+          aperture: { min: 4, max: 8 },
+        },
+        photo
+      )
+    ).toBe(true);
+    expect(
+      matchesNumericRanges(
+        {
+          "focal-length": { min: 10, max: 50 },
+          aperture: { min: 8 },
+        },
+        photo
+      )
+    ).toBe(false);
+  });
+
+  test("missing photo value → no match (treated as out-of-range)", () => {
+    const photo = makePhoto({
+      exposure: {
+        focalLength: undefined,
+        focalLength35mmEquiv: undefined,
+        aperture: undefined,
+        exposureTime: undefined,
+        iso: undefined,
+      },
+    });
+    expect(
+      matchesNumericRanges({ "focal-length": { min: 10, max: 200 } }, photo)
+    ).toBe(false);
+  });
+
+  test("unknown category → drops the dimension (forward-compat)", () => {
+    const photo = makePhoto();
+    expect(
+      matchesNumericRanges({ "future-thing": { min: 1, max: 10 } }, photo)
+    ).toBe(false);
   });
 });

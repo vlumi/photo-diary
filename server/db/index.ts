@@ -1,5 +1,9 @@
 import config from "../lib/config/index.js";
-import type { DateRange, FilterShape } from "../lib/photo-filter-eval.js";
+import type {
+  DateRange,
+  FilterShape,
+  NumericRanges,
+} from "../lib/photo-filter-eval.js";
 import type {
   Gallery,
   GalleryInput,
@@ -17,6 +21,7 @@ import type {
 export interface QueryFilteredOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   year?: number;
   month?: number;
   day?: number;
@@ -25,11 +30,13 @@ export interface QueryFilteredOpts {
 export interface CountsFilteredOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   year?: number;
 }
 export interface NeighborsFilteredOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   lang?: string;
 }
 export interface NeighborsResult {
@@ -320,24 +327,28 @@ export default {
     galleryId: string,
     lang?: string,
     filter?: FilterShape,
-    dateRange?: DateRange
+    dateRange?: DateRange,
+    numericRanges?: NumericRanges
   ): Promise<FilterValuesResult> => {
     return (await db.queryGalleryFilterValues(
       galleryId,
       lang,
       filter,
-      dateRange
+      dateRange,
+      numericRanges
     )) as FilterValuesResult;
   },
   queryGlobalFilterValues: async (
     lang?: string,
     filter?: FilterShape,
-    dateRange?: DateRange
+    dateRange?: DateRange,
+    numericRanges?: NumericRanges
   ): Promise<FilterValuesResult> => {
     return (await db.queryGlobalFilterValues(
       lang,
       filter,
-      dateRange
+      dateRange,
+      numericRanges
     )) as FilterValuesResult;
   },
   linkGalleryPhoto: async (galleryIds: string[], photoIds: string[]) => {

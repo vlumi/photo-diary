@@ -1590,6 +1590,12 @@ export interface paths {
                             from?: string;
                             to?: string;
                         };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
+                        };
                         year?: number;
                         month?: number;
                         day?: number;
@@ -1648,6 +1654,12 @@ export interface paths {
                             from?: string;
                             to?: string;
                         };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
+                        };
                         year?: number;
                     };
                 };
@@ -1703,6 +1715,12 @@ export interface paths {
                         dateRange?: {
                             from?: string;
                             to?: string;
+                        };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
                         };
                         lang?: string;
                     };
@@ -1771,6 +1789,12 @@ export interface paths {
                         dateRange?: {
                             from?: string;
                             to?: string;
+                        };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
                         };
                         lang?: string;
                     };
@@ -2434,6 +2458,12 @@ export interface paths {
                             from?: string;
                             to?: string;
                         };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
+                        };
                         lang?: string;
                     };
                 };
@@ -2537,6 +2567,12 @@ export interface paths {
                             from?: string;
                             to?: string;
                         };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
+                        };
                         lang?: string;
                     };
                 };
@@ -2595,6 +2631,12 @@ export interface paths {
                         dateRange?: {
                             from?: string;
                             to?: string;
+                        };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
                         };
                         lang?: string;
                     };
@@ -2695,6 +2737,12 @@ export interface paths {
                         dateRange?: {
                             from?: string;
                             to?: string;
+                        };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
                         };
                         lang?: string;
                     };

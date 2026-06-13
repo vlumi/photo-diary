@@ -26,8 +26,10 @@ import {
 } from "../lib/stats-compute.js";
 import {
   matchesDateRange,
+  matchesNumericRanges,
   type DateRange,
   type FilterShape,
+  type NumericRanges,
 } from "../lib/photo-filter-eval.js";
 
 // Date-range bypass-cache check sibling to `isUnfilteredBase`.
@@ -35,6 +37,8 @@ import {
 // request as filtered so cached unfiltered results don't shadow it.
 const isDateRangeUnbounded = (range?: DateRange): boolean =>
   !range || (!range.from && !range.to);
+const isNumericRangesUnbounded = (ranges?: NumericRanges): boolean =>
+  !ranges || Object.keys(ranges).length === 0;
 
 export default () => ({
   getGalleryStats,
@@ -70,21 +74,31 @@ const getGalleryStats = async (
   galleryId: string,
   filter?: FilterShape,
   lang?: string,
-  dateRange?: DateRange
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
 ): Promise<StatsResponse> => {
-  const cacheable = isUnfilteredBase(filter) && isDateRangeUnbounded(dateRange);
+  const cacheable =
+    isUnfilteredBase(filter) &&
+    isDateRangeUnbounded(dateRange) &&
+    isNumericRangesUnbounded(numericRanges);
   const key = galleryCacheKey(galleryId, lang);
   if (cacheable) {
     const cached = cacheGet<StatsResponse>(key);
     if (cached) return cached;
   }
   const loaded = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
-  // Pre-filter by date range so `computeStats` stays a pure
-  // FilterShape evaluator — keeps the range filter local to model
-  // / driver layers rather than threading into every aggregator.
-  const photos = isDateRangeUnbounded(dateRange)
-    ? loaded
-    : loaded.filter((p) => matchesDateRange(dateRange, p));
+  // Pre-filter by date range + numeric ranges so `computeStats`
+  // stays a pure FilterShape evaluator — keeps the range filters
+  // local to model / driver layers rather than threading into every
+  // aggregator.
+  const photos =
+    isDateRangeUnbounded(dateRange) && isNumericRangesUnbounded(numericRanges)
+      ? loaded
+      : loaded.filter(
+        (p) =>
+          matchesDateRange(dateRange, p) &&
+            matchesNumericRanges(numericRanges, p)
+      );
   const stats = computeStats(photos, filter);
   if (cacheable) cacheSet(key, stats);
   return stats;
@@ -99,12 +113,18 @@ const getGalleryEvolution = async (
   category: string,
   filter?: FilterShape,
   lang?: string,
-  dateRange?: DateRange
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
 ): Promise<EvolutionResult> => {
   const loaded = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
-  const photos = isDateRangeUnbounded(dateRange)
-    ? loaded
-    : loaded.filter((p) => matchesDateRange(dateRange, p));
+  const photos =
+    isDateRangeUnbounded(dateRange) && isNumericRangesUnbounded(numericRanges)
+      ? loaded
+      : loaded.filter(
+        (p) =>
+          matchesDateRange(dateRange, p) &&
+            matchesNumericRanges(numericRanges, p)
+      );
   return buildEvolution(photos, category, filter);
 };
 
@@ -119,9 +139,14 @@ const globalFilterValuesCacheKey = (lang?: string): string =>
 const getGlobalFilterValues = async (
   lang?: string,
   filter?: FilterShape,
-  dateRange?: DateRange
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
 ): Promise<FilterValuesResult> => {
-  if (isUnfilteredBase(filter) && isDateRangeUnbounded(dateRange)) {
+  if (
+    isUnfilteredBase(filter) &&
+    isDateRangeUnbounded(dateRange) &&
+    isNumericRangesUnbounded(numericRanges)
+  ) {
     const key = globalFilterValuesCacheKey(lang);
     const cached = cacheGet<FilterValuesResult>(key);
     if (cached) return cached;
@@ -129,15 +154,24 @@ const getGlobalFilterValues = async (
     cacheSet(key, result);
     return result;
   }
-  return await db.queryGlobalFilterValues(lang, filter, dateRange);
+  return await db.queryGlobalFilterValues(
+    lang,
+    filter,
+    dateRange,
+    numericRanges
+  );
 };
 
 const getGlobalStats = async (
   filter?: FilterShape,
   lang?: string,
-  dateRange?: DateRange
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
 ): Promise<StatsResponse> => {
-  const cacheable = isUnfilteredBase(filter) && isDateRangeUnbounded(dateRange);
+  const cacheable =
+    isUnfilteredBase(filter) &&
+    isDateRangeUnbounded(dateRange) &&
+    isNumericRangesUnbounded(numericRanges);
   const key = globalCacheKey(lang);
   if (cacheable) {
     const cached = cacheGet<StatsResponse>(key);
@@ -165,9 +199,14 @@ const getGlobalStats = async (
     ...p,
     galleries: galleriesByPhoto.get(p.id) ?? [],
   })) as Photo[];
-  const ranged = isDateRangeUnbounded(dateRange)
-    ? decorated
-    : decorated.filter((p) => matchesDateRange(dateRange, p));
+  const ranged =
+    isDateRangeUnbounded(dateRange) && isNumericRangesUnbounded(numericRanges)
+      ? decorated
+      : decorated.filter(
+        (p) =>
+          matchesDateRange(dateRange, p) &&
+            matchesNumericRanges(numericRanges, p)
+      );
   const stats = computeStats(ranged, filter);
   if (cacheable) cacheSet(key, stats);
   return stats;
