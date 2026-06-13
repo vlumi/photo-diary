@@ -6,7 +6,7 @@ Live examples: [dailybw.misaki.fi](https://dailybw.misaki.fi) and [papusama.misa
 
 Key features include:
 
-- Calendar-based views (year, month, day, photo)
+- Calendar-based views (year, month, photo)
   - Including map from embedded GPS information
 - Comprehensive photo statistics (time, gear, exposure settings, etc.)
 - Fast browsing — per-view fetch narrowed by the active filter, cached client-side so filter toggles update in place
@@ -44,7 +44,7 @@ The three pieces communicate via the shared filesystem and SQLite DB rather than
 Quickstart for a single personal instance. For the full production layout (multi-version code under `/opt/`, per-instance dirs under `/var/`, nginx vhosts, atomic upgrades, backup) see [Multi-Instance Deployment](#multi-instance-deployment) below; for an in-repo dev setup without an instance dir at all, see [Dev Mode](#dev-mode).
 
 1. **Prerequisites + install.** Node.js 22 or newer (npm 10+ recommended for workspaces) and [pm2](https://pm2.keymetrics.io/) installed globally (`npm install -g pm2`) — the per-instance `start-prod.sh` scripts and the `bin/instance.ts` upgrade / `--cycle` flows shell out to it. From the repo root, `npm run setup` installs every workspace ([server](server), [converter](converter), [react-app](react-app)) and builds the frontend into [server](server)/`build/`.
-2. **Bootstrap the instance directory** with [`bin/instance.ts`](bin/instance.ts). It creates the dir tree (`photos/{inbox,original,display,thumbnail}/`), generates `.env` with a fresh random `SECRET`, links `code` to this checkout, and surfaces operator shortcuts at `<instance>/bin/{photo,gallery,user,access}.ts`:
+2. **Bootstrap the instance directory** with [`bin/instance.ts`](bin/instance.ts). It creates the dir tree (`photos/{inbox,original,display,thumbnail}/`), generates `.env` with a fresh random `SECRET`, links `code` to this checkout, and surfaces operator shortcuts at `<instance>/bin/{photo,photo-rename,photo-geocode,gallery,user,group,meta}.ts`:
 
    ```sh
    ./bin/instance.ts <name> --base <parent-dir>
@@ -63,8 +63,8 @@ Quickstart for a single personal instance. For the full production layout (multi
 
    ```sh
    ./bin/user.ts passwd <user> <password>
+   ./bin/user.ts make-admin <user>
    ./bin/gallery.ts <gallery-id> --title "<Title>"
-   ./bin/access.ts level <user> :all admin
    ```
 
 5. **Set the instance `cdn`** — the public URL that serves `display/`, `thumbnail/`, and `gallery-icons/` (typically the same nginx host):
@@ -338,17 +338,17 @@ The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` sn
 | Converter logs "Invalid photo-repository directory structure" | The `photos/{inbox,original,display,thumbnail}/` subdirs aren't all present — re-run `./bin/instance.ts <name>` (or `bin/instance.ts <name>` from the code root) to recreate any missing ones (idempotent). |
 | `no such table: …` after upgrade | A migration didn't apply. Check `sqlite3 db.sqlite3 "SELECT value FROM meta WHERE key='schema_version'"` and the server log on startup for "Applying N DB migration(s)". |
 | Frontend loads but `/api/v1/galleries` 401s | The user's token expired or the `SECRET` changed across restarts — login again. |
-| Map widget missing where you expected it | The `hide_map` cascade is hiding it; check with `./bin/access.ts list` (filter to `--user <id>` or `--gallery <id>` if needed) and the privacy doc in the server README. |
+| Map widget missing where you expected it | The `hide_map` cascade is hiding it; inspect a user's resolved grants with `./bin/user.ts access <user>` and see the privacy doc in the server README. |
 
 ## Features
 
 - Photos are segmented into galleries
   - Each photo can be in any number of galleries
-  - Single level – no nesting
+  - Real galleries are a flat namespace — photo membership is direct, not nested
   - One gallery view at a time
-  - Special galleries for more abstract concepts
-    - :all includes all photos
-    - :public includes all photos added to galleries
+  - Virtual galleries compose existing galleries without copying photo rows
+    - Saved-filter galleries — a filter snapshot baked onto a parent gallery, addressed at `/m/g/<id>` like any other gallery
+    - Hybrid galleries — union of one or more real galleries' photos, resolved live at read time (sources must be real galleries; chained virtual sources aren't supported)
   - Hostname-based default gallery selection — and `Host`-bound admin/read scope: a request to a hostname matching one or more `gallery.hostname` patterns is narrowed to that set, both reads and admin writes (cross-gallery work is unreachable from a virtual host)
 - SPA view
   - Fast transition between views — per-view server fetch, TanStack Query cache, in-place refresh on filter toggles
@@ -358,7 +358,6 @@ The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` sn
     - Pre-load previous/next photo
   - Year view – Calendar with heat-mapped days
   - Month view – Thumbnails grouped by date
-  - Day view – Thumbnails
   - Single photo view – Maximize to visible space, with photo properties
 - Statistics view
   - General statistics
@@ -379,17 +378,8 @@ The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` sn
 - Authorization
   - Restricted access to galleries and functionality
     - No access restrictions planned for the actual photo content, which may be in a CDN
-  - Multiple access levels
-    - No access
-    - View access
-    - Admin access
-  - Access levels granted by scope
-    - Global scope (:all)
-    - Public scope (:public)
-    - Gallery scope
-  - Default access level
-    - Through guest user (:guest), inherited by all users
-    - Inheritance may be overridden by broadening or narrowing access
+  - Per-gallery viewer / editor grants on users and groups; `user.is_admin` for instance-wide admin
+  - Default access via the `:guest` user — every user inherits its grants, and individual users can broaden or narrow that baseline
 
 ### Beta features
 

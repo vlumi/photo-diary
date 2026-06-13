@@ -4,13 +4,13 @@ Guidance for AI coding agents (Claude Code, Cursor, Cline, Aider, …) and human
 
 ## Layout
 
-Monorepo with two long-lived subtrees plus a helper:
+Monorepo with three workspaces:
 
-- `react-app/` — front-end SPA. React 19, TypeScript, Vite, Emotion (styled), TanStack Query, react-i18next, vitest.
-- `server/` — Fastify backend. TypeScript, SQLite by default, vitest + supertest.
-- `converter/` — back-end worker that pre-processes incoming photos. Less active.
+- `react-app/` — front-end SPA. React 19, TypeScript, Vite, Emotion (styled), TanStack Query, Zustand, react-i18next, vitest.
+- `server/` — Fastify backend. TypeScript, `@fastify/type-provider-typebox`, SQLite by default, vitest + supertest.
+- `converter/` — back-end worker that pre-processes incoming photos (sharp, EXIF extraction). Less active.
 
-Top-level `bin/` has operator scripts (`instance.ts`, `gallery.ts`, `user.ts`, `access.ts`). Per-instance dirs (created by `bin/instance.ts`) live outside the repo at `<base>/<name>/`.
+Top-level `bin/` has the bootstrap script `instance.ts` (creates / doctors / upgrades a per-instance dir) and the `sync-versions.mjs` helper used by the release flow. Per-instance dirs (created by `bin/instance.ts`) live outside the repo at `<base>/<name>/`; their own `bin/` carries symlinks back into `server/bin/` (`photo`, `photo-rename`, `photo-geocode`, `gallery`, `user`, `group`, `meta`).
 
 ## Commands
 
@@ -19,11 +19,12 @@ Run inside the relevant subtree.
 | Subtree | Typecheck | Tests | Build | Dev |
 |---|---|---|---|---|
 | `react-app/` | `npm run typecheck` | `npm test` | `npm run build` | `npm run dev` (Vite, proxies `/api/*`) |
-| `server/` | `npm run typecheck` | `npm test` | `npm run build` | `npm run dev` (tsx watch, SQLite at `server/db.sqlite3`) |
+| `server/` | `npm run typecheck` | `npm test` | (no build — tsx runtime) | `npm run dev` (tsx watch, SQLite at `server/db.sqlite3`) |
+| `converter/` | `npm run typecheck` | `npm test` | (no build — tsx runtime) | `npm run dev` |
 
 Server tests use `DB_DRIVER=dummy` via the npm script, so no SQLite file is touched.
 
-Run `npm test` and `npm run typecheck` before pushing. The build step rolls up bundle sizes — worth running for visual changes that might touch chunking.
+Run `npm test`, `npm run typecheck`, and `npm run lint` (all three subtrees) before pushing — CI runs them all. The react-app build step rolls up bundle sizes — worth running for visual changes that might touch chunking.
 
 ## Cutting a release
 
@@ -33,8 +34,8 @@ The release step touches several files that need to stay in lockstep. Miss one a
 2. **Branch.** `git checkout -b release/<version>` off main.
 3. **Bump `version`** in all four `package.json` files: root, `server/`, `react-app/`, `converter/`. Same value everywhere.
 4. **Regenerate the OpenAPI dump.** `cd server && npm run docs:dump` writes `server/openapi.json` with `info.version` from `server/package.json`. Then `cd ../react-app && npm run api:codegen` regenerates `src/lib/api-schema.ts` from the new dump. Both must be committed — CI rejects a version bump without the matching regen.
-5. **Stamp CHANGELOG.** Rename `[Unreleased]` to `[<version>] - <YYYY-MM-DD>`; add a fresh empty `[Unreleased]` heading above it.
-6. **README.** Bump the install / upgrade `0.x.y` examples to the new version (search for the prior version string). Move the released milestone's bullet out of the Roadmap section into Version History with a one-paragraph release summary. Update the "what's in flight after 0.x" footer pointer.
+5. **Stamp CHANGELOG.** Rename `[Unreleased]` to `[<version>] - <YYYY-MM-DD>`; add a fresh empty `[Unreleased]` heading above it. Add a diff-link entry at the footer: `[<version>]: https://github.com/vlumi/photo-diary/compare/v<prev>...v<version>`.
+6. **README.** Bump the install / upgrade `0.x.y` examples to the new version (search for the prior version string). Move the released milestone's bullet out of the Roadmap section into Version History with a one-line release theme. Update the "what's in flight after 0.x" footer pointer.
 7. **Validate.** `npm test`, `npm run typecheck`, `npm run lint` across all three subtrees.
 8. **Open the release PR.** Title `Release <version>`. Body summarises what shipped + any milestone reorg.
 9. **After merge, tag.** `git checkout main && git pull && git tag -a v<version> -m "Release <version>" && git push origin v<version>`. GitHub auto-generates the tarball that `bin/instance.ts` examples reference.
@@ -47,7 +48,7 @@ The release step touches several files that need to stay in lockstep. Miss one a
 - **PR body paragraphs are single long lines.** No mid-paragraph hard wraps. GitHub re-flows on render.
 - **Commit messages**: short imperative title, body that explains *why* (the *what* is in the diff). Co-author trailer is fine.
 - **No PR/issue references in source comments.** They leak into OpenAPI descriptions, build artefacts, and rot over time. Put them in the commit message and PR body where they belong.
-- **Trust but verify.** If the user reports a bug, reproduce / read the failing code path before patching. Several recent fixes (map centering arc, Backdrop box-sizing) went through multiple wrong attempts because the symptom didn't match the actual root cause.
+- **Trust but verify.** If the user reports a bug, reproduce / read the failing code path before patching. Several recent fixes (map centering arc, Backdrop box-sizing, filter modal viewport overflow) went through multiple wrong attempts because the symptom didn't match the actual root cause.
 
 ## Code conventions
 
@@ -62,20 +63,23 @@ The release step touches several files that need to stay in lockstep. Miss one a
 
 ### Front end
 
-- `Gallery/index.tsx` is the router/dispatch component. It picks Year / Month / Photo / Stats / Empty based on URL params (`year`, `month`, `day`, `photoId`).
+- `Gallery/index.tsx` is the router/dispatch component. It picks Year / Month / Photo / Stats / Empty based on URL params (`year`, `month`, `day`, `photoId`). `Day` is not a separate view — the day slice is rendered inside Month.
 - **Photo view is a modal** rendered on top of its parent Month: when the URL has a `photoId`, `Gallery/index.tsx` mounts Month + Photo together as siblings. The Photo modal lives in `Gallery/Photo/index.tsx` with a `<Backdrop>` (dark scrim, `position: fixed; inset: 0; height: 100dvh; box-sizing: border-box; z-index: 1000`) wrapping a contained `<Frame>` (`max-width: 1400px`, rounded, drop shadow).
-- **Floating buttons** over the modal — close (`top: 8 right: 8`), fullscreen (`top: 58 left: 8` — below Navigation), info toggle (`bottom: 16 right: 16`) — all share `<FloatingButton>` style.
+- **Floating buttons** over the photo modal — close (`top: 8 right: 8`), fullscreen (`top: 58 left: 8` — below Navigation), info toggle (`bottom: 16 right: 16`) — all share `<FloatingButton>` style.
 - **Metadata** lives in `<MetadataPanel>` at the photo's bottom-right corner. Open by default on desktop, closed on mobile. Map inside is rendered only when the panel is open.
-- **Stats logic** is in `react-app/src/lib/stats.tsx`. `collectTopics` builds the per-category data; `StatsCategory.valueSortable` / `valueSortByLabel` mark which categories show the "By value / Top" toggle in their expanded modal.
+- **Filter widget** lives in `Gallery/Filters/`. `<Strip>` is the inline italic "Category: value" chunk row mounted in every Title; `<Modal>` is the centered overlay containing `<Builder>`; `<Builder>` is prop-driven (`filters`, `setFilters`, `dateRange`, `setDateRange`, `numericRanges`, `setNumericRange`, `defaultDateRange`) so the public viewer wires it to `useFiltersStore` while the saved-filter admin form wires it to local form state. Filter state lives in `stores/filters.ts`; modal open + sub-modal + landed-category live in `stores/filter-modal.ts`. `useWireNumericRanges()` returns a memoised, anchor-stripped wire shape — every server query keys + bodies the wire shape, not the raw store value.
+- **Stats logic** is in `react-app/src/lib/stats.tsx`. `collectTopics` builds the per-category data; `StatsCategory.valueSortable` / `valueSortByLabel` mark which categories show the "By value / Top" toggle in their expanded modal. `Stats/EvolutionChart.tsx` is the stacked-area trend chart with the month / year granularity toggle (`useEvolutionGranularityStore`).
 - **Title bar breadcrumb** (`Gallery/Title.tsx`) shows `🏠 › Gallery › 2024 › March › #1234`. The current view's crumb is bold and non-interactive; everything else is a link.
 - **`MapContainer`** is lazy-loaded via `MapContainer.lazy.tsx`. Callers pass an explicit `height` prop — the default 400px doesn't match the metadata panel's 160px clip, which is exactly the kind of mismatch that caused the "map north of pin" debug arc.
-- **`useKeyPress`** registers a `keydown` listener on `window` — when two mounted components handle the same key (Photo modal + underlying Month), both fire. Use a capture-phase listener with `stopImmediatePropagation` when one needs to win.
+- **Admin surface** lives under `Manage/` (`/m/*` routes), gated by `user.is_admin`. Lazy-loaded out of the main bundle. Notable: `GalleryEdit.tsx` owns the form state, `GallerySourcesSection.tsx` edits hybrid-gallery sources, `VirtualGalleryFilterSection.tsx` owns the saved-filter editor on a virtual gallery's own edit page, `SavedFiltersSection.tsx` is the parent gallery's directory of child virtual galleries.
 
 ### Server
 
-- Fastify routes under `server/src/routes/`, models under `server/src/models/`, typed errors in the route layer (don't return plain strings).
-- Pluggable DB via `DB_DRIVER` env (`sqlite` default, `dummy` for tests). Driver implementations in `server/src/db/`.
-- Access control: gallery IDs include slug pseudo-galleries `:all`, `:public`, `:private`. The `access` table grants per-user levels (`viewer`, `editor`, `admin`).
+- Fastify routes under `server/controllers/*-v1.ts`, models under `server/models/`, typed errors in `server/lib/errors.ts` (don't return plain strings). Layout is flat — no `src/` subdirectory.
+- Pluggable DB via `DB_DRIVER` env (`sqlite3` for prod, `dummy` for tests). Driver implementations in `server/db/sqlite3/` and `server/db/dummy/`; the public surface is `server/db/index.ts`.
+- **Access control.** Two columns carry the model: `user.is_admin` (global admin bypasses every per-gallery check) and `is_editor` on `user_gallery` / `group_gallery` (gallery-editor tier). A `user_gallery` or `group_gallery` row with `is_editor=0` is a view-only grant. The effective access is the union of direct rows, group-derived rows, and `:guest`'s rows. The wildcard target `:all` matches every real gallery; the only live pseudo-gallery sentinel.
+- **Gallery types.** `gallery.type` is `real` (default), `hybrid` (union of source galleries via `virtual_gallery_source` — sources must be real, no chained virtuals), or `saved_filter` (one source + a stored `{filter, dateRange, numericRanges}` baseline in `gallery_saved_filter`). The driver's `resolveGalleryRef` does the dispatch — every read path (load photos / counts / neighbors / filter values) routes through it.
+- **Filter wire shape.** `filter` (discrete FilterShape), `dateRange`, and `numericRanges` are the three predicates threaded through every read body. Evaluated by `matchesFilter` / `matchesDateRange` / `matchesNumericRanges` in `server/lib/photo-filter-eval.ts`. Saved-filter galleries apply the same predicates as a baseline before the request-side ones.
 - JWT auth via `jose`; sessions are 90 days. Rotating a user's `secret` invalidates all their tokens.
 
 ## Footguns (from recent debug arcs)
@@ -83,9 +87,11 @@ The release step touches several files that need to stay in lockstep. Miss one a
 - **Backticks inside Emotion `css\`\`` template literals** close the string prematurely. Use plain CSS comments (`/* ... */`) without backtick references.
 - **`position: fixed; inset: 0` with explicit `height: 100dvh` + `padding`** needs `box-sizing: border-box` — otherwise the explicit height + padding stack and the element extends past viewport (caused the InfoButton "4px below screen" bug).
 - **react-leaflet's `<MapContainer>` props (`center`, `zoom`, `bounds`) are initial-setup-only.** Subsequent prop changes don't move the view. Use `useMap()` + `setView`/`fitBounds` (with `animate: false` to avoid panning surprises).
-- **`useKeyPress` fires per registration on `window`.** If multiple mounted components handle the same key, both fire. Capture phase + `stopImmediatePropagation` is the escape hatch.
+- **`useKeyPress` fires per registration on `window`.** If multiple mounted components handle the same key, both fire. Capture phase + `stopImmediatePropagation` is the escape hatch — and when both listeners use capture phase, the earlier-registered one wins, so a stacked modal needs an explicit "is the inner modal open" check to defer (see `FilterModal` ↔ Builder's `subModalKey`).
 - **Locking `document.body.style.overflow = "hidden"`** removes the scrollbar gutter — content under the lock reflows ~15px wider. `html { scrollbar-gutter: stable; }` reserves the space.
-- **Server tests need every supertest call awaited.** Unawaited requests linger past the test, race with `afterAll(close)`, and surface as intermittent `ECONNRESET` in CI.
+- **Modal content that intrinsically demands width** (a long unbreakable chip label, an inline-flex value chunk) pushes flex items past `max-width: 100%` because `min-width: auto` is the default. Cap modal `<Frame>` with `max-width: min(<px>, calc(100vw - 40px))`, set `overflow-x: hidden` on the frame, and use `overflow-wrap: anywhere` + `white-space: normal` + `display: inline-block` on chips so the text actually wraps.
+- **Server tests need every supertest call awaited.** Unawaited requests linger past the test, race with `afterAll(close)`, and surface as intermittent `ECONNRESET` / "Parse Error: Expected HTTP/, RTSP/ or ICE/" in CI.
+- **TypeBox schemas with `additionalProperties: false`** reject unknown fields. Client-only state (like the filter widget's `numericRanges[cat].anchor`) must be stripped before serialising to the wire — see `toWireNumericRanges`.
 
 ## When in doubt
 
