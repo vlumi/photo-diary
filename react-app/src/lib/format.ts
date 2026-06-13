@@ -333,8 +333,15 @@ const buildCityLabels = (
       continue;
     }
     for (const p of group) {
-      const qualifier =
-        p.state || (p.country ? formatCountry(p.country) : "");
+      // Render the qualifier as a localised subdivision name (or
+      // country name when state is missing) rather than the raw
+      // `JP-13` code that came off the photo row — the latter
+      // leaks code-shaped strings into the UI.
+      const qualifier = p.state
+        ? subdivisionName(lang, p.state)
+        : p.country
+          ? formatCountry(p.country)
+          : "";
       labels[p.key] = qualifier ? `${p.display}, ${qualifier}` : p.display;
     }
   }
