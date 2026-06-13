@@ -14,11 +14,22 @@ import EpochAge from "../Gallery/EpochAge";
 import EpochDayIndex from "../Gallery/EpochDayIndex";
 import GalleryModel from "../../models/GalleryModel";
 import config from "../../lib/config";
+import filter, { type Filters as FiltersT, type ServerFilters } from "../../lib/filter";
 import galleriesService from "../../services/galleries";
+import savedFiltersService, {
+  type SavedFilterDefinition,
+} from "../../services/saved-filters";
 import { useUserStore } from "../../stores";
+import {
+  toWireNumericRanges,
+  type DateRange,
+  type NumericRange,
+  type NumericRanges,
+} from "../../stores/filters";
 import { languageNameIn } from "./LocalizedInputs";
 import GalleryTypeIcon from "./GalleryTypeIcon";
 import SavedFiltersSection from "./SavedFiltersSection";
+import VirtualGalleryFilterSection from "./VirtualGalleryFilterSection";
 import GalleryFormFields, {
   EMPTY_FORM,
   fromGalleryData,
@@ -229,6 +240,19 @@ interface GalleryData {
   defaultLanguage?: string;
   type?: "real" | "hybrid" | "saved_filter";
   photos?: Array<{ id: string }>;
+  // Decorated by the server for `saved_filter` galleries: which
+  // gallery owns the saved filter and its stored `{filter, dateRange}`
+  // envelope. Used by `<VirtualGalleryFilterSection>` to surface the
+  // parent and mount the shared filter builder.
+  savedFilter?: {
+    sourceGalleryId: string;
+    definition?: {
+      filter?: Record<string, unknown>;
+      dateRange?: { from?: string; to?: string };
+      numericRanges?: Record<string, { min?: number; max?: number }>;
+      [key: string]: unknown;
+    };
+  };
 }
 
 interface ParsedIconSource {
@@ -275,6 +299,70 @@ const GalleryEdit = (): React.ReactElement => {
   const [form, setForm] = React.useState<FormState>(EMPTY_FORM);
   const [original, setOriginal] = React.useState<FormState>(EMPTY_FORM);
   const [saveError, setSaveError] = React.useState<string | null>(null);
+
+  // Saved-filter state for virtual galleries. Lives alongside the
+  // gallery form so one Save button covers both surfaces in edit
+  // mode. Initialised from `gallery.savedFilter.definition` and
+  // serialised back through `savedFiltersService.update` when
+  // anything changed. Real / hybrid galleries leave these at the
+  // defaults; nothing reads them.
+  const [filters, setFilters] = React.useState<FiltersT>({});
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
+    undefined
+  );
+  const [numericRanges, setNumericRanges] = React.useState<NumericRanges>({});
+  const [originalDefinition, setOriginalDefinition] =
+    React.useState<SavedFilterDefinition>({});
+  const setNumericRange = (
+    category: string,
+    range: NumericRange | undefined
+  ) =>
+    setNumericRanges((prev) => {
+      const next = { ...prev };
+      if (range === undefined) delete next[category];
+      else next[category] = range;
+      return next;
+    });
+  const definitionFromState = (): SavedFilterDefinition => {
+    const def: SavedFilterDefinition = {};
+    const server = filter.toServerFilters(filters);
+    if (Object.keys(server).length > 0) def.filter = server;
+    if (dateRange && (dateRange.from || dateRange.to)) {
+      def.dateRange = {};
+      if (dateRange.from) def.dateRange.from = dateRange.from;
+      if (dateRange.to) def.dateRange.to = dateRange.to;
+    }
+    const wire = toWireNumericRanges(numericRanges);
+    if (Object.keys(wire).length > 0) def.numericRanges = wire;
+    return def;
+  };
+  const definitionDirty = (): boolean => {
+    const next = definitionFromState();
+    const orig: SavedFilterDefinition = {};
+    if (originalDefinition.filter) orig.filter = originalDefinition.filter;
+    if (
+      originalDefinition.dateRange &&
+      (originalDefinition.dateRange.from || originalDefinition.dateRange.to)
+    ) {
+      orig.dateRange = originalDefinition.dateRange;
+    }
+    if (
+      originalDefinition.numericRanges &&
+      Object.keys(originalDefinition.numericRanges).length > 0
+    ) {
+      orig.numericRanges = originalDefinition.numericRanges;
+    }
+    return JSON.stringify(next) !== JSON.stringify(orig);
+  };
+  const resetFilterStateFromDefinition = (def: SavedFilterDefinition) => {
+    setFilters(filter.fromServerFilters(def.filter as ServerFilters | undefined));
+    setDateRange(
+      def.dateRange && (def.dateRange.from || def.dateRange.to)
+        ? def.dateRange
+        : undefined
+    );
+    setNumericRanges(def.numericRanges ?? {});
+  };
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
   // `?openIcon=<photoId>` arrives from the "Set as gallery icon"
   // link on the photo view; it auto-opens the cropper on that
@@ -304,17 +392,38 @@ const GalleryEdit = (): React.ReactElement => {
   }, []);
 
   React.useEffect(() => {
-    if (data) {
-      const next = fromGalleryData(data as GalleryData);
-      setForm(next);
-      setOriginal(next);
-      setSaveError(null);
-    }
+    if (!data) return;
+    const next = fromGalleryData(data as GalleryData);
+    setForm(next);
+    setOriginal(next);
+    setSaveError(null);
+    const sf = (data as GalleryData).savedFilter;
+    const def = (sf?.definition ?? {}) as SavedFilterDefinition;
+    setOriginalDefinition(def);
+    resetFilterStateFromDefinition(def);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   const updateMutation = useMutation({
-    mutationFn: () =>
-      galleriesService.update(galleryId, toPatch(form, original, isAdmin)),
+    mutationFn: async () => {
+      // Gallery fields first — id-bearing patch. Empty patch (no
+      // gallery-side changes) still gets sent; server treats it as
+      // a no-op.
+      await galleriesService.update(
+        galleryId,
+        toPatch(form, original, isAdmin)
+      );
+      // Saved-filter definition second, only for virtual galleries
+      // whose filter / dateRange / numericRanges actually changed.
+      // Same Save button covers both surfaces, no second commit
+      // step for the operator.
+      const sf = (data as GalleryData | undefined)?.savedFilter;
+      if (sf && definitionDirty()) {
+        await savedFiltersService.update(sf.sourceGalleryId, galleryId, {
+          definition: definitionFromState(),
+        });
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gallery", galleryId] });
       queryClient.invalidateQueries({ queryKey: ["manage-galleries"] });
@@ -361,9 +470,11 @@ const GalleryEdit = (): React.ReactElement => {
     setEditing(true);
   };
   const handleCancelEdit = (): void => {
-    // Discard pending edits — reset the form back to the
-    // server's current value before flipping out of edit mode.
+    // Discard pending edits — reset both the gallery form and the
+    // saved-filter state back to the server's current value before
+    // flipping out of edit mode.
     if (data) setForm(original);
+    resetFilterStateFromDefinition(originalDefinition);
     setSaveError(null);
     setEditing(false);
   };
@@ -519,6 +630,19 @@ const GalleryEdit = (): React.ReactElement => {
             }}
             hostnameEditable={isAdmin}
           />
+          {gallery.type === "saved_filter" && gallery.savedFilter ? (
+            <VirtualGalleryFilterSection
+              galleryId={galleryId}
+              sourceGalleryId={gallery.savedFilter.sourceGalleryId}
+              editing
+              filters={filters}
+              setFilters={setFilters}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+              numericRanges={numericRanges}
+              setNumericRange={setNumericRange}
+            />
+          ) : null}
           <Footer>
             <span />
             <FooterRight>
@@ -572,11 +696,18 @@ const GalleryEdit = (): React.ReactElement => {
             <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
           </Summary>
           {(gallery.type ?? "real") === "real" && (
-            <SavedFiltersSection
-              galleryId={galleryId}
-              defaultLanguage={gallery.defaultLanguage}
-            />
+            <SavedFiltersSection galleryId={galleryId} />
           )}
+          {gallery.type === "saved_filter" && gallery.savedFilter ? (
+            <VirtualGalleryFilterSection
+              galleryId={galleryId}
+              sourceGalleryId={gallery.savedFilter.sourceGalleryId}
+              editing={false}
+              filters={filters}
+              dateRange={dateRange}
+              numericRanges={numericRanges}
+            />
+          ) : null}
           <Footer>
             {isAdmin && (
               <ButtonDanger
