@@ -718,6 +718,18 @@ const Builder = ({
       <Card key={`card:${topic}:${category}`} active={active.length > 0}>
         <CardHeader>
           <CardTitle>{t(`stats-category-${category}`)}</CardTitle>
+          {active.length > 0 ? (
+            <ClearButton
+              type="button"
+              onClick={() =>
+                setFilters(filter.removeCategory(filters, topic, category))
+              }
+              aria-label={String(t("filters-clear-category"))}
+              title={String(t("filters-clear-category"))}
+            >
+              <BsXLg />
+            </ClearButton>
+          ) : null}
         </CardHeader>
         {allEntries.length > TOP_N || active.length > 0 ? (
           <SearchInput

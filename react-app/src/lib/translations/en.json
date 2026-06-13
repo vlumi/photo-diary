@@ -175,6 +175,7 @@
     "filters-numeric-range-max": "≤",
     "filters-numeric-range-empty": "any value",
     "filters-numeric-range-clear": "Clear range",
+    "filters-clear-category": "Clear",
     "filters-numeric-range-tip-clear": "Tap to clear",
     "filters-numeric-range-tip-swap": "Anchor — tap to swap the fixed end",
     "manage-saved-filter-section-title": "Virtual galleries",

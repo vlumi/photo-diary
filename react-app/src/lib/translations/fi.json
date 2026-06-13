@@ -175,6 +175,7 @@
     "filters-numeric-range-max": "≤",
     "filters-numeric-range-empty": "mikä tahansa arvo",
     "filters-numeric-range-clear": "Tyhjennä alue",
+    "filters-clear-category": "Tyhjennä",
     "filters-numeric-range-tip-clear": "Napauta tyhjentääksesi",
     "filters-numeric-range-tip-swap": "Ankkuri — napauta vaihtaaksesi kiinteää päätä",
     "manage-saved-filter-section-title": "Virtuaaligalleriat",
