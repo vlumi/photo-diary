@@ -418,6 +418,28 @@ const Builder = ({
   const subModalKey = useFilterModalStore((s) => s.subModalKey);
   const openSubModal = useFilterModalStore((s) => s.openSubModal);
   const closeSubModal = useFilterModalStore((s) => s.closeSubModal);
+  const highlightCategory = useFilterModalStore((s) => s.highlightCategory);
+  const clearHighlight = useFilterModalStore((s) => s.clearHighlight);
+  // When the strip's value chunk was clicked to land us here, scroll
+  // that category's card into view and expand its topic if it
+  // happened to be collapsed. Clears the highlight so a later reopen
+  // of the modal doesn't re-jump.
+  React.useEffect(() => {
+    if (!highlightCategory) return;
+    const owningTopic = filter
+      .topics()
+      .find((topic) => filter.categories(topic).includes(highlightCategory));
+    if (owningTopic) {
+      setCollapsed((prev) => ({ ...prev, [owningTopic]: false }));
+    }
+    const el = document.querySelector(
+      `[data-card-category="${CSS.escape(highlightCategory)}"]`
+    ) as HTMLElement | null;
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    clearHighlight();
+  }, [highlightCategory, clearHighlight]);
   const setSubModalKey = (key: string | null) => {
     if (key === null) closeSubModal();
     else openSubModal(key);
@@ -580,7 +602,11 @@ const Builder = ({
       });
     };
     return (
-      <Card key={`card:${topic}:${category}`} active={range !== undefined}>
+      <Card
+        key={`card:${topic}:${category}`}
+        active={range !== undefined}
+        data-card-category={category}
+      >
         <CardHeader>
           <CardTitle>{t(`stats-category-${category}`)}</CardTitle>
           {range !== undefined ? (
@@ -649,7 +675,11 @@ const Builder = ({
   const renderDateRangeCard = () => {
     const range: DateRange | undefined = dateRange;
     return (
-      <Card key="card:time:date-range" active={range !== undefined}>
+      <Card
+        key="card:time:date-range"
+        active={range !== undefined}
+        data-card-category="date-range"
+      >
         <CardHeader>
           <CardTitle>{t("stats-category-date-range")}</CardTitle>
           {range !== undefined ? (
@@ -754,7 +784,11 @@ const Builder = ({
     }
 
     return (
-      <Card key={`card:${topic}:${category}`} active={active.length > 0}>
+      <Card
+        key={`card:${topic}:${category}`}
+        active={active.length > 0}
+        data-card-category={category}
+      >
         <CardHeader>
           <CardTitle>{t(`stats-category-${category}`)}</CardTitle>
           {active.length > 0 ? (
