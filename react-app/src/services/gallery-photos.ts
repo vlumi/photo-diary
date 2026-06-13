@@ -1,7 +1,7 @@
 import api, { unwrap } from "../lib/api";
 
 import type { ServerFilters } from "../lib/filter";
-import type { DateRange } from "../stores/filters";
+import type { DateRange, NumericRanges } from "../stores/filters";
 
 const get = async (galleryId: string, lang?: string) =>
   unwrap(
@@ -13,6 +13,7 @@ const get = async (galleryId: string, lang?: string) =>
 interface QueryOpts {
   filter?: ServerFilters;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   year?: number;
   month?: number;
   day?: number;
@@ -31,7 +32,12 @@ const query = async (galleryId: string, opts: QueryOpts = {}) =>
 // Per-day photo counts for the Year heatmap (#406).
 const getCounts = async (
   galleryId: string,
-  opts: { filter?: ServerFilters; dateRange?: DateRange; year?: number } = {}
+  opts: {
+    filter?: ServerFilters;
+    dateRange?: DateRange;
+    numericRanges?: NumericRanges;
+    year?: number;
+  } = {}
 ): Promise<Record<string, number>> =>
   unwrap(
     api.POST("/api/v1/gallery-photos/{galleryId}/counts", {
@@ -48,7 +54,12 @@ const getCounts = async (
 const getNeighbors = async (
   galleryId: string,
   photoId: string,
-  opts: { filter?: ServerFilters; dateRange?: DateRange; lang?: string } = {},
+  opts: {
+    filter?: ServerFilters;
+    dateRange?: DateRange;
+    numericRanges?: NumericRanges;
+    lang?: string;
+  } = {},
   signal?: AbortSignal
 ) =>
   unwrap(
@@ -67,6 +78,7 @@ const getNeighbors = async (
 interface FilterValuesOpts {
   filter?: ServerFilters;
   dateRange?: DateRange;
+  numericRanges?: NumericRanges;
   lang?: string;
 }
 const getFilterValues = async (

@@ -12,6 +12,7 @@ import type theme from "../../../lib/theme";
 import {
   useFiltersStore,
   useEvolutionGranularityStore,
+  useWireNumericRanges,
 } from "../../../stores";
 
 type ActiveTheme = ReturnType<(typeof theme)["setTheme"]>;
@@ -179,6 +180,7 @@ const EvolutionChart = ({
   );
   const filters = useFiltersStore((s) => s.filters);
   const dateRange = useFiltersStore((s) => s.dateRange);
+  const wireNumericRanges = useWireNumericRanges();
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -191,6 +193,7 @@ const EvolutionChart = ({
       serverCategory,
       serverFilters,
       dateRange,
+      wireNumericRanges,
     ],
     queryFn: () =>
       statsService.getGalleryEvolution(
@@ -198,7 +201,8 @@ const EvolutionChart = ({
         serverCategory,
         serverFilters,
         undefined,
-        dateRange
+        dateRange,
+        wireNumericRanges
       ),
     enabled: !!serverCategory,
     placeholderData: keepPreviousData,

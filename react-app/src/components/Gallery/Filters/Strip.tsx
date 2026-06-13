@@ -4,9 +4,13 @@ import { useTranslation } from "react-i18next";
 import { BsFillFunnelFill, BsXLg } from "react-icons/bs";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
+import format from "../../../lib/format";
 import stats, { type UniqueValues } from "../../../lib/stats";
 import { useFiltersStore, useFilterModalStore } from "../../../stores";
-import { type DateRange } from "../../../stores/filters";
+import {
+  type DateRange,
+  type NumericRange,
+} from "../../../stores/filters";
 import renderFilterValue from "./renderFilterValue";
 
 interface CountryData {
@@ -111,6 +115,24 @@ const dateRangeLabel = (range: DateRange, t: ReturnType<typeof useTranslation>["
   return parts.join(" ");
 };
 
+const numericRangeLabel = (
+  range: NumericRange,
+  category: string,
+  formatValue: (value: number) => string,
+  t: ReturnType<typeof useTranslation>["t"]
+): string => {
+  void category;
+  const { min, max } = range;
+  if (min === undefined && max === undefined) {
+    return String(t("filters-numeric-range-empty"));
+  }
+  if (min !== undefined && max !== undefined) {
+    return `${formatValue(min)}–${formatValue(max)}`;
+  }
+  if (min !== undefined) return `≥ ${formatValue(min)}`;
+  return `≤ ${formatValue(max as number)}`;
+};
+
 const lookupValueLabel = (
   uniqueValues: UniqueValues,
   topic: string,
@@ -131,8 +153,11 @@ const FilterStrip = ({
   const { t } = useTranslation();
   const filters = useFiltersStore((s) => s.filters);
   const dateRange = useFiltersStore((s) => s.dateRange);
+  const numericRanges = useFiltersStore((s) => s.numericRanges);
   const setFilters = useFiltersStore((s) => s.setFilters);
   const setDateRange = useFiltersStore((s) => s.setDateRange);
+  const setNumericRange = useFiltersStore((s) => s.setNumericRange);
+  const setNumericRanges = useFiltersStore((s) => s.setNumericRanges);
   const openModal = useFilterModalStore((s) => s.open);
 
   type ActiveChunk =
@@ -142,18 +167,24 @@ const FilterStrip = ({
         category: string;
         values: string[];
       }
-    | { kind: "date-range" };
+    | { kind: "date-range" }
+    | { kind: "numeric-range"; category: string; range: NumericRange };
 
   const chunks: ActiveChunk[] = [];
   for (const topic of filter.topics()) {
     const topicFilters = (filters as FiltersT)[topic];
-    if (!topicFilters) continue;
     for (const category of filter.categories(topic)) {
-      const valueRecord = topicFilters[category];
-      if (!valueRecord) continue;
-      const values = Object.keys(valueRecord);
-      if (values.length === 0) continue;
-      chunks.push({ kind: "values", topic, category, values });
+      if (topicFilters && topicFilters[category]) {
+        const valueRecord = topicFilters[category];
+        const values = Object.keys(valueRecord);
+        if (values.length > 0) {
+          chunks.push({ kind: "values", topic, category, values });
+        }
+      }
+      const numericRange = numericRanges[category];
+      if (numericRange) {
+        chunks.push({ kind: "numeric-range", category, range: numericRange });
+      }
     }
     if (topic === "time" && dateRange !== undefined) {
       chunks.push({ kind: "date-range" });
@@ -188,6 +219,11 @@ const FilterStrip = ({
     e.stopPropagation();
     setFilters({});
     setDateRange(undefined);
+    setNumericRanges({});
+  };
+  const handleClearNumericRange = (e: React.MouseEvent, category: string) => {
+    e.stopPropagation();
+    setNumericRange(category, undefined);
   };
 
   return (
@@ -208,6 +244,32 @@ const FilterStrip = ({
                   onClick={handleClearDateRange}
                   aria-label={String(t("filters-date-range-clear"))}
                   title={String(t("filters-date-range-clear"))}
+                >
+                  <BsXLg />
+                </span>
+              </ValueChunk>
+              {!isLast ? <Separator>,</Separator> : null}
+            </Chunk>
+          );
+        }
+        if (chunk.kind === "numeric-range") {
+          const formatValue = (v: number): string =>
+            String(
+              format
+                .categoryValue(lang, t, countryData)(chunk.category)(v)
+            );
+          return (
+            <Chunk key={`chunk:numeric-range:${chunk.category}`}>
+              <CatLabel>{t(`stats-category-${chunk.category}`)}:</CatLabel>
+              <ValueChunk onClick={stop}>
+                <span>
+                  {numericRangeLabel(chunk.range, chunk.category, formatValue, t)}
+                </span>
+                <span
+                  className="remove"
+                  onClick={(e) => handleClearNumericRange(e, chunk.category)}
+                  aria-label={String(t("filters-numeric-range-clear"))}
+                  title={String(t("filters-numeric-range-clear"))}
                 >
                   <BsXLg />
                 </span>

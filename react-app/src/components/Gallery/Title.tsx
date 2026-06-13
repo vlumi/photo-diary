@@ -16,6 +16,7 @@ import {
   useLastGalleryPathStore,
   useTitleMapModalStore,
   useUserStore,
+  useWireNumericRanges,
 } from "../../stores";
 import type { Gallery } from "../../models/GalleryModel";
 import PhotoModel, { type Photo } from "../../models/PhotoModel";
@@ -216,6 +217,7 @@ const Title = ({
   // the modal's Navigation bar).
   const filters = useFiltersStore((s) => s.filters);
   const dateRange = useFiltersStore((s) => s.dateRange);
+  const wireNumericRanges = useWireNumericRanges();
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -227,12 +229,13 @@ const Title = ({
       photo?.id(),
       serverFilters,
       dateRange,
+      wireNumericRanges,
     ],
     queryFn: ({ signal }) =>
       galleryPhotosService.getNeighbors(
         gallery.id(),
         photo!.id(),
-        { filter: serverFilters, dateRange },
+        { filter: serverFilters, dateRange, numericRanges: wireNumericRanges },
         signal
       ),
     enabled: !!photo,

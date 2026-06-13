@@ -59,9 +59,22 @@ const DateRangeSchema = Type.Object(
   },
   { additionalProperties: false }
 );
+// Numeric range filters per kebab-case category — sibling of
+// `filter` / `dateRange`. Continuous-variable predicate
+// (focal length, aperture, shutter, ISO, EV, LV); both bounds
+// optional for half-open ranges. (#264)
+const NumericRangeSchema = Type.Object(
+  {
+    min: Type.Optional(Type.Number()),
+    max: Type.Optional(Type.Number()),
+  },
+  { additionalProperties: false }
+);
+const NumericRangesSchema = Type.Record(Type.String(), NumericRangeSchema);
 const QueryBody = Type.Object({
   filter: Type.Optional(FilterSchema),
   dateRange: Type.Optional(DateRangeSchema),
+  numericRanges: Type.Optional(NumericRangesSchema),
   year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
   month: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
   day: Type.Optional(Type.Integer({ minimum: 1, maximum: 31 })),
@@ -70,6 +83,7 @@ const QueryBody = Type.Object({
 const CountsBody = Type.Object({
   filter: Type.Optional(FilterSchema),
   dateRange: Type.Optional(DateRangeSchema),
+  numericRanges: Type.Optional(NumericRangesSchema),
   year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
 });
 const CountsResponse = Type.Record(Type.String(), Type.Number());
@@ -77,6 +91,7 @@ const NeighborsBody = Type.Object({
   photoId: Type.String({ minLength: 1 }),
   filter: Type.Optional(FilterSchema),
   dateRange: Type.Optional(DateRangeSchema),
+  numericRanges: Type.Optional(NumericRangesSchema),
   lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
 });
 const NeighborsResponse = Type.Object({
@@ -172,6 +187,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           {
             filter: request.body.filter,
             dateRange: request.body.dateRange,
+            numericRanges: request.body.numericRanges,
             year: request.body.year,
             month: request.body.month,
             day: request.body.day,
@@ -219,6 +235,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           {
             filter: request.body.filter,
             dateRange: request.body.dateRange,
+            numericRanges: request.body.numericRanges,
             year: request.body.year,
           }
         );
@@ -259,6 +276,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           {
             filter: request.body.filter,
             dateRange: request.body.dateRange,
+            numericRanges: request.body.numericRanges,
             lang: request.body.lang,
           }
         );
@@ -297,6 +315,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         body: Type.Object({
           filter: Type.Optional(FilterSchema),
           dateRange: Type.Optional(DateRangeSchema),
+          numericRanges: Type.Optional(NumericRangesSchema),
           lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
         }),
         response: { 200: FilterValuesResponse },
@@ -313,7 +332,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.params.galleryId,
           request.body.lang,
           request.body.filter,
-          request.body.dateRange
+          request.body.dateRange,
+          request.body.numericRanges
         );
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {

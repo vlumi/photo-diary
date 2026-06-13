@@ -7,6 +7,7 @@ import statsFactory from "../models/stats.js";
 import type {
   DateRange,
   FilterShape,
+  NumericRanges,
 } from "../lib/photo-filter-eval.js";
 
 const authorizer = authorizerFactory();
@@ -39,16 +40,28 @@ const DateRangeSchema = Type.Object(
   },
   { additionalProperties: false }
 );
+// Numeric range filters per kebab-case category — sibling of
+// `filter` / `dateRange`. (#264)
+const NumericRangeSchema = Type.Object(
+  {
+    min: Type.Optional(Type.Number()),
+    max: Type.Optional(Type.Number()),
+  },
+  { additionalProperties: false }
+);
+const NumericRangesSchema = Type.Record(Type.String(), NumericRangeSchema);
 
 const StatsBody = Type.Object({
   filter: Type.Optional(FilterSchema),
   dateRange: Type.Optional(DateRangeSchema),
+  numericRanges: Type.Optional(NumericRangesSchema),
   lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
 });
 const EvolutionBody = Type.Object({
   category: Type.String({ minLength: 1 }),
   filter: Type.Optional(FilterSchema),
   dateRange: Type.Optional(DateRangeSchema),
+  numericRanges: Type.Optional(NumericRangesSchema),
   lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
 });
 const EvolutionResponse = Type.Object({
@@ -114,7 +127,8 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.params.galleryId,
         request.body.filter as FilterShape | undefined,
         request.body.lang,
-        request.body.dateRange as DateRange | undefined
+        request.body.dateRange as DateRange | undefined,
+        request.body.numericRanges as NumericRanges | undefined
       );
     }
   );
@@ -144,7 +158,8 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.body.category,
         request.body.filter as FilterShape | undefined,
         request.body.lang,
-        request.body.dateRange as DateRange | undefined
+        request.body.dateRange as DateRange | undefined,
+        request.body.numericRanges as NumericRanges | undefined
       );
     }
   );
@@ -171,7 +186,8 @@ const globalPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
       return await model.getGlobalStats(
         request.body.filter as FilterShape | undefined,
         request.body.lang,
-        request.body.dateRange as DateRange | undefined
+        request.body.dateRange as DateRange | undefined,
+        request.body.numericRanges as NumericRanges | undefined
       );
     }
   );

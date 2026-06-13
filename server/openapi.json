@@ -2810,6 +2810,21 @@
                     },
                     "additionalProperties": false
                   },
+                  "numericRanges": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
                   "year": {
                     "type": "integer",
                     "minimum": 1900,
@@ -2916,6 +2931,21 @@
                     },
                     "additionalProperties": false
                   },
+                  "numericRanges": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
                   "year": {
                     "type": "integer",
                     "minimum": 1900,
@@ -3011,6 +3041,21 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "numericRanges": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
                   },
                   "lang": {
                     "type": "string",
@@ -3130,6 +3175,21 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "numericRanges": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
                   },
                   "lang": {
                     "type": "string",
@@ -4095,6 +4155,21 @@
                     },
                     "additionalProperties": false
                   },
+                  "numericRanges": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
                   "lang": {
                     "type": "string",
                     "minLength": 2,
@@ -4320,6 +4395,21 @@
                     },
                     "additionalProperties": false
                   },
+                  "numericRanges": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
                   "lang": {
                     "type": "string",
                     "minLength": 2,
@@ -4446,6 +4536,21 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "numericRanges": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
                   },
                   "lang": {
                     "type": "string",
@@ -4654,6 +4759,21 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "numericRanges": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
                   },
                   "lang": {
                     "type": "string",

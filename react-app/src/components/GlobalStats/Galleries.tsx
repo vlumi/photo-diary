@@ -7,7 +7,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import format from "../../lib/format";
 import filter from "../../lib/filter";
 import statsService from "../../services/stats";
-import { useFiltersStore } from "../../stores";
+import { useFiltersStore, useWireNumericRanges } from "../../stores";
 
 interface Gallery {
   id: string;
@@ -116,14 +116,27 @@ const Galleries = ({
   const formatNumber = format.number(lang);
   const filters = useFiltersStore((s) => s.filters);
   const dateRange = useFiltersStore((s) => s.dateRange);
+  const wireNumericRanges = useWireNumericRanges();
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
   );
   const { data: stats } = useQuery({
-    queryKey: ["stats", "__global__", serverFilters, dateRange, lang],
+    queryKey: [
+      "stats",
+      "__global__",
+      serverFilters,
+      dateRange,
+      wireNumericRanges,
+      lang,
+    ],
     queryFn: () =>
-      statsService.getGlobalStats(serverFilters, lang, dateRange),
+      statsService.getGlobalStats(
+        serverFilters,
+        lang,
+        dateRange,
+        wireNumericRanges
+      ),
     placeholderData: keepPreviousData,
   });
 

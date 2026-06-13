@@ -98,11 +98,16 @@ const FilterModal = ({
   const setFilters = useFiltersStore((s) => s.setFilters);
   const dateRange = useFiltersStore((s) => s.dateRange);
   const setDateRange = useFiltersStore((s) => s.setDateRange);
+  const numericRanges = useFiltersStore((s) => s.numericRanges);
+  const setNumericRanges = useFiltersStore((s) => s.setNumericRanges);
   const hasFilters =
-    Object.keys(filters).length > 0 || dateRange !== undefined;
+    Object.keys(filters).length > 0 ||
+    dateRange !== undefined ||
+    Object.keys(numericRanges).length > 0;
   const clearAll = () => {
     setFilters({});
     setDateRange(undefined);
+    setNumericRanges({});
   };
 
   React.useEffect(() => {

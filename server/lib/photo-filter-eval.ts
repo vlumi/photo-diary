@@ -234,7 +234,7 @@ export const matchesFilter = (
 // `YYYY-MM-DD` strings; inclusive on both ends. Either bound may be
 // omitted for a half-open range (`from` only → "since"; `to` only →
 // "until"). Empty / undefined range or both bounds missing → no
-// constraint, all photos pass. (#264)
+// constraint, all photos pass.
 export interface DateRange {
   from?: string;
   to?: string;
@@ -252,5 +252,77 @@ export const matchesDateRange = (
     `${instant.year}-${String(instant.month).padStart(2, "0")}-${String(instant.day).padStart(2, "0")}`;
   if (from && ymd < from) return false;
   if (to && ymd > to) return false;
+  return true;
+};
+
+// Numeric range filters for continuous exposure fields (focal
+// length, aperture, exposure time, ISO, EV, LV). Same half-open
+// shape as date-range — either bound may be omitted. Empty `{}`
+// or both bounds missing → no constraint. Keyed by the same
+// kebab-case category names as FilterShape; cross-category logic
+// is AND. A photo with the value missing fails the range, mirroring
+// the discrete-filter rule for an "unknown" exclusion.
+export interface NumericRange {
+  min?: number;
+  max?: number;
+}
+export type NumericRanges = Record<string, NumericRange>;
+
+const numericValueFor = (
+  category: string,
+  photo: Photo
+): number | undefined | null => {
+  switch (category) {
+    case "focal-length":
+      return photo.exposure?.focalLength;
+    case "focal-length-eq":
+      return derived.focalLength35mmEquiv(
+        photo.exposure?.focalLength,
+        photo.camera?.make,
+        photo.camera?.model,
+        photo.exposure?.focalLength35mmEquiv
+      );
+    case "aperture":
+      return photo.exposure?.aperture;
+    case "exposure-time":
+      return photo.exposure?.exposureTime;
+    case "iso":
+      return photo.exposure?.iso;
+    case "ev":
+      return derived.exposureValue(
+        photo.exposure?.aperture,
+        photo.exposure?.exposureTime
+      );
+    case "lv":
+      return derived.lightValue(
+        photo.exposure?.aperture,
+        photo.exposure?.exposureTime,
+        photo.exposure?.iso
+      );
+    case "resolution":
+      return derived.resolution(
+        photo.dimensions?.original?.width,
+        photo.dimensions?.original?.height
+      );
+    default:
+      return undefined;
+  }
+};
+
+export const matchesNumericRanges = (
+  ranges: NumericRanges | undefined | null,
+  photo: Photo
+): boolean => {
+  if (!ranges) return true;
+  for (const category of Object.keys(ranges)) {
+    const range = ranges[category];
+    if (!range) continue;
+    const { min, max } = range;
+    if (min === undefined && max === undefined) continue;
+    const value = numericValueFor(category, photo);
+    if (value === undefined || value === null) return false;
+    if (min !== undefined && value < min) return false;
+    if (max !== undefined && value > max) return false;
+  }
   return true;
 };

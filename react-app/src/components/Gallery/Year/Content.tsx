@@ -9,7 +9,7 @@ import filter from "../../../lib/filter";
 import galleryPhotosService from "../../../services/gallery-photos";
 import useFilteredCalendar from "../../../lib/useFilteredCalendar";
 import useMediaQuery from "../../../lib/useMediaQuery";
-import { useFiltersStore } from "../../../stores";
+import { useFiltersStore, useWireNumericRanges } from "../../../stores";
 
 import type { Gallery } from "../../../models/GalleryModel";
 
@@ -46,6 +46,7 @@ const Content = ({
 }: Props): React.ReactElement => {
   const filters = useFiltersStore((s) => s.filters);
   const dateRange = useFiltersStore((s) => s.dateRange);
+  const wireNumericRanges = useWireNumericRanges();
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -60,11 +61,13 @@ const Content = ({
       year,
       serverFilters,
       dateRange,
+      wireNumericRanges,
     ],
     queryFn: () =>
       galleryPhotosService.getCounts(gallery.id(), {
         filter: serverFilters,
         dateRange,
+        numericRanges: wireNumericRanges,
         year,
       }),
     placeholderData: keepPreviousData,

@@ -2,7 +2,7 @@ import React from "react";
 import { Global, css } from "@emotion/react";
 import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import metaService from "../../services/meta";
 import galleryService from "../../services/galleries";
@@ -37,6 +37,7 @@ import {
   useUserStore,
   useLangStore,
   useFiltersStore,
+  useWireNumericRanges,
   useScrollStore,
   useThemePreferenceStore,
   useTitleMapModalStore,
@@ -95,6 +96,7 @@ const Gallery = ({
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
   const dateRange = useFiltersStore((s) => s.dateRange);
+  const wireNumericRanges = useWireNumericRanges();
   const setScroll = useScrollStore((s) => s.set);
   const themePreference = useThemePreferenceStore((s) => s.preference);
   const loadThemePreference = useThemePreferenceStore((s) => s.load);
@@ -165,14 +167,17 @@ const Gallery = ({
       lang,
       serverFiltersForValues,
       dateRange,
+      wireNumericRanges,
     ],
     queryFn: () =>
       galleryPhotosService.getFilterValues(galleryId as string, {
         filter: serverFiltersForValues,
         dateRange,
+        numericRanges: wireNumericRanges,
         lang,
       }),
     enabled: galleryInList,
+    placeholderData: keepPreviousData,
   });
   // Unfiltered gallery shape (#532): drives lastPath in the gallery
   // list, the "no photos" check below, and the calendar boundary

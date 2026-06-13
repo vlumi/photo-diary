@@ -25,7 +25,11 @@ import filter from "../../../lib/filter";
 import useKeyPress from "../../../lib/keypress";
 import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
 import galleryPhotosService from "../../../services/gallery-photos";
-import { useFiltersStore, useUserStore } from "../../../stores";
+import {
+  useFiltersStore,
+  useUserStore,
+  useWireNumericRanges,
+} from "../../../stores";
 import PhotoModel from "../../../models/PhotoModel";
 
 import type { Gallery } from "../../../models/GalleryModel";
@@ -279,6 +283,8 @@ const Photo = ({
   // refetch is in flight — animated slide-out lands on real
   // adjacent slides instead of flashing empty.
   const filters = useFiltersStore((s) => s.filters);
+  const dateRange = useFiltersStore((s) => s.dateRange);
+  const wireNumericRanges = useWireNumericRanges();
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -289,12 +295,14 @@ const Photo = ({
       gallery.id(),
       photo.id(),
       serverFilters,
+      dateRange,
+      wireNumericRanges,
     ],
     queryFn: ({ signal }) =>
       galleryPhotosService.getNeighbors(
         gallery.id(),
         photo.id(),
-        { filter: serverFilters },
+        { filter: serverFilters, dateRange, numericRanges: wireNumericRanges },
         signal
       ),
     placeholderData: keepPreviousData,
