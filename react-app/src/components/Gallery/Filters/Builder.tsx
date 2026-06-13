@@ -9,7 +9,11 @@ import stats, {
   type UniqueValues,
   type UniqueValueEntry,
 } from "../../../lib/stats";
-import { useFiltersStore, useBetaStore } from "../../../stores";
+import {
+  useFiltersStore,
+  useBetaStore,
+  useFilterModalStore,
+} from "../../../stores";
 import {
   type DateRange,
   type NumericRange,
@@ -302,20 +306,33 @@ const Builder = ({
   // open; null when no sub-modal is showing. Drives the "browse all
   // values" overlay so the operator can scan the universe in natural
   // sort order rather than search-as-you-type.
-  const [subModalKey, setSubModalKey] = React.useState<string | null>(null);
+  const subModalKey = useFilterModalStore((s) => s.subModalKey);
+  const openSubModal = useFilterModalStore((s) => s.openSubModal);
+  const closeSubModal = useFilterModalStore((s) => s.closeSubModal);
+  const setSubModalKey = (key: string | null) => {
+    if (key === null) closeSubModal();
+    else openSubModal(key);
+  };
   const [subModalSearch, setSubModalSearch] = React.useState("");
 
   React.useEffect(() => {
     if (!subModalKey) return;
+    // The outer modal's Esc listener also sits on window in
+    // capture phase and was registered first — it'd run before
+    // this one and close everything. The Modal's handler reads
+    // `subModalKey` from the store and bails when set, so this
+    // listener takes over. `stopImmediatePropagation` is still
+    // belt-and-braces for any future sibling listeners.
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        e.stopPropagation();
-        setSubModalKey(null);
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        closeSubModal();
       }
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [subModalKey]);
+  }, [subModalKey, closeSubModal]);
 
   const entriesByCategory = React.useMemo(
     () => buildEntriesByCategory(uniqueValues),
