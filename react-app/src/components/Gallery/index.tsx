@@ -183,6 +183,24 @@ const Gallery = ({
   // list, the "no photos" check below, and the calendar boundary
   // helpers that don't change with the active filter. Off /counts.
   const galleryCalendar = useGalleryCalendar(galleryId ?? "");
+  // Seed for the filter modal's date-range card so the native
+  // date picker opens within the gallery's photo timespan rather
+  // than on today. Derived from the unfiltered calendar; recomputed
+  // when the gallery's data set changes.
+  const galleryDateRange = React.useMemo(() => {
+    const fmt = (
+      ymd: [number, number, number] | [undefined, undefined, undefined]
+    ): string | undefined => {
+      const [y, m, d] = ymd;
+      if (y === undefined || m === undefined || d === undefined)
+        return undefined;
+      return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    };
+    const from = fmt(galleryCalendar.firstDay());
+    const to = fmt(galleryCalendar.lastDay());
+    if (!from && !to) return undefined;
+    return { from, to };
+  }, [galleryCalendar]);
   // Modal photo lookup (#532 phase 2). Resolves the `photoId` URL
   // param to its metadata via the per-id endpoint; on 404, falls
   // back to the originalFilename endpoint (pre-rename / camera-
@@ -534,6 +552,7 @@ const Gallery = ({
           lang={lang}
           countryData={countryData}
           hideMap={gallery.hideMap()}
+          defaultDateRange={galleryDateRange}
         />
       ) : null}
     </>

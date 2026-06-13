@@ -9,6 +9,7 @@ import galleryPhotosService from "../../services/gallery-photos";
 import filter, { type Filters as FiltersT } from "../../lib/filter";
 import format from "../../lib/format";
 import { buildUniqueValues } from "../../lib/uniqueValues";
+import { useGalleryCalendar } from "../../lib/useFilteredCalendar";
 import { useLangStore } from "../../stores";
 import {
   type DateRange,
@@ -103,6 +104,23 @@ const VirtualGalleryFilterSection = ({
       galleryPhotosService.getFilterValues(sourceGalleryId, { lang }),
     enabled: editing,
   });
+  // Seed for the date-range card — anchors the native picker to
+  // the source gallery's timespan instead of today.
+  const sourceCalendar = useGalleryCalendar(sourceGalleryId);
+  const defaultDateRange = React.useMemo(() => {
+    const fmt = (
+      ymd: [number, number, number] | [undefined, undefined, undefined]
+    ): string | undefined => {
+      const [y, m, d] = ymd;
+      if (y === undefined || m === undefined || d === undefined)
+        return undefined;
+      return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    };
+    const from = fmt(sourceCalendar.firstDay());
+    const to = fmt(sourceCalendar.lastDay());
+    if (!from && !to) return undefined;
+    return { from, to };
+  }, [sourceCalendar]);
   const uniqueValues = React.useMemo(() => {
     if (!filterValuesQuery.data || !countryData) return undefined;
     return buildUniqueValues(filterValuesQuery.data, lang, t, countryData);
@@ -190,6 +208,7 @@ const VirtualGalleryFilterSection = ({
               setDateRange={setDateRange}
               numericRanges={numericRanges}
               setNumericRange={setNumericRange}
+              defaultDateRange={defaultDateRange}
             />
           ) : (
             <Hint>{t("loading")}</Hint>

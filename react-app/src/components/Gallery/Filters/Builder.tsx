@@ -332,6 +332,12 @@ interface Props {
     category: string,
     range: NumericRange | undefined
   ) => void;
+  // Seed for the date-range card when the operator first activates
+  // it. Without this, the native `<input type="date">` opens on
+  // today — useless for galleries that span 2015..2020. Callers
+  // typically pass the gallery's earliest / latest photo dates so
+  // the picker anchors to the available range.
+  defaultDateRange?: DateRange;
 }
 
 const buildEntriesByCategory = (
@@ -357,6 +363,7 @@ const Builder = ({
   setDateRange,
   numericRanges,
   setNumericRange,
+  defaultDateRange,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const enabled = useBetaStore((s) => s.enabled);
@@ -657,7 +664,10 @@ const Builder = ({
           ) : null}
         </CardHeader>
         {range === undefined ? (
-          <TextButton type="button" onClick={() => setDateRange({})}>
+          <TextButton
+            type="button"
+            onClick={() => setDateRange(defaultDateRange ?? {})}
+          >
             + {t("filters-add")}
           </TextButton>
         ) : (
@@ -666,6 +676,8 @@ const Builder = ({
             <DateInput
               type="date"
               value={range.from ?? ""}
+              min={defaultDateRange?.from}
+              max={defaultDateRange?.to}
               onChange={(e) =>
                 setDateRange({ ...range, from: e.target.value || undefined })
               }
@@ -674,6 +686,8 @@ const Builder = ({
             <DateInput
               type="date"
               value={range.to ?? ""}
+              min={defaultDateRange?.from}
+              max={defaultDateRange?.to}
               onChange={(e) =>
                 setDateRange({ ...range, to: e.target.value || undefined })
               }
