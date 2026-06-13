@@ -533,6 +533,14 @@ const GalleryEdit = (): React.ReactElement => {
             }}
             hostnameEditable={isAdmin}
           />
+          {gallery.type === "saved_filter" && gallery.savedFilter ? (
+            <VirtualGalleryFilterSection
+              galleryId={galleryId}
+              sourceGalleryId={gallery.savedFilter.sourceGalleryId}
+              definition={gallery.savedFilter.definition}
+              editing
+            />
+          ) : null}
           <Footer>
             <span />
             <FooterRight>
@@ -593,6 +601,7 @@ const GalleryEdit = (): React.ReactElement => {
               galleryId={galleryId}
               sourceGalleryId={gallery.savedFilter.sourceGalleryId}
               definition={gallery.savedFilter.definition}
+              editing={false}
             />
           ) : null}
           <Footer>

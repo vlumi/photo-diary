@@ -194,6 +194,7 @@
     "manage-virtual-gallery-filter-title": "Suodatin",
     "manage-virtual-gallery-filter-hint": "Nämä ehdot määrittävät, mitkä lähdegallerian kuvat näkyvät täällä.",
     "manage-virtual-gallery-source": "Lähdegalleria:",
+    "manage-virtual-gallery-no-filter": "Ei suodatinta — kaikki lähdegallerian valokuvat näkyvät täällä.",
     "manage-saved-filter-button-save": "Tallenna",
     "manage-saved-filter-button-cancel": "Peruuta",
     "filters-date-range-from": "alkaen",

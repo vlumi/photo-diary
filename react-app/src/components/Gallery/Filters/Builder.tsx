@@ -37,6 +37,16 @@ const NUMERIC_RANGE_CATEGORIES = new Set([
   "ev",
   "lv",
 ]);
+// Bounded value sets that fit on a card without truncation — skip
+// the top-N rank, the search input, and the "Show all" sub-modal.
+// year-month stays in the top-N path because long-running galleries
+// blow it out to 50+ buckets.
+const SMALL_ENUM_CATEGORIES = new Set([
+  "year",
+  "month",
+  "weekday",
+  "hour",
+]);
 const BETA_CATEGORIES: Record<string, BetaFeature> = {
   state: "regions",
   "focal-length-eq": "focalLengthEquiv",
@@ -685,6 +695,12 @@ const Builder = ({
             String(e.key).toLowerCase().includes(term)
         )
       : allEntries;
+    // Small-enum categories (year / month / weekday / hour) carry a
+    // bounded set of values that all fit on the card — skip the
+    // top-N rank, the search input, and the "Show all" sub-modal.
+    // Chips render in natural numeric order with active state
+    // highlighted in place.
+    const isSmallEnum = SMALL_ENUM_CATEGORIES.has(category);
     const active: UniqueValueEntry[] = [];
     const inactive: UniqueValueEntry[] = [];
     for (const entry of filtered) {
@@ -694,25 +710,34 @@ const Builder = ({
         inactive.push(entry);
       }
     }
-    inactive.sort(sortByCountThenLabel);
-    // 0-count chips collapse under the current filter — "Show all"
-    // sub-modal reveals them. Exception: when this category is
-    // itself filtered, show them anyway so the operator can pile on
-    // more values (multi-select expansion). 0-count chips render
-    // dimmed to mark them as "no hits under the current filter,
-    // but still selectable".
-    const showZeroCounts = active.length > 0 || !!term;
-    const inactiveTopList = showZeroCounts
-      ? inactive
-      : inactive.filter((e) => (e.count ?? 0) > 0);
-    const visibleInactive = term ? inactive : inactiveTopList.slice(0, TOP_N);
-    const chips = [...active, ...visibleInactive];
-    // Anything in the universe past what's rendered → offer the
-    // sub-modal. Includes the case where 0-count entries were
-    // filtered out of the top list, so the operator can browse to
-    // them and combine filters that don't currently match (multi-
-    // category drill-out, not strict drill-down).
-    const moreAvailable = !term && allEntries.length > chips.length;
+    let chips: UniqueValueEntry[];
+    let moreAvailable = false;
+    if (isSmallEnum) {
+      // Natural order from buildUniqueValues; no truncation.
+      chips = filtered;
+    } else {
+      inactive.sort(sortByCountThenLabel);
+      // 0-count chips collapse under the current filter — "Show all"
+      // sub-modal reveals them. Exception: when this category is
+      // itself filtered, show them anyway so the operator can pile on
+      // more values (multi-select expansion). 0-count chips render
+      // dimmed to mark them as "no hits under the current filter,
+      // but still selectable".
+      const showZeroCounts = active.length > 0 || !!term;
+      const inactiveTopList = showZeroCounts
+        ? inactive
+        : inactive.filter((e) => (e.count ?? 0) > 0);
+      const visibleInactive = term
+        ? inactive
+        : inactiveTopList.slice(0, TOP_N);
+      chips = [...active, ...visibleInactive];
+      // Anything in the universe past what's rendered → offer the
+      // sub-modal. Includes the case where 0-count entries were
+      // filtered out of the top list, so the operator can browse to
+      // them and combine filters that don't currently match (multi-
+      // category drill-out, not strict drill-down).
+      moreAvailable = !term && allEntries.length > chips.length;
+    }
 
     return (
       <Card key={`card:${topic}:${category}`} active={active.length > 0}>
@@ -731,7 +756,7 @@ const Builder = ({
             </ClearButton>
           ) : null}
         </CardHeader>
-        {allEntries.length > TOP_N || active.length > 0 ? (
+        {!isSmallEnum && (allEntries.length > TOP_N || active.length > 0) ? (
           <SearchInput
             type="search"
             placeholder={String(t("filters-search-placeholder"))}

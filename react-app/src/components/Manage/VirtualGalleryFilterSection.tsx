@@ -10,6 +10,7 @@ import savedFiltersService, {
   type SavedFilterDefinition,
 } from "../../services/saved-filters";
 import filter, { type Filters as FiltersT, type ServerFilters } from "../../lib/filter";
+import format from "../../lib/format";
 import { buildUniqueValues } from "../../lib/uniqueValues";
 import { useLangStore } from "../../stores";
 import {
@@ -76,6 +77,25 @@ const ButtonSecondary = styled.button`
   color: var(--primary-color);
   cursor: pointer;
 `;
+const SummaryGrid = styled.dl`
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 12px;
+  row-gap: 4px;
+  margin: 0;
+  font-size: 0.9em;
+`;
+const SummaryKey = styled.dt`
+  color: var(--inactive-color);
+  text-transform: uppercase;
+  font-size: 0.75em;
+  letter-spacing: 0.05em;
+  align-self: center;
+`;
+const SummaryVal = styled.dd`
+  margin: 0;
+  color: var(--primary-color);
+`;
 const Hint = styled.div`
   font-size: 0.85em;
   color: var(--inactive-color);
@@ -85,6 +105,10 @@ const Hint = styled.div`
 interface Props {
   galleryId: string;
   sourceGalleryId: string;
+  // Tracks the parent edit form's mode. View mode renders a
+  // read-only summary; edit mode mounts the full Builder with its
+  // own save/cancel buttons.
+  editing: boolean;
   // The raw `definition` shape on the gallery row — same envelope
   // as `SavedFilterDefinition` but typed loose because the gallery
   // response uses `additionalProperties: true`. We trust the
@@ -110,6 +134,7 @@ const VirtualGalleryFilterSection = ({
   galleryId,
   sourceGalleryId,
   definition,
+  editing,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -222,6 +247,75 @@ const VirtualGalleryFilterSection = ({
     JSON.stringify(toWireNumericRanges(numericRanges)) !==
       JSON.stringify(toWireNumericRanges(initialNumericRanges));
 
+  // Read-only summary lines from the saved-filter envelope —
+  // `Country: Japan, USA`, `Aperture: f/1.4 – f/4`, `Date range:
+  // from 2018-01-01 to 2020-12-31`, etc. Falls back to a hint when
+  // the saved filter has no bounds set.
+  const summaryRows: Array<{ key: string; label: string; value: string }> = [];
+  // `countryData` may briefly be undefined while the lang store
+  // bootstraps — fall back to a stub that returns no localised name
+  // so the summary still renders during that window.
+  const countryDataForFormatter = countryData ?? {
+    getName: (_code: string, _lang: string) => undefined,
+  };
+  const formatCategoryValue = format.categoryValue(
+    lang,
+    t,
+    countryDataForFormatter
+  );
+  if (initialFilters) {
+    for (const topic of filter.topics()) {
+      const topicFilters = initialFilters[topic];
+      if (!topicFilters) continue;
+      for (const category of filter.categories(topic)) {
+        const valueRecord = topicFilters[category];
+        if (!valueRecord) continue;
+        const keys = Object.keys(valueRecord);
+        if (keys.length === 0) continue;
+        const formatter = formatCategoryValue(category);
+        const values = keys.map((k) => String(formatter(k))).join(", ");
+        summaryRows.push({
+          key: `f:${topic}:${category}`,
+          label: String(t(`stats-category-${category}`)),
+          value: values,
+        });
+      }
+    }
+  }
+  if (
+    initialDateRange &&
+    (initialDateRange.from || initialDateRange.to)
+  ) {
+    const { from, to } = initialDateRange;
+    let val: string;
+    if (from && to) val = `${from} – ${to}`;
+    else if (from) val = `≥ ${from}`;
+    else val = `≤ ${to}`;
+    summaryRows.push({
+      key: "dr",
+      label: String(t("stats-category-date-range")),
+      value: val,
+    });
+  }
+  for (const [cat, range] of Object.entries(initialNumericRanges)) {
+    if (!range) continue;
+    if (range.min === undefined && range.max === undefined) continue;
+    const formatter = formatCategoryValue(cat);
+    let val: string;
+    if (range.min !== undefined && range.max !== undefined) {
+      val = `${formatter(range.min)} – ${formatter(range.max)}`;
+    } else if (range.min !== undefined) {
+      val = `≥ ${formatter(range.min)}`;
+    } else {
+      val = `≤ ${formatter(range.max as number)}`;
+    }
+    summaryRows.push({
+      key: `nr:${cat}`,
+      label: String(t(`stats-category-${cat}`)),
+      value: val,
+    });
+  }
+
   return (
     <Section>
       <SectionTitle>{t("manage-virtual-gallery-filter-title")}</SectionTitle>
@@ -229,40 +323,55 @@ const VirtualGalleryFilterSection = ({
         {t("manage-virtual-gallery-source")}{" "}
         <RouterLink to={`/g/${sourceGalleryId}`}>{sourceGalleryId}</RouterLink>
       </ParentLine>
-      <Hint>{t("manage-virtual-gallery-filter-hint")}</Hint>
-      {uniqueValues && countryData ? (
-        <Builder
-          uniqueValues={uniqueValues}
-          lang={lang}
-          countryData={countryData}
-          hideMap={false}
-          filters={filters}
-          setFilters={setFilters}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          numericRanges={numericRanges}
-          setNumericRange={setNumericRange}
-        />
+      {editing ? (
+        <>
+          <Hint>{t("manage-virtual-gallery-filter-hint")}</Hint>
+          {uniqueValues && countryData ? (
+            <Builder
+              uniqueValues={uniqueValues}
+              lang={lang}
+              countryData={countryData}
+              hideMap={false}
+              filters={filters}
+              setFilters={setFilters}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+              numericRanges={numericRanges}
+              setNumericRange={setNumericRange}
+            />
+          ) : (
+            <Hint>{t("loading")}</Hint>
+          )}
+          {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+          <FooterRow>
+            <ButtonSecondary
+              type="button"
+              onClick={handleReset}
+              disabled={!dirty || saveMutation.isPending}
+            >
+              {t("manage-saved-filter-button-cancel")}
+            </ButtonSecondary>
+            <ButtonPrimary
+              type="button"
+              onClick={() => saveMutation.mutate()}
+              disabled={!dirty || saveMutation.isPending}
+            >
+              {t("manage-saved-filter-button-save")}
+            </ButtonPrimary>
+          </FooterRow>
+        </>
+      ) : summaryRows.length === 0 ? (
+        <Hint>{t("manage-virtual-gallery-no-filter")}</Hint>
       ) : (
-        <Hint>{t("loading")}</Hint>
+        <SummaryGrid>
+          {summaryRows.map((row) => (
+            <React.Fragment key={row.key}>
+              <SummaryKey>{row.label}</SummaryKey>
+              <SummaryVal>{row.value}</SummaryVal>
+            </React.Fragment>
+          ))}
+        </SummaryGrid>
       )}
-      {error ? <ErrorBanner>{error}</ErrorBanner> : null}
-      <FooterRow>
-        <ButtonSecondary
-          type="button"
-          onClick={handleReset}
-          disabled={!dirty || saveMutation.isPending}
-        >
-          {t("manage-saved-filter-button-cancel")}
-        </ButtonSecondary>
-        <ButtonPrimary
-          type="button"
-          onClick={() => saveMutation.mutate()}
-          disabled={!dirty || saveMutation.isPending}
-        >
-          {t("manage-saved-filter-button-save")}
-        </ButtonPrimary>
-      </FooterRow>
     </Section>
   );
 };

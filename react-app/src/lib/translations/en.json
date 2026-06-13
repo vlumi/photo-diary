@@ -194,6 +194,7 @@
     "manage-virtual-gallery-filter-title": "Filter",
     "manage-virtual-gallery-filter-hint": "These criteria define which photos from the source gallery appear here.",
     "manage-virtual-gallery-source": "Source gallery:",
+    "manage-virtual-gallery-no-filter": "No filter set — all photos from the source gallery appear here.",
     "manage-saved-filter-button-save": "Save",
     "manage-saved-filter-button-cancel": "Cancel",
     "filters-date-range-from": "from",

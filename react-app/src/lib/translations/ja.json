@@ -194,6 +194,7 @@
     "manage-virtual-gallery-filter-title": "フィルター",
     "manage-virtual-gallery-filter-hint": "ここに表示される写真は、ソースギャラリーからこの条件で絞り込まれます。",
     "manage-virtual-gallery-source": "ソースギャラリー:",
+    "manage-virtual-gallery-no-filter": "フィルターなし — ソースギャラリーの全写真が表示されます。",
     "manage-saved-filter-button-save": "保存",
     "manage-saved-filter-button-cancel": "キャンセル",
     "filters-date-range-from": "開始",
