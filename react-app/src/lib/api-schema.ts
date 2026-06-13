@@ -1748,19 +1748,34 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /** Filter pill universe (per-category value set) */
-        get: {
+        post: {
             parameters: {
-                query?: {
-                    lang?: string;
-                };
+                query?: never;
                 header?: never;
                 path: {
                     galleryId: string;
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
+                        lang?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -1772,6 +1787,11 @@ export interface paths {
                             categoryValues: {
                                 [key: string]: string[];
                             };
+                            categoryCounts: {
+                                [key: string]: {
+                                    [key: string]: number;
+                                };
+                            };
                             byCityLocalized: {
                                 [key: string]: string;
                             };
@@ -1780,8 +1800,6 @@ export interface paths {
                 };
             };
         };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2656,17 +2674,32 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /** Filter pill universe across all galleries (admin) */
-        get: {
+        post: {
             parameters: {
-                query?: {
-                    lang?: string;
-                };
+                query?: never;
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
+                        lang?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {
@@ -2678,6 +2711,11 @@ export interface paths {
                             categoryValues: {
                                 [key: string]: string[];
                             };
+                            categoryCounts: {
+                                [key: string]: {
+                                    [key: string]: number;
+                                };
+                            };
                             byCityLocalized: {
                                 [key: string]: string;
                             };
@@ -2686,8 +2724,6 @@ export interface paths {
                 };
             };
         };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;

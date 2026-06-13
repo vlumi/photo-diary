@@ -56,8 +56,14 @@ const NUMERIC_CATEGORIES = new Set([
 // distinct keys present in the unfiltered photo set (`null` would
 // indicate the "unknown" bucket, but the server emits empty string
 // for that — both get normalized to `stats.UNKNOWN` here).
+//
+// `categoryCounts` carries per-value photo counts in the same kebab-
+// case category namespace. Drives the filter widget's top-N sort.
+// Empty `{}` is fine for synthetic categories that aren't bucketed
+// server-side (`geotagged`, `year-month`).
 export interface FilterValuesPayload {
   categoryValues: Record<string, string[]>;
+  categoryCounts: Record<string, Record<string, number>>;
   byCityLocalized: Record<string, string>;
 }
 
@@ -89,35 +95,40 @@ export const buildUniqueValues = (
   t: TFunction,
   countryData: CountryData
 ): UniqueValues => {
-  const { categoryValues, byCityLocalized } = payload;
+  const { categoryValues, categoryCounts, byCityLocalized } = payload;
   const categoryValueFormatter = format.categoryValue(lang, t, countryData);
   const out: UniqueValues = {} as UniqueValues;
   for (const [topic, categories] of Object.entries(TOPICS)) {
     const topicBag: Record<string, UniqueValueEntry[]> = {};
     for (const category of categories) {
       const rawKeys = categoryValues[category] ?? [];
+      const rawCounts = categoryCounts?.[category] ?? {};
       const cityLabels =
         category === "city"
           ? buildCityLabels(rawKeys, lang, countryData, byCityLocalized)
           : null;
       const isNumeric = NUMERIC_CATEGORIES.has(category);
       const entries = rawKeys.map((raw): UniqueValueEntry => {
+        const count = rawCounts[raw];
         if (raw === "" || raw === null || raw === undefined) {
           return {
             key: stats.UNKNOWN,
             value: String(t("stats-unknown")),
+            count,
           };
         }
         if (cityLabels) {
           return {
             key: raw,
             value: cityLabels[raw] ?? String(raw),
+            count,
           };
         }
         const typedKey: string | number = isNumeric ? Number(raw) : raw;
         return {
           key: typedKey,
           value: categoryValueFormatter(category)(typedKey),
+          count,
         };
       });
       topicBag[category] = entries.sort(

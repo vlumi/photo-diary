@@ -97,15 +97,36 @@ const filterValuesCacheKey = (galleryId: string, lang?: string): string =>
     : `${galleryId}:fv:${lang}`;
 const getGalleryFilterValues = async (
   galleryId: string,
-  lang?: string
+  lang?: string,
+  filter?: FilterShape,
+  dateRange?: DateRange
 ): Promise<FilterValuesResult> => {
-  const key = filterValuesCacheKey(galleryId, lang);
-  const cached = cacheGet<FilterValuesResult>(key);
-  if (cached) return cached;
-  logger.debug("Computing filter values for gallery", { galleryId, lang });
-  const result = await db.queryGalleryFilterValues(galleryId, lang);
-  cacheSet(key, result);
-  return result;
+  const noFilter = !filter || Object.keys(filter).length === 0;
+  const noDateRange =
+    !dateRange || (!dateRange.from && !dateRange.to);
+  // Only the unfiltered universe (the cold-start view) hits the
+  // shared stats cache; filter-aware queries change per toggle and
+  // would churn the cache otherwise.
+  if (noFilter && noDateRange) {
+    const key = filterValuesCacheKey(galleryId, lang);
+    const cached = cacheGet<FilterValuesResult>(key);
+    if (cached) return cached;
+    logger.debug("Computing filter values for gallery", { galleryId, lang });
+    const result = await db.queryGalleryFilterValues(galleryId, lang);
+    cacheSet(key, result);
+    return result;
+  }
+  logger.debug("Computing filter values for gallery", {
+    galleryId,
+    lang,
+    filtered: true,
+  });
+  return await db.queryGalleryFilterValues(
+    galleryId,
+    lang,
+    filter,
+    dateRange
+  );
 };
 
 const getGalleryPhoto = async (

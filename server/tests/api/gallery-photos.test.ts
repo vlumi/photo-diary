@@ -950,17 +950,16 @@ describe("POST /:galleryId/neighbors (photo modal navigation)", () => {
   });
 });
 
-describe("GET /:galleryId/filter-values (filter pill universe)", () => {
+describe("POST /:galleryId/filter-values (filter pill universe)", () => {
   const getFilterValues = (
     token: string | undefined,
     galleryId: string,
     lang?: string,
     status = 200
   ) => {
-    const url =
-      `/api/v1/gallery-photos/${galleryId}/filter-values` +
-      (lang ? `?lang=${lang}` : "");
-    const req = api.get(url);
+    const req = api
+      .post(`/api/v1/gallery-photos/${galleryId}/filter-values`)
+      .send(lang ? { lang } : {});
     if (token) req.set("Authorization", `Bearer ${token}`);
     return req.expect(status);
   };
@@ -979,6 +978,10 @@ describe("GET /:galleryId/filter-values (filter pill universe)", () => {
 
   test("guest blocked from gallery1 → empty universe (privacy collapse)", async () => {
     const res = await getFilterValues(undefined, "gallery1");
-    expect(res.body).toEqual({ categoryValues: {}, byCityLocalized: {} });
+    expect(res.body).toEqual({
+      categoryValues: {},
+      categoryCounts: {},
+      byCityLocalized: {},
+    });
   });
 });

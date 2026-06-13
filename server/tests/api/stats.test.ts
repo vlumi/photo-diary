@@ -313,14 +313,15 @@ describe("unknown bucket", () => {
   });
 });
 
-describe("GET /api/v1/filter-values (global filter pill universe)", () => {
+describe("POST /api/v1/filter-values (global filter pill universe)", () => {
   const getGlobalFV = (
     token: string | undefined,
     lang?: string,
     status = 200
   ) => {
-    const url = "/api/v1/filter-values/" + (lang ? `?lang=${lang}` : "");
-    const req = api.get(url);
+    const req = api
+      .post("/api/v1/filter-values/")
+      .send(lang ? { lang } : {});
     if (token) req.set("Authorization", `Bearer ${token}`);
     return req.expect(status);
   };

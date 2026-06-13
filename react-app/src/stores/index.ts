@@ -1,6 +1,7 @@
 export { useUserStore } from "./user";
 export { useLangStore, ensureAllCountryLocales } from "./lang";
 export { useFiltersStore } from "./filters";
+export { useFilterModalStore } from "./filter-modal";
 export { useScrollStore } from "./scroll";
 export { useNotificationsStore } from "./notifications";
 export { useLoginModalStore } from "./login-modal";

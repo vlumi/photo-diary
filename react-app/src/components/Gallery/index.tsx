@@ -9,7 +9,7 @@ import galleryService from "../../services/galleries";
 import galleryPhotosService from "../../services/gallery-photos";
 
 import Title from "./Title";
-import Filters from "./Filters";
+import Filters, { FilterModal } from "./Filters";
 import ListBody from "./ListBody";
 import Empty from "./Empty";
 import Full from "./Full";
@@ -25,6 +25,7 @@ import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
 
 import collection from "../../lib/collection";
 import config from "../../lib/config";
+import filter from "../../lib/filter";
 import format from "../../lib/format";
 import { galleriesForHost } from "../../lib/host-scope";
 import stats, { type UniqueValues } from "../../lib/stats";
@@ -66,6 +67,10 @@ const globalStyles = (theme: ActiveTheme) => css`
     --photo-frame-mat: ${theme.get("photo-frame-mat")};
     --photo-frame-border: ${theme.get("photo-frame-border")};
     filter: ${theme.get("filter")};
+    overflow-x: hidden;
+  }
+  body {
+    overflow-x: hidden;
   }
 `;
 
@@ -89,6 +94,7 @@ const Gallery = ({
   const countryData = useLangStore((s) => s.countryData);
   const filters = useFiltersStore((s) => s.filters);
   const setFilters = useFiltersStore((s) => s.setFilters);
+  const dateRange = useFiltersStore((s) => s.dateRange);
   const setScroll = useScrollStore((s) => s.set);
   const themePreference = useThemePreferenceStore((s) => s.preference);
   const loadThemePreference = useThemePreferenceStore((s) => s.load);
@@ -143,10 +149,29 @@ const Gallery = ({
     !!galleryId &&
     !!galleriesQuery.data &&
     galleriesQuery.data.some((g) => g.id() === galleryId);
-  // Filter pill universe (#532). Tiny payload, server-cached.
+  // Filter pill universe + filter-aware counts. Values stay the
+  // unfiltered universe; counts reflect the active filter so the
+  // modal's top-N sort favours values that still produce a hit.
+  // Refetches whenever filter or dateRange change.
+  const serverFiltersForValues = React.useMemo(
+    () => filter.toServerFilters(filters),
+    [filters]
+  );
   const filterValuesQuery = useQuery({
-    queryKey: ["gallery-filter-values", galleryId, user?.id ?? null, lang],
-    queryFn: () => galleryPhotosService.getFilterValues(galleryId as string, lang),
+    queryKey: [
+      "gallery-filter-values",
+      galleryId,
+      user?.id ?? null,
+      lang,
+      serverFiltersForValues,
+      dateRange,
+    ],
+    queryFn: () =>
+      galleryPhotosService.getFilterValues(galleryId as string, {
+        filter: serverFiltersForValues,
+        dateRange,
+        lang,
+      }),
     enabled: galleryInList,
   });
   // Unfiltered gallery shape (#532): drives lastPath in the gallery
@@ -356,12 +381,9 @@ const Gallery = ({
         >
           <Title galleries={visibleGalleries} gallery={gallery} context={context} lang={lang} />
           <Filters
-            filters={filters}
-            setFilters={setFilters}
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
-            hideMap={gallery.hideMap()}
           />
         </Stats>
       );
@@ -371,12 +393,9 @@ const Gallery = ({
         <Empty gallery={gallery}>
           <Title galleries={visibleGalleries} gallery={gallery} context={context} lang={lang} />
           <Filters
-            filters={filters}
-            setFilters={setFilters}
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
-            hideMap={gallery.hideMap()}
           />
         </Empty>
       );
@@ -386,12 +405,9 @@ const Gallery = ({
         <Full gallery={gallery}>
           <Title galleries={visibleGalleries} gallery={gallery} context={context} lang={lang} />
           <Filters
-            filters={filters}
-            setFilters={setFilters}
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
-            hideMap={gallery.hideMap()}
           />
         </Full>
       );
@@ -407,12 +423,9 @@ const Gallery = ({
             lang={lang}
           />
           <Filters
-            filters={filters}
-            setFilters={setFilters}
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
-            hideMap={gallery.hideMap()}
           />
         </Year>
       );
@@ -439,12 +452,9 @@ const Gallery = ({
             lang={lang}
           />
           <Filters
-            filters={filters}
-            setFilters={setFilters}
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
-            hideMap={gallery.hideMap()}
           />
         </Month>
       );
@@ -489,12 +499,9 @@ const Gallery = ({
             lang={lang}
           />
           <Filters
-            filters={filters}
-            setFilters={setFilters}
             uniqueValues={uniqueValues}
             lang={lang}
             countryData={countryData}
-            hideMap={gallery.hideMap()}
           />
         </Month>
         <Photo
@@ -516,6 +523,14 @@ const Gallery = ({
       <React.Suspense fallback={<div>{t("loading")}</div>}>
         {renderContent()}
       </React.Suspense>
+      {gallery && uniqueValues ? (
+        <FilterModal
+          uniqueValues={uniqueValues}
+          lang={lang}
+          countryData={countryData}
+          hideMap={gallery.hideMap()}
+        />
+      ) : null}
     </>
   );
 };

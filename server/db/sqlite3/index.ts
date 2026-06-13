@@ -13,6 +13,7 @@ import {
 } from "../../lib/photo-filter-eval.js";
 import {
   buildAnnotations,
+  buildCategoryCounts,
   buildCategoryValues,
 } from "../../lib/stats-compute.js";
 import { migrate } from "./migrate.js";
@@ -1185,22 +1186,70 @@ const queryFilteredPhotoNeighbors = async (
 // `geotagged` (constant yes/no so the pill stays selectable).
 interface FilterValuesResult {
   categoryValues: Record<string, string[]>;
+  // Per-value photo counts per category — drives the filter widget's
+  // top-N sort so the operator sees the most-populated values first.
+  // Same kebab-case category names as `categoryValues`. Synthetic
+  // categories (`geotagged`, `year-month`) get inline-bucketed counts
+  // since they aren't part of `buildByCategory`.
+  categoryCounts: Record<string, Record<string, number>>;
   byCityLocalized: Record<string, string>;
 }
+const yearMonthOf = (photo: Photo): string => {
+  const i = photo.taken.instant;
+  return `${i.year}-${String(i.month).padStart(2, "0")}`;
+};
+const isGeotagged = (photo: Photo): boolean => {
+  const coords = photo.taken?.location?.coordinates;
+  return (
+    coords !== undefined &&
+    coords !== null &&
+    coords.latitude !== null &&
+    coords.longitude !== null
+  );
+};
 // Shared projection from the photo set into the kebab-case
 // FilterShape universe. Used by both the gallery-scoped
 // `queryGalleryFilterValues` (#534) and the global cross-gallery
 // flavour (followup to #532). Photos array is already filtered to
 // the appropriate scope by the caller.
-const buildFilterValuesFromPhotos = (photos: Photo[]): FilterValuesResult => {
+//
+// `filter` + `dateRange` drive a single-pass facet for counts —
+// `categoryValues` stays the unfiltered universe (so search can
+// find any value), but counts reflect the active filter set so the
+// client's top-N sort favours values that produce a hit under the
+// current pick. Same filter applied to every category; the client
+// decides whether to display 0-count chips based on whether the
+// category itself is actively filtered.
+const buildFilterValuesFromPhotos = (
+  photos: Photo[],
+  filter?: FilterShape,
+  dateRange?: DateRange
+): FilterValuesResult => {
   const cv = buildCategoryValues(photos);
   const annotations = buildAnnotations(photos);
   const yearMonthSet = new Set<string>();
   for (const p of photos) {
-    const i = p.taken.instant;
-    yearMonthSet.add(`${i.year}-${String(i.month).padStart(2, "0")}`);
+    yearMonthSet.add(yearMonthOf(p));
   }
   const yearMonths = [...yearMonthSet].sort();
+  const noFilter = !filter || Object.keys(filter).length === 0;
+  const noDateRange =
+    !dateRange || (!dateRange.from && !dateRange.to);
+  const subset =
+    noFilter && noDateRange
+      ? photos
+      : photos.filter(
+        (p) =>
+          matchesFilter(filter, p) && matchesDateRange(dateRange, p)
+      );
+  const cc = buildCategoryCounts(subset);
+  const yearMonthCounts: Record<string, number> = {};
+  const geotaggedCounts: Record<string, number> = { yes: 0, no: 0 };
+  for (const p of subset) {
+    yearMonthCounts[yearMonthOf(p)] =
+      (yearMonthCounts[yearMonthOf(p)] ?? 0) + 1;
+    geotaggedCounts[isGeotagged(p) ? "yes" : "no"] += 1;
+  }
   return {
     categoryValues: {
       author: cv.author ?? [],
@@ -1228,21 +1277,51 @@ const buildFilterValuesFromPhotos = (photos: Photo[]): FilterValuesResult => {
       orientation: cv.orientation ?? [],
       "aspect-ratio": cv.aspectRatio ?? [],
     },
+    categoryCounts: {
+      author: cc.author ?? {},
+      country: cc.country ?? {},
+      state: cc.state ?? {},
+      city: cc.city ?? {},
+      geotagged: geotaggedCounts,
+      year: cc.year ?? {},
+      "year-month": yearMonthCounts,
+      month: cc.month ?? {},
+      weekday: cc.weekday ?? {},
+      hour: cc.hour ?? {},
+      "camera-make": cc.cameraMake ?? {},
+      camera: cc.camera ?? {},
+      lens: cc.lens ?? {},
+      "camera-lens": cc.cameraLens ?? {},
+      "focal-length": cc.focalLength ?? {},
+      "focal-length-eq": cc.focalLength35mmEquiv ?? {},
+      aperture: cc.aperture ?? {},
+      "exposure-time": cc.exposureTime ?? {},
+      iso: cc.iso ?? {},
+      ev: cc.ev ?? {},
+      lv: cc.lv ?? {},
+      resolution: cc.resolution ?? {},
+      orientation: cc.orientation ?? {},
+      "aspect-ratio": cc.aspectRatio ?? {},
+    },
     byCityLocalized: annotations.byCityLocalized,
   };
 };
 const queryGalleryFilterValues = async (
   galleryId: string,
-  lang?: string
+  lang?: string,
+  filter?: FilterShape,
+  dateRange?: DateRange
 ): Promise<FilterValuesResult> => {
   const photos = (await loadGalleryPhotos(galleryId, lang)) as Photo[];
-  return buildFilterValuesFromPhotos(photos);
+  return buildFilterValuesFromPhotos(photos, filter, dateRange);
 };
 const queryGlobalFilterValues = async (
-  lang?: string
+  lang?: string,
+  filter?: FilterShape,
+  dateRange?: DateRange
 ): Promise<FilterValuesResult> => {
   const photos = (await loadPhotos(lang)) as Photo[];
-  return buildFilterValuesFromPhotos(photos);
+  return buildFilterValuesFromPhotos(photos, filter, dateRange);
 };
 
 const loadGalleryPhoto = async (

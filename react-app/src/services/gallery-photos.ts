@@ -64,10 +64,19 @@ const getNeighbors = async (
 // warm cache costs nothing extra. Lets the gallery viewer skip the
 // full unfiltered photo fetch it previously did just to derive
 // these values client-side.
-const getFilterValues = async (galleryId: string, lang?: string) =>
+interface FilterValuesOpts {
+  filter?: ServerFilters;
+  dateRange?: DateRange;
+  lang?: string;
+}
+const getFilterValues = async (
+  galleryId: string,
+  opts: FilterValuesOpts = {}
+) =>
   unwrap(
-    api.GET("/api/v1/gallery-photos/{galleryId}/filter-values", {
-      params: { path: { galleryId }, query: lang ? { lang } : undefined },
+    api.POST("/api/v1/gallery-photos/{galleryId}/filter-values", {
+      params: { path: { galleryId } },
+      body: opts,
     })
   );
 

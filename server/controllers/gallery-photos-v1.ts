@@ -89,6 +89,12 @@ const NeighborsResponse = Type.Object({
 });
 const FilterValuesResponse = Type.Object({
   categoryValues: Type.Record(Type.String(), Type.Array(Type.String())),
+  // Per-value photo counts per category — drives the filter widget's
+  // top-N sort under the active filter.
+  categoryCounts: Type.Record(
+    Type.String(),
+    Type.Record(Type.String(), Type.Number())
+  ),
   byCityLocalized: Type.Record(Type.String(), Type.String()),
 });
 
@@ -281,14 +287,18 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    * Filters sidebar in the gallery viewer without the client having
    * to fetch the gallery's full photo array.
    */
-  fastify.get(
+  fastify.post(
     "/:galleryId/filter-values",
     {
       schema: {
         tags: TAGS,
         summary: "Filter pill universe (per-category value set)",
         params: GalleryIdParam,
-        querystring: LangQuery,
+        body: Type.Object({
+          filter: Type.Optional(FilterSchema),
+          dateRange: Type.Optional(DateRangeSchema),
+          lang: Type.Optional(Type.String({ minLength: 2, maxLength: 8 })),
+        }),
         response: { 200: FilterValuesResponse },
       },
     },
@@ -301,11 +311,17 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         );
         return await model.getGalleryFilterValues(
           request.params.galleryId,
-          request.query.lang
+          request.body.lang,
+          request.body.filter,
+          request.body.dateRange
         );
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
-          return { categoryValues: {}, byCityLocalized: {} };
+          return {
+            categoryValues: {},
+            categoryCounts: {},
+            byCityLocalized: {},
+          };
         }
         throw error;
       }

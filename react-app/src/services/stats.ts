@@ -33,11 +33,13 @@ const getGlobalStats = async (
 // Cross-gallery filter pill universe (admin-only). Drives the
 // GlobalStats filter sidebar without needing the full photo array
 // client-side.
-const getGlobalFilterValues = async (lang?: string) =>
+const getGlobalFilterValues = async (
+  filter?: ServerFilters,
+  lang?: string,
+  dateRange?: DateRange
+) =>
   unwrap(
-    api.GET("/api/v1/filter-values", {
-      params: { query: lang ? { lang } : undefined },
-    })
+    api.POST("/api/v1/filter-values", { body: { filter, dateRange, lang } })
   );
 
 // Per-bucket time-series for the trend chart in the category
