@@ -227,21 +227,30 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "grant <group> <gallery>",
-    "Grant a group view (or editor with --editor) on a gallery. Idempotent — re-running with a different --editor toggles it.",
+    "Grant a group view (or editor with --editor) on a gallery. --private-view extends view to private-flagged photos. Idempotent — re-running with different flags toggles them.",
     (y) =>
       y
         .positional("group", { describe: "Group ID", type: "string", demandOption: true })
         .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
-        .option("editor", { describe: "Grant gallery-editor instead of view", type: "boolean", default: false }),
+        .option("editor", { describe: "Grant gallery-editor instead of view", type: "boolean", default: false })
+        .option("private-view", {
+          describe:
+            "Extend view to gallery_photo rows flagged is_private (no effect with --editor; editors always see private)",
+          type: "boolean",
+          default: false,
+        }),
     async (argv) => {
       requireRealGalleryId(argv.gallery);
       await db.upsertGroupGallery({
         group_id: argv.group,
         gallery_id: argv.gallery,
         is_editor: !!argv.editor,
+        can_see_private: !!argv["private-view"],
       });
+      const tier = argv.editor ? "editor" : "view";
+      const privacy = argv["private-view"] ? " + private-view" : "";
       console.log(
-        `✓ Granted ${argv.editor ? "editor" : "view"} to group (${argv.group}, ${argv.gallery})`
+        `✓ Granted ${tier}${privacy} to group (${argv.group}, ${argv.gallery})`
       );
     }
   )

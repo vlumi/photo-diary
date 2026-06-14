@@ -116,6 +116,7 @@ const PhotoOverridesFields = {
       { additionalProperties: false }
     )
   ),
+  isPrivate: Type.Optional(Type.Boolean()),
 };
 const PhotoCreateBody = Type.Object(
   {

@@ -216,8 +216,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
-        const gallery = (await model.getGallery(
+        const includePrivate = await authorizer.resolveCanSeePrivate(
+          request.user.id,
           request.params.galleryId
+        );
+        const gallery = (await model.getGallery(
+          request.params.galleryId,
+          includePrivate
         )) as Record<string, unknown> & { id: string; photos?: unknown[] };
         const hideMap = await shouldHideMap(
           request.user.id,

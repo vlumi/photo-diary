@@ -5,10 +5,12 @@
 ### Frontend
 
 - Global Stats (`/stats`, admin) gains feature parity with the gallery-scoped Stats: the Evolution chart now renders inside any trendable category's modal across the whole instance, sharing the same granularity toggle and palette. Closes #602.
+- Per-photo visibility: photos gain a "Private" switch in PhotoDrawer; `/m/photos` bulk multi-select gains "Set private…" and "Set public…" actions; the `/m/access` table grows a per-gallery "Private" column granting `can_see_private` to view-only viewers (editors implicit); and the public Photo modal shows a "Private" badge to viewers who can see it. Closes #480.
 
 ### Server
 
 - New `POST /api/v1/stats/evolution` (admin, unscoped) returns per-bucket year-month series across every gallery, mirroring `/galleries/:id/stats/evolution`.
+- `photo` gains an `is_private` flag and `user_gallery` / `group_gallery` gain `can_see_private`; every gallery read path (list, query, counts, neighbors, filter-values, gallery+photo, stats, evolution) excludes private photos unless the resolved viewer is admin, gallery-editor, or holds a direct/inherited `can_see_private` grant on the gallery they're viewing. The flag flips through the existing `PUT /api/v1/photos/:photoId` (gallery-editor on any of the photo's galleries). `bin/user.ts grant --private-view`, `bin/group.ts grant --private-view`, and `bin/photo.ts private/public <id>` are the CLI flavours.
 
 ## [0.16.0] - 2026-06-13
 

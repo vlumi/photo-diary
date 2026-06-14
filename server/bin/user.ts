@@ -336,21 +336,30 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "grant <user> <gallery>",
-    "Grant a user view (or gallery-editor with --editor) on a gallery. Idempotent — re-running with a different --editor toggles it.",
+    "Grant a user view (or gallery-editor with --editor) on a gallery. --private-view extends view to private-flagged photos. Idempotent — re-running with different flags toggles them.",
     (y) =>
       y
         .positional("user", { describe: "User ID (or :guest)", type: "string", demandOption: true })
         .positional("gallery", { describe: "Gallery ID", type: "string", demandOption: true })
-        .option("editor", { describe: "Grant gallery-editor instead of view", type: "boolean", default: false }),
+        .option("editor", { describe: "Grant gallery-editor instead of view", type: "boolean", default: false })
+        .option("private-view", {
+          describe:
+            "Extend view to gallery_photo rows flagged is_private (no effect with --editor; editors always see private)",
+          type: "boolean",
+          default: false,
+        }),
     async (argv) => {
       requireRealGalleryId(argv.gallery);
       await db.upsertUserGallery({
         user_id: argv.user,
         gallery_id: argv.gallery,
         is_editor: !!argv.editor,
+        can_see_private: !!argv["private-view"],
       });
+      const tier = argv.editor ? "editor" : "view";
+      const privacy = argv["private-view"] ? " + private-view" : "";
       console.log(
-        `✓ Granted ${argv.editor ? "editor" : "view"} to user (${argv.user}, ${argv.gallery})`
+        `✓ Granted ${tier}${privacy} to user (${argv.user}, ${argv.gallery})`
       );
     }
   )

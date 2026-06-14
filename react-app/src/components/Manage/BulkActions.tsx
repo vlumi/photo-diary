@@ -217,6 +217,8 @@ type Pending =
   | { kind: "none" }
   | { kind: "confirm-delete" }
   | { kind: "confirm-regeocode" }
+  | { kind: "confirm-set-private" }
+  | { kind: "confirm-set-public" }
   | { kind: "pick-link" }
   | { kind: "pick-unlink" }
   | { kind: "edit-fields" };
@@ -485,6 +487,11 @@ const BulkActions = ({
       galleryPhotosService.unlink(galleryPick, id)
     );
   };
+  // Bulk privacy: photo-level (#480), so the same simple iterator
+  // pattern as edit-fields / regeocode works — no gallery picker
+  // needed.
+  const doSetPrivacy = (isPrivate: boolean) =>
+    runSequentially((id) => photosService.update(id, { isPrivate }));
   const doApplyFields = () => {
     const patch = buildPatch(values);
     if (Object.keys(patch).length === 0) {
@@ -694,6 +701,49 @@ const BulkActions = ({
         </Backdrop>
       );
     }
+    if (
+      pending.kind === "confirm-set-private" ||
+      pending.kind === "confirm-set-public"
+    ) {
+      const isPrivate = pending.kind === "confirm-set-private";
+      const title = isPrivate
+        ? t("manage-photos-bulk-set-private")
+        : t("manage-photos-bulk-set-public");
+      const intro = isPrivate
+        ? t("manage-photos-bulk-confirm-set-private", { count })
+        : t("manage-photos-bulk-confirm-set-public", { count });
+      const applyLabel = busy
+        ? t("manage-photos-bulk-applying")
+        : isPrivate
+          ? t("manage-photos-bulk-set-private-button")
+          : t("manage-photos-bulk-set-public-button");
+      return (
+        <Backdrop
+          onClick={onBackdropClick}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bulk-modal-title"
+        >
+          <ModalBox>
+            <ModalTitle id="bulk-modal-title">{title}</ModalTitle>
+            <ModalBody>{intro}</ModalBody>
+            <ModalFooter>
+              <ActionButton type="button" disabled={busy} onClick={closeModal}>
+                {t("manage-user-button-cancel")}
+              </ActionButton>
+              <ActionButton
+                type="button"
+                disabled={busy}
+                onClick={() => void doSetPrivacy(isPrivate)}
+              >
+                {applyLabel}
+              </ActionButton>
+            </ModalFooter>
+            {error ? <ErrorText>{error}</ErrorText> : null}
+          </ModalBox>
+        </Backdrop>
+      );
+    }
     const isLink = pending.kind === "pick-link";
     const choices = galleries;
     return (
@@ -796,6 +846,20 @@ const BulkActions = ({
             onClick={() => setPending({ kind: "pick-unlink" })}
           >
             {t("manage-photos-bulk-unlink")}
+          </ActionButton>
+          <ActionButton
+            type="button"
+            disabled={busy || count === 0}
+            onClick={() => setPending({ kind: "confirm-set-private" })}
+          >
+            {t("manage-photos-bulk-set-private")}
+          </ActionButton>
+          <ActionButton
+            type="button"
+            disabled={busy || count === 0}
+            onClick={() => setPending({ kind: "confirm-set-public" })}
+          >
+            {t("manage-photos-bulk-set-public")}
           </ActionButton>
           {isAdmin && (
             <>

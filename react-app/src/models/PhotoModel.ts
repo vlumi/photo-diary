@@ -78,6 +78,11 @@ export interface PhotoData {
   exposure?: Exposure;
   geocoded?: Geocoded;
   galleries?: string[];
+  // Per-gallery privacy when the photo is fetched in a specific
+  // gallery's context (#480). True iff the link in that gallery is
+  // flagged `is_private` — surfaces the modal badge for viewers
+  // with `can_see_private`.
+  isPrivate?: boolean;
 }
 
 interface CountryData {
@@ -147,6 +152,7 @@ const PhotoModel = (photoData: unknown) => {
     description: (lang?: string): string | undefined =>
       pickLocalized(photo.description, photo.descriptionLocalized, lang),
     author: (): string | undefined => photo.taken.author,
+    isPrivate: (): boolean => !!photo.isPrivate,
     galleries: (): string[] => photo.galleries ?? [],
 
     ymd: (): [number, number, number] => [self.year(), self.month(), self.day()],

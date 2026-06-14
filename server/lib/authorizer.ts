@@ -9,6 +9,7 @@ export default () => {
     authorizeGalleryEditor,
     authorizePhotoEditor,
     loadEditorGalleries,
+    resolveCanSeePrivate,
   };
 };
 
@@ -18,11 +19,11 @@ export default () => {
 const resolve = async (
   userId: string,
   galleryId: string
-): Promise<{ hasAccess: boolean; isEditor: boolean }> => {
+): Promise<{ hasAccess: boolean; isEditor: boolean; canSeePrivate: boolean }> => {
   try {
     return await db.resolveAccessLevel(userId, galleryId);
   } catch {
-    return { hasAccess: false, isEditor: false };
+    return { hasAccess: false, isEditor: false, canSeePrivate: false };
   }
 };
 
@@ -137,6 +138,26 @@ const authorizePhotoEditor = async (
     photoId,
     required: "gallery-editor",
   });
+};
+
+// Cascade resolution for the per-gallery "this user sees private
+// photos here" predicate. Admin/editor inherit `canSeePrivate`
+// from `resolveAccessLevel`; for the saved-filter case, inherit
+// from the source gallery the same extend-never-narrow way view
+// does. Returns false when the user has no access at all (no
+// caller should be asking, but defensive).
+const resolveCanSeePrivate = async (
+  userId: string,
+  galleryId: string
+): Promise<boolean> => {
+  const direct = await resolve(userId, galleryId);
+  if (direct.hasAccess && direct.canSeePrivate) return true;
+  const source = await loadSourceFor(galleryId);
+  if (source !== undefined) {
+    const inherited = await resolve(userId, source);
+    if (inherited.hasAccess && inherited.canSeePrivate) return true;
+  }
+  return false;
 };
 
 // Direct + group-derived gallery-editor grants for a user.

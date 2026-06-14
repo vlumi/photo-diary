@@ -5,11 +5,13 @@ export interface GroupGalleryRow {
   gallery_id: string;
   is_editor: number;
   hide_map: number | null;
+  can_see_private: number;
 }
 
 export interface GroupGalleryUpsertBody {
   isEditor: boolean;
   hideMap?: boolean | null;
+  canSeePrivate?: boolean;
 }
 
 const list = async (filter: {

@@ -22,6 +22,7 @@ const upsertGroupGallery = async (row: {
   gallery_id: string;
   is_editor?: boolean;
   hide_map?: number | null;
+  can_see_private?: boolean;
 }) => {
   logger.debug("Upserting group_gallery", row);
   await db.upsertGroupGallery(row);

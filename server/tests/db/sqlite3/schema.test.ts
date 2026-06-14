@@ -71,10 +71,16 @@ describe("User", () => {
 });
 
 describe("UserGallery", () => {
-  const cols = ["user_id", "gallery_id", "is_editor", "hide_map"].join(",");
+  const cols = [
+    "user_id",
+    "gallery_id",
+    "is_editor",
+    "hide_map",
+    "can_see_private",
+  ].join(",");
   test("Build create query", () =>
     expect(schema.userGallery.buildCreateQuery()).toBe(
-      `INSERT INTO user_gallery (${cols}) VALUES (?,?,?,?)`
+      `INSERT INTO user_gallery (${cols}) VALUES (?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.userGallery.buildSelectByIdQuery()).toBe(
@@ -341,10 +347,11 @@ describe("Photo", () => {
 
     "geocode_no_data",
     "exif_at_intake",
+    "is_private",
   ].join(",");
   test("Build create query", () =>
     expect(schema.photo.buildCreateQuery()).toBe(
-      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.photo.buildSelectByIdQuery()).toBe(

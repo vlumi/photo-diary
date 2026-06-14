@@ -235,33 +235,43 @@ const deleteUserSessions = async (userId: string): Promise<void> => {
 const resolveAccessLevel = async (
   userId: string,
   galleryId: string
-): Promise<{ hasAccess: boolean; isEditor: boolean }> => {
+): Promise<{
+  hasAccess: boolean;
+  isEditor: boolean;
+  canSeePrivate: boolean;
+}> => {
   const userRow = db
     .prepare("SELECT is_admin FROM user WHERE id = ?")
     .get(userId) as { is_admin: number } | undefined;
   if (userRow && userRow.is_admin) {
-    return { hasAccess: true, isEditor: true };
+    return { hasAccess: true, isEditor: true, canSeePrivate: true };
   }
-  // UNION ALL of the two row sources, then MAX. Sub-queries are cheap on
-  // the small tables involved; explicit form reads better than a JOIN.
+  // UNION ALL of the two row sources, then MAX each flag. Sub-queries are
+  // cheap on the small tables involved; explicit form reads better than a
+  // JOIN.
   const grantRow = db
     .prepare(
-      `SELECT MAX(is_editor) AS is_editor FROM (
-         SELECT is_editor FROM user_gallery
-           WHERE user_id IN (?, ':guest') AND gallery_id = ?
-         UNION ALL
-         SELECT is_editor FROM group_gallery
-           WHERE gallery_id = ?
-             AND group_id IN (SELECT group_id FROM user_group WHERE user_id = ?)
-       )`
+      `SELECT MAX(is_editor) AS is_editor,
+              MAX(can_see_private) AS can_see_private
+         FROM (
+           SELECT is_editor, can_see_private FROM user_gallery
+             WHERE user_id IN (?, ':guest') AND gallery_id = ?
+           UNION ALL
+           SELECT is_editor, can_see_private FROM group_gallery
+             WHERE gallery_id = ?
+               AND group_id IN (SELECT group_id FROM user_group WHERE user_id = ?)
+         )`
     )
     .get(userId, galleryId, galleryId, userId) as
-    | { is_editor: number | null }
+    | { is_editor: number | null; can_see_private: number | null }
     | undefined;
   if (grantRow?.is_editor === null || grantRow?.is_editor === undefined) {
-    return { hasAccess: false, isEditor: false };
+    return { hasAccess: false, isEditor: false, canSeePrivate: false };
   }
-  return { hasAccess: true, isEditor: !!grantRow.is_editor };
+  const isEditor = !!grantRow.is_editor;
+  // Editors implicitly see private — they need it to flip the flag.
+  const canSeePrivate = isEditor || !!grantRow.can_see_private;
+  return { hasAccess: true, isEditor, canSeePrivate };
 };
 
 const loadUserGalleryRows = async (
@@ -288,6 +298,7 @@ const upsertUserGallery = async (
     gallery_id: string;
     is_editor?: boolean;
     hide_map?: number | null;
+    can_see_private?: boolean;
   }
 ): Promise<void> => {
   // Only touch the columns the caller passed (everything else is preserved on
@@ -298,19 +309,22 @@ const upsertUserGallery = async (
   const sets: string[] = [];
   if ("is_editor" in row) sets.push("is_editor = excluded.is_editor");
   if ("hide_map" in row) sets.push("hide_map = excluded.hide_map");
+  if ("can_see_private" in row)
+    sets.push("can_see_private = excluded.can_see_private");
   const conflict =
     sets.length > 0
       ? `DO UPDATE SET ${sets.join(", ")}`
       : "DO NOTHING";
   const query =
-    "INSERT INTO user_gallery (user_id, gallery_id, is_editor, hide_map) " +
-    "VALUES (?, ?, ?, ?) " +
+    "INSERT INTO user_gallery (user_id, gallery_id, is_editor, hide_map, can_see_private) " +
+    "VALUES (?, ?, ?, ?, ?) " +
     `ON CONFLICT(user_id, gallery_id) ${conflict}`;
   db.prepare(query).run(
     row.user_id,
     row.gallery_id,
     row.is_editor ? 1 : 0,
-    row.hide_map ?? null
+    row.hide_map ?? null,
+    row.can_see_private ? 1 : 0
   );
 };
 
@@ -399,25 +413,29 @@ const upsertGroupGallery = async (row: {
   gallery_id: string;
   is_editor?: boolean;
   hide_map?: number | null;
+  can_see_private?: boolean;
 }): Promise<void> => {
   // Mirror upsertUserGallery: DO NOTHING when no mutable columns were
   // passed, else DO UPDATE the supplied subset.
   const sets: string[] = [];
   if ("is_editor" in row) sets.push("is_editor = excluded.is_editor");
   if ("hide_map" in row) sets.push("hide_map = excluded.hide_map");
+  if ("can_see_private" in row)
+    sets.push("can_see_private = excluded.can_see_private");
   const conflict =
     sets.length > 0
       ? `DO UPDATE SET ${sets.join(", ")}`
       : "DO NOTHING";
   const query =
-    "INSERT INTO group_gallery (group_id, gallery_id, is_editor, hide_map) " +
-    "VALUES (?, ?, ?, ?) " +
+    "INSERT INTO group_gallery (group_id, gallery_id, is_editor, hide_map, can_see_private) " +
+    "VALUES (?, ?, ?, ?, ?) " +
     `ON CONFLICT(group_id, gallery_id) ${conflict}`;
   db.prepare(query).run(
     row.group_id,
     row.gallery_id,
     row.is_editor ? 1 : 0,
-    row.hide_map ?? null
+    row.hide_map ?? null,
+    row.can_see_private ? 1 : 0
   );
 };
 const deleteGroupGallery = async (
@@ -1011,7 +1029,11 @@ const setGalleryOrder = async (ids: string[]): Promise<void> => {
   tx(ids);
 };
 
-const loadGalleryPhotos = async (galleryId: string, lang?: string) => {
+const loadGalleryPhotos = async (
+  galleryId: string,
+  lang?: string,
+  includePrivate = false
+) => {
   const schema = SCHEMA.photo;
   const ref = resolveGalleryRef(galleryId);
   if (ref.sources.length === 0) return [];
@@ -1021,11 +1043,15 @@ const loadGalleryPhotos = async (galleryId: string, lang?: string) => {
   // resolve to `[source_gallery_id]` + a baseline applied below in
   // JS — the SQL load is identical to a real source.
   const placeholders = ref.sources.map(() => "?").join(", ");
-  const stmt = db.prepare(
-    schema.buildSelectQuery([
-      `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
-    ])
-  );
+  const conditions = [
+    `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
+  ];
+  // `photo.is_private = 0` filter is fail-closed: callers must opt
+  // in with `includePrivate=true` (only after the authorizer
+  // confirms the viewer holds can_see_private on this gallery, or
+  // is admin / editor).
+  if (!includePrivate) conditions.push("is_private = 0");
+  const stmt = db.prepare(schema.buildSelectQuery(conditions));
   const rows = stmt.all(...ref.sources) as PhotoRow[];
   const localized = loadLocalizedFor(rows.map((r) => r.id));
   const photos = rows.map((row, index) =>
@@ -1050,6 +1076,7 @@ const linkGalleryPhoto = async (
   });
   insertAll();
 };
+
 const loadAllGalleryPhotoLinks = async (): Promise<
   Array<{ galleryId: string; photoId: string }>
 > => {
@@ -1066,6 +1093,7 @@ interface QueryFilteredOpts {
   month?: number;
   day?: number;
   lang?: string;
+  includePrivate?: boolean;
 }
 const matchesScope = (
   photo: Photo,
@@ -1089,7 +1117,11 @@ const queryFilteredPhotos = async (
   galleryId: string,
   opts: QueryFilteredOpts = {}
 ): Promise<Photo[]> => {
-  const photos = (await loadGalleryPhotos(galleryId, opts.lang)) as Photo[];
+  const photos = (await loadGalleryPhotos(
+    galleryId,
+    opts.lang,
+    opts.includePrivate
+  )) as Photo[];
   return photos.filter(
     (photo) =>
       matchesScope(photo, opts.year, opts.month, opts.day) &&
@@ -1121,12 +1153,17 @@ interface CountsFilteredOpts {
   dateRange?: DateRange;
   numericRanges?: NumericRanges;
   year?: number;
+  includePrivate?: boolean;
 }
 const queryFilteredPhotoCounts = async (
   galleryId: string,
   opts: CountsFilteredOpts = {}
 ): Promise<Record<string, number>> => {
-  const photos = (await loadGalleryPhotos(galleryId)) as Photo[];
+  const photos = (await loadGalleryPhotos(
+    galleryId,
+    undefined,
+    opts.includePrivate
+  )) as Photo[];
   const out: Record<string, number> = {};
   for (const photo of photos) {
     const instant = photo.taken.instant;
@@ -1148,6 +1185,7 @@ interface NeighborsFilteredOpts {
   dateRange?: DateRange;
   numericRanges?: NumericRanges;
   lang?: string;
+  includePrivate?: boolean;
 }
 interface NeighborsResult {
   previous?: Photo;
@@ -1162,7 +1200,11 @@ const queryFilteredPhotoNeighbors = async (
   photoId: string,
   opts: NeighborsFilteredOpts = {}
 ): Promise<NeighborsResult> => {
-  const all = (await loadGalleryPhotos(galleryId, opts.lang)) as Photo[];
+  const all = (await loadGalleryPhotos(
+    galleryId,
+    opts.lang,
+    opts.includePrivate
+  )) as Photo[];
   const filtered = all
     .filter(
       (p) =>
@@ -1334,9 +1376,14 @@ const queryGalleryFilterValues = async (
   lang?: string,
   filter?: FilterShape,
   dateRange?: DateRange,
-  numericRanges?: NumericRanges
+  numericRanges?: NumericRanges,
+  includePrivate = false
 ): Promise<FilterValuesResult> => {
-  const photos = (await loadGalleryPhotos(galleryId, lang)) as Photo[];
+  const photos = (await loadGalleryPhotos(
+    galleryId,
+    lang,
+    includePrivate
+  )) as Photo[];
   return buildFilterValuesFromPhotos(photos, filter, dateRange, numericRanges);
 };
 const queryGlobalFilterValues = async (
@@ -1352,18 +1399,19 @@ const queryGlobalFilterValues = async (
 const loadGalleryPhoto = async (
   galleryId: string,
   photoId: string,
-  lang?: string
+  lang?: string,
+  includePrivate = false
 ) => {
   const schema = SCHEMA.photo;
   const ref = resolveGalleryRef(galleryId);
   if (ref.sources.length === 0) throw new NotFoundError();
   const placeholders = ref.sources.map(() => "?").join(", ");
-  const stmt = db.prepare(
-    schema.buildSelectQuery([
-      `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
-      "id = ?",
-    ])
-  );
+  const conditions = [
+    `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
+    "id = ?",
+  ];
+  if (!includePrivate) conditions.push("is_private = 0");
+  const stmt = db.prepare(schema.buildSelectQuery(conditions));
   const rows = stmt.all(...ref.sources, photoId) as PhotoRow[];
   if (rows.length === 0) {
     throw new NotFoundError();
@@ -1498,18 +1546,19 @@ const loadPhotosByOriginalFilename = async (originalFilename: string) => {
 const loadGalleryPhotoByOriginalFilename = async (
   galleryId: string,
   originalFilename: string,
-  lang?: string
+  lang?: string,
+  includePrivate = false
 ) => {
   const schema = SCHEMA.photo;
   const ref = resolveGalleryRef(galleryId);
   if (ref.sources.length === 0) throw new NotFoundError();
   const placeholders = ref.sources.map(() => "?").join(", ");
-  const stmt = db.prepare(
-    schema.buildSelectQuery([
-      `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
-      "original_filename = ? COLLATE NOCASE",
-    ])
-  );
+  const conditions = [
+    `id IN (SELECT photo_id FROM gallery_photo WHERE gallery_id IN (${placeholders}))`,
+    "original_filename = ? COLLATE NOCASE",
+  ];
+  if (!includePrivate) conditions.push("is_private = 0");
+  const stmt = db.prepare(schema.buildSelectQuery(conditions));
   const rows = stmt.all(...ref.sources, originalFilename) as PhotoRow[];
   if (rows.length === 0) {
     throw new NotFoundError();
