@@ -469,6 +469,7 @@ const OPERATOR_SCRIPTS = [
   "photo",
   "photo-rename",
   "photo-geocode",
+  "photo-rerender",
   "gallery",
   "user",
   "group",

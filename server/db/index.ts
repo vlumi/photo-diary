@@ -409,6 +409,12 @@ export default {
   ): Promise<void> => {
     await db.upsertPhotoRendition(photoId, name, maxDim);
   },
+  loadAllPhotoRenditions: async () => {
+    return await db.loadAllPhotoRenditions();
+  },
+  deletePhotoRendition: async (photoId: string, name: string): Promise<void> => {
+    await db.deletePhotoRendition(photoId, name);
+  },
   loadPhoto: async (photoId: string, lang?: string) => {
     return await db.loadPhoto(photoId, lang);
   },
