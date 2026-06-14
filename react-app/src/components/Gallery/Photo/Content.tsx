@@ -266,7 +266,18 @@ const Content = ({
     return () => el.removeEventListener("wheel", onWheel);
   }, [setZoom]);
 
-  const path = `${config.PHOTO_ROOT_URL}display/${photo.id()}`;
+  const renditions = photo.renditions();
+  const naturalWidthFor = (maxDim: number): number =>
+    photoRatio >= 1 ? maxDim : Math.round(maxDim * photoRatio);
+  const sortedRenditions = [...renditions].sort((a, b) => a.maxDim - b.maxDim);
+  const fallbackName = sortedRenditions.at(-1)?.name ?? "display";
+  const path = `${config.PHOTO_ROOT_URL}${fallbackName}/${photo.id()}`;
+  const srcSet = sortedRenditions
+    .map(
+      (r) =>
+        `${config.PHOTO_ROOT_URL}${r.name}/${photo.id()} ${naturalWidthFor(r.maxDim)}w`
+    )
+    .join(", ");
 
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
     if (zoom.scale <= 1) return;
@@ -393,6 +404,8 @@ const Content = ({
         <ImageClip>
           <Image
             src={path}
+            srcSet={srcSet || undefined}
+            sizes={srcSet ? "100vw" : undefined}
             alt={photo.id()}
             width={imageWidth}
             height={imageHeight}

@@ -198,6 +198,15 @@ const processJpeg = async (
     logger.debug(`[${relPath}] Created DB row ${id}`);
   }
 
+  for (const target of TARGETS) {
+    if (target.kind !== "display") continue;
+    await db.upsertPhotoRendition(
+      id,
+      target.directory,
+      Math.max(target.dimensions.width, target.dimensions.height)
+    );
+  }
+
   const coords = (
     properties as {
       taken?: {
