@@ -751,22 +751,41 @@ const activeMissing = (searchParams: URLSearchParams): Set<MissingField> => {
 };
 
 
-const PhotoDrawer = (): React.ReactElement => {
+interface PhotoDrawerProps {
+  // Photo id to load + edit. Required.
+  photoId: string;
+  // Gallery context for the "View in gallery" link, the icon
+  // affordance, and any future per-gallery defaults. Optional —
+  // the routed mount lifts it from `?gallery=`; the in-place
+  // modal in the public Photo view passes it directly.
+  galleryId?: string;
+  // Called when the drawer wants to dismiss itself (Esc, the
+  // header × button, or Cancel). Routed mount strips the
+  // `/<photoId>` segment from the pathname; the in-place modal
+  // closes the overlay without navigating away from `/g/`.
+  onClose: () => void;
+  // `?missing=…` chip highlighting — only the routed (admin)
+  // mount carries this URL state. The in-place modal omits it.
+  missingActive?: Set<MissingField>;
+  // `inline`: opened over the public Photo view; the header
+  // surfaces an "Open in Manage" link to jump to /m/photos.
+  // `routed`: already at /m/photos/<id>; header offers the
+  // sibling "View on site" link instead.
+  mode?: "inline" | "routed";
+}
+
+const PhotoDrawer = ({
+  photoId,
+  galleryId,
+  onClose,
+  missingActive: missingActiveProp,
+  mode = "routed",
+}: PhotoDrawerProps): React.ReactElement => {
   const { t } = useTranslation();
-  const { photoId } = useParams<{ photoId: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  // Gallery context for the drawer's "View in gallery" link and
-  // the Set-as-icon affordance — lifted from the active filter
-  // when exactly one `?gallery=` value is present (drawer is
-  // always nested under the photos route, no `:galleryId` route
-  // param to read).
-  const filteredGalleries = searchParams.getAll("gallery");
-  const galleryId =
-    filteredGalleries.length === 1 ? filteredGalleries[0] : undefined;
   const queryClient = useQueryClient();
 
-  const id = photoId!;
+  const id = photoId;
   const { data, isLoading, isError } = useQuery({
     queryKey: ["manage-photo", id],
     queryFn: () => photosService.get(id) as Promise<PhotoData>,
@@ -854,14 +873,12 @@ const PhotoDrawer = (): React.ReactElement => {
   }, [data, id]);
 
   const close = React.useCallback(() => {
-    // Strip /<photoId> from the pathname, keep search.
-    const base = window.location.pathname.replace(/\/[^/]+$/, "");
-    navigate({ pathname: base, search: window.location.search });
-  }, [navigate]);
+    onClose();
+  }, [onClose]);
 
   useKeyPress("Escape", close);
 
-  const missingActive = activeMissing(searchParams);
+  const missingActive = missingActiveProp ?? new Set<MissingField>();
   const highlight = {
     title: missingActive.has("title") && !original.title,
     description: missingActive.has("description") && !original.description,
@@ -1454,7 +1471,22 @@ const PhotoDrawer = (): React.ReactElement => {
       <Header>
         <Title>{data?.title || data?.id || id}</Title>
         <HeaderActions>
-          {publicUrl && (
+          {mode === "inline" && id && (
+            <ViewOnSiteLink
+              onClick={() =>
+                navigate(
+                  `/m/photos/${id}${galleryId ? `?gallery=${galleryId}` : ""}`
+                )
+              }
+              role="link"
+              tabIndex={0}
+              aria-label={String(t("manage-photo-open-in-manage"))}
+              title={String(t("manage-photo-open-in-manage"))}
+            >
+              <BsBoxArrowUpRight />
+            </ViewOnSiteLink>
+          )}
+          {mode === "routed" && publicUrl && (
             <ViewOnSiteLink
               onClick={() => navigate(publicUrl)}
               role="link"
@@ -1508,4 +1540,33 @@ const PhotoDrawer = (): React.ReactElement => {
   );
 };
 
-export default PhotoDrawer;
+// Route-mounted wrapper. Reads photoId from `:photoId`, gallery
+// id from `?gallery=` (single value only), and missing-chip set
+// from `?missing=`; close strips the `/<photoId>` segment so the
+// parent `/m/photos` page reasserts. Used at `/m/photos/:photoId`.
+const RoutedPhotoDrawer = (): React.ReactElement => {
+  const { photoId } = useParams<{ photoId: string }>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const filteredGalleries = searchParams.getAll("gallery");
+  const galleryId =
+    filteredGalleries.length === 1 ? filteredGalleries[0] : undefined;
+  const missingActive = activeMissing(searchParams);
+  const close = React.useCallback(() => {
+    const base = window.location.pathname.replace(/\/[^/]+$/, "");
+    navigate({ pathname: base, search: window.location.search });
+  }, [navigate]);
+  if (!photoId) return <></>;
+  return (
+    <PhotoDrawer
+      photoId={photoId}
+      galleryId={galleryId}
+      onClose={close}
+      missingActive={missingActive}
+      mode="routed"
+    />
+  );
+};
+
+export { PhotoDrawer };
+export default RoutedPhotoDrawer;

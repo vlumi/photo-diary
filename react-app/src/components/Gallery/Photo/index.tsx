@@ -22,6 +22,13 @@ import Navigation from "./Navigation";
 import Content from "./Content";
 import MetadataPanel from "./MetadataPanel";
 
+// Editor-tier in-place editor. Lazy so the heavy admin drawer
+// doesn't bloat the public chunk — only fetched when an admin /
+// gallery-editor clicks the pencil button.
+const InlinePhotoDrawer = React.lazy(async () => ({
+  default: (await import("../../Manage/PhotoDrawer")).PhotoDrawer,
+}));
+
 import filter from "../../../lib/filter";
 import useKeyPress from "../../../lib/keypress";
 import { useBodyScrollLock } from "../../../lib/useBodyScrollLock";
@@ -131,6 +138,41 @@ const SetIconButton = styled(FloatingButton)`
 const InfoButton = styled(FloatingButton)`
   bottom: 16px;
   right: 16px;
+`;
+// In-place editor overlay. Centered modal stacked on top of the
+// Photo Frame so the photo stays visible underneath (greyed by the
+// scrim). Higher z-index than the photo modal's own Backdrop so
+// it lands above everything in the photo view.
+const EditorBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 20px;
+  @media (max-width: 600px) {
+    padding: 0;
+  }
+`;
+const EditorFrame = styled.div`
+  flex: 1 1 auto;
+  max-width: 900px;
+  background: var(--primary-background);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  @media (max-width: 600px) {
+    border-radius: 0;
+    box-shadow: none;
+  }
+`;
+const EditorLoading = styled.div`
+  padding: 24px;
+  color: var(--inactive-color);
 `;
 // "Private in this gallery" badge — surfaces when the user can see
 // the photo only because their grant carries `can_see_private` (or
@@ -262,6 +304,11 @@ const Photo = ({
   // floating Manage / SetIcon buttons. Server enforces per-request,
   // this is just the rendering hint.
   const canManage = !!user?.isGalleryEditor(gallery.id());
+  // In-place editor modal — opens over the public Photo view so
+  // editors don't have to navigate away from `/g/` to fix
+  // metadata. The "Open in Manage" link inside still takes them
+  // to the full /m/photos/<id> surface when they want it.
+  const [inlineEditOpen, setInlineEditOpen] = React.useState(false);
   const [zoom, setZoom] = React.useState<ZoomState>(ZOOM_RESET);
   const [isFullscreen, setIsFullscreen] = React.useState(
     typeof document !== "undefined" && !!document.fullscreenElement
@@ -558,11 +605,7 @@ const Photo = ({
         {canManage && (
           <ManageButton
             type="button"
-            onClick={() =>
-              navigate(
-                `/m/photos/${photo.id()}?gallery=${gallery.id()}`
-              )
-            }
+            onClick={() => setInlineEditOpen(true)}
             aria-label={String(t("manage-this-photo"))}
             title={String(t("manage-this-photo"))}
           >
@@ -691,6 +734,28 @@ const Photo = ({
           />
         )}
       </Frame>
+      {inlineEditOpen && (
+        <EditorBackdrop
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setInlineEditOpen(false);
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <EditorFrame>
+            <React.Suspense fallback={<EditorLoading>{t("loading")}</EditorLoading>}>
+              <InlinePhotoDrawer
+                photoId={photo.id()}
+                galleryId={gallery.id()}
+                onClose={() => setInlineEditOpen(false)}
+                mode="inline"
+              />
+            </React.Suspense>
+          </EditorFrame>
+        </EditorBackdrop>
+      )}
     </Backdrop>
   );
 };
