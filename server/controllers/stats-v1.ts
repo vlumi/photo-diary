@@ -191,6 +191,31 @@ const globalPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
       );
     }
   );
+
+  fastify.post(
+    "/evolution",
+    {
+      schema: {
+        tags: TAGS,
+        summary:
+          "Per-bucket time-series for a trendable category across all galleries (admin)",
+        body: EvolutionBody,
+        response: { 200: EvolutionResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      requireUnscoped(request);
+      await authorizer.authorizeAdmin(request.user.id);
+      return await model.getGlobalEvolution(
+        request.body.category,
+        request.body.filter as FilterShape | undefined,
+        request.body.lang,
+        request.body.dateRange as DateRange | undefined,
+        request.body.numericRanges as NumericRanges | undefined
+      );
+    }
+  );
 };
 
 export default { init, galleryPlugin, globalPlugin };

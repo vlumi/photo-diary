@@ -44,6 +44,7 @@ export default () => ({
   getGalleryStats,
   getGalleryEvolution,
   getGlobalStats,
+  getGlobalEvolution,
   getGlobalFilterValues,
 });
 
@@ -160,6 +161,25 @@ const getGlobalFilterValues = async (
     dateRange,
     numericRanges
   );
+};
+
+const getGlobalEvolution = async (
+  category: string,
+  filter?: FilterShape,
+  lang?: string,
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
+): Promise<EvolutionResult> => {
+  const loaded = (await db.loadPhotos(lang)) as Photo[];
+  const photos =
+    isDateRangeUnbounded(dateRange) && isNumericRangesUnbounded(numericRanges)
+      ? loaded
+      : loaded.filter(
+        (p) =>
+          matchesDateRange(dateRange, p) &&
+            matchesNumericRanges(numericRanges, p)
+      );
+  return buildEvolution(photos, category, filter);
 };
 
 const getGlobalStats = async (

@@ -68,9 +68,23 @@ const getGalleryEvolution = async (
     })
   );
 
+const getGlobalEvolution = async (
+  category: string,
+  filter: ServerFilters,
+  lang?: string,
+  dateRange?: DateRange,
+  numericRanges?: NumericRanges
+) =>
+  unwrap(
+    api.POST("/api/v1/stats/evolution", {
+      body: { category, filter, dateRange, numericRanges, lang },
+    })
+  );
+
 export default {
   getGalleryStats,
   getGlobalStats,
   getGlobalFilterValues,
   getGalleryEvolution,
+  getGlobalEvolution,
 };

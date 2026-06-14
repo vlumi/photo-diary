@@ -104,6 +104,7 @@ interface Props {
   topic: StatsTopic;
   category: StatsCategory;
   galleryId?: string;
+  globalScope?: boolean;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
@@ -116,6 +117,7 @@ const TableModal = ({
   topic,
   category,
   galleryId,
+  globalScope = false,
   filters,
   setFilters,
   theme,
@@ -205,9 +207,10 @@ const TableModal = ({
         </Header>
         <ScrollArea>
           <Charts category={category} sortMode={sortMode} />
-          {galleryId && isTrendable(category.key) && (
+          {(galleryId || globalScope) && isTrendable(category.key) && (
             <EvolutionChart
               galleryId={galleryId}
+              globalScope={globalScope}
               categoryKey={category.key}
               categoryTitle={category.title}
               theme={theme}

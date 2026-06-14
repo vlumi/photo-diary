@@ -199,6 +199,7 @@ interface Props {
   topic: StatsTopic;
   category: StatsCategory;
   galleryId?: string;
+  globalScope?: boolean;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
@@ -210,6 +211,7 @@ const Category = ({
   topic,
   category,
   galleryId,
+  globalScope = false,
   filters,
   setFilters,
   theme,
@@ -286,6 +288,7 @@ const Category = ({
           topic={topic}
           category={category}
           galleryId={galleryId}
+          globalScope={globalScope}
           filters={filters}
           setFilters={setFilters}
           theme={theme}

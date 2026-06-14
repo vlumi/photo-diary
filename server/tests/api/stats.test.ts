@@ -301,6 +301,63 @@ describe("global (cross-gallery)", () => {
   });
 });
 
+describe("global evolution (cross-gallery)", () => {
+  const postGlobalEvolution = async (
+    token: string | undefined,
+    body: Record<string, unknown> = { category: "country" },
+    status = 200
+  ) =>
+    api
+      .post("/api/v1/stats/evolution")
+      .set("Authorization", `Bearer ${token}`)
+      .send(body)
+      .expect(status);
+
+  test("admin: returns yearMonths + bucket series across every gallery", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postGlobalEvolution(token);
+    expect(Array.isArray(res.body.yearMonths)).toBe(true);
+    expect(res.body.buckets).toBeDefined();
+    // Fixture spans jp + nl + fi across all 5 photos including the orphan.
+    expect(Object.keys(res.body.buckets).sort()).toEqual(["fi", "jp", "nl"]);
+    for (const series of Object.values(res.body.buckets) as Array<{
+      counts: number[];
+      cumulative: number[];
+    }>) {
+      expect(series.counts.length).toBe(res.body.yearMonths.length);
+      expect(series.cumulative.length).toBe(res.body.yearMonths.length);
+    }
+  });
+
+  test("filter narrows the buckets cross-gallery", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postGlobalEvolution(token, {
+      category: "country",
+      filter: { general: { country: ["jp"] } },
+    });
+    expect(Object.keys(res.body.buckets)).toEqual(["jp"]);
+  });
+
+  test("guest blocked → 403", async () => {
+    await api
+      .post("/api/v1/stats/evolution")
+      .send({ category: "country" })
+      .expect(403);
+  });
+
+  test("non-admin → 403", async () => {
+    const token = await loginUser(api, "plainuser");
+    await postGlobalEvolution(token, { category: "country" }, 403);
+  });
+
+  test("unknown category → empty buckets (graceful)", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postGlobalEvolution(token, { category: "nope" });
+    expect(res.body.yearMonths).toEqual([]);
+    expect(res.body.buckets).toEqual({});
+  });
+});
+
 describe("unknown bucket", () => {
   test("photos with empty fields bucket under 'unknown'", async () => {
     const token = await loginUser(api, "admin");

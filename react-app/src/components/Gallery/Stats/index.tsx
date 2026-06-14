@@ -223,6 +223,7 @@ const Stats = ({
             key={topic.key}
             topic={topic}
             galleryId={galleryId}
+            globalScope={globalScope}
             filters={filters}
             setFilters={setFilters}
             theme={theme}
