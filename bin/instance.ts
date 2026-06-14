@@ -37,7 +37,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { confirm } from "@inquirer/prompts";
+import { confirm, input } from "@inquirer/prompts";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -47,6 +47,16 @@ interface RequiredKey {
   key: string;
   description: string;
   default: (ctx: { instanceDir: string; name: string }) => string;
+  // True for keys an empty bootstrap must seed (writeEnvFile +
+  // --fix's missing-row report read this). False = optional
+  // .env knob: bootstrap leaves the row absent, the server's
+  // own default applies; --edit still walks it so an operator
+  // can opt in. Defaults true.
+  required?: boolean;
+  // False for keys an operator should not be re-prompted for in
+  // --edit mode (notably SECRET — rotating it invalidates every
+  // session). Defaults true.
+  editable?: boolean;
 }
 
 // ---- constants -----------------------------------------------------------
@@ -63,31 +73,111 @@ const REQUIRED_DIRS = [
   "photos/thumbnail",
 ];
 
-// Required .env keys for a working instance. The DB file (`db.sqlite3`) and
-// photo root (`photos/`) are no longer configurable — they're fixed relative
-// to the instance directory (the CWD when the server/converter run via
-// start-prod.sh). Symlink the instance dir, the `photos/` subdirectory, or
-// the `db.sqlite3` file if you need them on a different disk.
+// Configurable .env keys. `required: true` keys are seeded on
+// bootstrap and reported by --fix when missing; `required: false`
+// keys are opt-in (the server has a built-in default) but still
+// walked by --edit. The DB file (`db.sqlite3`) and photo root
+// (`photos/`) are no longer configurable — they're fixed relative
+// to the instance directory (the CWD when the server/converter
+// run via start-prod.sh). Symlink the instance dir, the `photos/`
+// subdirectory, or the `db.sqlite3` file if you need them on a
+// different disk.
+//
+// Per-instance BETA_FEATURE_<NAME> flags aren't enumerable in
+// advance (any feature the server defines), so --edit doesn't
+// walk them — the operator sets / unsets them by hand.
 const REQUIRED_KEYS: RequiredKey[] = [
+  // --- required: seeded on bootstrap -----------------------------------
   {
     key: "INSTANCE_NAME",
     description: "pm2 process name; converter gets `<name>-converter`",
     default: ({ name }) => name,
+    required: true,
   },
   {
     key: "PORT",
     description: "HTTP port the server listens on (nginx proxies to this)",
     default: () => "4200",
+    required: true,
   },
   {
     key: "SECRET",
     description: "HMAC secret for JWT tokens — keep this stable per instance",
     default: () => randomBytes(32).toString("hex"),
+    required: true,
+    editable: false,
   },
   {
     key: "DB_DRIVER",
     description: "DB driver",
     default: () => "sqlite3",
+    required: true,
+  },
+  // --- optional: server has built-in defaults --------------------------
+  // Empty value here means "leave the row absent; the server's
+  // built-in default applies". The description spells out that
+  // default explicitly so the operator knows what they get.
+  {
+    key: "DEFAULT_GALLERY",
+    description:
+      "Gallery to redirect to from `/g` when no other heuristic (single-gallery, hostname match) picks one (empty = let the heuristic choose)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "DEFAULT_THEME",
+    description:
+      "Fallback theme when a gallery row has no `theme` set: blue / red / grayscale / bw / alert (empty = blue)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "DEFAULT_LANGUAGE",
+    description:
+      "Instance-level primary language for operator-set photo / gallery metadata: en / fi / ja (empty = en)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "INITIAL_GALLERY_VIEW",
+    description:
+      "Fallback initial view when a gallery has no `initial_view` set: year / month / day / photo (empty = year)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "FIRST_WEEKDAY",
+    description:
+      "First day of the week in the year-view calendar grid: 0 (Sunday) or 1 (Monday) (empty = 0 / Sunday)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "REVERSE_GEOCODE",
+    description:
+      "Reverse-geocode new photos with coords at intake via Nominatim — truthy = on; opt-in because coordinates leave the host (empty = off)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "REVERSE_GEOCODE_EXTRA_LANGS",
+    description:
+      "Comma-separated extra languages to fetch on top of English (e.g. `ja,fi`); each adds one 1 RPS Nominatim call per photo at intake (empty = English only)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "NOMINATIM_BASE_URL",
+    description:
+      "Override to point at a self-hosted Nominatim (empty = https://nominatim.openstreetmap.org)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "DEBUG",
+    description: "Verbose logger output when truthy (empty = off)",
+    default: () => "",
+    required: false,
   },
 ];
 
@@ -131,9 +221,11 @@ const resolveSymlinkTarget = (link: string): string | null => {
 };
 
 const writeEnvFile = (filePath: string, ctx: { instanceDir: string; name: string }): void => {
-  const lines = REQUIRED_KEYS.map(({ key, description, default: d }) => {
-    return `# ${description}\n${key}=${d(ctx)}\n`;
-  });
+  const lines = REQUIRED_KEYS.filter((k) => k.required !== false).map(
+    ({ key, description, default: d }) => {
+      return `# ${description}\n${key}=${d(ctx)}\n`;
+    }
+  );
   fs.writeFileSync(filePath, lines.join("\n"));
 };
 
@@ -142,7 +234,9 @@ const appendMissingKeys = (
   existing: Record<string, string>,
   ctx: { instanceDir: string; name: string }
 ): string[] => {
-  const missing = REQUIRED_KEYS.filter(({ key }) => !existing[key]);
+  const missing = REQUIRED_KEYS.filter(
+    ({ key, required }) => required !== false && !existing[key]
+  );
   if (missing.length === 0) return [];
   const additions = missing
     .map(({ key, description, default: d }) => `# ${description}\n${key}=${d(ctx)}\n`)
@@ -260,6 +354,12 @@ const argv = yargs(hideBin(process.argv))
           type: "boolean",
           default: false,
         })
+        .option("edit", {
+          describe:
+            "Walk every configurable .env key, show the current value, prompt for a new one (default = keep). For a config-review / tweak pass on an existing instance. Requires a TTY. SECRET is read-only — rotating it invalidates every active session.",
+          type: "boolean",
+          default: false,
+        })
         .option("quiet", {
           describe:
             "Suppress informational output; errors and warnings still surface. For scripted re-runs.",
@@ -294,10 +394,12 @@ const argv = yargs(hideBin(process.argv))
 const positional = argv.dir as string | undefined;
 const nameFlag = argv.name as string | undefined;
 const fix = argv.fix;
+const edit = argv.edit as boolean;
 const quiet = argv.quiet;
 const auto = argv.auto as boolean;
 const printOnly = argv["print-only"] as boolean;
 const cycle = argv.cycle as boolean;
+const isTTY = !!process.stdin.isTTY && !!process.stdout.isTTY;
 
 const log: typeof console.log = (...args) => {
   if (!quiet) console.log(...args);
@@ -403,7 +505,9 @@ if (mode === "new") {
   log(`✓ Created ${envPath} (with a fresh random SECRET)`);
 } else {
   const existing = parseEnv(fs.readFileSync(envPath, "utf8"));
-  const missing = REQUIRED_KEYS.filter(({ key }) => !existing[key]);
+  const missing = REQUIRED_KEYS.filter(
+    ({ key, required }) => required !== false && !existing[key]
+  );
   if (missing.length === 0) {
     log("✓ .env present and complete");
   } else if (fix) {
@@ -420,6 +524,54 @@ if (mode === "new") {
   if (nameFlag && existing.INSTANCE_NAME !== nameFlag) {
     setEnvKey(envPath, "INSTANCE_NAME", nameFlag);
     log(`✓ Set INSTANCE_NAME=${nameFlag} in .env`);
+  }
+
+  // --edit: walk every editable key, current value as default,
+  // write the diff back. Requires a TTY (the rest of the script
+  // is non-interactive so headless re-runs can't accidentally
+  // snag the prompt). Runs after --fix's append so the operator
+  // never edits a missing key by hand on the first pass.
+  if (edit) {
+    if (!isTTY) {
+      console.error(
+        "Error: --edit requires a TTY (interactive terminal). Re-run from a shell."
+      );
+      process.exit(1);
+    }
+    const refreshed = parseEnv(fs.readFileSync(envPath, "utf8"));
+    log();
+    log(
+      "Editing .env values (Enter keeps the current value; empty value clears the row)."
+    );
+    log();
+    const changes: string[] = [];
+    for (const spec of REQUIRED_KEYS) {
+      if (spec.editable === false) {
+        log(`  · ${spec.key} (read-only, current value preserved)`);
+        continue;
+      }
+      log(`  ${spec.description}`);
+      const current = refreshed[spec.key] ?? "";
+      const next = await input({
+        message: `${spec.key}:`,
+        default: current,
+      });
+      const trimmed = next.trim();
+      if (trimmed !== current) {
+        setEnvKey(envPath, spec.key, trimmed);
+        changes.push(spec.key);
+      }
+    }
+    if (changes.length > 0) {
+      log(`✓ Updated .env: ${changes.join(", ")}`);
+    } else {
+      log("✓ No changes.");
+    }
+    log();
+    log(
+      "Restart the instance to pick up the new values (pm2 cycle, or `./bin/instance.ts <dir> --cycle`)."
+    );
+    process.exit(0);
   }
 }
 
@@ -542,13 +694,14 @@ log("Tools:");
 // 7. Next steps
 log();
 if (mode === "new") {
-  log("Instance ready. Next:");
+  log("Instance ready.");
+  await maybeCreateAdmin();
+  log();
+  log("Next:");
   log(`  cd ${instanceDir}`);
   log("  ./code/server/bin/start-prod.sh");
   log("  ./code/converter/bin/start-prod.sh");
-  log("  ./bin/user.ts passwd <username> <password>");
   log(`  ./bin/gallery.ts create ${instanceName} --title "${instanceName}"`);
-  log("  ./bin/user.ts make-admin <username>");
 } else if (mode === "upgrade") {
   await runPm2Cycle("upgrade");
 } else {
@@ -556,6 +709,70 @@ if (mode === "new") {
   if (cycle) {
     log();
     await runPm2Cycle("restart");
+  }
+}
+
+// New-mode bootstrap completes without a global-admin user — the
+// SPA's manage surface stays locked until one exists. Offer to
+// create one right here so the operator doesn't have to walk back
+// through the printed-instructions path. Skips on `--auto` and
+// non-TTY runs (CI / batch), falling back to the printed steps.
+async function maybeCreateAdmin(): Promise<void> {
+  if (auto || !isTTY) {
+    log();
+    log("Create your first admin user when ready:");
+    log("  ./bin/user.ts passwd <username>");
+    log("  ./bin/user.ts make-admin <username>");
+    return;
+  }
+  log();
+  const create = await confirm({
+    message: "Create an admin user now?",
+    default: true,
+  });
+  if (!create) {
+    log();
+    log("Create one later with:");
+    log("  ./bin/user.ts passwd <username>");
+    log("  ./bin/user.ts make-admin <username>");
+    return;
+  }
+  const username = (
+    await input({
+      message: "Admin username:",
+      default: "admin",
+    })
+  ).trim();
+  if (!username) {
+    console.warn("Empty username — skipping admin creation.");
+    return;
+  }
+  // Spawn the routine operator scripts with cwd=instanceDir so they
+  // pick up the just-created `.env` (DB path is fixed at <cwd>/db.sqlite3,
+  // SECRET / DB_DRIVER live in `.env`). user.ts's `passwd` prompts for
+  // the password interactively when omitted — instance.ts never holds
+  // the cleartext. inherit stdio so the prompt actually shows.
+  const userBin = path.join(instanceDir, "bin", "user.ts");
+  const passwdResult = spawnSync(userBin, ["passwd", username], {
+    cwd: instanceDir,
+    stdio: "inherit",
+  });
+  if (passwdResult.status !== 0) {
+    console.warn(
+      `passwd ${username} exited with status ${passwdResult.status ?? "?"} — skipping make-admin.`
+    );
+    return;
+  }
+  const adminResult = spawnSync(userBin, ["make-admin", username], {
+    cwd: instanceDir,
+    stdio: "inherit",
+  });
+  if (adminResult.status === 0) {
+    log(`✓ Admin user "${username}" created.`);
+  } else {
+    console.warn(
+      `make-admin ${username} exited with status ${adminResult.status ?? "?"}.`
+    );
   }
 }
 

@@ -6,13 +6,18 @@
 
 - Global Stats (`/stats`, admin) gains feature parity with the gallery-scoped Stats: the Evolution chart now renders inside any trendable category's modal across the whole instance, sharing the same granularity toggle and palette. Closes #602.
 - Per-photo visibility: photos gain a "Private" switch in PhotoDrawer; `/m/photos` bulk multi-select gains "Set private…" and "Set public…" actions; the `/m/access` table grows a per-gallery "Private" column granting `can_see_private` to view-only viewers (editors implicit); and the public Photo modal shows a "Private" badge to viewers who can see it. Closes #480.
-- Editor-tier "Manage this photo" / "Set as gallery icon" buttons on the public Photo modal — gated by `user.isGalleryEditor(galleryId)` instead of `isAdmin`. Editors reach the PhotoDrawer via `/m/photos/<id>?gallery=<g>` and land on a drawer-only shell (the cross-gallery grid + bulk actions stay admin-only). Closes #575.
+- Editor-tier "Manage this photo" / "Set as gallery icon" buttons on the public Photo modal — gated by `user.isGalleryEditor(galleryId)` instead of `isAdmin`. The pencil now opens the editor as an overlay modal in-place over the public Photo view, so admins / editors don't have to navigate away from `/g/` to fix metadata; the drawer keeps an "Open in Manage" link out to `/m/photos/<id>` for the full admin context. `e` keyboard shortcut toggles the editor while the photo is open. Closes #575.
 
 ### Server
 
 - New `POST /api/v1/stats/evolution` (admin, unscoped) returns per-bucket year-month series across every gallery, mirroring `/galleries/:id/stats/evolution`.
 - `photo` gains an `is_private` flag and `user_gallery` / `group_gallery` gain `can_see_private`; every gallery read path (list, query, counts, neighbors, filter-values, gallery+photo, stats, evolution) excludes private photos unless the resolved viewer is admin, gallery-editor, or holds a direct/inherited `can_see_private` grant on the gallery they're viewing. The flag flips through the existing `PUT /api/v1/photos/:photoId` (gallery-editor on any of the photo's galleries). `bin/user.ts grant --private-view`, `bin/group.ts grant --private-view`, and `bin/photo.ts private/public <id>` are the CLI flavours.
 - `GET /api/v1/photos/:photoId` opens to gallery-editors on at least one of the photo's galleries (same gate as PUT) so the editor-tier "Manage this photo" button can reach the drawer. The list endpoint `GET /api/v1/photos` stays admin-only — cross-gallery browse remains an admin surface.
+
+### Operator
+
+- `bin/instance.ts` prompts on a TTY after a fresh bootstrap to create the first admin user (Y/n; defaults to yes, username `admin`); `--auto` and non-TTY runs fall back to the printed instructions. Closes #557.
+- `bin/instance.ts --edit` walks every configurable `.env` key, shows the current value, prompts for a new one (default = keep). SECRET is read-only — rotating it invalidates every active session. Requires a TTY. Closes #537 (the standalone slice; the full prompt fan-out for `new` / `--fix` lands alongside #265's Postgres driver).
 
 ## [0.16.0] - 2026-06-13
 

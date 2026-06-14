@@ -78,12 +78,12 @@ cd /var/photo-diary/dailybw
 
 The per-instance `bin/` directory (`<instance>/bin/{photo,photo-rename,photo-geocode,gallery,user,group,meta}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognise them as TS source and apply the server's tsconfig via realpath.
 
-#### `instance.ts <name> [--base <dir>] [--fix]`
+#### `instance.ts <name> [--base <dir>] [--fix] [--edit]`
 
 Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. Default base is `/var/photo-diary`. Mode is auto-detected from existing state:
 
-- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root, and creates the per-instance `bin/{photo,photo-rename,photo-geocode,gallery,user,group,meta}.ts` shortcuts.
-- **Doctor** — instance exists, `code` already points at this script's root. Reports missing `.env` keys with `✓`/`✗` markers. Refreshes any missing `bin/` shortcuts. Add `--fix` to append defaults to `.env`.
+- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root, and creates the per-instance `bin/{photo,photo-rename,photo-geocode,gallery,user,group,meta}.ts` shortcuts. On a TTY (and unless `--auto` is passed) prompts to create the first admin user via `./bin/user.ts passwd <username>` + `./bin/user.ts make-admin <username>` so the SPA's manage surface is reachable without walking through the printed instructions.
+- **Doctor** — instance exists, `code` already points at this script's root. Reports missing `.env` keys with `✓`/`✗` markers. Refreshes any missing `bin/` shortcuts. Add `--fix` to append defaults to `.env`. Add `--edit` to walk every configurable `.env` key, show the current value, and prompt for a new one (Enter keeps it) — config-review / tweak pass without re-reading `.env` by hand. `SECRET` is read-only in this mode; rotate it manually only when you intentionally want to invalidate every session.
 - **Upgrade** — `code` points at a different version. Backs up the DB to `db.sqlite3.pre-<new-version>` and flips the symlink. Refreshes `bin/` shortcuts.
 
 #### `user.ts <subcommand> …`
