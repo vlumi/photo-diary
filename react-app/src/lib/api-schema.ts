@@ -775,6 +775,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         sourcePhotoId: string;
+                        sourceName: string;
                         crop: {
                             x: number;
                             y: number;

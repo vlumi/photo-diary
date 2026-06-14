@@ -258,6 +258,7 @@ interface GalleryData {
 
 interface ParsedIconSource {
   photoId: string;
+  sourceName?: string;
   crop: { x: number; y: number; width: number; height: number };
 }
 

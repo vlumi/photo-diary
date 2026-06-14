@@ -10,13 +10,17 @@ import config from "../../lib/config";
 
 interface PhotoLike {
   id: string;
+  renditions?: Array<{ name: string; maxDim: number }>;
 }
 
 interface IconSource {
   photoId: string;
-  // Missing when the operator was bounced in via the "Set as
-  // gallery icon" link from a photo view — there's no saved rect
-  // yet. Cropper defaults to centered + zoom 1.
+  // Rendition the saved crop was taken against. Missing only on a
+  // saved icon source predating the rendition rework; the migration
+  // backfills "display" so existing data already has it. Crop is
+  // missing when the operator opens the cropper fresh from a photo
+  // view — defaults to centered + zoom 1.
+  sourceName?: string;
   crop?: IconCrop;
 }
 
@@ -194,8 +198,24 @@ const IconCropper = ({
     if (event.target === event.currentTarget && !busy) onClose();
   };
 
+  const sourcePhoto = sourcePhotoId
+    ? photos.find((p) => p.id === sourcePhotoId)
+    : undefined;
+  // Reopening an existing crop: stick to the rendition the saved
+  // coords were taken against. Fresh crop: pick the largest available
+  // rendition so the cropper sees as much pixel detail as possible.
+  // The server gets `sourceName` either way so its crop happens in
+  // the same pixel space.
+  const savedSourceName =
+    sourcePhotoId === initialSource?.photoId
+      ? initialSource?.sourceName
+      : undefined;
+  const largestRendition = sourcePhoto?.renditions?.length
+    ? sourcePhoto.renditions.reduce((a, b) => (a.maxDim >= b.maxDim ? a : b)).name
+    : "display";
+  const sourceName = savedSourceName ?? largestRendition;
   const sourceUrl = sourcePhotoId
-    ? `${config.PHOTO_ROOT_URL}display/${sourcePhotoId}`
+    ? `${config.PHOTO_ROOT_URL}${sourceName}/${sourcePhotoId}`
     : null;
 
   const onCropComplete = React.useCallback(
@@ -232,7 +252,8 @@ const IconCropper = ({
           y: croppedAreaPixels.y,
           width: croppedAreaPixels.width,
           height: croppedAreaPixels.height,
-        }
+        },
+        sourceName
       );
       onSaved(icon);
     } catch (e) {

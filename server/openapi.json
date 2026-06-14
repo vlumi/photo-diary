@@ -1058,10 +1058,15 @@
                 "type": "object",
                 "required": [
                   "sourcePhotoId",
+                  "sourceName",
                   "crop"
                 ],
                 "properties": {
                   "sourcePhotoId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sourceName": {
                     "type": "string",
                     "minLength": 1
                   },
