@@ -65,11 +65,15 @@ const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 // bin/ → repo root
 const CODE_ROOT = path.resolve(SCRIPT_DIR, "..");
 
+// Display-ladder rendition directories (default `photos/display/`, plus
+// anything the operator adds via the `renditions` meta key) are
+// auto-created by the converter on first intake — keeping them out of
+// the bootstrap list means the operator can rename / replace the
+// default ladder without leaving an orphan `display/` behind.
 const REQUIRED_DIRS = [
   "photos",
   "photos/inbox",
   "photos/original",
-  "photos/display",
   "photos/thumbnail",
 ];
 

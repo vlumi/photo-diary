@@ -27,6 +27,7 @@ const init = async () => {
 const GalleryIdParam = Type.Object({ galleryId: Type.String() });
 const GalleryIconBody = Type.Object({
   sourcePhotoId: Type.String({ minLength: 1 }),
+  sourceName: Type.String({ minLength: 1 }),
   crop: Type.Object({
     x: Type.Number({ minimum: 0 }),
     y: Type.Number({ minimum: 0 }),
@@ -329,7 +330,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const icon = await model.setGalleryIcon(
         request.params.galleryId,
         request.body.sourcePhotoId,
-        request.body.crop
+        request.body.crop,
+        request.body.sourceName
       );
       return { icon };
     }

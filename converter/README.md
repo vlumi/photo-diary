@@ -3,17 +3,24 @@
 The converter is a tool to convert images for the Photo Diary, preparing the data for import into the server. Monitoring an `inbox` directory, it will:
 
 - Extract the EXIF information from the photos, storing them as `<file-base-name>.json` into the `inbox` directory
-- Generate the display and thumbnail sizes of each photo
-  - Put them into the `display` and `thumbnail` directories respectively
-- Move each original photo to `original` directory after completing
+- Generate one or more downscaled display renditions plus a thumbnail for each photo
+  - Display renditions are driven by the `renditions` meta key (admin-editable from `/m/instance`; the default ladder is one `display @ 1500`). Each entry writes `<name>/<id>.jpg` and inserts a row into `photo_rendition` so the SPA's `<img srcset>` picks the best fit per viewport and DPR.
+  - The thumbnail is fixed (600×200 box, cropped, native size on calendar tiles) and lives under `thumbnail/`.
+- Move each original photo to the `original/` directory after completing.
 
 The photo repository lives at a fixed path: `<cwd>/photos/`, where `<cwd>` is the converter's working directory (the instance directory when launched via `bin/start-prod.sh`). The directory structure is:
 
 - `photos/`
   - `inbox/` – The converter monitors this directory for new photos, also producing the JSON files here.
   - `original/` – Original photos are moved here after processing.
-  - `display/` – Standard display-sized photos are generated here.
-  - `thumbnail/` – Thumbnail-sized photos are generated here.
+  - `thumbnail/` – Thumbnails are generated here.
+  - `<rendition-name>/` – One per entry in the `renditions` meta key (e.g. `display/`). Auto-created on first intake.
+
+Operator scripts:
+
+- `bin/photo-rerender.ts` (default `scan` mode) — register existing `<name>/<id>.jpg` files on disk, e.g. after rsync'ing a locally-rendered larger variant.
+- `bin/photo-rerender.ts generate <name>` — server-side render missing variants from `original/<id>.jpg` at the `maxDim` configured for `<name>`. Skips photos whose original isn't on the server.
+- `bin/photo-rerender.ts prune` — drop `photo_rendition` rows whose file is gone.
 
 If the photo repository lives on a different disk, symlink the `photos/` subdirectory (or the whole instance dir).
 

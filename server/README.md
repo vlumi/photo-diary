@@ -62,7 +62,7 @@ The SPA runtime defaults *used* to live in `.env`; they migrated to the `meta` t
 The SQLite DB file and the photo repository are no longer configurable via env vars — they live at fixed locations relative to the server's working directory (which is the **instance directory** when launched via `start-prod.sh`):
 
 - **`<cwd>/db.sqlite3`** – the SQLite DB. If absent at first start, better-sqlite3 creates the file and the migration runner bootstraps the schema from `db/sqlite3/migrations/001_baseline.sql`. Subsequent starts apply any pending migrations from the same directory in version order, using the `meta.schema_version` row as the cursor. New migrations: drop `NNN_<description>.sql` (with a higher number than the last one) and end the file with `UPDATE meta SET value='NNN' WHERE key='schema_version';`.
-- **`<cwd>/photos/`** – the photo repository. Must contain the sub-directories `inbox`, `original`, `display`, `thumbnail`. Created automatically by `<repo-root>/bin/instance.ts`.
+- **`<cwd>/photos/`** – the photo repository. Must contain the sub-directories `inbox`, `original`, `thumbnail`; rendition directories like `display/` are created by the converter on first intake (per the `renditions` meta key, default `[{name: "display", maxDim: 1500}]`). The fixed-layout dirs are seeded by `<repo-root>/bin/instance.ts`.
 
 If you need the DB or photo dir on a separate disk, symlink the file (`db.sqlite3`), the subdirectory (`photos/`), or the whole instance dir.
 
@@ -169,7 +169,7 @@ Operator-side photo management. Intake (creating new rows from inbox files) is t
 | --- | --- |
 | `show <id>` | Pretty-print the photo row as JSON. `--lang <code>` applies the per-language overlay. |
 | `update <id>` | Modify operator-set fields on an existing row. Same property / override flags as before — see below. |
-| `delete <id>` | Remove the photo row. Files on disk under `photos/{original,display,thumbnail}/` are not touched. |
+| `delete <id>` | Remove the photo row and its `photo_rendition` rows. Files on disk under `photos/{original,thumbnail}/` and every configured rendition directory are not touched. |
 | `audit` | Find missing fields, orphan gallery links, duplicate `originalFilename`s, operator-vs-geocoded country drift. Counts-only by default; `--detail` or any restricting flag surfaces rows. `--format ids` is pipe-friendly. |
 | `search <originalFilename>` | List rows sharing a camera filename (collision triage). |
 | `cities <audit\|normalize\|clean-localized>` | Geocoded city hygiene — see `--help`. |

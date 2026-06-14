@@ -176,11 +176,17 @@ const deleteGallery = async (galleryId: string) => {
 const setGalleryIcon = async (
   galleryId: string,
   sourcePhotoId: string,
-  crop: CropPixels
+  crop: CropPixels,
+  sourceName: string
 ) => {
-  logger.debug("Setting gallery icon", { galleryId, sourcePhotoId });
-  const iconPath = await writeGalleryIcon(galleryId, sourcePhotoId, crop);
-  const iconSource = JSON.stringify({ photoId: sourcePhotoId, crop });
+  logger.debug("Setting gallery icon", { galleryId, sourcePhotoId, sourceName });
+  const iconPath = await writeGalleryIcon(
+    galleryId,
+    sourcePhotoId,
+    crop,
+    sourceName
+  );
+  const iconSource = JSON.stringify({ photoId: sourcePhotoId, sourceName, crop });
   await db.updateGallery(galleryId, { icon: iconPath, iconSource });
   return iconPath;
 };
