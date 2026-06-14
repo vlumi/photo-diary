@@ -335,8 +335,6 @@ describe("Photo", () => {
 
     "orig_width",
     "orig_height",
-    "disp_width",
-    "disp_height",
     "thumb_width",
     "thumb_height",
 
@@ -351,7 +349,7 @@ describe("Photo", () => {
   ].join(",");
   test("Build create query", () =>
     expect(schema.photo.buildCreateQuery()).toBe(
-      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO photo (${cols}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ));
   test("Build select by id query", () =>
     expect(schema.photo.buildSelectByIdQuery()).toBe(
@@ -433,10 +431,6 @@ describe("Photo", () => {
             width: 1,
             height: 2,
           },
-          display: {
-            width: 3,
-            height: 4,
-          },
           thumbnail: {
             width: 5,
             height: 6,
@@ -450,7 +444,7 @@ describe("Photo", () => {
         " taken=?, country_code=?, place=?, coord_lat=?, coord_lon=?, coord_alt=?," +
         " camera_make=?, camera_model=?, camera_serial=?, lens_make=?, lens_model=?, lens_serial=?," +
         " focal=?, focal_35mm_equiv=?, fstop=?, exposure_time=?, iso=?," +
-        " orig_width=?, orig_height=?, disp_width=?, disp_height=?, thumb_width=?, thumb_height=?" +
+        " orig_width=?, orig_height=?, thumb_width=?, thumb_height=?" +
         " WHERE id = ?",
       values: [
         "new title",
@@ -479,8 +473,6 @@ describe("Photo", () => {
 
         1,
         2,
-        3,
-        4,
         5,
         6,
       ],
@@ -535,10 +527,6 @@ describe("Photo", () => {
             width: undefined,
             height: undefined,
           },
-          display: {
-            width: undefined,
-            height: undefined,
-          },
           thumbnail: {
             width: undefined,
             height: undefined,
@@ -552,7 +540,7 @@ describe("Photo", () => {
         " taken=?, country_code=?, place=?, coord_lat=?, coord_lon=?, coord_alt=?," +
         " camera_make=?, camera_model=?, camera_serial=?, lens_make=?, lens_model=?, lens_serial=?," +
         " focal=?, focal_35mm_equiv=?, fstop=?, exposure_time=?, iso=?," +
-        " orig_width=?, orig_height=?, disp_width=?, disp_height=?, thumb_width=?, thumb_height=?" +
+        " orig_width=?, orig_height=?, thumb_width=?, thumb_height=?" +
         " WHERE id = ?",
       values: [
         undefined,
@@ -579,8 +567,6 @@ describe("Photo", () => {
         undefined,
         undefined,
 
-        undefined,
-        undefined,
         undefined,
         undefined,
         undefined,

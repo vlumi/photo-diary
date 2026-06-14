@@ -113,8 +113,6 @@ export interface PhotoRow {
   iso: number | null;
   orig_width: number | null;
   orig_height: number | null;
-  disp_width: number | null;
-  disp_height: number | null;
   thumb_width: number | null;
   thumb_height: number | null;
   // English-canonical reverse-geocoded fields. Other languages live
@@ -278,7 +276,6 @@ export interface Photo {
   };
   dimensions: {
     original: { width: number | undefined; height: number | undefined };
-    display: { width: number | undefined; height: number | undefined };
     thumbnail: { width: number | undefined; height: number | undefined };
   };
   // Reverse-geocoded location. Country / state come from language-
@@ -624,10 +621,6 @@ export default () => {
               width: toNumber(row.orig_width),
               height: toNumber(row.orig_height),
             },
-            display: {
-              width: toNumber(row.disp_width),
-              height: toNumber(row.disp_height),
-            },
             thumbnail: {
               width: toNumber(row.thumb_width),
               height: toNumber(row.thumb_height),
@@ -693,8 +686,6 @@ export default () => {
 
           map.orig_width,
           map.orig_height,
-          map.disp_width,
-          map.disp_height,
           map.thumb_width,
           map.thumb_height,
 
@@ -864,11 +855,6 @@ const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
       if ("width" in original) result.orig_width = original.width;
       if ("height" in original) result.orig_height = original.height;
     }
-    if (dimensions.display) {
-      const display = dimensions.display;
-      if ("width" in display) result.disp_width = display.width;
-      if ("height" in display) result.disp_height = display.height;
-    }
     if (dimensions.thumbnail) {
       const thumbnail = dimensions.thumbnail;
       if ("width" in thumbnail) result.thumb_width = thumbnail.width;
@@ -1031,8 +1017,6 @@ const SCHEMA = {
 
       "orig_width",
       "orig_height",
-      "disp_width",
-      "disp_height",
       "thumb_width",
       "thumb_height",
 

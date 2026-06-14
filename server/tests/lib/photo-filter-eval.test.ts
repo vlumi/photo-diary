@@ -47,7 +47,6 @@ const makePhoto = (overrides: Partial<Photo> = {}): Photo => {
     },
     dimensions: {
       original: { width: 6000, height: 4000 },
-      display: { width: 1500, height: 1000 },
       thumbnail: { width: 150, height: 100 },
     },
     geocoded: {

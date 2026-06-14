@@ -54,12 +54,19 @@ const ImageClip = styled.span`
 // touch-action:none stops the browser's default pinch/pan from
 // fighting our touch handlers; will-change:transform keeps the
 // scale/pan on the GPU compositor.
+//
+// width / height come from the `<img>`'s HTML attributes (numbers
+// in CSS pixels, set by callers). Previous attempt at templating
+// them into the CSS rendered as `width: 800;` (no unit) which the
+// browser silently dropped, then fell back to the HTML attrs —
+// "worked" by accident. Letting the HTML attrs drive the box keeps
+// the aspect-ratio reservation the browser builds from them, which
+// is what stops the frame from popping into place when the source
+// image lands.
 const Image = styled("img", {
   shouldForwardProp: (prop) =>
     prop !== "$scale" && prop !== "$x" && prop !== "$y" && prop !== "$grabbing",
 })<{ $scale: number; $x: number; $y: number; $grabbing: boolean }>`
-  width: ${(props) => props.width};
-  height: ${(props) => props.height};
   flex-shrink: 0;
   transform: translate(${(props) => props.$x}px, ${(props) => props.$y}px)
     scale(${(props) => props.$scale});
