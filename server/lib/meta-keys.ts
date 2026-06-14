@@ -10,11 +10,33 @@
 
 // Public form (what the HTTP API accepts). Keep this in sync with
 // `KNOWN_META_KEYS_INTERNAL` below.
+//
+// Two flavours sit in the same key namespace:
+//
+// 1. Instance identity rows (`name`, `description`, `cdn`, `image`)
+//    — purely DB-backed, edited via the admin UI or `bin/meta.ts`.
+// 2. SPA runtime defaults previously set in `.env`
+//    (`defaultGallery` / `defaultTheme` / `defaultLanguage` /
+//    `initialGalleryView` / `firstWeekday` / `betaFeatures`).
+//    Setting a meta row for one of these wins over the matching
+//    `.env` value at request time, so an admin can change behaviour
+//    without restarting the server. The `.env` values stay as a
+//    fallback for instances that don't seed the meta rows yet.
+//
+// `betaFeatures` is stored as a JSON-encoded `{name: "on" | "off"
+// | "user"}` map so the per-feature opt-in shape survives the
+// flat key/value table.
 export const KNOWN_META_KEYS_PUBLIC = [
   "name",
   "description",
   "cdn",
   "image",
+  "defaultGallery",
+  "defaultTheme",
+  "defaultLanguage",
+  "initialGalleryView",
+  "firstWeekday",
+  "betaFeatures",
 ] as const;
 export type KnownMetaKeyPublic = (typeof KNOWN_META_KEYS_PUBLIC)[number];
 
@@ -25,6 +47,12 @@ export const KNOWN_META_KEYS_INTERNAL = [
   "instance_description",
   "instance_cdn",
   "instance_image",
+  "instance_defaultGallery",
+  "instance_defaultTheme",
+  "instance_defaultLanguage",
+  "instance_initialGalleryView",
+  "instance_firstWeekday",
+  "instance_betaFeatures",
 ] as const;
 export type KnownMetaKeyInternal = (typeof KNOWN_META_KEYS_INTERNAL)[number];
 

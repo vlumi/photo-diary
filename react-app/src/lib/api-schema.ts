@@ -47,7 +47,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        key: "name" | "description" | "cdn" | "image";
+                        key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures";
                         value: string;
                     };
                 };
@@ -81,7 +81,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: "name" | "description" | "cdn" | "image";
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures";
                 };
                 cookie?: never;
             };
@@ -106,7 +106,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: "name" | "description" | "cdn" | "image";
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures";
                 };
                 cookie?: never;
             };
@@ -134,7 +134,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: "name" | "description" | "cdn" | "image";
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures";
                 };
                 cookie?: never;
             };

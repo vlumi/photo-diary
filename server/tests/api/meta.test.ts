@@ -121,6 +121,65 @@ describe("As admin", () => {
       .expect(400));
 });
 
+describe("SPA runtime defaults (#513)", () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await loginUser(api, "admin");
+  });
+
+  test("Newly accepted keys round-trip through POST/GET", async () => {
+    await api
+      .post("/api/v1/meta")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ key: "defaultTheme", value: "grayscale" })
+      .expect(201);
+    const result = await getMetas();
+    expectMeta(result, "defaultTheme", "grayscale");
+  });
+
+  test("Meta row wins over env default (merge order)", async () => {
+    // The test fixture's process.env doesn't set DEFAULT_THEME, so
+    // env contributes nothing here; the meta row is the only
+    // source. Once a row exists, GET returns it under the same key
+    // envDefaults() would use, with no double-key collision.
+    await api
+      .post("/api/v1/meta")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ key: "defaultGallery", value: "gallery1" })
+      .expect(201);
+    const result = await getMetas();
+    expectMeta(result, "defaultGallery", "gallery1");
+  });
+
+  test("betaFeatures stored as JSON, returned as parsed map", async () => {
+    await api
+      .post("/api/v1/meta")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        key: "betaFeatures",
+        value: JSON.stringify({ regions: "on", focalLengthEquiv: "user" }),
+      })
+      .expect(201);
+    const result = await getMetas();
+    expect(result.body.betaFeatures).toEqual({
+      regions: "on",
+      focalLengthEquiv: "user",
+    });
+  });
+
+  test("Malformed JSON in betaFeatures row is dropped from GET (not surfaced as string)", async () => {
+    // bin/meta.ts --force could plant a malformed value; the API
+    // must not crash on read.
+    await api
+      .post("/api/v1/meta")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ key: "betaFeatures", value: "{not json" })
+      .expect(201);
+    const result = await getMetas();
+    expect(result.body.betaFeatures).toBeUndefined();
+  });
+});
+
 describe("As non-admin", () => {
   let token: string;
   beforeEach(async () => {

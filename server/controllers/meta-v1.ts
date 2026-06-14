@@ -14,13 +14,30 @@ const init = async () => {
   await model.init();
 };
 
+// JSON-shaped meta rows the SPA wants as parsed objects, not the
+// stringified blob the DB stores. Centralised so a future "settings
+// store nested structure under one row" key can join cleanly.
+const JSON_META_KEYS = new Set(["betaFeatures"]);
+
 const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
   return Object.keys(meta)
     .filter((key) => key.startsWith("instance_"))
     .reduce<Record<string, unknown>>((obj, key) => {
+      const publicKey = key.replace("instance_", "");
+      const raw = meta[key];
+      let value: unknown = raw;
+      if (JSON_META_KEYS.has(publicKey) && typeof raw === "string" && raw.length > 0) {
+        try {
+          value = JSON.parse(raw);
+        } catch {
+          // Malformed row — drop instead of surfacing a string the
+          // SPA would crash trying to use as a map.
+          return obj;
+        }
+      }
       return {
         ...obj,
-        [key.replace("instance_", "")]: meta[key],
+        [publicKey]: value,
       };
     }, {});
 };
@@ -91,9 +108,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async () => {
-      // Public, no authorization needed
+      // Public, no authorization needed. `.env` defaults are the
+      // fallback for keys with no meta row; once a row is written
+      // (via admin UI / bin/meta.ts) it wins for that key. The
+      // flipped merge order vs. the pre-#513 behaviour is the
+      // whole point — operators expect admin-UI edits to take
+      // effect, not be silently shadowed by an unset env var.
       const meta = await model.getMetas();
-      return { ...cleanMeta(meta), ...envDefaults() };
+      return { ...envDefaults(), ...cleanMeta(meta) };
     }
   );
 

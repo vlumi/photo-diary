@@ -59,7 +59,13 @@
                       "name",
                       "description",
                       "cdn",
-                      "image"
+                      "image",
+                      "defaultGallery",
+                      "defaultTheme",
+                      "defaultLanguage",
+                      "initialGalleryView",
+                      "firstWeekday",
+                      "betaFeatures"
                     ]
                   },
                   "value": {
@@ -96,7 +102,13 @@
                 "name",
                 "description",
                 "cdn",
-                "image"
+                "image",
+                "defaultGallery",
+                "defaultTheme",
+                "defaultLanguage",
+                "initialGalleryView",
+                "firstWeekday",
+                "betaFeatures"
               ]
             },
             "in": "path",
@@ -150,7 +162,13 @@
                 "name",
                 "description",
                 "cdn",
-                "image"
+                "image",
+                "defaultGallery",
+                "defaultTheme",
+                "defaultLanguage",
+                "initialGalleryView",
+                "firstWeekday",
+                "betaFeatures"
               ]
             },
             "in": "path",
@@ -182,7 +200,13 @@
                 "name",
                 "description",
                 "cdn",
-                "image"
+                "image",
+                "defaultGallery",
+                "defaultTheme",
+                "defaultLanguage",
+                "initialGalleryView",
+                "firstWeekday",
+                "betaFeatures"
               ]
             },
             "in": "path",
