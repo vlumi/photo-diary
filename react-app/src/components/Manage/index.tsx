@@ -335,6 +335,11 @@ const Manage = (): React.ReactElement => {
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
+      // Autorepeat protection: holding Esc briefly fires keydown
+      // again every ~30ms and would skip multiple levels per
+      // tap. `e.repeat` is true on the autorepeat events; the
+      // first keydown of a press has it false.
+      if (e.repeat) return;
       const parent = parentManagePath(location.pathname);
       if (!parent) return;
       e.preventDefault();
