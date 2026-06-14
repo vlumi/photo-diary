@@ -25,7 +25,6 @@ import photosService, {
   type MissingField,
   type PhotoUpdatePatch,
 } from "../../services/photos";
-import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
 import { isCountrySentinel } from "../../lib/country-sentinel";
 import { ensureAllCountryLocales, useLangStore } from "../../stores";
@@ -885,7 +884,22 @@ const PhotoDrawer = ({
     onClose();
   }, [onClose]);
 
-  useKeyPress("Escape", close);
+  // Capture-phase Esc + `stopImmediatePropagation` so the outer
+  // modals (Photo modal, Month / Year underneath) don't all close
+  // when the editor dismisses. Photo modal's own capture-phase
+  // listener already defers to the editor when it's open; this
+  // listener finishes the chain by halting propagation before any
+  // bubble-phase handler downstream sees the event.
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      close();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [close]);
 
   const missingActive = missingActiveProp ?? new Set<MissingField>();
   const highlight = {
