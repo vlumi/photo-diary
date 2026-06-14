@@ -47,6 +47,12 @@ interface RequiredKey {
   key: string;
   description: string;
   default: (ctx: { instanceDir: string; name: string }) => string;
+  // True for keys an empty bootstrap must seed (writeEnvFile +
+  // --fix's missing-row report read this). False = optional
+  // .env knob: bootstrap leaves the row absent, the server's
+  // own default applies; --edit still walks it so an operator
+  // can opt in. Defaults true.
+  required?: boolean;
   // False for keys an operator should not be re-prompted for in
   // --edit mode (notably SECRET — rotating it invalidates every
   // session). Defaults true.
@@ -67,32 +73,111 @@ const REQUIRED_DIRS = [
   "photos/thumbnail",
 ];
 
-// Required .env keys for a working instance. The DB file (`db.sqlite3`) and
-// photo root (`photos/`) are no longer configurable — they're fixed relative
-// to the instance directory (the CWD when the server/converter run via
-// start-prod.sh). Symlink the instance dir, the `photos/` subdirectory, or
-// the `db.sqlite3` file if you need them on a different disk.
+// Configurable .env keys. `required: true` keys are seeded on
+// bootstrap and reported by --fix when missing; `required: false`
+// keys are opt-in (the server has a built-in default) but still
+// walked by --edit. The DB file (`db.sqlite3`) and photo root
+// (`photos/`) are no longer configurable — they're fixed relative
+// to the instance directory (the CWD when the server/converter
+// run via start-prod.sh). Symlink the instance dir, the `photos/`
+// subdirectory, or the `db.sqlite3` file if you need them on a
+// different disk.
+//
+// Per-instance BETA_FEATURE_<NAME> flags aren't enumerable in
+// advance (any feature the server defines), so --edit doesn't
+// walk them — the operator sets / unsets them by hand.
 const REQUIRED_KEYS: RequiredKey[] = [
+  // --- required: seeded on bootstrap -----------------------------------
   {
     key: "INSTANCE_NAME",
     description: "pm2 process name; converter gets `<name>-converter`",
     default: ({ name }) => name,
+    required: true,
   },
   {
     key: "PORT",
     description: "HTTP port the server listens on (nginx proxies to this)",
     default: () => "4200",
+    required: true,
   },
   {
     key: "SECRET",
     description: "HMAC secret for JWT tokens — keep this stable per instance",
     default: () => randomBytes(32).toString("hex"),
+    required: true,
     editable: false,
   },
   {
     key: "DB_DRIVER",
     description: "DB driver",
     default: () => "sqlite3",
+    required: true,
+  },
+  // --- optional: server has built-in defaults --------------------------
+  // Empty value here means "leave the row absent; the server's
+  // built-in default applies". The description spells out that
+  // default explicitly so the operator knows what they get.
+  {
+    key: "DEFAULT_GALLERY",
+    description:
+      "Gallery to redirect to from `/g` when no other heuristic (single-gallery, hostname match) picks one (empty = let the heuristic choose)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "DEFAULT_THEME",
+    description:
+      "Fallback theme when a gallery row has no `theme` set: blue / red / grayscale / bw / alert (empty = blue)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "DEFAULT_LANGUAGE",
+    description:
+      "Instance-level primary language for operator-set photo / gallery metadata: en / fi / ja (empty = en)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "INITIAL_GALLERY_VIEW",
+    description:
+      "Fallback initial view when a gallery has no `initial_view` set: year / month / day / photo (empty = year)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "FIRST_WEEKDAY",
+    description:
+      "First day of the week in the year-view calendar grid: 0 (Sunday) or 1 (Monday) (empty = 0 / Sunday)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "REVERSE_GEOCODE",
+    description:
+      "Reverse-geocode new photos with coords at intake via Nominatim — truthy = on; opt-in because coordinates leave the host (empty = off)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "REVERSE_GEOCODE_EXTRA_LANGS",
+    description:
+      "Comma-separated extra languages to fetch on top of English (e.g. `ja,fi`); each adds one 1 RPS Nominatim call per photo at intake (empty = English only)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "NOMINATIM_BASE_URL",
+    description:
+      "Override to point at a self-hosted Nominatim (empty = https://nominatim.openstreetmap.org)",
+    default: () => "",
+    required: false,
+  },
+  {
+    key: "DEBUG",
+    description: "Verbose logger output when truthy (empty = off)",
+    default: () => "",
+    required: false,
   },
 ];
 
@@ -136,9 +221,11 @@ const resolveSymlinkTarget = (link: string): string | null => {
 };
 
 const writeEnvFile = (filePath: string, ctx: { instanceDir: string; name: string }): void => {
-  const lines = REQUIRED_KEYS.map(({ key, description, default: d }) => {
-    return `# ${description}\n${key}=${d(ctx)}\n`;
-  });
+  const lines = REQUIRED_KEYS.filter((k) => k.required !== false).map(
+    ({ key, description, default: d }) => {
+      return `# ${description}\n${key}=${d(ctx)}\n`;
+    }
+  );
   fs.writeFileSync(filePath, lines.join("\n"));
 };
 
@@ -147,7 +234,9 @@ const appendMissingKeys = (
   existing: Record<string, string>,
   ctx: { instanceDir: string; name: string }
 ): string[] => {
-  const missing = REQUIRED_KEYS.filter(({ key }) => !existing[key]);
+  const missing = REQUIRED_KEYS.filter(
+    ({ key, required }) => required !== false && !existing[key]
+  );
   if (missing.length === 0) return [];
   const additions = missing
     .map(({ key, description, default: d }) => `# ${description}\n${key}=${d(ctx)}\n`)
@@ -416,7 +505,9 @@ if (mode === "new") {
   log(`✓ Created ${envPath} (with a fresh random SECRET)`);
 } else {
   const existing = parseEnv(fs.readFileSync(envPath, "utf8"));
-  const missing = REQUIRED_KEYS.filter(({ key }) => !existing[key]);
+  const missing = REQUIRED_KEYS.filter(
+    ({ key, required }) => required !== false && !existing[key]
+  );
   if (missing.length === 0) {
     log("✓ .env present and complete");
   } else if (fix) {
@@ -449,13 +540,17 @@ if (mode === "new") {
     }
     const refreshed = parseEnv(fs.readFileSync(envPath, "utf8"));
     log();
-    log("Editing .env values (Enter keeps the current value):");
+    log(
+      "Editing .env values (Enter keeps the current value; empty value clears the row)."
+    );
+    log();
     const changes: string[] = [];
     for (const spec of REQUIRED_KEYS) {
       if (spec.editable === false) {
         log(`  · ${spec.key} (read-only, current value preserved)`);
         continue;
       }
+      log(`  ${spec.description}`);
       const current = refreshed[spec.key] ?? "";
       const next = await input({
         message: `${spec.key}:`,
