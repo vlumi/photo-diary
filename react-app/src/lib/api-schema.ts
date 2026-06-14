@@ -1392,7 +1392,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get one photo by id */
+        /** Get one photo by id (gallery-editor on any of the photo's galleries) */
         get: {
             parameters: {
                 query?: never;

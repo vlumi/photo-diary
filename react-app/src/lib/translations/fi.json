@@ -311,6 +311,7 @@
     "manage-photo-save-error": "Tallennus epäonnistui.",
     "manage-photo-revert-to-exif": "Palauta EXIF-arvoon",
     "manage-photo-view-on-site": "Näytä julkisella puolella",
+    "manage-photo-open-in-manage": "Avaa hallintapuolella",
     "manage-photo-map-locked": "Lukittu",
     "manage-photo-map-locked-hint": "Avaa yllä olevat EXIF-kentät siirtääksesi pistettä.",
     "manage-photo-unlock-exif": "Tämä kuva on otettu ennen EXIF-varmuuskopion käyttöönottoa. Salli EXIF-pohjaisten kenttien muokkaus; muutoksia ei voi palauttaa.",

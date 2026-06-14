@@ -2535,7 +2535,7 @@
     },
     "/api/v1/photos/{photoId}": {
       "get": {
-        "summary": "Get one photo by id",
+        "summary": "Get one photo by id (gallery-editor on any of the photo's galleries)",
         "tags": [
           "photos"
         ],

@@ -260,25 +260,31 @@ describe("As gallery1admin", () => {
     token = await loginUser(api, "gallery1admin");
   });
 
-  // /photos and /photos/:id are admin-only post-#394 (the old "global
-  // view" tier collapsed into is_admin). gallery1admin has only a
-  // per-gallery grant → 403 across the board.
+  // /photos (list) stays admin-only. /photos/:id opens to editors
+  // on at least one of the photo's galleries post-#575 — same gate
+  // as PUT, so the public Photo modal's "Manage this photo" button
+  // can land the editor on the drawer without going through the
+  // cross-gallery grid.
   test("List photos", async () => {
     await getPhotos(token, 403);
   });
   test("Get gallery1photo.jpg", async () => {
-    await getPhoto(token, "gallery1photo.jpg", 403);
+    await getPhoto(token, "gallery1photo.jpg", 200);
   });
   test("Get gallery12photo.jpg", async () => {
-    await getPhoto(token, "gallery12photo.jpg", 403);
+    // gallery12photo lives in both gallery1 and gallery2 — editor
+    // on either gallery sees it.
+    await getPhoto(token, "gallery12photo.jpg", 200);
   });
   test("Get gallery2photo.jpg", async () => {
+    // Not editor on gallery2 → 403.
     await getPhoto(token, "gallery2photo.jpg", 403);
   });
   test("Get gallery3photo.jpg", async () => {
     await getPhoto(token, "gallery3photo.jpg", 403);
   });
   test("Get orphanphoto.jpg", async () => {
+    // Orphan photos stay admin-only — no gallery to qualify on.
     await getPhoto(token, "orphanphoto.jpg", 403);
   });
   test("Get invalid", async () => {
@@ -299,10 +305,10 @@ describe("As gallery2admin", () => {
     await getPhoto(token, "gallery1photo.jpg", 403);
   });
   test("Get gallery12photo.jpg", async () => {
-    await getPhoto(token, "gallery12photo.jpg", 403);
+    await getPhoto(token, "gallery12photo.jpg", 200);
   });
   test("Get gallery2photo.jpg", async () => {
-    await getPhoto(token, "gallery2photo.jpg", 403);
+    await getPhoto(token, "gallery2photo.jpg", 200);
   });
   test("Get gallery3photo.jpg", async () => {
     await getPhoto(token, "gallery3photo.jpg", 403);
