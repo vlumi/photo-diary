@@ -10,13 +10,12 @@ import config from "../../lib/config";
 
 interface PhotoLike {
   id: string;
+  renditions?: number[];
 }
 
 interface IconSource {
   photoId: string;
-  // Missing when the operator was bounced in via the "Set as
-  // gallery icon" link from a photo view — there's no saved rect
-  // yet. Cropper defaults to centered + zoom 1.
+  sourceMaxDim?: number;
   crop?: IconCrop;
 }
 
@@ -194,8 +193,21 @@ const IconCropper = ({
     if (event.target === event.currentTarget && !busy) onClose();
   };
 
+  const sourcePhoto = sourcePhotoId
+    ? photos.find((p) => p.id === sourcePhotoId)
+    : undefined;
+  // Reopen → reuse the saved dim so the crop rect stays valid.
+  // Fresh → largest available for max pixel detail.
+  const savedSourceMaxDim =
+    sourcePhotoId === initialSource?.photoId
+      ? initialSource?.sourceMaxDim
+      : undefined;
+  const largestRenditionDim = sourcePhoto?.renditions?.length
+    ? Math.max(...sourcePhoto.renditions)
+    : 1500;
+  const sourceMaxDim = savedSourceMaxDim ?? largestRenditionDim;
   const sourceUrl = sourcePhotoId
-    ? `${config.PHOTO_ROOT_URL}display/${sourcePhotoId}`
+    ? `${config.PHOTO_ROOT_URL}display/${sourceMaxDim}/${sourcePhotoId}`
     : null;
 
   const onCropComplete = React.useCallback(
@@ -232,7 +244,8 @@ const IconCropper = ({
           y: croppedAreaPixels.y,
           width: croppedAreaPixels.width,
           height: croppedAreaPixels.height,
-        }
+        },
+        sourceMaxDim
       );
       onSaved(icon);
     } catch (e) {

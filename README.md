@@ -33,9 +33,9 @@ Photo Diary is split into independent modules, each handling its own sub-system:
 
 - [react-app](react-app) — front-end React SPA. Served as static files by the backend; no separate hosting required.
 - [server](server) — Fastify + SQLite backend. Exposes `/api/v1` (with an OpenAPI doc at `/api/v1/docs`) and serves the bundled frontend.
-- [converter](converter) — back-end worker that pre-processes new photos (EXIF extraction, thumbnail/display renditions via sharp).
+- [converter](converter) — back-end worker that pre-processes new photos (EXIF extraction, configurable downscale ladder + thumbnail via sharp).
 
-The three pieces communicate via the shared filesystem and SQLite DB rather than over a network — the converter writes `photos/{display,thumbnail}/` renditions and inserts the photo row into the DB on intake, processing operator JSON sidecars through the same pipeline; the server reads the DB to serve the API; `bin/photo.ts update <id>` is the operator hook for after-the-fact enrichment. Per-instance state (database, photo files, `.env`) lives in a single instance directory outside the repo; see [Setup](#setup) below.
+The three pieces communicate via the shared filesystem and SQLite DB rather than over a network — the converter writes one thumbnail and one or more display renditions per intake under `photos/display/<maxDim>/<id>.jpg` (the ladder is operator-configurable via the `renditions` meta key; the default is a single 1500-px rendition) and inserts the photo row into the DB on intake, processing operator JSON sidecars through the same pipeline; the server reads the DB to serve the API; `bin/photo.ts update <id>` is the operator hook for after-the-fact enrichment. Per-instance state (database, photo files, `.env`) lives in a single instance directory outside the repo; see [Setup](#setup) below.
 
 ## Setup
 
@@ -44,7 +44,7 @@ The three pieces communicate via the shared filesystem and SQLite DB rather than
 Quickstart for a single personal instance. For the full production layout (multi-version code under `/opt/`, per-instance dirs under `/var/`, nginx vhosts, atomic upgrades, backup) see [Multi-Instance Deployment](#multi-instance-deployment) below; for an in-repo dev setup without an instance dir at all, see [Dev Mode](#dev-mode).
 
 1. **Prerequisites + install.** Node.js 22 or newer (npm 10+ recommended for workspaces) and [pm2](https://pm2.keymetrics.io/) installed globally (`npm install -g pm2`) — the per-instance `start-prod.sh` scripts and the `bin/instance.ts` upgrade / `--cycle` flows shell out to it. From the repo root, `npm run setup` installs every workspace ([server](server), [converter](converter), [react-app](react-app)) and builds the frontend into [server](server)/`build/`.
-2. **Bootstrap the instance directory** with [`bin/instance.ts`](bin/instance.ts). It creates the dir tree (`photos/{inbox,original,display,thumbnail}/`), generates `.env` with a fresh random `SECRET`, links `code` to this checkout, and surfaces operator shortcuts at `<instance>/bin/{photo,photo-rename,photo-geocode,gallery,user,group,meta}.ts`:
+2. **Bootstrap the instance directory** with [`bin/instance.ts`](bin/instance.ts). It creates the dir tree (`photos/{inbox,original,thumbnail}/` — rendition directories like `photos/display/` are added by the converter on first intake), generates `.env` with a fresh random `SECRET`, links `code` to this checkout, and surfaces operator shortcuts at `<instance>/bin/{photo,photo-rename,photo-geocode,photo-rerender,gallery,user,group,meta}.ts`:
 
    ```sh
    ./bin/instance.ts <name> --base <parent-dir>
@@ -67,7 +67,7 @@ Quickstart for a single personal instance. For the full production layout (multi
    ./bin/gallery.ts <gallery-id> --title "<Title>"
    ```
 
-5. **Set the instance `cdn`** — the public URL that serves `display/`, `thumbnail/`, and `gallery-icons/` (typically the same nginx host):
+5. **Set the instance `cdn`** — the public URL that serves `display/`, `thumbnail/`, and `gallery-icons/`, typically the same nginx host:
 
    ```sh
    ./bin/meta.ts set instance_cdn https://photos.example.com/
@@ -83,7 +83,7 @@ Mirror the prod layout with a dev "instance" inside the repo. The init script wi
 ./bin/instance.ts dev
 ```
 
-That gives you `<repo>/dev/` with `.env`, `photos/{inbox,…,thumbnail}/`, `code → <repo>` (the `dev/` path is gitignored, so the bootstrapped state won't pollute the repo). Each of server, converter, and react-app has a `bin/start-dev.sh` wrapper — run them in the foreground (tsx watch / vite, no pm2):
+That gives you `<repo>/dev/` with `.env`, `photos/{inbox,original,thumbnail}/`, `code → <repo>` (the `dev/` path is gitignored, so the bootstrapped state won't pollute the repo). Each of server, converter, and react-app has a `bin/start-dev.sh` wrapper — run them in the foreground (tsx watch / vite, no pm2):
 
 ```sh
 cd dev
@@ -112,7 +112,7 @@ Directory layout:
     code -> /opt/photo-diary/0.16.0      # symlink to the code version this instance runs
     db.sqlite3                          # auto-created on first server start
     photos/
-      inbox/  original/  display/  thumbnail/
+      inbox/  original/  thumbnail/        # display/<maxDim>/ subdirs auto-created on intake
   travel/
     .env
     code -> /opt/photo-diary/0.11.0     # different instance, possibly on a different version
@@ -227,8 +227,11 @@ server {
     proxy_set_header   X-Forwarded-Proto $scheme;
   }
 
-  # Photo bytes — served directly from disk. The IDs are content-stable (the
-  # converter writes by EXIF-derived ID), so we can mark these immutable.
+  # Photo bytes — served directly from disk. The IDs are content-stable
+  # (the converter writes by EXIF-derived ID), so we can mark these
+  # immutable. `/display/` covers every configured rendition size at
+  # once (each size lives at `display/<maxDim>/<id>.jpg`); adding a
+  # size to the `renditions` meta key never requires an nginx edit.
   location /display/ {
     alias /var/photo-diary/dailybw/photos/display/;
     expires 30d;
@@ -326,7 +329,7 @@ Log files live at `~/.pm2/logs/<name>-out.log` and `~/.pm2/logs/<name>-error.log
 **Backup.** Two pieces matter:
 
 - `<instance>/db.sqlite3` — the source of truth for users, galleries, ACL, and photo metadata. Plain `cp` works if pm2 is stopped; for live backups use the SQLite online-backup API: `sqlite3 db.sqlite3 ".backup '/backups/$(date +%F)-db.sqlite3'"`.
-- `<instance>/photos/{original,display,thumbnail}/` — the bytes themselves. `inbox/` is transient (the converter empties it), no need to back it up.
+- `<instance>/photos/{original,display,thumbnail}/` — the bytes themselves (`display/` is `display/<maxDim>/<id>.jpg` per configured rendition size). `inbox/` is transient (the converter empties it), no need to back it up.
 
 The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` snapshots before flipping the `code` symlink — those are good restore points for a downgrade, but they're not a substitute for off-host backups.
 
@@ -335,7 +338,7 @@ The `bin/instance.ts` upgrade flow already creates `db.sqlite3.pre-<version>` sn
 | Symptom | First thing to check |
 | --- | --- |
 | Server won't start | `pm2 logs <name>` — most common: missing `SECRET` in `.env`, port already in use, or the migration runner threw on a DB inconsistency. |
-| Converter logs "Invalid photo-repository directory structure" | The `photos/{inbox,original,display,thumbnail}/` subdirs aren't all present — re-run `./bin/instance.ts <name>` (or `bin/instance.ts <name>` from the code root) to recreate any missing ones (idempotent). |
+| Converter logs "Invalid photo-repository directory structure" | The `photos/{inbox,original,thumbnail}/` subdirs aren't all present — re-run `./bin/instance.ts <name>` (or `bin/instance.ts <name>` from the code root) to recreate any missing ones (idempotent). Rendition directories like `display/` are auto-created by the converter on first intake and don't need to pre-exist. |
 | `no such table: …` after upgrade | A migration didn't apply. Check `sqlite3 db.sqlite3 "SELECT value FROM meta WHERE key='schema_version'"` and the server log on startup for "Applying N DB migration(s)". |
 | Frontend loads but `/api/v1/galleries` 401s | The user's token expired or the `SECRET` changed across restarts — login again. |
 | Map widget missing where you expected it | The `hide_map` cascade is hiding it; inspect a user's resolved grants with `./bin/user.ts access <user>` and see the privacy doc in the server README. |
@@ -393,7 +396,7 @@ Opt-in surfaces that aren't part of the default UI. Per-visitor toggle in UserMe
 End-to-end flow from a new JPG arriving on the host to it being browsable in the gallery:
 
 1. **Drop into `inbox/<gallery>/`.** Copy/move a JPG into the instance's `photos/inbox/<gallery>/` directory (or just `photos/inbox/` if you'd rather link to a gallery later). The converter watches this path (via chokidar) recursively and picks the file up immediately.
-2. **Converter processes the file.** [converter](converter) reads the EXIF, generates display- and thumbnail-sized renditions (via sharp), writes them to `photos/{display,thumbnail}/<id>.jpg`, moves the original to `photos/original/<id>.jpg`, and **inserts the photo row into the DB** (id, originalFilename, EXIF-derived timestamp / camera / lens / exposure, dimensions). When the file came in under `inbox/<gallery>/`, it's auto-linked to that gallery in `gallery_photo` on intake. After this step the photo appears in the gallery on next page load.
+2. **Converter processes the file.** [converter](converter) reads the EXIF, writes one entry per configured rendition (default: a single 1500-px size) at `photos/display/<maxDim>/<id>.jpg` plus the fixed thumbnail at `photos/thumbnail/<id>.jpg`, inserts a `photo_rendition` row per display variant so the SPA's `srcset` picks it up, moves the original to `photos/original/<id>.jpg`, and **inserts the photo row into the DB** (id, originalFilename, EXIF-derived timestamp / camera / lens / exposure, dimensions). When the file came in under `inbox/<gallery>/`, it's auto-linked to that gallery in `gallery_photo` on intake. After this step the photo appears in the gallery on next page load.
 3. **Geocoding fills place / country / city.** If the photo had EXIF coordinates, the converter (and the `bin/photo-geocode.ts` backfill daemon) resolves them through Nominatim and stores the result on `photo.geocoded_*` and `photo_localized.*` for the operator's extra languages.
 4. **(Optional) operator enrichment via JSON sidecar.** Drop a `<name>.json` alongside (or anywhere under) `inbox/` with the fields you want to overlay onto an existing row — title, description, operator-set country / place, etc. The converter matches it back to the row by id / originalFilename + timestamp and applies the overlay. The sidecar is archived under `photos/original/<id>.intake.json` after processing.
 5. **(Optional) operator enrichment via CLI.** For one-off corrections, `./bin/photo.ts update <id> --title "…" --place "…"` applies the same overrides directly. `./bin/photo.ts show <id>` prints the current row; `./bin/photo.ts delete <id>` removes one. See `./bin/photo.ts --help`.

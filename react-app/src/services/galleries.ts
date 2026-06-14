@@ -94,12 +94,13 @@ export interface IconCrop {
 const setIcon = async (
   galleryId: string,
   sourcePhotoId: string,
-  crop: IconCrop
+  crop: IconCrop,
+  sourceMaxDim: number
 ): Promise<{ icon: string }> =>
   unwrap(
     api.PUT("/api/v1/galleries/{galleryId}/icon", {
       params: { path: { galleryId } },
-      body: { sourcePhotoId, crop },
+      body: { sourcePhotoId, crop, sourceMaxDim },
     })
   ) as Promise<{ icon: string }>;
 

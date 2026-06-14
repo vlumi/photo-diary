@@ -23,7 +23,7 @@
  * prompt nudges; --yes bypasses (use with care).
  *
  * Files renamed per photo:
- *   display/<id>.jpg
+ *   display/<maxDim>/<id>.jpg    (one per configured rendition size)
  *   thumbnail/<id>.jpg
  *   original/<id>.jpg            (may have been cleaned up to save disk)
  *
@@ -50,7 +50,21 @@ const DIR_PHOTOS = "photos";
 const DIR_DISPLAY = "display";
 const DIR_THUMBNAIL = "thumbnail";
 const DIR_ORIGINAL = "original";
-const RENAMEABLE_SUBDIRS = [DIR_DISPLAY, DIR_THUMBNAIL, DIR_ORIGINAL];
+
+// `display/<maxDim>/` enumerated from disk so new sizes pick up
+// without a code edit.
+const buildRenameableSubdirs = (photoRoot: string): string[] => {
+  const out = [DIR_THUMBNAIL, DIR_ORIGINAL];
+  const displayPath = path.join(photoRoot, DIR_DISPLAY);
+  if (fs.existsSync(displayPath)) {
+    for (const entry of fs.readdirSync(displayPath, { withFileTypes: true })) {
+      if (entry.isDirectory() && /^\d+$/.test(entry.name)) {
+        out.push(path.join(DIR_DISPLAY, entry.name));
+      }
+    }
+  }
+  return out;
+};
 
 // Matches the converter's #272 scheme: <YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext>
 const NEW_ID_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-[0-9a-f]{16}\.[a-z0-9]+$/i;
@@ -210,10 +224,11 @@ try {
   // these back; if we updated the DB first and then a file rename failed,
   // the row would point at a non-existent file with no easy way to
   // recover the old name.
+  const renameableSubdirs = buildRenameableSubdirs(photoRoot);
   for (const item of ready) {
     const oldId = item.row.id as string;
     const newId = item.newId;
-    for (const subdir of RENAMEABLE_SUBDIRS) {
+    for (const subdir of renameableSubdirs) {
       const from = path.join(photoRoot, subdir, oldId);
       const to = path.join(photoRoot, subdir, newId);
       if (fileExists(from)) {

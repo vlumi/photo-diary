@@ -1058,12 +1058,17 @@
                 "type": "object",
                 "required": [
                   "sourcePhotoId",
+                  "sourceMaxDim",
                   "crop"
                 ],
                 "properties": {
                   "sourcePhotoId": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "sourceMaxDim": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
                   },
                   "crop": {
                     "type": "object",

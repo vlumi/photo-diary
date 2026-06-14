@@ -235,10 +235,12 @@ const Select = styled.select`
 
 interface PhotoLike {
   id: string;
+  renditions?: number[];
 }
 
 interface IconSource {
   photoId: string;
+  sourceMaxDim?: number;
   crop?: { x: number; y: number; width: number; height: number };
 }
 

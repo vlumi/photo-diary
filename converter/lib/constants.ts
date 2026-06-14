@@ -13,7 +13,6 @@ export const DIR_ORIGINAL = "original";
 export const DIR_DISPLAY = "display";
 export const DIR_THUMBNAIL = "thumbnail";
 
-export const DIM_DISPLAY = { width: 1500, height: 1500 };
 export const DIM_THUMBNAIL = { width: 600, height: 200 };
 
 export type Target = {
@@ -22,11 +21,7 @@ export type Target = {
   kind: "display" | "thumbnail";
 };
 
-export type Rendition = { name: string; maxDim: number };
-
-export const DEFAULT_RENDITIONS: Rendition[] = [
-  { name: DIR_DISPLAY, maxDim: DIM_DISPLAY.width },
-];
+export const DEFAULT_RENDITIONS: number[] = [1500];
 
 export const THUMBNAIL_TARGET: Target = {
   directory: DIR_THUMBNAIL,
@@ -34,8 +29,8 @@ export const THUMBNAIL_TARGET: Target = {
   kind: "thumbnail",
 };
 
-export const renditionToTarget = (rendition: Rendition): Target => ({
-  directory: rendition.name,
-  dimensions: { width: rendition.maxDim, height: rendition.maxDim },
+export const displayTargetFor = (maxDim: number): Target => ({
+  directory: path.join(DIR_DISPLAY, String(maxDim)),
+  dimensions: { width: maxDim, height: maxDim },
   kind: "display",
 });
