@@ -487,6 +487,14 @@ const Photo = ({
   // (closing the modal), and Escape would skip two levels up.
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Stacked-modal deference: when the in-place editor is open
+      // on top of the Photo modal, let its own Escape handler win
+      // — otherwise the capture-phase listener here would close
+      // the photo modal and the editor with it (the editor is a
+      // child of this component). Same shape as FilterModal ↔
+      // Builder's `subModalKey` check in the gallery filter
+      // widget.
+      if (inlineEditOpen) return;
       switch (e.key) {
         case "Escape":
           e.preventDefault();
@@ -517,7 +525,7 @@ const Photo = ({
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [handleClose, animateToPrev, animateToNext]);
+  }, [handleClose, animateToPrev, animateToNext, inlineEditOpen]);
 
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,

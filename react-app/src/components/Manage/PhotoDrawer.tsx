@@ -51,6 +51,12 @@ const Drawer = styled.div`
   border-radius: 4px;
   overflow: hidden;
   box-sizing: border-box;
+  /* min-height: 0 + flex parent → the Body can shrink and scroll
+     inside (in-place modal mounts the Drawer in a constrained
+     overlay; the routed mount inherits a scroll container from
+     the Photos sidebar, so the inner scroll is harmless there). */
+  min-height: 0;
+  flex: 1 1 auto;
 `;
 const Header = styled.div`
   display: flex;
@@ -105,6 +111,9 @@ const Body = styled.div`
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 `;
 const Preview = styled.img`
   width: 100%;
