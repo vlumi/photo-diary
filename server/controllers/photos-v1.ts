@@ -487,14 +487,22 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
-        summary: "Get one photo by id",
+        summary: "Get one photo by id (gallery-editor on any of the photo's galleries)",
         params: PhotoIdParam,
         response: { 200: PhotoItem },
       },
     },
     async (request) => {
       await requirePhotoInScope(request, request.params.photoId);
-      await authorizer.authorizeView(request.user.id);
+      // Editor-tier on at least one of the photo's galleries
+      // satisfies — same gate as the PUT below, so the editor's
+      // Manage button on the public Photo modal can land them on
+      // the drawer without going through the global photo list.
+      // Admin short-circuits inside.
+      await authorizer.authorizePhotoEditor(
+        request.user.id,
+        request.params.photoId
+      );
       const photo = await model.getPhoto(request.params.photoId);
       return photo;
     }

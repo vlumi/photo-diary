@@ -258,6 +258,10 @@ const Photo = ({
   const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
   const isAdmin = !!user?.isAdmin();
+  // Editor-tier on this gallery (or any global admin) — gates the
+  // floating Manage / SetIcon buttons. Server enforces per-request,
+  // this is just the rendering hint.
+  const canManage = !!user?.isGalleryEditor(gallery.id());
   const [zoom, setZoom] = React.useState<ZoomState>(ZOOM_RESET);
   const [isFullscreen, setIsFullscreen] = React.useState(
     typeof document !== "undefined" && !!document.fullscreenElement
@@ -551,7 +555,7 @@ const Photo = ({
             {isFullscreen ? <BsFullscreenExit /> : <BsArrowsFullscreen />}
           </FullscreenButton>
         )}
-        {isAdmin && (
+        {canManage && (
           <ManageButton
             type="button"
             onClick={() =>
@@ -565,7 +569,7 @@ const Photo = ({
             <BsPencilSquare />
           </ManageButton>
         )}
-        {isAdmin && (
+        {canManage && (
           <SetIconButton
             type="button"
             onClick={() =>

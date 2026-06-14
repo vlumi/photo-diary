@@ -307,7 +307,7 @@ const Manage = (): React.ReactElement => {
 
   const body = !user ? (
     <NoticeBody>{t("manage-not-logged-in")}</NoticeBody>
-  ) : !user.isAdmin() ? (
+  ) : !isAdmin && !isEditor ? (
     <NoticeBody>{t("manage-not-admin")}</NoticeBody>
   ) : shouldBounceToDashboard ? (
     <Navigate to="/m" replace />

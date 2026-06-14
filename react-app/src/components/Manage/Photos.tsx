@@ -22,6 +22,8 @@ import photosService, {
 import galleriesService from "../../services/galleries";
 import useKeyPress from "../../lib/keypress";
 import config from "../../lib/config";
+import { useUserStore } from "../../stores";
+import { Navigate } from "react-router-dom";
 import BulkActions from "./BulkActions";
 import TimelineStrip from "./TimelineStrip";
 
@@ -422,7 +424,35 @@ const pageFromSearchParams = (searchParams: URLSearchParams): number => {
 
 const PAGE_SIZE = 100;
 
+// Editor-tier short-circuit: editors land here only via the
+// "Manage this photo" button on the public Photo modal, which
+// always carries a `:photoId` and resolves a per-photo drawer.
+// The grid + bulk operations stay admin-only — render just the
+// outlet so the drawer mounts under the same /m breadcrumbs.
+const EditorPhotosShell = (): React.ReactElement => {
+  const params = useParams();
+  if (!params.photoId) {
+    return <Navigate to="/m" replace />;
+  }
+  return (
+    <Root>
+      <Sidebar $hideOnMobile={false}>
+        <Outlet />
+      </Sidebar>
+    </Root>
+  );
+};
+
 const Photos = (): React.ReactElement => {
+  const user = useUserStore((s) => s.user);
+  const isAdmin = !!user?.isAdmin();
+  if (!isAdmin) {
+    return <EditorPhotosShell />;
+  }
+  return <AdminPhotos />;
+};
+
+const AdminPhotos = (): React.ReactElement => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
