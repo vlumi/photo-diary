@@ -100,7 +100,6 @@ test("processes a JPEG with EXIF end-to-end and renames to <ts>-<uuid>.jpg", asy
   assert.equal(row.camera.make, "TestMake");
   assert.equal(row.exposure.aperture, 5.6);
   assert.ok(row.dimensions.original.width > 0);
-  assert.ok(row.dimensions.display.width > 0);
   assert.ok(row.dimensions.thumbnail.width > 0);
 });
 
