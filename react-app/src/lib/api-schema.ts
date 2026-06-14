@@ -47,7 +47,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures";
+                        key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions";
                         value: string;
                     };
                 };
@@ -81,7 +81,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures";
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions";
                 };
                 cookie?: never;
             };
@@ -106,7 +106,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures";
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions";
                 };
                 cookie?: never;
             };
@@ -134,7 +134,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures";
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions";
                 };
                 cookie?: never;
             };

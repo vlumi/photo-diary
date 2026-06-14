@@ -37,6 +37,7 @@ export const KNOWN_META_KEYS_PUBLIC = [
   "initialGalleryView",
   "firstWeekday",
   "betaFeatures",
+  "renditions",
 ] as const;
 export type KnownMetaKeyPublic = (typeof KNOWN_META_KEYS_PUBLIC)[number];
 
@@ -53,6 +54,7 @@ export const KNOWN_META_KEYS_INTERNAL = [
   "instance_initialGalleryView",
   "instance_firstWeekday",
   "instance_betaFeatures",
+  "instance_renditions",
 ] as const;
 export type KnownMetaKeyInternal = (typeof KNOWN_META_KEYS_INTERNAL)[number];
 

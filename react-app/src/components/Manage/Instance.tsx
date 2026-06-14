@@ -77,6 +77,25 @@ const BetaRow = styled.div`
   gap: 12px;
   align-items: center;
 `;
+const RenditionRowEl = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 140px 40px;
+  gap: 8px;
+  align-items: center;
+`;
+const SmallButton = styled.button`
+  font: inherit;
+  padding: 4px 10px;
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  cursor: pointer;
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+`;
 const Footer = styled.div`
   display: flex;
   justify-content: flex-end;
@@ -123,6 +142,10 @@ const Notice = styled.div`
   color: var(--inactive-color);
 `;
 
+interface RenditionShape {
+  name?: string;
+  maxDim?: number;
+}
 interface MetaShape {
   name?: string;
   description?: string;
@@ -134,6 +157,12 @@ interface MetaShape {
   initialGalleryView?: string;
   firstWeekday?: string | number;
   betaFeatures?: Partial<Record<BetaFeature, BetaMode>>;
+  renditions?: RenditionShape[];
+}
+
+interface RenditionRow {
+  name: string;
+  maxDim: string;
 }
 
 interface FormState {
@@ -147,6 +176,7 @@ interface FormState {
   initialGalleryView: string;
   firstWeekday: string;
   betaFeatures: Record<BetaFeature, BetaMode>;
+  renditions: RenditionRow[];
 }
 
 const SUPPORTED_LANGUAGES = ["en", "fi", "ja"] as const;
@@ -157,6 +187,8 @@ const FIRST_WEEKDAYS = [
   { value: "1", label: "Monday" },
 ] as const;
 const BETA_MODES: BetaMode[] = ["user", "on", "off"];
+
+const DEFAULT_RENDITIONS: RenditionRow[] = [{ name: "display", maxDim: "1500" }];
 
 const emptyBeta = (): Record<BetaFeature, BetaMode> =>
   Object.fromEntries(BETA_FEATURES.map((f) => [f, "user"])) as Record<
@@ -175,6 +207,7 @@ const emptyForm = (): FormState => ({
   initialGalleryView: "",
   firstWeekday: "",
   betaFeatures: emptyBeta(),
+  renditions: DEFAULT_RENDITIONS.map((r) => ({ ...r })),
 });
 
 const formFromMeta = (meta: MetaShape | undefined): FormState => {
@@ -196,12 +229,53 @@ const formFromMeta = (meta: MetaShape | undefined): FormState => {
       if (v === "on" || v === "off" || v === "user") base.betaFeatures[f] = v;
     }
   }
+  if (Array.isArray(meta.renditions) && meta.renditions.length > 0) {
+    base.renditions = meta.renditions
+      .filter(
+        (r): r is { name: string; maxDim: number } =>
+          !!r && typeof r.name === "string" && typeof r.maxDim === "number"
+      )
+      .map((r) => ({ name: r.name, maxDim: String(r.maxDim) }));
+    if (base.renditions.length === 0) {
+      base.renditions = DEFAULT_RENDITIONS.map((r) => ({ ...r }));
+    }
+  }
   return base;
 };
 
+const renditionsEqualDefault = (rows: RenditionRow[]): boolean => {
+  if (rows.length !== DEFAULT_RENDITIONS.length) return false;
+  return rows.every(
+    (r, i) =>
+      r.name.trim() === DEFAULT_RENDITIONS[i].name &&
+      r.maxDim.trim() === DEFAULT_RENDITIONS[i].maxDim
+  );
+};
+
+const renditionRowsAreValid = (rows: RenditionRow[]): boolean => {
+  if (rows.length === 0) return false;
+  const seen = new Set<string>();
+  for (const r of rows) {
+    const name = r.name.trim();
+    const dim = Number(r.maxDim);
+    if (!name || name.includes("/") || name.includes("..")) return false;
+    if (!Number.isFinite(dim) || dim <= 0 || !Number.isInteger(dim)) return false;
+    if (seen.has(name)) return false;
+    seen.add(name);
+  }
+  return true;
+};
+
+const serialiseRenditions = (rows: RenditionRow[]): string =>
+  JSON.stringify(
+    rows.map((r) => ({ name: r.name.trim(), maxDim: Number(r.maxDim) }))
+  );
+
 // Stringified meta payloads for diffing — beta features collapse
 // to one JSON-encoded value, the rest are plain strings.
-const SCALAR_KEYS: Array<Exclude<keyof FormState, "betaFeatures">> = [
+const SCALAR_KEYS: Array<
+  Exclude<keyof FormState, "betaFeatures" | "renditions">
+> = [
   "name",
   "description",
   "cdn",
@@ -251,8 +325,14 @@ const Instance = (): React.ReactElement => {
     for (const f of BETA_FEATURES) {
       if (form.betaFeatures[f] !== original.betaFeatures[f]) return true;
     }
+    if (
+      JSON.stringify(form.renditions) !== JSON.stringify(original.renditions)
+    )
+      return true;
     return false;
   }, [form, original]);
+
+  const renditionsValid = renditionRowsAreValid(form.renditions);
 
   const save = async () => {
     if (!dirty) return;
@@ -288,6 +368,21 @@ const Instance = (): React.ReactElement => {
           await metaService.set(
             "betaFeatures",
             JSON.stringify(form.betaFeatures)
+          );
+        }
+      }
+      // Renditions: drop the row when the ladder matches the
+      // built-in default; converter falls back to it automatically.
+      const renditionsChanged =
+        JSON.stringify(form.renditions) !==
+        JSON.stringify(original.renditions);
+      if (renditionsChanged) {
+        if (renditionsEqualDefault(form.renditions)) {
+          await metaService.remove("renditions");
+        } else {
+          await metaService.set(
+            "renditions",
+            serialiseRenditions(form.renditions)
           );
         }
       }
@@ -434,6 +529,67 @@ const Instance = (): React.ReactElement => {
       </Section>
 
       <Section>
+        <SectionTitle>{t("manage-instance-renditions")}</SectionTitle>
+        <FieldHint>{t("manage-instance-renditions-hint")}</FieldHint>
+        {form.renditions.map((row, idx) => (
+          <RenditionRowEl key={idx}>
+            <Input
+              value={row.name}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  renditions: prev.renditions.map((r, i) =>
+                    i === idx ? { ...r, name: e.target.value } : r
+                  ),
+                }))
+              }
+              placeholder={t("manage-instance-renditions-name") ?? ""}
+            />
+            <Input
+              type="number"
+              min={1}
+              step={1}
+              value={row.maxDim}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  renditions: prev.renditions.map((r, i) =>
+                    i === idx ? { ...r, maxDim: e.target.value } : r
+                  ),
+                }))
+              }
+              placeholder={t("manage-instance-renditions-max-dim") ?? ""}
+            />
+            <SmallButton
+              type="button"
+              disabled={form.renditions.length <= 1}
+              onClick={() =>
+                setForm((prev) => ({
+                  ...prev,
+                  renditions: prev.renditions.filter((_, i) => i !== idx),
+                }))
+              }
+              aria-label={t("manage-instance-renditions-remove") ?? ""}
+              title={t("manage-instance-renditions-remove") ?? ""}
+            >
+              ×
+            </SmallButton>
+          </RenditionRowEl>
+        ))}
+        <SmallButton
+          type="button"
+          onClick={() =>
+            setForm((prev) => ({
+              ...prev,
+              renditions: [...prev.renditions, { name: "", maxDim: "" }],
+            }))
+          }
+        >
+          {t("manage-instance-renditions-add")}
+        </SmallButton>
+      </Section>
+
+      <Section>
         <SectionTitle>{t("manage-instance-beta")}</SectionTitle>
         <FieldHint>{t("manage-instance-beta-hint")}</FieldHint>
         {BETA_FEATURES.map((feature) => (
@@ -468,7 +624,7 @@ const Instance = (): React.ReactElement => {
         <ButtonPrimary
           type="button"
           onClick={() => void save()}
-          disabled={!dirty || saving}
+          disabled={!dirty || saving || !renditionsValid}
         >
           {saving
             ? t("manage-user-button-saving")
