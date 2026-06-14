@@ -61,12 +61,20 @@ const ManageGalleryAccess = React.lazy(
   () => import("./components/Manage/GalleryAccess")
 );
 const ManageAccess = React.lazy(() => import("./components/Manage/Access"));
+const ManageInstance = React.lazy(
+  () => import("./components/Manage/Instance")
+);
 const GlobalStats = React.lazy(() => import("./components/GlobalStats"));
 
 import config from "./lib/config";
 import metaService from "./services/meta";
 import theme from "./lib/theme";
-import { useBetaStore, useLangStore, useThemePreferenceStore } from "./stores";
+import {
+  hadStoredLangAtBoot,
+  useBetaStore,
+  useLangStore,
+  useThemePreferenceStore,
+} from "./stores";
 import { BETA_FEATURES, type BetaFeature, type BetaMode } from "./stores/beta";
 
 type ActiveTheme = ReturnType<typeof theme.setTheme>;
@@ -99,6 +107,7 @@ interface Meta {
   description?: string;
   defaultGallery?: string;
   defaultTheme?: string;
+  defaultLanguage?: string;
   initialGalleryView?: string;
   firstWeekday?: string | number;
   betaFeatures?: Record<string, string>;
@@ -154,15 +163,44 @@ const App = (): React.ReactElement => {
     }
     if (Object.keys(next).length > 0) setBetaModes(next);
   }, [meta, setBetaModes]);
+  // First-visit language pick: apply `meta.defaultLanguage` when
+  // the visitor has no `lang` localStorage. Once they pick a
+  // language via the UI, the persisted value wins on subsequent
+  // visits and meta is ignored. i18next was already initialised
+  // with `config.DEFAULT_LANGUAGE` at module load, so the visible
+  // effect is a brief flip from en → instance-default while the
+  // visitor is on the initial Loading view (text is gated on
+  // countryDataReady, which the language change resets).
+  const setLang = useLangStore((s) => s.setLang);
+  const langAppliedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (langAppliedRef.current) return;
+    if (hadStoredLangAtBoot) return;
+    if (!meta?.defaultLanguage) return;
+    langAppliedRef.current = true;
+    setLang(meta.defaultLanguage);
+  }, [meta?.defaultLanguage, setLang]);
 
   const themePreference = useThemePreferenceStore((s) => s.preference);
-  const baseTheme = theme.setTheme(
-    themePreference ?? meta?.defaultTheme ?? config.DEFAULT_THEME
-  );
+  // Until `/meta` resolves, fall back to App.css's neutral defaults
+  // rather than painting the bundled "blue" theme — otherwise a
+  // grayscale-themed instance flashes blue for a frame on load. A
+  // per-visitor theme override (themePreference) wins immediately
+  // since the visitor has stated their preference; everyone else
+  // gets the neutral state for the brief window before /meta
+  // lands. Same goes if the metaQuery actively errors — neutral
+  // beats a wrong guess.
+  const themeResolved =
+    !!themePreference || (metaQuery.isSuccess && !!meta?.defaultTheme);
+  const baseTheme = themeResolved
+    ? theme.setTheme(
+        themePreference ?? meta?.defaultTheme ?? config.DEFAULT_THEME
+      )
+    : null;
 
   return (
     <>
-      <Global styles={baseGlobalStyles(baseTheme)} />
+      {baseTheme && <Global styles={baseGlobalStyles(baseTheme)} />}
       <title>Photo diary</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="robots" content="noindex" />
@@ -205,6 +243,7 @@ const App = (): React.ReactElement => {
                     element={<ManageGroupEdit />}
                   />
                   <Route path="access" element={<ManageAccess />} />
+                  <Route path="instance" element={<ManageInstance />} />
                   <Route path="galleries" element={<ManageGalleries />} />
                   <Route
                     path="galleries/new"

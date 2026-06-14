@@ -1,5 +1,5 @@
 export { useUserStore } from "./user";
-export { useLangStore, ensureAllCountryLocales } from "./lang";
+export { useLangStore, ensureAllCountryLocales, hadStoredLangAtBoot } from "./lang";
 export { useFiltersStore, useWireNumericRanges } from "./filters";
 export { useFilterModalStore } from "./filter-modal";
 export { useScrollStore } from "./scroll";

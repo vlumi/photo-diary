@@ -48,6 +48,12 @@ const storedLang =
     : null;
 const initialLang = storedLang ?? config.DEFAULT_LANGUAGE;
 
+// True when the visitor has no persisted language pick at boot —
+// App.tsx uses this once `/meta` resolves to apply
+// `meta.defaultLanguage` (server-side default) without
+// overriding a visitor who's already chosen.
+export const hadStoredLangAtBoot = storedLang !== null;
+
 interface LangState {
   lang: string;
   countryData: typeof countryData | undefined;

@@ -30,6 +30,7 @@ const GLOBAL_MANAGE_PATHS = [
   "/m/users",
   "/m/groups",
   "/m/access",
+  "/m/instance",
 ];
 
 const Root = styled.div`

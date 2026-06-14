@@ -10,6 +10,7 @@ import {
   BsPeople,
   BsPeopleFill,
   BsShieldLock,
+  BsSliders,
 } from "react-icons/bs";
 import type { IconType } from "react-icons";
 
@@ -141,6 +142,12 @@ const GLOBAL_TILES: TileSpec[] = [
     Icon: BsShieldLock,
     titleKey: "manage-page-access-title",
     blurbKey: "manage-dashboard-tile-access-blurb",
+  },
+  {
+    path: "/m/instance",
+    Icon: BsSliders,
+    titleKey: "manage-page-instance-title",
+    blurbKey: "manage-dashboard-tile-instance-blurb",
   },
 ];
 
