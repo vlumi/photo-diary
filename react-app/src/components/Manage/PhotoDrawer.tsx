@@ -14,6 +14,7 @@ import {
   BsBoxArrowUpRight,
   BsClipboard,
   BsClipboardCheck,
+  BsEyeSlashFill,
   BsPencilSquare,
   BsX,
 } from "react-icons/bs";
@@ -433,6 +434,9 @@ interface PhotoData {
   // `getPhoto` / `listPhotos` so the drawer can render jump-link
   // chips into `/g/<gallery>/<photoId>` or `/m/galleries/<id>`.
   galleries?: string[];
+  // Photo-level visibility (#480) — flipped by the privacy switch
+  // in this drawer; surfaces the badge on the public Photo modal.
+  isPrivate?: boolean;
 }
 
 // Maritime address keys Nominatim emits when reverse-geocoding
@@ -549,6 +553,7 @@ interface FormState {
   focalLength: string;
   focalLength35mmEquiv: string;
   aperture: string;
+  isPrivate: boolean;
 }
 
 const emptyLocalized = (): Record<string, string> =>
@@ -573,6 +578,7 @@ const emptyForm = (): FormState => ({
   focalLength: "",
   focalLength35mmEquiv: "",
   aperture: "",
+  isPrivate: false,
 });
 
 const numField = (v: number | null | undefined): string =>
@@ -605,6 +611,7 @@ const formFrom = (p: PhotoData): FormState => ({
   focalLength: numField(p.exposure?.focalLength),
   focalLength35mmEquiv: numField(p.exposure?.focalLength35mmEquiv),
   aperture: numField(p.exposure?.aperture),
+  isPrivate: !!p.isPrivate,
 });
 
 // Diff per-language overlay maps. Returns only the entries the user
@@ -726,6 +733,9 @@ const patchFrom = (
     if (!Number.isNaN(v)) exposure.aperture = v;
   }
   if (Object.keys(exposure).length > 0) patch.exposure = exposure;
+  if (current.isPrivate !== original.isPrivate) {
+    patch.isPrivate = current.isPrivate;
+  }
   return patch;
 };
 
@@ -1340,6 +1350,37 @@ const PhotoDrawer = (): React.ReactElement => {
                   {t("manage-photo-galleries-orphan")}
                 </EmptyValue>
               )}
+            </MetaValue>
+            <MetaLabel>{t("manage-photo-field-privacy")}</MetaLabel>
+            <MetaValue>
+              <MetaValueRow>
+                <label
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.isPrivate}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        isPrivate: e.target.checked,
+                      }))
+                    }
+                  />
+                  <BsEyeSlashFill aria-hidden />
+                  {t("manage-photo-privacy-toggle")}
+                </label>
+                <span
+                  style={{ color: "var(--inactive-color)", fontSize: "0.85em" }}
+                >
+                  {t("manage-photo-privacy-hint")}
+                </span>
+              </MetaValueRow>
             </MetaValue>
             {data.taken?.instant?.timestamp && (
               <>

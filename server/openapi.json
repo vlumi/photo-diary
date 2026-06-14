@@ -2050,6 +2050,9 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -2692,6 +2695,9 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -3522,7 +3528,8 @@
                       "user_id",
                       "gallery_id",
                       "is_editor",
-                      "hide_map"
+                      "hide_map",
+                      "can_see_private"
                     ],
                     "properties": {
                       "user_id": {
@@ -3543,6 +3550,9 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "can_see_private": {
+                        "type": "number"
                       }
                     }
                   }
@@ -3581,6 +3591,9 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "canSeePrivate": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -4029,7 +4042,8 @@
                       "group_id",
                       "gallery_id",
                       "is_editor",
-                      "hide_map"
+                      "hide_map",
+                      "can_see_private"
                     ],
                     "properties": {
                       "group_id": {
@@ -4050,6 +4064,9 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "can_see_private": {
+                        "type": "number"
                       }
                     }
                   }
@@ -4088,6 +4105,9 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "canSeePrivate": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false

@@ -5,6 +5,7 @@ import styled from "@emotion/styled";
 import {
   BsArrowsFullscreen,
   BsBookmarkStar,
+  BsEyeSlashFill,
   BsFullscreenExit,
   BsInfoCircleFill,
   BsPencilSquare,
@@ -130,6 +131,28 @@ const SetIconButton = styled(FloatingButton)`
 const InfoButton = styled(FloatingButton)`
   bottom: 16px;
   right: 16px;
+`;
+// "Private in this gallery" badge — surfaces when the user can see
+// the photo only because their grant carries `can_see_private` (or
+// they're editor/admin). Same floating-button geometry as the other
+// overlays; non-interactive (pointer-events: none) since it's a
+// label, not a button.
+const PrivacyBadge = styled.div`
+  position: absolute;
+  z-index: 9;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 0.75em;
+  letter-spacing: 0.02em;
 `;
 // Author overlay anchored to the bottom-left so it doesn't collide
 // with the InfoButton (bottom-right) or the MetadataPanel (anchored
@@ -569,6 +592,12 @@ const Photo = ({
           <AuthorOverlay aria-label={t("photo-author")}>
             © {photo.author()}
           </AuthorOverlay>
+        )}
+        {photo.isPrivate() && (
+          <PrivacyBadge aria-label={String(t("photo-private-badge"))}>
+            <BsEyeSlashFill aria-hidden />
+            {t("photo-private-badge")}
+          </PrivacyBadge>
         )}
         {zoom.scale === 1 ? (
           <CarouselViewport>

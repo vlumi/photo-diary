@@ -25,15 +25,19 @@ const RowResponse = Type.Object({
   gallery_id: Type.String(),
   is_editor: Type.Number(),
   hide_map: Type.Union([Type.Number(), Type.Null()]),
+  can_see_private: Type.Number(),
 });
 const RowsResponse = Type.Array(RowResponse);
 // `isEditor = true` upgrades a row to gallery editor. `hideMap`
 // is the privacy override on this specific (user, gallery) pair —
-// `null` means "inherit from the next outer level."
+// `null` means "inherit from the next outer level." `canSeePrivate`
+// extends view-only rows to the gallery's private-flagged photos
+// (editors / admins always see private regardless).
 const UpsertBody = Type.Object(
   {
     isEditor: Type.Boolean(),
     hideMap: Type.Optional(Type.Union([Type.Boolean(), Type.Null()])),
+    canSeePrivate: Type.Optional(Type.Boolean()),
   },
   { additionalProperties: false }
 );
@@ -65,6 +69,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         gallery_id: string;
         is_editor: number;
         hide_map: number | null;
+        can_see_private: number;
       }>;
       // On a scoped host, narrow to the scoped galleries. Rows for any
       // other gallery are simply not visible from this hostname.
@@ -92,13 +97,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request, reply) => {
       requireScopeMatches(request, request.params.galleryId);
       await authorizer.authorizeAdmin(request.user.id);
-      const { isEditor, hideMap } = request.body;
+      const { isEditor, hideMap, canSeePrivate } = request.body;
       await model.upsertUserGallery({
         user_id: request.params.userId,
         gallery_id: request.params.galleryId,
         is_editor: isEditor,
         hide_map:
           hideMap === undefined ? undefined : hideMap === null ? null : hideMap ? 1 : 0,
+        can_see_private: canSeePrivate,
       });
       reply.status(204).send();
     }

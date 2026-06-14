@@ -116,10 +116,14 @@ const createGallery = async (gallery: { id: string } & Record<string, any>) => {
   await db.createGallery(gallery);
   await applyVirtualSources(gallery.id, sources);
 };
-const getGallery = async (galleryId: string) => {
+const getGallery = async (galleryId: string, includePrivate = false) => {
   logger.debug("Getting gallery", galleryId);
   const gallery = await db.loadGallery(galleryId);
-  const galleryPhotos = await db.loadGalleryPhotos(galleryId);
+  const galleryPhotos = await db.loadGalleryPhotos(
+    galleryId,
+    undefined,
+    includePrivate
+  );
   return {
     ...gallery,
     photos: galleryPhotos,

@@ -137,7 +137,7 @@ export default {
   resolveAccessLevel: async (
     userId: string,
     galleryId: string
-  ): Promise<{ hasAccess: boolean; isEditor: boolean }> => {
+  ): Promise<{ hasAccess: boolean; isEditor: boolean; canSeePrivate: boolean }> => {
     return await db.resolveAccessLevel(userId, galleryId);
   },
   loadUserGalleryRows: async (
@@ -150,6 +150,7 @@ export default {
     gallery_id: string;
     is_editor?: boolean;
     hide_map?: number | null;
+    can_see_private?: boolean;
   }): Promise<void> => {
     await db.upsertUserGallery(row);
   },
@@ -210,6 +211,7 @@ export default {
     gallery_id: string;
     is_editor?: boolean;
     hide_map?: number | null;
+    can_see_private?: boolean;
   }): Promise<void> => {
     await db.upsertGroupGallery(row);
   },
@@ -289,8 +291,12 @@ export default {
     await db.deleteSavedFilter(sourceGalleryId, id);
   },
 
-  loadGalleryPhotos: async (galleryId: string, lang?: string) => {
-    return await db.loadGalleryPhotos(galleryId, lang);
+  loadGalleryPhotos: async (
+    galleryId: string,
+    lang?: string,
+    includePrivate?: boolean
+  ) => {
+    return await db.loadGalleryPhotos(galleryId, lang, includePrivate);
   },
   queryFilteredPhotos: async (
     galleryId: string,
@@ -328,14 +334,16 @@ export default {
     lang?: string,
     filter?: FilterShape,
     dateRange?: DateRange,
-    numericRanges?: NumericRanges
+    numericRanges?: NumericRanges,
+    includePrivate?: boolean
   ): Promise<FilterValuesResult> => {
     return (await db.queryGalleryFilterValues(
       galleryId,
       lang,
       filter,
       dateRange,
-      numericRanges
+      numericRanges,
+      includePrivate
     )) as FilterValuesResult;
   },
   queryGlobalFilterValues: async (
@@ -354,18 +362,25 @@ export default {
   linkGalleryPhoto: async (galleryIds: string[], photoIds: string[]) => {
     return await db.linkGalleryPhoto(galleryIds, photoIds);
   },
-  loadGalleryPhoto: async (galleryId: string, photoId: string, lang?: string) => {
-    return await db.loadGalleryPhoto(galleryId, photoId, lang);
+  loadGalleryPhoto: async (
+    galleryId: string,
+    photoId: string,
+    lang?: string,
+    includePrivate?: boolean
+  ) => {
+    return await db.loadGalleryPhoto(galleryId, photoId, lang, includePrivate);
   },
   loadGalleryPhotoByOriginalFilename: async (
     galleryId: string,
     originalFilename: string,
-    lang?: string
+    lang?: string,
+    includePrivate?: boolean
   ) => {
     return await db.loadGalleryPhotoByOriginalFilename(
       galleryId,
       originalFilename,
-      lang
+      lang,
+      includePrivate
     );
   },
   unlinkGalleryPhoto: async (galleryId: string, photoId: string) => {

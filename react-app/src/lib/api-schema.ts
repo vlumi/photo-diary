@@ -1165,6 +1165,7 @@ export interface paths {
                             focalLength35mmEquiv?: number;
                             aperture?: number;
                         };
+                        isPrivate?: boolean;
                     };
                 };
             };
@@ -1465,6 +1466,7 @@ export interface paths {
                             focalLength35mmEquiv?: number;
                             aperture?: number;
                         };
+                        isPrivate?: boolean;
                     };
                 };
             };
@@ -2013,6 +2015,7 @@ export interface paths {
                             gallery_id: string;
                             is_editor: number;
                             hide_map: number | null;
+                            can_see_private: number;
                         }[];
                     };
                 };
@@ -2050,6 +2053,7 @@ export interface paths {
                     "application/json": {
                         isEditor: boolean;
                         hideMap?: boolean | null;
+                        canSeePrivate?: boolean;
                     };
                 };
             };
@@ -2373,6 +2377,7 @@ export interface paths {
                             gallery_id: string;
                             is_editor: number;
                             hide_map: number | null;
+                            can_see_private: number;
                         }[];
                     };
                 };
@@ -2410,6 +2415,7 @@ export interface paths {
                     "application/json": {
                         isEditor: boolean;
                         hideMap?: boolean | null;
+                        canSeePrivate?: boolean;
                     };
                 };
             };

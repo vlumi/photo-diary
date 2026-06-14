@@ -172,6 +172,7 @@ export interface PhotoUpdatePatch {
     focalLength35mmEquiv?: number;
     aperture?: number;
   };
+  isPrivate?: boolean;
 }
 
 const update = async (id: string, patch: PhotoUpdatePatch): Promise<void> => {

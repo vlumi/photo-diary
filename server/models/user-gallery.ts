@@ -24,6 +24,7 @@ const upsertUserGallery = async (row: {
   gallery_id: string;
   is_editor?: boolean;
   hide_map?: number | null;
+  can_see_private?: boolean;
 }) => {
   logger.debug("Upserting user_gallery", row);
   await db.upsertUserGallery(row);

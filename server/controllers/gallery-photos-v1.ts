@@ -140,9 +140,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
+        const includePrivate = await authorizer.resolveCanSeePrivate(
+          request.user.id,
+          request.params.galleryId
+        );
         const photos = await model.getGalleryPhotos(
           request.params.galleryId,
-          request.query.lang
+          request.query.lang,
+          includePrivate
         );
         if (await shouldHideMap(request.user.id, request.params.galleryId)) {
           maskCoordinates(photos as Parameters<typeof maskCoordinates>[0]);
@@ -182,6 +187,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
+        const includePrivate = await authorizer.resolveCanSeePrivate(
+          request.user.id,
+          request.params.galleryId
+        );
         const photos = await model.queryGalleryPhotos(
           request.params.galleryId,
           {
@@ -192,6 +201,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             month: request.body.month,
             day: request.body.day,
             lang: request.body.lang,
+            includePrivate,
           }
         );
         if (await shouldHideMap(request.user.id, request.params.galleryId)) {
@@ -230,6 +240,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
+        const includePrivate = await authorizer.resolveCanSeePrivate(
+          request.user.id,
+          request.params.galleryId
+        );
         return await model.queryGalleryPhotoCounts(
           request.params.galleryId,
           {
@@ -237,6 +251,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             dateRange: request.body.dateRange,
             numericRanges: request.body.numericRanges,
             year: request.body.year,
+            includePrivate,
           }
         );
       } catch (error) {
@@ -270,6 +285,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
+        const includePrivate = await authorizer.resolveCanSeePrivate(
+          request.user.id,
+          request.params.galleryId
+        );
         const result = await model.getGalleryPhotoNeighbors(
           request.params.galleryId,
           request.body.photoId,
@@ -278,6 +297,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             dateRange: request.body.dateRange,
             numericRanges: request.body.numericRanges,
             lang: request.body.lang,
+            includePrivate,
           }
         );
         if (await shouldHideMap(request.user.id, request.params.galleryId)) {
@@ -328,12 +348,17 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
+        const includePrivate = await authorizer.resolveCanSeePrivate(
+          request.user.id,
+          request.params.galleryId
+        );
         return await model.getGalleryFilterValues(
           request.params.galleryId,
           request.body.lang,
           request.body.filter,
           request.body.dateRange,
-          request.body.numericRanges
+          request.body.numericRanges,
+          includePrivate
         );
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
@@ -373,10 +398,15 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
+        const includePrivate = await authorizer.resolveCanSeePrivate(
+          request.user.id,
+          request.params.galleryId
+        );
         const photo = await model.getGalleryPhotoByOriginalFilename(
           request.params.galleryId,
           request.params.originalFilename,
-          request.query.lang
+          request.query.lang,
+          includePrivate
         );
         if (await shouldHideMap(request.user.id, request.params.galleryId)) {
           maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
@@ -414,10 +444,15 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
+        const includePrivate = await authorizer.resolveCanSeePrivate(
+          request.user.id,
+          request.params.galleryId
+        );
         const photo = await model.getGalleryPhoto(
           request.params.galleryId,
           request.params.photoId,
-          request.query.lang
+          request.query.lang,
+          includePrivate
         );
         if (await shouldHideMap(request.user.id, request.params.galleryId)) {
           maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);

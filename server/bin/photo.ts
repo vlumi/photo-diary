@@ -441,6 +441,44 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
+    "private <id>",
+    "Flag the photo as private — view-only viewers without can_see_private on the gallery they're using stop seeing it. Editors / admins always see private photos.",
+    (y) =>
+      y.positional("id", {
+        describe: "Photo id",
+        type: "string",
+        demandOption: true,
+      }),
+    async (argv) => {
+      const existing = await db.loadPhoto(argv.id as string).catch(() => null);
+      if (!existing) {
+        console.error(`✗ Photo "${argv.id}" doesn't exist.`);
+        process.exit(1);
+      }
+      await db.updatePhoto(argv.id as string, { isPrivate: true });
+      console.log(`✓ Marked "${argv.id}" private.`);
+    }
+  )
+  .command(
+    "public <id>",
+    "Clear the photo's is_private flag so every viewer with gallery access sees it.",
+    (y) =>
+      y.positional("id", {
+        describe: "Photo id",
+        type: "string",
+        demandOption: true,
+      }),
+    async (argv) => {
+      const existing = await db.loadPhoto(argv.id as string).catch(() => null);
+      if (!existing) {
+        console.error(`✗ Photo "${argv.id}" doesn't exist.`);
+        process.exit(1);
+      }
+      await db.updatePhoto(argv.id as string, { isPrivate: false });
+      console.log(`✓ Marked "${argv.id}" public.`);
+    }
+  )
+  .command(
     "regeocode <id>",
     "Clear the photo's geocoded_* columns and drop a sidecar so the converter daemon re-fetches via Nominatim. Useful when the row's geocoded data has drifted (Nominatim updated, manual fix, post-coord-edit refresh).",
     (y) =>

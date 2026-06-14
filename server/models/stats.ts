@@ -62,8 +62,18 @@ export { UNKNOWN_BUCKET } from "../lib/stats-compute.js";
 // Cache namespace builder. `en` / no-lang shares the bare key so
 // the most common path accrues hits across requests that don't
 // ask for a localized overlay.
-const galleryCacheKey = (galleryId: string, lang?: string): string =>
-  !lang || lang === "en" ? galleryId : `${galleryId}:${lang}`;
+// `includePrivate` joins the cache key so a private-view viewer
+// never inherits a public-only cached aggregate (or vice versa).
+const galleryCacheKey = (
+  galleryId: string,
+  lang: string | undefined,
+  includePrivate: boolean
+): string => {
+  const scope = includePrivate ? "priv" : "pub";
+  return !lang || lang === "en"
+    ? `${galleryId}:${scope}`
+    : `${galleryId}:${scope}:${lang}`;
+};
 
 // Distinct namespace so a gallery named "global" can't collide
 // with the cross-gallery cache. Hostnames can't carry colons
@@ -76,18 +86,23 @@ const getGalleryStats = async (
   filter?: FilterShape,
   lang?: string,
   dateRange?: DateRange,
-  numericRanges?: NumericRanges
+  numericRanges?: NumericRanges,
+  includePrivate = false
 ): Promise<StatsResponse> => {
   const cacheable =
     isUnfilteredBase(filter) &&
     isDateRangeUnbounded(dateRange) &&
     isNumericRangesUnbounded(numericRanges);
-  const key = galleryCacheKey(galleryId, lang);
+  const key = galleryCacheKey(galleryId, lang, includePrivate);
   if (cacheable) {
     const cached = cacheGet<StatsResponse>(key);
     if (cached) return cached;
   }
-  const loaded = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
+  const loaded = (await db.loadGalleryPhotos(
+    galleryId,
+    lang,
+    includePrivate
+  )) as Photo[];
   // Pre-filter by date range + numeric ranges so `computeStats`
   // stays a pure FilterShape evaluator — keeps the range filters
   // local to model / driver layers rather than threading into every
@@ -115,9 +130,14 @@ const getGalleryEvolution = async (
   filter?: FilterShape,
   lang?: string,
   dateRange?: DateRange,
-  numericRanges?: NumericRanges
+  numericRanges?: NumericRanges,
+  includePrivate = false
 ): Promise<EvolutionResult> => {
-  const loaded = (await db.loadGalleryPhotos(galleryId, lang)) as Photo[];
+  const loaded = (await db.loadGalleryPhotos(
+    galleryId,
+    lang,
+    includePrivate
+  )) as Photo[];
   const photos =
     isDateRangeUnbounded(dateRange) && isNumericRangesUnbounded(numericRanges)
       ? loaded

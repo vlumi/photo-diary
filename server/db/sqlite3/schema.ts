@@ -28,6 +28,9 @@ export interface UserGalleryRow {
   // Privacy toggle: 1 = hide map/coordinates, 0 = show; NULL inherits the
   // next outer level (gallery override → instance default).
   hide_map: number | null;
+  // 1 = grant covers gallery_photo rows flagged `is_private`; 0 = public-only.
+  // Editors implicitly see private; admins always do.
+  can_see_private: number;
 }
 export interface GroupRow {
   id: string;
@@ -43,6 +46,7 @@ export interface GroupGalleryRow {
   gallery_id: string;
   is_editor: number;
   hide_map: number | null;
+  can_see_private: number;
 }
 // Three flavours of gallery row. `real` rows have photos linked via
 // `gallery_photo`; `hybrid` rows have sources in `virtual_gallery_source`
@@ -125,6 +129,11 @@ export interface PhotoRow {
   // JSON-stringified output of the converter's read-exif at intake.
   // NULL for rows that pre-date migration 014.
   exif_at_intake: string | null;
+  // Privacy flag: 1 = only admins, gallery-editors, and viewers with
+  // `can_see_private` on the gallery they're using see this photo.
+  // Default 0 = public to anyone with view access on a gallery the
+  // photo's in. See migration 026.
+  is_private: number;
 }
 
 export interface PhotoLocalizedRow {
@@ -292,6 +301,10 @@ export interface Photo {
   // sets (title, description, place, country override) aren't in here;
   // this is the camera's raw output.
   exifAtIntake: Record<string, unknown> | undefined;
+  // Operator-set visibility flag. False for everyone by default;
+  // when true the row is hidden from view-only viewers unless their
+  // grant on the gallery they're using carries `can_see_private`.
+  isPrivate: boolean;
 }
 
 // Partial input shapes for updates / inserts. DeepPartial so nested
@@ -646,6 +659,7 @@ export default () => {
               return undefined;
             }
           })(),
+          isPrivate: !!row.is_private,
         };
       },
       mapInsert: (photo: PhotoInput): unknown[] => {
@@ -691,6 +705,7 @@ export default () => {
 
           0, // geocode_no_data: defaults to 0 (not yet attempted)
           map.exif_at_intake,
+          map.is_private ?? 0,
         ];
       },
 
@@ -740,6 +755,8 @@ const userGalleryMapToRow = (
   if ("is_editor" in userGallery)
     result.is_editor = userGallery.is_editor ? 1 : 0;
   if ("hide_map" in userGallery) result.hide_map = userGallery.hide_map;
+  if ("can_see_private" in userGallery)
+    result.can_see_private = userGallery.can_see_private ? 1 : 0;
   return result;
 };
 const groupMapToRow = (group: Partial<GroupRow>): Record<string, unknown> => {
@@ -754,6 +771,8 @@ const groupGalleryMapToRow = (
   const result: Record<string, unknown> = {};
   if ("is_editor" in row) result.is_editor = row.is_editor ? 1 : 0;
   if ("hide_map" in row) result.hide_map = row.hide_map;
+  if ("can_see_private" in row)
+    result.can_see_private = row.can_see_private ? 1 : 0;
   return result;
 };
 const galleryMapToRow = (
@@ -881,6 +900,9 @@ const photoMapToRow = (photo: PhotoInput): Record<string, unknown> => {
           ? null
           : JSON.stringify(blob);
   }
+  if ("isPrivate" in photo) {
+    result.is_private = photo.isPrivate ? 1 : 0;
+  }
   return result;
 };
 
@@ -914,7 +936,7 @@ const SCHEMA = {
   },
   userGallery: {
     table: "user_gallery",
-    columns: ["user_id", "gallery_id", "is_editor", "hide_map"],
+    columns: ["user_id", "gallery_id", "is_editor", "hide_map", "can_see_private"],
     primaryKey: ["user_id", "gallery_id"],
     order: ["user_id ASC", "gallery_id ASC"],
     mapToRow: userGalleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
@@ -935,7 +957,7 @@ const SCHEMA = {
   },
   groupGallery: {
     table: "group_gallery",
-    columns: ["group_id", "gallery_id", "is_editor", "hide_map"],
+    columns: ["group_id", "gallery_id", "is_editor", "hide_map", "can_see_private"],
     primaryKey: ["group_id", "gallery_id"],
     order: ["group_id ASC", "gallery_id ASC"],
     mapToRow: groupGalleryMapToRow as (data: Record<string, unknown>) => Record<string, unknown>,
@@ -1021,6 +1043,7 @@ const SCHEMA = {
 
       "geocode_no_data",
       "exif_at_intake",
+      "is_private",
     ],
     primaryKey: ["id"],
     // Tiebreak same-second shots by `original_filename`, which carries

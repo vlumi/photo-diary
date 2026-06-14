@@ -33,9 +33,13 @@ export default () => {
 
 const init = async () => {};
 
-const getGalleryPhotos = async (galleryId: string, lang?: string) => {
+const getGalleryPhotos = async (
+  galleryId: string,
+  lang?: string,
+  includePrivate = false
+) => {
   logger.debug("Getting photos from gallery", galleryId);
-  return await db.loadGalleryPhotos(galleryId, lang);
+  return await db.loadGalleryPhotos(galleryId, lang, includePrivate);
 };
 
 // View-scoped + filtered fetch — backs the per-view fetch path the
@@ -49,6 +53,7 @@ interface QueryOpts {
   month?: number;
   day?: number;
   lang?: string;
+  includePrivate?: boolean;
 }
 const queryGalleryPhotos = async (galleryId: string, opts: QueryOpts = {}) => {
   logger.debug("Querying photos from gallery", { galleryId, opts });
@@ -63,6 +68,7 @@ interface NeighborsOpts {
   dateRange?: DateRange;
   numericRanges?: NumericRanges;
   lang?: string;
+  includePrivate?: boolean;
 }
 const getGalleryPhotoNeighbors = async (
   galleryId: string,
@@ -81,6 +87,7 @@ interface CountsOpts {
   dateRange?: DateRange;
   numericRanges?: NumericRanges;
   year?: number;
+  includePrivate?: boolean;
 }
 const queryGalleryPhotoCounts = async (
   galleryId: string,
@@ -95,16 +102,27 @@ const queryGalleryPhotoCounts = async (
 // (invalidateGallery sweeps `<galleryId>:*`, so the `:fv:`
 // entries get cleaned up on photo writes alongside the stats
 // entries).
-const filterValuesCacheKey = (galleryId: string, lang?: string): string =>
-  !lang || lang === "en"
-    ? `${galleryId}:fv`
-    : `${galleryId}:fv:${lang}`;
+// `includePrivate` joins the cache key so a public viewer can't be
+// served a private viewer's universe (or vice versa). The two
+// suffixes are an explicit `:pub` / `:priv` rather than relying on
+// presence/absence so any future caller mistake reads obvious.
+const filterValuesCacheKey = (
+  galleryId: string,
+  lang: string | undefined,
+  includePrivate: boolean
+): string => {
+  const scope = includePrivate ? "priv" : "pub";
+  return !lang || lang === "en"
+    ? `${galleryId}:fv:${scope}`
+    : `${galleryId}:fv:${scope}:${lang}`;
+};
 const getGalleryFilterValues = async (
   galleryId: string,
   lang?: string,
   filter?: FilterShape,
   dateRange?: DateRange,
-  numericRanges?: NumericRanges
+  numericRanges?: NumericRanges,
+  includePrivate = false
 ): Promise<FilterValuesResult> => {
   const noFilter = !filter || Object.keys(filter).length === 0;
   const noDateRange =
@@ -115,11 +133,18 @@ const getGalleryFilterValues = async (
   // shared stats cache; filter-aware queries change per toggle and
   // would churn the cache otherwise.
   if (noFilter && noDateRange && noNumericRanges) {
-    const key = filterValuesCacheKey(galleryId, lang);
+    const key = filterValuesCacheKey(galleryId, lang, includePrivate);
     const cached = cacheGet<FilterValuesResult>(key);
     if (cached) return cached;
     logger.debug("Computing filter values for gallery", { galleryId, lang });
-    const result = await db.queryGalleryFilterValues(galleryId, lang);
+    const result = await db.queryGalleryFilterValues(
+      galleryId,
+      lang,
+      undefined,
+      undefined,
+      undefined,
+      includePrivate
+    );
     cacheSet(key, result);
     return result;
   }
@@ -133,22 +158,25 @@ const getGalleryFilterValues = async (
     lang,
     filter,
     dateRange,
-    numericRanges
+    numericRanges,
+    includePrivate
   );
 };
 
 const getGalleryPhoto = async (
   galleryId: string,
   photoId: string,
-  lang?: string
+  lang?: string,
+  includePrivate = false
 ) => {
   logger.debug("Getting photo", photoId, "from gallery", galleryId);
-  return await db.loadGalleryPhoto(galleryId, photoId, lang);
+  return await db.loadGalleryPhoto(galleryId, photoId, lang, includePrivate);
 };
 const getGalleryPhotoByOriginalFilename = async (
   galleryId: string,
   originalFilename: string,
-  lang?: string
+  lang?: string,
+  includePrivate = false
 ) => {
   logger.debug(
     "Getting photo by original filename",
@@ -159,7 +187,8 @@ const getGalleryPhotoByOriginalFilename = async (
   return await db.loadGalleryPhotoByOriginalFilename(
     galleryId,
     originalFilename,
-    lang
+    lang,
+    includePrivate
   );
 };
 // Virtual galleries are read-only (#22): membership is computed

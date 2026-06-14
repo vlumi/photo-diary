@@ -123,12 +123,17 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.user.id,
         request.params.galleryId
       );
+      const includePrivate = await authorizer.resolveCanSeePrivate(
+        request.user.id,
+        request.params.galleryId
+      );
       return await model.getGalleryStats(
         request.params.galleryId,
         request.body.filter as FilterShape | undefined,
         request.body.lang,
         request.body.dateRange as DateRange | undefined,
-        request.body.numericRanges as NumericRanges | undefined
+        request.body.numericRanges as NumericRanges | undefined,
+        includePrivate
       );
     }
   );
@@ -153,13 +158,18 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.user.id,
         request.params.galleryId
       );
+      const includePrivate = await authorizer.resolveCanSeePrivate(
+        request.user.id,
+        request.params.galleryId
+      );
       return await model.getGalleryEvolution(
         request.params.galleryId,
         request.body.category,
         request.body.filter as FilterShape | undefined,
         request.body.lang,
         request.body.dateRange as DateRange | undefined,
-        request.body.numericRanges as NumericRanges | undefined
+        request.body.numericRanges as NumericRanges | undefined,
+        includePrivate
       );
     }
   );

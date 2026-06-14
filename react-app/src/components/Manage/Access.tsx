@@ -273,10 +273,11 @@ interface AccessRow {
   subjectId: string;
   type: "user" | "group";
   isEditor: boolean;
+  canSeePrivate: boolean;
   hideMap: HideMapValue;
 }
 
-type SortKey = "gallery" | "subject" | "admin" | "hidemap";
+type SortKey = "gallery" | "subject" | "admin" | "private" | "hidemap";
 
 const Access = (): React.ReactElement => {
   const { t } = useTranslation();
@@ -322,6 +323,7 @@ const Access = (): React.ReactElement => {
       subjectId: r.user_id,
       type: "user",
       isEditor: !!r.is_editor,
+      canSeePrivate: !!r.can_see_private,
       hideMap: hideMapFromDb(r.hide_map),
     })
   );
@@ -331,6 +333,7 @@ const Access = (): React.ReactElement => {
       subjectId: r.group_id,
       type: "group",
       isEditor: !!r.is_editor,
+      canSeePrivate: !!r.can_see_private,
       hideMap: hideMapFromDb(r.hide_map),
     })
   );
@@ -391,6 +394,14 @@ const Access = (): React.ReactElement => {
         ? factor * c
         : compareString(a.galleryId, b.galleryId);
     }
+    if (sort === "private") {
+      const c =
+        Number(a.isEditor || a.canSeePrivate) -
+        Number(b.isEditor || b.canSeePrivate);
+      return c !== 0
+        ? factor * c
+        : compareString(a.galleryId, b.galleryId);
+    }
     if (sort === "hidemap") {
       const order = { inherit: 0, show: 1, hide: 2 } as const;
       const c = order[a.hideMap] - order[b.hideMap];
@@ -407,10 +418,12 @@ const Access = (): React.ReactElement => {
       galleryId: string;
       isEditor: boolean;
       hideMap: HideMapValue;
+      canSeePrivate: boolean;
     }) =>
       userGalleryService.upsert(args.userId, args.galleryId, {
         isEditor: args.isEditor,
         hideMap: hideMapToBody(args.hideMap),
+        canSeePrivate: args.canSeePrivate,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["manage-user-gallery-all"] });
@@ -423,10 +436,12 @@ const Access = (): React.ReactElement => {
       galleryId: string;
       isEditor: boolean;
       hideMap: HideMapValue;
+      canSeePrivate: boolean;
     }) =>
       groupGalleryService.upsert(args.groupId, args.galleryId, {
         isEditor: args.isEditor,
         hideMap: hideMapToBody(args.hideMap),
+        canSeePrivate: args.canSeePrivate,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["manage-group-gallery-all"] });
@@ -458,7 +473,8 @@ const Access = (): React.ReactElement => {
   const onUpsert = (
     row: AccessRow,
     isEditor: boolean,
-    hideMap: HideMapValue
+    hideMap: HideMapValue,
+    canSeePrivate: boolean
   ) => {
     setActionError(null);
     if (row.type === "user") {
@@ -467,6 +483,7 @@ const Access = (): React.ReactElement => {
         galleryId: row.galleryId,
         isEditor,
         hideMap,
+        canSeePrivate,
       });
     } else {
       upsertGroupMutation.mutate({
@@ -474,6 +491,7 @@ const Access = (): React.ReactElement => {
         galleryId: row.galleryId,
         isEditor,
         hideMap,
+        canSeePrivate,
       });
     }
   };
@@ -634,6 +652,10 @@ const Access = (): React.ReactElement => {
                 {t("manage-gallery-access-col-admin")}
                 {sortIndicator("admin")}
               </Th>
+              <Th $sortable $center onClick={() => setSort("private")}>
+                {t("manage-gallery-access-col-private")}
+                {sortIndicator("private")}
+              </Th>
               <Th $sortable $center onClick={() => setSort("hidemap")}>
                 {t("manage-gallery-access-col-hidemap")}
                 {sortIndicator("hidemap")}
@@ -685,9 +707,35 @@ const Access = (): React.ReactElement => {
                     checked={row.isEditor}
                     disabled={mutating}
                     onChange={(e) =>
-                      onUpsert(row, e.target.checked, row.hideMap)
+                      onUpsert(
+                        row,
+                        e.target.checked,
+                        row.hideMap,
+                        row.canSeePrivate
+                      )
                     }
                     aria-label={String(t("manage-gallery-access-col-admin"))}
+                  />
+                </Td>
+                <Td $center>
+                  <Checkbox
+                    type="checkbox"
+                    checked={row.isEditor || row.canSeePrivate}
+                    disabled={mutating || row.isEditor}
+                    onChange={(e) =>
+                      onUpsert(
+                        row,
+                        row.isEditor,
+                        row.hideMap,
+                        e.target.checked
+                      )
+                    }
+                    aria-label={String(t("manage-gallery-access-col-private"))}
+                    title={String(
+                      row.isEditor
+                        ? t("manage-gallery-access-private-implicit")
+                        : t("manage-gallery-access-col-private")
+                    )}
                   />
                 </Td>
                 <Td $center>
@@ -695,7 +743,12 @@ const Access = (): React.ReactElement => {
                     value={row.hideMap}
                     disabled={mutating}
                     onChange={(e) =>
-                      onUpsert(row, row.isEditor, e.target.value as HideMapValue)
+                      onUpsert(
+                        row,
+                        row.isEditor,
+                        e.target.value as HideMapValue,
+                        row.canSeePrivate
+                      )
                     }
                     aria-label={String(t("manage-gallery-access-col-hidemap"))}
                   >
@@ -750,6 +803,7 @@ const Access = (): React.ReactElement => {
               galleryId: args.galleryId,
               isEditor: args.isEditor,
               hideMap: args.hideMap,
+              canSeePrivate: args.canSeePrivate,
             });
           } else {
             upsertGroupMutation.mutate({
@@ -757,6 +811,7 @@ const Access = (): React.ReactElement => {
               galleryId: args.galleryId,
               isEditor: args.isEditor,
               hideMap: args.hideMap,
+              canSeePrivate: args.canSeePrivate,
             });
           }
         }}
@@ -776,6 +831,7 @@ interface AddGrantPanelProps {
     subjectId: string;
     isEditor: boolean;
     hideMap: HideMapValue;
+    canSeePrivate: boolean;
   }) => void;
   mutating: boolean;
 }
@@ -796,6 +852,7 @@ const AddGrantPanel = ({
   const [galleryId, setGalleryId] = React.useState("");
   const [subjectValue, setSubjectValue] = React.useState("");
   const [isEditor, setIsAdmin] = React.useState(false);
+  const [canSeePrivate, setCanSeePrivate] = React.useState(false);
   const [hideMap, setHideMap] = React.useState<HideMapValue>("inherit");
 
   const sortedGalleries = galleries
@@ -812,10 +869,18 @@ const AddGrantPanel = ({
     const colonIdx = subjectValue.indexOf(":");
     const subjectType = subjectValue.slice(0, colonIdx) as "user" | "group";
     const subjectId = subjectValue.slice(colonIdx + 1);
-    onAdd({ galleryId, subjectType, subjectId, isEditor, hideMap });
+    onAdd({
+      galleryId,
+      subjectType,
+      subjectId,
+      isEditor,
+      hideMap,
+      canSeePrivate,
+    });
     setSubjectValue("");
     setIsAdmin(false);
     setHideMap("inherit");
+    setCanSeePrivate(false);
   };
 
   const canAdd = !!galleryId && !!subjectValue && !mutating;
@@ -867,6 +932,15 @@ const AddGrantPanel = ({
             onChange={(e) => setIsAdmin(e.target.checked)}
           />
           {t("manage-gallery-access-col-admin")}
+        </AddLabel>
+        <AddLabel>
+          <Checkbox
+            type="checkbox"
+            checked={isEditor || canSeePrivate}
+            disabled={isEditor}
+            onChange={(e) => setCanSeePrivate(e.target.checked)}
+          />
+          {t("manage-gallery-access-col-private")}
         </AddLabel>
         <AddLabel>
           {t("manage-gallery-access-col-hidemap")}

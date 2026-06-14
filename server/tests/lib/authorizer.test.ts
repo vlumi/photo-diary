@@ -34,7 +34,10 @@ const fail = (authorize: Authorize, user: string, gallery?: string) => {
 // The mock keeps a per-test ACL and answers both queries from it.
 const setup = (
   globalAdmins: string[],
-  perGallery: Record<string, Record<string, { isEditor: boolean }>>
+  perGallery: Record<
+    string,
+    Record<string, { isEditor: boolean; canSeePrivate?: boolean }>
+  >
 ): void => {
   db.loadUser.mockImplementation(async (userId) => {
     const base = { name: "", password: "", secret: "" };
@@ -47,13 +50,17 @@ const setup = (
   });
   db.resolveAccessLevel.mockImplementation(async (userId, galleryId) => {
     if (globalAdmins.includes(userId)) {
-      return { hasAccess: true, isEditor: true };
+      return { hasAccess: true, isEditor: true, canSeePrivate: true };
     }
     const userRow = perGallery[userId]?.[galleryId];
     const guestRow = perGallery[":guest"]?.[galleryId];
-    if (!userRow && !guestRow) return { hasAccess: false, isEditor: false };
+    if (!userRow && !guestRow)
+      return { hasAccess: false, isEditor: false, canSeePrivate: false };
     const isEditor = !!(userRow?.isEditor || guestRow?.isEditor);
-    return { hasAccess: true, isEditor };
+    const canSeePrivate =
+      isEditor ||
+      !!(userRow?.canSeePrivate || guestRow?.canSeePrivate);
+    return { hasAccess: true, isEditor, canSeePrivate };
   });
 };
 
@@ -139,6 +146,7 @@ describe("Global admin missing user is denied (not 500)", () => {
     db.resolveAccessLevel.mockResolvedValue({
       hasAccess: false,
       isEditor: false,
+      canSeePrivate: false,
     });
   });
   test("authorizeAdmin throws AccessError on missing user", () =>
