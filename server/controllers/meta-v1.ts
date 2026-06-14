@@ -17,7 +17,7 @@ const init = async () => {
 // JSON-shaped meta rows the SPA wants as parsed objects, not the
 // stringified blob the DB stores. Centralised so a future "settings
 // store nested structure under one row" key can join cleanly.
-const JSON_META_KEYS = new Set(["betaFeatures"]);
+const JSON_META_KEYS = new Set(["betaFeatures", "renditions"]);
 
 const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
   return Object.keys(meta)

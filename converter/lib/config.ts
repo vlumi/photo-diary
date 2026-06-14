@@ -6,7 +6,7 @@ import {
   PHOTO_ROOT_DIR,
   DIR_INBOX,
   DIR_ORIGINAL,
-  TARGETS,
+  THUMBNAIL_TARGET,
 } from "./constants.js";
 import * as logger from "./logger.js";
 
@@ -31,7 +31,7 @@ export const getDirectory = (): string => {
     "",
     DIR_INBOX,
     DIR_ORIGINAL,
-    ...TARGETS.map((target) => target.directory),
+    THUMBNAIL_TARGET.directory,
   ];
   const missing =
     subDirectories.filter(

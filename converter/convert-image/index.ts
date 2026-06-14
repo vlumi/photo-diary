@@ -11,7 +11,9 @@ export default async (
   root: string,
   target: Target
 ): Promise<void> => {
-  const outputPath = path.join(root, target.directory, id);
+  const outputDir = path.join(root, target.directory);
+  await fs.promises.mkdir(outputDir, { recursive: true });
+  const outputPath = path.join(outputDir, id);
 
   const { width, height } = target.dimensions;
   logger.debug(`[${id}] Resizing to ${width}x${height}`);

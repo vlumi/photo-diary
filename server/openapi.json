@@ -65,7 +65,8 @@
                       "defaultLanguage",
                       "initialGalleryView",
                       "firstWeekday",
-                      "betaFeatures"
+                      "betaFeatures",
+                      "renditions"
                     ]
                   },
                   "value": {
@@ -108,7 +109,8 @@
                 "defaultLanguage",
                 "initialGalleryView",
                 "firstWeekday",
-                "betaFeatures"
+                "betaFeatures",
+                "renditions"
               ]
             },
             "in": "path",
@@ -168,7 +170,8 @@
                 "defaultLanguage",
                 "initialGalleryView",
                 "firstWeekday",
-                "betaFeatures"
+                "betaFeatures",
+                "renditions"
               ]
             },
             "in": "path",
@@ -206,7 +209,8 @@
                 "defaultLanguage",
                 "initialGalleryView",
                 "firstWeekday",
-                "betaFeatures"
+                "betaFeatures",
+                "renditions"
               ]
             },
             "in": "path",

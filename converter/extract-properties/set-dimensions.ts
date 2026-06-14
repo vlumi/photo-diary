@@ -1,7 +1,10 @@
 import path from "node:path";
 import { imageSizeFromFile } from "image-size/fromFile";
 
-import { DIR_ORIGINAL, TARGETS } from "../lib/constants.js";
+import {
+  DIR_ORIGINAL,
+  THUMBNAIL_TARGET,
+} from "../lib/constants.js";
 
 type Dimensions = { width: number; height: number };
 type Properties = { dimensions?: Record<string, Dimensions> } & Record<string, unknown>;
@@ -19,20 +22,16 @@ export default async (
     const dims = await imageSizeFromFile(filePath);
     properties.dimensions = properties.dimensions ?? {};
     if ((dims.orientation ?? 0) >= 5) {
-      // Vertical
       properties.dimensions[target] = { width: dims.height, height: dims.width };
     } else {
-      // Horizontal
       properties.dimensions[target] = { width: dims.width, height: dims.height };
     }
   };
 
   await addFileDimensions(DIR_ORIGINAL, sourcePath);
-  for (const target of TARGETS) {
-    await addFileDimensions(
-      target.directory,
-      path.join(rootDir, target.directory, id)
-    );
-  }
+  await addFileDimensions(
+    THUMBNAIL_TARGET.directory,
+    path.join(rootDir, THUMBNAIL_TARGET.directory, id)
+  );
   return properties;
 };

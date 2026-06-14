@@ -22,15 +22,20 @@ export type Target = {
   kind: "display" | "thumbnail";
 };
 
-export const TARGETS: Target[] = [
-  {
-    directory: DIR_DISPLAY,
-    dimensions: DIM_DISPLAY,
-    kind: "display",
-  },
-  {
-    directory: DIR_THUMBNAIL,
-    dimensions: DIM_THUMBNAIL,
-    kind: "thumbnail",
-  },
+export type Rendition = { name: string; maxDim: number };
+
+export const DEFAULT_RENDITIONS: Rendition[] = [
+  { name: DIR_DISPLAY, maxDim: DIM_DISPLAY.width },
 ];
+
+export const THUMBNAIL_TARGET: Target = {
+  directory: DIR_THUMBNAIL,
+  dimensions: DIM_THUMBNAIL,
+  kind: "thumbnail",
+};
+
+export const renditionToTarget = (rendition: Rendition): Target => ({
+  directory: rendition.name,
+  dimensions: { width: rendition.maxDim, height: rendition.maxDim },
+  kind: "display",
+});

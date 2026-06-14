@@ -12,7 +12,13 @@ import {
   readIncomingCoords,
 } from "photo-diary-server/lib/photo-coords.js";
 
-import { DIR_INBOX, DIR_ORIGINAL, TARGETS } from "./lib/constants.js";
+import {
+  DIR_INBOX,
+  DIR_ORIGINAL,
+  THUMBNAIL_TARGET,
+  renditionToTarget,
+} from "./lib/constants.js";
+import { loadRenditions } from "./lib/renditions.js";
 import * as logger from "./lib/logger.js";
 import extractProperties from "./extract-properties/index.js";
 import convertImage from "./convert-image/index.js";
@@ -171,8 +177,13 @@ const processJpeg = async (
     }
   }
 
+  const renditions = await loadRenditions();
+  const displayTargets = renditions.map(renditionToTarget);
+  const conversionTargets = [...displayTargets, THUMBNAIL_TARGET];
   await Promise.all(
-    TARGETS.map((target) => convertImage(originalPath, id, rootDir, target))
+    conversionTargets.map((target) =>
+      convertImage(originalPath, id, rootDir, target)
+    )
   );
 
   const properties = await extractProperties(originalPath, id, rootDir);
@@ -198,13 +209,8 @@ const processJpeg = async (
     logger.debug(`[${relPath}] Created DB row ${id}`);
   }
 
-  for (const target of TARGETS) {
-    if (target.kind !== "display") continue;
-    await db.upsertPhotoRendition(
-      id,
-      target.directory,
-      Math.max(target.dimensions.width, target.dimensions.height)
-    );
+  for (const rendition of renditions) {
+    await db.upsertPhotoRendition(id, rendition.name, rendition.maxDim);
   }
 
   const coords = (
