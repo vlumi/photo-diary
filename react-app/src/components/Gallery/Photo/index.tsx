@@ -336,6 +336,9 @@ const Photo = ({
   }, [photo.id()]);
 
   useKeyPress("i", () => setShowMetadata((s) => !s));
+  useKeyPress("e", () => {
+    if (canManage) setInlineEditOpen((open) => !open);
+  });
   useKeyPress("+", () =>
     setZoom((z) => ({ ...z, scale: clampScale(z.scale * ZOOM_STEP) }))
   );
