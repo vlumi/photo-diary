@@ -2733,6 +2733,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/stats/evolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Per-bucket time-series for a trendable category across all galleries (admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        category: string;
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
+                        };
+                        lang?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            yearMonths: string[];
+                            buckets: {
+                                [key: string]: {
+                                    counts: number[];
+                                    cumulative: number[];
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/filter-values": {
         parameters: {
             query?: never;

@@ -110,7 +110,11 @@ const goldenCoprimeStride = (n: number): number => {
 };
 
 interface Props {
-  galleryId: string;
+  // Exactly one of galleryId / globalScope must be set. galleryId
+  // routes the fetch through /galleries/:id/stats/evolution;
+  // globalScope routes through the admin-only /stats/evolution.
+  galleryId?: string;
+  globalScope?: boolean;
   categoryKey: string;
   categoryTitle: string;
   theme: ActiveTheme;
@@ -168,6 +172,7 @@ const aggregateByYear = (
 
 const EvolutionChart = ({
   galleryId,
+  globalScope = false,
   categoryKey,
   categoryTitle,
   theme,
@@ -186,25 +191,34 @@ const EvolutionChart = ({
     [filters]
   );
   const serverCategory = CATEGORY_KEY_TO_SERVER[categoryKey];
+  const scopeKey = galleryId ?? (globalScope ? "__global__" : undefined);
   const { data, isLoading } = useQuery({
     queryKey: [
-      "gallery-stats-evolution",
-      galleryId,
+      "stats-evolution",
+      scopeKey,
       serverCategory,
       serverFilters,
       dateRange,
       wireNumericRanges,
     ],
     queryFn: () =>
-      statsService.getGalleryEvolution(
-        galleryId,
-        serverCategory,
-        serverFilters,
-        undefined,
-        dateRange,
-        wireNumericRanges
-      ),
-    enabled: !!serverCategory,
+      galleryId
+        ? statsService.getGalleryEvolution(
+            galleryId,
+            serverCategory,
+            serverFilters,
+            undefined,
+            dateRange,
+            wireNumericRanges
+          )
+        : statsService.getGlobalEvolution(
+            serverCategory,
+            serverFilters,
+            undefined,
+            dateRange,
+            wireNumericRanges
+          ),
+    enabled: !!serverCategory && !!scopeKey,
     placeholderData: keepPreviousData,
   });
 

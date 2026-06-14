@@ -55,6 +55,7 @@ const Categories = styled.section`
 interface Props {
   topic: StatsTopic;
   galleryId?: string;
+  globalScope?: boolean;
   filters: FiltersT;
   setFilters: (filters: FiltersT) => void;
   theme: ActiveTheme;
@@ -65,6 +66,7 @@ interface Props {
 const Topic = ({
   topic,
   galleryId,
+  globalScope = false,
   filters,
   setFilters,
   theme,
@@ -81,6 +83,7 @@ const Topic = ({
             topic={topic}
             category={category}
             galleryId={galleryId}
+            globalScope={globalScope}
             filters={filters}
             setFilters={setFilters}
             theme={theme}

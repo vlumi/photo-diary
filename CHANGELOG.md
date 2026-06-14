@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Global Stats (`/stats`, admin) gains feature parity with the gallery-scoped Stats: the Evolution chart now renders inside any trendable category's modal across the whole instance, sharing the same granularity toggle and palette. Closes #602.
+
+### Server
+
+- New `POST /api/v1/stats/evolution` (admin, unscoped) returns per-bucket year-month series across every gallery, mirroring `/galleries/:id/stats/evolution`.
+
 ## [0.16.0] - 2026-06-13
 
 ### Frontend
