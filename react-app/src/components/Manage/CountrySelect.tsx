@@ -149,14 +149,21 @@ const CountrySelect = ({
         setOpen(false);
       }
     };
+    // Capture-phase + stopImmediatePropagation so the dropdown
+    // intercepts Esc before the Manage shell's Esc-up handler
+    // (#612) navigates the user out of /m/users/<id>/etc. when
+    // they were just trying to close this dropdown.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setOpen(false);
     };
     document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey, true);
     return () => {
       document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("keydown", onKey, true);
     };
   }, [open]);
 

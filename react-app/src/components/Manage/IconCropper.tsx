@@ -176,11 +176,18 @@ const IconCropper = ({
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    // Capture-phase + stopImmediatePropagation so closing the
+    // crop modal doesn't also trigger the Manage shell's Esc-up
+    // navigation (#612).
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) onClose();
+      if (e.key !== "Escape") return;
+      if (busy) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      onClose();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [busy, onClose]);
 
   const onBackdropClick = (event: React.MouseEvent) => {
