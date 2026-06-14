@@ -37,7 +37,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { confirm } from "@inquirer/prompts";
+import { confirm, input } from "@inquirer/prompts";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -47,6 +47,10 @@ interface RequiredKey {
   key: string;
   description: string;
   default: (ctx: { instanceDir: string; name: string }) => string;
+  // False for keys an operator should not be re-prompted for in
+  // --edit mode (notably SECRET — rotating it invalidates every
+  // session). Defaults true.
+  editable?: boolean;
 }
 
 // ---- constants -----------------------------------------------------------
@@ -83,6 +87,7 @@ const REQUIRED_KEYS: RequiredKey[] = [
     key: "SECRET",
     description: "HMAC secret for JWT tokens — keep this stable per instance",
     default: () => randomBytes(32).toString("hex"),
+    editable: false,
   },
   {
     key: "DB_DRIVER",
@@ -260,6 +265,12 @@ const argv = yargs(hideBin(process.argv))
           type: "boolean",
           default: false,
         })
+        .option("edit", {
+          describe:
+            "Walk every configurable .env key, show the current value, prompt for a new one (default = keep). For a config-review / tweak pass on an existing instance. Requires a TTY. SECRET is read-only — rotating it invalidates every active session.",
+          type: "boolean",
+          default: false,
+        })
         .option("quiet", {
           describe:
             "Suppress informational output; errors and warnings still surface. For scripted re-runs.",
@@ -294,10 +305,12 @@ const argv = yargs(hideBin(process.argv))
 const positional = argv.dir as string | undefined;
 const nameFlag = argv.name as string | undefined;
 const fix = argv.fix;
+const edit = argv.edit as boolean;
 const quiet = argv.quiet;
 const auto = argv.auto as boolean;
 const printOnly = argv["print-only"] as boolean;
 const cycle = argv.cycle as boolean;
+const isTTY = !!process.stdin.isTTY && !!process.stdout.isTTY;
 
 const log: typeof console.log = (...args) => {
   if (!quiet) console.log(...args);
@@ -421,6 +434,50 @@ if (mode === "new") {
     setEnvKey(envPath, "INSTANCE_NAME", nameFlag);
     log(`✓ Set INSTANCE_NAME=${nameFlag} in .env`);
   }
+
+  // --edit: walk every editable key, current value as default,
+  // write the diff back. Requires a TTY (the rest of the script
+  // is non-interactive so headless re-runs can't accidentally
+  // snag the prompt). Runs after --fix's append so the operator
+  // never edits a missing key by hand on the first pass.
+  if (edit) {
+    if (!isTTY) {
+      console.error(
+        "Error: --edit requires a TTY (interactive terminal). Re-run from a shell."
+      );
+      process.exit(1);
+    }
+    const refreshed = parseEnv(fs.readFileSync(envPath, "utf8"));
+    log();
+    log("Editing .env values (Enter keeps the current value):");
+    const changes: string[] = [];
+    for (const spec of REQUIRED_KEYS) {
+      if (spec.editable === false) {
+        log(`  · ${spec.key} (read-only, current value preserved)`);
+        continue;
+      }
+      const current = refreshed[spec.key] ?? "";
+      const next = await input({
+        message: `${spec.key}:`,
+        default: current,
+      });
+      const trimmed = next.trim();
+      if (trimmed !== current) {
+        setEnvKey(envPath, spec.key, trimmed);
+        changes.push(spec.key);
+      }
+    }
+    if (changes.length > 0) {
+      log(`✓ Updated .env: ${changes.join(", ")}`);
+    } else {
+      log("✓ No changes.");
+    }
+    log();
+    log(
+      "Restart the instance to pick up the new values (pm2 cycle, or `./bin/instance.ts <dir> --cycle`)."
+    );
+    process.exit(0);
+  }
 }
 
 // 4. Upgrade flow: back up the DB before flipping the symlink
@@ -542,13 +599,14 @@ log("Tools:");
 // 7. Next steps
 log();
 if (mode === "new") {
-  log("Instance ready. Next:");
+  log("Instance ready.");
+  await maybeCreateAdmin();
+  log();
+  log("Next:");
   log(`  cd ${instanceDir}`);
   log("  ./code/server/bin/start-prod.sh");
   log("  ./code/converter/bin/start-prod.sh");
-  log("  ./bin/user.ts passwd <username> <password>");
   log(`  ./bin/gallery.ts create ${instanceName} --title "${instanceName}"`);
-  log("  ./bin/user.ts make-admin <username>");
 } else if (mode === "upgrade") {
   await runPm2Cycle("upgrade");
 } else {
@@ -556,6 +614,70 @@ if (mode === "new") {
   if (cycle) {
     log();
     await runPm2Cycle("restart");
+  }
+}
+
+// New-mode bootstrap completes without a global-admin user — the
+// SPA's manage surface stays locked until one exists. Offer to
+// create one right here so the operator doesn't have to walk back
+// through the printed-instructions path. Skips on `--auto` and
+// non-TTY runs (CI / batch), falling back to the printed steps.
+async function maybeCreateAdmin(): Promise<void> {
+  if (auto || !isTTY) {
+    log();
+    log("Create your first admin user when ready:");
+    log("  ./bin/user.ts passwd <username>");
+    log("  ./bin/user.ts make-admin <username>");
+    return;
+  }
+  log();
+  const create = await confirm({
+    message: "Create an admin user now?",
+    default: true,
+  });
+  if (!create) {
+    log();
+    log("Create one later with:");
+    log("  ./bin/user.ts passwd <username>");
+    log("  ./bin/user.ts make-admin <username>");
+    return;
+  }
+  const username = (
+    await input({
+      message: "Admin username:",
+      default: "admin",
+    })
+  ).trim();
+  if (!username) {
+    console.warn("Empty username — skipping admin creation.");
+    return;
+  }
+  // Spawn the routine operator scripts with cwd=instanceDir so they
+  // pick up the just-created `.env` (DB path is fixed at <cwd>/db.sqlite3,
+  // SECRET / DB_DRIVER live in `.env`). user.ts's `passwd` prompts for
+  // the password interactively when omitted — instance.ts never holds
+  // the cleartext. inherit stdio so the prompt actually shows.
+  const userBin = path.join(instanceDir, "bin", "user.ts");
+  const passwdResult = spawnSync(userBin, ["passwd", username], {
+    cwd: instanceDir,
+    stdio: "inherit",
+  });
+  if (passwdResult.status !== 0) {
+    console.warn(
+      `passwd ${username} exited with status ${passwdResult.status ?? "?"} — skipping make-admin.`
+    );
+    return;
+  }
+  const adminResult = spawnSync(userBin, ["make-admin", username], {
+    cwd: instanceDir,
+    stdio: "inherit",
+  });
+  if (adminResult.status === 0) {
+    log(`✓ Admin user "${username}" created.`);
+  } else {
+    console.warn(
+      `make-admin ${username} exited with status ${adminResult.status ?? "?"}.`
+    );
   }
 }
 
