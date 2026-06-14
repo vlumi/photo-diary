@@ -25,6 +25,7 @@
 ### Operator
 
 - `bin/instance.ts` prompts on a TTY after a fresh bootstrap to create the first admin user (Y/n; defaults to yes, username `admin`); `--auto` and non-TTY runs fall back to the printed instructions. Closes #557.
+- New `bin/photo-rerender.ts` feeds the `photo_rendition` table from disk: `scan` walks `photos/<dir>/*.jpg` and registers missing rows (sampling sharp metadata for `maxDim`), `generate <name>` server-side renders missing variants from `original/<id>.jpg` skipping photos without an original on disk (`--force` overwrites), and `prune` drops rows whose file is gone — all dry-run unless `--apply`. Closes #617.
 - `bin/instance.ts --edit` walks every configurable `.env` key, shows the current value, prompts for a new one (default = keep). SECRET is read-only — rotating it invalidates every active session. Requires a TTY. Closes #537 (the standalone slice; the full prompt fan-out for `new` / `--fix` lands alongside #265's Postgres driver).
 
 ## [0.16.0] - 2026-06-13

@@ -121,6 +121,8 @@ export default () => {
     loadPhotos,
     createPhoto,
     upsertPhotoRendition,
+    loadAllPhotoRenditions,
+    deletePhotoRendition,
     loadPhoto,
     loadPhotosByOriginalFilename,
     loadOrphanPhotoIds,
@@ -1578,6 +1580,29 @@ const upsertPhotoRendition = async (
     `INSERT INTO photo_rendition (photo_id, name, max_dim) VALUES (?, ?, ?)
        ON CONFLICT(photo_id, name) DO UPDATE SET max_dim = excluded.max_dim`
   ).run(photoId, name, maxDim);
+};
+const loadAllPhotoRenditions = async (): Promise<
+  Array<{ photoId: string; name: string; maxDim: number }>
+> => {
+  const rows = db
+    .prepare(
+      `SELECT photo_id, name, max_dim FROM photo_rendition
+         ORDER BY photo_id ASC, max_dim ASC`
+    )
+    .all() as Array<{ photo_id: string; name: string; max_dim: number }>;
+  return rows.map((r) => ({
+    photoId: r.photo_id,
+    name: r.name,
+    maxDim: r.max_dim,
+  }));
+};
+const deletePhotoRendition = async (
+  photoId: string,
+  name: string
+): Promise<void> => {
+  db.prepare(
+    "DELETE FROM photo_rendition WHERE photo_id = ? AND name = ?"
+  ).run(photoId, name);
 };
 const loadPhoto = async (photoId: string, lang?: string) => {
   const row = db.prepare(SCHEMA.photo.buildSelectByIdQuery()).get(photoId) as
