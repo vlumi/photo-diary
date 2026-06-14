@@ -5,6 +5,7 @@
 ### Admin
 
 - New `/m/instance` page edits the instance's identity (`name`, `description`, `cdn`, `image`) and the SPA's runtime defaults (`defaultGallery`, `defaultTheme`, `defaultLanguage`, `initialGalleryView`, `firstWeekday`, `betaFeatures`). The SPA defaults previously lived only in `.env` and required a server restart; they're now stored in the `meta` table, take effect on the SPA's next `/meta` fetch, and the `meta` row wins over the matching env value when both are set. The `.env` path remains as a fallback for instances that haven't seeded the meta rows yet — server logs a one-line deprecation on startup when any deprecated key is in use, and the env path is scheduled for removal by 1.0. The SPA now also waits for `/meta` before applying any theme, so the brief blue-flash before a grayscale-themed gallery loaded goes away. Closes #513.
+- Esc anywhere in `/m/*` navigates one step up the breadcrumb (matches the public Photo modal's Esc). `/m/g/<id>` → `/m/galleries`, `/m/users/<id>` → `/m/users`, etc.; `/m` is a no-op. Stacked modals (filter widget, bulk-action picker, icon cropper, login / change-password / theme-picker pop-ups, the in-place PhotoDrawer) keep their Esc-closes-me behaviour by intercepting via capture-phase listeners with `stopImmediatePropagation`. Closes #612.
 
 ### Frontend
 

@@ -76,11 +76,17 @@ const LoginModal = (): React.ReactElement | null => {
 
   React.useEffect(() => {
     if (!isOpen) return;
+    // Capture-phase + stopImmediatePropagation so closing this
+    // modal doesn't also trigger the Manage shell's Esc-up
+    // navigation (#612) when it's opened from /m/*.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      close();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [isOpen, close]);
 
   if (!isOpen) return null;

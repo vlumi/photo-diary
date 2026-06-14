@@ -149,14 +149,20 @@ const UserMenu = (): React.ReactElement => {
         setIsOpen(false);
       }
     };
+    // Capture-phase + stopImmediatePropagation so closing this
+    // dropdown doesn't also trigger the Manage shell's Esc-up
+    // navigation (#612) when opened from /m/*.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setIsOpen(false);
     };
     document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey, true);
     return () => {
       document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("keydown", onKey, true);
     };
   }, [isOpen]);
 

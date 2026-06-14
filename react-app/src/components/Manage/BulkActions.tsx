@@ -449,11 +449,17 @@ const BulkActions = ({
 
   React.useEffect(() => {
     if (pending.kind === "none") return;
+    // Capture-phase + stopImmediatePropagation so closing the bulk
+    // modal doesn't also trigger the Manage shell's Esc-up
+    // navigation (#612).
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeModal();
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      closeModal();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [pending.kind, closeModal]);
 
   const runSequentially = async (fn: (id: string) => Promise<void>) => {

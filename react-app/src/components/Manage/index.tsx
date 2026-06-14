@@ -33,6 +33,24 @@ const GLOBAL_MANAGE_PATHS = [
   "/m/instance",
 ];
 
+// Resolve the "go up one step" target for Esc-up navigation.
+// Mostly strip-last-segment; the one asymmetry is `/m/g/<id>` →
+// `/m/galleries` (the list lives at `/m/galleries`, not `/m/g`).
+// Returns null when there's nowhere to go (top-level `/m`, or an
+// unfamiliar path that doesn't look like /m/*).
+export const parentManagePath = (pathname: string): string | null => {
+  // Strip trailing slash for uniform matching.
+  const path = pathname.replace(/\/$/, "");
+  if (path === "/m" || !path.startsWith("/m/")) return null;
+  // `/m/g/<id>` → `/m/galleries` (list isn't `/m/g`).
+  if (/^\/m\/g\/[^/]+$/.test(path)) return "/m/galleries";
+  // Strip the last segment.
+  const idx = path.lastIndexOf("/");
+  const parent = idx > 0 ? path.slice(0, idx) : "/m";
+  // Don't escape `/m`.
+  return parent.startsWith("/m") ? parent : "/m";
+};
+
 const Root = styled.div`
   padding: 0 5px;
 `;
@@ -305,6 +323,26 @@ const Manage = (): React.ReactElement => {
     () => buildCrumbs(location.pathname, t, resolved, { galleryId }),
     [location.pathname, t, resolved, galleryId]
   );
+
+  // Esc-up: Esc anywhere in /m/* navigates to the parent path,
+  // matching the public Photo modal's "close this, return to the
+  // previous view" behaviour. Bubble phase on purpose — stacked
+  // modals (FilterModal, the in-place PhotoDrawer, future
+  // dirty-form prompts) already register capture-phase listeners
+  // with `stopImmediatePropagation`, so they win and we never
+  // navigate while one of them is open. When nothing closer
+  // wants the event, the shell handles it.
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const parent = parentManagePath(location.pathname);
+      if (!parent) return;
+      e.preventDefault();
+      navigate(parent);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [location.pathname, navigate]);
 
   const body = !user ? (
     <NoticeBody>{t("manage-not-logged-in")}</NoticeBody>
