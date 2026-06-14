@@ -33,7 +33,7 @@ describe("migrate", () => {
   test("fresh DB runs every migration and lands at the highest version", () => {
     const db = open();
     migrate(db);
-    expect(schemaVersion(db)).toBe(26);
+    expect(schemaVersion(db)).toBe(27);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "gallery",
@@ -98,7 +98,11 @@ describe("migrate", () => {
         level INTEGER,
         PRIMARY KEY(user_id, gallery_id)
       );
-      CREATE TABLE photo (id TEXT PRIMARY KEY);
+      CREATE TABLE photo (
+        id TEXT PRIMARY KEY,
+        disp_width INTEGER,
+        disp_height INTEGER
+      );
       CREATE TABLE gallery_photo (
         gallery_id TEXT,
         photo_id TEXT,
@@ -115,7 +119,7 @@ describe("migrate", () => {
 
     migrate(db);
 
-    expect(schemaVersion(db)).toBe(26);
+    expect(schemaVersion(db)).toBe(27);
     expect(gallerPhotoFkRefs(db).sort()).toEqual(["gallery", "photo"]);
     const rows = db.prepare("SELECT * FROM gallery_photo").all();
     expect(rows).toEqual([{ gallery_id: "g1", photo_id: "p1" }]);

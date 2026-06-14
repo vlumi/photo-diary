@@ -40,7 +40,6 @@ describe("Constructor", () => {
         },
         dimensions: {
           original: { width: 3000, height: 2000 },
-          display: { width: 1500, height: 1000 },
           thumbnail: { width: 300, height: 200 },
         },
       })
@@ -90,10 +89,6 @@ describe("Constructor", () => {
     delete template.dimensions.original;
     expect(PhotoModel(template)).toBeUndefined();
   });
-  test("No display dimensions", () => {
-    delete template.dimensions.display;
-    expect(PhotoModel(template)).toBeUndefined();
-  });
   test("No thumbnail dimensions", () => {
     delete template.dimensions.thumbnail;
     expect(PhotoModel(template)).toBeUndefined();
@@ -134,8 +129,7 @@ describe("With samples", () => {
           iso: null,
         },
         dimensions: {
-          original: { width: null, height: null },
-          display: { width: 1500, height: 1000 },
+          original: { width: 300, height: 200 },
           thumbnail: { width: 300, height: 200 },
         },
       }),
@@ -175,7 +169,6 @@ describe("With samples", () => {
         },
         dimensions: {
           original: { width: 2000, height: 3000 },
-          display: { width: 1000, height: 1500 },
           thumbnail: { width: 200, height: 300 },
         },
       }),
@@ -215,7 +208,6 @@ describe("With samples", () => {
         },
         dimensions: {
           original: { width: 2000, height: 3000 },
-          display: { width: 1000, height: 1500 },
           thumbnail: { width: 200, height: 300 },
         },
       }),
@@ -255,7 +247,6 @@ describe("With samples", () => {
         },
         dimensions: {
           original: { width: 2000, height: 3000 },
-          display: { width: 1000, height: 1500 },
           thumbnail: { width: 200, height: 300 },
         },
       }),
@@ -739,7 +730,7 @@ describe("With samples", () => {
       expect(samples["empty.jpg"].uniqueValues()).toStrictEqual({
         exposure: {
           aperture: new Set([null]),
-          "aspect-ratio": new Set([undefined]),
+          "aspect-ratio": new Set(["3:2"]),
           ev: new Set([undefined]),
           "exposure-time": new Set([null]),
           "focal-length": new Set([null]),

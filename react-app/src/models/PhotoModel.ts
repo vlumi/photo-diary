@@ -10,7 +10,6 @@ interface Dimensions {
 
 interface PhotoDataDimensions {
   original: Dimensions;
-  display: Dimensions;
   thumbnail: Dimensions;
 }
 
@@ -113,7 +112,6 @@ const PhotoModel = (photoData: unknown) => {
       !instant.day ||
       !dimensions ||
       !("original" in dimensions) ||
-      !("display" in dimensions) ||
       !("thumbnail" in dimensions)
     ) {
       return undefined;
@@ -192,8 +190,14 @@ const PhotoModel = (photoData: unknown) => {
     thumbnailDimensions: (): Dimensions => {
       return { ...photo.dimensions.thumbnail };
     },
+    // Aspect ratio is uniform across the original and any downscaled
+    // rendition (sharp preserves it within rounding), so we read
+    // from `original` — the smallest set of dimensions we keep. Used
+    // for the Photo modal's fit math and `<img>` width/height attrs.
     ratio: (): number =>
-      photo.dimensions.display.width / photo.dimensions.display.height,
+      photo.dimensions.original.width / photo.dimensions.original.height,
+    origWidth: (): number => photo.dimensions.original.width,
+    origHeight: (): number => photo.dimensions.original.height,
 
     focalLength: (): number | undefined => photo.exposure?.focalLength,
     // EXIF `FocalLengthIn35mmFormat` when present; otherwise derived via
