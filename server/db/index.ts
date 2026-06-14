@@ -402,6 +402,13 @@ export default {
   createPhoto: async (photo: PhotoInput) => {
     await db.createPhoto(photo);
   },
+  upsertPhotoRendition: async (
+    photoId: string,
+    name: string,
+    maxDim: number
+  ): Promise<void> => {
+    await db.upsertPhotoRendition(photoId, name, maxDim);
+  },
   loadPhoto: async (photoId: string, lang?: string) => {
     return await db.loadPhoto(photoId, lang);
   },

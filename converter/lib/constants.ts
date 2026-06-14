@@ -19,15 +19,18 @@ export const DIM_THUMBNAIL = { width: 600, height: 200 };
 export type Target = {
   directory: string;
   dimensions: { width: number; height: number };
+  kind: "display" | "thumbnail";
 };
 
 export const TARGETS: Target[] = [
   {
     directory: DIR_DISPLAY,
     dimensions: DIM_DISPLAY,
+    kind: "display",
   },
   {
     directory: DIR_THUMBNAIL,
     dimensions: DIM_THUMBNAIL,
+    kind: "thumbnail",
   },
 ];

@@ -302,6 +302,16 @@ export interface Photo {
   // when true the row is hidden from view-only viewers unless their
   // grant on the gallery they're using carries `can_see_private`.
   isPrivate: boolean;
+  // Display ladder (#615). Each entry says "this photo has a
+  // rendition under `<name>/<id>.jpg` with bounding-square edge
+  // `maxDim`". The SPA builds `<img srcset>` from the list and
+  // lets the browser pick the closest fit. Aspect is uniform
+  // across the ladder (sharp's downscale preserves it), so the
+  // per-rendition dimensions are unstored; only the bounding-square
+  // edge matters. Empty array means no display renditions exist
+  // (e.g. mid-migration / mid-intake) — the SPA falls back to its
+  // built-in `display/` path.
+  renditions: Array<{ name: string; maxDim: number }>;
 }
 
 // Partial input shapes for updates / inserts. DeepPartial so nested
@@ -653,6 +663,12 @@ export default () => {
             }
           })(),
           isPrivate: !!row.is_private,
+          // Renditions are attached by the loader after this row
+          // maps; mapRow only sees the `photo` columns, not the
+          // `photo_rendition` rows. Default to empty here so the
+          // type is satisfied — the loader overrides before the
+          // value reaches a caller.
+          renditions: [],
         };
       },
       mapInsert: (photo: PhotoInput): unknown[] => {

@@ -59,6 +59,7 @@ const makePhoto = (overrides: Partial<Photo> = {}): Photo => {
     },
     exifAtIntake: undefined,
     isPrivate: false,
+    renditions: [],
   };
   return { ...base, ...overrides };
 };

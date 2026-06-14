@@ -120,6 +120,7 @@ export default () => {
 
     loadPhotos,
     createPhoto,
+    upsertPhotoRendition,
     loadPhoto,
     loadPhotosByOriginalFilename,
     loadOrphanPhotoIds,
@@ -1057,6 +1058,7 @@ const loadGalleryPhotos = async (
   const photos = rows.map((row, index) =>
     schema.mapRow(row, index, localized.get(row.id), lang)
   );
+  attachRenditions(photos);
   return applyBaseline(photos, ref);
 };
 const linkGalleryPhoto = async (
@@ -1426,6 +1428,7 @@ const loadGalleryPhoto = async (
   if (!photoPassesBaseline(photo, ref)) {
     throw new NotFoundError();
   }
+  attachRenditions([photo]);
   return photo;
 };
 const unlinkGalleryPhoto = async (galleryId: string, photoId: string) => {
@@ -1452,6 +1455,50 @@ const unlinkAllGalleries = async (photoId: string) => {
 // `geocoded.city` when a `lang` argument is also passed. Returns an
 // empty Map for empty input; photos without any localized rows are
 // simply absent from the result.
+// Display-ladder rendition rows (#615) grouped by photo id, sorted
+// ascending by maxDim so the SPA's srcset descriptors come out in
+// a natural order. Empty array when a photo has no rows (mid-
+// intake, mid-migration); callers fall back to the built-in
+// `display/` path.
+const loadRenditionsFor = (
+  photoIds: string[]
+): Map<string, Array<{ name: string; maxDim: number }>> => {
+  if (photoIds.length === 0) return new Map();
+  const placeholders = photoIds.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT photo_id, name, max_dim FROM photo_rendition
+        WHERE photo_id IN (${placeholders})
+        ORDER BY max_dim ASC`
+    )
+    .all(...photoIds) as Array<{
+      photo_id: string;
+      name: string;
+      max_dim: number;
+    }>;
+  const byId = new Map<string, Array<{ name: string; maxDim: number }>>();
+  for (const r of rows) {
+    const list = byId.get(r.photo_id);
+    const entry = { name: r.name, maxDim: r.max_dim };
+    if (list) list.push(entry);
+    else byId.set(r.photo_id, [entry]);
+  }
+  return byId;
+};
+
+// Mutate a Photo (already mapped from a row) to attach the
+// rendition list. Called by every photo-emitting loader after
+// `mapRow` runs (mapRow itself only sees `photo` columns, not
+// `photo_rendition`).
+const attachRenditions = <T extends { id: string; renditions: Array<{ name: string; maxDim: number }> }>(
+  photos: T[]
+): void => {
+  const byId = loadRenditionsFor(photos.map((p) => p.id));
+  for (const p of photos) {
+    p.renditions = byId.get(p.id) ?? [];
+  }
+};
+
 const loadLocalizedFor = (
   photoIds: string[]
 ): Map<string, PhotoLocalizedRow[]> => {
@@ -1496,9 +1543,11 @@ const loadGalleryLocalizedFor = (
 const loadPhotos = async (lang?: string) => {
   const rows = db.prepare(SCHEMA.photo.buildSelectQuery()).all() as PhotoRow[];
   const localized = loadLocalizedFor(rows.map((r) => r.id));
-  return rows.map((row, index) =>
+  const photos = rows.map((row, index) =>
     SCHEMA.photo.mapRow(row, index, localized.get(row.id), lang)
   );
+  attachRenditions(photos);
+  return photos;
 };
 const createPhoto = async (photo: PhotoInput) => {
   db.prepare(SCHEMA.photo.buildCreateQuery()).run(
@@ -1514,6 +1563,22 @@ const createPhoto = async (photo: PhotoInput) => {
     upsertPhotoLocalizedFields(photoId, lang, fields);
   }
 };
+
+// Upsert a single (photo, name) rendition row. Used by the
+// converter's intake pipeline (#616) when it produces a new
+// display variant, and by `bin/photo-rerender.ts` (#617) to
+// register on-disk files. INSERT OR REPLACE keeps the maxDim
+// fresh if the operator ever resizes an existing rendition.
+const upsertPhotoRendition = async (
+  photoId: string,
+  name: string,
+  maxDim: number
+): Promise<void> => {
+  db.prepare(
+    `INSERT INTO photo_rendition (photo_id, name, max_dim) VALUES (?, ?, ?)
+       ON CONFLICT(photo_id, name) DO UPDATE SET max_dim = excluded.max_dim`
+  ).run(photoId, name, maxDim);
+};
 const loadPhoto = async (photoId: string, lang?: string) => {
   const row = db.prepare(SCHEMA.photo.buildSelectByIdQuery()).get(photoId) as
     | PhotoRow
@@ -1522,7 +1587,9 @@ const loadPhoto = async (photoId: string, lang?: string) => {
   const localizedRows = db
     .prepare("SELECT * FROM photo_localized WHERE photo_id = ?")
     .all(photoId) as PhotoLocalizedRow[];
-  return SCHEMA.photo.mapRow(row, 0, localizedRows, lang);
+  const photo = SCHEMA.photo.mapRow(row, 0, localizedRows, lang);
+  attachRenditions([photo]);
+  return photo;
 };
 // Filename matching is case-insensitive: cameras vary on extension
 // case (Fuji writes `.JPG`, others `.jpg`), and operator-generated
@@ -1570,6 +1637,7 @@ const loadGalleryPhotoByOriginalFilename = async (
   if (!photoPassesBaseline(photo, ref)) {
     throw new NotFoundError();
   }
+  attachRenditions([photo]);
   return photo;
 };
 // Photo rows with no gallery_photo link — useful for `bin/photo.ts audit`.
