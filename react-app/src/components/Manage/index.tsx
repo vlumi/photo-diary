@@ -34,20 +34,20 @@ const GLOBAL_MANAGE_PATHS = [
 ];
 
 // Resolve the "go up one step" target for Esc-up navigation.
-// Mostly strip-last-segment; the one asymmetry is `/m/g/<id>` →
-// `/m/galleries` (the list lives at `/m/galleries`, not `/m/g`).
+// Mostly strip-last-segment; two asymmetries:
+//   `/m/g/<id>` → `/m/galleries` (list isn't at `/m/g`).
+//   `/m/g/<id>/access` → `/m/galleries` (skip the modal level — if
+//     we stripped just the last segment the modal would re-open
+//     over the list, which feels like Esc went the wrong way).
 // Returns null when there's nowhere to go (top-level `/m`, or an
 // unfamiliar path that doesn't look like /m/*).
 export const parentManagePath = (pathname: string): string | null => {
-  // Strip trailing slash for uniform matching.
   const path = pathname.replace(/\/$/, "");
   if (path === "/m" || !path.startsWith("/m/")) return null;
-  // `/m/g/<id>` → `/m/galleries` (list isn't `/m/g`).
   if (/^\/m\/g\/[^/]+$/.test(path)) return "/m/galleries";
-  // Strip the last segment.
+  if (/^\/m\/g\/[^/]+\/access$/.test(path)) return "/m/galleries";
   const idx = path.lastIndexOf("/");
   const parent = idx > 0 ? path.slice(0, idx) : "/m";
-  // Don't escape `/m`.
   return parent.startsWith("/m") ? parent : "/m";
 };
 
@@ -197,17 +197,21 @@ const buildCrumbs = (
   out.push({ kind: "link", path: "/m", label: t("manage-root") });
 
   if (tail[0] === "g") {
-    // /m/g/<id>[/sub]
+    // /m/g/<id>[/sub]. The item modal owns both the Properties and
+    // Access surfaces as tabs, so the breadcrumb stops at the
+    // gallery id regardless of which tab is active.
     out.push({ kind: "link", path: "/m/galleries", label: t("manage-page-galleries-title") });
     const galleryId = tail[1];
     if (!galleryId) return out;
     const sub = tail[2];
     const galleryLabel = resolved.galleryTitle ?? galleryId;
-    pushLinkOrLeaf(!sub, `/m/g/${galleryId}`, galleryLabel);
     if (sub === "access") {
-      out.push({ kind: "leaf", label: t("manage-page-gallery-access-title") });
-    } else if (sub) {
-      out.push({ kind: "leaf", label: sub });
+      out.push({ kind: "leaf", label: galleryLabel });
+    } else {
+      pushLinkOrLeaf(!sub, `/m/g/${galleryId}`, galleryLabel);
+      if (sub) {
+        out.push({ kind: "leaf", label: sub });
+      }
     }
     return out;
   }

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BsPencilSquare, BsPlus, BsTrash, BsXLg } from "react-icons/bs";
 
+import ItemModal from "./ItemModal";
 import groupsService, {
   type GroupRow,
   type GroupUpdatePatch,
@@ -366,12 +367,25 @@ const GroupEdit = (): React.ReactElement => {
     setEditing(false);
   };
 
-  if (isLoading) return <Root><Notice>{t("loading")}</Notice></Root>;
+  if (isLoading)
+    return (
+      <ItemModal closeTo="/m/groups">
+        {() => (
+          <Root>
+            <Notice>{t("loading")}</Notice>
+          </Root>
+        )}
+      </ItemModal>
+    );
   if (isError || !data) {
     return (
-      <Root>
-        <Notice>{t("manage-group-load-error")}</Notice>
-      </Root>
+      <ItemModal closeTo="/m/groups">
+        {() => (
+          <Root>
+            <Notice>{t("manage-group-load-error")}</Notice>
+          </Root>
+        )}
+      </ItemModal>
     );
   }
 
@@ -391,13 +405,32 @@ const GroupEdit = (): React.ReactElement => {
       <SummaryEmpty>{t("manage-group-summary-empty")}</SummaryEmpty>
     );
 
+  const formDirty =
+    name !== (data.name ?? "") || description !== (data.description ?? "");
+
+  const handleEscape = (): boolean => {
+    if (!editing) return false;
+    if (formDirty) {
+      const ok = window.confirm(String(t("manage-modal-confirm-discard")));
+      if (!ok) return true;
+    }
+    handleCancelEdit();
+    return true;
+  };
+
   return (
-    <Root>
-      <TitleRow>
-        <Title>
-          <Mono>{groupId}</Mono>
-        </Title>
-      </TitleRow>
+    <ItemModal
+      closeTo="/m/groups"
+      dirty={editing && formDirty}
+      onEscape={handleEscape}
+    >
+      {() => (
+        <Root>
+          <TitleRow>
+            <Title>
+              <Mono>{groupId}</Mono>
+            </Title>
+          </TitleRow>
       {saveError && (
         <ErrorBanner>
           {t("manage-group-save-error")}
@@ -565,7 +598,9 @@ const GroupEdit = (): React.ReactElement => {
           </ConfirmActions>
         </ConfirmPanel>
       )}
-    </Root>
+        </Root>
+      )}
+    </ItemModal>
   );
 };
 

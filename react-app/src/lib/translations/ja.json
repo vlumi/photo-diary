@@ -3,6 +3,10 @@
     "loading": "ロード中",
     "empty": "空",
     "close": "閉じる",
+    "manage-modal-confirm-discard": "保存していない変更があります。破棄しますか?",
+    "manage-gallery-tabs": "ギャラリーセクション",
+    "manage-gallery-tab-properties": "プロパティ",
+    "manage-gallery-tab-access": "アクセス権",
 
     "login": "ログイン",
     "logout": "ログアウト",
@@ -435,6 +439,7 @@
     "manage-instance-field-initial-gallery-view": "ギャラリーの初期表示",
     "manage-instance-field-first-weekday": "週の最初の曜日",
     "manage-instance-default-empty": "(組み込みの既定値)",
+    "manage-instance-view-empty": "—",
     "manage-instance-save-error": "インスタンス設定を保存できませんでした",
     "manage-page-access-title": "アクセス権",
     "manage-dashboard-tile-access-blurb": "全ギャラリーのアクセス権を一つの表で。",

@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import ItemModal from "./ItemModal";
 import galleriesService, {
   type GalleryCreateBody,
 } from "../../services/galleries";
@@ -149,9 +150,14 @@ const GalleryCreate = (): React.ReactElement => {
     navigate("/m/galleries");
   };
 
+  const formDirty =
+    id.length > 0 || JSON.stringify(form) !== JSON.stringify(EMPTY_FORM);
+
   return (
-    <Root>
-      <Title>{t("manage-gallery-create-title")}</Title>
+    <ItemModal closeTo="/m/galleries" dirty={formDirty}>
+      {() => (
+        <Root>
+          <Title>{t("manage-gallery-create-title")}</Title>
       {saveError && (
         <ErrorBanner>
           {t("manage-gallery-create-error")}
@@ -197,7 +203,9 @@ const GalleryCreate = (): React.ReactElement => {
             : t("manage-gallery-button-create")}
         </ButtonPrimary>
       </Footer>
-    </Root>
+        </Root>
+      )}
+    </ItemModal>
   );
 };
 

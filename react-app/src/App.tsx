@@ -31,8 +31,11 @@ const ManagePhotos = React.lazy(() => import("./components/Manage/Photos"));
 const ManagePhotoDrawer = React.lazy(
   () => import("./components/Manage/PhotoDrawer")
 );
-const ManageGalleries = React.lazy(
-  () => import("./components/Manage/Galleries")
+const ManageGalleriesLayout = React.lazy(
+  () => import("./components/Manage/GalleriesLayout")
+);
+const ManageGalleryItemShell = React.lazy(
+  () => import("./components/Manage/GalleryItemShell")
 );
 const ManageGalleryEdit = React.lazy(
   () => import("./components/Manage/GalleryEdit")
@@ -40,17 +43,21 @@ const ManageGalleryEdit = React.lazy(
 const ManageGalleryCreate = React.lazy(
   () => import("./components/Manage/GalleryCreate")
 );
-const ManageDashboard = React.lazy(
-  () => import("./components/Manage/Dashboard")
+const ManageDashboardLayout = React.lazy(
+  () => import("./components/Manage/DashboardLayout")
 );
-const ManageUsers = React.lazy(() => import("./components/Manage/Users"));
+const ManageUsersLayout = React.lazy(
+  () => import("./components/Manage/UsersLayout")
+);
 const ManageUserEdit = React.lazy(
   () => import("./components/Manage/UserEdit")
 );
 const ManageUserCreate = React.lazy(
   () => import("./components/Manage/UserCreate")
 );
-const ManageGroups = React.lazy(() => import("./components/Manage/Groups"));
+const ManageGroupsLayout = React.lazy(
+  () => import("./components/Manage/GroupsLayout")
+);
 const ManageGroupEdit = React.lazy(
   () => import("./components/Manage/GroupEdit")
 );
@@ -232,29 +239,43 @@ const App = (): React.ReactElement => {
                 />
                 <Route path="/g" element={<Gallery />} />
                 <Route path="/m" element={<Manage />}>
-                  <Route index element={<ManageDashboard />} />
-                  <Route path="users" element={<ManageUsers />} />
-                  <Route path="users/new" element={<ManageUserCreate />} />
-                  <Route path="users/:userId" element={<ManageUserEdit />} />
-                  <Route path="groups" element={<ManageGroups />} />
-                  <Route path="groups/new" element={<ManageGroupCreate />} />
-                  <Route
-                    path="groups/:groupId"
-                    element={<ManageGroupEdit />}
-                  />
+                  <Route element={<ManageDashboardLayout />}>
+                    <Route index element={null} />
+                    <Route path="instance" element={<ManageInstance />} />
+                  </Route>
+                  <Route element={<ManageUsersLayout />}>
+                    <Route path="users" element={null} />
+                    <Route path="users/new" element={<ManageUserCreate />} />
+                    <Route path="users/:userId" element={<ManageUserEdit />} />
+                  </Route>
+                  <Route element={<ManageGroupsLayout />}>
+                    <Route path="groups" element={null} />
+                    <Route path="groups/new" element={<ManageGroupCreate />} />
+                    <Route
+                      path="groups/:groupId"
+                      element={<ManageGroupEdit />}
+                    />
+                  </Route>
                   <Route path="access" element={<ManageAccess />} />
-                  <Route path="instance" element={<ManageInstance />} />
-                  <Route path="galleries" element={<ManageGalleries />} />
-                  <Route
-                    path="galleries/new"
-                    element={<ManageGalleryCreate />}
-                  />
+                  <Route element={<ManageGalleriesLayout />}>
+                    <Route path="galleries" element={null} />
+                    <Route
+                      path="galleries/new"
+                      element={<ManageGalleryCreate />}
+                    />
+                    <Route element={<ManageGalleryItemShell />}>
+                      <Route
+                        path="g/:galleryId"
+                        element={<ManageGalleryEdit />}
+                      />
+                      <Route
+                        path="g/:galleryId/access"
+                        element={<ManageGalleryAccess />}
+                      />
+                    </Route>
+                  </Route>
                   <Route path="photos" element={<ManagePhotos />}>
                     <Route path=":photoId" element={<ManagePhotoDrawer />} />
-                  </Route>
-                  <Route path="g/:galleryId">
-                    <Route index element={<ManageGalleryEdit />} />
-                    <Route path="access" element={<ManageGalleryAccess />} />
                   </Route>
                 </Route>
                 <Route path="/" element={<Gallery smartLanding />} />

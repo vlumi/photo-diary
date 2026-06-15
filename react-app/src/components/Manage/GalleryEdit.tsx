@@ -12,6 +12,7 @@ import {
 
 import EpochAge from "../Gallery/EpochAge";
 import EpochDayIndex from "../Gallery/EpochDayIndex";
+import { useModalDirty, useModalEscape } from "./ItemModal";
 import GalleryModel from "../../models/GalleryModel";
 import config from "../../lib/config";
 import filter, { type Filters as FiltersT, type ServerFilters } from "../../lib/filter";
@@ -39,7 +40,7 @@ import GalleryFormFields, {
 } from "./GalleryForm";
 
 const Root = styled.div`
-  padding: 24px 16px;
+  padding: 0 16px 16px;
   max-width: 640px;
   margin: 0 auto;
   text-align: left;
@@ -51,6 +52,13 @@ const TitleRow = styled.div`
   gap: 16px;
   flex-wrap: wrap;
   margin: 0 0 16px;
+  /* Sticks just below the tab bar (48px) so the gallery identity
+     stays in view as the body scrolls. */
+  position: sticky;
+  top: 48px;
+  background: var(--primary-background);
+  padding: 12px 0;
+  z-index: 1;
 `;
 // Left half of TitleRow: cover thumbnail (when present) +
 // title-block (id + epoch-today line). Lays the visual identity
@@ -119,6 +127,14 @@ const Footer = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 20px;
+  /* Sticks at the modal Frame's bottom so Save / Cancel stay reachable
+     when the form scrolls. Background + border separate it visually
+     from the scrolling content above. */
+  position: sticky;
+  bottom: 0;
+  background: var(--primary-background);
+  padding: 12px 0;
+  border-top: 1px solid var(--inactive-color);
 `;
 const FooterRight = styled.div`
   display: inline-flex;
@@ -481,7 +497,28 @@ const GalleryEdit = (): React.ReactElement => {
     setEditing(false);
   };
 
-  if (isLoading) return <Root><Notice>{t("loading")}</Notice></Root>;
+  const formDirty =
+    JSON.stringify(form) !== JSON.stringify(original) || definitionDirty();
+  useModalDirty(editing && formDirty);
+  useModalEscape(
+    () => {
+      if (!editing) return false;
+      if (formDirty) {
+        const ok = window.confirm(String(t("manage-modal-confirm-discard")));
+        if (!ok) return true;
+      }
+      handleCancelEdit();
+      return true;
+    },
+    [editing, formDirty, t]
+  );
+
+  if (isLoading)
+    return (
+      <Root>
+        <Notice>{t("loading")}</Notice>
+      </Root>
+    );
   if (isError || !data) {
     return (
       <Root>
@@ -587,16 +624,6 @@ const GalleryEdit = (): React.ReactElement => {
             <BsImages aria-hidden />
             {t("manage-gallery-link-photos")}
           </SiblingLink>
-          {isAdmin && (
-            <SiblingLink
-              onClick={() => navigate(`/m/g/${galleryId}/access`)}
-              role="link"
-              tabIndex={0}
-            >
-              <BsShieldLock aria-hidden />
-              {t("manage-gallery-link-access")}
-            </SiblingLink>
-          )}
         </SiblingNav>
       </TitleRow>
       {saveError && (
