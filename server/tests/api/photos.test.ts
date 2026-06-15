@@ -555,12 +555,12 @@ describe("Mutations as admin", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({ geocoded: { city: "Spoofed" } })
       .expect(400));
-  test("Update rejects EXIF-managed field (exposure.iso)", () =>
+  test("Update accepts exposure.iso (operator-editable since #605)", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
       .set("Authorization", `Bearer ${token}`)
       .send({ exposure: { iso: 100 } })
-      .expect(400));
+      .expect(204));
   test("Update with changed coords clears stale geocoded columns (#415)", async () => {
     // Seed geocoded data, then PUT new coords. Expect the geocoded
     // payload to be wiped (handed off to the converter via the

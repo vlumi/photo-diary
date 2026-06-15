@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import ItemModal from "./ItemModal";
+import { Section, SectionTitle } from "./Section";
 import metaService, { type KnownMetaKey } from "../../services/meta";
 import { useUserStore } from "../../stores";
 import { BETA_FEATURES, type BetaFeature, type BetaMode } from "../../stores/beta";
@@ -19,23 +20,6 @@ const Root = styled.div`
 const Title = styled.h2`
   margin: 0 0 16px;
   font-size: 1.2em;
-`;
-const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--inactive-color);
-  &:last-of-type {
-    border-bottom: none;
-  }
-`;
-const SectionTitle = styled.h3`
-  margin: 0;
-  font-size: 1em;
-  color: var(--inactive-color);
-  font-weight: 600;
 `;
 const Field = styled.label`
   display: flex;

@@ -11,6 +11,7 @@ import {
 import ThemePicker from "../ThemePicker";
 import IconCropper from "./IconCropper";
 import { useModalSubModalOpen } from "./ItemModal";
+import { Section, SectionTitle } from "./Section";
 import LocalizedInputs, {
   SUPPORTED_LANGS,
   languageNameIn,
@@ -174,19 +175,6 @@ export const toPatch = (
   return patch;
 };
 
-const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-const SectionTitle = styled.h3`
-  margin: 0 0 4px;
-  font-size: 0.75em;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--inactive-color);
-`;
 const Field = styled.label`
   display: flex;
   flex-direction: column;

@@ -393,7 +393,9 @@ const MISSING_FIELDS: MissingField[] = [
 
 // Parse the searchParams into a typed PhotoFilter. Filters that aren't
 // present in the URL collapse to undefined / false / [].
-const filterFromSearchParams = (
+// Exported so the modal drawer can mirror the table's queryKey and
+// read prev/next neighbours from the same cache entry.
+export const filterFromSearchParams = (
   searchParams: URLSearchParams
 ): PhotoFilter => {
   const filter: PhotoFilter = {};
@@ -415,14 +417,16 @@ const filterFromSearchParams = (
   return filter;
 };
 
-const pageFromSearchParams = (searchParams: URLSearchParams): number => {
+export const pageFromSearchParams = (
+  searchParams: URLSearchParams
+): number => {
   const raw = searchParams.get("page");
   if (!raw) return 1;
   const n = parseInt(raw, 10);
   return Number.isFinite(n) && n > 0 ? n : 1;
 };
 
-const PAGE_SIZE = 100;
+export const PAGE_SIZE = 100;
 
 // Editor-tier short-circuit: editors land here only via the
 // "Manage this photo" button on the public Photo modal, which
@@ -434,13 +438,7 @@ const EditorPhotosShell = (): React.ReactElement => {
   if (!params.photoId) {
     return <Navigate to="/m" replace />;
   }
-  return (
-    <Root>
-      <Sidebar $hideOnMobile={false}>
-        <Outlet />
-      </Sidebar>
-    </Root>
-  );
+  return <Outlet />;
 };
 
 const Photos = (): React.ReactElement => {
@@ -1190,10 +1188,9 @@ const AdminPhotos = (): React.ReactElement => {
 
   return (
     <Root>
-      <Sidebar $hideOnMobile={!editing}>
-        {editing ? <Outlet /> : renderSidebarContents()}
-      </Sidebar>
+      <Sidebar $hideOnMobile={false}>{renderSidebarContents()}</Sidebar>
       <Body>{renderBody()}</Body>
+      <Outlet />
       {!editing && selectedIds.size === 0 && (
         <FilterFab
           type="button"

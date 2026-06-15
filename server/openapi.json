@@ -2080,6 +2080,12 @@
                       },
                       "aperture": {
                         "type": "number"
+                      },
+                      "exposureTime": {
+                        "type": "number"
+                      },
+                      "iso": {
+                        "type": "number"
                       }
                     },
                     "additionalProperties": false
@@ -2724,6 +2730,12 @@
                         "type": "number"
                       },
                       "aperture": {
+                        "type": "number"
+                      },
+                      "exposureTime": {
+                        "type": "number"
+                      },
+                      "iso": {
                         "type": "number"
                       }
                     },

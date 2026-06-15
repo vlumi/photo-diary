@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import ItemModal from "./ItemModal";
+import { Section, SectionTitle } from "./Section";
 import galleriesService, {
   type GalleryCreateBody,
 } from "../../services/galleries";
@@ -24,19 +25,6 @@ const Root = styled.div`
 const Title = styled.h2`
   margin: 0 0 16px;
   font-size: 1.2em;
-`;
-const IdSection = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-const SectionTitle = styled.h3`
-  margin: 0 0 4px;
-  font-size: 0.75em;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--inactive-color);
 `;
 const Field = styled.label`
   display: flex;
@@ -166,7 +154,7 @@ const GalleryCreate = (): React.ReactElement => {
         </ErrorBanner>
       )}
 
-      <IdSection>
+      <Section>
         <SectionTitle>{t("manage-gallery-section-identifier")}</SectionTitle>
         <Field>
           <FieldLabel>{t("manage-gallery-field-id")}</FieldLabel>
@@ -181,7 +169,7 @@ const GalleryCreate = (): React.ReactElement => {
           />
           <FieldHint>{t("manage-gallery-field-id-hint")}</FieldHint>
         </Field>
-      </IdSection>
+      </Section>
 
       <GalleryFormFields
         form={form}

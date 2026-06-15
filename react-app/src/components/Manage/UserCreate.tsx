@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import ItemModal from "./ItemModal";
+import { Section } from "./Section";
 import usersService, { type UserCreateBody } from "../../services/users";
 import { ID_PATTERN } from "../../lib/id-shape";
 
@@ -17,12 +18,6 @@ const Root = styled.div`
 const Title = styled.h2`
   margin: 0 0 16px;
   font-size: 1.2em;
-`;
-const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
 `;
 const Field = styled.label`
   display: flex;
