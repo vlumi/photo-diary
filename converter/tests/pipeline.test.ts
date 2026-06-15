@@ -71,16 +71,16 @@ test("processes a JPEG with EXIF end-to-end and renames to <ts>-<uuid>.jpg", asy
     fs.promises.access(path.join(rootDir, "inbox", "photo.jpg"))
   );
 
-  // Renamed to <ts>-<uuid>.jpg in original/, display/, thumbnail/.
+  // Renamed to <ts>-<uuid>.jpg in original/, display/<maxDim>/, thumbnail/.
   const id = await onlyFile(path.join(rootDir, "original"));
   assert.match(id, ID_PATTERN);
   // Timestamp portion derives from EXIF DateTimeOriginal (2024-01-15 10:30:45).
   assert.ok(id.startsWith("2024-01-15T10-30-45-"));
-  assert.equal(await onlyFile(path.join(rootDir, "display")), id);
+  assert.equal(await onlyFile(path.join(rootDir, "display", "1500")), id);
   assert.equal(await onlyFile(path.join(rootDir, "thumbnail")), id);
 
   const displayDims = await imageSizeFromFile(
-    path.join(rootDir, "display", id)
+    path.join(rootDir, "display", "1500", id)
   );
   assert.ok(displayDims.width <= 1500);
   assert.ok(displayDims.height <= 1500);
@@ -110,7 +110,7 @@ test("processes a JPEG without EXIF, falling back to mtime for the id", async ()
 
   const id = await onlyFile(path.join(rootDir, "original"));
   assert.match(id, ID_PATTERN);
-  assert.equal(await onlyFile(path.join(rootDir, "display")), id);
+  assert.equal(await onlyFile(path.join(rootDir, "display", "1500")), id);
   assert.equal(await onlyFile(path.join(rootDir, "thumbnail")), id);
 
   const row = (await db.loadPhoto(id)) as any;

@@ -65,11 +65,13 @@ const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 // bin/ → repo root
 const CODE_ROOT = path.resolve(SCRIPT_DIR, "..");
 
+// `photos/display/<maxDim>/` is created by the converter on first
+// intake — leaving it out keeps a stale ladder dir from outliving a
+// `renditions` config change.
 const REQUIRED_DIRS = [
   "photos",
   "photos/inbox",
   "photos/original",
-  "photos/display",
   "photos/thumbnail",
 ];
 

@@ -5,12 +5,29 @@ import sharp from "sharp";
 import { NotFoundError } from "./errors.js";
 import logger from "./logger.js";
 
-// Icon source = the photo's `display/<id>` variant (~1280-1600px
-// wide). Plenty of resolution for a 160x160 output crop, and
-// independent of whether originals are kept on the server.
-const DISPLAY_DIR = path.join(process.cwd(), "photos", "display");
-const ICON_DIR = path.join(process.cwd(), "photos", "gallery-icons");
+const PHOTO_ROOT = path.join(process.cwd(), "photos");
+const DISPLAY_DIR = path.join(PHOTO_ROOT, "display");
+const ICON_DIR = path.join(PHOTO_ROOT, "gallery-icons");
 const ICON_SIZE = 160;
+
+// Must crop the exact rendition the UI cropped against — different
+// pixel space would silently offset / scale the saved coords.
+const resolveSourcePath = async (
+  sourcePhotoId: string,
+  sourceMaxDim: number
+): Promise<string | null> => {
+  const candidate = path.join(
+    DISPLAY_DIR,
+    String(sourceMaxDim),
+    sourcePhotoId
+  );
+  try {
+    await fs.promises.access(candidate, fs.constants.R_OK);
+    return candidate;
+  } catch {
+    return null;
+  }
+};
 
 export interface CropPixels {
   x: number;
@@ -35,19 +52,15 @@ export const iconRelPath = (galleryId: string): string =>
 export const writeGalleryIcon = async (
   galleryId: string,
   sourcePhotoId: string,
-  crop: CropPixels
+  crop: CropPixels,
+  sourceMaxDim: number
 ): Promise<string> => {
   await fs.promises.mkdir(ICON_DIR, { recursive: true });
-  const sourcePath = path.join(DISPLAY_DIR, sourcePhotoId);
-  try {
-    await fs.promises.access(sourcePath, fs.constants.R_OK);
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-      throw new NotFoundError(
-        `Source photo display variant not found: ${sourcePhotoId}`
-      );
-    }
-    throw err;
+  const sourcePath = await resolveSourcePath(sourcePhotoId, sourceMaxDim);
+  if (!sourcePath) {
+    throw new NotFoundError(
+      `Source rendition display/${sourceMaxDim}/${sourcePhotoId} not found on disk`
+    );
   }
   const outPath = path.join(ICON_DIR, `${galleryId}.jpg`);
   const oriented = sharp(sourcePath).rotate();

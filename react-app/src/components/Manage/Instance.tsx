@@ -79,7 +79,7 @@ const BetaRow = styled.div`
 `;
 const RenditionRowEl = styled.div`
   display: grid;
-  grid-template-columns: 1fr 140px 40px;
+  grid-template-columns: 140px 40px;
   gap: 8px;
   align-items: center;
 `;
@@ -142,10 +142,6 @@ const Notice = styled.div`
   color: var(--inactive-color);
 `;
 
-interface RenditionShape {
-  name?: string;
-  maxDim?: number;
-}
 interface MetaShape {
   name?: string;
   description?: string;
@@ -157,12 +153,7 @@ interface MetaShape {
   initialGalleryView?: string;
   firstWeekday?: string | number;
   betaFeatures?: Partial<Record<BetaFeature, BetaMode>>;
-  renditions?: RenditionShape[];
-}
-
-interface RenditionRow {
-  name: string;
-  maxDim: string;
+  renditions?: number[];
 }
 
 interface FormState {
@@ -176,7 +167,9 @@ interface FormState {
   initialGalleryView: string;
   firstWeekday: string;
   betaFeatures: Record<BetaFeature, BetaMode>;
-  renditions: RenditionRow[];
+  // Edited as strings so partially-typed input doesn't blow up on
+  // a non-numeric value; coerced to int on save.
+  renditions: string[];
 }
 
 const SUPPORTED_LANGUAGES = ["en", "fi", "ja"] as const;
@@ -188,7 +181,7 @@ const FIRST_WEEKDAYS = [
 ] as const;
 const BETA_MODES: BetaMode[] = ["user", "on", "off"];
 
-const DEFAULT_RENDITIONS: RenditionRow[] = [{ name: "display", maxDim: "1500" }];
+const DEFAULT_RENDITIONS: string[] = ["1500"];
 
 const emptyBeta = (): Record<BetaFeature, BetaMode> =>
   Object.fromEntries(BETA_FEATURES.map((f) => [f, "user"])) as Record<
@@ -207,7 +200,7 @@ const emptyForm = (): FormState => ({
   initialGalleryView: "",
   firstWeekday: "",
   betaFeatures: emptyBeta(),
-  renditions: DEFAULT_RENDITIONS.map((r) => ({ ...r })),
+  renditions: [...DEFAULT_RENDITIONS],
 });
 
 const formFromMeta = (meta: MetaShape | undefined): FormState => {
@@ -230,46 +223,29 @@ const formFromMeta = (meta: MetaShape | undefined): FormState => {
     }
   }
   if (Array.isArray(meta.renditions) && meta.renditions.length > 0) {
-    base.renditions = meta.renditions
-      .filter(
-        (r): r is { name: string; maxDim: number } =>
-          !!r && typeof r.name === "string" && typeof r.maxDim === "number"
-      )
-      .map((r) => ({ name: r.name, maxDim: String(r.maxDim) }));
-    if (base.renditions.length === 0) {
-      base.renditions = DEFAULT_RENDITIONS.map((r) => ({ ...r }));
-    }
+    const valid = meta.renditions.filter(
+      (r): r is number => typeof r === "number" && Number.isFinite(r) && r > 0
+    );
+    base.renditions =
+      valid.length > 0 ? valid.map((n) => String(n)) : [...DEFAULT_RENDITIONS];
   }
   return base;
 };
 
-const renditionsEqualDefault = (rows: RenditionRow[]): boolean => {
-  if (rows.length !== DEFAULT_RENDITIONS.length) return false;
-  return rows.every(
-    (r, i) =>
-      r.name.trim() === DEFAULT_RENDITIONS[i].name &&
-      r.maxDim.trim() === DEFAULT_RENDITIONS[i].maxDim
-  );
-};
-
-const renditionRowsAreValid = (rows: RenditionRow[]): boolean => {
+const renditionRowsAreValid = (rows: string[]): boolean => {
   if (rows.length === 0) return false;
-  const seen = new Set<string>();
+  const seen = new Set<number>();
   for (const r of rows) {
-    const name = r.name.trim();
-    const dim = Number(r.maxDim);
-    if (!name || name.includes("/") || name.includes("..")) return false;
+    const dim = Number(r);
     if (!Number.isFinite(dim) || dim <= 0 || !Number.isInteger(dim)) return false;
-    if (seen.has(name)) return false;
-    seen.add(name);
+    if (seen.has(dim)) return false;
+    seen.add(dim);
   }
   return true;
 };
 
-const serialiseRenditions = (rows: RenditionRow[]): string =>
-  JSON.stringify(
-    rows.map((r) => ({ name: r.name.trim(), maxDim: Number(r.maxDim) }))
-  );
+const serialiseRenditions = (rows: string[]): string =>
+  JSON.stringify(rows.map((r) => Number(r)));
 
 // Stringified meta payloads for diffing — beta features collapse
 // to one JSON-encoded value, the rest are plain strings.
@@ -371,20 +347,17 @@ const Instance = (): React.ReactElement => {
           );
         }
       }
-      // Renditions: drop the row when the ladder matches the
-      // built-in default; converter falls back to it automatically.
+      // Renditions: always write the full list. The migration
+      // seeds [1500] at install time so the UI always reflects what's
+      // in the DB.
       const renditionsChanged =
         JSON.stringify(form.renditions) !==
         JSON.stringify(original.renditions);
       if (renditionsChanged) {
-        if (renditionsEqualDefault(form.renditions)) {
-          await metaService.remove("renditions");
-        } else {
-          await metaService.set(
-            "renditions",
-            serialiseRenditions(form.renditions)
-          );
-        }
+        await metaService.set(
+          "renditions",
+          serialiseRenditions(form.renditions)
+        );
       }
       await queryClient.invalidateQueries({ queryKey: ["meta"] });
       // Refetch to reseed `original` so `dirty` resets cleanly.
@@ -531,30 +504,18 @@ const Instance = (): React.ReactElement => {
       <Section>
         <SectionTitle>{t("manage-instance-renditions")}</SectionTitle>
         <FieldHint>{t("manage-instance-renditions-hint")}</FieldHint>
-        {form.renditions.map((row, idx) => (
+        {form.renditions.map((dim, idx) => (
           <RenditionRowEl key={idx}>
-            <Input
-              value={row.name}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  renditions: prev.renditions.map((r, i) =>
-                    i === idx ? { ...r, name: e.target.value } : r
-                  ),
-                }))
-              }
-              placeholder={t("manage-instance-renditions-name") ?? ""}
-            />
             <Input
               type="number"
               min={1}
               step={1}
-              value={row.maxDim}
+              value={dim}
               onChange={(e) =>
                 setForm((prev) => ({
                   ...prev,
                   renditions: prev.renditions.map((r, i) =>
-                    i === idx ? { ...r, maxDim: e.target.value } : r
+                    i === idx ? e.target.value : r
                   ),
                 }))
               }
@@ -581,7 +542,7 @@ const Instance = (): React.ReactElement => {
           onClick={() =>
             setForm((prev) => ({
               ...prev,
-              renditions: [...prev.renditions, { name: "", maxDim: "" }],
+              renditions: [...prev.renditions, ""],
             }))
           }
         >

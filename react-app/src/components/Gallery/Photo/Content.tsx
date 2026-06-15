@@ -269,14 +269,13 @@ const Content = ({
   const renditions = photo.renditions();
   const naturalWidthFor = (maxDim: number): number =>
     photoRatio >= 1 ? maxDim : Math.round(maxDim * photoRatio);
-  const sortedRenditions = [...renditions].sort((a, b) => a.maxDim - b.maxDim);
-  const fallbackName = sortedRenditions.at(-1)?.name ?? "display";
-  const path = `${config.PHOTO_ROOT_URL}${fallbackName}/${photo.id()}`;
-  const srcSet = sortedRenditions
-    .map(
-      (r) =>
-        `${config.PHOTO_ROOT_URL}${r.name}/${photo.id()} ${naturalWidthFor(r.maxDim)}w`
-    )
+  const sortedDims = [...renditions].sort((a, b) => a - b);
+  const fallbackDim = sortedDims.at(-1) ?? 1500;
+  const urlFor = (dim: number): string =>
+    `${config.PHOTO_ROOT_URL}display/${dim}/${photo.id()}`;
+  const path = urlFor(fallbackDim);
+  const srcSet = sortedDims
+    .map((dim) => `${urlFor(dim)} ${naturalWidthFor(dim)}w`)
     .join(", ");
 
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {

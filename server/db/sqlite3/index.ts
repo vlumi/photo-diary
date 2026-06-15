@@ -1457,42 +1457,27 @@ const unlinkAllGalleries = async (photoId: string) => {
 // `geocoded.city` when a `lang` argument is also passed. Returns an
 // empty Map for empty input; photos without any localized rows are
 // simply absent from the result.
-// Display-ladder rendition rows (#615) grouped by photo id, sorted
-// ascending by maxDim so the SPA's srcset descriptors come out in
-// a natural order. Empty array when a photo has no rows (mid-
-// intake, mid-migration); callers fall back to the built-in
-// `display/` path.
-const loadRenditionsFor = (
-  photoIds: string[]
-): Map<string, Array<{ name: string; maxDim: number }>> => {
+// Ordered ascending so srcset descriptors emerge in width order.
+const loadRenditionsFor = (photoIds: string[]): Map<string, number[]> => {
   if (photoIds.length === 0) return new Map();
   const placeholders = photoIds.map(() => "?").join(",");
   const rows = db
     .prepare(
-      `SELECT photo_id, name, max_dim FROM photo_rendition
+      `SELECT photo_id, max_dim FROM photo_rendition
         WHERE photo_id IN (${placeholders})
         ORDER BY max_dim ASC`
     )
-    .all(...photoIds) as Array<{
-      photo_id: string;
-      name: string;
-      max_dim: number;
-    }>;
-  const byId = new Map<string, Array<{ name: string; maxDim: number }>>();
+    .all(...photoIds) as Array<{ photo_id: string; max_dim: number }>;
+  const byId = new Map<string, number[]>();
   for (const r of rows) {
     const list = byId.get(r.photo_id);
-    const entry = { name: r.name, maxDim: r.max_dim };
-    if (list) list.push(entry);
-    else byId.set(r.photo_id, [entry]);
+    if (list) list.push(r.max_dim);
+    else byId.set(r.photo_id, [r.max_dim]);
   }
   return byId;
 };
 
-// Mutate a Photo (already mapped from a row) to attach the
-// rendition list. Called by every photo-emitting loader after
-// `mapRow` runs (mapRow itself only sees `photo` columns, not
-// `photo_rendition`).
-const attachRenditions = <T extends { id: string; renditions: Array<{ name: string; maxDim: number }> }>(
+const attachRenditions = <T extends { id: string; renditions: number[] }>(
   photos: T[]
 ): void => {
   const byId = loadRenditionsFor(photos.map((p) => p.id));
@@ -1566,43 +1551,33 @@ const createPhoto = async (photo: PhotoInput) => {
   }
 };
 
-// Upsert a single (photo, name) rendition row. Used by the
-// converter's intake pipeline (#616) when it produces a new
-// display variant, and by `bin/photo-rerender.ts` (#617) to
-// register on-disk files. INSERT OR REPLACE keeps the maxDim
-// fresh if the operator ever resizes an existing rendition.
 const upsertPhotoRendition = async (
   photoId: string,
-  name: string,
   maxDim: number
 ): Promise<void> => {
   db.prepare(
-    `INSERT INTO photo_rendition (photo_id, name, max_dim) VALUES (?, ?, ?)
-       ON CONFLICT(photo_id, name) DO UPDATE SET max_dim = excluded.max_dim`
-  ).run(photoId, name, maxDim);
+    `INSERT INTO photo_rendition (photo_id, max_dim) VALUES (?, ?)
+       ON CONFLICT(photo_id, max_dim) DO NOTHING`
+  ).run(photoId, maxDim);
 };
 const loadAllPhotoRenditions = async (): Promise<
-  Array<{ photoId: string; name: string; maxDim: number }>
+  Array<{ photoId: string; maxDim: number }>
 > => {
   const rows = db
     .prepare(
-      `SELECT photo_id, name, max_dim FROM photo_rendition
+      `SELECT photo_id, max_dim FROM photo_rendition
          ORDER BY photo_id ASC, max_dim ASC`
     )
-    .all() as Array<{ photo_id: string; name: string; max_dim: number }>;
-  return rows.map((r) => ({
-    photoId: r.photo_id,
-    name: r.name,
-    maxDim: r.max_dim,
-  }));
+    .all() as Array<{ photo_id: string; max_dim: number }>;
+  return rows.map((r) => ({ photoId: r.photo_id, maxDim: r.max_dim }));
 };
 const deletePhotoRendition = async (
   photoId: string,
-  name: string
+  maxDim: number
 ): Promise<void> => {
   db.prepare(
-    "DELETE FROM photo_rendition WHERE photo_id = ? AND name = ?"
-  ).run(photoId, name);
+    "DELETE FROM photo_rendition WHERE photo_id = ? AND max_dim = ?"
+  ).run(photoId, maxDim);
 };
 const loadPhoto = async (photoId: string, lang?: string) => {
   const row = db.prepare(SCHEMA.photo.buildSelectByIdQuery()).get(photoId) as

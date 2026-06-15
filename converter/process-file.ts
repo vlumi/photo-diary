@@ -16,7 +16,7 @@ import {
   DIR_INBOX,
   DIR_ORIGINAL,
   THUMBNAIL_TARGET,
-  renditionToTarget,
+  displayTargetFor,
 } from "./lib/constants.js";
 import { loadRenditions } from "./lib/renditions.js";
 import * as logger from "./lib/logger.js";
@@ -178,7 +178,7 @@ const processJpeg = async (
   }
 
   const renditions = await loadRenditions();
-  const displayTargets = renditions.map(renditionToTarget);
+  const displayTargets = renditions.map(displayTargetFor);
   const conversionTargets = [...displayTargets, THUMBNAIL_TARGET];
   await Promise.all(
     conversionTargets.map((target) =>
@@ -209,8 +209,8 @@ const processJpeg = async (
     logger.debug(`[${relPath}] Created DB row ${id}`);
   }
 
-  for (const rendition of renditions) {
-    await db.upsertPhotoRendition(id, rendition.name, rendition.maxDim);
+  for (const maxDim of renditions) {
+    await db.upsertPhotoRendition(id, maxDim);
   }
 
   const coords = (

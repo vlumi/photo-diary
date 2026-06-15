@@ -78,7 +78,7 @@ export interface PhotoData {
   geocoded?: Geocoded;
   galleries?: string[];
   isPrivate?: boolean;
-  renditions?: Array<{ name: string; maxDim: number }>;
+  renditions?: number[];
 }
 
 interface CountryData {
@@ -148,8 +148,7 @@ const PhotoModel = (photoData: unknown) => {
       pickLocalized(photo.description, photo.descriptionLocalized, lang),
     author: (): string | undefined => photo.taken.author,
     isPrivate: (): boolean => !!photo.isPrivate,
-    renditions: (): Array<{ name: string; maxDim: number }> =>
-      photo.renditions ?? [],
+    renditions: (): number[] => photo.renditions ?? [],
     galleries: (): string[] => photo.galleries ?? [],
 
     ymd: (): [number, number, number] => [self.year(), self.month(), self.day()],
