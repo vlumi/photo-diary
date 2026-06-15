@@ -1165,6 +1165,8 @@ export interface paths {
                             focalLength?: number;
                             focalLength35mmEquiv?: number;
                             aperture?: number;
+                            exposureTime?: number;
+                            iso?: number;
                         };
                         isPrivate?: boolean;
                     };
@@ -1466,6 +1468,8 @@ export interface paths {
                             focalLength?: number;
                             focalLength35mmEquiv?: number;
                             aperture?: number;
+                            exposureTime?: number;
+                            iso?: number;
                         };
                         isPrivate?: boolean;
                     };

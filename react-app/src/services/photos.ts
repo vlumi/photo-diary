@@ -171,6 +171,8 @@ export interface PhotoUpdatePatch {
     focalLength?: number;
     focalLength35mmEquiv?: number;
     aperture?: number;
+    exposureTime?: number;
+    iso?: number;
   };
   isPrivate?: boolean;
 }

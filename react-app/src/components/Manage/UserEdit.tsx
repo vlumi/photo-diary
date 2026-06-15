@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BsPencilSquare, BsTrash } from "react-icons/bs";
 
 import ItemModal from "./ItemModal";
+import { Section } from "./Section";
 import usersService, { type UserUpdatePatch } from "../../services/users";
 import { useUserStore } from "../../stores";
 
@@ -31,12 +32,6 @@ const Notice = styled.p`
   color: var(--inactive-color);
   font-style: italic;
   margin: 0;
-`;
-const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
 `;
 const Field = styled.label`
   display: flex;

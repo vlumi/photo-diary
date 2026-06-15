@@ -112,6 +112,8 @@ const PhotoOverridesFields = {
         focalLength: Type.Optional(Type.Number()),
         focalLength35mmEquiv: Type.Optional(Type.Number()),
         aperture: Type.Optional(Type.Number()),
+        exposureTime: Type.Optional(Type.Number()),
+        iso: Type.Optional(Type.Number()),
       },
       { additionalProperties: false }
     )

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BsPencilSquare, BsPlus, BsTrash, BsXLg } from "react-icons/bs";
 
 import ItemModal from "./ItemModal";
+import { Section, SectionTitle } from "./Section";
 import groupsService, {
   type GroupRow,
   type GroupUpdatePatch,
@@ -35,19 +36,6 @@ const Notice = styled.p`
   color: var(--inactive-color);
   font-style: italic;
   margin: 0;
-`;
-const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-const SectionTitle = styled.h3`
-  margin: 0 0 4px;
-  font-size: 0.75em;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--inactive-color);
 `;
 const Field = styled.label`
   display: flex;

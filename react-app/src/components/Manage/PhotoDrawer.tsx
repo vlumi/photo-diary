@@ -12,6 +12,8 @@ import {
   BsArrowClockwise,
   BsBookmarkStar,
   BsBoxArrowUpRight,
+  BsCaretLeftFill,
+  BsCaretRightFill,
   BsClipboard,
   BsClipboardCheck,
   BsEyeSlashFill,
@@ -19,6 +21,13 @@ import {
   BsX,
 } from "react-icons/bs";
 
+import ItemModal from "./ItemModal";
+import { Section, SectionTitle } from "./Section";
+import {
+  filterFromSearchParams,
+  pageFromSearchParams,
+  PAGE_SIZE,
+} from "./Photos";
 import galleriesService from "../../services/galleries";
 import metaService from "../../services/meta";
 import photosService, {
@@ -121,18 +130,6 @@ const Preview = styled.img`
   background: var(--tile-background);
   border-radius: 2px;
 `;
-const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-const SectionTitle = styled.h3`
-  margin: 0;
-  font-size: 0.75em;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--inactive-color);
-`;
 const Field = styled.label`
   display: flex;
   flex-direction: column;
@@ -140,7 +137,9 @@ const Field = styled.label`
 `;
 const FieldRow = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* auto-fit lets the modal pack as many columns as fit at the
+     current width — 2-col on narrow screens, 3+ on wide modals. */
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 8px;
 `;
 const FieldLabel = styled.span`
@@ -238,6 +237,75 @@ const MetaValue = styled.div`
   text-align: left;
   word-break: break-word;
   min-width: 0;
+`;
+// Overview panel doubles as the photo's visual identity at the top
+// of the drawer — the largest rendition acts as a hero preview on
+// the left, with renditions / galleries / privacy listed on the
+// right as compact rows. Saves a couple of two-row Sections worth
+// of chrome at the cost of nesting.
+const RenditionRowLayout = styled.div`
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+`;
+const OverviewMeta = styled.div`
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+`;
+const OverviewMetaRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+const OverviewMetaLabel = styled.span`
+  font-size: 0.75em;
+  color: var(--inactive-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+`;
+const OverviewMetaValue = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+`;
+const RenditionHero = styled.a`
+  flex: 0 0 auto;
+  display: block;
+  text-decoration: none;
+`;
+const RenditionHeroImg = styled.img`
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  background: var(--tile-background);
+  border-radius: 4px;
+  border: 1px solid var(--inactive-color);
+`;
+const RenditionChips = styled.div`
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+`;
+const RenditionChip = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--inactive-color);
+  border-radius: 999px;
+  background: var(--primary-background);
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 0.85em;
+  &:hover {
+    background: var(--tile-background);
+  }
 `;
 const MetaValueRow = styled.div`
   display: flex;
@@ -436,6 +504,8 @@ interface PhotoData {
       focalLength?: number;
       focalLength35mmEquiv?: number;
       aperture?: number;
+      exposureTime?: number;
+      iso?: number;
     };
   };
   // Gallery ids the photo is linked to. Decorated server-side by
@@ -445,6 +515,9 @@ interface PhotoData {
   // Photo-level visibility (#480) — flipped by the privacy switch
   // in this drawer; surfaces the badge on the public Photo modal.
   isPrivate?: boolean;
+  // Display ladder per #615 — array of maxDim values the converter
+  // (and bin/photo-rerender.ts) registered for this photo.
+  renditions?: number[];
 }
 
 // Maritime address keys Nominatim emits when reverse-geocoding
@@ -561,6 +634,8 @@ interface FormState {
   focalLength: string;
   focalLength35mmEquiv: string;
   aperture: string;
+  exposureTime: string;
+  iso: string;
   isPrivate: boolean;
 }
 
@@ -586,11 +661,44 @@ const emptyForm = (): FormState => ({
   focalLength: "",
   focalLength35mmEquiv: "",
   aperture: "",
+  exposureTime: "",
+  iso: "",
   isPrivate: false,
 });
 
 const numField = (v: number | null | undefined): string =>
   v !== undefined && v !== null ? String(v) : "";
+
+// Accept either decimal seconds ("0.008") or photographer-friendly
+// fractions ("1/125") in the exposure-time field. Empty string and
+// nonsense return null so toPatch can skip the field.
+const parseExposureTime = (raw: string): number | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const fraction = /^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/.exec(trimmed);
+  if (fraction) {
+    const num = parseFloat(fraction[1]);
+    const den = parseFloat(fraction[2]);
+    if (Number.isFinite(num) && Number.isFinite(den) && den !== 0) {
+      return num / den;
+    }
+  }
+  const direct = parseFloat(trimmed);
+  return Number.isFinite(direct) ? direct : null;
+};
+
+// Photographer-friendly form-input representation: fractions for
+// sub-second exposures ("1/125"), bare seconds for slower ("2.5").
+// `formatExposureTime` adds the trailing "s" for view-mode display.
+const formatExposureTimeForInput = (seconds: number): string => {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "";
+  if (seconds >= 1) return String(seconds);
+  return `1/${Math.round(1 / seconds)}`;
+};
+const formatExposureTime = (seconds: number): string => {
+  const inputForm = formatExposureTimeForInput(seconds);
+  return inputForm ? `${inputForm}s` : "";
+};
 
 const localizedFrom = (
   map: Record<string, string> | undefined
@@ -619,6 +727,11 @@ const formFrom = (p: PhotoData): FormState => ({
   focalLength: numField(p.exposure?.focalLength),
   focalLength35mmEquiv: numField(p.exposure?.focalLength35mmEquiv),
   aperture: numField(p.exposure?.aperture),
+  exposureTime:
+    p.exposure?.exposureTime !== undefined && p.exposure.exposureTime !== null
+      ? formatExposureTimeForInput(p.exposure.exposureTime)
+      : "",
+  iso: numField(p.exposure?.iso),
   isPrivate: !!p.isPrivate,
 });
 
@@ -740,6 +853,14 @@ const patchFrom = (
     const v = parseFloat(current.aperture);
     if (!Number.isNaN(v)) exposure.aperture = v;
   }
+  if (current.exposureTime.trim() !== original.exposureTime.trim()) {
+    const v = parseExposureTime(current.exposureTime);
+    if (v !== null) exposure.exposureTime = v;
+  }
+  if (current.iso.trim() !== original.iso.trim()) {
+    const v = parseFloat(current.iso);
+    if (!Number.isNaN(v)) exposure.iso = v;
+  }
   if (Object.keys(exposure).length > 0) patch.exposure = exposure;
   if (current.isPrivate !== original.isPrivate) {
     patch.isPrivate = current.isPrivate;
@@ -780,6 +901,11 @@ interface PhotoDrawerProps {
   // `routed`: already at /m/photos/<id>; header offers the
   // sibling "View on site" link instead.
   mode?: "inline" | "routed";
+  // Routed-mode prev/next neighbours from the cached photos list.
+  // Drives the Header arrows + ← / → keyboard nav. Either may be
+  // undefined when at the start/end of the result page.
+  prevPhotoId?: string;
+  nextPhotoId?: string;
 }
 
 const PhotoDrawer = ({
@@ -788,6 +914,8 @@ const PhotoDrawer = ({
   onClose,
   missingActive: missingActiveProp,
   mode = "routed",
+  prevPhotoId,
+  nextPhotoId,
 }: PhotoDrawerProps): React.ReactElement => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -890,7 +1018,10 @@ const PhotoDrawer = ({
   // listener already defers to the editor when it's open; this
   // listener finishes the chain by halting propagation before any
   // bubble-phase handler downstream sees the event.
+  // In routed mode the surrounding ItemModal owns Esc handling
+  // already, so skip the listener here to avoid double-firing.
   React.useEffect(() => {
+    if (mode === "routed") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       e.preventDefault();
@@ -899,7 +1030,7 @@ const PhotoDrawer = ({
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [close]);
+  }, [close, mode]);
 
   const missingActive = missingActiveProp ?? new Set<MissingField>();
   const highlight = {
@@ -988,6 +1119,8 @@ const PhotoDrawer = ({
     "focalLength",
     "focalLength35mmEquiv",
     "aperture",
+    "exposureTime",
+    "iso",
   ] as const;
   type ExifKey = (typeof EXIF_KEYS)[number];
   const exifValueFor = (key: ExifKey): string | undefined => {
@@ -1018,6 +1151,14 @@ const PhotoDrawer = ({
         return num(blob.exposure?.focalLength35mmEquiv);
       case "aperture":
         return num(blob.exposure?.aperture);
+      case "exposureTime": {
+        const v = blob.exposure?.exposureTime;
+        return v === undefined || v === null
+          ? undefined
+          : formatExposureTimeForInput(v);
+      }
+      case "iso":
+        return num(blob.exposure?.iso);
     }
   };
   const hasBlob = !!data?.exifAtIntake;
@@ -1071,10 +1212,6 @@ const PhotoDrawer = ({
     const geocoded = data.geocoded;
     return (
       <Body>
-        <Preview
-          src={`${config.PHOTO_ROOT_URL}display/${data.id}`}
-          alt={data.id}
-        />
         {error && <ErrorBanner>{error}</ErrorBanner>}
         {!hasBlob && (
           <UnlockRow>
@@ -1103,6 +1240,164 @@ const PhotoDrawer = ({
             <span>{t("manage-photo-unlock-exif")}</span>
           </UnlockRow>
         )}
+        <Section>
+          <SectionTitle>{t("manage-photo-section-overview")}</SectionTitle>
+          {(() => {
+            const renditions = (data?.renditions ?? []) as number[];
+            const sorted = [...renditions].sort((a, b) => a - b);
+            // Thumbnail URL doubles as the hero — it always exists
+            // (one-off per photo, not part of the rendition ladder),
+            // so the panel works even on instances that haven't run
+            // bin/photo-rerender.ts to populate the display ladder
+            // yet. Clicking opens the largest registered rendition.
+            const thumbUrl = `${config.PHOTO_ROOT_URL}thumbnail/${data.id}`;
+            const largest =
+              sorted.length > 0 ? sorted[sorted.length - 1] : null;
+            const heroHref =
+              largest !== null
+                ? `${config.PHOTO_ROOT_URL}display/${largest}/${data.id}`
+                : thumbUrl;
+            return (
+              <RenditionRowLayout>
+                <RenditionHero
+                  href={heroHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={largest !== null ? `${largest} px` : undefined}
+                >
+                  <RenditionHeroImg src={thumbUrl} alt={data.id} />
+                </RenditionHero>
+                <OverviewMeta>
+                  <OverviewMetaRow>
+                    <OverviewMetaLabel>
+                      {t("manage-photo-field-renditions")}
+                    </OverviewMetaLabel>
+                    <OverviewMetaValue>
+                      {sorted.length === 0 ? (
+                        <EmptyValue>
+                          {t("manage-photo-renditions-empty")}
+                        </EmptyValue>
+                      ) : (
+                        <RenditionChips>
+                          {sorted.map((dim) => {
+                            const url = `${config.PHOTO_ROOT_URL}display/${dim}/${data.id}`;
+                            return (
+                              <RenditionChip
+                                key={dim}
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {dim} px
+                              </RenditionChip>
+                            );
+                          })}
+                        </RenditionChips>
+                      )}
+                    </OverviewMetaValue>
+                  </OverviewMetaRow>
+                  <OverviewMetaRow>
+                    <OverviewMetaLabel>
+                      {t("manage-photo-field-galleries")}
+                    </OverviewMetaLabel>
+                    <OverviewMetaValue>
+                      {data.galleries && data.galleries.length > 0 ? (
+                        <GalleryChipRow>
+                          {data.galleries.map((gid) => {
+                            const meta = galleryById.get(gid);
+                            const label = meta?.title || gid;
+                            const ts = data.taken?.instant?.timestamp;
+                            const ymd =
+                              ts && /^\d{4}-\d{2}-\d{2}/.test(ts)
+                                ? [
+                                    Number(ts.slice(0, 4)),
+                                    Number(ts.slice(5, 7)),
+                                    Number(ts.slice(8, 10)),
+                                  ]
+                                : null;
+                            const viewHref = ymd
+                              ? `/g/${gid}/${ymd[0]}/${ymd[1]}/${ymd[2]}/${data.id}`
+                              : `/g/${gid}`;
+                            const editHref = `/m/g/${gid}`;
+                            return (
+                              <GalleryChip key={gid}>
+                                <GalleryChipPrimary
+                                  href={viewHref}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    navigate(viewHref);
+                                  }}
+                                  title={String(
+                                    t("manage-photo-galleries-jump-view", {
+                                      label,
+                                    })
+                                  )}
+                                >
+                                  {label}
+                                </GalleryChipPrimary>
+                                <GalleryChipSecondary
+                                  href={editHref}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    navigate(editHref);
+                                  }}
+                                  title={String(
+                                    t("manage-photo-galleries-jump-edit", {
+                                      label,
+                                    })
+                                  )}
+                                  aria-label={String(
+                                    t("manage-photo-galleries-jump-edit", {
+                                      label,
+                                    })
+                                  )}
+                                >
+                                  <BsPencilSquare aria-hidden />
+                                </GalleryChipSecondary>
+                              </GalleryChip>
+                            );
+                          })}
+                        </GalleryChipRow>
+                      ) : (
+                        <EmptyValue>
+                          {t("manage-photo-galleries-orphan")}
+                        </EmptyValue>
+                      )}
+                    </OverviewMetaValue>
+                  </OverviewMetaRow>
+                  <OverviewMetaRow>
+                    <OverviewMetaLabel>
+                      {t("manage-photo-field-privacy")}
+                    </OverviewMetaLabel>
+                    <OverviewMetaValue>
+                      <label
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={form.isPrivate}
+                          onChange={(e) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              isPrivate: e.target.checked,
+                            }))
+                          }
+                        />
+                        <BsEyeSlashFill aria-hidden />
+                        {t("manage-photo-privacy-toggle")}
+                      </label>
+                    </OverviewMetaValue>
+                  </OverviewMetaRow>
+                </OverviewMeta>
+              </RenditionRowLayout>
+            );
+          })()}
+        </Section>
         <Section>
           <SectionTitle>{t("manage-photo-section-content")}</SectionTitle>
           <Field>
@@ -1261,7 +1556,7 @@ const PhotoDrawer = ({
           <FieldHint>{t("manage-photo-coord-hint")}</FieldHint>
         </Section>
         <Section>
-          <SectionTitle>{t("manage-photo-section-camera")}</SectionTitle>
+          <SectionTitle>{t("manage-photo-section-gear")}</SectionTitle>
           <FieldRow>
             <Field>
               <FieldLabel>{t("manage-photo-field-camera-make")}</FieldLabel>
@@ -1279,6 +1574,11 @@ const PhotoDrawer = ({
               <FieldLabel>{t("manage-photo-field-lens-model")}</FieldLabel>
               {renderExifInput("lensModel", { type: "text" })}
             </Field>
+          </FieldRow>
+        </Section>
+        <Section>
+          <SectionTitle>{t("manage-photo-section-exposure")}</SectionTitle>
+          <FieldRow>
             <Field>
               <FieldLabel>{t("manage-photo-field-focal")}</FieldLabel>
               {renderExifInput("focalLength", {
@@ -1299,6 +1599,18 @@ const PhotoDrawer = ({
                 type: "number",
                 step: "any",
               })}
+            </Field>
+            <Field>
+              <FieldLabel>{t("manage-photo-field-exposure-time")}</FieldLabel>
+              {renderExifInput("exposureTime", {
+                type: "text",
+                placeholder: "1/125",
+              })}
+              <FieldHint>{t("manage-photo-field-exposure-time-hint")}</FieldHint>
+            </Field>
+            <Field>
+              <FieldLabel>{t("manage-photo-field-iso")}</FieldLabel>
+              {renderExifInput("iso", { type: "number", step: 1 })}
             </Field>
           </FieldRow>
         </Section>
@@ -1325,103 +1637,6 @@ const PhotoDrawer = ({
                 </MetaValue>
               </>
             )}
-            <MetaLabel>{t("manage-photo-field-galleries")}</MetaLabel>
-            <MetaValue>
-              {data.galleries && data.galleries.length > 0 ? (
-                <GalleryChipRow>
-                  {data.galleries.map((gid) => {
-                    const meta = galleryById.get(gid);
-                    const label = meta?.title || gid;
-                    // Public gallery route is
-                    // `/g/<id>/<year>/<month>/<day>/<photoId>`
-                    // — parse year/month/day from the photo's
-                    // capture timestamp (first 10 chars of the
-                    // ISO string). Photos without a usable
-                    // timestamp fall back to the gallery's
-                    // landing page; deep-linking to the photo
-                    // requires a date.
-                    const ts = data.taken?.instant?.timestamp;
-                    const ymd = ts && /^\d{4}-\d{2}-\d{2}/.test(ts)
-                      ? [
-                          Number(ts.slice(0, 4)),
-                          Number(ts.slice(5, 7)),
-                          Number(ts.slice(8, 10)),
-                        ]
-                      : null;
-                    const viewHref = ymd
-                      ? `/g/${gid}/${ymd[0]}/${ymd[1]}/${ymd[2]}/${data.id}`
-                      : `/g/${gid}`;
-                    const editHref = `/m/g/${gid}`;
-                    return (
-                      <GalleryChip key={gid}>
-                        <GalleryChipPrimary
-                          href={viewHref}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            navigate(viewHref);
-                          }}
-                          title={String(
-                            t("manage-photo-galleries-jump-view", { label })
-                          )}
-                        >
-                          {label}
-                        </GalleryChipPrimary>
-                        <GalleryChipSecondary
-                          href={editHref}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            navigate(editHref);
-                          }}
-                          title={String(
-                            t("manage-photo-galleries-jump-edit", { label })
-                          )}
-                          aria-label={String(
-                            t("manage-photo-galleries-jump-edit", { label })
-                          )}
-                        >
-                          <BsPencilSquare aria-hidden />
-                        </GalleryChipSecondary>
-                      </GalleryChip>
-                    );
-                  })}
-                </GalleryChipRow>
-              ) : (
-                <EmptyValue>
-                  {t("manage-photo-galleries-orphan")}
-                </EmptyValue>
-              )}
-            </MetaValue>
-            <MetaLabel>{t("manage-photo-field-privacy")}</MetaLabel>
-            <MetaValue>
-              <MetaValueRow>
-                <label
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={form.isPrivate}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        isPrivate: e.target.checked,
-                      }))
-                    }
-                  />
-                  <BsEyeSlashFill aria-hidden />
-                  {t("manage-photo-privacy-toggle")}
-                </label>
-                <span
-                  style={{ color: "var(--inactive-color)", fontSize: "0.85em" }}
-                >
-                  {t("manage-photo-privacy-hint")}
-                </span>
-              </MetaValueRow>
-            </MetaValue>
             {data.taken?.instant?.timestamp && (
               <>
                 <MetaLabel>{t("manage-photo-field-taken")}</MetaLabel>
@@ -1450,23 +1665,6 @@ const PhotoDrawer = ({
                   </MetaValue>
                 </>
               )}
-            {data.exposure?.iso !== undefined && (
-              <>
-                <MetaLabel>{t("manage-photo-field-exposure-extra")}</MetaLabel>
-                <MetaValue>
-                  {[
-                    data.exposure.exposureTime !== undefined
-                      ? `${data.exposure.exposureTime}s`
-                      : null,
-                    data.exposure.iso !== undefined
-                      ? `ISO ${data.exposure.iso}`
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </MetaValue>
-              </>
-            )}
           </MetaTable>
         </Section>
       </Body>
@@ -1489,11 +1687,77 @@ const PhotoDrawer = ({
     return `/g/${galleryId}/${year}/${month}/${day}/${id}`;
   })();
 
+  // Routed-mode prev/next: render arrows in the header, listen for
+  // ← / → on capture phase so the table behind doesn't see them.
+  const navigateToSibling = React.useCallback(
+    (siblingId: string | undefined) => {
+      if (!siblingId) return;
+      if (dirty) {
+        const ok = window.confirm(
+          String(t("manage-photo-confirm-discard"))
+        );
+        if (!ok) return;
+      }
+      navigate({
+        pathname: `/m/photos/${siblingId}`,
+        search: window.location.search,
+      });
+    },
+    [dirty, navigate, t]
+  );
+  React.useEffect(() => {
+    if (mode !== "routed") return;
+    const onKey = (e: KeyboardEvent) => {
+      // Don't hijack while the user is typing in an input/textarea.
+      const tgt = e.target as HTMLElement | null;
+      if (tgt && (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA")) {
+        return;
+      }
+      if (e.key === "ArrowLeft" && prevPhotoId) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        navigateToSibling(prevPhotoId);
+      } else if (e.key === "ArrowRight" && nextPhotoId) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        navigateToSibling(nextPhotoId);
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [mode, prevPhotoId, nextPhotoId, navigateToSibling]);
+
   return (
     <Drawer>
       <Header>
         <Title>{data?.title || data?.id || id}</Title>
         <HeaderActions>
+          {mode === "routed" && (
+            <>
+              <ViewOnSiteLink
+                onClick={() => navigateToSibling(prevPhotoId)}
+                role="link"
+                tabIndex={0}
+                aria-disabled={!prevPhotoId}
+                style={prevPhotoId ? undefined : { opacity: 0.4, pointerEvents: "none" }}
+                aria-label={String(t("manage-photo-prev"))}
+                title={String(t("manage-photo-prev"))}
+              >
+                <BsCaretLeftFill />
+              </ViewOnSiteLink>
+              <ViewOnSiteLink
+                onClick={() => navigateToSibling(nextPhotoId)}
+                role="link"
+                tabIndex={0}
+                aria-disabled={!nextPhotoId}
+                style={nextPhotoId ? undefined : { opacity: 0.4, pointerEvents: "none" }}
+                aria-label={String(t("manage-photo-next"))}
+                title={String(t("manage-photo-next"))}
+              >
+                <BsCaretRightFill />
+              </ViewOnSiteLink>
+            </>
+          )}
           {mode === "inline" && id && (
             <ViewOnSiteLink
               onClick={() =>
@@ -1535,13 +1799,15 @@ const PhotoDrawer = ({
               <BsBookmarkStar />
             </ViewOnSiteLink>
           ) : null}
-          <CloseButton
-            type="button"
-            aria-label={String(t("close"))}
-            onClick={close}
-          >
-            <BsX />
-          </CloseButton>
+          {mode === "inline" && (
+            <CloseButton
+              type="button"
+              aria-label={String(t("close"))}
+              onClick={close}
+            >
+              <BsX />
+            </CloseButton>
+          )}
         </HeaderActions>
       </Header>
       {renderBody()}
@@ -1569,25 +1835,50 @@ const PhotoDrawer = ({
 // parent `/m/photos` page reasserts. Used at `/m/photos/:photoId`.
 const RoutedPhotoDrawer = (): React.ReactElement => {
   const { photoId } = useParams<{ photoId: string }>();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const filteredGalleries = searchParams.getAll("gallery");
   const galleryId =
     filteredGalleries.length === 1 ? filteredGalleries[0] : undefined;
   const missingActive = activeMissing(searchParams);
-  const close = React.useCallback(() => {
-    const base = window.location.pathname.replace(/\/[^/]+$/, "");
-    navigate({ pathname: base, search: window.location.search });
-  }, [navigate]);
+
+  // Mirror the table's query so prev/next neighbours come from
+  // exactly the photos list the operator sees behind the modal.
+  // Same queryKey → TanStack returns the cached entry; no extra
+  // fetch in the typical "click row → modal opens" flow.
+  const filter = filterFromSearchParams(searchParams);
+  const page = pageFromSearchParams(searchParams);
+  const { data: pageData } = useQuery({
+    queryKey: ["manage-photos", filter, page, PAGE_SIZE, photoId ?? null],
+    queryFn: () =>
+      photosService.list(filter, page, PAGE_SIZE, photoId ?? undefined),
+    enabled: !!photoId,
+    placeholderData: keepPreviousData,
+  });
+  const photosList = (pageData?.photos ?? []) as Array<{ id: string }>;
+  const currentIndex = photosList.findIndex((p) => p.id === photoId);
+  const prevPhotoId =
+    currentIndex > 0 ? photosList[currentIndex - 1].id : undefined;
+  const nextPhotoId =
+    currentIndex >= 0 && currentIndex < photosList.length - 1
+      ? photosList[currentIndex + 1].id
+      : undefined;
+
   if (!photoId) return <></>;
+  const closeTo = `/m/photos${window.location.search}`;
   return (
-    <PhotoDrawer
-      photoId={photoId}
-      galleryId={galleryId}
-      onClose={close}
-      missingActive={missingActive}
-      mode="routed"
-    />
+    <ItemModal closeTo={closeTo}>
+      {({ close }) => (
+        <PhotoDrawer
+          photoId={photoId}
+          galleryId={galleryId}
+          onClose={close}
+          missingActive={missingActive}
+          mode="routed"
+          prevPhotoId={prevPhotoId}
+          nextPhotoId={nextPhotoId}
+        />
+      )}
+    </ItemModal>
   );
 };
 
