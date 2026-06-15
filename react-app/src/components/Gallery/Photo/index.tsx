@@ -217,21 +217,12 @@ const AuthorOverlay = styled.div`
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
-// Flex column that gives Content a stable parent size. Without this
-// Content's flex-grow has no flex parent and the ResizeObserver feeds
-// back into itself, shrinking the photo to nothing.
-const Body = styled.div`
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-`;
-// Used while zoom == 1: a 3-slide carousel (prev / current / next)
-// dragged horizontally so the user sees the neighbour peeking from
-// the edge as they swipe. The Frame above clips overflow so slides
-// extending past the Frame are hidden until peeked into view.
-// touch-action: none — the carousel captures both axes (horizontal
-// for nav, vertical for swipe-down-to-close).
+// 3-slide carousel (prev / current / next) dragged horizontally so
+// the user sees the neighbour peeking from the edge as they swipe.
+// The Frame above clips overflow so slides extending past the Frame
+// are hidden until peeked into view. touch-action: none — the
+// carousel captures both axes (horizontal for nav, vertical for
+// swipe-down-to-close).
 const CarouselViewport = styled.div`
   flex: 1 1 auto;
   min-height: 0;
@@ -257,24 +248,6 @@ const Slide = styled.div`
   display: flex;
   flex-direction: column;
 `;
-
-// Zoom state lives here so Swipeable is bypassed while zoomed
-// (drag-to-pan would otherwise fire swipe-to-next/prev) and so
-// photo navigation resets the zoom cleanly.
-const ZOOM_STEP = 1.2;
-const MIN_SCALE = 1;
-const MAX_SCALE = 8;
-const clampScale = (s: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, s));
-export interface ZoomState {
-  scale: number;
-  x: number;
-  y: number;
-}
-const ZOOM_RESET: ZoomState = { scale: 1, x: 0, y: 0 };
-// Adjacent (peeking) slides render a Content too so the user sees the
-// real prev/next photo while dragging. They never zoom — pass a stable
-// no-op setZoom so React's prop-equality reuses memo'd children.
-const noopSetZoom: React.Dispatch<React.SetStateAction<ZoomState>> = () => {};
 
 // iOS Safari only supports the Fullscreen API on <video>.
 const fullscreenSupported = (): boolean =>
@@ -309,7 +282,6 @@ const Photo = ({
   // metadata. The "Open in Manage" link inside still takes them
   // to the full /m/photos/<id> surface when they want it.
   const [inlineEditOpen, setInlineEditOpen] = React.useState(false);
-  const [zoom, setZoom] = React.useState<ZoomState>(ZOOM_RESET);
   const [isFullscreen, setIsFullscreen] = React.useState(
     typeof document !== "undefined" && !!document.fullscreenElement
   );
@@ -331,24 +303,10 @@ const Photo = ({
 
   const { t } = useTranslation();
 
-  React.useEffect(() => {
-    setZoom(ZOOM_RESET);
-  }, [photo.id()]);
-
   useKeyPress("i", () => setShowMetadata((s) => !s));
   useKeyPress("e", () => {
     if (canManage) setInlineEditOpen((open) => !open);
   });
-  useKeyPress("+", () =>
-    setZoom((z) => ({ ...z, scale: clampScale(z.scale * ZOOM_STEP) }))
-  );
-  useKeyPress("=", () =>
-    setZoom((z) => ({ ...z, scale: clampScale(z.scale * ZOOM_STEP) }))
-  );
-  useKeyPress("-", () =>
-    setZoom((z) => ({ ...z, scale: clampScale(z.scale / ZOOM_STEP) }))
-  );
-  useKeyPress("0", () => setZoom(ZOOM_RESET));
 
   // 3-slide carousel: track rests at -1/3 so the middle slide
   // (current photo) is centred in the viewport. Sliding right exposes
@@ -657,81 +615,61 @@ const Photo = ({
             {t("photo-private-badge")}
           </PrivacyBadge>
         )}
-        {zoom.scale === 1 ? (
-          <CarouselViewport>
-            <Track
-              drag
-              dragDirectionLock
-              dragConstraints={{
-                // Constraints are absolute pixel offsets from the
-                // Track's translate origin. The Track rests at
-                // motion.x = -window.innerWidth (the -33.3333% of its
-                // 300% width that centres slot 1). Range: TRACK_NEXT
-                // (-2W) ↔ TRACK_PREV (0). At edges, lock at rest so
-                // the empty slot can't be pulled into view.
-                left: nextPhoto ? -2 * window.innerWidth : -window.innerWidth,
-                right: prevPhoto ? 0 : -window.innerWidth,
-                top: 0,
-                bottom: window.innerHeight,
-              }}
-              dragElastic={0.3}
-              dragMomentum={false}
-              animate={trackControls}
-              initial={{ x: TRACK_REST, y: 0 }}
-              onDragEnd={handleDragEnd}
-            >
-              <Slide>
-                {prevPhoto && (
-                  <Content
-                    gallery={gallery}
-                    year={prevPhoto.ymd()[0]}
-                    month={prevPhoto.ymd()[1]}
-                    day={prevPhoto.ymd()[2]}
-                    photo={prevPhoto}
-                    zoom={ZOOM_RESET}
-                    setZoom={noopSetZoom}
-                  />
-                )}
-              </Slide>
-              <Slide>
+        <CarouselViewport>
+          <Track
+            drag
+            dragDirectionLock
+            dragConstraints={{
+              // Constraints are absolute pixel offsets from the
+              // Track's translate origin. The Track rests at
+              // motion.x = -window.innerWidth (the -33.3333% of its
+              // 300% width that centres slot 1). Range: TRACK_NEXT
+              // (-2W) ↔ TRACK_PREV (0). At edges, lock at rest so
+              // the empty slot can't be pulled into view.
+              left: nextPhoto ? -2 * window.innerWidth : -window.innerWidth,
+              right: prevPhoto ? 0 : -window.innerWidth,
+              top: 0,
+              bottom: window.innerHeight,
+            }}
+            dragElastic={0.3}
+            dragMomentum={false}
+            animate={trackControls}
+            initial={{ x: TRACK_REST, y: 0 }}
+            onDragEnd={handleDragEnd}
+          >
+            <Slide>
+              {prevPhoto && (
                 <Content
                   gallery={gallery}
-                  year={year}
-                  month={month}
-                  day={day}
-                  photo={photo}
-                  zoom={zoom}
-                  setZoom={setZoom}
+                  year={prevPhoto.ymd()[0]}
+                  month={prevPhoto.ymd()[1]}
+                  day={prevPhoto.ymd()[2]}
+                  photo={prevPhoto}
                 />
-              </Slide>
-              <Slide>
-                {nextPhoto && (
-                  <Content
-                    gallery={gallery}
-                    year={nextPhoto.ymd()[0]}
-                    month={nextPhoto.ymd()[1]}
-                    day={nextPhoto.ymd()[2]}
-                    photo={nextPhoto}
-                    zoom={ZOOM_RESET}
-                    setZoom={noopSetZoom}
-                  />
-                )}
-              </Slide>
-            </Track>
-          </CarouselViewport>
-        ) : (
-          <Body>
-            <Content
-              gallery={gallery}
-              year={year}
-              month={month}
-              day={day}
-              photo={photo}
-              zoom={zoom}
-              setZoom={setZoom}
-            />
-          </Body>
-        )}
+              )}
+            </Slide>
+            <Slide>
+              <Content
+                gallery={gallery}
+                year={year}
+                month={month}
+                day={day}
+                photo={photo}
+              />
+            </Slide>
+            <Slide>
+              {nextPhoto && (
+                <Content
+                  gallery={gallery}
+                  year={nextPhoto.ymd()[0]}
+                  month={nextPhoto.ymd()[1]}
+                  day={nextPhoto.ymd()[2]}
+                  photo={nextPhoto}
+                />
+              )}
+            </Slide>
+          </Track>
+        </CarouselViewport>
         {showMetadata && (
           <MetadataPanel
             gallery={gallery}

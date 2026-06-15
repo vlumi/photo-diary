@@ -15,6 +15,7 @@
 - Global Stats (`/stats`, admin) gains feature parity with the gallery-scoped Stats: the Evolution chart now renders inside any trendable category's modal across the whole instance, sharing the same granularity toggle and palette. Closes #602.
 - Per-photo visibility: photos gain a "Private" switch in PhotoDrawer; `/m/photos` bulk multi-select gains "Set private…" and "Set public…" actions; the `/m/access` table grows a per-gallery "Private" column granting `can_see_private` to view-only viewers (editors implicit); and the public Photo modal shows a "Private" badge to viewers who can see it. Closes #480.
 - Editor-tier "Manage this photo" / "Set as gallery icon" buttons on the public Photo modal — gated by `user.isGalleryEditor(galleryId)` instead of `isAdmin`. The pencil now opens the editor as an overlay modal in-place over the public Photo view, so admins / editors don't have to navigate away from `/g/` to fix metadata; the drawer keeps an "Open in Manage" link out to `/m/photos/<id>` for the full admin context. `e` keyboard shortcut toggles the editor while the photo is open. Closes #575.
+- Photo modal zoom (wheel + pinch + `+`/`-`/`0` keys, plus the click-drag-to-pan it gated) removed; srcset now hands the browser a higher-resolution variant per viewport so the zoom-into-detail use-case is covered without the bespoke transform plumbing. Carousel branching collapses to a single code path.
 
 ### Server
 
