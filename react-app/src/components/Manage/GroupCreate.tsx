@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import ItemModal from "./ItemModal";
 import groupsService, {
   type GroupCreateBody,
 } from "../../services/groups";
@@ -139,9 +140,14 @@ const GroupCreate = (): React.ReactElement => {
     navigate("/m/groups");
   };
 
+  const formDirty =
+    id.length > 0 || name.length > 0 || description.length > 0;
+
   return (
-    <Root>
-      <Title>{t("manage-group-create-title")}</Title>
+    <ItemModal closeTo="/m/groups" dirty={formDirty}>
+      {() => (
+        <Root>
+          <Title>{t("manage-group-create-title")}</Title>
       {saveError && (
         <ErrorBanner>
           {t("manage-group-create-error")}
@@ -189,7 +195,9 @@ const GroupCreate = (): React.ReactElement => {
             : t("manage-group-button-create")}
         </ButtonPrimary>
       </Footer>
-    </Root>
+        </Root>
+      )}
+    </ItemModal>
   );
 };
 

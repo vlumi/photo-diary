@@ -10,6 +10,7 @@ import {
 } from "../../services/galleries";
 import ThemePicker from "../ThemePicker";
 import IconCropper from "./IconCropper";
+import { useModalSubModalOpen } from "./ItemModal";
 import LocalizedInputs, {
   SUPPORTED_LANGS,
   languageNameIn,
@@ -315,6 +316,7 @@ const GalleryFormFields = ({
   const { t, i18n } = useTranslation();
   const [cropperOpen, setCropperOpen] = React.useState(false);
   const canCrop = !!galleryId && !!photos;
+  useModalSubModalOpen(cropperOpen);
   React.useEffect(() => {
     if (autoOpenCropper && canCrop) setCropperOpen(true);
   }, [autoOpenCropper, canCrop]);

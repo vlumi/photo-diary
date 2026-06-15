@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BsPencilSquare, BsTrash } from "react-icons/bs";
 
+import ItemModal from "./ItemModal";
 import usersService, { type UserUpdatePatch } from "../../services/users";
 import { useUserStore } from "../../stores";
 
@@ -278,12 +279,25 @@ const UserEdit = (): React.ReactElement => {
     setEditing(false);
   };
 
-  if (isLoading) return <Root><Notice>{t("loading")}</Notice></Root>;
+  if (isLoading)
+    return (
+      <ItemModal closeTo="/m/users">
+        {() => (
+          <Root>
+            <Notice>{t("loading")}</Notice>
+          </Root>
+        )}
+      </ItemModal>
+    );
   if (isError || !data) {
     return (
-      <Root>
-        <Notice>{t("manage-user-load-error")}</Notice>
-      </Root>
+      <ItemModal closeTo="/m/users">
+        {() => (
+          <Root>
+            <Notice>{t("manage-user-load-error")}</Notice>
+          </Root>
+        )}
+      </ItemModal>
     );
   }
 
@@ -296,12 +310,35 @@ const UserEdit = (): React.ReactElement => {
   // remain. The id pattern is enforced server-side at create time.
   const isPseudo = userId.startsWith(":");
 
+  const originalName = ((data as UserData).name ?? "") as string;
+  const originalAdmin = isAdminFlag(data as UserData);
+  const formDirty =
+    name !== originalName ||
+    adminFlag !== originalAdmin ||
+    newPassword.length > 0;
+
+  const handleEscape = (): boolean => {
+    if (!editing) return false;
+    if (formDirty) {
+      const ok = window.confirm(String(t("manage-modal-confirm-discard")));
+      if (!ok) return true;
+    }
+    handleCancelEdit();
+    return true;
+  };
+
   return (
-    <Root>
-      <TitleRow>
-        <Title>
-          <Mono>{userId}</Mono>
-        </Title>
+    <ItemModal
+      closeTo="/m/users"
+      dirty={editing && formDirty}
+      onEscape={handleEscape}
+    >
+      {() => (
+        <Root>
+          <TitleRow>
+            <Title>
+              <Mono>{userId}</Mono>
+            </Title>
       </TitleRow>
       {isPseudo && (
         <InfoBanner>{t("manage-user-guest-banner")}</InfoBanner>
@@ -441,7 +478,9 @@ const UserEdit = (): React.ReactElement => {
           </ConfirmActions>
         </ConfirmPanel>
       )}
-    </Root>
+        </Root>
+      )}
+    </ItemModal>
   );
 };
 

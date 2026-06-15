@@ -4,7 +4,6 @@ import { parentManagePath } from "./index";
 
 describe("parentManagePath", () => {
   test("nested edit pages strip the last segment", () => {
-    expect(parentManagePath("/m/g/abc/access")).toBe("/m/g/abc");
     expect(parentManagePath("/m/users/alice")).toBe("/m/users");
     expect(parentManagePath("/m/groups/staff")).toBe("/m/groups");
     expect(parentManagePath("/m/photos/img.jpg")).toBe("/m/photos");
@@ -16,6 +15,10 @@ describe("parentManagePath", () => {
   test("/m/g/<id> maps to /m/galleries (asymmetric route shape)", () => {
     expect(parentManagePath("/m/g/dailybw")).toBe("/m/galleries");
     expect(parentManagePath("/m/g/abc-123")).toBe("/m/galleries");
+  });
+
+  test("/m/g/<id>/access skips the modal level back to /m/galleries", () => {
+    expect(parentManagePath("/m/g/abc/access")).toBe("/m/galleries");
   });
 
   test("first-level pages go to /m", () => {
@@ -38,6 +41,6 @@ describe("parentManagePath", () => {
   test("trailing slash is normalised", () => {
     expect(parentManagePath("/m/galleries/")).toBe("/m");
     expect(parentManagePath("/m/g/abc/")).toBe("/m/galleries");
-    expect(parentManagePath("/m/g/abc/access/")).toBe("/m/g/abc");
+    expect(parentManagePath("/m/g/abc/access/")).toBe("/m/galleries");
   });
 });

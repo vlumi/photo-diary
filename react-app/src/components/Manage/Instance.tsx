@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import ItemModal from "./ItemModal";
 import metaService, { type KnownMetaKey } from "../../services/meta";
 import { useUserStore } from "../../stores";
 import { BETA_FEATURES, type BetaFeature, type BetaMode } from "../../stores/beta";
@@ -106,6 +107,17 @@ const Footer = styled.div`
   background: var(--primary-background);
   padding: 12px 0;
   border-top: 1px solid var(--inactive-color);
+`;
+const ViewValue = styled.span`
+  display: inline-block;
+  padding: 6px 0;
+  word-break: break-word;
+`;
+const ViewValueEmpty = styled.span`
+  display: inline-block;
+  padding: 6px 0;
+  color: var(--inactive-color);
+  font-style: italic;
 `;
 const ButtonPrimary = styled.button`
   font: inherit;
@@ -283,6 +295,7 @@ const Instance = (): React.ReactElement => {
   const [original, setOriginal] = React.useState<FormState>(emptyForm);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [editing, setEditing] = React.useState(false);
 
   React.useEffect(() => {
     if (!meta) return;
@@ -290,6 +303,12 @@ const Instance = (): React.ReactElement => {
     setForm(f);
     setOriginal(f);
   }, [meta]);
+
+  const cancelEdit = (): void => {
+    setForm(original);
+    setError(null);
+    setEditing(false);
+  };
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -309,6 +328,27 @@ const Instance = (): React.ReactElement => {
   }, [form, original]);
 
   const renditionsValid = renditionRowsAreValid(form.renditions);
+
+  const renderViewValue = (value: string | undefined): React.ReactNode =>
+    value && value.length > 0 ? (
+      <ViewValue>{value}</ViewValue>
+    ) : (
+      <ViewValueEmpty>{t("manage-instance-view-empty")}</ViewValueEmpty>
+    );
+  const renderViewWeekday = (value: string): React.ReactNode => {
+    const opt = FIRST_WEEKDAYS.find((o) => o.value === value);
+    return opt && opt.value
+      ? <ViewValue>{opt.label}</ViewValue>
+      : <ViewValueEmpty>{t("manage-instance-view-empty")}</ViewValueEmpty>;
+  };
+  const renderViewBeta = (mode: BetaMode): React.ReactNode =>
+    <ViewValue>{mode}</ViewValue>;
+  const renderViewRenditions = (): React.ReactNode => {
+    if (form.renditions.length === 0) {
+      return <ViewValueEmpty>{t("manage-instance-view-empty")}</ViewValueEmpty>;
+    }
+    return <ViewValue>{form.renditions.join(", ")} px</ViewValue>;
+  };
 
   const save = async () => {
     if (!dirty) return;
@@ -362,6 +402,7 @@ const Instance = (): React.ReactElement => {
       await queryClient.invalidateQueries({ queryKey: ["meta"] });
       // Refetch to reseed `original` so `dirty` resets cleanly.
       // useEffect on `meta` re-runs and re-syncs.
+      setEditing(false);
     } catch (e) {
       setError(
         e instanceof Error ? e.message : t("manage-instance-save-error")
@@ -373,226 +414,314 @@ const Instance = (): React.ReactElement => {
 
   if (!isAdmin) {
     return (
-      <Root>
-        <Notice>{t("manage-not-admin")}</Notice>
-      </Root>
+      <ItemModal closeTo="/m">
+        {() => (
+          <Root>
+            <Notice>{t("manage-not-admin")}</Notice>
+          </Root>
+        )}
+      </ItemModal>
     );
   }
   if (metaQuery.isLoading) {
     return (
-      <Root>
-        <Notice>{t("loading")}</Notice>
-      </Root>
+      <ItemModal closeTo="/m">
+        {() => (
+          <Root>
+            <Notice>{t("loading")}</Notice>
+          </Root>
+        )}
+      </ItemModal>
     );
   }
 
+  const handleEscape = (): boolean => {
+    if (!editing) return false;
+    if (dirty) {
+      const ok = window.confirm(String(t("manage-modal-confirm-discard")));
+      if (!ok) return true;
+    }
+    cancelEdit();
+    return true;
+  };
+
   return (
-    <Root>
-      <Title>{t("manage-instance-title")}</Title>
-      {error && <ErrorBanner>{error}</ErrorBanner>}
+    <ItemModal
+      closeTo="/m"
+      dirty={editing && dirty}
+      onEscape={handleEscape}
+    >
+      {() => (
+        <Root>
+          <Title>{t("manage-instance-title")}</Title>
+          {error && <ErrorBanner>{error}</ErrorBanner>}
 
       <Section>
         <SectionTitle>{t("manage-instance-identity")}</SectionTitle>
         <Field>
           <FieldLabel>{t("manage-instance-field-name")}</FieldLabel>
-          <Input
-            value={form.name}
-            onChange={(e) => setField("name", e.target.value)}
-          />
-          <FieldHint>{t("manage-instance-field-name-hint")}</FieldHint>
+          {editing ? (
+            <>
+              <Input
+                value={form.name}
+                onChange={(e) => setField("name", e.target.value)}
+              />
+              <FieldHint>{t("manage-instance-field-name-hint")}</FieldHint>
+            </>
+          ) : (
+            renderViewValue(form.name)
+          )}
         </Field>
         <Field>
           <FieldLabel>{t("manage-instance-field-description")}</FieldLabel>
-          <TextArea
-            value={form.description}
-            onChange={(e) => setField("description", e.target.value)}
-          />
+          {editing ? (
+            <TextArea
+              value={form.description}
+              onChange={(e) => setField("description", e.target.value)}
+            />
+          ) : (
+            renderViewValue(form.description)
+          )}
         </Field>
         <Field>
           <FieldLabel>{t("manage-instance-field-cdn")}</FieldLabel>
-          <Input
-            value={form.cdn}
-            onChange={(e) => setField("cdn", e.target.value)}
-            placeholder="https://cdn.example.com"
-          />
-          <FieldHint>{t("manage-instance-field-cdn-hint")}</FieldHint>
+          {editing ? (
+            <>
+              <Input
+                value={form.cdn}
+                onChange={(e) => setField("cdn", e.target.value)}
+                placeholder="https://cdn.example.com"
+              />
+              <FieldHint>{t("manage-instance-field-cdn-hint")}</FieldHint>
+            </>
+          ) : (
+            renderViewValue(form.cdn)
+          )}
         </Field>
         <Field>
           <FieldLabel>{t("manage-instance-field-image")}</FieldLabel>
-          <Input
-            value={form.image}
-            onChange={(e) => setField("image", e.target.value)}
-          />
+          {editing ? (
+            <Input
+              value={form.image}
+              onChange={(e) => setField("image", e.target.value)}
+            />
+          ) : (
+            renderViewValue(form.image)
+          )}
         </Field>
       </Section>
 
       <Section>
         <SectionTitle>{t("manage-instance-defaults")}</SectionTitle>
-        <FieldHint>{t("manage-instance-defaults-hint")}</FieldHint>
+        {editing && <FieldHint>{t("manage-instance-defaults-hint")}</FieldHint>}
         <Field>
           <FieldLabel>{t("manage-instance-field-default-gallery")}</FieldLabel>
-          <Input
-            value={form.defaultGallery}
-            onChange={(e) => setField("defaultGallery", e.target.value)}
-            placeholder=""
-          />
-          <FieldHint>
-            {t("manage-instance-field-default-gallery-hint")}
-          </FieldHint>
+          {editing ? (
+            <>
+              <Input
+                value={form.defaultGallery}
+                onChange={(e) => setField("defaultGallery", e.target.value)}
+              />
+              <FieldHint>
+                {t("manage-instance-field-default-gallery-hint")}
+              </FieldHint>
+            </>
+          ) : (
+            renderViewValue(form.defaultGallery)
+          )}
         </Field>
         <Field>
           <FieldLabel>{t("manage-instance-field-default-theme")}</FieldLabel>
-          <Select
-            value={form.defaultTheme}
-            onChange={(e) => setField("defaultTheme", e.target.value)}
-          >
-            <option value="">{t("manage-instance-default-empty")}</option>
-            {themeOptions.map((id) => (
-              <option key={id} value={id}>
-                {id}
-              </option>
-            ))}
-          </Select>
+          {editing ? (
+            <Select
+              value={form.defaultTheme}
+              onChange={(e) => setField("defaultTheme", e.target.value)}
+            >
+              <option value="">{t("manage-instance-default-empty")}</option>
+              {themeOptions.map((id) => (
+                <option key={id} value={id}>
+                  {id}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            renderViewValue(form.defaultTheme)
+          )}
         </Field>
         <Field>
           <FieldLabel>
             {t("manage-instance-field-default-language")}
           </FieldLabel>
-          <Select
-            value={form.defaultLanguage}
-            onChange={(e) => setField("defaultLanguage", e.target.value)}
-          >
-            <option value="">{t("manage-instance-default-empty")}</option>
-            {SUPPORTED_LANGUAGES.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </Select>
+          {editing ? (
+            <Select
+              value={form.defaultLanguage}
+              onChange={(e) => setField("defaultLanguage", e.target.value)}
+            >
+              <option value="">{t("manage-instance-default-empty")}</option>
+              {SUPPORTED_LANGUAGES.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            renderViewValue(form.defaultLanguage)
+          )}
         </Field>
         <Field>
           <FieldLabel>
             {t("manage-instance-field-initial-gallery-view")}
           </FieldLabel>
-          <Select
-            value={form.initialGalleryView}
-            onChange={(e) => setField("initialGalleryView", e.target.value)}
-          >
-            <option value="">{t("manage-instance-default-empty")}</option>
-            {INITIAL_VIEWS.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </Select>
+          {editing ? (
+            <Select
+              value={form.initialGalleryView}
+              onChange={(e) => setField("initialGalleryView", e.target.value)}
+            >
+              <option value="">{t("manage-instance-default-empty")}</option>
+              {INITIAL_VIEWS.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            renderViewValue(form.initialGalleryView)
+          )}
         </Field>
         <Field>
           <FieldLabel>{t("manage-instance-field-first-weekday")}</FieldLabel>
-          <Select
-            value={form.firstWeekday}
-            onChange={(e) => setField("firstWeekday", e.target.value)}
-          >
-            {FIRST_WEEKDAYS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </Select>
+          {editing ? (
+            <Select
+              value={form.firstWeekday}
+              onChange={(e) => setField("firstWeekday", e.target.value)}
+            >
+              {FIRST_WEEKDAYS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            renderViewWeekday(form.firstWeekday)
+          )}
         </Field>
       </Section>
 
       <Section>
         <SectionTitle>{t("manage-instance-renditions")}</SectionTitle>
-        <FieldHint>{t("manage-instance-renditions-hint")}</FieldHint>
-        {form.renditions.map((dim, idx) => (
-          <RenditionRowEl key={idx}>
-            <Input
-              type="number"
-              min={1}
-              step={1}
-              value={dim}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  renditions: prev.renditions.map((r, i) =>
-                    i === idx ? e.target.value : r
-                  ),
-                }))
-              }
-              placeholder={t("manage-instance-renditions-max-dim") ?? ""}
-            />
+        {editing ? (
+          <>
+            <FieldHint>{t("manage-instance-renditions-hint")}</FieldHint>
+            {form.renditions.map((dim, idx) => (
+              <RenditionRowEl key={idx}>
+                <Input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={dim}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      renditions: prev.renditions.map((r, i) =>
+                        i === idx ? e.target.value : r
+                      ),
+                    }))
+                  }
+                  placeholder={t("manage-instance-renditions-max-dim") ?? ""}
+                />
+                <SmallButton
+                  type="button"
+                  disabled={form.renditions.length <= 1}
+                  onClick={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      renditions: prev.renditions.filter((_, i) => i !== idx),
+                    }))
+                  }
+                  aria-label={t("manage-instance-renditions-remove") ?? ""}
+                  title={t("manage-instance-renditions-remove") ?? ""}
+                >
+                  ×
+                </SmallButton>
+              </RenditionRowEl>
+            ))}
             <SmallButton
               type="button"
-              disabled={form.renditions.length <= 1}
               onClick={() =>
                 setForm((prev) => ({
                   ...prev,
-                  renditions: prev.renditions.filter((_, i) => i !== idx),
+                  renditions: [...prev.renditions, ""],
                 }))
               }
-              aria-label={t("manage-instance-renditions-remove") ?? ""}
-              title={t("manage-instance-renditions-remove") ?? ""}
             >
-              ×
+              {t("manage-instance-renditions-add")}
             </SmallButton>
-          </RenditionRowEl>
-        ))}
-        <SmallButton
-          type="button"
-          onClick={() =>
-            setForm((prev) => ({
-              ...prev,
-              renditions: [...prev.renditions, ""],
-            }))
-          }
-        >
-          {t("manage-instance-renditions-add")}
-        </SmallButton>
+          </>
+        ) : (
+          renderViewRenditions()
+        )}
       </Section>
 
       <Section>
         <SectionTitle>{t("manage-instance-beta")}</SectionTitle>
-        <FieldHint>{t("manage-instance-beta-hint")}</FieldHint>
+        {editing && <FieldHint>{t("manage-instance-beta-hint")}</FieldHint>}
         {BETA_FEATURES.map((feature) => (
           <BetaRow key={feature}>
             <span>{feature}</span>
-            <Select
-              value={form.betaFeatures[feature]}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  betaFeatures: {
-                    ...prev.betaFeatures,
-                    [feature]: e.target.value as BetaMode,
-                  },
-                }))
-              }
-            >
-              {BETA_MODES.map((mode) => (
-                <option key={mode} value={mode}>
-                  {mode}
-                </option>
-              ))}
-            </Select>
+            {editing ? (
+              <Select
+                value={form.betaFeatures[feature]}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    betaFeatures: {
+                      ...prev.betaFeatures,
+                      [feature]: e.target.value as BetaMode,
+                    },
+                  }))
+                }
+              >
+                {BETA_MODES.map((mode) => (
+                  <option key={mode} value={mode}>
+                    {mode}
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              renderViewBeta(form.betaFeatures[feature])
+            )}
           </BetaRow>
         ))}
       </Section>
 
       <Footer>
-        <ButtonSecondary type="button" onClick={() => navigate("/m")}>
-          {t("manage-user-button-cancel")}
-        </ButtonSecondary>
-        <ButtonPrimary
-          type="button"
-          onClick={() => void save()}
-          disabled={!dirty || saving || !renditionsValid}
-        >
-          {saving
-            ? t("manage-user-button-saving")
-            : t("manage-user-button-save")}
-        </ButtonPrimary>
+        {editing ? (
+          <>
+            <ButtonSecondary type="button" onClick={cancelEdit}>
+              {t("manage-user-button-cancel")}
+            </ButtonSecondary>
+            <ButtonPrimary
+              type="button"
+              onClick={() => void save()}
+              disabled={!dirty || saving || !renditionsValid}
+            >
+              {saving
+                ? t("manage-user-button-saving")
+                : t("manage-user-button-save")}
+            </ButtonPrimary>
+          </>
+        ) : (
+          <ButtonPrimary
+            type="button"
+            onClick={() => setEditing(true)}
+          >
+            {t("manage-user-button-edit")}
+          </ButtonPrimary>
+        )}
       </Footer>
-    </Root>
+        </Root>
+      )}
+    </ItemModal>
   );
 };
 

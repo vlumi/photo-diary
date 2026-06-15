@@ -3,6 +3,10 @@
     "loading": "Ladataan...",
     "empty": "Tyhjä",
     "close": "Sulje",
+    "manage-modal-confirm-discard": "Sinulla on tallentamattomia muutoksia. Hylätäänkö ne?",
+    "manage-gallery-tabs": "Gallerian osiot",
+    "manage-gallery-tab-properties": "Asetukset",
+    "manage-gallery-tab-access": "Käyttöoikeudet",
 
     "login": "Kirjaudu sisään",
     "logout": "Kirjaudu ulos",
@@ -435,6 +439,7 @@
     "manage-instance-field-initial-gallery-view": "Gallerian aloitusnäkymä",
     "manage-instance-field-first-weekday": "Viikon ensimmäinen päivä",
     "manage-instance-default-empty": "(sisäänrakennettu oletus)",
+    "manage-instance-view-empty": "—",
     "manage-instance-save-error": "Asetuksia ei voitu tallentaa",
     "manage-page-access-title": "Käyttöoikeudet",
     "manage-dashboard-tile-access-blurb": "Kaikki gallerioiden käyttöoikeudet yhdessä taulukossa.",

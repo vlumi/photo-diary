@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import ItemModal from "./ItemModal";
 import usersService, { type UserCreateBody } from "../../services/users";
 import { ID_PATTERN } from "../../lib/id-shape";
 
@@ -135,9 +136,17 @@ const UserCreate = (): React.ReactElement => {
     navigate("/m/users");
   };
 
+  const formDirty =
+    id.length > 0 ||
+    name.length > 0 ||
+    password.length > 0 ||
+    adminFlag;
+
   return (
-    <Root>
-      <Title>{t("manage-user-create-title")}</Title>
+    <ItemModal closeTo="/m/users" dirty={formDirty}>
+      {() => (
+        <Root>
+          <Title>{t("manage-user-create-title")}</Title>
       {saveError && (
         <ErrorBanner>
           {t("manage-user-create-error")}
@@ -196,7 +205,9 @@ const UserCreate = (): React.ReactElement => {
             : t("manage-user-button-create")}
         </ButtonPrimary>
       </Footer>
-    </Root>
+        </Root>
+      )}
+    </ItemModal>
   );
 };
 
