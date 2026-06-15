@@ -21,7 +21,7 @@ import {
   BsX,
 } from "react-icons/bs";
 
-import ItemModal from "./ItemModal";
+import ItemModal, { useModalDirty } from "./ItemModal";
 import { Section, SectionTitle } from "./Section";
 import {
   filterFromSearchParams,
@@ -1008,29 +1008,8 @@ const PhotoDrawer = ({
     }
   }, [data, id]);
 
-  const close = React.useCallback(() => {
-    onClose();
-  }, [onClose]);
-
-  // Capture-phase Esc + `stopImmediatePropagation` so the outer
-  // modals (Photo modal, Month / Year underneath) don't all close
-  // when the editor dismisses. Photo modal's own capture-phase
-  // listener already defers to the editor when it's open; this
-  // listener finishes the chain by halting propagation before any
-  // bubble-phase handler downstream sees the event.
-  // In routed mode the surrounding ItemModal owns Esc handling
-  // already, so skip the listener here to avoid double-firing.
-  React.useEffect(() => {
-    if (mode === "routed") return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      close();
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [close, mode]);
+  // (`close` + the inline-mode Esc listener are defined below
+  //  `dirty` so the confirm check reads the current dirty state.)
 
   const missingActive = missingActiveProp ?? new Set<MissingField>();
   const highlight = {
@@ -1048,6 +1027,42 @@ const PhotoDrawer = ({
     const patch = patchFrom(original, form);
     return Object.keys(patch).length > 0;
   }, [original, form]);
+
+  // Propagate dirty up to the surrounding ItemModal (routed mode)
+  // so X / backdrop / Esc go through the same confirm-discard
+  // prompt as the other Manage modals. No-op when the modal
+  // context isn't mounted (inline mode handles dirty locally
+  // inside `close`).
+  useModalDirty(dirty);
+
+  const close = React.useCallback(() => {
+    // Routed-mode `onClose` is ItemModal's own `safeNavigate`,
+    // which already prompts when the body is dirty (via the
+    // useModalDirty hook above). Inline mode's `onClose` is a
+    // raw setState callback in /g/'s Photo modal — confirm here
+    // so a stray Esc doesn't quietly drop unsaved edits.
+    if (mode === "inline" && dirty) {
+      const ok = window.confirm(String(t("manage-modal-confirm-discard")));
+      if (!ok) return;
+    }
+    onClose();
+  }, [onClose, mode, dirty, t]);
+
+  // Inline-mode Esc listener (routed mode delegates to ItemModal,
+  // which uses the dirty flag posted via useModalDirty above).
+  // Capture phase + stopImmediatePropagation keeps the outer Photo
+  // / Month listeners from also firing.
+  React.useEffect(() => {
+    if (mode === "routed") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      close();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [close, mode]);
 
   const save = async () => {
     const patch = patchFrom(original, form);
