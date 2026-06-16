@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BsXLg } from "react-icons/bs";
 
+import { useModalStackStore } from "../../stores/modal-stack";
+
 interface Props {
   // Where Esc / backdrop-click / close-button navigate to.
   closeTo: string;
@@ -18,6 +20,10 @@ interface Props {
   // swallow (switched edit→view); false to fall through to close.
   // Outlet bodies use `useModalEscape` instead.
   onEscape?: () => boolean;
+  // Bodies that render their own close affordance (e.g. PhotoDrawer
+  // groups its close button with prev/next arrows) hide the modal's
+  // default floating X to avoid two close buttons stacked.
+  noCloseButton?: boolean;
   children: (helpers: { close: () => void }) => React.ReactNode;
 }
 
@@ -136,6 +142,7 @@ const ItemModal = ({
   subModalOpen = false,
   dirty = false,
   onEscape,
+  noCloseButton = false,
   children,
 }: Props): React.ReactElement => {
   const navigate = useNavigate();
@@ -145,6 +152,13 @@ const ItemModal = ({
   const [bodySubModalOpen, setBodySubModalOpen] = React.useState(false);
   const effectiveDirty = dirty || bodyDirty;
   const effectiveSubModalOpen = subModalOpen || bodySubModalOpen;
+
+  const pushModal = useModalStackStore((s) => s.push);
+  const popModal = useModalStackStore((s) => s.pop);
+  React.useEffect(() => {
+    pushModal();
+    return popModal;
+  }, [pushModal, popModal]);
 
   const safeNavigate = React.useCallback(
     (to: string) => {
@@ -201,14 +215,16 @@ const ItemModal = ({
   return (
     <Backdrop onClick={onBackdropClick} role="dialog" aria-modal="true">
       <Frame onClick={(e) => e.stopPropagation()}>
-        <CloseButton
-          type="button"
-          onClick={close}
-          aria-label={String(t("close"))}
-          title={String(t("close"))}
-        >
-          <BsXLg />
-        </CloseButton>
+        {!noCloseButton && (
+          <CloseButton
+            type="button"
+            onClick={close}
+            aria-label={String(t("close"))}
+            title={String(t("close"))}
+          >
+            <BsXLg />
+          </CloseButton>
+        )}
         <ItemModalContext.Provider value={ctxValue}>
           <Body>{children({ close })}</Body>
         </ItemModalContext.Provider>
