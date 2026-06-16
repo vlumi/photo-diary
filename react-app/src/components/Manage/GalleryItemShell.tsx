@@ -14,7 +14,6 @@ import ItemModal, { useItemModalContext } from "./ItemModal";
 const TabBar = styled.nav`
   display: flex;
   gap: 0;
-  border-bottom: 1px solid var(--inactive-color);
   margin: 0;
   /* Stick at the Frame's top while the body scrolls. Hardcoded
      min-height so per-surface sticky titles can clear it (top: 48px)
@@ -23,26 +22,37 @@ const TabBar = styled.nav`
   position: sticky;
   top: 0;
   min-height: 48px;
-  padding-right: 48px;
-  align-items: stretch;
+  padding: 0 48px 0 16px;
+  align-items: center;
   background: var(--primary-background);
+  border-bottom: 1px solid var(--inactive-color);
   z-index: 2;
 `;
+const TabGroup = styled.div`
+  display: inline-flex;
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  overflow: hidden;
+`;
 const Tab = styled.button<{ $active: boolean }>`
-  appearance: none;
-  background: transparent;
-  border: none;
-  border-bottom: 3px solid
-    ${({ $active }) => ($active ? "var(--header-background)" : "transparent")};
-  padding: 10px 16px;
-  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: ${({ $active }) =>
+    $active ? "var(--header-background)" : "transparent"};
   color: ${({ $active }) =>
-    $active ? "var(--primary-color)" : "var(--inactive-color)"};
-  font-weight: ${({ $active }) => ($active ? 600 : 400)};
-  cursor: pointer;
-  margin-bottom: -1px;
+    $active ? "var(--header-color)" : "var(--inactive-color)"};
+  border: none;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: bold;
+  cursor: ${({ $active }) => ($active ? "default" : "pointer")};
+  & + & {
+    border-left: 1px solid var(--inactive-color);
+  }
   &:hover {
-    color: var(--primary-color);
+    color: ${({ $active }) =>
+      $active ? "var(--header-color)" : "var(--primary-color)"};
   }
 `;
 
@@ -60,24 +70,26 @@ const TabHeader = ({
   const { safeNavigate } = useItemModalContext();
   return (
     <TabBar role="tablist" aria-label={String(t("manage-gallery-tabs"))}>
-      <Tab
-        type="button"
-        role="tab"
-        aria-selected={tab === "properties"}
-        $active={tab === "properties"}
-        onClick={() => safeNavigate(`/m/g/${galleryId}`)}
-      >
-        {t("manage-gallery-tab-properties")}
-      </Tab>
-      <Tab
-        type="button"
-        role="tab"
-        aria-selected={tab === "access"}
-        $active={tab === "access"}
-        onClick={() => safeNavigate(`/m/g/${galleryId}/access`)}
-      >
-        {t("manage-gallery-tab-access")}
-      </Tab>
+      <TabGroup>
+        <Tab
+          type="button"
+          role="tab"
+          aria-selected={tab === "properties"}
+          $active={tab === "properties"}
+          onClick={() => safeNavigate(`/m/g/${galleryId}`)}
+        >
+          {t("manage-gallery-tab-properties")}
+        </Tab>
+        <Tab
+          type="button"
+          role="tab"
+          aria-selected={tab === "access"}
+          $active={tab === "access"}
+          onClick={() => safeNavigate(`/m/g/${galleryId}/access`)}
+        >
+          {t("manage-gallery-tab-access")}
+        </Tab>
+      </TabGroup>
     </TabBar>
   );
 };
