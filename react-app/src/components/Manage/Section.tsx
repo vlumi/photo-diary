@@ -49,3 +49,21 @@ export const SectionHint = styled.p`
   color: var(--inactive-color);
   font-style: italic;
 `;
+
+export const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 0 -16px 16px;
+  padding: 10px 16px;
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--primary-color) 8%, transparent),
+      color-mix(in srgb, var(--primary-color) 2%, transparent)
+    ),
+    var(--primary-background);
+  border-bottom: 1px solid var(--inactive-color);
+`;

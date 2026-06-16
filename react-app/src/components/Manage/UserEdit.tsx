@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BsPencilSquare, BsTrash } from "react-icons/bs";
 
 import ItemModal from "./ItemModal";
-import { Section } from "./Section";
+import { Section, ModalHeader } from "./Section";
 import usersService, { type UserUpdatePatch } from "../../services/users";
 import { useUserStore } from "../../stores";
 
@@ -15,14 +15,6 @@ const Root = styled.div`
   max-width: 640px;
   margin: 0 auto;
   text-align: left;
-`;
-const TitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin: 0 0 16px;
 `;
 const Title = styled.h2`
   margin: 0;
@@ -330,11 +322,11 @@ const UserEdit = (): React.ReactElement => {
     >
       {() => (
         <Root>
-          <TitleRow>
+          <ModalHeader>
             <Title>
               <Mono>{userId}</Mono>
             </Title>
-      </TitleRow>
+          </ModalHeader>
       {isPseudo && (
         <InfoBanner>{t("manage-user-guest-banner")}</InfoBanner>
       )}
