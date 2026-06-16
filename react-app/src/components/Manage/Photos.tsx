@@ -26,120 +26,152 @@ import { useUserStore } from "../../stores";
 import { Navigate } from "react-router-dom";
 import BulkActions from "./BulkActions";
 import TimelineStrip from "./TimelineStrip";
+import { useModalStackStore } from "../../stores/modal-stack";
 
 const Root = styled.div`
   display: flex;
-  gap: 16px;
-  padding: 16px 8px;
-  align-items: flex-start;
-  @media (max-width: 700px) {
-    flex-direction: column;
-  }
-`;
-// One sidebar, two modes: filters (default) and edit (when a
-// photo is open via /m/photos/<id>). Widened from the filter-
-// only 220px so the edit form fits without cramping; the extra
-// width reads as comfortable padding in filter mode rather than
-// wasted real estate.
-const Sidebar = styled.aside<{ $hideOnMobile?: boolean }>`
-  flex: 0 0 360px;
-  // Belt-and-suspenders width pin so a stray min-content from any
-  // inner element (long photo id, unbroken Title text, etc.) can't
-  // push the flex item wider than 360px when the edit form mounts.
-  min-width: 360px;
-  max-width: 360px;
-  display: flex;
   flex-direction: column;
-  gap: 16px;
-  @media (max-width: 700px) {
-    flex: 0 0 auto;
-    min-width: 0;
-    max-width: none;
-    width: 100%;
-    ${({ $hideOnMobile }) => ($hideOnMobile ? "display: none;" : "")}
+  gap: 12px;
+  padding: 16px 8px;
+  align-items: stretch;
+`;
+const FilterBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+const FilterButton = styled.button`
+  flex: 0 0 auto;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    border-color: var(--primary-color);
   }
 `;
-const FilterFab = styled.button`
-  display: none;
-  @media (max-width: 700px) {
-    display: inline-flex;
-  }
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
-  background: var(--header-background);
-  color: var(--header-color);
-  border: 1px solid var(--header-background);
+// Active-filter strip — italic "category: value" chunks for each
+// set filter, each with × to clear individually. Mirrors /g/'s
+// Strip pattern but reads from URL search params (PhotoFilter
+// shape) instead of useFiltersStore. Sits inline with the Filters
+// button (no flex-grow) so the two visually cluster as one unit
+// on wide screens instead of getting pushed to opposite edges.
+const FilterStripRow = styled.div`
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.9em;
+  color: var(--inactive-color);
+  font-style: italic;
+  min-width: 0;
+  cursor: pointer;
+`;
+const FilterChunk = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 12px;
+  background: var(--tile-background);
+  color: var(--primary-color);
+  font-style: normal;
+  font-size: 0.9em;
+`;
+const FilterChunkRemove = styled.button`
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4em;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--inactive-color);
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  z-index: 900;
+  font: inherit;
+  font-size: 0.75em;
+  border-radius: 50%;
+  &:hover {
+    color: var(--primary-color);
+    background: var(--inactive-color);
+  }
 `;
-const FilterSheetBackdrop = styled.div`
+const FilterModalBackdrop = styled.div`
   position: fixed;
   inset: 0;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.55);
-  z-index: 2000;
+  z-index: 1500;
   display: flex;
-  align-items: stretch;
-  justify-content: stretch;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  box-sizing: border-box;
 `;
-const FilterSheet = styled.div`
+const FilterModalFrame = styled.div`
   background: var(--primary-background);
   color: var(--primary-color);
+  border: 1px solid var(--inactive-color);
+  border-radius: 6px;
   width: 100%;
-  max-width: 480px;
-  margin-left: auto;
+  max-width: min(720px, calc(100vw - 40px));
+  max-height: calc(100dvh - 64px);
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  gap: 16px;
-  overflow-y: auto;
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
 `;
-const FilterSheetHeader = styled.div`
+const FilterModalHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--inactive-color);
 `;
-const FilterSheetTitle = styled.h2`
+const FilterModalTitle = styled.h2`
   margin: 0;
   font-size: 1.05em;
 `;
-const FilterSheetClose = styled.button`
+const FilterModalClose = styled.button`
   font: inherit;
-  padding: 8px 10px;
-  background: transparent;
-  color: inherit;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   border: 1px solid var(--inactive-color);
-  border-radius: 4px;
-  cursor: pointer;
+  background: var(--primary-background);
+  color: var(--primary-color);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  &:hover {
+    background: var(--inactive-color);
+  }
+`;
+const FilterModalBody = styled.div`
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 const Body = styled.section`
-  flex: 1 1 auto;
-  min-width: 0;
   /* Clearance for the floating BulkActions bar (fixed on every
-     surface) and the mobile filter FAB so the last grid row isn't
-     permanently covered when either is up. */
+     surface) so the last grid row isn't permanently covered. */
   padding-bottom: 88px;
-  /* Root's align-items: flex-start means flex items keep their
-     intrinsic width on the cross axis. In column mode that left the
-     Body shrink-wrapped to its widest child — the grid (auto-fill
-     minmax(120px, 1fr)) collapsed to a single 120px column, and only
-     stretched once the BulkActions bar mounted and forced the
-     parent's content width up. Pin the width in column mode so the
-     grid always fills the viewport. */
-  @media (max-width: 700px) {
-    width: 100%;
-  }
 `;
 const FilterGroup = styled.div`
   display: flex;
@@ -1180,52 +1212,204 @@ const AdminPhotos = (): React.ReactElement => {
   };
 
   // useParams() inside the parent <Photos> route picks up the
-  // child :photoId. When a photo is open, the sidebar swaps from
-  // filter controls to the edit form (rendered via <Outlet />).
-  // `params` is declared earlier alongside the focus query.
+  // child :photoId. When a photo is open, the PhotoDrawer mounts
+  // as its own routed modal via <Outlet />; the filter modal is
+  // independent.
   const editing = !!params.photoId;
-  const [filterSheetOpen, setFilterSheetOpen] = React.useState(false);
+  const [filterModalOpen, setFilterModalOpen] = React.useState(false);
+  const pushModal = useModalStackStore((s) => s.push);
+  const popModal = useModalStackStore((s) => s.pop);
   React.useEffect(() => {
-    if (editing && filterSheetOpen) setFilterSheetOpen(false);
-  }, [editing, filterSheetOpen]);
+    if (!filterModalOpen) return;
+    pushModal();
+    return popModal;
+  }, [filterModalOpen, pushModal, popModal]);
+  React.useEffect(() => {
+    if (!filterModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setFilterModalOpen(false);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [filterModalOpen]);
+
+  // Active-filter chunks: one per set filter param. Each carries a
+  // value label + × to clear individually. Clicking the strip's
+  // empty space opens the modal; the × on a chunk only clears that
+  // one filter without opening the modal.
+  const renderFilterStrip = (): React.ReactElement => {
+    const chunks: React.ReactElement[] = [];
+    const q = searchParams.get("q");
+    if (q) {
+      chunks.push(
+        <FilterChunk key="q">
+          <span>
+            {t("manage-photos-filter-search")}: <strong>{q}</strong>
+          </span>
+          <FilterChunkRemove
+            type="button"
+            aria-label={String(t("manage-photos-filters-clear-one"))}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSearchParam("q", null);
+            }}
+          >
+            <BsXLg aria-hidden />
+          </FilterChunkRemove>
+        </FilterChunk>
+      );
+    }
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
+    if (dateFrom || dateTo) {
+      const label = `${dateFrom ?? "…"} – ${dateTo ?? "…"}`;
+      chunks.push(
+        <FilterChunk key="date">
+          <span>
+            {t("manage-photos-filter-date")}: <strong>{label}</strong>
+          </span>
+          <FilterChunkRemove
+            type="button"
+            aria-label={String(t("manage-photos-filters-clear-one"))}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete("dateFrom");
+                next.delete("dateTo");
+                next.delete("page");
+                return next;
+              });
+            }}
+          >
+            <BsXLg aria-hidden />
+          </FilterChunkRemove>
+        </FilterChunk>
+      );
+    }
+    const galleryIds = searchParams.getAll("gallery");
+    if (galleryIds.length > 0) {
+      const labels = galleryIds
+        .map((id) => galleries.find((g) => g.id === id)?.title || id)
+        .join(", ");
+      chunks.push(
+        <FilterChunk key="gallery">
+          <span>
+            {t("manage-photos-filter-gallery")}: <strong>{labels}</strong>
+          </span>
+          <FilterChunkRemove
+            type="button"
+            aria-label={String(t("manage-photos-filters-clear-one"))}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSearchParam("gallery", null);
+            }}
+          >
+            <BsXLg aria-hidden />
+          </FilterChunkRemove>
+        </FilterChunk>
+      );
+    }
+    const booleanFlags: Array<[string, string]> = [
+      ["orphan", "manage-photos-filter-orphan"],
+      ["duplicates", "manage-photos-filter-duplicates"],
+      ["countryMismatch", "manage-photos-filter-country-mismatch"],
+    ];
+    for (const [param, key] of booleanFlags) {
+      if (searchParams.get(param) === "1") {
+        chunks.push(
+          <FilterChunk key={param}>
+            <span>{t(key)}</span>
+            <FilterChunkRemove
+              type="button"
+              aria-label={String(t("manage-photos-filters-clear-one"))}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSearchParam(param, null);
+              }}
+            >
+              <BsXLg aria-hidden />
+            </FilterChunkRemove>
+          </FilterChunk>
+        );
+      }
+    }
+    const missing = searchParams.getAll("missing");
+    if (missing.length > 0) {
+      const labels = missing
+        .map((field) => t(`manage-photos-filter-missing-${field}`))
+        .join(", ");
+      chunks.push(
+        <FilterChunk key="missing">
+          <span>
+            {t("manage-photos-filter-audit")}: <strong>{labels}</strong>
+          </span>
+          <FilterChunkRemove
+            type="button"
+            aria-label={String(t("manage-photos-filters-clear-one"))}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSearchParam("missing", null);
+            }}
+          >
+            <BsXLg aria-hidden />
+          </FilterChunkRemove>
+        </FilterChunk>
+      );
+    }
+    return (
+      <FilterStripRow onClick={() => setFilterModalOpen(true)}>
+        {chunks.length === 0 ? (
+          <span>{t("manage-photos-filters-none")}</span>
+        ) : (
+          chunks
+        )}
+      </FilterStripRow>
+    );
+  };
 
   return (
     <Root>
-      <Sidebar $hideOnMobile={false}>{renderSidebarContents()}</Sidebar>
-      <Body>{renderBody()}</Body>
-      <Outlet />
-      {!editing && selectedIds.size === 0 && (
-        <FilterFab
+      <FilterBar>
+        <FilterButton
           type="button"
+          onClick={() => setFilterModalOpen(true)}
           aria-label={String(t("manage-photos-filters-open"))}
-          title={String(t("manage-photos-filters-open"))}
-          onClick={() => setFilterSheetOpen(true)}
         >
           <BsFunnel aria-hidden />
-        </FilterFab>
-      )}
-      {!editing && filterSheetOpen && (
-        <FilterSheetBackdrop
+          {t("manage-photos-filters-open")}
+        </FilterButton>
+        {renderFilterStrip()}
+      </FilterBar>
+      <Body>{renderBody()}</Body>
+      <Outlet />
+      {filterModalOpen && (
+        <FilterModalBackdrop
           onClick={(e) => {
-            if (e.target === e.currentTarget) setFilterSheetOpen(false);
+            if (e.target === e.currentTarget) setFilterModalOpen(false);
           }}
+          role="dialog"
+          aria-modal="true"
         >
-          <FilterSheet>
-            <FilterSheetHeader>
-              <FilterSheetTitle>
+          <FilterModalFrame>
+            <FilterModalHeader>
+              <FilterModalTitle>
                 {t("manage-photos-filters-title")}
-              </FilterSheetTitle>
-              <FilterSheetClose
+              </FilterModalTitle>
+              <FilterModalClose
                 type="button"
                 aria-label={String(t("manage-photos-filters-close"))}
-                onClick={() => setFilterSheetOpen(false)}
+                onClick={() => setFilterModalOpen(false)}
               >
                 <BsXLg aria-hidden />
-              </FilterSheetClose>
-            </FilterSheetHeader>
-            {renderSidebarContents()}
-          </FilterSheet>
-        </FilterSheetBackdrop>
+              </FilterModalClose>
+            </FilterModalHeader>
+            <FilterModalBody>{renderSidebarContents()}</FilterModalBody>
+          </FilterModalFrame>
+        </FilterModalBackdrop>
       )}
     </Root>
   );
