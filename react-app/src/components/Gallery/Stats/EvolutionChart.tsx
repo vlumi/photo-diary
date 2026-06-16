@@ -7,6 +7,7 @@ import { Line } from "react-chartjs-2";
 
 import statsService from "../../../services/stats";
 import color from "../../../lib/color";
+import config from "../../../lib/config";
 import filter from "../../../lib/filter";
 import type theme from "../../../lib/theme";
 import {
@@ -23,6 +24,8 @@ type ActiveTheme = ReturnType<(typeof theme)["setTheme"]>;
 const CATEGORY_KEY_TO_SERVER: Record<string, string> = {
   author: "author",
   country: "country",
+  weekday: "weekday",
+  hour: "hour",
   "camera-make": "cameraMake",
   camera: "camera",
   lens: "lens",
@@ -136,6 +139,22 @@ const compareByLabel = (
   const nb = Number(b.key);
   if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
   return a.label.localeCompare(b.label);
+};
+
+// Weekday's natural order is locale-dependent: ISO Mon-first vs
+// Sun-first. Rotate the 0-6 ring by `FIRST_WEEKDAY` so the bands
+// stack in the same order the year-view calendar grid uses.
+export const compareByWeekday = (
+  a: { key: string },
+  b: { key: string }
+): number => {
+  const first = config.FIRST_WEEKDAY;
+  const rotate = (raw: string): number => {
+    const n = Number(raw);
+    if (Number.isNaN(n)) return Number.MAX_SAFE_INTEGER;
+    return n < first ? n + 7 : n;
+  };
+  return rotate(a.key) - rotate(b.key);
 };
 
 // Collapse year-month series ("2024-01", "2024-02", …) into year
@@ -272,7 +291,7 @@ const EvolutionChart = ({
       label: labelFor ? labelFor(key) : key,
       counts,
     }))
-    .sort(compareByLabel);
+    .sort(categoryKey === "weekday" ? compareByWeekday : compareByLabel);
   // Categories whose keys form a linear scale (focal length,
   // aperture, exposure time, ISO, EV, LV, …) read more naturally
   // as a hue ramp than a categorical palette — adjacent bucket =

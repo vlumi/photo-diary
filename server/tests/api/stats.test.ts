@@ -356,6 +356,28 @@ describe("global evolution (cross-gallery)", () => {
     expect(res.body.yearMonths).toEqual([]);
     expect(res.body.buckets).toEqual({});
   });
+
+  test("weekday trendable: returns bucket per day-of-week", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postGlobalEvolution(token, { category: "weekday" });
+    const keys = Object.keys(res.body.buckets);
+    expect(keys.length).toBeGreaterThan(0);
+    for (const k of keys) {
+      const n = Number(k);
+      expect(Number.isInteger(n) && n >= 0 && n <= 6).toBe(true);
+    }
+  });
+
+  test("hour trendable: returns bucket per hour-of-day", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await postGlobalEvolution(token, { category: "hour" });
+    const keys = Object.keys(res.body.buckets);
+    expect(keys.length).toBeGreaterThan(0);
+    for (const k of keys) {
+      const n = Number(k);
+      expect(Number.isInteger(n) && n >= 0 && n <= 23).toBe(true);
+    }
+  });
 });
 
 describe("unknown bucket", () => {

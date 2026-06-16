@@ -141,6 +141,8 @@ const TableModal = ({
     "ev",
     "lv",
     "resolution",
+    "weekday",
+    "hour",
   ]);
   const formatter = format.categoryValue(lang, t, countryData)(category.key);
   const labelForBucket = (raw: string): string => {
