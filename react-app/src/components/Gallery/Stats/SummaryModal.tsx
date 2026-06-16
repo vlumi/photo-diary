@@ -199,13 +199,9 @@ const SummaryModal = ({
         return format.subdivisionName(lang, String(key));
       case "city": {
         const parsed = format.parseCityKey(String(key));
-        const display = format.cityName(
-          lang,
-          parsed.country,
-          parsed.city,
-          parsed.city
-        );
-        return parsed.state ? `${display}, ${parsed.state}` : display;
+        return parsed.state
+          ? `${parsed.city}, ${parsed.state}`
+          : parsed.city;
       }
       case "cameraLens": {
         try {

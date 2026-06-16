@@ -371,12 +371,7 @@ const PhotoModel = (photoData: unknown) => {
       format.geocodedAddress(lang, {
         country: self.geocodedCountryName(lang, countryData),
         state: opts?.includeState ? self.geocodedStateName(lang) : undefined,
-        city: format.cityName(
-          lang,
-          photo.geocoded?.countryCode,
-          photo.geocoded?.cityEn,
-          photo.geocoded?.city
-        ),
+        city: photo.geocoded?.city ?? photo.geocoded?.cityEn ?? "",
       }),
     hasCoordinates: (): boolean =>
       !!(

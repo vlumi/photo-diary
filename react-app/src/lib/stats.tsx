@@ -710,12 +710,7 @@ const collectTopics = (
     );
     const fallbackLabel = (key: string): string => {
       const parsed = format.parseCityKey(key);
-      return format.cityName(
-        lang,
-        parsed.country,
-        parsed.city,
-        byCityLocalized?.[key] ?? parsed.city
-      );
+      return byCityLocalized?.[key] ?? parsed.city;
     };
     const [flat, data, valueRanks] = transformData({
       original: byCity,
