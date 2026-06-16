@@ -114,6 +114,9 @@ const Body = styled.div`
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Don't chain scroll into the underlying list page once the modal
+     body hits top / bottom — keeps wheel and touch events contained. */
+  overscroll-behavior: contain;
 `;
 const CloseButton = styled.button`
   position: absolute;
@@ -168,7 +171,11 @@ const ItemModal = ({
         );
         if (!confirmed) return;
       }
-      navigate(to);
+      // Modals are a visual layer over their list/parent page —
+      // opening / closing them shouldn't snap the underlying page's
+      // scroll position to top (or to whatever ScrollToPosition has
+      // cached for the target path). The body stays where it is.
+      navigate(to, { state: { skipScrollRestore: true } });
     },
     [effectiveDirty, t, navigate]
   );

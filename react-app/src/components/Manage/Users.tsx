@@ -158,7 +158,14 @@ const Users = (): React.ReactElement => {
           </thead>
           <tbody>
             {rows.map((u) => (
-              <Row key={u.id} onClick={() => navigate(`/m/users/${u.id}`)}>
+              <Row
+                key={u.id}
+                onClick={() =>
+                  navigate(`/m/users/${u.id}`, {
+                    state: { skipScrollRestore: true },
+                  })
+                }
+              >
                 <Td>
                   <Mono>{u.id}</Mono>
                 </Td>

@@ -132,6 +132,23 @@ const AppFooter = (): React.ReactElement | null => {
     </Footer>
   );
 };
+
+// Lock the document scroll while any modal is open so wheel events
+// on the backdrop don't scroll the underlying list page. Relies on
+// `html { scrollbar-gutter: stable }` (App.css) to reserve the gutter
+// space — otherwise the reflow during the lock shifts content ~15px.
+const BodyScrollLock = (): null => {
+  const modalCount = useModalStackStore((s) => s.count);
+  React.useEffect(() => {
+    if (modalCount === 0) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [modalCount]);
+  return null;
+};
 const Footer = styled.div`
   width: 100%;
   text-align: right;
@@ -225,6 +242,7 @@ const App = (): React.ReactElement => {
       <meta name="robots" content="noindex" />
       <GlobalFetchIndicator />
       <Notifications />
+      <BodyScrollLock />
       <LoginModal />
       <ChangePasswordModal />
       <ThemePickerModal />

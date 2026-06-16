@@ -246,6 +246,12 @@ const RenditionRowLayout = styled.div`
   display: flex;
   gap: 16px;
   align-items: flex-start;
+  /* On narrow viewports (iPhone SE etc.) the 180px hero + meta row
+     leaves the meta column too narrow for chips + Private label —
+     stack the hero above the meta instead. */
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
 `;
 const OverviewMeta = styled.div`
   flex: 1 1 auto;
@@ -1716,10 +1722,13 @@ const PhotoDrawer = ({
         );
         if (!ok) return;
       }
-      navigate({
-        pathname: `/m/photos/${siblingId}`,
-        search: window.location.search,
-      });
+      navigate(
+        {
+          pathname: `/m/photos/${siblingId}`,
+          search: window.location.search,
+        },
+        { state: { skipScrollRestore: true } }
+      );
     },
     [dirty, navigate, t]
   );

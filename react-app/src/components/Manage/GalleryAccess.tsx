@@ -321,7 +321,11 @@ const GalleryAccess = (): React.ReactElement => {
         </Title>
         <SiblingNav aria-label={String(t("manage-gallery-nav-group"))}>
           <SiblingLink
-            onClick={() => navigate(`/m/g/${galleryId}`)}
+            onClick={() =>
+              navigate(`/m/g/${galleryId}`, {
+                state: { skipScrollRestore: true },
+              })
+            }
             role="link"
             tabIndex={0}
           >
