@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BsPencilSquare, BsPlus, BsTrash, BsXLg } from "react-icons/bs";
 
 import ItemModal from "./ItemModal";
-import { Section, SectionTitle } from "./Section";
+import { Section, SectionTitle, ModalHeader } from "./Section";
 import groupsService, {
   type GroupRow,
   type GroupUpdatePatch,
@@ -19,14 +19,6 @@ const Root = styled.div`
   max-width: 640px;
   margin: 0 auto;
   text-align: left;
-`;
-const TitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin: 0 0 16px;
 `;
 const Title = styled.h2`
   margin: 0;
@@ -414,11 +406,11 @@ const GroupEdit = (): React.ReactElement => {
     >
       {() => (
         <Root>
-          <TitleRow>
+          <ModalHeader>
             <Title>
               <Mono>{groupId}</Mono>
             </Title>
-          </TitleRow>
+          </ModalHeader>
       {saveError && (
         <ErrorBanner>
           {t("manage-group-save-error")}

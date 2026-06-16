@@ -18,7 +18,7 @@ import {
   BsClipboardCheck,
   BsEyeSlashFill,
   BsPencilSquare,
-  BsX,
+  BsXLg,
 } from "react-icons/bs";
 
 import ItemModal, { useModalDirty } from "./ItemModal";
@@ -57,22 +57,25 @@ const Drawer = styled.div`
   color: var(--primary-color);
   border: 1px solid var(--inactive-color);
   border-radius: 4px;
-  overflow: hidden;
   box-sizing: border-box;
-  /* min-height: 0 + flex parent → the Body can shrink and scroll
-     inside (in-place modal mounts the Drawer in a constrained
-     overlay; the routed mount inherits a scroll container from
-     the Photos sidebar, so the inner scroll is harmless there). */
+  /* No overflow:hidden — the sticky Header/Footer below need a
+     scrolling ancestor without a clipping context between them.
+     Routed mode scrolls at ItemModal.Body; inline mode scrolls at
+     the inner Body (which has its own overflow-y: auto). */
   min-height: 0;
   flex: 1 1 auto;
 `;
 const Header = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--inactive-color);
   flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  background: var(--primary-background);
+  z-index: 2;
 `;
 const Title = styled.div`
   font-weight: bold;
@@ -82,37 +85,33 @@ const Title = styled.div`
   text-overflow: ellipsis;
   flex: 1 1 auto;
   min-width: 0;
+  text-align: center;
 `;
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 1.5em;
-  cursor: pointer;
-  padding: 0 4px;
+const HeaderIconButton = styled.a`
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  color: inherit;
+  font-size: 1.1em;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 4px;
+  background: none;
+  border: none;
+  font: inherit;
   &:hover {
     color: var(--inactive-color);
+  }
+  &[aria-disabled="true"] {
+    opacity: 0.4;
+    pointer-events: none;
   }
 `;
 const HeaderActions = styled.div`
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   flex: 0 0 auto;
-`;
-const ViewOnSiteLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  color: inherit;
-  font-size: 1.1em;
-  cursor: pointer;
-  text-decoration: none;
-  padding: 0 4px;
-  &:hover {
-    color: var(--inactive-color);
-  }
 `;
 const Body = styled.div`
   padding: 14px;
@@ -408,6 +407,10 @@ const Footer = styled.div`
   padding: 10px 14px;
   border-top: 1px solid var(--inactive-color);
   flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  background: var(--primary-background);
+  z-index: 2;
 `;
 const ButtonPrimary = styled.button`
   font: inherit;
@@ -1742,87 +1745,87 @@ const PhotoDrawer = ({
     return () => window.removeEventListener("keydown", onKey, true);
   }, [mode, prevPhotoId, nextPhotoId, navigateToSibling]);
 
+  const titleLabel = data?.title || data?.originalFilename || data?.id || id;
+
   return (
     <Drawer>
       <Header>
-        <Title>{data?.title || data?.id || id}</Title>
+        {mode === "routed" ? (
+          <HeaderIconButton
+            as="button"
+            type="button"
+            onClick={() => navigateToSibling(prevPhotoId)}
+            aria-disabled={!prevPhotoId}
+            aria-label={String(t("manage-photo-prev"))}
+            title={String(t("manage-photo-prev"))}
+          >
+            <BsCaretLeftFill />
+          </HeaderIconButton>
+        ) : null}
+        <Title title={titleLabel}>{titleLabel}</Title>
         <HeaderActions>
-          {mode === "routed" && (
-            <>
-              <ViewOnSiteLink
-                onClick={() => navigateToSibling(prevPhotoId)}
-                role="link"
-                tabIndex={0}
-                aria-disabled={!prevPhotoId}
-                style={prevPhotoId ? undefined : { opacity: 0.4, pointerEvents: "none" }}
-                aria-label={String(t("manage-photo-prev"))}
-                title={String(t("manage-photo-prev"))}
-              >
-                <BsCaretLeftFill />
-              </ViewOnSiteLink>
-              <ViewOnSiteLink
-                onClick={() => navigateToSibling(nextPhotoId)}
-                role="link"
-                tabIndex={0}
-                aria-disabled={!nextPhotoId}
-                style={nextPhotoId ? undefined : { opacity: 0.4, pointerEvents: "none" }}
-                aria-label={String(t("manage-photo-next"))}
-                title={String(t("manage-photo-next"))}
-              >
-                <BsCaretRightFill />
-              </ViewOnSiteLink>
-            </>
-          )}
+          {mode === "routed" ? (
+            <HeaderIconButton
+              as="button"
+              type="button"
+              onClick={() => navigateToSibling(nextPhotoId)}
+              aria-disabled={!nextPhotoId}
+              aria-label={String(t("manage-photo-next"))}
+              title={String(t("manage-photo-next"))}
+            >
+              <BsCaretRightFill />
+            </HeaderIconButton>
+          ) : null}
           {mode === "inline" && id && (
-            <ViewOnSiteLink
+            <HeaderIconButton
+              as="button"
+              type="button"
               onClick={() =>
                 navigate(
                   `/m/photos/${id}${galleryId ? `?gallery=${galleryId}` : ""}`
                 )
               }
-              role="link"
-              tabIndex={0}
               aria-label={String(t("manage-photo-open-in-manage"))}
               title={String(t("manage-photo-open-in-manage"))}
             >
               <BsBoxArrowUpRight />
-            </ViewOnSiteLink>
+            </HeaderIconButton>
           )}
           {mode === "routed" && publicUrl && (
-            <ViewOnSiteLink
+            <HeaderIconButton
+              as="button"
+              type="button"
               onClick={() => navigate(publicUrl)}
-              role="link"
-              tabIndex={0}
               aria-label={String(t("manage-photo-view-on-site"))}
               title={String(t("manage-photo-view-on-site"))}
             >
               <BsBoxArrowUpRight />
-            </ViewOnSiteLink>
+            </HeaderIconButton>
           )}
           {galleryId && id ? (
-            <ViewOnSiteLink
+            <HeaderIconButton
+              as="button"
+              type="button"
               onClick={() =>
                 navigate(
                   `/m/g/${galleryId}?openIcon=${encodeURIComponent(id)}`
                 )
               }
-              role="link"
-              tabIndex={0}
               aria-label={String(t("set-as-gallery-icon"))}
               title={String(t("set-as-gallery-icon"))}
             >
               <BsBookmarkStar />
-            </ViewOnSiteLink>
+            </HeaderIconButton>
           ) : null}
-          {mode === "inline" && (
-            <CloseButton
-              type="button"
-              aria-label={String(t("close"))}
-              onClick={close}
-            >
-              <BsX />
-            </CloseButton>
-          )}
+          <HeaderIconButton
+            as="button"
+            type="button"
+            aria-label={String(t("close"))}
+            title={String(t("close"))}
+            onClick={close}
+          >
+            <BsXLg />
+          </HeaderIconButton>
         </HeaderActions>
       </Header>
       {renderBody()}
@@ -1881,7 +1884,7 @@ const RoutedPhotoDrawer = (): React.ReactElement => {
   if (!photoId) return <></>;
   const closeTo = `/m/photos${window.location.search}`;
   return (
-    <ItemModal closeTo={closeTo}>
+    <ItemModal closeTo={closeTo} noCloseButton>
       {({ close }) => (
         <PhotoDrawer
           photoId={photoId}

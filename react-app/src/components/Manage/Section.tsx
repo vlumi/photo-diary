@@ -12,7 +12,10 @@ export const Section = styled.section`
   padding: 14px 16px;
   border: 1px solid var(--inactive-color);
   border-radius: 6px;
-  background: var(--primary-background);
+  /* Section panels read as cards on the page background — use the
+     theme's tile colour (matches /g/'s calendar tiles) so /m/ looks
+     like a sibling to /g/, not a separate app. */
+  background: var(--tile-background);
   /* App.css sets a global text-align: center; admin section bodies
      read left so values + form fields line up on the leading edge. */
   text-align: left;
@@ -45,4 +48,22 @@ export const SectionHint = styled.p`
   font-size: 0.8em;
   color: var(--inactive-color);
   font-style: italic;
+`;
+
+export const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 0 -16px 16px;
+  padding: 10px 16px;
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--primary-color) 8%, transparent),
+      color-mix(in srgb, var(--primary-color) 2%, transparent)
+    ),
+    var(--primary-background);
+  border-bottom: 1px solid var(--inactive-color);
 `;

@@ -13,29 +13,15 @@ import { BsArrowRight, BsPlusLg } from "react-icons/bs";
 import savedFiltersService, {
   type SavedFilter,
 } from "../../services/saved-filters";
+import { Section, SectionTitle } from "./Section";
 
 // Virtual-gallery directory under the source gallery's manage page.
 // Each saved filter IS a virtual gallery with this gallery as its
 // source — list rows link to the child's own edit page, where the
-// filter and gallery metadata get edited together (#563). "Create"
-// here is just "make a new virtual gallery with this as source":
-// id + initial title, then the operator finishes the rest on the
-// child's edit page.
+// filter and gallery metadata get edited together. "Create" here is
+// just "make a new virtual gallery with this as source": id + initial
+// title, then the operator finishes the rest on the child's edit page.
 
-const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-const SectionTitle = styled.h3`
-  margin: 12px 0 4px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--inactive-color);
-  font-size: 1.05em;
-  font-weight: 600;
-  color: var(--primary-color);
-`;
 const Notice = styled.p`
   margin: 0;
   color: var(--inactive-color);

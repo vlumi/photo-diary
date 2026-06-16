@@ -6,26 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BsArrowDown, BsArrowUp, BsXLg } from "react-icons/bs";
 
 import galleriesService from "../../services/galleries";
-
-const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-const SectionTitle = styled.h3`
-  margin: 12px 0 4px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--inactive-color);
-  font-size: 1.05em;
-  font-weight: 600;
-  color: var(--primary-color);
-`;
-const Hint = styled.div`
-  font-size: 0.85em;
-  color: var(--inactive-color);
-  font-style: italic;
-`;
+import { Section, SectionTitle, SectionHint as Hint } from "./Section";
 const List = styled.div`
   display: flex;
   flex-direction: column;

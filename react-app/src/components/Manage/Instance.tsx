@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import ItemModal from "./ItemModal";
-import { Section, SectionTitle } from "./Section";
+import { Section, SectionTitle, ModalHeader } from "./Section";
 import metaService, { type KnownMetaKey } from "../../services/meta";
 import { useUserStore } from "../../stores";
 import { BETA_FEATURES, type BetaFeature, type BetaMode } from "../../stores/beta";
@@ -18,7 +18,7 @@ const Root = styled.div`
   text-align: left;
 `;
 const Title = styled.h2`
-  margin: 0 0 16px;
+  margin: 0;
   font-size: 1.2em;
 `;
 const Field = styled.label`
@@ -437,7 +437,9 @@ const Instance = (): React.ReactElement => {
     >
       {() => (
         <Root>
-          <Title>{t("manage-instance-title")}</Title>
+          <ModalHeader>
+            <Title>{t("manage-instance-title")}</Title>
+          </ModalHeader>
           {error && <ErrorBanner>{error}</ErrorBanner>}
 
       <Section>
