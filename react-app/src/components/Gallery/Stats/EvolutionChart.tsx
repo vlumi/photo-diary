@@ -23,6 +23,8 @@ type ActiveTheme = ReturnType<(typeof theme)["setTheme"]>;
 const CATEGORY_KEY_TO_SERVER: Record<string, string> = {
   author: "author",
   country: "country",
+  weekday: "weekday",
+  hour: "hour",
   "camera-make": "cameraMake",
   camera: "camera",
   lens: "lens",

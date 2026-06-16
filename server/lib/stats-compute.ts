@@ -271,10 +271,11 @@ const buildByCategory = (
 // Cumulative time series per bucket for the trend chart (#383).
 // Server hands the client a chart-ready shape: a sorted yearMonths
 // X axis, plus per-bucket parallel arrays of monthly counts +
-// running cumulative totals. Categories that aren't already a time
-// axis (year / month / weekday / hour) or unreasonably high-
-// cardinality (state / city — operator's call, see ticket) are the
-// trendable set.
+// running cumulative totals. weekday and hour are trendable too —
+// year-by-year and month-by-month they show shooting-habit shifts
+// (weekend → weekday, golden-hour → midday, etc.). year and month
+// are still excluded since they ARE the time axis. State / city
+// stay excluded as unreasonably high-cardinality.
 export interface EvolutionResult {
   yearMonths: string[];
   buckets: Record<string, { counts: number[]; cumulative: number[] }>;
@@ -282,6 +283,13 @@ export interface EvolutionResult {
 const EVOLUTION_BUCKETERS: Record<string, (p: Photo) => unknown> = {
   author: (p) => p.taken.author,
   country: (p) => p.taken.location?.country,
+  weekday: (p) =>
+    derived.weekday(
+      p.taken.instant.year,
+      p.taken.instant.month,
+      p.taken.instant.day
+    ),
+  hour: (p) => p.taken.instant.hour,
   cameraMake: (p) => p.camera?.make,
   camera: formatCamera,
   lens: formatLens,
