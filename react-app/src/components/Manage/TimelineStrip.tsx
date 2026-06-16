@@ -221,6 +221,34 @@ const TimelineStrip = ({
     return activeMonths.values().next().value as string;
   }, [activeMonths]);
 
+  // Two-tap range anchor. First tap sets the anchor + single-month
+  // range; subsequent taps either extend from the anchor, swap the
+  // anchor to the non-anchor endpoint, or clear. Mirrors how date-
+  // range pickers work on touchscreens where shift-click isn't an
+  // option. Defaults to dateFrom's YYYY-MM when the component mounts
+  // mid-range (operator just arrived with a URL-encoded range).
+  const initialAnchorYM = dateFrom ? dateFrom.slice(0, 7) : null;
+  const [anchorYM, setAnchorYM] = React.useState<string | null>(
+    initialAnchorYM
+  );
+  // Parent cleared the range externally (e.g. the Clear link in the
+  // date row) → drop the anchor so the next tap starts fresh.
+  React.useEffect(() => {
+    if (!dateFrom && !dateTo) setAnchorYM(null);
+  }, [dateFrom, dateTo]);
+  // First / last YYYY-MM of the active range — used to detect a tap
+  // on the non-anchor endpoint of a multi-month range, which swaps
+  // the anchor to that endpoint.
+  const rangeEnds = React.useMemo<
+    { firstYM: string; lastYM: string } | null
+  >(() => {
+    if (!dateFrom || !dateTo) return null;
+    const firstYM = dateFrom.slice(0, 7);
+    const lastYM = dateTo.slice(0, 7);
+    if (firstYM === lastYM) return null;
+    return { firstYM, lastYM };
+  }, [dateFrom, dateTo]);
+
   // Track range changes via a stable string key so the effect
   // fires once per change (rather than on every Set identity
   // shift). Empty range → no auto-expansion decision.
@@ -275,11 +303,8 @@ const TimelineStrip = ({
                   const onClick = (e: React.MouseEvent) => {
                     if (!present) return;
                     const clicked = monthRange(yearMonth);
-                    // Shift-click extends an existing range to
-                    // cover the clicked month. Without an active
-                    // range, falls through to the plain-click
-                    // (set single month) path so it isn't a
-                    // no-op for the first click in a span.
+                    // Shift-click extends the current range to
+                    // cover the clicked month, ignoring the anchor.
                     if (e.shiftKey && dateFrom && dateTo) {
                       const newFrom =
                         dateFrom < clicked.dateFrom ? dateFrom : clicked.dateFrom;
@@ -292,14 +317,49 @@ const TimelineStrip = ({
                       return;
                     }
                     // Plain click on the only active month → clear.
-                    // Otherwise → replace the range with just this
-                    // month (works for both "no range" and "clicked
-                    // inside a multi-month span" cases).
                     if (singleActiveYearMonth === yearMonth) {
+                      setAnchorYM(null);
                       onPickMonth(yearMonth, null);
-                    } else {
-                      onPickMonth(yearMonth, clicked);
+                      return;
                     }
+                    // Plain click on the non-anchor endpoint of a
+                    // multi-month range → move the anchor here and
+                    // collapse the range to this month. Subsequent
+                    // taps then extend from the new anchor.
+                    if (
+                      rangeEnds &&
+                      anchorYM &&
+                      yearMonth !== anchorYM &&
+                      (yearMonth === rangeEnds.firstYM ||
+                        yearMonth === rangeEnds.lastYM)
+                    ) {
+                      setAnchorYM(yearMonth);
+                      onPickMonth(yearMonth, clicked);
+                      return;
+                    }
+                    // Plain click with an existing anchor → extend
+                    // the range from the anchor to the clicked
+                    // month, anchor stays put.
+                    if (anchorYM && anchorYM !== yearMonth) {
+                      const anchored = monthRange(anchorYM);
+                      const newFrom =
+                        anchored.dateFrom < clicked.dateFrom
+                          ? anchored.dateFrom
+                          : clicked.dateFrom;
+                      const newTo =
+                        anchored.dateTo > clicked.dateTo
+                          ? anchored.dateTo
+                          : clicked.dateTo;
+                      onPickMonth(yearMonth, {
+                        dateFrom: newFrom,
+                        dateTo: newTo,
+                      });
+                      return;
+                    }
+                    // No anchor yet → set the anchor + single-month
+                    // range to the clicked month.
+                    setAnchorYM(yearMonth);
+                    onPickMonth(yearMonth, clicked);
                   };
                   return (
                     <MonthCell
