@@ -71,3 +71,61 @@ test("readCache: file without address returns null", async () => {
   const result = await geocode(0, 0, "en");
   assert.equal(result, null);
 });
+
+// Smaller countries publish their primary ISO 3166-2 codes at
+// lvl6/7/8 — Estonia (counties = lvl6), Luxembourg (canton = lvl6,
+// municipality = lvl7), Liechtenstein (municipality = lvl8). Falls
+// through broadest-first so the most generic subdivision wins.
+test("stateCode falls through to lvl6 when lvl4 is missing (Estonia)", async () => {
+  writeCacheFile(59.4370, 24.7536, "en", {
+    address: {
+      city: "Tallinn",
+      country_code: "ee",
+      "ISO3166-2-lvl6": "EE-37",
+      "ISO3166-2-lvl7": "EE-784",
+    },
+  });
+  const result = await geocode(59.4370, 24.7536, "en");
+  assert.ok(result);
+  assert.equal(result.stateCode, "EE-37");
+});
+
+test("stateCode falls through to lvl7 when lvl4 + lvl6 missing (Luxembourg)", async () => {
+  writeCacheFile(49.6116, 6.1319, "en", {
+    address: {
+      city: "Luxembourg",
+      country_code: "lu",
+      "ISO3166-2-lvl7": "LU-LU",
+    },
+  });
+  const result = await geocode(49.6116, 6.1319, "en");
+  assert.ok(result);
+  assert.equal(result.stateCode, "LU-LU");
+});
+
+test("stateCode falls through to lvl8 when only lvl8 present (Liechtenstein)", async () => {
+  writeCacheFile(47.1380, 9.5345, "en", {
+    address: {
+      village: "Rotenboden",
+      country_code: "li",
+      "ISO3166-2-lvl8": "LI-10",
+    },
+  });
+  const result = await geocode(47.1380, 9.5345, "en");
+  assert.ok(result);
+  assert.equal(result.stateCode, "LI-10");
+});
+
+test("stateCode prefers lvl4 when multiple levels present", async () => {
+  writeCacheFile(35.4437, 139.6380, "en", {
+    address: {
+      city: "Yokohama",
+      country_code: "jp",
+      "ISO3166-2-lvl4": "JP-14",
+      "ISO3166-2-lvl6": "JP-14-XX",
+    },
+  });
+  const result = await geocode(35.4437, 139.6380, "en");
+  assert.ok(result);
+  assert.equal(result.stateCode, "JP-14");
+});

@@ -79,9 +79,18 @@ const extract = (raw: NominatimResponse): NominatimResult | null => {
     const cc = a.country_code;
     return typeof cc === "string" ? cc : undefined;
   })();
+  // lvl4 is Nominatim's first-level admin subdivision for most
+  // countries (US states, JP prefectures, FI regions), but smaller
+  // countries publish their primary ISO 3166-2 codes at lvl6 (EE
+  // counties, LU canton), lvl7 (LU municipalities), or lvl8 (LI
+  // municipalities). Fall through in broadest-first order so the
+  // most generic subdivision available wins.
   const stateCode = (() => {
-    const v = a["ISO3166-2-lvl4"];
-    return typeof v === "string" && v ? v : undefined;
+    for (const level of [4, 6, 7, 8]) {
+      const v = a[`ISO3166-2-lvl${level}`];
+      if (typeof v === "string" && v) return v;
+    }
+    return undefined;
   })();
   return { countryCode, stateCode, city, address: a };
 };

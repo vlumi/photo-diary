@@ -1,8 +1,5 @@
 #!/usr/bin/env -S npx tsx
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console -- interactive CLI tool; console output is the UI */
-import fs from "node:fs";
-import path from "node:path";
-
 import yargs, { type Argv } from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -663,69 +660,9 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "cities",
-    "Manage geocoded city data — audit per-language overlay coverage, normalize, or clean bad localized values.",
+    "Manage geocoded city data — normalize admin cruft from the canonical column or clean per-language rows that failed the script rule.",
     (y) =>
       y
-        .command(
-          "audit",
-          "List unique (country, city) pairs in the gallery and whether each lang has an override in react-app/src/lib/translations/cities/. Helps target the per-language overlay against actual data.",
-          (y) =>
-            y.option("lang", {
-              type: "array",
-              string: true,
-              default: ["fi", "ja"],
-              describe: "Languages to check overrides for (default: fi, ja)",
-            }),
-          async (argv) => {
-            const photos = (await db.loadPhotos()) as any[];
-            const pairs = new Map<string, { country: string; cityEn: string }>();
-            for (const p of photos) {
-              const cc = p.geocoded?.countryCode as string | undefined;
-              const cityEn = (p.geocoded?.cityEn ?? p.geocoded?.city) as
-                | string
-                | undefined;
-              if (!cc || !cityEn) continue;
-              const key = `${cc.toLowerCase()}:${cityEn}`;
-              if (!pairs.has(key)) pairs.set(key, { country: cc, cityEn });
-            }
-            const overlayDir = path.resolve(
-              path.dirname(new URL(import.meta.url).pathname),
-              "../../react-app/src/lib/translations/cities"
-            );
-            const overlays: Record<string, Record<string, string>> = {};
-            for (const lang of argv.lang as string[]) {
-              const file = path.join(overlayDir, `${lang}.json`);
-              overlays[lang] = fs.existsSync(file)
-                ? (JSON.parse(fs.readFileSync(file, "utf8")) as Record<
-                    string,
-                    string
-                  >)
-                : {};
-            }
-            const header = ["country", "city (en)", ...(argv.lang as string[])];
-            const rows: string[][] = [header];
-            const missing: string[] = [];
-            for (const key of [...pairs.keys()].sort()) {
-              const { country, cityEn } = pairs.get(key)!;
-              const cells = [country, cityEn];
-              let anyMissing = false;
-              for (const lang of argv.lang as string[]) {
-                const v = overlays[lang]?.[key];
-                if (v) cells.push(v);
-                else {
-                  cells.push("—");
-                  anyMissing = true;
-                }
-              }
-              rows.push(cells);
-              if (anyMissing) missing.push(key);
-            }
-            console.log(formatTable(rows));
-            console.log(
-              `\n${pairs.size} unique (country, city) pair(s); ${missing.length} missing at least one override.`
-            );
-          }
-        )
         .command(
           "normalize",
           "Strip admin cruft from `photo.geocoded_city` (e.g. \"Stockholm Municipality\" → \"Stockholm\") using the current normalization rules. Dry-run by default; pass --apply to write.",
@@ -766,7 +703,7 @@ await yargs(hideBin(process.argv))
         )
         .command(
           "clean-localized",
-          "Clear photo_localized.geocoded_city values that don't match their language's script rule (see server/lib/localized-script.ts). Sets the column to NULL — keeps the row + raw geocoded_address blob, so the daemon won't re-fetch and re-introduce the bad value. Dry-run by default; --apply to write.",
+          "Clear photo_localized rows whose geocoded_city doesn't match their language's script rule (see server/lib/localized-script.ts). NULLs both geocoded_city and geocoded_address — the blob's labels share the same rejected script and would leak via address-aware UIs. The row stays so the daemon won't re-fetch and re-introduce the bad value. Dry-run by default; --apply to write.",
           (y) =>
             y
               .option("apply", {
@@ -819,10 +756,7 @@ await yargs(hideBin(process.argv))
             }
           }
         )
-        .demandCommand(
-          1,
-          "Choose an action: audit, normalize, or clean-localized"
-        )
+        .demandCommand(1, "Choose an action: normalize or clean-localized")
   )
   .demandCommand(1, "Specify a subcommand")
   .parseAsync();

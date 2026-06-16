@@ -121,39 +121,6 @@ const countryName =
     );
   };
 
-// `<country>:<en-city>` → localized name. Per-language chunks load
-// on demand. Lookup is case-insensitive on the city portion;
-// fallback chain is lang → en → raw input. Used for foreign
-// exonyms (Tukholma, Soul, Peking) and any place where the en
-// canonical doesn't match the locale's natural form.
-const CITIES: Record<string, Record<string, string>> = {};
-const CITY_LOADERS: Record<
-  string,
-  () => Promise<{ default: Record<string, string> }>
-> = {
-  en: () => import("./translations/cities/en.json"),
-  fi: () => import("./translations/cities/fi.json"),
-  ja: () => import("./translations/cities/ja.json"),
-};
-const loadCities = async (lang: string): Promise<void> => {
-  if (CITIES[lang]) return;
-  const loader = CITY_LOADERS[lang];
-  if (!loader) return;
-  const mod = await loader();
-  CITIES[lang] = mod.default;
-};
-const cityName = (
-  lang: string,
-  countryCode: string | undefined,
-  cityEn: string | undefined,
-  fallback?: string
-): string => {
-  const fb = fallback ?? cityEn ?? "";
-  if (!countryCode || !cityEn) return fb;
-  const key = `${countryCode.toLowerCase()}:${cityEn}`;
-  return CITIES[lang]?.[key] ?? CITIES.en?.[key] ?? fb;
-};
-
 // ISO 3166-2 code → localized name. JSON keys are lowercase with the
 // hyphen stripped (`jp13`, `usma`). Per-language chunks load on demand;
 // lookup falls back lang → en → original code.
@@ -313,14 +280,10 @@ const buildCityLabels = (
     key: k,
     ...parseCityKey(k),
   }));
+  void lang;
   const localized = parsed.map((p) => ({
     ...p,
-    display: cityName(
-      lang,
-      p.country,
-      p.city,
-      localizedByKey[p.key] ?? p.city
-    ),
+    display: localizedByKey[p.key] ?? p.city,
   }));
   const byDisplay: Record<string, typeof localized> = {};
   for (const p of localized) {
@@ -508,8 +471,6 @@ export default {
   countryName,
   subdivisionName,
   loadSubdivisions,
-  cityName,
-  loadCities,
 
   exposure,
   gear,
