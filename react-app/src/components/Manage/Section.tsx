@@ -12,7 +12,10 @@ export const Section = styled.section`
   padding: 14px 16px;
   border: 1px solid var(--inactive-color);
   border-radius: 6px;
-  background: var(--primary-background);
+  /* Section panels read as cards on the page background — use the
+     theme's tile colour (matches /g/'s calendar tiles) so /m/ looks
+     like a sibling to /g/, not a separate app. */
+  background: var(--tile-background);
   /* App.css sets a global text-align: center; admin section bodies
      read left so values + form fields line up on the leading edge. */
   text-align: left;

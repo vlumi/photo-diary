@@ -13,6 +13,7 @@ import {
 import EpochAge from "../Gallery/EpochAge";
 import EpochDayIndex from "../Gallery/EpochDayIndex";
 import { useModalDirty, useModalEscape } from "./ItemModal";
+import { Section, SectionTitle } from "./Section";
 import GalleryModel from "../../models/GalleryModel";
 import config from "../../lib/config";
 import filter, { type Filters as FiltersT, type ServerFilters } from "../../lib/filter";
@@ -706,34 +707,66 @@ const GalleryEdit = (): React.ReactElement => {
         </>
       ) : (
         <>
-          <Summary>
-            <SummaryLabel>{t("manage-gallery-field-title")}</SummaryLabel>
-            <SummaryValue>{renderValue(gallery.title)}</SummaryValue>
-            <SummaryLabel>{t("manage-gallery-field-description")}</SummaryLabel>
-            <SummaryValue>{renderValue(gallery.description)}</SummaryValue>
-            <SummaryLabel>{t("manage-gallery-field-icon")}</SummaryLabel>
-            <SummaryValue>{renderValue(gallery.icon)}</SummaryValue>
-            <SummaryLabel>{t("manage-gallery-field-theme")}</SummaryLabel>
-            <SummaryValue>{renderValue(gallery.theme)}</SummaryValue>
-            <SummaryLabel>{t("manage-gallery-field-initial-view")}</SummaryLabel>
-            <SummaryValue>{renderValue(gallery.initialView)}</SummaryValue>
-            <SummaryLabel>{t("manage-gallery-field-epoch")}</SummaryLabel>
-            <SummaryValue>{renderValue(gallery.epoch)}</SummaryValue>
-            <SummaryLabel>{t("manage-gallery-field-epoch-type")}</SummaryLabel>
-            <SummaryValue>{renderValue(gallery.epochType)}</SummaryValue>
-            <SummaryLabel>
-              {t("manage-gallery-field-default-language")}
-            </SummaryLabel>
-            <SummaryValue>
-              {renderValue(
-                gallery.defaultLanguage
-                  ? languageNameIn(gallery.defaultLanguage, i18n.language)
-                  : undefined
-              )}
-            </SummaryValue>
-            <SummaryLabel>{t("manage-gallery-field-hostname")}</SummaryLabel>
-            <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
-          </Summary>
+          <Section>
+            <SectionTitle>
+              {t("manage-gallery-section-content")}
+            </SectionTitle>
+            <Summary>
+              <SummaryLabel>{t("manage-gallery-field-title")}</SummaryLabel>
+              <SummaryValue>{renderValue(gallery.title)}</SummaryValue>
+              <SummaryLabel>
+                {t("manage-gallery-field-description")}
+              </SummaryLabel>
+              <SummaryValue>{renderValue(gallery.description)}</SummaryValue>
+              <SummaryLabel>
+                {t("manage-gallery-field-default-language")}
+              </SummaryLabel>
+              <SummaryValue>
+                {renderValue(
+                  gallery.defaultLanguage
+                    ? languageNameIn(gallery.defaultLanguage, i18n.language)
+                    : undefined
+                )}
+              </SummaryValue>
+              <SummaryLabel>{t("manage-gallery-field-icon")}</SummaryLabel>
+              <SummaryValue>{renderValue(gallery.icon)}</SummaryValue>
+            </Summary>
+          </Section>
+          <Section>
+            <SectionTitle>
+              {t("manage-gallery-section-display")}
+            </SectionTitle>
+            <Summary>
+              <SummaryLabel>{t("manage-gallery-field-theme")}</SummaryLabel>
+              <SummaryValue>{renderValue(gallery.theme)}</SummaryValue>
+              <SummaryLabel>
+                {t("manage-gallery-field-initial-view")}
+              </SummaryLabel>
+              <SummaryValue>
+                {renderValue(gallery.initialView)}
+              </SummaryValue>
+            </Summary>
+          </Section>
+          <Section>
+            <SectionTitle>
+              {t("manage-gallery-section-epoch")}
+            </SectionTitle>
+            <Summary>
+              <SummaryLabel>{t("manage-gallery-field-epoch")}</SummaryLabel>
+              <SummaryValue>{renderValue(gallery.epoch)}</SummaryValue>
+              <SummaryLabel>
+                {t("manage-gallery-field-epoch-type")}
+              </SummaryLabel>
+              <SummaryValue>{renderValue(gallery.epochType)}</SummaryValue>
+            </Summary>
+          </Section>
+          <Section>
+            <SectionTitle>{t("manage-gallery-section-scope")}</SectionTitle>
+            <Summary>
+              <SummaryLabel>{t("manage-gallery-field-hostname")}</SummaryLabel>
+              <SummaryValue>{renderValue(gallery.hostname)}</SummaryValue>
+            </Summary>
+          </Section>
           {gallery.type === "hybrid" ? (
             <GallerySourcesSection
               galleryId={galleryId}

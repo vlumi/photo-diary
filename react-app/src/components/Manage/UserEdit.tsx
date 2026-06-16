@@ -406,18 +406,22 @@ const UserEdit = (): React.ReactElement => {
         </>
       ) : (
         <>
-          <Summary>
-            <SummaryLabel>{t("manage-users-col-id")}</SummaryLabel>
-            <SummaryValue>
-              <Mono>{userId}</Mono>
-            </SummaryValue>
-            <SummaryLabel>{t("manage-user-field-name")}</SummaryLabel>
-            <SummaryValue>{((data as UserData).name as string) || ""}</SummaryValue>
-            <SummaryLabel>{t("manage-user-field-is-admin")}</SummaryLabel>
-            <SummaryValue>
-              {flag ? t("manage-user-flag-yes") : t("manage-user-flag-no")}
-            </SummaryValue>
-          </Summary>
+          <Section>
+            <Summary>
+              <SummaryLabel>{t("manage-users-col-id")}</SummaryLabel>
+              <SummaryValue>
+                <Mono>{userId}</Mono>
+              </SummaryValue>
+              <SummaryLabel>{t("manage-user-field-name")}</SummaryLabel>
+              <SummaryValue>
+                {((data as UserData).name as string) || ""}
+              </SummaryValue>
+              <SummaryLabel>{t("manage-user-field-is-admin")}</SummaryLabel>
+              <SummaryValue>
+                {flag ? t("manage-user-flag-yes") : t("manage-user-flag-no")}
+              </SummaryValue>
+            </Summary>
+          </Section>
           {!isPseudo && (
             <Footer>
               <ButtonDanger

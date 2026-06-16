@@ -84,6 +84,9 @@ const Backdrop = styled.div`
   box-sizing: border-box;
 `;
 const Frame = styled.div`
+  /* Frame is the modal's "page" surface — the panels inside it use
+     --tile-background so they read as cards on this surface, the
+     same way /g/'s calendar tiles sit on the gallery page. */
   background: var(--primary-background);
   color: var(--primary-color);
   border: 1px solid var(--inactive-color);
