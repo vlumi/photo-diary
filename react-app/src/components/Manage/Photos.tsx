@@ -219,9 +219,24 @@ const TextInput = styled.input`
 const DateRow = styled.div`
   display: flex;
   gap: 6px;
+  align-items: center;
   & > input {
     flex: 1 1 0;
     min-width: 0;
+  }
+`;
+const ClearLink = styled.button`
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 0.85em;
+  color: var(--inactive-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 6px;
+  &:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
   }
 `;
 const ResultSummary = styled.div`
@@ -833,6 +848,22 @@ const AdminPhotos = (): React.ReactElement => {
               setSearchParam("dateTo", e.target.value || null)
             }
           />
+          {(searchParams.get("dateFrom") || searchParams.get("dateTo")) && (
+            <ClearLink
+              type="button"
+              onClick={() =>
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.delete("dateFrom");
+                  next.delete("dateTo");
+                  next.delete("page");
+                  return next;
+                })
+              }
+            >
+              {t("manage-photos-filters-clear-one")}
+            </ClearLink>
+          )}
         </DateRow>
       </FilterGroup>
       <FilterGroup>
