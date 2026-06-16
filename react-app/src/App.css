@@ -5,6 +5,9 @@ html {
   --header-color: #fff;
   --header-sub-color: #ddd;
   --header-background: #000;
+  /* Reserve the scrollbar gutter so toggling body overflow:hidden
+     (modal scroll lock) doesn't reflow the page ~15px wider. */
+  scrollbar-gutter: stable;
 }
 
 body {

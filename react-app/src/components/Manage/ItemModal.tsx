@@ -114,6 +114,9 @@ const Body = styled.div`
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Don't chain scroll into the underlying list page once the modal
+     body hits top / bottom — keeps wheel and touch events contained. */
+  overscroll-behavior: contain;
 `;
 const CloseButton = styled.button`
   position: absolute;
