@@ -1860,21 +1860,31 @@ const upsertGeocoded = async (
     }
     return;
   }
-  // Per-lang validation drops values whose script doesn't match the
-  // language (Nominatim's `?accept-language=<lang>` falls back to OSM
-  // local labels when no localized form exists). Keeps the row + raw
-  // address blob, only the city goes NULL.
-  const city = acceptLocalizedCity(fields.city, lang)
-    ? (fields.city ?? null)
-    : null;
+  // Per-lang validation drops values whose script doesn't match
+  // the language (Nominatim's `?accept-language=<lang>` falls back
+  // to OSM local labels when no localized form exists). When the
+  // city is rejected, drop the address blob too — every per-row
+  // label inside it (`city`, `neighbourhood`, `suburb`, `town`…)
+  // carries the same script and would leak through to consumers
+  // that read the raw blob (PhotoDrawer's maritime fallback, state
+  // / city derivation, future address-aware UIs). Read path falls
+  // through to the en row's blob when this row's columns are NULL.
+  //
+  // ON CONFLICT replaces directly (no COALESCE) so a re-geocode
+  // where the new result is rejected actually clears the old
+  // kanji blob — every caller of the non-en branch writes the
+  // full geocoder result, never a partial.
+  const cityOk = acceptLocalizedCity(fields.city, lang);
+  const city = cityOk ? (fields.city ?? null) : null;
+  const address = cityOk ? (fields.address ?? null) : null;
   db.prepare(
     `INSERT INTO photo_localized
        (photo_id, lang, geocoded_city, geocoded_address)
      VALUES (?, ?, ?, ?)
      ON CONFLICT (photo_id, lang) DO UPDATE SET
-       geocoded_city    = COALESCE(excluded.geocoded_city, photo_localized.geocoded_city),
-       geocoded_address = COALESCE(excluded.geocoded_address, photo_localized.geocoded_address)`
-  ).run(photoId, lang, city, fields.address ?? null);
+       geocoded_city    = excluded.geocoded_city,
+       geocoded_address = excluded.geocoded_address`
+  ).run(photoId, lang, city, address);
 };
 
 // Flag a photo as "Nominatim has no address for these coordinates" so
@@ -1949,20 +1959,39 @@ const loadPhotosMissingGeocoded = async (
 
 const loadPhotoLocalized = async (
   lang: string
-): Promise<Array<{ photo_id: string; geocoded_city: string | null }>> => {
+): Promise<
+  Array<{
+    photo_id: string;
+    geocoded_city: string | null;
+    geocoded_address: string | null;
+  }>
+> => {
   return db
     .prepare(
-      "SELECT photo_id, geocoded_city FROM photo_localized WHERE lang = ?"
+      "SELECT photo_id, geocoded_city, geocoded_address FROM photo_localized WHERE lang = ?"
     )
-    .all(lang) as Array<{ photo_id: string; geocoded_city: string | null }>;
+    .all(lang) as Array<{
+    photo_id: string;
+    geocoded_city: string | null;
+    geocoded_address: string | null;
+  }>;
 };
 
 const clearLocalizedCity = async (
   photoId: string,
   lang: string
 ): Promise<void> => {
+  // Clears both the derived city AND the raw address blob — the
+  // blob's labels (city, suburb, neighbourhood…) share the script
+  // that just failed `acceptLocalizedCity`, so keeping the blob
+  // would leak the same characters via PhotoDrawer's maritime
+  // fallback / address-aware UIs. Row stays (no DELETE) so the
+  // daemon's loadPhotosMissingGeocoded query keeps treating this
+  // (photo, lang) pair as already attempted.
   db.prepare(
-    "UPDATE photo_localized SET geocoded_city = NULL WHERE photo_id = ? AND lang = ?"
+    `UPDATE photo_localized
+       SET geocoded_city = NULL, geocoded_address = NULL
+     WHERE photo_id = ? AND lang = ?`
   ).run(photoId, lang);
 };
 

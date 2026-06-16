@@ -766,7 +766,7 @@ await yargs(hideBin(process.argv))
         )
         .command(
           "clean-localized",
-          "Clear photo_localized.geocoded_city values that don't match their language's script rule (see server/lib/localized-script.ts). Sets the column to NULL — keeps the row + raw geocoded_address blob, so the daemon won't re-fetch and re-introduce the bad value. Dry-run by default; --apply to write.",
+          "Clear photo_localized rows whose geocoded_city doesn't match their language's script rule (see server/lib/localized-script.ts). NULLs both geocoded_city and geocoded_address — the blob's labels share the same rejected script and would leak via address-aware UIs. The row stays so the daemon won't re-fetch and re-introduce the bad value. Dry-run by default; --apply to write.",
           (y) =>
             y
               .option("apply", {

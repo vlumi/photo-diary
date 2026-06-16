@@ -262,14 +262,49 @@ describe("photo_localized", () => {
     expect(target?.geocoded_city).toBe("東京");
   });
 
-  test("clearLocalizedCity nulls the city for the (photo, lang) pair", async () => {
+  test("clearLocalizedCity nulls both city and address for the (photo, lang) pair", async () => {
     await driver.clearLocalizedCity("ph-loc", "ja");
-    const rows = (await driver.loadPhotoLocalized("ja")) as Array<{
-      photo_id: string;
-      geocoded_city: string | null;
-    }>;
+    const rows = await driver.loadPhotoLocalized("ja");
     const target = rows.find((r) => r.photo_id === "ph-loc");
     expect(target?.geocoded_city).toBeNull();
+    expect(target?.geocoded_address).toBeNull();
+  });
+
+  test("upsertGeocoded drops the address blob when the city fails the script rule", async () => {
+    // fi-langed Nominatim response for a JP location falls back to
+    // local OSM labels (kanji city + kanji per-row labels in the
+    // address blob). The acceptLocalizedCity filter rejects the
+    // city; the blob must drop alongside so consumers reading
+    // address.suburb / address.neighbourhood don't see the kanji.
+    await driver.createPhoto({ id: "ph-fi-kanji" });
+    await driver.upsertGeocoded("ph-fi-kanji", "fi", {
+      city: "品川区",
+      address:
+        '{"city":"\\u54c1\\u5ddd\\u533a","neighbourhood":"\\u5c0f\\u5c71\\u53f0\\u4e00\\u4e01\\u76ee"}',
+    });
+    const rows = await driver.loadPhotoLocalized("fi");
+    const target = rows.find((r) => r.photo_id === "ph-fi-kanji");
+    expect(target?.geocoded_city).toBeNull();
+    expect(target?.geocoded_address).toBeNull();
+  });
+
+  test("upsertGeocoded overwrites a rejected re-geocode over an existing accepted row", async () => {
+    // First write: accepted Latin-script fi value. Second write:
+    // rejected kanji — should clear both columns, not COALESCE the
+    // old blob back in.
+    await driver.createPhoto({ id: "ph-fi-overwrite" });
+    await driver.upsertGeocoded("ph-fi-overwrite", "fi", {
+      city: "Helsinki",
+      address: '{"city":"Helsinki","country":"Suomi"}',
+    });
+    await driver.upsertGeocoded("ph-fi-overwrite", "fi", {
+      city: "品川区",
+      address: '{"city":"\\u54c1\\u5ddd\\u533a"}',
+    });
+    const rows = await driver.loadPhotoLocalized("fi");
+    const target = rows.find((r) => r.photo_id === "ph-fi-overwrite");
+    expect(target?.geocoded_city).toBeNull();
+    expect(target?.geocoded_address).toBeNull();
   });
 });
 
