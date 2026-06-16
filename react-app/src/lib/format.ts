@@ -132,7 +132,6 @@ const CITY_LOADERS: Record<
   () => Promise<{ default: Record<string, string> }>
 > = {
   en: () => import("./translations/cities/en.json"),
-  fi: () => import("./translations/cities/fi.json"),
   ja: () => import("./translations/cities/ja.json"),
 };
 const loadCities = async (lang: string): Promise<void> => {
