@@ -668,6 +668,33 @@ const AdminPhotos = (): React.ReactElement => {
     queryFn: () => photosService.getYearMonths(timelineFilter),
     placeholderData: keepPreviousData,
   });
+  // Anchor the date-range picker to the photo set's actual span via
+  // min / max on the native <input type="date">. Browsers that open
+  // the picker at `min` when value is empty (e.g. Chrome) land on a
+  // useful month instead of today; all browsers prevent picking dates
+  // outside the set's range. Last month gets its true last-day via
+  // Date(year, month+1, 0).
+  const defaultDateRange = React.useMemo<
+    { from?: string; to?: string } | undefined
+  >(() => {
+    const buckets = timelineQuery.data ?? [];
+    if (buckets.length === 0) return undefined;
+    // YYYY-MM strings sort lexicographically the same as
+    // chronologically — pull min / max regardless of the server's
+    // bucket ordering.
+    let minYM = buckets[0].yearMonth;
+    let maxYM = buckets[0].yearMonth;
+    for (const b of buckets) {
+      if (b.yearMonth < minYM) minYM = b.yearMonth;
+      if (b.yearMonth > maxYM) maxYM = b.yearMonth;
+    }
+    const [maxY, maxM] = maxYM.split("-").map(Number);
+    const lastDay = new Date(maxY, maxM, 0).getDate();
+    return {
+      from: `${minYM}-01`,
+      to: `${maxYM}-${String(lastDay).padStart(2, "0")}`,
+    };
+  }, [timelineQuery.data]);
 
   // After photoIdFocus resolves a non-1 page, write it back to the
   // URL. Without this the page param stays absent: closing the
@@ -791,6 +818,8 @@ const AdminPhotos = (): React.ReactElement => {
           <TextInput
             type="date"
             value={searchParams.get("dateFrom") ?? ""}
+            min={defaultDateRange?.from}
+            max={defaultDateRange?.to}
             onChange={(e) =>
               setSearchParam("dateFrom", e.target.value || null)
             }
@@ -798,6 +827,8 @@ const AdminPhotos = (): React.ReactElement => {
           <TextInput
             type="date"
             value={searchParams.get("dateTo") ?? ""}
+            min={defaultDateRange?.from}
+            max={defaultDateRange?.to}
             onChange={(e) =>
               setSearchParam("dateTo", e.target.value || null)
             }
