@@ -3,7 +3,7 @@
   "info": {
     "title": "Photo Diary API",
     "description": "Self-hosted photo-diary backend. Schema is generated from TypeBox-validated route handlers.",
-    "version": "0.16.0"
+    "version": "0.17.0"
   },
   "components": {
     "securitySchemes": {
