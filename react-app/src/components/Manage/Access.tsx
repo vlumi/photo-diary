@@ -548,7 +548,11 @@ const Access = (): React.ReactElement => {
               key={id}
               role="link"
               tabIndex={0}
-              onClick={() => navigate(`/m/users/${id}`)}
+              onClick={() =>
+                navigate(`/m/users/${id}`, {
+                  state: { skipScrollRestore: true },
+                })
+              }
               title={String(t("manage-access-global-admins-jump"))}
             >
               {id}
@@ -696,7 +700,11 @@ const Access = (): React.ReactElement => {
                   <GalleryLink
                     role="link"
                     tabIndex={0}
-                    onClick={() => navigate(`/m/g/${row.galleryId}/access`)}
+                    onClick={() =>
+                      navigate(`/m/g/${row.galleryId}/access`, {
+                        state: { skipScrollRestore: true },
+                      })
+                    }
                   >
                     <Mono>{row.galleryId}</Mono>
                   </GalleryLink>

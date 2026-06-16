@@ -1716,10 +1716,13 @@ const PhotoDrawer = ({
         );
         if (!ok) return;
       }
-      navigate({
-        pathname: `/m/photos/${siblingId}`,
-        search: window.location.search,
-      });
+      navigate(
+        {
+          pathname: `/m/photos/${siblingId}`,
+          search: window.location.search,
+        },
+        { state: { skipScrollRestore: true } }
+      );
     },
     [dirty, navigate, t]
   );

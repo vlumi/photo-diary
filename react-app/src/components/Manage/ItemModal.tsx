@@ -168,7 +168,11 @@ const ItemModal = ({
         );
         if (!confirmed) return;
       }
-      navigate(to);
+      // Modals are a visual layer over their list/parent page —
+      // opening / closing them shouldn't snap the underlying page's
+      // scroll position to top (or to whatever ScrollToPosition has
+      // cached for the target path). The body stays where it is.
+      navigate(to, { state: { skipScrollRestore: true } });
     },
     [effectiveDirty, t, navigate]
   );

@@ -259,7 +259,11 @@ const SortableRow = ({ gallery }: SortableRowProps): React.ReactElement => {
     <Row
       ref={setNodeRef}
       style={style}
-      onClick={() => navigate(`/m/g/${gallery.id}`)}
+      onClick={() =>
+        navigate(`/m/g/${gallery.id}`, {
+          state: { skipScrollRestore: true },
+        })
+      }
     >
       <DragHandleCell onClick={(e) => e.stopPropagation()}>
         <DragHandle
@@ -312,7 +316,9 @@ const SortableRow = ({ gallery }: SortableRowProps): React.ReactElement => {
           <ActionButton
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/m/g/${gallery.id}/access`);
+              navigate(`/m/g/${gallery.id}/access`, {
+                state: { skipScrollRestore: true },
+              });
             }}
             role="link"
             tabIndex={0}

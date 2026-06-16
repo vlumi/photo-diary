@@ -590,7 +590,10 @@ const AdminPhotos = (): React.ReactElement => {
     const base = location.pathname.endsWith("/photos")
       ? location.pathname
       : location.pathname.replace(/\/[^/]+$/, "");
-    navigate({ pathname: `${base}/${id}`, search: location.search });
+    navigate(
+      { pathname: `${base}/${id}`, search: location.search },
+      { state: { skipScrollRestore: true } }
+    );
   };
 
   const filter = React.useMemo(

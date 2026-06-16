@@ -126,7 +126,14 @@ const Groups = (): React.ReactElement => {
           </thead>
           <tbody>
             {rows.map((g) => (
-              <Row key={g.id} onClick={() => navigate(`/m/groups/${g.id}`)}>
+              <Row
+                key={g.id}
+                onClick={() =>
+                  navigate(`/m/groups/${g.id}`, {
+                    state: { skipScrollRestore: true },
+                  })
+                }
+              >
                 <Td>
                   <Mono>{g.id}</Mono>
                 </Td>
