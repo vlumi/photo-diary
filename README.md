@@ -46,11 +46,14 @@ The three pieces communicate via the shared filesystem and SQLite DB rather than
 
 ### Public viewer (`/g/`)
 
-- Year / Month / Photo views — heat-mapped calendar grid, thumbnails grouped by date, full-screen photo modal with metadata panel + map
+- Year / Month / Photo views — heat-mapped calendar grid, thumbnails grouped by date, full-screen photo modal with corner metadata panel (EXIF + location + date + map)
+- Persistent title-bar map button (`m`) that survives year / month / photo nav, scoped to the current view's photo set
 - Fast browse — per-view fetches narrowed by the active filter, TanStack Query cache, in-place refresh on filter toggles
-- Arrow / swipe nav with prev/next prefetch; click-into-photo from anywhere it shows
-- Per-photo metadata in `en` / `fi` / `ja` (title, description, place); reverse-geocoded country / state / city from Nominatim
+- Arrow / swipe nav with prev/next prefetch; clickable breadcrumb (`🏠 › Gallery › 2024 › March › #1234`)
+- SPA UI in `en` / `fi` / `ja` (UserMenu language picker); per-photo metadata (title, description, place) in the same three locales
+- Reverse-geocoded country / state / city from Nominatim, in the visitor's locale
 - 18 themes (light / dark / neutral / coloured); per-gallery override or instance-wide default
+- Per-gallery `hide_map` privacy cascade — coordinates / map / location card can be suppressed per gallery, per user, or via the `:guest` baseline; same MAX-merge logic as the access grants
 
 ### Filtering
 
@@ -63,27 +66,32 @@ The three pieces communicate via the shared filesystem and SQLite DB rather than
 ### Statistics
 
 - Per-gallery `/g/<id>/stats`; cross-gallery `/s` for admins
-- General: total photos, total days, average per day, top author / country
-- Time: year, year/month, month, weekday, hour
-- Gear: camera make / camera / lens / camera-lens combo
-- Exposure: focal length, aperture, shutter speed, ISO, EV, LV, resolution, orientation, aspect ratio
-- Stacked-area Evolution chart for every trendable category with month/year granularity
-- Map view with marker clustering; popup thumbnail links to the photo
+- **General**: summary (total photos, days, average per day), author, country, state (beta), city, location (map card)
+- **Time**: year, year/month, month, weekday, hour
+- **Gear**: camera make, camera, lens, camera-lens combo
+- **Exposure**: focal length, aperture, shutter speed, ISO, EV, LV
+- **Image**: resolution, orientation, aspect ratio
+- Stacked-area Evolution chart for every trendable category with month / year granularity
+- Map card with marker clustering; popup thumbnail links to the photo
 - Click any value chip / chart segment to filter both stats and gallery to that subset
 
 ### Admin (`/m/*`, gated on `user.is_admin`)
 
 - Galleries / Users / Groups / Photos / Access / Instance management surfaces, each opening item routes as layered modals over their list page
-- Photo browser with bulk multi-select (shift / long-press / drag-paint), bulk Edit / Regeocode / Set-private / Set-public
+- Photo browser with bulk multi-select (shift / long-press / drag-paint), bulk Edit / Regeocode / Set-private / Set-public; same filter strip + modal pattern as `/g/`, plus audit chips (duplicates / country-mismatch / per-field missing) for the data-quality workflow
 - Per-photo Private flag; per-gallery `can_see_private` grants on users + groups; public Photo modal shows a Private badge to viewers who can see it
-- Editor-tier "Manage this photo" / "Set as gallery icon" buttons on the public Photo modal (gated by `user.isGalleryEditor`)
+- Editor-tier "Manage this photo" / "Set as gallery icon" buttons on the public Photo modal (gated by `user.isGalleryEditor`); pencil opens the same `PhotoDrawer` in-place over the gallery
+- Per-language metadata inputs for title / description / place (en / fi / ja) on every item form; canonical column + `*_localized` overlay rows
+- Virtual gallery editors — hybrid gallery's source picker, saved-filter gallery's filter builder (mounts the same `<Builder>` the public viewer uses)
+- Gallery icon cropper — pick any photo, drop a square crop, written to `gallery-icons/<id>.jpg`
 - Instance defaults (`defaultGallery`, `defaultTheme`, `defaultLanguage`, `initialGalleryView`, `firstWeekday`, beta feature toggles, rendition ladder) editable from `/m/instance` without an `.env` round-trip
 
 ### Authentication & authorization
 
 - JWT sessions (90-day default); user-rotatable secret invalidates every token issued to that user
 - Per-user / per-group viewer / editor grants on galleries; `user.is_admin` for instance-wide admin
-- `:guest` user carries the public baseline — every user inherits its grants and individual users can broaden or narrow that baseline
+- `:guest` user carries the public baseline; every user inherits its grants and individual user / group rows can only broaden them (access is `MAX` across all matching rows, never `MIN`)
+- `:all` wildcard gallery sentinel — a `user_gallery` / `group_gallery` row with `gallery_id = ':all'` grants the same access on every real gallery in one shot
 
 ### Operator scripts & deploy
 
