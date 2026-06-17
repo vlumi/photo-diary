@@ -354,6 +354,14 @@ const collectTopics = (
           stacked: true,
         },
       },
+      // pointRadius: 0 on the year/month datasets hides the per-
+      // month dots but also kills hover hit-testing under the default
+      // `intersect: true`. `intersect: false` lets the index-mode
+      // tooltip trigger on column position alone.
+      interaction: {
+        mode: "index",
+        intersect: false,
+      },
     },
   });
 
@@ -394,6 +402,12 @@ const collectTopics = (
             {
               data: data.map((_: any) => _.value),
               backgroundColor: colors,
+              // Hairline in --primary-color keeps every band visible
+              // even when its fill happens to land near the chart
+              // background (#590 — gradient endpoints can otherwise
+              // blend into white / off-white surrounds on neutral
+              // themes).
+              borderColor: theme.get("primary-color"),
               borderWidth: 0.5,
               barThickness: "flex",
               minBarLength: 3,
@@ -839,6 +853,15 @@ const collectTopics = (
           return {
             label: entry.key,
             backgroundColor: colorGradients[i],
+            // Hairline in --primary-color keeps the band edge visible
+            // when the fill lands near the chart background (#590).
+            borderColor: theme.get("primary-color"),
+            borderWidth: 0.5,
+            // Suppress the per-month point markers — they read as
+            // noise against the band borders. Hover still flashes a
+            // small point so the tooltip association is clear.
+            pointRadius: 0,
+            pointHoverRadius: 3,
             data: [...Array(12).keys()].map((month: any) => entry.value[month + 1]),
             fill: true,
             lineTension: 0.4,

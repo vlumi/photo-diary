@@ -1,6 +1,8 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { Global, css } from "@emotion/react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { BsGeoAltFill } from "react-icons/bs";
 import Leaflet, { type LatLngExpression } from "leaflet";
 import {
@@ -34,6 +36,49 @@ const Root = styled("div", { shouldForwardProp: (prop) => prop !== "$height" })<
 `;
 const PopupContent = styled.span`
   text-align: center;
+`;
+const PopupLink = styled(Link)`
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+// react-leaflet-markercluster ships pastel fills (green / yellow /
+// orange, alpha 0.6) that wash out on neutral / dark themes — and
+// disappear entirely on the grayscale theme, where the page-wide
+// `filter: grayscale(100%)` desaturates the otherwise-distinct
+// hues into near-identical mid-grays that blend into the OSM tile
+// layer. Override every cluster bucket with the theme's
+// --primary-color + --header-color, plus a 2px --header-color
+// border so the cluster stays distinct against whatever the tile
+// layer paints behind it. The bucket-size colour coding is gone;
+// the inline count + cluster size still signal magnitude (#590).
+const mapClusterStyles = css`
+  .marker-cluster {
+    background-clip: padding-box;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--primary-color) 50%, transparent);
+  }
+  .marker-cluster div {
+    width: 30px;
+    height: 30px;
+    margin-left: 5px;
+    margin-top: 5px;
+    text-align: center;
+    border-radius: 15px;
+    font: bold 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+    background: var(--primary-color);
+    color: var(--header-color);
+    border: 2px solid var(--header-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
+    box-sizing: border-box;
+  }
+  .marker-cluster span {
+    line-height: 26px;
+  }
 `;
 
 const DefaultIcon = Leaflet.icon({
@@ -191,6 +236,16 @@ interface Props {
   // Show the "Locate me" overlay button (#545). Defaults off — only
   // surfaces on MapModal, not on per-photo metadata-panel maps.
   showLocate?: boolean;
+  // When set, each marker popup links to that gallery's photo view
+  // at `/g/<galleryId>/<year>/<month>/<day>/<photoId>`. Without it,
+  // the popup falls back to the photo's first `galleries` entry;
+  // photos with no galleries (or no capture timestamp) keep the
+  // non-linked thumbnail.
+  galleryId?: string;
+  // Global stats / cross-gallery admin map → popup links to
+  // `/m/photos/<photoId>` (the admin drawer) instead of any
+  // `/g/<gallery>/...` view. Takes precedence over `galleryId`.
+  adminLink?: boolean;
 }
 
 const MapContainer = ({
@@ -199,6 +254,8 @@ const MapContainer = ({
   maxZoom,
   drawLine,
   showLocate,
+  galleryId,
+  adminLink,
 }: Props): React.ReactElement => {
   const [userPosition, setUserPosition] =
     React.useState<LatLngExpression | undefined>(undefined);
@@ -228,6 +285,7 @@ const MapContainer = ({
     .join("|");
   return (
     <Root $height={height}>
+      <Global styles={mapClusterStyles} />
       <Map
         bounds={bounds}
         center={center}
@@ -251,12 +309,34 @@ const MapContainer = ({
           attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <MarkerClusterGroup maxClusterRadius={40}>
+        <MarkerClusterGroup
+          maxClusterRadius={20}
+          spiderfyOnMaxZoom={true}
+        >
           {photos.map((photo, index) => {
             const thumbnailUrl = `${
               config.PHOTO_ROOT_URL
             }thumbnail/${photo.id()}`;
             const dimensions = photo.thumbnailDimensions();
+            const photoPath = (() => {
+              if (adminLink) return `/m/photos/${photo.id()}`;
+              const targetGallery = galleryId ?? photo.galleries()[0];
+              if (!targetGallery) return null;
+              const [y, m, d] = photo.ymd();
+              return `/g/${targetGallery}/${y}/${m}/${d}/${photo.id()}`;
+            })();
+            const body = (
+              <>
+                <img
+                  alt={photo.id()}
+                  src={thumbnailUrl}
+                  width={dimensions.width / 2}
+                  height={dimensions.height / 2}
+                />
+                <br />
+                {photo.formatDate()}
+              </>
+            );
             return (
               <Marker
                 key={index}
@@ -264,14 +344,11 @@ const MapContainer = ({
               >
                 <Popup>
                   <PopupContent>
-                    <img
-                      alt={photo.id()}
-                      src={thumbnailUrl}
-                      width={dimensions.width / 2}
-                      height={dimensions.height / 2}
-                    />
-                    <br />
-                    {photo.formatDate()}
+                    {photoPath ? (
+                      <PopupLink to={photoPath}>{body}</PopupLink>
+                    ) : (
+                      body
+                    )}
                   </PopupContent>
                 </Popup>
               </Marker>

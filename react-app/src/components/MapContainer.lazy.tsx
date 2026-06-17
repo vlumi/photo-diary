@@ -27,6 +27,8 @@ interface Props {
   maxZoom?: number;
   drawLine?: boolean;
   showLocate?: boolean;
+  galleryId?: string;
+  adminLink?: boolean;
 }
 
 const LazyMapContainer = (props: Props): React.ReactElement => (
