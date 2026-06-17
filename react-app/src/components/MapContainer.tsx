@@ -43,13 +43,15 @@ const PopupContent = styled.span`
 // `filter: grayscale(100%)` desaturates the otherwise-distinct
 // hues into near-identical mid-grays that blend into the OSM tile
 // layer. Override every cluster bucket with the theme's
-// --primary-color + --header-color so the cluster reads against any
-// theme's background regardless of bucket size (#590).
+// --primary-color + --header-color, plus a 2px --header-color
+// border so the cluster stays distinct against whatever the tile
+// layer paints behind it. The bucket-size colour coding is gone;
+// the inline count + cluster size still signal magnitude (#590).
 const mapClusterStyles = css`
   .marker-cluster {
     background-clip: padding-box;
     border-radius: 20px;
-    background: color-mix(in srgb, var(--primary-color) 30%, transparent);
+    background: color-mix(in srgb, var(--primary-color) 50%, transparent);
   }
   .marker-cluster div {
     width: 30px;
@@ -58,12 +60,15 @@ const mapClusterStyles = css`
     margin-top: 5px;
     text-align: center;
     border-radius: 15px;
-    font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+    font: bold 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
     background: var(--primary-color);
     color: var(--header-color);
+    border: 2px solid var(--header-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
+    box-sizing: border-box;
   }
   .marker-cluster span {
-    line-height: 30px;
+    line-height: 26px;
   }
 `;
 
