@@ -310,6 +310,7 @@ const Category = ({
           title={category.title}
           photos={category.photos ?? []}
           galleryId={galleryId}
+          adminLink={globalScope}
           onClose={closeMapModal}
         />
       )}

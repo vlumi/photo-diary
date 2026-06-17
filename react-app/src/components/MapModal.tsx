@@ -64,6 +64,8 @@ interface Props {
   // Threaded through to MapContainer so each marker popup links to
   // the photo view at /g/<galleryId>/...
   galleryId?: string;
+  // Global stats / admin map — popup links to /m/photos/<id> instead.
+  adminLink?: boolean;
   onClose: () => void;
 }
 
@@ -72,6 +74,7 @@ const MapModal = ({
   photos,
   drawLine,
   galleryId,
+  adminLink,
   onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
@@ -122,6 +125,7 @@ const MapModal = ({
             drawLine={drawLine}
             showLocate
             galleryId={galleryId}
+            adminLink={adminLink}
           />
         </MapArea>
       </ModalBox>

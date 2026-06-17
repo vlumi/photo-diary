@@ -242,6 +242,10 @@ interface Props {
   // photos with no galleries (or no capture timestamp) keep the
   // non-linked thumbnail.
   galleryId?: string;
+  // Global stats / cross-gallery admin map → popup links to
+  // `/m/photos/<photoId>` (the admin drawer) instead of any
+  // `/g/<gallery>/...` view. Takes precedence over `galleryId`.
+  adminLink?: boolean;
 }
 
 const MapContainer = ({
@@ -251,6 +255,7 @@ const MapContainer = ({
   drawLine,
   showLocate,
   galleryId,
+  adminLink,
 }: Props): React.ReactElement => {
   const [userPosition, setUserPosition] =
     React.useState<LatLngExpression | undefined>(undefined);
@@ -313,11 +318,13 @@ const MapContainer = ({
               config.PHOTO_ROOT_URL
             }thumbnail/${photo.id()}`;
             const dimensions = photo.thumbnailDimensions();
-            const targetGallery = galleryId ?? photo.galleries()[0];
-            const [y, m, d] = photo.ymd();
-            const photoPath = targetGallery
-              ? `/g/${targetGallery}/${y}/${m}/${d}/${photo.id()}`
-              : null;
+            const photoPath = (() => {
+              if (adminLink) return `/m/photos/${photo.id()}`;
+              const targetGallery = galleryId ?? photo.galleries()[0];
+              if (!targetGallery) return null;
+              const [y, m, d] = photo.ymd();
+              return `/g/${targetGallery}/${y}/${m}/${d}/${photo.id()}`;
+            })();
             const body = (
               <>
                 <img
