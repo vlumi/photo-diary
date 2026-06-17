@@ -563,7 +563,7 @@
 
     "stats-filters": "Filters",
 
-    "stats-unknown": "N/A",
+    "stats-unknown": "Unknown",
     "stats-other": "Other",
     "stats-other-beyond": "Other ({{n}}+)",
     "stats-more_one": "+ {{count}} more…",

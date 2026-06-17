@@ -563,7 +563,7 @@
 
     "stats-filters": "Suodattimet",
 
-    "stats-unknown": "N/A",
+    "stats-unknown": "Tuntematon",
     "stats-other": "Muut",
     "stats-other-beyond": "Muut ({{n}}+)",
     "stats-more_one": "+ {{count}} muu…",
