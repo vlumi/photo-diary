@@ -24,16 +24,16 @@
     "geo-coord": "^0.2.0",
     "image-size": "^2.0.2",
     "photo-diary-server": "*",
-    "sharp": "^0.34.5"
+    "sharp": "^0.35.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.9.0",
+    "@types/node": "^25.9.3",
     "eslint": "^10.4.1",
     "globals": "^17.6.0",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.60.1"
+    "typescript-eslint": "^8.61.1"
   },
   "version": "0.17.0"
 }
