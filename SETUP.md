@@ -19,13 +19,14 @@ Operator guide for installing and running Photo Diary. The project's overview, f
 Quickstart for a single personal instance. For the full production layout (multi-version code under `/opt/`, per-instance dirs under `/var/`, nginx vhosts, atomic upgrades, backup) see [Multi-Instance Deployment](#multi-instance-deployment) below; for an in-repo dev setup without an instance dir at all, see [Dev Mode](#dev-mode).
 
 1. **Prerequisites + install.** Node.js 22 or newer (npm 10+ recommended for workspaces) and [pm2](https://pm2.keymetrics.io/) installed globally (`npm install -g pm2`) — the per-instance `start-prod.sh` scripts and the `bin/instance.ts` upgrade / `--cycle` flows shell out to it. From the repo root, `npm run setup` installs every workspace ([server](server), [converter](converter), [react-app](react-app)) and builds the frontend into [server](server)/`build/`.
-2. **Bootstrap the instance directory** with [`bin/instance.ts`](bin/instance.ts). It creates the dir tree (`photos/{inbox,original,thumbnail}/` — rendition directories like `photos/display/` are added by the converter on first intake), generates `.env` with a fresh random `SECRET`, links `code` to this checkout, and surfaces operator shortcuts at `<instance>/bin/{photo,photo-rename,photo-geocode,photo-rerender,gallery,user,group,meta}.ts`:
+2. **Bootstrap the instance directory** with [`bin/instance.ts`](bin/instance.ts). It creates the dir tree (`photos/{inbox,original,thumbnail}/` — rendition directories like `photos/display/` are added by the converter on first intake), generates `.env` with a fresh random `SECRET`, links `code` to this checkout, and surfaces operator shortcuts at `<instance>/bin/{photo,photo-rename,photo-geocode,photo-rerender,gallery,user,group,meta}.ts`. The positional is the instance directory (relative or absolute):
 
    ```sh
-   ./bin/instance.ts <name> --base <parent-dir>
+   ./bin/instance.ts /var/photo-diary/<name>     # production layout
+   ./bin/instance.ts ~/photo-diary/<name>        # personal layout — any path works
    ```
 
-   Default `--base` is `/var/photo-diary` (the production layout); pass any other path for a personal setup. See [Bootstrapping a new instance](#bootstrapping-a-new-instance) for the dir layout, `.env` keys, and re-run-as-doctor semantics.
+   Pass `--name <label>` to pin a logical name different from the dir basename (writes through to `.env`'s `INSTANCE_NAME`, which the pm2 process labels use). See [Bootstrapping a new instance](#bootstrapping-a-new-instance) for the dir layout, `.env` keys, and re-run-as-doctor semantics.
 3. **Start the processes** via the per-instance `start-prod.sh` scripts (pm2-managed; the DB file is created at `<instance>/db.sqlite3` on first start and the migration runner bootstraps the schema on every start):
 
    ```sh
