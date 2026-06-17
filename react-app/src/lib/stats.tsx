@@ -849,6 +849,11 @@ const collectTopics = (
             // when the fill lands near the chart background (#590).
             borderColor: theme.get("primary-color"),
             borderWidth: 0.5,
+            // Suppress the per-month point markers — they read as
+            // noise against the band borders. Hover still flashes a
+            // small point so the tooltip association is clear.
+            pointRadius: 0,
+            pointHoverRadius: 3,
             data: [...Array(12).keys()].map((month: any) => entry.value[month + 1]),
             fill: true,
             lineTension: 0.4,
