@@ -685,7 +685,10 @@ const collectTopics = (
       ],
       table: flat.map((entry: any) => {
         const countryCode = byStateCountry?.[entry.key];
-        const label = format.subdivisionName(lang, entry.key);
+        const label =
+          entry.key === UNKNOWN
+            ? String(t("stats-unknown"))
+            : format.subdivisionName(lang, entry.key);
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
@@ -751,7 +754,10 @@ const collectTopics = (
       ],
       table: flat.map((entry: any) => {
         const countryCode = byCityCountry?.[entry.key];
-        const label = cityLabels[entry.key] ?? fallbackLabel(entry.key);
+        const label =
+          entry.key === UNKNOWN
+            ? String(t("stats-unknown"))
+            : cityLabels[entry.key] ?? fallbackLabel(entry.key);
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
