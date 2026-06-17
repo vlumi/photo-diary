@@ -309,6 +309,7 @@ const Category = ({
         <MapModal
           title={category.title}
           photos={category.photos ?? []}
+          galleryId={galleryId}
           onClose={closeMapModal}
         />
       )}

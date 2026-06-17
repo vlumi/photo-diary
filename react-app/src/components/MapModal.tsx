@@ -61,6 +61,9 @@ interface Props {
   title: string;
   photos: Photo[];
   drawLine?: boolean;
+  // Threaded through to MapContainer so each marker popup links to
+  // the photo view at /g/<galleryId>/...
+  galleryId?: string;
   onClose: () => void;
 }
 
@@ -68,6 +71,7 @@ const MapModal = ({
   title,
   photos,
   drawLine,
+  galleryId,
   onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
@@ -117,6 +121,7 @@ const MapModal = ({
             maxZoom={18}
             drawLine={drawLine}
             showLocate
+            galleryId={galleryId}
           />
         </MapArea>
       </ModalBox>

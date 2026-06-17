@@ -2,6 +2,7 @@ import React from "react";
 import styled from "@emotion/styled";
 import { Global, css } from "@emotion/react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { BsGeoAltFill } from "react-icons/bs";
 import Leaflet, { type LatLngExpression } from "leaflet";
 import {
@@ -35,6 +36,14 @@ const Root = styled("div", { shouldForwardProp: (prop) => prop !== "$height" })<
 `;
 const PopupContent = styled.span`
   text-align: center;
+`;
+const PopupLink = styled(Link)`
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 // react-leaflet-markercluster ships pastel fills (green / yellow /
@@ -227,6 +236,12 @@ interface Props {
   // Show the "Locate me" overlay button (#545). Defaults off — only
   // surfaces on MapModal, not on per-photo metadata-panel maps.
   showLocate?: boolean;
+  // When set, each marker popup links to that gallery's photo view
+  // at `/g/<galleryId>/<year>/<month>/<day>/<photoId>`. Without it,
+  // the popup falls back to the photo's first `galleries` entry;
+  // photos with no galleries (or no capture timestamp) keep the
+  // non-linked thumbnail.
+  galleryId?: string;
 }
 
 const MapContainer = ({
@@ -235,6 +250,7 @@ const MapContainer = ({
   maxZoom,
   drawLine,
   showLocate,
+  galleryId,
 }: Props): React.ReactElement => {
   const [userPosition, setUserPosition] =
     React.useState<LatLngExpression | undefined>(undefined);
@@ -297,6 +313,23 @@ const MapContainer = ({
               config.PHOTO_ROOT_URL
             }thumbnail/${photo.id()}`;
             const dimensions = photo.thumbnailDimensions();
+            const targetGallery = galleryId ?? photo.galleries()[0];
+            const [y, m, d] = photo.ymd();
+            const photoPath = targetGallery
+              ? `/g/${targetGallery}/${y}/${m}/${d}/${photo.id()}`
+              : null;
+            const body = (
+              <>
+                <img
+                  alt={photo.id()}
+                  src={thumbnailUrl}
+                  width={dimensions.width / 2}
+                  height={dimensions.height / 2}
+                />
+                <br />
+                {photo.formatDate()}
+              </>
+            );
             return (
               <Marker
                 key={index}
@@ -304,14 +337,11 @@ const MapContainer = ({
               >
                 <Popup>
                   <PopupContent>
-                    <img
-                      alt={photo.id()}
-                      src={thumbnailUrl}
-                      width={dimensions.width / 2}
-                      height={dimensions.height / 2}
-                    />
-                    <br />
-                    {photo.formatDate()}
+                    {photoPath ? (
+                      <PopupLink to={photoPath}>{body}</PopupLink>
+                    ) : (
+                      body
+                    )}
                   </PopupContent>
                 </Popup>
               </Marker>

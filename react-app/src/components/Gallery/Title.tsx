@@ -500,6 +500,7 @@ const Title = ({
           title={String(t("stats-category-location"))}
           photos={mapPhotos}
           drawLine={context !== "stats"}
+          galleryId={gallery.id()}
           onClose={closeMap}
         />
       )}
