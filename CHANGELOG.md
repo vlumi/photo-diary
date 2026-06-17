@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-06-17
+
+### Frontend
+
+- Stats State and City tables localize the missing-value bucket label — previously leaked the literal `"unknown"` sentinel from the server's stats compute through `format.subdivisionName` / `format.cityName` to the table cell.
+- `stats-unknown` label values refined to locale-natural strings: `Unknown` (en), `Tuntematon` (fi), `不明` (ja); previously `N/A` on en + fi (the same string, not really localized) and `未定` (ja, "not yet decided" — imprecise).
+- Subdivision name overlay covers Estonia (15 counties), Liechtenstein (11 municipalities), and Luxembourg (12 cantons) in en + ja; Estonia in fi (Finnish exonyms with `-maa` suffix). Previously these countries resolved their state codes to the raw ISO 3166-2 string.
+
+### Operator
+
+- Dependency updates across server / converter / react-app (typebox 1.1 → 1.2, sharp 0.34 → 0.35, @fastify/compress 8 → 9, @fastify/swagger-ui 5 → 6, react-easy-crop 5 → 6, plus various patch + minor bumps); clears the vite + launch-editor advisories. The eslint 9 → 10 major is held back — eslint 10's transitive `resolve@2.0.0-next.7` ships a `node-exports-info` dep npm fails to install on this workspace, breaking `eslint-plugin-react`.
+
 ## [0.17.0] - 2026-06-16
 
 ### Admin
@@ -624,6 +636,7 @@
 
 ## Initial commit - 2020-07-04
 
+[0.17.1]: https://github.com/vlumi/photo-diary/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/vlumi/photo-diary/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/vlumi/photo-diary/compare/v0.15.2...v0.16.0
 [0.15.2]: https://github.com/vlumi/photo-diary/compare/v0.15.1...v0.15.2

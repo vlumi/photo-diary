@@ -563,7 +563,7 @@
 
     "stats-filters": "フィルター",
 
-    "stats-unknown": "未定",
+    "stats-unknown": "不明",
     "stats-other": "他",
     "stats-other-beyond": "その他（{{n}}+）",
     "stats-more_one": "+他 {{count}}件…",
