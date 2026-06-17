@@ -354,6 +354,14 @@ const collectTopics = (
           stacked: true,
         },
       },
+      // pointRadius: 0 on the year/month datasets hides the per-
+      // month dots but also kills hover hit-testing under the default
+      // `intersect: true`. `intersect: false` lets the index-mode
+      // tooltip trigger on column position alone.
+      interaction: {
+        mode: "index",
+        intersect: false,
+      },
     },
   });
 
