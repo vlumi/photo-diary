@@ -91,7 +91,6 @@ The three pieces communicate via the shared filesystem and SQLite DB rather than
 - JWT sessions (90-day default); user-rotatable secret invalidates every token issued to that user
 - Per-user / per-group viewer / editor grants on galleries; `user.is_admin` for instance-wide admin
 - `:guest` user carries the public baseline; every user inherits its grants and individual user / group rows can only broaden them (access is `MAX` across all matching rows, never `MIN`)
-- `:all` wildcard gallery sentinel — a `user_gallery` / `group_gallery` row with `gallery_id = ':all'` grants the same access on every real gallery in one shot
 
 ### Operator scripts & deploy
 
