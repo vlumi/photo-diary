@@ -394,6 +394,12 @@ const collectTopics = (
             {
               data: data.map((_: any) => _.value),
               backgroundColor: colors,
+              // Hairline in --primary-color keeps every band visible
+              // even when its fill happens to land near the chart
+              // background (#590 — gradient endpoints can otherwise
+              // blend into white / off-white surrounds on neutral
+              // themes).
+              borderColor: theme.get("primary-color"),
               borderWidth: 0.5,
               barThickness: "flex",
               minBarLength: 3,
@@ -839,6 +845,10 @@ const collectTopics = (
           return {
             label: entry.key,
             backgroundColor: colorGradients[i],
+            // Hairline in --primary-color keeps the band edge visible
+            // when the fill lands near the chart background (#590).
+            borderColor: theme.get("primary-color"),
+            borderWidth: 0.5,
             data: [...Array(12).keys()].map((month: any) => entry.value[month + 1]),
             fill: true,
             lineTension: 0.4,

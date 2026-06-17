@@ -335,18 +335,22 @@ const EvolutionChart = ({
     }
     return palette[(i * stride) % palette.length];
   };
+  // Hairline between bands in --primary-color so adjacent bands
+  // stay distinguishable even when the gradient endpoints land
+  // close to each other / to the chart background (#590).
+  const bandStroke = theme.get("primary-color");
   const datasets = ordered.map((entry, i) => {
     const colour = colourFor(entry, i);
     return {
       label: entry.label,
       data: entry.counts,
-      borderColor: colour,
+      borderColor: bandStroke,
       backgroundColor: colour,
       fill: true,
       tension: 0,
       pointRadius: 0,
       pointHoverRadius: 3,
-      borderWidth: 1,
+      borderWidth: 0.5,
     };
   });
   // Top-N rank per x cached for the current hover — filter narrows

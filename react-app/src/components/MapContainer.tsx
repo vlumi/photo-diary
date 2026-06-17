@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { Global, css } from "@emotion/react";
 import { useTranslation } from "react-i18next";
 import { BsGeoAltFill } from "react-icons/bs";
 import Leaflet, { type LatLngExpression } from "leaflet";
@@ -34,6 +35,36 @@ const Root = styled("div", { shouldForwardProp: (prop) => prop !== "$height" })<
 `;
 const PopupContent = styled.span`
   text-align: center;
+`;
+
+// react-leaflet-markercluster ships pastel fills (green / yellow /
+// orange, alpha 0.6) that wash out on neutral / dark themes — and
+// disappear entirely on the grayscale theme, where the page-wide
+// `filter: grayscale(100%)` desaturates the otherwise-distinct
+// hues into near-identical mid-grays that blend into the OSM tile
+// layer. Override every cluster bucket with the theme's
+// --primary-color + --header-color so the cluster reads against any
+// theme's background regardless of bucket size (#590).
+const mapClusterStyles = css`
+  .marker-cluster {
+    background-clip: padding-box;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--primary-color) 30%, transparent);
+  }
+  .marker-cluster div {
+    width: 30px;
+    height: 30px;
+    margin-left: 5px;
+    margin-top: 5px;
+    text-align: center;
+    border-radius: 15px;
+    font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+    background: var(--primary-color);
+    color: var(--header-color);
+  }
+  .marker-cluster span {
+    line-height: 30px;
+  }
 `;
 
 const DefaultIcon = Leaflet.icon({
@@ -228,6 +259,7 @@ const MapContainer = ({
     .join("|");
   return (
     <Root $height={height}>
+      <Global styles={mapClusterStyles} />
       <Map
         bounds={bounds}
         center={center}

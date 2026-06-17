@@ -25,6 +25,7 @@
 - Per-photo visibility: PhotoDrawer Private switch + `/m/photos` bulk Set-private/public; `/m/access` grows a per-gallery Private column granting `can_see_private`; public Photo modal shows a Private badge to viewers who can see it. Closes #480.
 - Editor-tier "Manage this photo" / "Set as gallery icon" buttons on the public Photo modal, gated by `user.isGalleryEditor(galleryId)`; `e` toggles the in-place editor overlay. Closes #575.
 - Photo modal zoom plumbing (wheel + pinch + `+`/`-`/`0`) removed — srcset's higher-resolution variants cover the zoom-into-detail use case.
+- Stats charts gain a `--primary-color` hairline border per band, and the map's marker-cluster fills swap to theme-aware `--primary-color` / `--header-color`, so the gradient endpoints and pastel cluster defaults no longer wash into the chart / map background on grayscale or other neutral themes. Closes #590.
 
 ### Server
 
