@@ -412,11 +412,8 @@ Active milestones on the way to 1.0, plus the far-out 2.0 direction. Each bullet
 
 Themes loosely held for later — full list lives as open issues without a milestone on [GitHub](https://github.com/vlumi/photo-diary/issues?q=is%3Aissue+is%3Aopen+no%3Amilestone).
 
-- **Media delivery** — viewport-sized rendition selection, photo license metadata + gated original-bytes download.
-- **Filter & navigation UX** — range filters for continuous variables (time, focal length, aperture), edit-in-place filter pills, map modal that survives month / year navigation.
+- **Filter & navigation UX** — coordinate-radius filter (photos within N km of a point).
 - **Gallery shape** — alternative renderers for galleries that aren't calendar-shaped.
-- **Localization & data** — Finnish exonyms policy, per-language subdivision-name dataset as a reusable resource beyond this app.
-- **Admin convenience** — runtime-overridable instance defaults (`DEFAULT_GALLERY`, `DEFAULT_THEME`, beta feature toggles) editable from `/m/` without an `.env` round-trip.
 
 ## Version History
 
