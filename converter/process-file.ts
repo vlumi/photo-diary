@@ -45,9 +45,26 @@ const geocodeAtIntake = async (
     .filter((s) => s && s !== "en");
   const langs = ["en", ...extra];
   for (const lang of langs) {
-    const result = await geocode(lat, lon, lang);
+    let result;
+    try {
+      result = await geocode(lat, lon, lang);
+    } catch (err) {
+      await db.logOperation({
+        photoId,
+        action: "geocode",
+        status: "failure",
+        detail: `${lang}: ${(err as Error).message ?? String(err)}`,
+      });
+      throw err;
+    }
     if (!result) {
       await db.markGeocodeNoData(photoId);
+      await db.logOperation({
+        photoId,
+        action: "geocode",
+        status: "skipped",
+        detail: `${lang}: no data from Nominatim`,
+      });
       return;
     }
     await db.upsertGeocoded(photoId, lang, {
@@ -55,6 +72,12 @@ const geocodeAtIntake = async (
       stateCode: lang === "en" ? (result.stateCode ?? null) : undefined,
       city: result.city ?? null,
       address: JSON.stringify(result.address),
+    });
+    await db.logOperation({
+      photoId,
+      action: "geocode",
+      status: "success",
+      detail: `${lang}: ${result.city ?? "(no city)"}, ${result.countryCode ?? "(no country)"}`,
     });
     // Backfill the operator-set country when it was empty and the
     // English pass resolved one. Makes regeocode (single-photo or
@@ -241,6 +264,12 @@ const processJpeg = async (
   const elapsedSeconds =
     Math.round(hrend[0] * 1000 + hrend[1] / 1000000) / 1000;
   logger.info(`[${relPath}] Processed as ${id}, elapsed ${elapsedSeconds}s`);
+  await db.logOperation({
+    photoId: id,
+    action: "intake",
+    status: "success",
+    detail: `${originalFilename} → ${id} (${elapsedSeconds}s${isReimport ? ", reimport" : ""})`,
+  });
 };
 
 const processJsonSidecar = async (

@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
+  BsActivity,
   BsCollection,
   BsImages,
   BsPencilSquare,
@@ -148,6 +149,12 @@ const GLOBAL_TILES: TileSpec[] = [
     Icon: BsSliders,
     titleKey: "manage-page-instance-title",
     blurbKey: "manage-dashboard-tile-instance-blurb",
+  },
+  {
+    path: "/m/operations",
+    Icon: BsActivity,
+    titleKey: "manage-page-operations-title",
+    blurbKey: "manage-dashboard-tile-operations-blurb",
   },
 ];
 

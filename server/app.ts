@@ -26,6 +26,7 @@ import userGalleryV1 from "./controllers/user-gallery-v1.js";
 import groupsV1 from "./controllers/groups-v1.js";
 import groupGalleryV1 from "./controllers/group-gallery-v1.js";
 import statsV1 from "./controllers/stats-v1.js";
+import operationsV1 from "./controllers/operations-v1.js";
 import filterValuesV1 from "./controllers/filter-values-v1.js";
 
 import middleware from "./lib/middleware/index.js";
@@ -195,6 +196,7 @@ await app.register(statsV1.globalPlugin, { prefix: "/api/v1/stats" });
 await app.register(filterValuesV1.globalPlugin, {
   prefix: "/api/v1/filter-values",
 });
+await app.register(operationsV1.plugin, { prefix: "/api/v1/operations" });
 
 // Double-duty 404 handler: serve index.html for SPA routes so
 // React Router can resolve deep links (refreshing /m/photos, or
@@ -221,6 +223,7 @@ export const init = async () => {
   await groupsV1.init();
   await groupGalleryV1.init();
   await statsV1.init();
+  await operationsV1.init();
   await app.ready();
   logger.debug("Initialize app done");
 };

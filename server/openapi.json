@@ -5098,6 +5098,187 @@
           }
         }
       }
+    },
+    "/api/v1/operations": {
+      "get": {
+        "summary": "Recent converter / operator-script activity, pending-queue counts, and recent failures",
+        "tags": [
+          "operations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "recent",
+                    "failures",
+                    "pending"
+                  ],
+                  "properties": {
+                    "recent": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "createdAt",
+                          "photoId",
+                          "action",
+                          "status",
+                          "detail"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "photoId": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "success"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "failure"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "skipped"
+                                ]
+                              }
+                            ]
+                          },
+                          "detail": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "failures": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "createdAt",
+                          "photoId",
+                          "action",
+                          "status",
+                          "detail"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "photoId": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "success"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "failure"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "skipped"
+                                ]
+                              }
+                            ]
+                          },
+                          "detail": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "pending": {
+                      "type": "object",
+                      "required": [
+                        "intake",
+                        "geocode"
+                      ],
+                      "properties": {
+                        "intake": {
+                          "type": "integer"
+                        },
+                        "geocode": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "tags": [

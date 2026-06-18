@@ -31,6 +31,7 @@ const GLOBAL_MANAGE_PATHS = [
   "/m/groups",
   "/m/access",
   "/m/instance",
+  "/m/operations",
 ];
 
 // Resolve the "go up one step" target for Esc-up navigation.
@@ -263,6 +264,8 @@ const buildCrumbs = (
     }
   } else if (page === "access") {
     out.push({ kind: "leaf", label: t("manage-page-access-title") });
+  } else if (page === "operations") {
+    out.push({ kind: "leaf", label: t("manage-page-operations-title") });
   } else if (page === "inbox") {
     out.push({ kind: "leaf", label: t("manage-page-inbox-title") });
   } else {

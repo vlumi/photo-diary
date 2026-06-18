@@ -72,6 +72,9 @@ const ManageAccess = React.lazy(() => import("./components/Manage/Access"));
 const ManageInstance = React.lazy(
   () => import("./components/Manage/Instance")
 );
+const ManageOperations = React.lazy(
+  () => import("./components/Manage/Operations")
+);
 const GlobalStats = React.lazy(() => import("./components/GlobalStats"));
 
 import config from "./lib/config";
@@ -287,6 +290,7 @@ const App = (): React.ReactElement => {
                     />
                   </Route>
                   <Route path="access" element={<ManageAccess />} />
+                  <Route path="operations" element={<ManageOperations />} />
                   <Route element={<ManageGalleriesLayout />}>
                     <Route path="galleries" element={null} />
                     <Route
