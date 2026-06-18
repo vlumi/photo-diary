@@ -105,10 +105,8 @@ const createGallery = async (gallery: { id: string } & Record<string, any>) => {
   assertSlugId(gallery.id);
   logger.debug("Creating gallery", { id: gallery.id });
   // Seed the gallery's primary language from the instance-level
-  // `defaultLanguage` meta row when the caller didn't specify one
-  // (operator's preference at the instance level becomes the seed
-  // for every new gallery), with `en` as the final fallback. The
-  // pre-#513 `.env DEFAULT_LANGUAGE` fallback was removed in #609.
+  // `defaultLanguage` meta row when the caller didn't specify one,
+  // with `en` as the final fallback.
   if (!gallery.defaultLanguage) {
     const metas = await db.loadMetas();
     gallery.defaultLanguage = metas.instance_defaultLanguage || "en";
@@ -200,7 +198,7 @@ const setGalleryIcon = async (
   return iconPath;
 };
 
-// Apply an operator-curated order across every visible gallery (#585).
+// Apply an operator-curated order across every visible gallery.
 // The input must contain exactly the current gallery id set — no
 // missing ids (would leave them stranded at ordinal 0) and no extras
 // (typo / stale client). Ordinals are reassigned by position: 0, 1,

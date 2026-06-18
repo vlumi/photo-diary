@@ -87,9 +87,8 @@ const REQUIRED_DIRS = [
 //
 // The frontend defaults (`defaultGallery` / `defaultTheme` /
 // `defaultLanguage` / `initialGalleryView` / `firstWeekday` /
-// `betaFeatures`) used to live here too, but moved to the `meta`
-// table in #513 and the .env fallback path was removed in #609.
-// Operators edit them via `/m/instance` or `bin/meta.ts`.
+// `betaFeatures`) live in the `meta` table — edit them via
+// `/m/instance` or `bin/meta.ts`.
 const REQUIRED_KEYS: RequiredKey[] = [
   // --- required: seeded on bootstrap -----------------------------------
   {
@@ -252,7 +251,7 @@ const looksLikeInstanceDir = (dir: string): boolean => {
   }
 };
 
-// --- pm2 cycle helpers (upgrade mode, #546) --------------------------------
+// --- pm2 cycle helpers (upgrade mode) --------------------------------
 interface Pm2Process {
   name: string;
   pm2_env: { status: string };

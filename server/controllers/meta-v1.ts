@@ -78,10 +78,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async () => {
       // Public, no authorization needed. Each meta key's value comes
       // from the `meta` table; unset keys fall through to the SPA's
-      // bundled defaults in `lib/config.ts`. The legacy `.env`
-      // fallback path (DEFAULT_GALLERY / DEFAULT_THEME / …) was
-      // removed in #609 — operators set runtime defaults via
-      // `/m/instance` or `bin/meta.ts`.
+      // bundled defaults in `lib/config.ts`. Operators set runtime
+      // defaults via `/m/instance` or `bin/meta.ts`.
       const meta = await model.getMetas();
       return cleanMeta(meta);
     }

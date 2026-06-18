@@ -37,8 +37,6 @@ Per-instance runtime defaults are edited from `/m/instance` (admin UI) or `bin/m
 
 Per-gallery values (`theme`, `initial_view`, `hostname`, `default_language`) on each gallery row in the DB take precedence over the instance-level defaults above.
 
-The pre-0.17 `.env`-based fallback path (`DEFAULT_GALLERY`, `DEFAULT_THEME`, `DEFAULT_LANGUAGE`, `INITIAL_GALLERY_VIEW`, `FIRST_WEEKDAY`, `BETA_FEATURE_<NAME>`) was removed in #609 — upgrades from those versions need to seed the matching meta rows.
-
 Available themes: `blue`, `red`, `grayscale`, `bw`, `alert` (defined in `src/lib/theme.ts`). Supported languages: `en`, `fi`, `ja`.
 
 ## Internationalization (i18n)

@@ -121,7 +121,7 @@ describe("As admin", () => {
       .expect(400));
 });
 
-describe("SPA runtime defaults (#513)", () => {
+describe("SPA runtime defaults", () => {
   let token: string;
   beforeEach(async () => {
     token = await loginUser(api, "admin");
@@ -138,9 +138,8 @@ describe("SPA runtime defaults (#513)", () => {
   });
 
   test("Meta row is the source of truth for SPA runtime defaults", async () => {
-    // The `.env` fallback path (envDefaults) was removed in #609 —
-    // the meta row is now the only source. Unset keys fall through
-    // to the SPA's bundled defaults in `lib/config.ts` (handled
+    // The meta row is the only source; unset keys fall through to
+    // the SPA's bundled defaults in `lib/config.ts` (handled
     // client-side, not by this endpoint).
     await api
       .post("/api/v1/meta")

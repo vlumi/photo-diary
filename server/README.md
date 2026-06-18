@@ -53,8 +53,6 @@ Two places hold instance config:
 - **`.env`** (boot-time). Read once when the server / converter process starts. Changing requires a restart. Lives here: credentials and binding (`SECRET`, `PORT`, `DB_DRIVER`, `INSTANCE_NAME`), paths (`STATIC_DIR`, `GEOCODE_DIR`), and converter daemon knobs (`REVERSE_GEOCODE`, `REVERSE_GEOCODE_EXTRA_LANGS`, `NOMINATIM_BASE_URL`, `DEBUG`).
 - **`meta` table** (runtime). Read per-request when the SPA fetches `/api/v1/meta`. Changing takes effect on the next response — no restart. Edited from `/m/instance` (admin UI) or `bin/meta.ts`. Holds the instance identity (`name`, `description`, `cdn`, `image`), the SPA's runtime defaults (`defaultGallery`, `defaultTheme`, `defaultLanguage`, `initialGalleryView`, `firstWeekday`, `betaFeatures`), and the converter's rendition ladder (`renditions`).
 
-The SPA runtime defaults *used* to live in `.env` (`DEFAULT_GALLERY` / `DEFAULT_THEME` / `DEFAULT_LANGUAGE` / `INITIAL_GALLERY_VIEW` / `FIRST_WEEKDAY` / `BETA_FEATURE_<NAME>`); they migrated to the `meta` table in #513 and the `.env` fallback path was removed in #609. Upgrades from pre-0.17 instances need to seed the matching `meta` rows (`bin/meta.ts set instance_<key> <value>`); the env entries are no longer read.
-
 ### Fixed-by-convention paths
 
 The SQLite DB file and the photo repository are no longer configurable via env vars — they live at fixed locations relative to the server's working directory (which is the **instance directory** when launched via `start-prod.sh`):

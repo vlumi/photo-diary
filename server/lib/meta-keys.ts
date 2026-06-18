@@ -17,10 +17,9 @@
 //    — DB-backed, edited via the admin UI or `bin/meta.ts`.
 // 2. SPA runtime defaults (`defaultGallery` / `defaultTheme` /
 //    `defaultLanguage` / `initialGalleryView` / `firstWeekday` /
-//    `betaFeatures`). These used to live in `.env`; the meta row
-//    became the source of truth in #513 and the `.env` fallback
-//    path was removed in #609. Unset keys fall through to the
-//    SPA's bundled defaults in `lib/config.ts`.
+//    `betaFeatures`). The meta row is the source of truth; unset
+//    keys fall through to the SPA's bundled defaults in
+//    `lib/config.ts`.
 //
 // `betaFeatures` is stored as a JSON-encoded `{name: "on" | "off"
 // | "user"}` map so the per-feature opt-in shape survives the
