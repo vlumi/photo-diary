@@ -137,11 +137,11 @@ describe("SPA runtime defaults (#513)", () => {
     expectMeta(result, "defaultTheme", "grayscale");
   });
 
-  test("Meta row wins over env default (merge order)", async () => {
-    // The test fixture's process.env doesn't set DEFAULT_THEME, so
-    // env contributes nothing here; the meta row is the only
-    // source. Once a row exists, GET returns it under the same key
-    // envDefaults() would use, with no double-key collision.
+  test("Meta row is the source of truth for SPA runtime defaults", async () => {
+    // The `.env` fallback path (envDefaults) was removed in #609 —
+    // the meta row is now the only source. Unset keys fall through
+    // to the SPA's bundled defaults in `lib/config.ts` (handled
+    // client-side, not by this endpoint).
     await api
       .post("/api/v1/meta")
       .set("Authorization", `Bearer ${token}`)

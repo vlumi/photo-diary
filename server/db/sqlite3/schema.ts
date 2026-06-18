@@ -69,8 +69,8 @@ export interface GalleryRow {
   // Operator-set primary language for the canonical `title` /
   // `description` columns. Always set since migration 022 — NULLs
   // backfill to 'en' on upgrade, and new galleries take the value
-  // from `.env DEFAULT_LANGUAGE` (server create path) or 'en' as
-  // the column default.
+  // from the `instance_defaultLanguage` meta row (server create
+  // path) or 'en' as the column default.
   default_language: string;
   type: GalleryType;
   // Operator-curated sort index (#585). Drives the primary sort

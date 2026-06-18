@@ -25,18 +25,19 @@ For production, run `npm run build` from the **repo root**: it builds the react-
 
 The frontend has no build-time environment variables — one build serves every instance. Defaults live as plain values in [`src/lib/config.ts`](src/lib/config.ts) and per-instance behavior comes from the API at boot.
 
-Set these on the **server's** `.env` (per instance) to override the defaults; the server returns them through `/api/v1/meta` and the frontend applies them when the meta loads:
+Per-instance runtime defaults are edited from `/m/instance` (admin UI) or `bin/meta.ts` and stored in the server's `meta` table — the server returns them through `/api/v1/meta` and the frontend applies them when the meta loads. The keys (without their internal `instance_` prefix):
 
-- `DEFAULT_GALLERY` — gallery to redirect to from `/g` when no other heuristic (single-gallery, hostname match) picks one
-- `DEFAULT_THEME` — fallback theme when a gallery row has no `theme` set
-- `INITIAL_GALLERY_VIEW` — `year` / `month` / `day` / `photo` fallback when a gallery row has no `initial_view` set
-- `FIRST_WEEKDAY` — `0` (Sunday) or `1` (Monday); affects the year-view calendar grid
+- `defaultGallery` — gallery to redirect to from `/g` when no other heuristic (single-gallery, hostname match) picks one
+- `defaultTheme` — fallback theme when a gallery row has no `theme` set
+- `initialGalleryView` — `year` / `month` / `day` / `photo` fallback when a gallery row has no `initial_view` set
+- `firstWeekday` — `0` (Sunday) or `1` (Monday); affects the year-view calendar grid
+- `defaultLanguage` — fallback display language; seeds new galleries' `default_language` column at create time
+- `betaFeatures` — JSON-encoded `{name: "on" | "off" | "user"}` map for per-instance beta-feature locks
+- `cdn` — public URL prefix for `display/` / `thumbnail/` / `gallery-icons/`
 
-Per-gallery values (`theme`, `initial_view`, `hostname`) on each gallery row in the DB take precedence over the instance-level defaults above.
+Per-gallery values (`theme`, `initial_view`, `hostname`, `default_language`) on each gallery row in the DB take precedence over the instance-level defaults above.
 
-`PHOTO_ROOT_URL` is overridden the same way via the `instance_cdn` meta row (set with `bin/` tools or directly in the DB).
-
-`DEFAULT_LANGUAGE` is the one value that **can't** be overridden at runtime — i18next initializes at module load, before the meta fetch. Edit the literal in `config.ts` if you need a different fallback language for new visitors. Users' own selections are persisted via the `lang` localStorage key.
+The pre-0.17 `.env`-based fallback path (`DEFAULT_GALLERY`, `DEFAULT_THEME`, `DEFAULT_LANGUAGE`, `INITIAL_GALLERY_VIEW`, `FIRST_WEEKDAY`, `BETA_FEATURE_<NAME>`) was removed in #609 — upgrades from those versions need to seed the matching meta rows.
 
 Available themes: `blue`, `red`, `grayscale`, `bw`, `alert` (defined in `src/lib/theme.ts`). Supported languages: `en`, `fi`, `ja`.
 

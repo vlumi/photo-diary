@@ -14,14 +14,13 @@
 // Two flavours sit in the same key namespace:
 //
 // 1. Instance identity rows (`name`, `description`, `cdn`, `image`)
-//    — purely DB-backed, edited via the admin UI or `bin/meta.ts`.
-// 2. SPA runtime defaults previously set in `.env`
-//    (`defaultGallery` / `defaultTheme` / `defaultLanguage` /
-//    `initialGalleryView` / `firstWeekday` / `betaFeatures`).
-//    Setting a meta row for one of these wins over the matching
-//    `.env` value at request time, so an admin can change behaviour
-//    without restarting the server. The `.env` values stay as a
-//    fallback for instances that don't seed the meta rows yet.
+//    — DB-backed, edited via the admin UI or `bin/meta.ts`.
+// 2. SPA runtime defaults (`defaultGallery` / `defaultTheme` /
+//    `defaultLanguage` / `initialGalleryView` / `firstWeekday` /
+//    `betaFeatures`). These used to live in `.env`; the meta row
+//    became the source of truth in #513 and the `.env` fallback
+//    path was removed in #609. Unset keys fall through to the
+//    SPA's bundled defaults in `lib/config.ts`.
 //
 // `betaFeatures` is stored as a JSON-encoded `{name: "on" | "off"
 // | "user"}` map so the per-feature opt-in shape survives the
