@@ -39,8 +39,6 @@ Read at startup from a `.env` file in the **current working directory** (which i
 | `NODE_ENV` | | `prod` | `dev` / `prod` / `test`. Set by the npm scripts; don't override unless you know why. |
 | `DEBUG` | | `false` | When truthy, enables verbose logger output. |
 | `STATIC_DIR` | | `<source>/build` | Path to the bundled frontend. Resolved relative to the server's source file by default; override if you build into a non-standard location. |
-| `DEFAULT_GALLERY`, `DEFAULT_THEME`, `DEFAULT_LANGUAGE`, `INITIAL_GALLERY_VIEW`, `FIRST_WEEKDAY` | | — | **Deprecated, scheduled for removal by 1.0.** Per-instance frontend defaults, now editable from `/m/instance` (the corresponding `meta` table row wins over the env value when set). Still honoured as a fallback for instances that haven't seeded the meta rows. See the boot-time vs. runtime split note below. |
-| `BETA_FEATURE_<NAME>` | | `user` | **Deprecated, scheduled for removal by 1.0.** Per-instance lock for a beta feature, now editable from `/m/instance` via the `betaFeatures` meta row. `user` (default) shows the per-browser toggle in the UserMenu; `on` forces the feature on for everyone and hides the toggle; `off` forces it off. One env var per feature — e.g. `BETA_FEATURE_REGIONS=on`. |
 | `REVERSE_GEOCODE` | | `false` | When set (any truthy value), the converter reverse-geocodes new photos with coords at intake. Opt-in by default — coordinates are sent to Nominatim. `photo-geocode.ts` honours this flag by default; pass `--force` to bypass for one-off backfills. |
 | `REVERSE_GEOCODE_EXTRA_LANGS` | | — | Comma-separated extra languages to fetch on top of English (e.g. `ja,fi`). Each adds one 1 RPS Nominatim call per photo at intake. `photo-geocode.ts` uses the same default. |
 | `NOMINATIM_BASE_URL` | | `https://nominatim.openstreetmap.org` | Override to point at a self-hosted Nominatim. |
@@ -53,9 +51,7 @@ The SQLite DB file and the photo repository are **not** configured via env vars 
 Two places hold instance config:
 
 - **`.env`** (boot-time). Read once when the server / converter process starts. Changing requires a restart. Lives here: credentials and binding (`SECRET`, `PORT`, `DB_DRIVER`, `INSTANCE_NAME`), paths (`STATIC_DIR`, `GEOCODE_DIR`), and converter daemon knobs (`REVERSE_GEOCODE`, `REVERSE_GEOCODE_EXTRA_LANGS`, `NOMINATIM_BASE_URL`, `DEBUG`).
-- **`meta` table** (runtime). Read per-request when the SPA fetches `/api/v1/meta`. Changing takes effect on the next response — no restart. Edited from `/m/instance` (admin UI) or `bin/meta.ts`. Holds the instance identity (`name`, `description`, `cdn`, `image`) and the SPA's runtime defaults (`defaultGallery`, `defaultTheme`, `defaultLanguage`, `initialGalleryView`, `firstWeekday`, `betaFeatures`).
-
-The SPA runtime defaults *used* to live in `.env`; they migrated to the `meta` table in #513. The `.env` keys still work as a fallback (the server logs a deprecation line on startup when any are set) but the path is scheduled for removal by 1.0 — seed the meta rows via the admin UI and drop the env entries.
+- **`meta` table** (runtime). Read per-request when the SPA fetches `/api/v1/meta`. Changing takes effect on the next response — no restart. Edited from `/m/instance` (admin UI) or `bin/meta.ts`. Holds the instance identity (`name`, `description`, `cdn`, `image`), the SPA's runtime defaults (`defaultGallery`, `defaultTheme`, `defaultLanguage`, `initialGalleryView`, `firstWeekday`, `betaFeatures`), and the converter's rendition ladder (`renditions`).
 
 ### Fixed-by-convention paths
 

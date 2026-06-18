@@ -210,37 +210,8 @@ app.setNotFoundHandler(async (request, reply) => {
   throw new NotFoundError();
 });
 
-// `.env` keys that moved into the `meta` table in #513. The
-// admin UI at `/m/instance` reads / writes the meta row; setting
-// the env var still works as a fallback for instances that
-// haven't seeded the meta rows yet, but the env path is
-// scheduled for removal by 1.0 — log a one-line deprecation on
-// startup so the operator notices.
-const DEPRECATED_ENV_KEYS = [
-  "DEFAULT_GALLERY",
-  "DEFAULT_THEME",
-  "DEFAULT_LANGUAGE",
-  "INITIAL_GALLERY_VIEW",
-  "FIRST_WEEKDAY",
-];
-
-const warnDeprecatedEnvKeys = (): void => {
-  const set = DEPRECATED_ENV_KEYS.filter((k) => !!process.env[k]);
-  const beta = Object.keys(process.env).filter(
-    (k) => k.startsWith("BETA_FEATURE_") && process.env[k]
-  );
-  if (set.length === 0 && beta.length === 0) return;
-  const all = [...set, ...beta];
-  logger.info(
-    `Deprecated .env keys in use: ${all.join(", ")}. ` +
-      "These moved to the `meta` table (edit via /m/instance or " +
-      "`bin/meta.ts`). The .env path is scheduled for removal by 1.0."
-  );
-};
-
 export const init = async () => {
   logger.debug("Initialize app start");
-  warnDeprecatedEnvKeys();
   await tokensV1.init();
   await galleriesV1.init();
   await savedFiltersV1.init();

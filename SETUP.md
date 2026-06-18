@@ -132,16 +132,16 @@ The `bin/instance.ts` script handles directory creation, `.env` generation (with
 
 That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The positional is the instance directory; it's resolved via `path.resolve()` against cwd, so `dailybw` and `./dailybw` both mean `<cwd>/dailybw`, while `../sibling` and absolute paths resolve as expected. To pin a logical name different from the dir basename, pass `--name`. Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
 
-The generated `.env` covers the required keys. Optional per-instance frontend defaults can be added — these flow through `/api/v1/meta` to the frontend on boot:
+The generated `.env` covers the required keys. Per-instance frontend defaults (default gallery / theme / language / initial view / first weekday / beta-feature locks) are no longer set via `.env` — set them through `/m/instance` (admin UI) or `bin/meta.ts`:
 
 ```sh
-DEFAULT_GALLERY=dailybw
-DEFAULT_THEME=grayscale
-DEFAULT_LANGUAGE=fi         # operator's primary; falls back to `en` if missing
-BETA_FEATURE_REGIONS=user   # `user` (default) | `on` | `off`
+./bin/meta.ts set instance_defaultGallery dailybw
+./bin/meta.ts set instance_defaultTheme grayscale
+./bin/meta.ts set instance_defaultLanguage fi
+./bin/meta.ts set instance_betaFeatures '{"regions":"user"}'
 ```
 
-`BETA_FEATURE_<NAME>` locks a beta feature for this instance: `on` enables it for everyone (hides the per-browser toggle), `off` disables it for everyone, `user` (default) shows the toggle in the UserMenu so each visitor can opt in. See the [server README](server/README.md#environment-variables) for the full env table.
+`betaFeatures` values are `on` (enable for everyone, hide the per-browser toggle), `off` (disable for everyone), or `user` (default — show the per-visitor toggle in the UserMenu). See the [server README](server/README.md#environment-variables) for the full env table and the [admin UI](server/README.md) for the meta-key shape.
 
 ### Starting an instance
 
@@ -277,7 +277,7 @@ Worked example. One instance (`/var/photo-diary/multi/`) serves two domains, eac
    }
    ```
 
-3. The frontend selects which gallery to land on based on the hostname the visitor used. The fallback order is: single-gallery instance → matching `hostname` regex → `DEFAULT_GALLERY` env var → the gallery-list page.
+3. The frontend selects which gallery to land on based on the hostname the visitor used. The fallback order is: single-gallery instance → matching `hostname` regex → `instance_defaultGallery` meta row → the gallery-list page.
 
 Gotchas:
 

@@ -42,38 +42,6 @@ const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
     }, {});
 };
 
-// Per-instance frontend defaults from the server's `process.env`.
-// Each key is optional; the SPA falls back to `lib/config.ts`.
-const envDefaults = (): Record<string, unknown> => {
-  const out: Record<string, unknown> = {};
-  const {
-    DEFAULT_GALLERY,
-    DEFAULT_THEME,
-    DEFAULT_LANGUAGE,
-    INITIAL_GALLERY_VIEW,
-    FIRST_WEEKDAY,
-  } = process.env;
-  if (DEFAULT_GALLERY) out.defaultGallery = DEFAULT_GALLERY;
-  if (DEFAULT_THEME) out.defaultTheme = DEFAULT_THEME;
-  if (DEFAULT_LANGUAGE) out.defaultLanguage = DEFAULT_LANGUAGE;
-  if (INITIAL_GALLERY_VIEW) out.initialGalleryView = INITIAL_GALLERY_VIEW;
-  if (FIRST_WEEKDAY) out.firstWeekday = FIRST_WEEKDAY;
-  // `BETA_FEATURE_<NAME>=user|on|off` → betaFeatures[name] = mode.
-  // `<NAME>` is upper-snake; underscores collapse to camelCase so the
-  // env value maps onto the client's `BetaFeature` keys (`regions`,
-  // `focalLengthEquiv`, …). Single-word names like REGIONS still
-  // round-trip unchanged.
-  const envToCamel = (s: string): string =>
-    s.toLowerCase().replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-  const beta: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env)) {
-    if (!key.startsWith("BETA_FEATURE_") || !value) continue;
-    beta[envToCamel(key.slice("BETA_FEATURE_".length))] = value;
-  }
-  if (Object.keys(beta).length > 0) out.betaFeatures = beta;
-  return out;
-};
-
 // Mutation routes lock `key` to the schema-seeded public-facing set
 // (matches `bin/meta.ts`'s default key list, minus the `instance_`
 // prefix the row gets stored under). `schema_version` and other
@@ -108,14 +76,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async () => {
-      // Public, no authorization needed. `.env` defaults are the
-      // fallback for keys with no meta row; once a row is written
-      // (via admin UI / bin/meta.ts) it wins for that key. The
-      // flipped merge order vs. the pre-#513 behaviour is the
-      // whole point — operators expect admin-UI edits to take
-      // effect, not be silently shadowed by an unset env var.
+      // Public, no authorization needed. Each meta key's value comes
+      // from the `meta` table; unset keys fall through to the SPA's
+      // bundled defaults in `lib/config.ts`. Operators set runtime
+      // defaults via `/m/instance` or `bin/meta.ts`.
       const meta = await model.getMetas();
-      return { ...envDefaults(), ...cleanMeta(meta) };
+      return cleanMeta(meta);
     }
   );
 

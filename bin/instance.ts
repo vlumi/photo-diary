@@ -85,9 +85,10 @@ const REQUIRED_DIRS = [
 // subdirectory, or the `db.sqlite3` file if you need them on a
 // different disk.
 //
-// Per-instance BETA_FEATURE_<NAME> flags aren't enumerable in
-// advance (any feature the server defines), so --edit doesn't
-// walk them — the operator sets / unsets them by hand.
+// The frontend defaults (`defaultGallery` / `defaultTheme` /
+// `defaultLanguage` / `initialGalleryView` / `firstWeekday` /
+// `betaFeatures`) live in the `meta` table — edit them via
+// `/m/instance` or `bin/meta.ts`.
 const REQUIRED_KEYS: RequiredKey[] = [
   // --- required: seeded on bootstrap -----------------------------------
   {
@@ -119,41 +120,6 @@ const REQUIRED_KEYS: RequiredKey[] = [
   // Empty value here means "leave the row absent; the server's
   // built-in default applies". The description spells out that
   // default explicitly so the operator knows what they get.
-  {
-    key: "DEFAULT_GALLERY",
-    description:
-      "Gallery to redirect to from `/g` when no other heuristic (single-gallery, hostname match) picks one (empty = let the heuristic choose)",
-    default: () => "",
-    required: false,
-  },
-  {
-    key: "DEFAULT_THEME",
-    description:
-      "Fallback theme when a gallery row has no `theme` set: blue / red / grayscale / bw / alert (empty = blue)",
-    default: () => "",
-    required: false,
-  },
-  {
-    key: "DEFAULT_LANGUAGE",
-    description:
-      "Instance-level primary language for operator-set photo / gallery metadata: en / fi / ja (empty = en)",
-    default: () => "",
-    required: false,
-  },
-  {
-    key: "INITIAL_GALLERY_VIEW",
-    description:
-      "Fallback initial view when a gallery has no `initial_view` set: year / month / day / photo (empty = year)",
-    default: () => "",
-    required: false,
-  },
-  {
-    key: "FIRST_WEEKDAY",
-    description:
-      "First day of the week in the year-view calendar grid: 0 (Sunday) or 1 (Monday) (empty = 0 / Sunday)",
-    default: () => "",
-    required: false,
-  },
   {
     key: "REVERSE_GEOCODE",
     description:
@@ -285,7 +251,7 @@ const looksLikeInstanceDir = (dir: string): boolean => {
   }
 };
 
-// --- pm2 cycle helpers (upgrade mode, #546) --------------------------------
+// --- pm2 cycle helpers (upgrade mode) --------------------------------
 interface Pm2Process {
   name: string;
   pm2_env: { status: string };
