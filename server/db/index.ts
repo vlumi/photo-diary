@@ -475,6 +475,27 @@ export default {
   clearLocalizedCity: async (photoId: string, lang: string) => {
     await db.clearLocalizedCity(photoId, lang);
   },
+
+  logOperation: async (event: {
+    photoId?: string | null;
+    action: string;
+    status: "success" | "failure" | "skipped";
+    detail?: string | null;
+  }) => {
+    await db.logOperation(event);
+  },
+  loadRecentOperations: async (limit?: number) => {
+    return await db.loadRecentOperations(limit);
+  },
+  loadOperationFailures: async (limit?: number) => {
+    return await db.loadOperationFailures(limit);
+  },
+  pruneOperationsBefore: async (cutoffIso: string): Promise<number> => {
+    return (await db.pruneOperationsBefore(cutoffIso)) as number;
+  },
+  countPendingGeocode: async () => {
+    return await db.countPendingGeocode();
+  },
 };
 
 // Re-export shared types so models can use them without reaching into the driver.

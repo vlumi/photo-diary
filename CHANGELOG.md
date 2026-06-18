@@ -5,6 +5,7 @@
 ### Operator
 
 - **Breaking:** the `.env` fallback path for the SPA's runtime defaults (`DEFAULT_GALLERY`, `DEFAULT_THEME`, `DEFAULT_LANGUAGE`, `INITIAL_GALLERY_VIEW`, `FIRST_WEEKDAY`, `BETA_FEATURE_<NAME>`) is gone — the `meta` table is the only source. **Upgrade step:** for each of these you currently set in `.env`, run `bin/meta.ts set instance_<key> <value>` (or edit at `/m/instance`) before upgrading past this version. The env entries are no longer read; leaving them in place silently does nothing. The new-gallery `default_language` seed now reads `instance_defaultLanguage` from the meta table (falling back to `en` when unset) instead of the env var. Closes #609.
+- New `/m/operations` admin page surfaces converter activity: recent events (intake + geocode), recent failures, and pending-queue counts (inbox files + photos awaiting geocode). Closes #495.
 
 ## [0.17.1] - 2026-06-17
 

@@ -7,10 +7,37 @@ import { getDirectory } from "./lib/config.js";
 import * as logger from "./lib/logger.js";
 import processFile from "./process-file.js";
 
+// Operation-event retention. The converter owns pruning because
+// it's the always-on producer — a server-only deploy would still
+// run it via the same process.
+const OPERATION_EVENT_RETENTION_DAYS = 90;
+const OPERATION_EVENT_PRUNE_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+const pruneOldOperationEvents = async (): Promise<void> => {
+  try {
+    const { default: db } = await import("photo-diary-server/db/index.js");
+    const cutoff = new Date(
+      Date.now() - OPERATION_EVENT_RETENTION_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
+    const removed = await db.pruneOperationsBefore(cutoff);
+    if (removed > 0) {
+      logger.info(`Pruned ${removed} operation_event rows older than ${cutoff}`);
+    }
+  } catch (err) {
+    logger.error("Failed to prune operation_event rows:", err);
+  }
+};
+
 try {
   const rootDir = getDirectory();
   const watchDir = path.join(rootDir, DIR_INBOX);
   logger.info(`Watching ${watchDir}`);
+
+  void pruneOldOperationEvents();
+  setInterval(
+    () => void pruneOldOperationEvents(),
+    OPERATION_EVENT_PRUNE_INTERVAL_MS
+  );
 
   // chokidar v4 dropped glob-pattern support. Inline filter:
   //   - .jpg / .jpeg → SOOC intake (image pipeline).
@@ -38,8 +65,21 @@ try {
     const relPath = fileQueue.shift();
     if (relPath) {
       processFile(relPath, rootDir)
-        .catch((err) => {
+        .catch(async (err) => {
           logger.error("Processing failed for file", relPath, err);
+          try {
+            const { default: db } = await import(
+              "photo-diary-server/db/index.js"
+            );
+            await db.logOperation({
+              photoId: null,
+              action: "intake",
+              status: "failure",
+              detail: `${relPath}: ${(err as Error).message ?? String(err)}`,
+            });
+          } catch {
+            // Best-effort: a DB write failure here mustn't kill the queue.
+          }
         })
         .finally(() => setTimeout(fileQueueProcessor, 0));
     } else {
