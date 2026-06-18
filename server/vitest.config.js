@@ -11,5 +11,19 @@ export default defineConfig({
     // bcrypt at the production cost (10) starves the event loop when
     // many login flows run. 4 is the minimum bcrypt accepts.
     env: { BCRYPT_ROUNDS: "4" },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "json-summary"],
+      include: ["**/*.ts"],
+      exclude: [
+        "tests/**",
+        "bin/**",
+        "**/*.test.ts",
+        "vitest.config.js",
+        "eslint.config.js",
+        "openapi.json",
+        "db/sqlite3/migrations/**",
+      ],
+    },
   },
 });

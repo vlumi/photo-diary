@@ -40,5 +40,16 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/setupTests.ts"],
     css: false,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "json-summary"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/**/*.test.{ts,tsx}",
+        "src/setupTests.ts",
+        "src/lib/api-schema.ts",
+        "src/main.tsx",
+      ],
+    },
   },
 });
