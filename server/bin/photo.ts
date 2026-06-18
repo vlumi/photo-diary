@@ -438,8 +438,8 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
-    "private <id>",
-    "Flag the photo as private — view-only viewers without can_see_private on the gallery they're using stop seeing it. Editors / admins always see private photos.",
+    "make-private <id>",
+    "Set the photo's is_private flag. Hides it from view-only viewers without can_see_private; editors / admins still see it.",
     (y) =>
       y.positional("id", {
         describe: "Photo id",
@@ -457,7 +457,7 @@ await yargs(hideBin(process.argv))
     }
   )
   .command(
-    "public <id>",
+    "make-public <id>",
     "Clear the photo's is_private flag so every viewer with gallery access sees it.",
     (y) =>
       y.positional("id", {
@@ -477,7 +477,7 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "regeocode <id>",
-    "Clear the photo's geocoded_* columns and drop a sidecar so the converter daemon re-fetches via Nominatim. Useful when the row's geocoded data has drifted (Nominatim updated, manual fix, post-coord-edit refresh).",
+    "Clear the photo's geocoded_* columns and queue the converter daemon to re-fetch via Nominatim.",
     (y) =>
       y.positional("id", {
         describe: "Photo id",
@@ -511,7 +511,7 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "delete <id>",
-    "Delete a photo row. Files on disk (photos/{original,display,thumbnail}/<id>.*) are NOT touched.",
+    "Delete a photo row. Files on disk (photos/<dir>/<id>.*) are NOT touched.",
     (y) =>
       y.positional("id", {
         describe: "Photo id",
@@ -530,7 +530,7 @@ await yargs(hideBin(process.argv))
   )
   .command(
     "audit",
-    "Find photos with missing properties, orphan gallery links, duplicate originalFilenames, or operator-vs-geocoded country drift. Default: counts-only summary across every check. Pass --detail or any restricting flag to surface the item rows.",
+    "Counts-only summary of missing fields, orphan links, duplicate originalFilenames, and operator-vs-geocoded country drift. Pass --detail or any restricting flag to surface the item rows.",
     (y) =>
       y
         .option("missing", {
