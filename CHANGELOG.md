@@ -9,6 +9,7 @@
 ### Developer
 
 - Playwright e2e test suite under `e2e/` covers the regression-prone seams between SPA components, stores, and the API: login/logout cycle, session expiry → login modal, change-password (right + wrong current), non-existent gallery, and language persistence. Wired into CI as a separate workflow job. Closes #261.
+- `npm run coverage --workspace=e2e` produces a v8 coverage report of the server code exercised by the e2e suite (`e2e/coverage/`). Sits alongside the existing per-workspace vitest coverage; unifying the two reports tracks under a follow-up (the timing-sensitive vitest tests get flaky under raw v8 instrumentation). Closes #656.
 
 ## [0.18.0] - 2026-06-19
 
