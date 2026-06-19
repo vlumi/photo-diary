@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import usersService from "../services/users";
 
 import { HttpError } from "../lib/api";
-import token from "../lib/token";
 import { useUserStore, useNotificationsStore } from "../stores";
 
 const Form = styled.form`
@@ -73,27 +72,12 @@ const ChangePassword = ({ onSuccess }: Props): React.ReactElement => {
     }
     setSubmitting(true);
     try {
-      const { accessToken, refreshToken } = await usersService.changePassword(
-        current,
-        next
-      );
-      // Swap in the new pair so subsequent requests stay authenticated
-      // under the rotated secret (and the new session row). All other
-      // sessions for this user were revoked server-side as part of the
-      // change — this device gets a fresh pair to stay signed in.
-      token.setTokens(accessToken, refreshToken);
-      const stored = window.localStorage.getItem("user");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          parsed.token = accessToken;
-          parsed.refreshToken = refreshToken;
-          window.localStorage.setItem("user", JSON.stringify(parsed));
-        } catch {
-          // Corrupt localStorage — nothing we can do here; the next
-          // 401 handler will catch any downstream issue.
-        }
-      }
+      await usersService.changePassword(current, next);
+      // The server rotated this device's session secret + refreshed
+      // the auth cookies as part of the change. All other sessions
+      // for this user were revoked, so any other open tabs / devices
+      // will hit the next-request 401 → re-login flow. No client-side
+      // token bookkeeping needed.
       setError(undefined);
       onSuccess?.();
       notify("success", t("change-password-success"));

@@ -263,7 +263,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        refreshToken: string;
+                        refreshToken?: string;
                     };
                 };
             };

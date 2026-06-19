@@ -12,6 +12,13 @@ import { HttpError } from "../lib/api";
 import token from "../lib/token";
 import { useUserStore, useNotificationsStore } from "../stores";
 
+// The server's POST /api/v1/tokens response still echoes the access +
+// refresh tokens in the body for the legacy SPA's localStorage path.
+// New SPAs ignore them — only the just-decoded `id` + `isAdmin` claims
+// from the access token go into the user store (no token persistence).
+// `data.accessToken` is still pulled out below as the source for that
+// decode; nothing else looks at it.
+
 const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -76,18 +83,18 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
       // We trust the just-issued access token (the server signed it; we
       // got it back from the response body). `decodeJwt` parses the
       // claims without verifying the signature — verification happens
-      // server-side on every subsequent request via `verifyToken`.
+      // server-side on every subsequent request via `verifyToken`. The
+      // server also set HttpOnly cookies on the response; subsequent
+      // calls travel under those, the SPA never reads them.
       const userData = jose.decodeJwt(data.accessToken) as unknown as {
         id: string;
         isAdmin?: boolean;
       };
-      const user = UserModel(
-        { ...userData, editorGalleries: data.editorGalleries },
-        data.accessToken,
-        data.refreshToken
-      );
+      const user = UserModel({
+        ...userData,
+        editorGalleries: data.editorGalleries,
+      });
 
-      token.setTokens(data.accessToken, data.refreshToken);
       window.localStorage.setItem("user", user.toJson());
       setUser(user);
       // Drop any access-derived data we cached under the previous (guest or
@@ -104,11 +111,11 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
       // attach an inline confirmation to.
       notify("success", t("login-success", { userId: user.id() }));
     } catch (err) {
-      token.clearTokens();
       // Only the `user` key is auth state — the `lang` preference and
       // anything else live alongside but aren't tied to login, so the
       // previous `localStorage.clear()` here was a privacy/UX overreach.
       window.localStorage.removeItem("user");
+      token.stripLegacyTokens();
       setUser(undefined);
       // 429 is the only failure mode whose specific cause is useful to
       // surface — `Too many failed attempts` is actionable (wait + try

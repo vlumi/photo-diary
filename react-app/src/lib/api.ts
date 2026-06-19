@@ -3,6 +3,7 @@ import createClient from "openapi-fetch";
 import type { paths } from "./api-schema";
 import token from "./token";
 import i18n from "./i18n";
+import UserModel from "../models/UserModel";
 import {
   useUserStore,
   useLoginModalStore,
@@ -12,15 +13,12 @@ import {
 // Single typed client for the entire server API. The `paths` type is
 // generated from the committed `server/openapi.json` (CI verifies the
 // committed JSON matches the live route schemas, so this stays in
-// lockstep). Auth is attached via openapi-fetch middleware so callers
-// don't have to thread the Authorization header through every call.
-// openapi-fetch resolves request URLs via the WHATWG `URL` constructor,
-// which requires an absolute base. The previous `fetch("/api/v1/…")`
-// usage worked because the browser implicitly resolved against the
-// current page origin; openapi-fetch hands the URL constructor a string
-// directly. Using `window.location.origin` matches the implicit resolution
-// — same-origin requests in production, jsdom's `http://localhost:3000`
-// in vitest, with no per-environment plumbing.
+// lockstep).
+//
+// Auth travels as HttpOnly cookies — `credentials: "include"` makes
+// the browser attach them to every same-origin call. Logout / 401
+// refresh / login responses set or clear the cookies server-side; the
+// SPA never reads them.
 //
 // `fetch` is passed as a thunk that re-reads `globalThis.fetch` on every
 // call. Without this, createClient would capture the original `fetch`
@@ -28,54 +26,62 @@ import {
 // `globalThis.fetch = mock` wouldn't reach the client.
 const client = createClient<paths>({
   baseUrl: window.location.origin,
-  fetch: (input) => globalThis.fetch(input),
+  fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+    globalThis.fetch(input, { ...init, credentials: "include" }),
 });
 
-// Refresh tokens rotate on every use, so two parallel refresh calls
-// with the same token would race and the loser would be revoked.
-// Coalesce concurrent 401s into one in-flight refresh attempt.
-let refreshInFlight: Promise<string | undefined> | undefined;
-const refreshOnce = async (): Promise<string | undefined> => {
+// Refresh requests rotate the refresh cookie, so two parallel attempts
+// would race and the loser would see its rotated token rejected.
+// Coalesce concurrent 401s into one in-flight refresh.
+let refreshInFlight: Promise<boolean> | undefined;
+const refreshOnce = async (): Promise<boolean> => {
   if (refreshInFlight) return refreshInFlight;
-  const current = token.getRefreshToken();
-  if (!current) return undefined;
   refreshInFlight = (async () => {
     try {
+      // Legacy carry-over: if the user has a refresh token in
+      // localStorage from a pre-cookie SPA, post it explicitly so the
+      // server can rotate and set cookies. Once cookies are in place,
+      // strip the legacy token from localStorage so this branch is
+      // taken at most once per user. Removable pre-1.0.
+      const legacy = token.legacyRefreshToken();
+      const body = legacy ? JSON.stringify({ refreshToken: legacy }) : "{}";
       const response = await globalThis.fetch(
         `${window.location.origin}/api/v1/tokens/refresh`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refreshToken: current }),
+          credentials: "include",
+          body,
         }
       );
-      if (!response.ok) return undefined;
-      const data = (await response.json()) as {
-        accessToken: string;
-        refreshToken: string;
-        editorGalleries: string[];
-      };
-      token.setTokens(data.accessToken, data.refreshToken);
-      // Mirror the new pair into the stored user blob so a reload picks
-      // it up too. The user record's other fields stay as they were,
-      // except editorGalleries which the server resolves freshly on
-      // every refresh (catches grant changes between refreshes).
-      const stored = window.localStorage.getItem("user");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          parsed.token = data.accessToken;
-          parsed.refreshToken = data.refreshToken;
-          parsed.editorGalleries = data.editorGalleries;
-          window.localStorage.setItem("user", JSON.stringify(parsed));
-        } catch {
-          // Corrupt localStorage — ignore; in-memory tokens are
-          // already updated above.
+      if (!response.ok) return false;
+      if (legacy) token.stripLegacyTokens();
+      // editorGalleries can drift between refreshes (grant changes
+      // mid-session). Mirror the server's fresh value into the user
+      // store + localStorage so the UI's editor-tier tile set stays
+      // accurate.
+      try {
+        const data = (await response.json()) as {
+          editorGalleries?: string[];
+        };
+        if (Array.isArray(data.editorGalleries)) {
+          const current = useUserStore.getState().user;
+          if (current) {
+            const rebuilt = UserModel({
+              id: current.id() as string,
+              isAdmin: current.isAdmin(),
+              editorGalleries: data.editorGalleries,
+            });
+            useUserStore.getState().setUser(rebuilt);
+            window.localStorage.setItem("user", rebuilt.toJson());
+          }
         }
+      } catch {
+        // Body wasn't JSON-shaped — cookies still rotated, ignore.
       }
-      return data.accessToken;
+      return true;
     } catch {
-      return undefined;
+      return false;
     } finally {
       refreshInFlight = undefined;
     }
@@ -84,7 +90,7 @@ const refreshOnce = async (): Promise<string | undefined> => {
 };
 
 const expireLocalAuth = () => {
-  token.clearTokens();
+  token.stripLegacyTokens();
   window.localStorage.removeItem("user");
   useUserStore.getState().setUser(undefined);
   // Close any other modal that might be open (e.g. change-password mid-
@@ -94,41 +100,41 @@ const expireLocalAuth = () => {
   useLoginModalStore.getState().open(i18n.t("session-expired"));
 };
 
+// Legacy carry-over: on bundle load, if the user has a refresh token
+// in localStorage from a pre-cookie SPA, post it once so the server
+// sets the cookies and we strip the legacy fields. Fire-and-forget —
+// the 401-refresh path covers the same case lazily if this somehow
+// fails, but doing it upfront avoids the awkward "looks logged in
+// but next protected call 401s" gap on first load post-upgrade.
+// Removable pre-1.0 alongside #650.
+if (token.legacyRefreshToken()) {
+  void refreshOnce();
+}
+
 client.use({
-  onRequest({ request }) {
-    const config = token.createConfig();
-    const headers = (config.headers ?? {}) as Record<string, string>;
-    Object.entries(headers).forEach(([name, value]) => {
-      request.headers.set(name, value);
-    });
-    return request;
-  },
-  // Mid-session 401 handler with refresh fallback. If a request that
-  // *had* an Authorization header comes back 401 and we have a refresh
-  // token in hand, try to refresh once and retry the original request
-  // with the new access token. On refresh failure, fall through to the
-  // pre-existing "clear state + open login modal" flow.
-  // Requests without an Authorization header (login attempts, guest
-  // browsing) are ignored — Login's `catch` handles those inline.
+  // Mid-session 401 handler with refresh fallback. If a request comes
+  // back 401 and a refresh succeeds (cookie or legacy localStorage),
+  // retry the original. On refresh failure, fall through to the
+  // "clear state + open login modal" flow.
   async onResponse({ request, response }) {
     if (response.status !== 401) return;
-    if (!request.headers.get("authorization")) return;
     // The refresh endpoint itself doesn't get a refresh attempt — that
-    // would loop. Falling through to the login modal is the right
-    // behaviour when refresh itself fails.
+    // would loop. Login attempts (POST /tokens with no prior session)
+    // surface as 401 too; let them through to the login flow's catch.
     if (request.url.endsWith("/api/v1/tokens/refresh")) {
       expireLocalAuth();
       return;
     }
-    const newAccess = await refreshOnce();
-    if (!newAccess) {
+    if (request.method === "POST" && request.url.endsWith("/api/v1/tokens")) {
+      return;
+    }
+    const ok = await refreshOnce();
+    if (!ok) {
       expireLocalAuth();
       return;
     }
-    // Retry the original request with the freshly-minted access token.
-    const retry = new Request(request);
-    retry.headers.set("Authorization", `bearer ${newAccess}`);
-    return await globalThis.fetch(retry);
+    // Retry the original request — cookies are now refreshed.
+    return await globalThis.fetch(request);
   },
 });
 

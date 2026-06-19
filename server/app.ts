@@ -7,6 +7,7 @@ import {
   TypeBoxValidatorCompiler,
   type TypeBoxTypeProvider,
 } from "@fastify/type-provider-typebox";
+import fastifyCookie from "@fastify/cookie";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyCompress from "@fastify/compress";
 import fastifyStatic from "@fastify/static";
@@ -144,6 +145,7 @@ if (DOCS_EXPOSED) {
 // styles / dynamic imports (warrants its own audit). Referrer-
 // Policy overridden because OSM's tile servers block referrer-less
 // requests as bot traffic, breaking the Leaflet map widget.
+await app.register(fastifyCookie);
 await app.register(fastifyHelmet, {
   contentSecurityPolicy: false,
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },

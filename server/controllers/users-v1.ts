@@ -4,6 +4,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import CONST from "../lib/constants.js";
 import { AccessError } from "../lib/errors.js";
 import authorizerFactory from "../lib/authorizer.js";
+import { setAuthCookies } from "../lib/auth-cookies.js";
 import { requireUnscoped } from "../lib/host-scope.js";
 import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import modelFactory from "../models/user.js";
@@ -180,7 +181,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         security: [{ bearer: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       if (request.user.id === CONST.GUEST_USER) {
         // Guests have no password to change. AccessError matches the rest
         // of the "you can't do this" patterns in this codebase.
@@ -206,6 +207,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.user.id,
         !!request.user.isAdmin
       );
+      setAuthCookies(reply, pair.accessToken, pair.refreshToken);
       return pair;
     }
   );
