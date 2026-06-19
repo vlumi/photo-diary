@@ -1,0 +1,8 @@
+# Per-run instance dir — fresh .env, db, photo tree built by global-setup.
+.runtime/
+# Playwright artifacts.
+playwright-report/
+test-results/
+# Workspace install puts everything in the root lockfile; the inner
+# package-lock.json npm autogenerates here is redundant.
+package-lock.json

@@ -78,3 +78,34 @@ jobs:
           npm run api:codegen --workspace=react-app
           git diff --exit-code -- react-app/src/lib/api-schema.ts \
             || (echo "::error::react-app/src/lib/api-schema.ts is out of date — run \`npm run api:codegen --workspace=react-app\` and commit the result" && exit 1)
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      # Playwright browser binaries are cached separately from npm by
+      # version so the install step is a no-op on warm runs.
+      - name: Get installed Playwright version
+        id: pw-version
+        run: |
+          v=$(node -p "require('@playwright/test/package.json').version")
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ steps.pw-version.outputs.version }}
+      - name: Install Playwright browsers
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx --workspace=e2e playwright install --with-deps chromium
+      - name: Install Playwright system deps (cache hit)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx --workspace=e2e playwright install-deps chromium
+      - run: npm test --workspace=e2e
