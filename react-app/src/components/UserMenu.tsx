@@ -169,19 +169,17 @@ const UserMenu = (): React.ReactElement => {
   const handleLogout = () => {
     setIsOpen(false);
     // Server-side revoke first so the session row is gone before we
-    // throw away the refresh token. Fire-and-forget — local state is
-    // cleared regardless of whether the network call succeeds, so a
-    // user offline / mid-rotation can still log out locally.
-    const refreshToken = token.getRefreshToken();
-    if (refreshToken) {
-      tokenService.logout(refreshToken).catch(() => {});
-    }
-    // Order matters: clear the bearer before `setUser` so the React
-    // re-render's queries don't fire with the just-revoked token.
+    // throw away local state. The server identifies the session via
+    // the refresh cookie and clears both auth cookies in the response.
+    // Fire-and-forget — local state is cleared regardless of whether
+    // the network call succeeds, so a user offline can still log out
+    // locally.
+    tokenService.logout().catch(() => {});
     // localStorage is narrowed to the `user` key so the `lang`
-    // preference survives.
-    token.clearTokens();
+    // preference survives. `stripLegacyTokens` covers the case where a
+    // legacy refresh token is still hanging around.
     window.localStorage.removeItem("user");
+    token.stripLegacyTokens();
     setUser(undefined);
     // Drop access-derived caches so the re-render fetches the guest
     // view instead of leaving the previous user's galleries / map

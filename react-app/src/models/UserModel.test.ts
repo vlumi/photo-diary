@@ -3,48 +3,17 @@ import UserModel from "./UserModel";
 describe("Construction", () => {
   test("undefined", () => expect(() => UserModel(undefined)).toThrow());
   test("empty", () => expect(() => UserModel({} as any)).toThrow());
-  test("no ID", () =>
-    expect(() => UserModel({ token: "123" } as any)).toThrow());
   test("ID only", () => {
     const user = UserModel({ id: 42 });
     expect(user.id()).toBe(42);
-    expect(user.token()).toBeUndefined();
     expect(user.isAdmin()).toBe(false);
   });
-  test("Admin, no token", () => {
+  test("Admin", () => {
     const user = UserModel({ id: 42, isAdmin: true });
     expect(user.id()).toBe(42);
-    expect(user.token()).toBeUndefined();
     expect(user.isAdmin()).toBe(true);
     expect(user.toJson()).toBe(
       '{"id":42,"isAdmin":true,"editorGalleries":[]}'
-    );
-  });
-  test("Separate token", () => {
-    const user = UserModel({ id: 42 }, "1234");
-    expect(user.id()).toBe(42);
-    expect(user.token()).toBe("1234");
-    expect(user.isAdmin()).toBe(false);
-    expect(user.toJson()).toBe(
-      '{"id":42,"token":"1234","editorGalleries":[]}'
-    );
-  });
-  test("Token in object", () => {
-    const user = UserModel({ id: 42, token: "1234" });
-    expect(user.id()).toBe(42);
-    expect(user.token()).toBe("1234");
-    expect(user.isAdmin()).toBe(false);
-    expect(user.toJson()).toBe(
-      '{"id":42,"token":"1234","editorGalleries":[]}'
-    );
-  });
-  test("Two tokens", () => {
-    const user = UserModel({ id: 42, token: "1234" }, "5678");
-    expect(user.id()).toBe(42);
-    expect(user.token()).toBe("5678");
-    expect(user.isAdmin()).toBe(false);
-    expect(user.toJson()).toBe(
-      '{"id":42,"token":"5678","editorGalleries":[]}'
     );
   });
   test("Editor galleries", () => {
@@ -59,5 +28,16 @@ describe("Construction", () => {
   test("Global admin satisfies isGalleryEditor for any gallery", () => {
     const user = UserModel({ id: 42, isAdmin: true });
     expect(user.isGalleryEditor("any-gallery")).toBe(true);
+  });
+  test("Legacy token/refreshToken fields in input are silently dropped", () => {
+    const user = UserModel({
+      id: 42,
+      token: "at",
+      refreshToken: "rt",
+    } as any);
+    expect(user.id()).toBe(42);
+    expect(user.toJson()).toBe(
+      '{"id":42,"editorGalleries":[]}'
+    );
   });
 });

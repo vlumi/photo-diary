@@ -2,6 +2,11 @@ import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import { InvalidTokenError, LoginError, RateLimitError } from "../lib/errors.js";
+import {
+  REFRESH_COOKIE,
+  clearAuthCookies,
+  setAuthCookies,
+} from "../lib/auth-cookies.js";
 import logger from "../lib/logger.js";
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/token.js";
@@ -30,8 +35,10 @@ const TokenPairResponse = Type.Object({
   refreshToken: Type.String(),
   editorGalleries: Type.Array(Type.String()),
 });
+// `refreshToken` is optional so cookie-only clients can hit /refresh
+// with no body. Legacy SPAs continue to POST the token explicitly.
 const RefreshBody = Type.Object({
-  refreshToken: Type.String(),
+  refreshToken: Type.Optional(Type.String()),
 });
 const LogoutBody = Type.Object({
   // Optional so an already-invalid refresh token (e.g. expired and
@@ -146,7 +153,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const editorGalleries = await authorizer.loadEditorGalleries(
         credentials.id
       );
+      setAuthCookies(reply, pair.accessToken, pair.refreshToken);
       logger.debug(`User "${credentials.id}" logged in successfully.`);
+      // Tokens still travel in the response body for back-compat: the
+      // legacy SPA reads them from there and writes to localStorage.
+      // New SPAs ignore the body tokens and rely on the cookies set
+      // above. Removable once all clients are on the cookie path.
       reply.status(200).send({ ...pair, editorGalleries });
     }
   );
@@ -169,13 +181,15 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
-      if (!request.body?.refreshToken) throw new InvalidTokenError();
-      const { userId, refreshToken } = await model.verifyAndRotateRefresh(
-        request.body.refreshToken
-      );
+      const submitted =
+        request.body?.refreshToken ?? request.cookies?.[REFRESH_COOKIE];
+      if (!submitted) throw new InvalidTokenError();
+      const { userId, refreshToken } =
+        await model.verifyAndRotateRefresh(submitted);
       const isAdmin = await resolveIsAdmin(userId);
       const accessToken = await model.signAccessToken(userId, isAdmin);
       const editorGalleries = await authorizer.loadEditorGalleries(userId);
+      setAuthCookies(reply, accessToken, refreshToken);
       reply.status(200).send({ accessToken, refreshToken, editorGalleries });
     }
   );
@@ -196,9 +210,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
-      if (request.body?.refreshToken) {
-        await model.revokeSession(request.body.refreshToken);
+      const submitted =
+        request.body?.refreshToken ?? request.cookies?.[REFRESH_COOKIE];
+      if (submitted) {
+        await model.revokeSession(submitted);
       }
+      clearAuthCookies(reply);
       reply.status(204).send();
     }
   );
