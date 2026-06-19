@@ -11,7 +11,8 @@
   "workspaces": [
     "server",
     "converter",
-    "react-app"
+    "react-app",
+    "e2e"
   ],
   "scripts": {
     "setup": "npm install && npm run build",
