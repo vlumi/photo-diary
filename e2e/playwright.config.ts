@@ -35,6 +35,8 @@ export default defineConfig({
     port: PORT,
     timeout: 60_000,
     reuseExistingServer: !process.env.CI,
+    stdout: "pipe",
+    stderr: "pipe",
     env: {
       // `test` is the only config branch that honours DB_OPTS — prod
       // hardcodes the DB path to `<cwd>/db.sqlite3`, which would

@@ -12,6 +12,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+// `fs` is imported only for ensureRuntimeDir() / the CLI-mode entry
+// guard; the seed no longer deletes the DB file (see comment in
+// seedE2eDb about SQLITE_READONLY_DBMOVED).
+
 import {
   FIXTURE_PASSWORD_HASH,
   USERS,
@@ -34,12 +38,6 @@ const ensureRuntimeDir = (): void => {
 
 export const seedE2eDb = async (): Promise<void> => {
   ensureRuntimeDir();
-  // Wipe any prior DB so each run starts fresh.
-  try {
-    fs.unlinkSync(DB_PATH);
-  } catch {
-    // Didn't exist; fine.
-  }
 
   // Server config reads these at module load — must be set before the
   // dynamic import resolves. NODE_ENV=test selects the only config
@@ -51,6 +49,16 @@ export const seedE2eDb = async (): Promise<void> => {
   process.env.SECRET = "e2e-secret";
   process.env.PORT = "4201";
   process.env.BCRYPT_ROUNDS = "4";
+
+  // The driver's `_resetForTests` is a non-public seam we reach into
+  // for the FK-safe DELETE cascade. Truncating in place keeps the
+  // file's inode stable, which matters because Playwright's reused
+  // webServer holds an open connection — deleting the file under it
+  // would trip SQLITE_READONLY_DBMOVED on the first write.
+  const driverFactory = (
+    await import("photo-diary-server/db/sqlite3/index.js")
+  ).default;
+  driverFactory()._resetForTests();
 
   const { default: db } = await import("photo-diary-server/db/index.js");
 
