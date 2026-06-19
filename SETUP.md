@@ -79,13 +79,13 @@ Directory layout:
 ```text
 /opt/photo-diary/                       # parent dir, owned by the deploy user (see below)
   0.11.0/                               #   each version unpacked into its own subdir
-  0.17.1/                               #   so different instances can run different versions
+  0.18.0/                               #   so different instances can run different versions
                                         #   and upgrades are atomic (flip a symlink)
 
 /var/photo-diary/
   dailybw/                              # one directory per instance
     .env                                # per-instance config (see below)
-    code -> /opt/photo-diary/0.17.1      # symlink to the code version this instance runs
+    code -> /opt/photo-diary/0.18.0      # symlink to the code version this instance runs
     db.sqlite3                          # auto-created on first server start
     photos/
       inbox/  original/  thumbnail/        # display/<maxDim>/ subdirs auto-created on intake
@@ -112,7 +112,7 @@ sudo install -d -o "$USER" /opt/photo-diary /var/photo-diary
 GitHub auto-generates a source tarball for every tag. Extract it directly into a version subdirectory of `/opt/photo-diary/` with `tar --strip-components=1` (no rename step), then run `npm run setup` to install everything and build the bundled frontend:
 
 ```sh
-V=0.17.1
+V=0.18.0
 mkdir -p "/opt/photo-diary/$V"
 curl -L "https://github.com/vlumi/photo-diary/archive/refs/tags/v$V.tar.gz" \
   | tar xz -C "/opt/photo-diary/$V" --strip-components=1
@@ -127,7 +127,7 @@ Repeat this block for each new version you want to land on this host.
 The `bin/instance.ts` script handles directory creation, `.env` generation (with a fresh random `SECRET`), the `code` symlink, and the per-instance `bin/` shortcuts in one shot. Invoke it from the version of the code you want the instance to run:
 
 ```sh
-/opt/photo-diary/0.17.1/bin/instance.ts /var/photo-diary/dailybw
+/opt/photo-diary/0.18.0/bin/instance.ts /var/photo-diary/dailybw
 ```
 
 That creates `/var/photo-diary/dailybw/` with everything wired up — including `/var/photo-diary/dailybw/bin/{photo,gallery,user}.ts` symlinks so the routine operator commands are short paths (`./bin/photo.ts …` instead of `./code/server/bin/photo.ts …`). The positional is the instance directory; it's resolved via `path.resolve()` against cwd, so `dailybw` and `./dailybw` both mean `<cwd>/dailybw`, while `../sibling` and absolute paths resolve as expected. To pin a logical name different from the dir basename, pass `--name`. Re-running on an existing instance acts as a doctor — verifies the directory tree, checks for missing required `.env` keys, reports `✓`/`✗`. Add `--fix` to append any missing keys with defaults (without touching existing values).
@@ -159,7 +159,7 @@ Re-run `bin/instance.ts` from the new version of the code, then **delete + start
 
 ```sh
 pm2 stop dailybw dailybw-converter
-/opt/photo-diary/0.17.1/bin/instance.ts /var/photo-diary/dailybw    # backs up the DB, flips the symlink
+/opt/photo-diary/0.18.0/bin/instance.ts /var/photo-diary/dailybw    # backs up the DB, flips the symlink
 pm2 delete dailybw dailybw-converter                                # drop cached metadata
 cd /var/photo-diary/dailybw
 ./code/server/bin/start-prod.sh                                     # migration runner applies any schema bumps
