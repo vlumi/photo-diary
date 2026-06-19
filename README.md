@@ -1,37 +1,40 @@
 # Photo Diary
 
-**Photo Diary** is a calendar-based photo gallery platform for self-hosting. The photos are arranged by the date they were shot, in calendar-based views, aimed at diaries and other, date-based photography projects.
+**Photo Diary** is a calendar-based photo gallery platform for self-hosting. Photos are arranged by the date they were shot, in calendar-based views, aimed at diaries and other date-based photography projects.
 
-Live examples: [dailybw.misaki.fi](https://dailybw.misaki.fi) and [papusama.misaki.fi](https://papusama.misaki.fi).
+**Live examples:** [dailybw.misaki.fi](https://dailybw.misaki.fi) · [papusama.misaki.fi](https://papusama.misaki.fi)
 
-Key features include:
+Key features:
 
-- Calendar-based views (year, month, photo)
-  - Including map from embedded GPS information
-- Comprehensive photo statistics (time, gear, exposure settings, etc.)
+- Calendar-based views (year, month, photo), with map from embedded GPS information
+- Comprehensive photo statistics (time, gear, exposure settings, etc.) with stacked-area evolution charts
 - Fast browsing — per-view fetch narrowed by the active filter, cached client-side so filter toggles update in place
-- User management and basic access control
+- Admin UI for galleries, users, groups, photo bulk-edit, and per-instance settings
+- Multi-instance deploy pattern: shared code + per-instance state + atomic upgrades
 
 ## Contents
 
-- [Structure](#structure)
+For visitors / evaluators:
+
+- [What it looks like](#what-it-looks-like)
 - [Features](#features)
-  - [Beta features](#beta-features)
-- [Setup](SETUP.md) — basic setup, dev mode, multi-instance deployment, day-to-day ops
-- [Photo pipeline](#photo-pipeline)
 - [Roadmap](#roadmap)
-- [Backlog](#backlog)
 - [Version history](#version-history)
 
-## Structure
+For operators:
 
-Photo Diary is split into independent modules, each handling its own sub-system:
+- [Setup](SETUP.md) — install, dev mode, multi-instance deployment, day-to-day ops
+- [Photo pipeline](#photo-pipeline)
+- [Architecture](#architecture)
 
-- [react-app](react-app) — front-end React SPA. Served as static files by the backend; no separate hosting required.
-- [server](server) — Fastify + SQLite backend. Exposes `/api/v1` (with an OpenAPI doc at `/api/v1/docs`) and serves the bundled frontend.
-- [converter](converter) — back-end worker that pre-processes new photos (EXIF extraction, configurable downscale ladder + thumbnail via sharp).
+For contributors:
 
-The three pieces communicate via the shared filesystem and SQLite DB rather than over a network — the converter writes one thumbnail and one or more display renditions per intake under `photos/display/<maxDim>/<id>.jpg` (the ladder is operator-configurable via the `renditions` meta key; the default is a single 1500-px rendition) and inserts the photo row into the DB on intake, processing operator JSON sidecars through the same pipeline; the server reads the DB to serve the API; `bin/photo.ts update <id>` is the operator hook for after-the-fact enrichment. Per-instance state (database, photo files, `.env`) lives in a single instance directory outside the repo; see [Setup](#setup) below.
+- [Working in the repo](AGENTS.md) — layout, commands, footguns, release flow
+- [react-app](react-app/README.md) · [server](server/README.md) · [converter](converter/README.md) · [e2e](e2e/README.md)
+
+## What it looks like
+
+The live examples up top are the canonical "see it in action" — the calendar grid, photo modal, stats, and admin UI are best understood by clicking around. A small set of screenshots will land in [docs/screenshots.md](docs/screenshots.md) as the operator captures them.
 
 ## Features
 
@@ -120,11 +123,48 @@ End-to-end flow from a new JPG arriving on the host to it being browsable in the
 4. **(Optional) operator enrichment via JSON sidecar.** Drop a `<name>.json` alongside (or anywhere under) `inbox/` with the fields you want to overlay onto an existing row — title, description, operator-set country / place, etc. The converter matches it back to the row by id / originalFilename + timestamp and applies the overlay. The sidecar is archived under `photos/original/<id>.intake.json` after processing.
 5. **(Optional) operator enrichment via CLI.** For one-off corrections, `./bin/photo.ts update <id> --title "…" --place "…"` applies the same overrides directly. `./bin/photo.ts show <id>` prints the current row; `./bin/photo.ts delete <id>` removes one. See `./bin/photo.ts --help`.
 
+## Architecture
+
+Three TypeScript workspaces, no network between them — the converter and server share the same SQLite DB and `photos/` tree on the host filesystem; the SPA talks to the server over HTTP.
+
+```mermaid
+flowchart LR
+    operator["Operator: drop JPGs / JSON sidecars"]
+    visitor["Visitor browser"]
+
+    subgraph instance["Instance dir"]
+        inbox["photos/inbox/"]
+        photos["photos/{original,thumbnail,display}/"]
+        db[("db.sqlite3")]
+    end
+
+    operator -->|"copy"| inbox
+    inbox -->|"chokidar watch"| converter
+    converter -->|"sharp + exifr"| photos
+    converter -->|"insert photo row"| db
+    converter -.->|"reverse-geocode"| nominatim["Nominatim"]
+
+    visitor -->|"HTTPS"| nginx["nginx (TLS)"]
+    nginx -->|"/api/*"| server
+    nginx -.->|"photos/* directly"| photos
+    server -->|"read"| db
+    server -->|"static SPA bundle"| visitor
+```
+
+For more on the boundaries:
+
+- **[react-app](react-app/README.md)** — Vite + React 19 SPA. Built into static files, served by the server. No backend of its own.
+- **[server](server/README.md)** — Fastify + TypeBox + better-sqlite3. Owns `/api/v1` and serves the SPA bundle. OpenAPI doc at `/api/v1/docs`.
+- **[converter](converter/README.md)** — chokidar-watched intake daemon. EXIF extraction, configurable rendition ladder via sharp, optional Nominatim reverse-geocoding.
+
+Per-instance state — the SQLite DB, the `photos/` tree, `.env` — lives in a single directory outside the repo. Same code can run multiple instances; see [Setup](SETUP.md) for the multi-instance layout.
+
 ## Roadmap
 
 Active milestones on the way to 1.0, plus the far-out 2.0 direction. Each bullet links the GitHub milestone for live status.
 
-- [**1.0 — Pre-release audits**](https://github.com/vlumi/photo-diary/milestone/4) — test-coverage gap analysis, frontend security audit, end-to-end UI test suite, documentation overhaul, operator-script surface tidy.
+- [**0.19**](https://github.com/vlumi/photo-diary/milestone/22) — Pre-release polish: e2e UI test suite, this docs overhaul, subdivision-dataset story.
+- [**1.0**](https://github.com/vlumi/photo-diary/milestone/4) — Stamp once the audit + hardening work has aged out. Drop the JWT bearer-header transition (#650), CSP enable pass (#648), per-photo licence metadata (#263), other follow-ups from the security + coverage audits.
 - [**2.0 — Thin server, cloud-native direction**](https://github.com/vlumi/photo-diary/milestone/18) *(direction-setting, far out)* — originals leave the server for client-side / cold storage, the converter's sharp pipeline becomes a bundled local uploader, all DB ops route through the API, storage backends behind a vendor-agnostic interface. Likely diverges from today's self-hosted-monolith shape enough that it may end up being a different product line.
 
 ## Backlog
