@@ -6,6 +6,10 @@
 
 - New `bin/instance.ts gc` subcommand reports `/opt/photo-diary/` code dirs that no scanned instance under `/var/photo-diary/` references, with sizes and the `rm -rf` commands the operator would run. Read-only — never deletes. Closes #653.
 
+### Developer
+
+- Playwright e2e test suite under `e2e/` covers the regression-prone seams between SPA components, stores, and the API: login/logout cycle, session expiry → login modal, change-password (right + wrong current), non-existent gallery, and language persistence. Wired into CI as a separate workflow job. Closes #261.
+
 ## [0.18.0] - 2026-06-19
 
 ### Operator
