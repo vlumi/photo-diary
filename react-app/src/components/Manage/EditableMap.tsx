@@ -159,7 +159,7 @@ const EditableMap = ({
         style={{ height: "100%" }}
       >
         <TileLayer
-          attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&amp;copy <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <RecenterOnProps lat={lat} lon={lon} positionKey={positionKey} />
