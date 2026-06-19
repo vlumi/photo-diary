@@ -171,6 +171,16 @@ pm2 save
 
 The DB backup is named `db.sqlite3.pre-<new-version>` — a plain file copy that assumes the instance is stopped (started instances may have an inconsistent backup). Rollback is manual: `cp db.sqlite3.pre-<version> db.sqlite3`, point `code` back at the older version, then the same `pm2 delete && start-prod.sh` cycle.
 
+### Reclaiming disk after several upgrades
+
+The multi-instance layout never garbage-collects old `/opt/photo-diary/<version>/` directories — each one is 400+ MB (`sharp`, `better-sqlite3`, etc. in `node_modules`), so after a dozen releases they add up. `bin/instance.ts gc` scans the conventional layout and reports versions that no scanned instance references:
+
+```sh
+/opt/photo-diary/0.18.0/bin/instance.ts gc
+```
+
+It walks `/var/photo-diary/*/code` symlinks to collect what's in use, then prints anything under `/opt/photo-diary/` that isn't in that set, along with sizes and the `rm -rf` commands you would run. It never deletes — an operator with non-conventional instance layouts may have instances outside `/var/photo-diary/` that reference these dirs, so the actual `rm` is left to you after reviewing. Override the scan roots with `--code-root` / `--instances-root` if your layout differs.
+
 ### nginx
 
 One server block per instance, proxying to its `PORT` (set in the instance's `.env`). nginx also serves `display/`, `thumbnail/`, and `gallery-icons/` directly from disk — the server never streams photos, only their metadata. The `cdn` meta row (set via `./bin/meta.ts set instance_cdn …` — or the [API](server/README.md) / raw SQL as fallback) tells the frontend which URL to load images from; typically the same host the API is on.

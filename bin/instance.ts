@@ -283,6 +283,168 @@ const runStep = (
   }
   return true;
 };
+// Recursive byte size of a directory tree. Cheap stat-walk, used by
+// the `gc` report to size each unreferenced /opt/photo-diary version.
+// Symlinks are not followed so a versioned dir that nests a symlink
+// to anywhere outside its own tree won't inflate the number.
+const dirSizeBytes = (dir: string): number => {
+  let total = 0;
+  const walk = (p: string): void => {
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(p, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      const full = path.join(p, e.name);
+      if (e.isSymbolicLink()) continue;
+      if (e.isDirectory()) {
+        walk(full);
+      } else if (e.isFile()) {
+        try {
+          total += fs.statSync(full).size;
+        } catch {
+          // Race with concurrent removal — skip.
+        }
+      }
+    }
+  };
+  walk(dir);
+  return total;
+};
+
+const formatBytes = (n: number): string => {
+  if (n < 1024) return `${n} B`;
+  const units = ["KB", "MB", "GB", "TB"];
+  let v = n / 1024;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return `${v.toFixed(v >= 10 ? 0 : 1)} ${units[i]}`;
+};
+
+interface GcOpts {
+  codeRoot: string;
+  instancesRoot: string;
+}
+
+// Walk `instancesRoot/*/code` and resolve each symlink to its real target.
+// Returns the set of code dirs the conventional layout references. Dirs
+// that aren't instance shells (no `code` symlink) are silently skipped.
+const collectReferencedCodeDirs = (instancesRoot: string): Set<string> => {
+  const referenced = new Set<string>();
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(instancesRoot, { withFileTypes: true });
+  } catch {
+    return referenced;
+  }
+  for (const e of entries) {
+    if (!e.isDirectory()) continue;
+    const link = path.join(instancesRoot, e.name, "code");
+    const target = resolveSymlinkTarget(link);
+    if (target) referenced.add(target);
+  }
+  return referenced;
+};
+
+// Reports orphan code dirs under `codeRoot` (parent of every
+// /opt/photo-diary/<version>/) that no instance under `instancesRoot`
+// references. Never deletes — prints the dirs + sizes + the rm commands
+// the operator would run if they're sure. An operator with non-
+// conventional instance layouts will see false positives here, which
+// is exactly why this is a report, not an action.
+const runGc = (opts: GcOpts): void => {
+  const codeRoot = path.resolve(opts.codeRoot);
+  const instancesRoot = path.resolve(opts.instancesRoot);
+
+  let codeEntries: fs.Dirent[];
+  try {
+    codeEntries = fs.readdirSync(codeRoot, { withFileTypes: true });
+  } catch (err) {
+    console.error(
+      `Error: cannot read code root ${codeRoot}: ${(err as Error).message}`
+    );
+    process.exit(1);
+  }
+
+  const referenced = collectReferencedCodeDirs(instancesRoot);
+  console.log(`Code root:      ${codeRoot}`);
+  console.log(`Instances root: ${instancesRoot}`);
+  console.log(
+    `Referenced:     ${referenced.size} code dir${referenced.size === 1 ? "" : "s"}`
+  );
+  if (referenced.size === 0) {
+    console.log(
+      "(No instance `code` symlinks found — either there are no instances, or they live outside the scanned root. The orphan list below may include versions you don't actually want to delete.)"
+    );
+  }
+  console.log();
+
+  const orphans: Array<{
+    dir: string;
+    bytes: number;
+    reason: "unreferenced" | "no-package-json";
+  }> = [];
+
+  for (const e of codeEntries) {
+    if (!e.isDirectory()) continue;
+    const full = path.join(codeRoot, e.name);
+    // Canonicalise the candidate too — the referenced set carries
+    // realpath-resolved targets, and on systems where the scanned
+    // code root itself is a symlink (macOS /tmp, custom mounts), the
+    // string-equal check would otherwise miss every match.
+    let canonical = full;
+    try {
+      canonical = fs.realpathSync(full);
+    } catch {
+      // Stat race or broken link — leave canonical as-is.
+    }
+    const hasPkg = fs.existsSync(path.join(full, "package.json"));
+    if (!hasPkg) {
+      orphans.push({
+        dir: full,
+        bytes: dirSizeBytes(full),
+        reason: "no-package-json",
+      });
+      continue;
+    }
+    if (referenced.has(canonical)) continue;
+    orphans.push({
+      dir: full,
+      bytes: dirSizeBytes(full),
+      reason: "unreferenced",
+    });
+  }
+
+  if (orphans.length === 0) {
+    console.log("No orphan code dirs found.");
+    return;
+  }
+
+  orphans.sort((a, b) => b.bytes - a.bytes);
+  const totalBytes = orphans.reduce((sum, o) => sum + o.bytes, 0);
+
+  console.log("Orphan code dirs (review before deleting):");
+  console.log();
+  for (const o of orphans) {
+    const tag = o.reason === "no-package-json" ? " [no package.json]" : "";
+    console.log(`  ${formatBytes(o.bytes).padStart(8)}  ${o.dir}${tag}`);
+  }
+  console.log();
+  console.log(`Total reclaimable: ${formatBytes(totalBytes)}`);
+  console.log();
+  console.log("To remove (after reviewing — non-conventional instance layouts");
+  console.log("may not be scanned and could be referencing these dirs):");
+  console.log();
+  for (const o of orphans) {
+    console.log(`  rm -rf ${o.dir}`);
+  }
+};
+
 // Best-effort post-cycle probe — server's /api/v1/meta is unauthenticated
 // and cheap. PORT is required in .env so we always have it. Non-fatal:
 // returns false on any error, caller decides what to do with that.
@@ -301,6 +463,32 @@ const probeMeta = async (port: number): Promise<boolean> => {
 const argv = yargs(hideBin(process.argv))
   .scriptName("instance.ts")
   .locale("en")
+  .command(
+    "gc",
+    "Report /opt/photo-diary versions no scanned instance references. Read-only — prints the rm commands the operator would run if they're sure.",
+    (y) =>
+      y
+        .option("code-root", {
+          describe:
+            "Directory containing the versioned code dirs (the parent of each /opt/photo-diary/<version>/). Defaults to the parent of this script's own code root.",
+          type: "string",
+        })
+        .option("instances-root", {
+          describe:
+            "Directory containing per-instance dirs (each with a `code` symlink). Defaults to /var/photo-diary.",
+          type: "string",
+          default: "/var/photo-diary",
+        }),
+    (args) => {
+      const codeRoot =
+        (args["code-root"] as string | undefined) ?? path.dirname(CODE_ROOT);
+      runGc({
+        codeRoot,
+        instancesRoot: args["instances-root"] as string,
+      });
+      process.exit(0);
+    }
+  )
   .command(
     "$0 [dir]",
     "Bootstrap, doctor, or upgrade a Photo Diary instance directory",
