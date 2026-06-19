@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
@@ -6,6 +7,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const RUNTIME_DIR = path.resolve(__dirname, ".runtime");
 const SERVER_ENTRY = path.resolve(__dirname, "../server/index.ts");
 const STATIC_DIR = path.resolve(__dirname, "../react-app/build");
+
+// webServer.cwd is resolved at Playwright startup (before globalSetup
+// runs, where the seed normally creates this dir). On a clean
+// checkout it doesn't exist and the spawn fails with ENOENT — make
+// sure it's there at config-load time.
+fs.mkdirSync(RUNTIME_DIR, { recursive: true });
 
 const PORT = 4201;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
