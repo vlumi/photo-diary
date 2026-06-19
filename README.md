@@ -152,6 +152,7 @@ Third structural take on a long-running personal photo-gallery side project — 
 - **0.15** (Jun 2026) — Composition + scale: hybrid galleries, saved filters as pseudo-galleries, per-language metadata, date-range filter, stats evolution chart; per-view `/query`/`/counts`/`/neighbors` endpoints.
 - **0.16** (Jun 2026) — Filter & viewing UX polish: redesigned filter widget (inline strip + per-category modal cards with faceted counts), continuous-variable range filters, stacked-area evolution chart, virtual-gallery edit page + hybrid-source admin UI, persistent map modal.
 - **0.17** (Jun 2026) — Admin UI shift to layered modals + Section card primitive; per-photo visibility + editor-tier admin actions on `/g/`; `/m/instance` page with runtime-overridable `meta` defaults; configurable rendition ladder + collapsed `photos/display/<maxDim>/` layout; `/m/photos` filters move into a modal; Stats Evolution adds `weekday` and `hour`; Finnish geocoding cleanup (state-code lvl fallthrough + script-rule address blob filter).
+- **0.18** (Jun 2026) — Cleanup + observability: `meta` table is the only source for SPA runtime defaults (no `.env` fallback); `/m/operations` admin page surfaces converter activity, pending queues, and failures; tidied `bin/photo.ts` surface; vitest coverage wired; frontend security audit pass; auth tokens move from localStorage to HttpOnly cookies.
 
-See the [Roadmap](#roadmap) for what's in flight after 0.17.
+See the [Roadmap](#roadmap) for what's in flight after 0.18.
   
