@@ -100,6 +100,17 @@ const expireLocalAuth = () => {
   useLoginModalStore.getState().open(i18n.t("session-expired"));
 };
 
+// Legacy carry-over: on bundle load, if the user has a refresh token
+// in localStorage from a pre-cookie SPA, post it once so the server
+// sets the cookies and we strip the legacy fields. Fire-and-forget —
+// the 401-refresh path covers the same case lazily if this somehow
+// fails, but doing it upfront avoids the awkward "looks logged in
+// but next protected call 401s" gap on first load post-upgrade.
+// Removable pre-1.0 alongside #650.
+if (token.legacyRefreshToken()) {
+  void refreshOnce();
+}
+
 client.use({
   // Mid-session 401 handler with refresh fallback. If a request comes
   // back 401 and a refresh succeeds (cookie or legacy localStorage),
