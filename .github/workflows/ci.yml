@@ -95,7 +95,7 @@ jobs:
       - name: Get installed Playwright version
         id: pw-version
         run: |
-          v=$(node -p "require('./e2e/node_modules/@playwright/test/package.json').version")
+          v=$(node -p "require('@playwright/test/package.json').version")
           echo "version=$v" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
         id: pw-cache
