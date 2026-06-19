@@ -6,3 +6,5 @@ test-results/
 # Workspace install puts everything in the root lockfile; the inner
 # package-lock.json npm autogenerates here is redundant.
 package-lock.json
+# Coverage output (raw v8 + the c8-rendered report).
+coverage/

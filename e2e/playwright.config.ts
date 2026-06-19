@@ -14,6 +14,19 @@ const STATIC_DIR = path.resolve(__dirname, "../react-app/build");
 // sure it's there at config-load time.
 fs.mkdirSync(RUNTIME_DIR, { recursive: true });
 
+// Coverage capture (opt-in via E2E_COVERAGE=1). Node writes raw v8
+// coverage to this dir while the server runs; c8 produces a report
+// from there after the suite finishes (see `npm run coverage`).
+// Honors an externally-set NODE_V8_COVERAGE so the root-level
+// `coverage` script can pool v8 data from vitest + e2e into one dir
+// for a unified report.
+const COVERAGE_DIR =
+  process.env.NODE_V8_COVERAGE ?? path.resolve(__dirname, "coverage", "v8");
+if (process.env.E2E_COVERAGE && !process.env.NODE_V8_COVERAGE) {
+  fs.rmSync(COVERAGE_DIR, { recursive: true, force: true });
+  fs.mkdirSync(COVERAGE_DIR, { recursive: true });
+}
+
 const PORT = 4201;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
@@ -41,6 +54,10 @@ export default defineConfig({
     cwd: RUNTIME_DIR,
     port: PORT,
     timeout: 60_000,
+    // Coverage capture relies on Node flushing v8 data on graceful
+    // exit. Playwright kills with SIGKILL by default; SIGTERM with a
+    // grace window lets Node's exit handler run.
+    gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },
     reuseExistingServer: !process.env.CI,
     stdout: "pipe",
     stderr: "pipe",
@@ -59,6 +76,12 @@ export default defineConfig({
       // but new hashes (e.g. password rotation tests) need fast costs
       // to keep CI snappy.
       BCRYPT_ROUNDS: "4",
+      // v8 coverage capture in the server process. The Node runtime
+      // dumps a JSON file per worker to this dir on graceful exit;
+      // omitted unless E2E_COVERAGE is set so normal runs stay fast.
+      ...(process.env.E2E_COVERAGE
+        ? { NODE_V8_COVERAGE: COVERAGE_DIR }
+        : {}),
     },
   },
 });

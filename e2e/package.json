@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
-    "seed": "tsx seed.ts"
+    "seed": "tsx seed.ts",
+    "coverage": "E2E_COVERAGE=1 playwright test && cd .. && c8 report --temp-directory=e2e/coverage/v8 --reporter=text --reporter=html --reporter=json-summary --report-dir=e2e/coverage --include='server/**/*.ts' --exclude='server/**/*.test.ts' --exclude='server/tests/**' --exclude='server/bin/**' --exclude='server/openapi.json' --exclude='server/db/sqlite3/migrations/**'"
   },
   "dependencies": {
     "photo-diary-server": "*"
@@ -14,6 +15,7 @@
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "@types/node": "^25.9.3",
+    "c8": "^11.0.0",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
