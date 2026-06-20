@@ -34,7 +34,15 @@ For contributors:
 
 ## What it looks like
 
-The live examples up top are the canonical "see it in action" — the calendar grid, photo modal, stats, and admin UI are best understood by clicking around. A small set of screenshots will land in [docs/screenshots.md](docs/screenshots.md) as the operator captures them.
+The live examples up top are the canonical "see it in action" — the calendar grid, photo modal, stats, and admin UI are best understood by clicking around. A static set captured from a local fixture lives in [docs/screenshots.md](docs/screenshots.md).
+
+![Year calendar](docs/screenshots/01-calendar-year.png)
+
+![Month calendar](docs/screenshots/02-calendar-month.png)
+
+![Photo modal](docs/screenshots/03-photo-modal.png)
+
+![Statistics](docs/screenshots/04-stats.png)
 
 ## Features
 
@@ -195,4 +203,3 @@ Third structural take on a long-running personal photo-gallery side project — 
 - **0.18** (Jun 2026) — Cleanup + observability: `meta` table is the only source for SPA runtime defaults (no `.env` fallback); `/m/operations` admin page surfaces converter activity, pending queues, and failures; tidied `bin/photo.ts` surface; vitest coverage wired; frontend security audit pass; auth tokens move from localStorage to HttpOnly cookies.
 
 See the [Roadmap](#roadmap) for what's in flight after 0.18.
-  

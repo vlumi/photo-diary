@@ -8,8 +8,10 @@ coverage/
 .playwright-mcp/
 
 # Ad-hoc visual-verification screenshots written by playwright MCP /
-# manual checks. Local only; never committed.
-screenshots/
+# manual checks. Local only; never committed. Anchored to repo root
+# so subdir paths like `docs/screenshots/` (the committed README
+# captures) and `docs/fixtures/screenshots/` aren't caught.
+/screenshots/
 
 # Local dev instance bootstrapped by `./bin/instance.ts dev --base .`
 dev/

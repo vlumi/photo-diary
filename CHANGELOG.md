@@ -14,6 +14,7 @@
 ### Docs
 
 - Top-level `README.md` reorganized around the three audiences (visitor / operator / contributor) — Contents lists per-lane entry points, "What it looks like" surfaces the live-example links + a stub `docs/screenshots.md`, "Architecture" carries a mermaid diagram of the converter / server / SPA boundary. New `e2e/README.md` documents the e2e workspace. Closes #283.
+- `docs/screenshots/` now ships year-calendar / month-calendar / photo-modal / stats captures from a fixture under `docs/fixtures/screenshots/`. Seed + capture scripts are reproducible (`npx tsx seed.mjs && npx tsx capture.mjs`); the 7 placeholder photos can be swapped for AI-generated replacements per `docs/fixtures/screenshots/PROMPTS.md`. Closes #661.
 
 ## [0.18.0] - 2026-06-19
 

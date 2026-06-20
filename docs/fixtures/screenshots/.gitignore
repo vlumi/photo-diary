@@ -1,0 +1,3 @@
+# Per-capture instance dir — seeded DB + processed photo tree built by
+# seed.mjs. Regenerable; not committed.
+.runtime/
