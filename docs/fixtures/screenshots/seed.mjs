@@ -121,18 +121,38 @@ const SYNTHETIC_CAMERAS = [
   { make: "Leica", model: "Q2", lensModel: "SUMMILUX 28mm f/1.7 ASPH" },
 ];
 
-const SYNTHETIC_LOCATIONS = [
-  { country: "jp", place: "Tokyo", lat: 35.6762, lon: 139.6503 },
-  { country: "is", place: "Reykjavik", lat: 64.1466, lon: -21.9426 },
-  { country: "it", place: "Rome", lat: 41.9028, lon: 12.4964 },
-  { country: "no", place: "Tromsø", lat: 69.6492, lon: 18.9553 },
-  { country: "us", place: "Yosemite", lat: 37.8651, lon: -119.5383 },
-  { country: "fr", place: "Paris", lat: 48.8566, lon: 2.3522 },
-  { country: "fi", place: "Helsinki", lat: 60.1699, lon: 24.9384 },
-  { country: "nz", place: "Queenstown", lat: -45.0312, lon: 168.6626 },
-  { country: "ca", place: "Banff", lat: 51.4968, lon: -115.9281 },
-  { country: "kr", place: "Seoul", lat: 37.5665, lon: 126.978 },
+// Weighted location pool — Japan dominates (operator's home-country
+// shape), Iceland / Italy / USA mid-tier, the rest tail off. The
+// `repeat` count drives how often each entry is picked when cycling
+// through synthetic photos, producing visible variation in the
+// Country and City donuts.
+const SYNTHETIC_LOCATIONS_WEIGHTED = [
+  { country: "jp", place: "Tokyo", lat: 35.6762, lon: 139.6503, repeat: 14 },
+  { country: "jp", place: "Kyoto", lat: 35.0116, lon: 135.7681, repeat: 8 },
+  { country: "jp", place: "Osaka", lat: 34.6937, lon: 135.5023, repeat: 5 },
+  { country: "jp", place: "Sapporo", lat: 43.0618, lon: 141.3545, repeat: 3 },
+  { country: "is", place: "Reykjavik", lat: 64.1466, lon: -21.9426, repeat: 9 },
+  { country: "it", place: "Rome", lat: 41.9028, lon: 12.4964, repeat: 7 },
+  { country: "it", place: "Venice", lat: 45.4408, lon: 12.3155, repeat: 3 },
+  { country: "us", place: "Yosemite", lat: 37.8651, lon: -119.5383, repeat: 5 },
+  { country: "us", place: "Cape Canaveral", lat: 28.5729, lon: -80.649, repeat: 3 },
+  { country: "fi", place: "Helsinki", lat: 60.1699, lon: 24.9384, repeat: 6 },
+  { country: "fr", place: "Paris", lat: 48.8566, lon: 2.3522, repeat: 5 },
+  { country: "no", place: "Tromsø", lat: 69.6492, lon: 18.9553, repeat: 3 },
+  { country: "nz", place: "Queenstown", lat: -45.0312, lon: 168.6626, repeat: 2 },
+  { country: "ca", place: "Banff", lat: 51.4968, lon: -115.9281, repeat: 2 },
+  { country: "kr", place: "Seoul", lat: 37.5665, lon: 126.978, repeat: 2 },
 ];
+// Expanded list with each entry repeated `repeat` times, in
+// insertion order — synthetic photos take `i % pool.length` slots.
+const SYNTHETIC_LOCATIONS = SYNTHETIC_LOCATIONS_WEIGHTED.flatMap((loc) =>
+  Array(loc.repeat).fill({
+    country: loc.country,
+    place: loc.place,
+    lat: loc.lat,
+    lon: loc.lon,
+  })
+);
 
 const FOCAL_LENGTHS = [14, 24, 28, 35, 50, 85, 105, 135, 200];
 const APERTURES = [1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11];
@@ -360,6 +380,14 @@ const main = async () => {
       })
     );
     await db.upsertPhotoRendition(photoId, DISPLAY_MAX_DIM);
+    // Stats Country topic reads taken.location.country (already set
+    // via createPhoto above); Stats City topic reads geocoded.city.
+    // Populate the geocoded fields so stats donuts have varied
+    // segments rather than one "Unknown" slice.
+    await db.upsertGeocoded(photoId, "en", {
+      countryCode: f.location.country,
+      city: f.location.place,
+    });
     linkedIds.push(photoId);
   }
 
@@ -394,6 +422,10 @@ const main = async () => {
         },
       })
     );
+    await db.upsertGeocoded(photoId, "en", {
+      countryCode: location.country,
+      city: location.place,
+    });
     linkedIds.push(photoId);
   }
 
