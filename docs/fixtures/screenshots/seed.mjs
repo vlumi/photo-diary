@@ -315,13 +315,25 @@ const main = async () => {
     fs.copyFileSync(sourcePath, originalPath);
     const origMeta = await sharp(sourcePath).metadata();
     await sharp(sourcePath)
-      .resize(DISPLAY_MAX_DIM, DISPLAY_MAX_DIM, { fit: "inside" })
+      .resize(DISPLAY_MAX_DIM, DISPLAY_MAX_DIM, {
+        fit: "inside",
+        withoutEnlargement: true,
+      })
       .jpeg({ quality: 88 })
       .toFile(displayPath);
+    // Matches converter/convert-image: fit:'inside' with no
+    // enlargement, so the actual thumbnail dimensions stay in the
+    // photo's natural aspect (NOT the 600×200 box). Read them back
+    // for the DB row.
     await sharp(sourcePath)
-      .resize(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, { fit: "cover" })
+      .rotate()
+      .resize(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, {
+        fit: "inside",
+        withoutEnlargement: true,
+      })
       .jpeg({ quality: 82 })
       .toFile(thumbnailPath);
+    const thumbMeta = await sharp(thumbnailPath).metadata();
 
     const photoId = `${id}.jpg`;
     await db.createPhoto(
@@ -343,7 +355,7 @@ const main = async () => {
         iso: f.iso,
         dimensions: {
           original: { width: origMeta.width, height: origMeta.height },
-          thumbnail: { width: THUMBNAIL_WIDTH, height: THUMBNAIL_HEIGHT },
+          thumbnail: { width: thumbMeta.width, height: thumbMeta.height },
         },
       })
     );
