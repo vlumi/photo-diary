@@ -5,6 +5,7 @@
 ### Operator
 
 - **Breaking:** end of the JWT-cookie transition window opened in 0.18. The server no longer accepts `Authorization: bearer` headers, no longer echoes `accessToken` / `refreshToken` in any response body, and `POST /api/v1/tokens/refresh` requires the `pd_refresh` cookie (the body field is gone). Pre-0.18 SPA bundles cached in any browser will need a one-time hard reload to pick up the cookie path. New SPAs handle the cookie flow entirely. Closes #650.
+- Content-Security-Policy headers are now sent on every response. Directive set tuned to what the SPA actually needs: `default-src 'self'`, `style-src 'self' 'unsafe-inline'` (Emotion's runtime style injection), `img-src 'self' data: https:` (covers operator-set `instance_cdn` URLs + OSM tile servers without per-request header computation), `frame-ancestors 'none'`, `object-src 'none'`. Closes #648.
 - New `bin/instance.ts gc` subcommand reports `/opt/photo-diary/` code dirs that no scanned instance under `/var/photo-diary/` references, with sizes and the `rm -rf` commands the operator would run. Read-only — never deletes. Closes #653.
 
 ### Frontend

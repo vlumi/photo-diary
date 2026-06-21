@@ -146,8 +146,43 @@ if (DOCS_EXPOSED) {
 // Policy overridden because OSM's tile servers block referrer-less
 // requests as bot traffic, breaking the Leaflet map widget.
 await app.register(fastifyCookie);
+// Content-Security-Policy. Tuned to what the SPA actually needs:
+//
+// - `style-src` allows `'unsafe-inline'` because Emotion injects
+//   per-component <style> tags at runtime. A nonce strategy would
+//   need a SPA-side hook into Emotion's cache which isn't ergonomic;
+//   `'unsafe-inline'` for styles only is the pragmatic default.
+// - `script-src` is `'self'` — no inline scripts in index.html, no
+//   external script tags.
+// - `img-src` allows `https:` so the operator-configured
+//   `instance_cdn` (any HTTPS origin) and the OSM tile servers work
+//   without rebuilding the header per request. `data:` is needed
+//   for inline SVGs / fallback markers. The loose `https:` is OK
+//   here — the SPA's image sources come from operator-controlled
+//   config, not user input.
+// - `connect-src 'self'` covers the API + same-origin /thumbnail,
+//   /display, /gallery-icons static paths.
+// - `frame-ancestors 'none'` — no embedding; clickjacking-clean.
+// - `object-src 'none'` — no <object> / <embed>.
+//
+// Referrer-Policy override stays — OSM tile servers block referrer-
+// less requests as bot traffic (the 0.7.4 regression).
 await app.register(fastifyHelmet, {
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'"],
+      "style-src": ["'self'", "'unsafe-inline'"],
+      "img-src": ["'self'", "data:", "https:"],
+      "connect-src": ["'self'"],
+      "font-src": ["'self'", "data:"],
+      "frame-ancestors": ["'none'"],
+      "base-uri": ["'self'"],
+      "form-action": ["'self'"],
+      "object-src": ["'none'"],
+    },
+  },
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 });
 await app.register(fastifyCompress);
