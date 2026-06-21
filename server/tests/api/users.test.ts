@@ -15,12 +15,12 @@ beforeEach(async () => {
 
 
 const getUsers = async (token: string | undefined, status = 200) =>
-  api.get("/api/v1/users").set("Authorization", `Bearer ${token}`).expect(status);
+  api.get("/api/v1/users").set("Cookie", `pd_access=${token}`).expect(status);
 
 const getUser = async (token: string | undefined, id: string, status = 200) =>
   api
     .get(`/api/v1/users/${id}`)
-    .set("Authorization", `Bearer ${token}`)
+    .set("Cookie", `pd_access=${token}`)
     .expect(status);
 
 describe("As Guest", () => {
@@ -176,7 +176,7 @@ const changePassword = async (
 ) =>
   api
     .put("/api/v1/users/self/password")
-    .set("Authorization", `Bearer ${token}`)
+    .set("Cookie", `pd_access=${token}`)
     .send(body)
     .expect(status);
 
@@ -215,22 +215,22 @@ describe("PUT /users/self/password", () => {
     );
   });
 
-  test("Successful change returns a fresh token pair that verifies", async () => {
+  test("Successful change sets fresh auth cookies that verify", async () => {
     const token = await loginUser(api, "admin");
     const result = await changePassword(token, {
       currentPassword: "foobar",
       newPassword: "fresh-secret-123",
     });
-    expect(result.body.accessToken).toBeDefined();
-    expect(typeof result.body.accessToken).toBe("string");
-    expect(result.body.refreshToken).toBeDefined();
-    expect(typeof result.body.refreshToken).toBe("string");
-    // The new access token should verify on the next request — the secret
-    // cache was rotated in-process so the freshly-minted JWT signs against
-    // the right secret.
+    // No tokens in the body anymore — the new pair comes via
+    // Set-Cookie. The new access cookie should verify on the next
+    // request (the secret cache was rotated in-process so the
+    // freshly-minted JWT signs against the right secret).
+    const cookies = (result.headers["set-cookie"] as unknown as string[]) ?? [];
+    const accessCookie = cookies.find((c) => c.startsWith("pd_access="));
+    expect(accessCookie).toBeDefined();
     await api
       .get("/api/v1/tokens")
-      .set("Authorization", `Bearer ${result.body.accessToken}`)
+      .set("Cookie", accessCookie ?? "")
       .expect(200);
   });
 
@@ -281,19 +281,19 @@ describe("Mutations as gallery1admin", () => {
   test("Create rejected", () =>
     api
       .post("/api/v1/users")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ id: "newuser", password: "secret" })
       .expect(403));
   test("Update rejected", () =>
     api
       .put("/api/v1/users/admin")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ password: "reset" })
       .expect(403));
   test("Delete rejected", () =>
     api
       .delete("/api/v1/users/admin")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(403));
 });
 
@@ -306,7 +306,7 @@ describe("Mutations as admin", () => {
   test("Create user", async () => {
     await api
       .post("/api/v1/users")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ id: "freshuser", password: "freshpass" })
       .expect(201);
     // Login as the new user proves the password hash + secret were stored.
@@ -318,7 +318,7 @@ describe("Mutations as admin", () => {
   test("Update user password (admin reset)", async () => {
     await api
       .put("/api/v1/users/plainuser")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ password: "reset-pass" })
       .expect(204);
     await api
@@ -333,20 +333,20 @@ describe("Mutations as admin", () => {
   test("Delete user", async () => {
     await api
       .delete("/api/v1/users/plainuser")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(204);
     await getUser(token, "plainuser", 404);
   });
   test("Create with invalid body → 400", () =>
     api
       .post("/api/v1/users")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ id: "" })
       .expect(400));
   test("Update with invalid body → 400", () =>
     api
       .put("/api/v1/users/admin")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ password: null })
       .expect(400));
 });

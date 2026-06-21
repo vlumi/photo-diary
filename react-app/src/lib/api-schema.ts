@@ -181,7 +181,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Log in, issuing access + refresh tokens */
+        /** Log in (sets HttpOnly auth cookies) */
         post: {
             parameters: {
                 query?: never;
@@ -205,15 +205,15 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            accessToken: string;
-                            refreshToken: string;
+                            id: string;
+                            isAdmin: boolean;
                             editorGalleries: string[];
                         };
                     };
                 };
             };
         };
-        /** Log out (revoke this session) */
+        /** Log out (revoke this session, clear auth cookies) */
         delete: {
             parameters: {
                 query?: never;
@@ -221,13 +221,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        refreshToken?: string;
-                    };
-                };
-            };
+            requestBody?: never;
             responses: {
                 /** @description Default Response */
                 200: {
@@ -252,7 +246,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rotate refresh token, issue a new access token */
+        /** Rotate refresh token, mint a new access token (cookie-only) */
         post: {
             parameters: {
                 query?: never;
@@ -260,13 +254,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        refreshToken?: string;
-                    };
-                };
-            };
+            requestBody?: never;
             responses: {
                 /** @description Default Response */
                 200: {
@@ -275,8 +263,8 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            accessToken: string;
-                            refreshToken: string;
+                            id: string;
+                            isAdmin: boolean;
                             editorGalleries: string[];
                         };
                     };
@@ -507,10 +495,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            accessToken: string;
-                            refreshToken: string;
-                        };
+                        "application/json": Record<string, never>;
                     };
                 };
             };

@@ -15,7 +15,7 @@ beforeEach(async () => {
 
 const list = (token: string | undefined, galleryId: string, status = 200) => {
   const req = api.get(`/api/v1/galleries/${galleryId}/filters`);
-  if (token) req.set("Authorization", `Bearer ${token}`);
+  if (token) req.set("Cookie", `pd_access=${token}`);
   return req.expect(status);
 };
 const get = (
@@ -27,7 +27,7 @@ const get = (
   const req = api.get(
     `/api/v1/galleries/${galleryId}/filters/${filterId}`
   );
-  if (token) req.set("Authorization", `Bearer ${token}`);
+  if (token) req.set("Cookie", `pd_access=${token}`);
   return req.expect(status);
 };
 const create = (
@@ -39,7 +39,7 @@ const create = (
   const req = api
     .post(`/api/v1/galleries/${galleryId}/filters`)
     .send(body);
-  if (token) req.set("Authorization", `Bearer ${token}`);
+  if (token) req.set("Cookie", `pd_access=${token}`);
   return req.expect(status);
 };
 const update = (
@@ -52,7 +52,7 @@ const update = (
   const req = api
     .put(`/api/v1/galleries/${galleryId}/filters/${filterId}`)
     .send(body);
-  if (token) req.set("Authorization", `Bearer ${token}`);
+  if (token) req.set("Cookie", `pd_access=${token}`);
   return req.expect(status);
 };
 const remove = (
@@ -62,7 +62,7 @@ const remove = (
   status = 204
 ) => {
   const req = api.delete(`/api/v1/galleries/${galleryId}/filters/${filterId}`);
-  if (token) req.set("Authorization", `Bearer ${token}`);
+  if (token) req.set("Cookie", `pd_access=${token}`);
   return req.expect(status);
 };
 
@@ -147,7 +147,7 @@ describe("As admin", () => {
     // to attach a saved filter to it — should 422.
     await api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ sources: ["gallery2"] })
       .expect(204);
     await create(token, "gallery1", { id: "x", definition: {} }, 422);
@@ -208,7 +208,7 @@ describe("Public viewer (saved filter as pseudo-gallery)", () => {
     });
     const listed = await api
       .get("/api/v1/galleries")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     const ids = (listed.body as Array<{ id: string; type?: string }>).map(
       (g) => g.id
@@ -229,7 +229,7 @@ describe("Public viewer (saved filter as pseudo-gallery)", () => {
     });
     const res = await api
       .get("/api/v1/gallery-photos/jp-on-gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     const ids = (res.body as Array<{ id: string }>).map((p) => p.id);
     expect(ids).toEqual(["gallery1photo.jpg"]);
@@ -244,7 +244,7 @@ describe("Public viewer (saved filter as pseudo-gallery)", () => {
     });
     const res = await api
       .post("/api/v1/gallery-photos/year-2018/query")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({})
       .expect(200);
     const ids = (res.body as Array<{ id: string }>).map((p) => p.id);

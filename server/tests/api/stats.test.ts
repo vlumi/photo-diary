@@ -21,7 +21,7 @@ const postStats = async (
 ) =>
   api
     .post(`/api/v1/galleries/${galleryId}/stats`)
-    .set("Authorization", `Bearer ${token}`)
+    .set("Cookie", `pd_access=${token}`)
     .send(body)
     .expect(status);
 
@@ -220,7 +220,7 @@ describe("cache", () => {
     // Flip gallery1photo.jpg's country.
     await api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ taken: { location: { country: "fi" } } })
       .expect(204);
     const after = await postStats(token, "gallery1");
@@ -234,7 +234,7 @@ describe("cache", () => {
     // Link gallery1photo.jpg into gallery3.
     await api
       .put("/api/v1/gallery-photos/gallery3/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(204);
     const after = await postStats(token, "gallery3");
     expect(after.body.total).toBe(2);
@@ -249,7 +249,7 @@ describe("global (cross-gallery)", () => {
   ) =>
     api
       .post("/api/v1/stats/")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send(body)
       .expect(status);
 
@@ -292,7 +292,7 @@ describe("global (cross-gallery)", () => {
     // Flip orphanphoto.jpg's country fi → nl.
     await api
       .put("/api/v1/photos/orphanphoto.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ taken: { location: { country: "nl" } } })
       .expect(204);
     const after = await postGlobal(token);
@@ -309,7 +309,7 @@ describe("global evolution (cross-gallery)", () => {
   ) =>
     api
       .post("/api/v1/stats/evolution")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send(body)
       .expect(status);
 
@@ -401,7 +401,7 @@ describe("POST /api/v1/filter-values (global filter pill universe)", () => {
     const req = api
       .post("/api/v1/filter-values/")
       .send(lang ? { lang } : {});
-    if (token) req.set("Authorization", `Bearer ${token}`);
+    if (token) req.set("Cookie", `pd_access=${token}`);
     return req.expect(status);
   };
 

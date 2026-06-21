@@ -243,7 +243,7 @@
         }
       },
       "post": {
-        "summary": "Log in, issuing access + refresh tokens",
+        "summary": "Log in (sets HttpOnly auth cookies)",
         "tags": [
           "tokens"
         ],
@@ -273,16 +273,16 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "accessToken",
-                    "refreshToken",
+                    "id",
+                    "isAdmin",
                     "editorGalleries"
                   ],
                   "properties": {
-                    "accessToken": {
+                    "id": {
                       "type": "string"
                     },
-                    "refreshToken": {
-                      "type": "string"
+                    "isAdmin": {
+                      "type": "boolean"
                     },
                     "editorGalleries": {
                       "type": "array",
@@ -298,25 +298,10 @@
         }
       },
       "delete": {
-        "summary": "Log out (revoke this session)",
+        "summary": "Log out (revoke this session, clear auth cookies)",
         "tags": [
           "tokens"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "refreshToken": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
         "security": [
           {
             "bearer": []
@@ -331,25 +316,10 @@
     },
     "/api/v1/tokens/refresh": {
       "post": {
-        "summary": "Rotate refresh token, issue a new access token",
+        "summary": "Rotate refresh token, mint a new access token (cookie-only)",
         "tags": [
           "tokens"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "refreshToken": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Default Response",
@@ -358,16 +328,16 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "accessToken",
-                    "refreshToken",
+                    "id",
+                    "isAdmin",
                     "editorGalleries"
                   ],
                   "properties": {
-                    "accessToken": {
+                    "id": {
                       "type": "string"
                     },
-                    "refreshToken": {
-                      "type": "string"
+                    "isAdmin": {
+                      "type": "boolean"
                     },
                     "editorGalleries": {
                       "type": "array",
@@ -646,18 +616,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": [
-                    "accessToken",
-                    "refreshToken"
-                  ],
-                  "properties": {
-                    "accessToken": {
-                      "type": "string"
-                    },
-                    "refreshToken": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": {}
                 }
               }
             }

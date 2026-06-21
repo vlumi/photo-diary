@@ -42,14 +42,12 @@ const ChangePasswordBody = Type.Object({
   currentPassword: Type.String({ minLength: 1 }),
   newPassword: Type.String({ minLength: 1 }),
 });
-// Same shape as the login response — caller's existing session is killed
-// (the user's `secret` rotates, invalidating its access JWT, and existing
-// refresh tokens get cleared along with it), so the response carries a
-// fresh pair for the same device to stay signed in.
-const ChangePasswordResponse = Type.Object({
-  accessToken: Type.String(),
-  refreshToken: Type.String(),
-});
+// Caller's existing session is killed (the user's `secret` rotates,
+// invalidating its access JWT, and existing refresh tokens get
+// cleared along with it). The response sets fresh auth cookies on
+// the same device so it stays signed in; nothing token-bearing
+// travels in the body.
+const ChangePasswordResponse = Type.Object({});
 const TAGS = ["users"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -208,7 +206,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         !!request.user.isAdmin
       );
       setAuthCookies(reply, pair.accessToken, pair.refreshToken);
-      return pair;
+      return {};
     }
   );
 };

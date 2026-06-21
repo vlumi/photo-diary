@@ -63,11 +63,11 @@ describe("As admin", () => {
     // The dummy seeds all four known keys; clear one so POST creates.
     await api
       .delete("/api/v1/meta/cdn")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(204);
     await api
       .post("/api/v1/meta")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ key: "cdn", value: "https://cdn.example" })
       .expect(201);
     const result = await getMeta("cdn");
@@ -76,25 +76,25 @@ describe("As admin", () => {
   test("Create with unknown key → 400", () =>
     api
       .post("/api/v1/meta")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ key: "schema_version", value: "999" })
       .expect(400));
   test("Update with unknown key → 400", () =>
     api
       .put("/api/v1/meta/schema_version")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ value: "999" })
       .expect(400));
   test("Delete with unknown key → 400", () =>
     api
       .delete("/api/v1/meta/schema_version")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(400));
   test("Get with unknown key → 400", () => getMeta("schema_version", 400));
   test("Update existing meta", async () => {
     await api
       .put("/api/v1/meta/name")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ value: "renamed instance" })
       .expect(204);
     const result = await getMeta("name");
@@ -103,20 +103,20 @@ describe("As admin", () => {
   test("Delete existing meta", async () => {
     await api
       .delete("/api/v1/meta/name")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(204);
     await getMeta("name", 404);
   });
   test("Create with invalid body → 400", () =>
     api
       .post("/api/v1/meta")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ value: "v" })
       .expect(400));
   test("Update with invalid body → 400", () =>
     api
       .put("/api/v1/meta/name")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({})
       .expect(400));
 });
@@ -130,7 +130,7 @@ describe("SPA runtime defaults", () => {
   test("Newly accepted keys round-trip through POST/GET", async () => {
     await api
       .post("/api/v1/meta")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ key: "defaultTheme", value: "grayscale" })
       .expect(201);
     const result = await getMetas();
@@ -143,7 +143,7 @@ describe("SPA runtime defaults", () => {
     // client-side, not by this endpoint).
     await api
       .post("/api/v1/meta")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ key: "defaultGallery", value: "gallery1" })
       .expect(201);
     const result = await getMetas();
@@ -153,7 +153,7 @@ describe("SPA runtime defaults", () => {
   test("betaFeatures stored as JSON, returned as parsed map", async () => {
     await api
       .post("/api/v1/meta")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         key: "betaFeatures",
         value: JSON.stringify({ regions: "on", focalLengthEquiv: "user" }),
@@ -171,7 +171,7 @@ describe("SPA runtime defaults", () => {
     // must not crash on read.
     await api
       .post("/api/v1/meta")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ key: "betaFeatures", value: "{not json" })
       .expect(201);
     const result = await getMetas();
@@ -187,18 +187,18 @@ describe("As non-admin", () => {
   test("Create rejected", () =>
     api
       .post("/api/v1/meta")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ key: "name", value: "v" })
       .expect(403));
   test("Update rejected", () =>
     api
       .put("/api/v1/meta/name")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ value: "renamed" })
       .expect(403));
   test("Delete rejected", () =>
     api
       .delete("/api/v1/meta/name")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(403));
 });

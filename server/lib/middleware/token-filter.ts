@@ -7,17 +7,12 @@ import logger from "../logger.js";
 
 const tokensModel = tokenFactory();
 
-// Cookie first (the new SPA's only auth carrier), bearer header second
-// (legacy SPAs + test fixtures). The bearer path is slated for removal
-// once cached bundles + carry-over migration shims have aged out.
+// Cookie-only since #650 (the bearer-header fallback was a transition
+// affordance for cached pre-cookie SPA bundles). New tests set the
+// `pd_access` cookie via supertest; the SPA writes it via the
+// HttpOnly cookies issued at login.
 const getToken = (request: FastifyRequest): string | undefined => {
-  const cookie = request.cookies?.pd_access;
-  if (cookie) return cookie;
-  const header = request.headers.authorization;
-  if (header && header.toLowerCase().startsWith("bearer")) {
-    return header.substring(7);
-  }
-  return undefined;
+  return request.cookies?.pd_access;
 };
 
 const tokenFilter: onRequestHookHandler = async (request) => {

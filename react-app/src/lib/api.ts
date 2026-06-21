@@ -1,7 +1,6 @@
 import createClient from "openapi-fetch";
 
 import type { paths } from "./api-schema";
-import token from "./token";
 import i18n from "./i18n";
 import UserModel from "../models/UserModel";
 import {
@@ -38,43 +37,32 @@ const refreshOnce = async (): Promise<boolean> => {
   if (refreshInFlight) return refreshInFlight;
   refreshInFlight = (async () => {
     try {
-      // Legacy carry-over: if the user has a refresh token in
-      // localStorage from a pre-cookie SPA, post it explicitly so the
-      // server can rotate and set cookies. Once cookies are in place,
-      // strip the legacy token from localStorage so this branch is
-      // taken at most once per user. Removable pre-1.0.
-      const legacy = token.legacyRefreshToken();
-      const body = legacy ? JSON.stringify({ refreshToken: legacy }) : "{}";
       const response = await globalThis.fetch(
         `${window.location.origin}/api/v1/tokens/refresh`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body,
-        }
+        { method: "POST", credentials: "include" }
       );
       if (!response.ok) return false;
-      if (legacy) token.stripLegacyTokens();
+      // Server returns {id, isAdmin, editorGalleries} on success;
       // editorGalleries can drift between refreshes (grant changes
-      // mid-session). Mirror the server's fresh value into the user
-      // store + localStorage so the UI's editor-tier tile set stays
-      // accurate.
+      // mid-session), so mirror the fresh values into the user store
+      // + localStorage to keep the UI's editor-tier tiles accurate.
       try {
         const data = (await response.json()) as {
+          id?: string;
+          isAdmin?: boolean;
           editorGalleries?: string[];
         };
-        if (Array.isArray(data.editorGalleries)) {
-          const current = useUserStore.getState().user;
-          if (current) {
-            const rebuilt = UserModel({
-              id: current.id() as string,
-              isAdmin: current.isAdmin(),
-              editorGalleries: data.editorGalleries,
-            });
-            useUserStore.getState().setUser(rebuilt);
-            window.localStorage.setItem("user", rebuilt.toJson());
-          }
+        if (
+          typeof data.id === "string" &&
+          Array.isArray(data.editorGalleries)
+        ) {
+          const rebuilt = UserModel({
+            id: data.id,
+            isAdmin: !!data.isAdmin,
+            editorGalleries: data.editorGalleries,
+          });
+          useUserStore.getState().setUser(rebuilt);
+          window.localStorage.setItem("user", rebuilt.toJson());
         }
       } catch {
         // Body wasn't JSON-shaped — cookies still rotated, ignore.
@@ -90,7 +78,6 @@ const refreshOnce = async (): Promise<boolean> => {
 };
 
 const expireLocalAuth = () => {
-  token.stripLegacyTokens();
   window.localStorage.removeItem("user");
   useUserStore.getState().setUser(undefined);
   // Close any other modal that might be open (e.g. change-password mid-
@@ -99,17 +86,6 @@ const expireLocalAuth = () => {
   useChangePasswordModalStore.getState().close();
   useLoginModalStore.getState().open(i18n.t("session-expired"));
 };
-
-// Legacy carry-over: on bundle load, if the user has a refresh token
-// in localStorage from a pre-cookie SPA, post it once so the server
-// sets the cookies and we strip the legacy fields. Fire-and-forget —
-// the 401-refresh path covers the same case lazily if this somehow
-// fails, but doing it upfront avoids the awkward "looks logged in
-// but next protected call 401s" gap on first load post-upgrade.
-// Removable pre-1.0 alongside #650.
-if (token.legacyRefreshToken()) {
-  void refreshOnce();
-}
 
 client.use({
   // Mid-session 401 handler with refresh fallback. If a request comes

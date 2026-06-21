@@ -13,19 +13,19 @@ beforeEach(async () => {
   await init();
 });
 
-const adminAuth = async () => `Bearer ${await loginUser(api, "admin")}`;
+const adminAuth = async () => `pd_access=${await loginUser(api, "admin")}`;
 
 // Bootstrap: a `family` group + a gallery1user member. Tests then exercise
 // access flips via grant + revoke at the group layer.
 const setupGroup = async (auth: string) => {
   await api
     .post("/api/v1/groups")
-    .set("Authorization", auth)
+    .set("Cookie", auth)
     .send({ id: "family", name: "Family" })
     .expect(201);
   await api
     .put("/api/v1/groups/family/members/gallery1admin")
-    .set("Authorization", auth)
+    .set("Cookie", auth)
     .expect(204);
 };
 
@@ -46,21 +46,21 @@ describe("As admin", () => {
     // Before grant: gallery1admin has no rows on gallery2.
     const before = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
+      .set("Cookie", `pd_access=${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(before.body).toStrictEqual({ id: "gallery2", hideMap: false });
 
     // Grant the family group view on gallery2.
     await api
       .put("/api/v1/group-gallery/family/gallery2")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ isEditor: false })
       .expect(204);
 
     // Now gallery1admin (in family) gets gallery2 via the group.
     const after = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
+      .set("Cookie", `pd_access=${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(after.body.id).toBe("gallery2");
     expect(after.body.title).toBe("gallery 2");
@@ -71,14 +71,14 @@ describe("As admin", () => {
     await setupGroup(auth);
     await api
       .put("/api/v1/group-gallery/family/gallery2")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ isEditor: true })
       .expect(204);
     // gallery1admin can now PUT gallery2 via the group's admin grant.
-    const galleryAdminToken = `Bearer ${await loginUser(api, "gallery1admin")}`;
+    const galleryAdminToken = `pd_access=${await loginUser(api, "gallery1admin")}`;
     await api
       .put("/api/v1/galleries/gallery2")
-      .set("Authorization", galleryAdminToken)
+      .set("Cookie", galleryAdminToken)
       .send({ title: "Renamed via group admin" })
       .expect(204);
   });
@@ -88,16 +88,16 @@ describe("As admin", () => {
     await setupGroup(auth);
     await api
       .put("/api/v1/group-gallery/family/gallery2")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ isEditor: false })
       .expect(204);
     await api
       .delete("/api/v1/group-gallery/family/gallery2")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(204);
     const after = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
+      .set("Cookie", `pd_access=${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(after.body).toStrictEqual({ id: "gallery2", hideMap: false });
   });
@@ -108,25 +108,25 @@ describe("As admin", () => {
     // Seed with hideMap=true (hide).
     await api
       .put("/api/v1/group-gallery/family/gallery2")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ isEditor: false, hideMap: true })
       .expect(204);
     let result = await api
       .get("/api/v1/group-gallery")
       .query({ groupId: "family", galleryId: "gallery2" })
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     expect(result.body[0].hide_map).toBe(1);
     // Move back to inherit by sending hideMap=null.
     await api
       .put("/api/v1/group-gallery/family/gallery2")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ isEditor: false, hideMap: null })
       .expect(204);
     result = await api
       .get("/api/v1/group-gallery")
       .query({ groupId: "family", galleryId: "gallery2" })
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     expect(result.body[0].hide_map).toBeNull();
   });
@@ -136,13 +136,13 @@ describe("As admin", () => {
     await setupGroup(auth);
     await api
       .put("/api/v1/group-gallery/family/gallery2")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ isEditor: false })
       .expect(204);
     const result = await api
       .get("/api/v1/group-gallery")
       .query({ groupId: "family" })
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     expect(result.body.length).toBe(1);
     expect(result.body[0].group_id).toBe("family");
@@ -154,14 +154,14 @@ describe("As admin", () => {
     await setupGroup(auth);
     await api
       .put("/api/v1/group-gallery/family/gallery2")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ isEditor: false })
       .expect(204);
 
     // With membership: gallery2 visible.
     const with_ = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
+      .set("Cookie", `pd_access=${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(with_.body.id).toBe("gallery2");
     expect(with_.body.title).toBe("gallery 2");
@@ -169,11 +169,11 @@ describe("As admin", () => {
     // Remove membership: gallery2 falls back to "unavailable" placeholder.
     await api
       .delete("/api/v1/groups/family/members/gallery1admin")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(204);
     const without = await api
       .get("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${await loginUser(api, "gallery1admin")}`)
+      .set("Cookie", `pd_access=${await loginUser(api, "gallery1admin")}`)
       .expect(200);
     expect(without.body).toStrictEqual({ id: "gallery2", hideMap: false });
   });
