@@ -18,13 +18,13 @@ beforeEach(async () => {
 const getGalleries = async (token: string | undefined, status = 200) =>
   api
     .get("/api/v1/galleries")
-    .set("Authorization", `Bearer ${token}`)
+    .set("Cookie", `pd_access=${token}`)
     .expect(status);
 
 const getGallery = async (token: string | undefined, galleryId: string, status = 200) =>
   api
     .get(`/api/v1/galleries/${galleryId}`)
-    .set("Authorization", `Bearer ${token}`)
+    .set("Cookie", `pd_access=${token}`)
     .expect(status);
 
 // Every "the requester can't see this gallery" case (no access AND no such
@@ -37,7 +37,7 @@ const expectGalleryUnavailable = async (
   galleryId: string
 ) => {
   const req = api.get(`/api/v1/galleries/${galleryId}`);
-  if (token) req.set("Authorization", `Bearer ${token}`);
+  if (token) req.set("Cookie", `pd_access=${token}`);
   const result = await req.expect(200);
   expect(result.body).toStrictEqual({ id: galleryId, hideMap: false });
 };
@@ -234,7 +234,7 @@ describe("As admin", () => {
   test("Reorder galleries (admin) → list order follows", async () => {
     await api
       .post("/api/v1/galleries/_order")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ ids: ["gallery3", "gallery1", "gallery2"] })
       .expect(204);
     const result = await getGalleries(token);
@@ -242,28 +242,28 @@ describe("As admin", () => {
     expect(ids).toEqual(["gallery3", "gallery1", "gallery2"]);
     await api
       .post("/api/v1/galleries/_order")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ ids: ["gallery1", "gallery2", "gallery3"] })
       .expect(204);
   });
   test("Reorder rejects an incomplete id list (422)", async () => {
     await api
       .post("/api/v1/galleries/_order")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ ids: ["gallery1", "gallery2"] })
       .expect(422);
   });
   test("Reorder rejects an unknown id (422)", async () => {
     await api
       .post("/api/v1/galleries/_order")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ ids: ["gallery1", "gallery2", "gallery3", "ghost"] })
       .expect(422);
   });
   test("Reorder rejects duplicates (422)", async () => {
     await api
       .post("/api/v1/galleries/_order")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ ids: ["gallery1", "gallery1", "gallery2"] })
       .expect(422);
   });
@@ -271,7 +271,7 @@ describe("As admin", () => {
     const plainToken = await loginUser(api, "plainuser");
     await api
       .post("/api/v1/galleries/_order")
-      .set("Authorization", `Bearer ${plainToken}`)
+      .set("Cookie", `pd_access=${plainToken}`)
       .send({ ids: ["gallery1", "gallery2", "gallery3"] })
       .expect(403);
   });
@@ -501,35 +501,35 @@ describe("Mutations as gallery1admin", () => {
   test("Create rejected (admin-only)", () =>
     api
       .post("/api/v1/galleries")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ id: "newgal", title: "x" })
       .expect(403));
   test("Update own gallery", () =>
     api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ title: "renamed" })
       .expect(204));
   test("Update other gallery rejected", () =>
     api
       .put("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ title: "renamed" })
       .expect(403));
   test("Delete own gallery rejected (admin-only)", () =>
     api
       .delete("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(403));
   test("Delete other gallery rejected", () =>
     api
       .delete("/api/v1/galleries/gallery2")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(403));
   test("Update with hostname rejected (admin-only)", () =>
     api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ hostname: "example.com" })
       .expect(403));
 });
@@ -542,7 +542,7 @@ describe("Mutations as admin", () => {
   test("Create new gallery", async () => {
     await api
       .post("/api/v1/galleries")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         id: "freshgal",
         title: "Fresh",
@@ -552,7 +552,7 @@ describe("Mutations as admin", () => {
     // GET it back from the public list (admin sees all).
     const result = await api
       .get("/api/v1/galleries")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(result.body.some((g: { id: string }) => g.id === "freshgal")).toBe(
       true
@@ -561,56 +561,56 @@ describe("Mutations as admin", () => {
   test("Update gallery", () =>
     api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ title: "renamed" })
       .expect(204));
   test("Delete gallery", () =>
     api
       .delete("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(204));
   test("Create with invalid body → 400", () =>
     api
       .post("/api/v1/galleries")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ id: "" })
       .expect(400));
   test("Update with invalid body → 400", () =>
     api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send("not even json")
       .set("Content-Type", "application/json")
       .expect(400));
   test("Update with unknown theme → 400", () =>
     api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ theme: "bw" })
       .expect(400));
   test("Update with unknown initialView → 400", () =>
     api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ initialView: "decade" })
       .expect(400));
   test("Update with unknown epochType → 400", () =>
     api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ epochType: "lunar" })
       .expect(400));
   test("Update with known enums accepted", () =>
     api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ theme: "grayscale", initialView: "year", epochType: "birthday" })
       .expect(204));
 
   test("defaultLanguage change is purely metadata — canonical and overlays stay put", async () => {
     await api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         title: "Landscapes",
         description: "Scenic shots.",
@@ -621,12 +621,12 @@ describe("Mutations as admin", () => {
       .expect(204);
     await api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ defaultLanguage: "fi" })
       .expect(204);
     const after = await api
       .get("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(after.body.defaultLanguage).toBe("fi");
     // Canonical column is untouched — the operator is expected to
@@ -653,14 +653,14 @@ describe("Virtual galleries", () => {
   const createVirt = async (sources: string[]) =>
     api
       .post("/api/v1/galleries")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ id: "virt_a", title: "Virtual A", sources })
       .expect(201);
 
   test("create with sources → virtual gallery resolves to source photos", async () => {
     await api
       .post("/api/v1/galleries")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         id: "virt_a",
         title: "Virtual A",
@@ -670,7 +670,7 @@ describe("Virtual galleries", () => {
     // Sources surface in the GET response.
     const res = await api
       .get("/api/v1/galleries/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(res.body.sources).toEqual(["gallery1", "gallery2"]);
     // Photo set is the union — gallery1 (gallery1photo + gallery12photo),
@@ -678,7 +678,7 @@ describe("Virtual galleries", () => {
     // both; the photo `id IN (...)` outer membership dedupes.
     const photosRes = await api
       .get("/api/v1/gallery-photos/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     const ids = (photosRes.body as Array<{ id: string }>).map((p) => p.id).sort();
     expect(ids).toEqual(
@@ -690,12 +690,12 @@ describe("Virtual galleries", () => {
     await createVirt(["gallery1", "gallery2"]);
     await api
       .put("/api/v1/galleries/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ sources: ["gallery1"] })
       .expect(204);
     const photosRes = await api
       .get("/api/v1/gallery-photos/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     const ids = (photosRes.body as Array<{ id: string }>).map((p) => p.id).sort();
     expect(ids).toEqual(["gallery1photo.jpg", "gallery12photo.jpg"].sort());
@@ -705,11 +705,11 @@ describe("Virtual galleries", () => {
     await createVirt(["gallery1", "gallery2"]);
     await api
       .put("/api/v1/gallery-photos/virt_a/gallery2photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(422);
     await api
       .delete("/api/v1/gallery-photos/virt_a/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(422);
   });
 
@@ -717,7 +717,7 @@ describe("Virtual galleries", () => {
     await createVirt(["gallery1"]);
     await api
       .put("/api/v1/galleries/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ sources: ["virt_a"] })
       .expect(422);
   });
@@ -726,7 +726,7 @@ describe("Virtual galleries", () => {
     await createVirt(["gallery1"]);
     await api
       .put("/api/v1/galleries/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ sources: ["nonexistent_gallery"] })
       .expect(422);
   });
@@ -735,7 +735,7 @@ describe("Virtual galleries", () => {
     await createVirt(["gallery1"]);
     await api
       .post("/api/v1/galleries")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         id: "virt_b",
         title: "Virtual B",
@@ -748,18 +748,18 @@ describe("Virtual galleries", () => {
     await createVirt(["gallery1", "gallery2"]);
     await api
       .put("/api/v1/galleries/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ sources: [] })
       .expect(204);
     const res = await api
       .get("/api/v1/galleries/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(res.body.sources).toBeUndefined();
     // No gallery_photo rows linked to virt_a — empty list now.
     const photosRes = await api
       .get("/api/v1/gallery-photos/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(photosRes.body).toEqual([]);
   });
@@ -768,11 +768,11 @@ describe("Virtual galleries", () => {
     await createVirt(["gallery1", "gallery2"]);
     await api
       .delete("/api/v1/galleries/virt_a")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(204);
     const gallery1 = await api
       .get("/api/v1/gallery-photos/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(gallery1.body).not.toEqual([]);
   });
@@ -785,7 +785,7 @@ describe("Virtual galleries", () => {
     await createVirt(["gallery1"]);
     await api
       .put("/api/v1/galleries/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ sources: ["gallery2"] })
       .expect(422);
   });

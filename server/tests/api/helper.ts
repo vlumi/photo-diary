@@ -1,4 +1,4 @@
-import supertest, { type Agent } from "supertest";
+import supertest, { type Agent, type Response } from "supertest";
 import { app } from "../../app.js";
 
 // Pass Fastify's underlying http.Server to supertest. supertest binds
@@ -11,6 +11,16 @@ export const createApi = () => {
   return { api };
 };
 
+const extractCookie = (response: Response, name: string): string => {
+  const cookies = response.headers["set-cookie"];
+  const list = Array.isArray(cookies) ? cookies : cookies ? [cookies] : [];
+  for (const c of list) {
+    const m = new RegExp(`^${name}=([^;]+)`).exec(c);
+    if (m) return m[1] as string;
+  }
+  throw new Error(`${name} cookie not set on response`);
+};
+
 export const loginUser = async (api: Agent, id: string): Promise<string> => {
   const authRes = await api
     .post("/api/v1/tokens")
@@ -19,11 +29,14 @@ export const loginUser = async (api: Agent, id: string): Promise<string> => {
       password: "foobar",
     })
     .expect(200);
-  return authRes.body.accessToken;
+  return extractCookie(authRes, "pd_access");
 };
 
 // For tests that need the refresh-token half of the pair (refresh-flow,
-// logout, etc.).
+// logout, etc.). Both halves are extracted from the Set-Cookie header
+// the login response sets — pd_access carries the JWT used as the
+// bearer-equivalent in subsequent `.set("Cookie", ...)` calls, pd_refresh
+// is the rotation token the /refresh + /logout endpoints read.
 export const loginUserPair = async (
   api: Agent,
   id: string
@@ -36,7 +49,7 @@ export const loginUserPair = async (
     })
     .expect(200);
   return {
-    accessToken: authRes.body.accessToken,
-    refreshToken: authRes.body.refreshToken,
+    accessToken: extractCookie(authRes, "pd_access"),
+    refreshToken: extractCookie(authRes, "pd_refresh"),
   };
 };

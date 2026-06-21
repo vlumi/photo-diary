@@ -14,7 +14,7 @@ beforeEach(async () => {
 });
 
 const auth = (token: string | undefined): Record<string, string> =>
-  token ? { Authorization: `Bearer ${token}` } : {};
+  token ? { Cookie: `pd_access=${token}` } : {};
 
 const flipPrivate = async (
   token: string,

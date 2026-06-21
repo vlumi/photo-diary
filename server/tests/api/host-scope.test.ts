@@ -33,7 +33,7 @@ const withHost = (req: ReturnType<Agent["get"]>, host: string) =>
 
 const adminAuth = async () => {
   const token = await loginUser(api, "admin");
-  return `Bearer ${token}`;
+  return `pd_access=${token}`;
 };
 
 describe("unscoped host (no gallery.hostname match)", () => {
@@ -41,7 +41,7 @@ describe("unscoped host (no gallery.hostname match)", () => {
     const auth = await adminAuth();
     await api
       .post("/api/v1/users")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: "freshuser", password: "p" })
       .expect(201);
   });
@@ -50,7 +50,7 @@ describe("unscoped host (no gallery.hostname match)", () => {
     const auth = await adminAuth();
     await api
       .post("/api/v1/galleries")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: "freshgal", title: "Fresh" })
       .expect(201);
   });
@@ -59,11 +59,11 @@ describe("unscoped host (no gallery.hostname match)", () => {
     const auth = await adminAuth();
     await api
       .delete("/api/v1/meta/cdn")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(204);
     await api
       .post("/api/v1/meta")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ key: "cdn", value: "https://x" })
       .expect(201);
   });
@@ -73,7 +73,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
   test("POST /users → 404", async () => {
     const auth = await adminAuth();
     await withHost(api.post("/api/v1/users"), "gallery1.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: "freshuser", password: "p" })
       .expect(404);
   });
@@ -81,7 +81,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
   test("PUT /users/:id → 404", async () => {
     const auth = await adminAuth();
     await withHost(api.put("/api/v1/users/admin"), "gallery1.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ password: "newpass" })
       .expect(404);
   });
@@ -89,21 +89,21 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
   test("DELETE /users/:id → 404", async () => {
     const auth = await adminAuth();
     await withHost(api.delete("/api/v1/users/admin"), "gallery1.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(404);
   });
 
   test("GET /users → 404", async () => {
     const auth = await adminAuth();
     await withHost(api.get("/api/v1/users"), "gallery1.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(404);
   });
 
   test("POST /galleries → 404", async () => {
     const auth = await adminAuth();
     await withHost(api.post("/api/v1/galleries"), "gallery1.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: "freshgal", title: "x" })
       .expect(404);
   });
@@ -114,7 +114,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.put("/api/v1/galleries/gallery1"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ title: "renamed" })
       .expect(204);
   });
@@ -125,7 +125,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.put("/api/v1/galleries/gallery2"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ title: "renamed" })
       .expect(404);
   });
@@ -136,14 +136,14 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.delete("/api/v1/galleries/gallery1"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(404);
   });
 
   test("POST /meta → 404", async () => {
     const auth = await adminAuth();
     await withHost(api.post("/api/v1/meta"), "gallery1.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ key: "cdn", value: "x" })
       .expect(404);
   });
@@ -151,7 +151,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
   test("PUT /meta/:key → 404", async () => {
     const auth = await adminAuth();
     await withHost(api.put("/api/v1/meta/name"), "gallery1.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ value: "x" })
       .expect(404);
   });
@@ -159,14 +159,14 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
   test("DELETE /meta/:key → 404", async () => {
     const auth = await adminAuth();
     await withHost(api.delete("/api/v1/meta/name"), "gallery1.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(404);
   });
 
   test("POST /photos → 404", async () => {
     const auth = await adminAuth();
     await withHost(api.post("/api/v1/photos"), "gallery1.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: "newp.jpg" })
       .expect(404);
   });
@@ -177,7 +177,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.put("/api/v1/photos/gallery1photo.jpg"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ title: "renamed" })
       .expect(204);
   });
@@ -190,7 +190,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.put("/api/v1/photos/gallery2photo.jpg"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ title: "renamed" })
       .expect(404);
   });
@@ -201,7 +201,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.delete("/api/v1/photos/gallery2photo.jpg"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(404);
   });
 
@@ -211,7 +211,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.put("/api/v1/user-gallery/plainuser/gallery1"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ isEditor: false })
       .expect(204);
   });
@@ -222,7 +222,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.put("/api/v1/user-gallery/plainuser/gallery2"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ isEditor: false })
       .expect(404);
   });
@@ -233,7 +233,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.delete("/api/v1/user-gallery/plainuser/gallery2"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(404);
   });
 
@@ -243,7 +243,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.get("/api/v1/user-gallery"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     expect(
       (result.body as Array<{ gallery_id: string }>).every(
@@ -258,7 +258,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.get("/api/v1/galleries"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     expect(
       (result.body as Array<{ id: string }>).map((g) => g.id)
@@ -297,7 +297,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.get("/api/v1/photos"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     // gallery1's fixture photos are gallery1photo.jpg + gallery12photo.jpg
     // (the latter also lives in gallery2). gallery2photo.jpg /
@@ -314,7 +314,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.get("/api/v1/photos/gallery1photo.jpg"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
   });
 
@@ -324,7 +324,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.get("/api/v1/photos/gallery2photo.jpg"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(404);
   });
 
@@ -336,7 +336,7 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       api.get("/api/v1/photos/gallery12photo.jpg"),
       "gallery1.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
   });
 });
@@ -356,14 +356,14 @@ describe("scoped host (multi match)", () => {
       api.put("/api/v1/galleries/gallery1"),
       "anything.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ title: "x" })
       .expect(204);
     await withHost(
       api.put("/api/v1/galleries/gallery2"),
       "anything.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ title: "x" })
       .expect(204);
     // gallery3 has no hostname pattern → not in scope.
@@ -371,12 +371,12 @@ describe("scoped host (multi match)", () => {
       api.put("/api/v1/galleries/gallery3"),
       "anything.example.com"
     )
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ title: "x" })
       .expect(404);
     // Cross-cutting endpoints still 404 — multi-match is still scope.
     await withHost(api.post("/api/v1/users"), "anything.example.com")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: "freshuser", password: "p" })
       .expect(404);
   });

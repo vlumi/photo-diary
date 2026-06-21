@@ -17,7 +17,7 @@ beforeEach(async () => {
 const getGalleryPhoto = async (token: string | undefined, galleryId: string, photoId: string, status = 200) =>
   api
     .get(`/api/v1/gallery-photos/${galleryId}/${photoId}`)
-    .set("Authorization", `Bearer ${token}`)
+    .set("Cookie", `pd_access=${token}`)
     .expect(status);
 
 describe("As guest", () => {
@@ -731,7 +731,7 @@ describe("POST /:galleryId/query (filtered + scoped fetch)", () => {
     const req = api
       .post(`/api/v1/gallery-photos/${galleryId}/query`)
       .send(body);
-    if (token) req.set("Authorization", `Bearer ${token}`);
+    if (token) req.set("Cookie", `pd_access=${token}`);
     return req.expect(status);
   };
 
@@ -838,7 +838,7 @@ describe("POST /:galleryId/counts (year heatmap)", () => {
     const req = api
       .post(`/api/v1/gallery-photos/${galleryId}/counts`)
       .send(body);
-    if (token) req.set("Authorization", `Bearer ${token}`);
+    if (token) req.set("Cookie", `pd_access=${token}`);
     return req.expect(status);
   };
 
@@ -881,7 +881,7 @@ describe("POST /:galleryId/neighbors (photo modal navigation)", () => {
     const req = api
       .post(`/api/v1/gallery-photos/${galleryId}/neighbors`)
       .send(body);
-    if (token) req.set("Authorization", `Bearer ${token}`);
+    if (token) req.set("Cookie", `pd_access=${token}`);
     return req.expect(status);
   };
 
@@ -960,7 +960,7 @@ describe("POST /:galleryId/filter-values (filter pill universe)", () => {
     const req = api
       .post(`/api/v1/gallery-photos/${galleryId}/filter-values`)
       .send(lang ? { lang } : {});
-    if (token) req.set("Authorization", `Bearer ${token}`);
+    if (token) req.set("Cookie", `pd_access=${token}`);
     return req.expect(status);
   };
 

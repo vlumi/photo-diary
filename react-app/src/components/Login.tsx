@@ -1,6 +1,5 @@
 import React from "react";
 import styled from "@emotion/styled";
-import * as jose from "jose";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,15 +8,7 @@ import UserModel from "../models/UserModel";
 import tokenService from "../services/tokens";
 
 import { HttpError } from "../lib/api";
-import token from "../lib/token";
 import { useUserStore, useNotificationsStore } from "../stores";
-
-// The server's POST /api/v1/tokens response still echoes the access +
-// refresh tokens in the body for the legacy SPA's localStorage path.
-// New SPAs ignore them — only the just-decoded `id` + `isAdmin` claims
-// from the access token go into the user store (no token persistence).
-// `data.accessToken` is still pulled out below as the source for that
-// decode; nothing else looks at it.
 
 const Form = styled.form`
   display: flex;
@@ -80,18 +71,12 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
   const login = async (userId: string, password: string) => {
     try {
       const data = await tokenService.login(userId, password);
-      // We trust the just-issued access token (the server signed it; we
-      // got it back from the response body). `decodeJwt` parses the
-      // claims without verifying the signature — verification happens
-      // server-side on every subsequent request via `verifyToken`. The
-      // server also set HttpOnly cookies on the response; subsequent
-      // calls travel under those, the SPA never reads them.
-      const userData = jose.decodeJwt(data.accessToken) as unknown as {
-        id: string;
-        isAdmin?: boolean;
-      };
+      // Server response carries identity claims directly + sets the
+      // HttpOnly auth cookies on the same response; subsequent calls
+      // travel under those, the SPA never reads the tokens.
       const user = UserModel({
-        ...userData,
+        id: data.id,
+        isAdmin: data.isAdmin,
         editorGalleries: data.editorGalleries,
       });
 
@@ -115,7 +100,6 @@ const Login = ({ onSuccess, autoFocus = true }: Props): React.ReactElement => {
       // anything else live alongside but aren't tied to login, so the
       // previous `localStorage.clear()` here was a privacy/UX overreach.
       window.localStorage.removeItem("user");
-      token.stripLegacyTokens();
       setUser(undefined);
       // 429 is the only failure mode whose specific cause is useful to
       // surface — `Too many failed attempts` is actionable (wait + try

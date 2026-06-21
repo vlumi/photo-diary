@@ -13,7 +13,7 @@ beforeEach(async () => {
   await init();
 });
 
-const adminToken = async () => `Bearer ${await loginUser(api, "admin")}`;
+const adminToken = async () => `pd_access=${await loginUser(api, "admin")}`;
 
 describe("As guest", () => {
   test("list rejected", () => api.get("/api/v1/groups").expect(403));
@@ -26,7 +26,7 @@ describe("As non-admin", () => {
     const token = await loginUser(api, "gallery1admin");
     await api
       .get("/api/v1/groups")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(403);
   });
 });
@@ -36,12 +36,12 @@ describe("As admin", () => {
     const auth = await adminToken();
     await api
       .post("/api/v1/groups")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: "family", name: "Family" })
       .expect(201);
     const list = await api
       .get("/api/v1/groups")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     expect(list.body).toEqual([
       { id: "family", name: "Family", description: "" },
@@ -52,7 +52,7 @@ describe("As admin", () => {
     const auth = await adminToken();
     await api
       .post("/api/v1/groups")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: ":bogus" })
       .expect(400);
   });
@@ -61,17 +61,17 @@ describe("As admin", () => {
     const auth = await adminToken();
     await api
       .post("/api/v1/groups")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: "family" })
       .expect(201);
     await api
       .put("/api/v1/groups/family")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ name: "Renamed", description: "Inner circle" })
       .expect(204);
     const got = await api
       .get("/api/v1/groups/family")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     expect(got.body).toEqual({
       id: "family",
@@ -80,11 +80,11 @@ describe("As admin", () => {
     });
     await api
       .delete("/api/v1/groups/family")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(204);
     await api
       .get("/api/v1/groups/family")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(404);
   });
 
@@ -92,30 +92,30 @@ describe("As admin", () => {
     const auth = await adminToken();
     await api
       .post("/api/v1/groups")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .send({ id: "family" })
       .expect(201);
     await api
       .put("/api/v1/groups/family/members/gallery1user")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(204);
     // Re-running is a no-op (idempotent), still 204.
     await api
       .put("/api/v1/groups/family/members/gallery1user")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(204);
     const members = await api
       .get("/api/v1/groups/family/members")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     expect(members.body).toEqual(["gallery1user"]);
     await api
       .delete("/api/v1/groups/family/members/gallery1user")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(204);
     const afterRemove = await api
       .get("/api/v1/groups/family/members")
-      .set("Authorization", auth)
+      .set("Cookie", auth)
       .expect(200);
     expect(afterRemove.body).toEqual([]);
   });

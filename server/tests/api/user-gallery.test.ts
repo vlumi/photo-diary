@@ -33,18 +33,18 @@ describe("As gallery1admin (non-global)", () => {
   test("List rejected (global admin only)", () =>
     api
       .get("/api/v1/user-gallery")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(403));
   test("Upsert rejected", () =>
     api
       .put("/api/v1/user-gallery/plainuser/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ isEditor: false })
       .expect(403));
   test("Delete rejected", () =>
     api
       .delete("/api/v1/user-gallery/plainuser/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(403));
 });
 
@@ -56,7 +56,7 @@ describe("As admin", () => {
   test("List all", async () => {
     const result = await api
       .get("/api/v1/user-gallery")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(Array.isArray(result.body)).toBe(true);
     expect(result.body.length).toBeGreaterThan(0);
@@ -65,7 +65,7 @@ describe("As admin", () => {
     const result = await api
       .get("/api/v1/user-gallery")
       .query({ userId: "gallery1admin" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(
       result.body.every(
@@ -77,7 +77,7 @@ describe("As admin", () => {
     const result = await api
       .get("/api/v1/user-gallery")
       .query({ galleryId: "gallery2" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(
       result.body.every(
@@ -88,13 +88,13 @@ describe("As admin", () => {
   test("Upsert grants view (is_editor=false)", async () => {
     await api
       .put("/api/v1/user-gallery/plainuser/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ isEditor: false })
       .expect(204);
     const result = await api
       .get("/api/v1/user-gallery")
       .query({ userId: "plainuser", galleryId: "gallery1" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(result.body.length).toBe(1);
     expect(result.body[0].is_editor).toBe(0);
@@ -102,25 +102,25 @@ describe("As admin", () => {
   test("Upsert promotes to gallery admin (is_editor=true)", async () => {
     await api
       .put("/api/v1/user-gallery/gallery1admin/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ isEditor: true })
       .expect(204);
     const result = await api
       .get("/api/v1/user-gallery")
       .query({ userId: "gallery1admin", galleryId: "gallery1" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(result.body[0].is_editor).toBe(1);
   });
   test("Delete (revokes the row entirely)", async () => {
     await api
       .delete("/api/v1/user-gallery/gallery1admin/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(204);
     const result = await api
       .get("/api/v1/user-gallery")
       .query({ userId: "gallery1admin", galleryId: "gallery1" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(result.body.length).toBe(0);
   });
@@ -128,51 +128,51 @@ describe("As admin", () => {
     // Seed with hideMap=true (hide) so we can verify the move back to null.
     await api
       .put("/api/v1/user-gallery/plainuser/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ isEditor: false, hideMap: true })
       .expect(204);
     let result = await api
       .get("/api/v1/user-gallery")
       .query({ userId: "plainuser", galleryId: "gallery1" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(result.body[0].hide_map).toBe(1);
     // Move back to inherit by sending hideMap=null.
     await api
       .put("/api/v1/user-gallery/plainuser/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ isEditor: false, hideMap: null })
       .expect(204);
     result = await api
       .get("/api/v1/user-gallery")
       .query({ userId: "plainuser", galleryId: "gallery1" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(result.body[0].hide_map).toBeNull();
   });
   test("Upsert with hideMap omitted persists NULL (default on insert)", async () => {
     await api
       .put("/api/v1/user-gallery/plainuser/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ isEditor: false })
       .expect(204);
     const result = await api
       .get("/api/v1/user-gallery")
       .query({ userId: "plainuser", galleryId: "gallery1" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(result.body[0].hide_map).toBeNull();
   });
   test("Upsert with invalid isEditor → 400", () =>
     api
       .put("/api/v1/user-gallery/plainuser/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ isEditor: "yes" })
       .expect(400));
   test("Upsert with extra field → 400", () =>
     api
       .put("/api/v1/user-gallery/plainuser/gallery1")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ isEditor: false, bogus: true })
       .expect(400));
 });

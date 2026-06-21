@@ -16,12 +16,12 @@ beforeEach(async () => {
 
 
 const getPhotos = async (token: string | undefined, status = 200) =>
-  api.get("/api/v1/photos").set("Authorization", `Bearer ${token}`).expect(status);
+  api.get("/api/v1/photos").set("Cookie", `pd_access=${token}`).expect(status);
 
 const getPhoto = async (token: string | undefined, photoId: string, status = 200) =>
   api
     .get(`/api/v1/photos/${photoId}`)
-    .set("Authorization", `Bearer ${token}`)
+    .set("Cookie", `pd_access=${token}`)
     .expect(status);
 
 const expectPhoto = (
@@ -176,7 +176,7 @@ describe("As admin", () => {
   test("Batch by-ids returns the requested photos in order", async () => {
     const result = await api
       .post("/api/v1/photos/by-ids")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ ids: ["gallery1photo.jpg", "gallery2photo.jpg"] })
       .expect(200);
     const ids = result.body.photos.map((p: { id: string }) => p.id);
@@ -185,7 +185,7 @@ describe("As admin", () => {
   test("Batch by-ids drops unknown ids silently", async () => {
     const result = await api
       .post("/api/v1/photos/by-ids")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ ids: ["gallery1photo.jpg", "no-such-id"] })
       .expect(200);
     const ids = result.body.photos.map((p: { id: string }) => p.id);
@@ -194,14 +194,14 @@ describe("As admin", () => {
   test("Batch by-ids: empty ids array rejected (minItems 1)", async () => {
     await api
       .post("/api/v1/photos/by-ids")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ ids: [] })
       .expect(400);
   });
   test("Year-months returns one bucket per (year, month) sorted newest-first", async () => {
     const result = await api
       .get("/api/v1/photos/year-months")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     const buckets = result.body.buckets as Array<{
       yearMonth: string;
@@ -223,7 +223,7 @@ describe("As admin", () => {
     const result = await api
       .get("/api/v1/photos/year-months")
       .query({ orphan: true })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     const buckets = result.body.buckets as Array<{
       yearMonth: string;
@@ -234,7 +234,7 @@ describe("As admin", () => {
   test("Audit-counts returns per-predicate tallies", async () => {
     const result = await api
       .get("/api/v1/photos/audit-counts")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     const body = result.body as {
       orphan: number;
@@ -431,25 +431,25 @@ describe("Mutations as gallery1admin", () => {
   test("Create rejected (global admin only)", () =>
     api
       .post("/api/v1/photos")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ id: "new.jpg" })
       .expect(403));
   test("Update allowed on own gallery's photo (gallery-editor)", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ title: "x" })
       .expect(204));
   test("Update rejected on other gallery's photo", () =>
     api
       .put("/api/v1/photos/gallery2photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ title: "x" })
       .expect(403));
   test("Delete rejected (global admin only)", () =>
     api
       .delete("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(403));
 });
 
@@ -461,7 +461,7 @@ describe("Mutations as admin", () => {
   test("Create photo", async () => {
     await api
       .post("/api/v1/photos")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ id: "fresh.jpg", title: "Fresh photo" })
       .expect(201);
     await getPhoto(token, "fresh.jpg");
@@ -469,7 +469,7 @@ describe("Mutations as admin", () => {
   test("Update photo", async () => {
     await api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ title: "renamed" })
       .expect(204);
     const result = await getPhoto(token, "gallery1photo.jpg");
@@ -478,26 +478,26 @@ describe("Mutations as admin", () => {
   test("Delete photo", async () => {
     await api
       .delete("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(204);
     await getPhoto(token, "gallery1photo.jpg", 404);
   });
   test("Create with missing id → 400", () =>
     api
       .post("/api/v1/photos")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ title: "no id" })
       .expect(400));
   test("Update rejects EXIF-managed field (taken.instant.timestamp)", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ taken: { instant: { timestamp: "1999-01-01 00:00:00" } } })
       .expect(400));
   test("Update accepts operator-set coordinates (lat / lon / alt)", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         taken: {
           location: {
@@ -512,7 +512,7 @@ describe("Mutations as admin", () => {
     // shape used to produce.
     await api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         taken: {
           location: {
@@ -524,7 +524,7 @@ describe("Mutations as admin", () => {
     // Clear all three with null.
     await api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         taken: {
           location: {
@@ -546,19 +546,19 @@ describe("Mutations as admin", () => {
   test("Update accepts operator-set focal-35mm-equiv", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ exposure: { focalLength35mmEquiv: 41 } })
       .expect(204));
   test("Update rejects Nominatim-managed field (geocoded)", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ geocoded: { city: "Spoofed" } })
       .expect(400));
   test("Update accepts exposure.iso (operator-editable since #605)", () =>
     api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({ exposure: { iso: 100 } })
       .expect(204));
   test("Update with changed coords clears stale geocoded columns (#415)", async () => {
@@ -576,7 +576,7 @@ describe("Mutations as admin", () => {
     expect(beforeResult.body.geocoded?.city).toBe("Tokyo");
     await api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         taken: {
           location: {
@@ -598,7 +598,7 @@ describe("Mutations as admin", () => {
     const coords = before.body.taken?.location?.coordinates;
     await api
       .put("/api/v1/photos/gallery1photo.jpg")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .send({
         taken: {
           location: {
@@ -621,7 +621,7 @@ describe("Mutations as admin", () => {
     });
     await api
       .post("/api/v1/photos/gallery1photo.jpg/regeocode")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(204);
     const after = await getPhoto(token, "gallery1photo.jpg");
     expect(after.body.geocoded?.city).toBeFalsy();
@@ -631,7 +631,7 @@ describe("Mutations as admin", () => {
     // gallery3photo has no coords in the dummy fixture.
     await api
       .post("/api/v1/photos/gallery3photo.jpg/regeocode")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(400);
   });
 });
@@ -662,7 +662,7 @@ describe("List photos: filters + pagination", () => {
     const result = await api
       .get("/api/v1/photos")
       .query({ gallery: "gallery1" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(ids(result.body).sort()).toStrictEqual([
       "gallery12photo.jpg",
@@ -674,7 +674,7 @@ describe("List photos: filters + pagination", () => {
     const result = await api
       .get("/api/v1/photos")
       .query({ orphan: true })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(ids(result.body)).toStrictEqual(["orphanphoto.jpg"]);
   });
@@ -683,7 +683,7 @@ describe("List photos: filters + pagination", () => {
     const result = await api
       .get("/api/v1/photos")
       .query({ missing: "coords" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     // gallery1photo has coords; the other four don't.
     expect(ids(result.body).sort()).toStrictEqual([
@@ -698,7 +698,7 @@ describe("List photos: filters + pagination", () => {
     const result = await api
       .get("/api/v1/photos")
       .query({ missing: "country" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     // Every fixture has a country, so this filter matches nothing.
     expect(result.body.photos.length).toBe(0);
@@ -709,7 +709,7 @@ describe("List photos: filters + pagination", () => {
     const result = await api
       .get("/api/v1/photos")
       .query({ dateFrom: "2020-07-01", dateTo: "2020-07-31" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(ids(result.body).sort()).toStrictEqual([
       "gallery12photo.jpg",
@@ -722,7 +722,7 @@ describe("List photos: filters + pagination", () => {
     const result = await api
       .get("/api/v1/photos")
       .query({ pageSize: 2, page: 2 })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
     // Newest-first order: 0=orphan, 1=gallery3, 2=gallery2, 3=gallery12, 4=gallery1
     // page 2 (pageSize 2) → indices 2 + 3.
@@ -739,7 +739,7 @@ describe("List photos: filters + pagination", () => {
     await api
       .get("/api/v1/photos")
       .query({ bogus: "x" })
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(400);
   });
 });

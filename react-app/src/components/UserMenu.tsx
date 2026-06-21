@@ -7,7 +7,6 @@ import { BsPersonFill, BsPerson } from "react-icons/bs";
 
 import theme from "../lib/theme";
 import { useHostScope } from "../lib/use-host-scope";
-import token from "../lib/token";
 import tokenService from "../services/tokens";
 import {
   useUserStore,
@@ -176,10 +175,8 @@ const UserMenu = (): React.ReactElement => {
     // locally.
     tokenService.logout().catch(() => {});
     // localStorage is narrowed to the `user` key so the `lang`
-    // preference survives. `stripLegacyTokens` covers the case where a
-    // legacy refresh token is still hanging around.
+    // preference survives.
     window.localStorage.removeItem("user");
-    token.stripLegacyTokens();
     setUser(undefined);
     // Drop access-derived caches so the re-render fetches the guest
     // view instead of leaving the previous user's galleries / map

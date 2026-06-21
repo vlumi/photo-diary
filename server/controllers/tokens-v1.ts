@@ -30,20 +30,15 @@ const LoginBody = Type.Object({
 // rotation endpoint + the user's current set of editor-grant
 // gallery ids (purely a client-rendering hint; the server still
 // enforces every request via the authorizer).
-const TokenPairResponse = Type.Object({
-  accessToken: Type.String(),
-  refreshToken: Type.String(),
+// Login + refresh + change-password all return the same session
+// shape: identity + admin flag + editor-gallery ids the client uses
+// to render the right tile set. JWTs travel only as HttpOnly cookies
+// (set on the response by `setAuthCookies` below); the SPA never
+// sees them.
+const SessionResponse = Type.Object({
+  id: Type.String(),
+  isAdmin: Type.Boolean(),
   editorGalleries: Type.Array(Type.String()),
-});
-// `refreshToken` is optional so cookie-only clients can hit /refresh
-// with no body. Legacy SPAs continue to POST the token explicitly.
-const RefreshBody = Type.Object({
-  refreshToken: Type.Optional(Type.String()),
-});
-const LogoutBody = Type.Object({
-  // Optional so an already-invalid refresh token (e.g. expired and
-  // already cleared client-side) still hits the idempotent revoke path.
-  refreshToken: Type.Optional(Type.String()),
 });
 
 const UserIdParam = Type.Object({ userId: Type.String() });
@@ -115,9 +110,9 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
-        summary: "Log in, issuing access + refresh tokens",
+        summary: "Log in (sets HttpOnly auth cookies)",
         body: LoginBody,
-        response: { 200: TokenPairResponse },
+        response: { 200: SessionResponse },
       },
     },
     async (request, reply) => {
@@ -155,11 +150,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       );
       setAuthCookies(reply, pair.accessToken, pair.refreshToken);
       logger.debug(`User "${credentials.id}" logged in successfully.`);
-      // Tokens still travel in the response body for back-compat: the
-      // legacy SPA reads them from there and writes to localStorage.
-      // New SPAs ignore the body tokens and rely on the cookies set
-      // above. Removable once all clients are on the cookie path.
-      reply.status(200).send({ ...pair, editorGalleries });
+      reply.status(200).send({ id: credentials.id, isAdmin, editorGalleries });
     }
   );
 
@@ -175,14 +166,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
-        summary: "Rotate refresh token, issue a new access token",
-        body: RefreshBody,
-        response: { 200: TokenPairResponse },
+        summary: "Rotate refresh token, mint a new access token (cookie-only)",
+        response: { 200: SessionResponse },
       },
     },
     async (request, reply) => {
-      const submitted =
-        request.body?.refreshToken ?? request.cookies?.[REFRESH_COOKIE];
+      const submitted = request.cookies?.[REFRESH_COOKIE];
       if (!submitted) throw new InvalidTokenError();
       const { userId, refreshToken } =
         await model.verifyAndRotateRefresh(submitted);
@@ -190,7 +179,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const accessToken = await model.signAccessToken(userId, isAdmin);
       const editorGalleries = await authorizer.loadEditorGalleries(userId);
       setAuthCookies(reply, accessToken, refreshToken);
-      reply.status(200).send({ accessToken, refreshToken, editorGalleries });
+      reply.status(200).send({ id: userId, isAdmin, editorGalleries });
     }
   );
 
@@ -204,14 +193,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
-        summary: "Log out (revoke this session)",
-        body: LogoutBody,
+        summary: "Log out (revoke this session, clear auth cookies)",
         security: [{ bearer: [] }],
       },
     },
     async (request, reply) => {
-      const submitted =
-        request.body?.refreshToken ?? request.cookies?.[REFRESH_COOKIE];
+      const submitted = request.cookies?.[REFRESH_COOKIE];
       if (submitted) {
         await model.revokeSession(submitted);
       }

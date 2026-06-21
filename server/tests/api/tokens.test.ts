@@ -46,10 +46,11 @@ describe("Login", () => {
         password: "foobar",
       })
       .expect(200);
-    expect(result.body.accessToken).toBeDefined();
-    expect(typeof result.body.accessToken).toBe("string");
-    expect(result.body.refreshToken).toBeDefined();
-    expect(typeof result.body.refreshToken).toBe("string");
+    // Login response carries identity claims for the SPA; tokens
+    // travel via the HttpOnly cookies set on the same response.
+    expect(result.body.id).toBe("admin");
+    expect(result.body.isAdmin).toBe(true);
+    expect(Array.isArray(result.body.editorGalleries)).toBe(true);
   });
   test("Login sets HttpOnly auth cookies", async () => {
     const result = await api
@@ -68,14 +69,16 @@ describe("Login", () => {
     expect(refreshCookie).toMatch(/SameSite=Lax/i);
   });
   test("Cookie auth — requests with pd_access cookie are authenticated", async () => {
-    const login = await api
+    const cookies = (await api
       .post("/api/v1/tokens")
       .send({ id: "admin", password: "foobar" })
-      .expect(200);
-    // Identify by GET /api/v1/users which requires admin auth.
+      .expect(200)).headers["set-cookie"] as unknown as string[];
+    const accessCookie = cookies.find((c) => c.startsWith("pd_access="));
+    // Identify by GET /api/v1/users which requires admin auth. Use
+    // the literal Set-Cookie line as the request's Cookie header.
     await api
       .get("/api/v1/users")
-      .set("Cookie", `pd_access=${login.body.accessToken}`)
+      .set("Cookie", accessCookie ?? "")
       .expect(200);
   });
 });
@@ -140,52 +143,40 @@ describe("Keep-alive", () => {
   test("Success", async () => {
     await api
       .get("/api/v1/tokens")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `pd_access=${token}`)
       .expect(200);
   });
 });
 
 describe("Refresh", () => {
-  test("rotates the refresh token + returns a fresh access token", async () => {
-    const pair = await loginUserPair(api, "admin");
-    const refreshed = await api
-      .post("/api/v1/tokens/refresh")
-      .send({ refreshToken: pair.refreshToken })
-      .expect(200);
-    expect(refreshed.body.accessToken).toBeDefined();
-    expect(refreshed.body.refreshToken).toBeDefined();
-    expect(refreshed.body.refreshToken).not.toBe(pair.refreshToken);
-    // Re-using the consumed refresh token fails.
-    await api
-      .post("/api/v1/tokens/refresh")
-      .send({ refreshToken: pair.refreshToken })
-      .expect(401);
-  });
-
-  test("rejects a malformed refresh token", async () => {
-    await api
-      .post("/api/v1/tokens/refresh")
-      .send({ refreshToken: "not-a-pair" })
-      .expect(401);
-  });
-
-  test("returns 401 when neither cookie nor body field carries a refresh token", async () => {
-    // The body field is optional now (cookie-only clients hit /refresh
-    // with no body), so a missing field falls through to the handler's
-    // 401 path rather than short-circuiting on schema validation.
-    await api.post("/api/v1/tokens/refresh").send({}).expect(401);
-  });
-  test("Cookie-only refresh rotates and re-sets the cookies", async () => {
+  test("rotates the refresh cookie + sets a fresh access cookie", async () => {
     const pair = await loginUserPair(api, "admin");
     const refreshed = await api
       .post("/api/v1/tokens/refresh")
       .set("Cookie", `pd_refresh=${pair.refreshToken}`)
-      .send({})
       .expect(200);
+    expect(refreshed.body.id).toBe("admin");
+    expect(refreshed.body.isAdmin).toBe(true);
     const cookies = refreshed.headers["set-cookie"] as unknown as string[];
-    expect(cookies.find((c) => c.startsWith("pd_access="))).toBeDefined();
-    expect(cookies.find((c) => c.startsWith("pd_refresh="))).toBeDefined();
-    expect(refreshed.body.refreshToken).not.toBe(pair.refreshToken);
+    const newRefresh = cookies.find((c) => c.startsWith("pd_refresh="));
+    expect(newRefresh).toBeDefined();
+    expect(newRefresh).not.toContain(pair.refreshToken);
+    // Re-using the consumed refresh token fails.
+    await api
+      .post("/api/v1/tokens/refresh")
+      .set("Cookie", `pd_refresh=${pair.refreshToken}`)
+      .expect(401);
+  });
+
+  test("rejects a malformed refresh cookie", async () => {
+    await api
+      .post("/api/v1/tokens/refresh")
+      .set("Cookie", "pd_refresh=not-a-pair")
+      .expect(401);
+  });
+
+  test("returns 401 when no refresh cookie is sent", async () => {
+    await api.post("/api/v1/tokens/refresh").expect(401);
   });
 });
 
@@ -195,25 +186,26 @@ describe("Logout", () => {
     const sessionB = await loginUserPair(api, "plainuser");
     await api
       .delete("/api/v1/tokens")
-      .set("Authorization", `Bearer ${sessionA.accessToken}`)
-      .send({ refreshToken: sessionA.refreshToken })
+      .set("Cookie", `pd_refresh=${sessionA.refreshToken}`)
       .expect(204);
     await api
       .post("/api/v1/tokens/refresh")
-      .send({ refreshToken: sessionA.refreshToken })
+      .set("Cookie", `pd_refresh=${sessionA.refreshToken}`)
       .expect(401);
     await api
       .post("/api/v1/tokens/refresh")
-      .send({ refreshToken: sessionB.refreshToken })
+      .set("Cookie", `pd_refresh=${sessionB.refreshToken}`)
       .expect(200);
   });
 
-  test("Cookie-only logout revokes the session and clears the cookies", async () => {
+  test("Logout clears the auth cookies", async () => {
     const session = await loginUserPair(api, "plainuser");
     const logout = await api
       .delete("/api/v1/tokens")
-      .set("Cookie", `pd_access=${session.accessToken}; pd_refresh=${session.refreshToken}`)
-      .send({})
+      .set(
+        "Cookie",
+        `pd_access=${session.accessToken}; pd_refresh=${session.refreshToken}`
+      )
       .expect(204);
     const cookies = (logout.headers["set-cookie"] as unknown as string[]) ?? [];
     // clearCookie emits a Set-Cookie with an expired Max-Age or Expires.
@@ -224,7 +216,7 @@ describe("Logout", () => {
     // The refresh token from the now-revoked session no longer works.
     await api
       .post("/api/v1/tokens/refresh")
-      .send({ refreshToken: session.refreshToken })
+      .set("Cookie", `pd_refresh=${session.refreshToken}`)
       .expect(401);
   });
 
@@ -232,13 +224,11 @@ describe("Logout", () => {
     const session = await loginUserPair(api, "plainuser");
     await api
       .delete("/api/v1/tokens")
-      .set("Authorization", `Bearer ${session.accessToken}`)
-      .send({ refreshToken: session.refreshToken })
+      .set("Cookie", `pd_refresh=${session.refreshToken}`)
       .expect(204);
     await api
       .delete("/api/v1/tokens")
-      .set("Authorization", `Bearer ${session.accessToken}`)
-      .send({ refreshToken: session.refreshToken })
+      .set("Cookie", `pd_refresh=${session.refreshToken}`)
       .expect(204);
   });
 });
@@ -250,7 +240,7 @@ describe("Admin revoke", () => {
     const targetB = await loginUserPair(api, "plainuser");
     await api
       .delete("/api/v1/tokens/plainuser")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Cookie", `pd_access=${adminToken}`)
       .expect(204);
     await api
       .post("/api/v1/tokens/refresh")
@@ -266,7 +256,7 @@ describe("Admin revoke", () => {
     const otherToken = await loginUser(api, "simpleuser");
     await api
       .delete("/api/v1/tokens/plainuser")
-      .set("Authorization", `Bearer ${otherToken}`)
+      .set("Cookie", `pd_access=${otherToken}`)
       .expect(403);
   });
 });
