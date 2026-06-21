@@ -15,6 +15,7 @@ import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 
 import config from "./lib/config/index.js";
+import db from "./db/index.js";
 
 import metaV1 from "./controllers/meta-v1.js";
 import tokensV1 from "./controllers/tokens-v1.js";
@@ -146,6 +147,24 @@ if (DOCS_EXPOSED) {
 // Policy overridden because OSM's tile servers block referrer-less
 // requests as bot traffic, breaking the Leaflet map widget.
 await app.register(fastifyCookie);
+
+// CDN origin is operator-configurable via `meta.instance_cdn`.
+// Read at boot + pinned into the CSP directives below, so the
+// `img-src` allowlist is the exact set of origins the SPA actually
+// loads images from. Operators changing the CDN need to restart pm2
+// for the new origin to land in the header — documented constraint;
+// alternative is a per-request header which adds DB read overhead
+// on every response.
+let cdnOrigin: string | undefined;
+try {
+  const metas = await db.loadMetas();
+  const cdn = metas.instance_cdn;
+  if (cdn) cdnOrigin = new URL(cdn).origin;
+} catch {
+  // Malformed URL or empty meta — fall back to no CDN entry; the
+  // SPA's default same-origin photo path covers it.
+}
+
 // Content-Security-Policy. Tuned to what the SPA actually needs:
 //
 // - `style-src` allows `'unsafe-inline'` because Emotion injects
@@ -154,12 +173,12 @@ await app.register(fastifyCookie);
 //   `'unsafe-inline'` for styles only is the pragmatic default.
 // - `script-src` is `'self'` — no inline scripts in index.html, no
 //   external script tags.
-// - `img-src` allows `https:` so the operator-configured
-//   `instance_cdn` (any HTTPS origin) and the OSM tile servers work
-//   without rebuilding the header per request. `data:` is needed
-//   for inline SVGs / fallback markers. The loose `https:` is OK
-//   here — the SPA's image sources come from operator-controlled
-//   config, not user input.
+// - `img-src` pins the exact set of image origins: same-origin (for
+//   the SPA's bundled assets + the photos when no CDN is set),
+//   OSM's tile subdomains (Leaflet map), and the operator's
+//   `instance_cdn` origin if configured. `data:` covers Leaflet's
+//   inline marker icons + similar embedded sprites. `blob:` covers
+//   the gallery-icon cropper's canvas preview.
 // - `connect-src 'self'` covers the API + same-origin /thumbnail,
 //   /display, /gallery-icons static paths.
 // - `frame-ancestors 'none'` — no embedding; clickjacking-clean.
@@ -174,7 +193,13 @@ await app.register(fastifyHelmet, {
       "default-src": ["'self'"],
       "script-src": ["'self'"],
       "style-src": ["'self'", "'unsafe-inline'"],
-      "img-src": ["'self'", "data:", "https:"],
+      "img-src": [
+        "'self'",
+        "data:",
+        "blob:",
+        "https://*.tile.openstreetmap.org",
+        ...(cdnOrigin ? [cdnOrigin] : []),
+      ],
       "connect-src": ["'self'"],
       "font-src": ["'self'", "data:"],
       "frame-ancestors": ["'none'"],
