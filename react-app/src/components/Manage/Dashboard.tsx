@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -223,7 +223,7 @@ const galleryScopedTiles = (
 const Dashboard = (): React.ReactElement => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isReady, isHostScoped, scopedGalleryIds } = useHostScope();
+  const { isHostScoped, scopedGalleryIds } = useHostScope();
   const user = useUserStore((s) => s.user);
   const isAdmin = !!user?.isAdmin();
   const auditQuery = useQuery({
@@ -234,20 +234,9 @@ const Dashboard = (): React.ReactElement => {
   });
   // Gallery-editor (non-admin) sees only the galleries they
   // can act on — same tile shape as host-scope, with editor
-  // grants driving the per-gallery set. A single editable
-  // gallery short-circuits to its edit page like the
-  // single-host-scope case does.
+  // grants driving the per-gallery set.
   const editorGalleries = user?.editorGalleries() ?? [];
   const editorScoped = !isAdmin && editorGalleries.length > 0;
-  // Single-gallery host scope is the common shape (one hostname →
-  // one gallery). Drop the operator straight into that gallery's
-  // edit page — the manage dashboard has nothing to add on top.
-  if (isReady && isHostScoped && scopedGalleryIds.length === 1) {
-    return <Navigate to={`/m/g/${scopedGalleryIds[0]}`} replace />;
-  }
-  if (editorScoped && !isHostScoped && editorGalleries.length === 1) {
-    return <Navigate to={`/m/g/${editorGalleries[0]}`} replace />;
-  }
   // Global admins (incl. host-scoped global admins) keep the
   // Access tile per-gallery; editors (no global admin) don't —
   // gallery ACL management stays out of their reach.

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- `/m` no longer auto-opens the gallery edit modal on host-scoped or single-gallery-editor instances. Earlier the dashboard short-circuited straight to `/m/g/<id>` (which mounts the edit modal), so every visit to Manage landed inside a modal-over-dashboard overlay. Now the dashboard renders normally; the gallery tile opens the modal on click. Closes #663.
+
 ### Operator
 
 - New `bin/instance.ts gc` subcommand reports `/opt/photo-diary/` code dirs that no scanned instance under `/var/photo-diary/` references, with sizes and the `rm -rf` commands the operator would run. Read-only — never deletes. Closes #653.
