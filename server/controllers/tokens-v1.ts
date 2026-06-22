@@ -30,6 +30,29 @@ const init = async () => {
   await model.init();
 };
 
+// Pull the operator-curated host list out of meta and reduce to
+// lowercased hostnames for case-insensitive comparison. Empty when
+// unset / malformed — the cross-host endpoint then rejects every
+// target, effectively disabling the feature without an explicit
+// toggle.
+const loadKnownHosts = async (): Promise<string[]> => {
+  try {
+    const metas = await db.loadMetas();
+    const raw = metas.instance_knownHosts;
+    if (typeof raw !== "string" || raw.length === 0) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (e): e is { hostname: string } =>
+          !!e && typeof (e as { hostname?: unknown }).hostname === "string"
+      )
+      .map((e) => e.hostname.toLowerCase());
+  } catch {
+    return [];
+  }
+};
+
 // Fields are optional in the schema so missing credentials hit the
 // handler's 401 path; making them required would short-circuit to
 // a 400 which clients don't expect.
@@ -263,9 +286,9 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    * Cross-host SSO mint (#664). Authed caller asks this host to mint
    * a one-shot signed token bound to a target hostname; the SPA
    * redirects the browser to the target's /sso endpoint, which
-   * verifies + sets cookies there. Disabled when SSO_SECRET is unset
-   * — operators who don't run multi-host setups don't pay for the
-   * machinery.
+   * verifies + sets cookies there. Targets are validated against
+   * `instance_knownHosts` — empty list (the default) effectively
+   * disables the feature without an explicit toggle.
    */
   fastify.post(
     "/cross-host",
@@ -279,19 +302,22 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      if (!config.SSO_SECRET) {
-        // Feature off on this instance. 503 (not 404) so the SPA
-        // can render a "switching disabled" hint instead of crashing.
-        throw new AccessError(
-          "Cross-host SSO is not configured on this instance."
-        );
-      }
       if (request.user.id === ":guest") {
         throw new AccessError();
       }
       const { target, path } = request.body;
+      // Target must be one of the operator-curated known hosts —
+      // prevents minting SSO tokens for arbitrary hostnames, even
+      // though without the matching SECRET on the receiving side
+      // such a token would be useless.
+      const knownHosts = await loadKnownHosts();
+      if (!knownHosts.includes(target.toLowerCase())) {
+        throw new AccessError(
+          "Target hostname is not in the configured knownHosts set."
+        );
+      }
       const token = await mintSsoToken(
-        config.SSO_SECRET,
+        config.SECRET,
         request.user.id,
         target
       );
@@ -322,14 +348,9 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
-      if (!config.SSO_SECRET) {
-        throw new AccessError(
-          "Cross-host SSO is not configured on this instance."
-        );
-      }
       const { token, redirect } = request.query;
       const claims = await verifySsoToken(
-        config.SSO_SECRET,
+        config.SECRET,
         request.hostname.toLowerCase(),
         token
       );

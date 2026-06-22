@@ -8,9 +8,26 @@ import { createApi, loginUser } from "./helper.js";
 
 const { api } = createApi();
 
+// Mint validates the target against instance_knownHosts. Supertest
+// reports the bound `127.0.0.1` as request.hostname, and the SPA's
+// cross-host flow would set the target hostname literally — seed
+// the matching meta + a couple of others the negative cases need.
+const seedKnownHosts = async () => {
+  const { default: db } = await import("../../db/index.js");
+  await db.createMeta({
+    key: "instance_knownHosts",
+    value: JSON.stringify([
+      { hostname: "127.0.0.1", label: "Self", isMain: true },
+      { hostname: "photos.example.com", label: "Photos" },
+      { hostname: "elsewhere.example.com", label: "Elsewhere" },
+    ]),
+  });
+};
+
 beforeEach(async () => {
   await seedApiFixture();
   await init();
+  await seedKnownHosts();
 });
 
 // Pull the access cookie out of a Set-Cookie response. Used for the
@@ -46,6 +63,19 @@ describe("Cross-host SSO mint", () => {
       .expect((res) => {
         if (res.status === 200) {
           throw new Error("guest unexpectedly minted an SSO token");
+        }
+      });
+  });
+
+  test("target not in knownHosts is rejected", async () => {
+    const token = await loginUser(api, "admin");
+    await api
+      .post("/api/v1/tokens/cross-host")
+      .set("Cookie", `pd_access=${token}`)
+      .send({ target: "evil.example.com" })
+      .expect((res) => {
+        if (res.status === 200) {
+          throw new Error("unknown target unexpectedly succeeded");
         }
       });
   });

@@ -10,9 +10,13 @@
 // post-SSO redirect target.
 //
 // The signature is HS256 over the same `jose` we already use for
-// access JWTs. The SSO_SECRET env must be the same on every
-// instance — different from the per-user JWT secret because that
-// one mixes in user.secret and isn't portable across instances.
+// access JWTs. Signed with `config.SECRET` (the same env var as
+// access tokens, but without the per-user mix-in that those add) —
+// multi-instance deploys that want this feature must share `SECRET`
+// across sibling instances, which already happens for any shared-
+// session setup. Access JWTs stay safe because they're signed with
+// `${user.secret}${SECRET}` (per-user composite) — a different
+// effective signing key than `SECRET` alone.
 
 import { randomUUID } from "node:crypto";
 import { SignJWT, jwtVerify, errors as joseErrors } from "jose";
@@ -61,7 +65,7 @@ export const mintSsoToken = async (
     .sign(encodeSecret(secret));
 };
 
-// Verify a candidate SSO token against the local SSO_SECRET. Does
+// Verify a candidate SSO token against the local `SECRET`. Does
 // NOT check the jti dedup table — the caller does that next so the
 // check + insert can be one atomic step (avoids a TOCTOU window
 // where two concurrent consumes could both pass verify before

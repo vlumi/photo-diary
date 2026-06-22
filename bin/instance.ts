@@ -105,15 +105,8 @@ const REQUIRED_KEYS: RequiredKey[] = [
   },
   {
     key: "SECRET",
-    description: "HMAC secret for JWT tokens — keep this stable per instance",
-    default: () => randomBytes(32).toString("hex"),
-    required: true,
-    editable: false,
-  },
-  {
-    key: "SSO_SECRET",
     description:
-      "HMAC secret for the cross-host SSO flow (#664). Auto-generated on bootstrap. Single-instance multi-hostname deploys (one server, several nginx vhosts pointing at it) need only this one value — same .env is read by every hostname. True multi-instance deploys (separate /var/photo-diary/<name>/ trees) must paste the SAME value into every instance's .env, otherwise SSO tokens minted on host A won't verify on host B. Leave empty to disable the feature.",
+      "HMAC secret for JWT tokens — keep this stable per instance. Also signs the one-shot cross-host SSO tokens (#664); for multi-instance deploys that want the UserMenu switcher, paste the SAME value into every sibling instance's .env.",
     default: () => randomBytes(32).toString("hex"),
     required: true,
     editable: false,
