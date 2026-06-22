@@ -12,6 +12,7 @@ const KNOWN_KEYS = [
   "firstWeekday",
   "betaFeatures",
   "renditions",
+  "knownHosts",
 ] as const;
 export type KnownMetaKey = (typeof KNOWN_KEYS)[number];
 
