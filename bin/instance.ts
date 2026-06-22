@@ -111,6 +111,14 @@ const REQUIRED_KEYS: RequiredKey[] = [
     editable: false,
   },
   {
+    key: "SSO_SECRET",
+    description:
+      "HMAC secret for the cross-host SSO flow (#664). Auto-generated on bootstrap. Single-instance multi-hostname deploys (one server, several nginx vhosts pointing at it) need only this one value — same .env is read by every hostname. True multi-instance deploys (separate /var/photo-diary/<name>/ trees) must paste the SAME value into every instance's .env, otherwise SSO tokens minted on host A won't verify on host B. Leave empty to disable the feature.",
+    default: () => randomBytes(32).toString("hex"),
+    required: true,
+    editable: false,
+  },
+  {
     key: "DB_DRIVER",
     description: "DB driver",
     default: () => "sqlite3",
