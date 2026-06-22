@@ -105,7 +105,8 @@ const REQUIRED_KEYS: RequiredKey[] = [
   },
   {
     key: "SECRET",
-    description: "HMAC secret for JWT tokens — keep this stable per instance",
+    description:
+      "HMAC secret for JWT tokens — keep this stable per instance. Also signs the one-shot cross-host SSO tokens (#664); for multi-instance deploys that want the UserMenu switcher, paste the SAME value into every sibling instance's .env.",
     default: () => randomBytes(32).toString("hex"),
     required: true,
     editable: false,

@@ -34,6 +34,7 @@ Per-instance runtime defaults are edited from `/m/instance` (admin UI) or `bin/m
 - `defaultLanguage` — fallback display language; seeds new galleries' `default_language` column at create time
 - `betaFeatures` — JSON-encoded `{name: "on" | "off" | "user"}` map for per-instance beta-feature locks
 - `cdn` — public URL prefix for `display/` / `thumbnail/` / `gallery-icons/`
+- `knownHosts` — JSON array of `{hostname, label, isMain}` entries powering the UserMenu virtual-host switcher (#664). One entry should set `isMain: true` — that's the host the SPA hits to mint cross-host SSO tokens.
 
 Per-gallery values (`theme`, `initial_view`, `hostname`, `default_language`) on each gallery row in the DB take precedence over the instance-level defaults above.
 

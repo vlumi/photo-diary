@@ -32,7 +32,7 @@ Read at startup from a `.env` file in the **current working directory** (which i
 
 | Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
-| `SECRET` | ✓ | — | HMAC secret used to sign JWT tokens. The server refuses to start without it. Keep stable per instance; rotating invalidates every existing session. |
+| `SECRET` | ✓ | — | HMAC secret used to sign JWT tokens. The server refuses to start without it. Keep stable per instance; rotating invalidates every existing session. Also signs the one-shot cross-host SSO tokens (#664); multi-instance deploys that want the UserMenu switcher need the **same value** in every sibling instance's `.env`. Access JWTs stay safe across that sharing because they're signed with `${user.secret}${SECRET}` (per-user composite), so a leaked SSO token can't be turned into an access JWT. |
 | `DB_DRIVER` | ✓ | — | `sqlite3` (production) or `dummy` (test fixture). |
 | `PORT` | | `4200` | HTTP port nginx proxies to. One per instance. |
 | `INSTANCE_NAME` | | `photo-diary-server` | pm2 process name when launched via `bin/start-prod.sh`. The converter half is automatically suffixed `-converter`. |
