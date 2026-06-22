@@ -493,6 +493,13 @@ export default {
   pruneOperationsBefore: async (cutoffIso: string): Promise<number> => {
     return (await db.pruneOperationsBefore(cutoffIso)) as number;
   },
+  consumeSsoJti: async (
+    jti: string,
+    nowEpochMs: number,
+    ttlMs: number
+  ): Promise<boolean> => {
+    return (await db.consumeSsoJti(jti, nowEpochMs, ttlMs)) as boolean;
+  },
   countPendingGeocode: async () => {
     return await db.countPendingGeocode();
   },

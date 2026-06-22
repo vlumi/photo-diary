@@ -143,6 +143,7 @@ export default () => {
     loadRecentOperations,
     loadOperationFailures,
     pruneOperationsBefore,
+    consumeSsoJti,
     countPendingGeocode,
 
     _resetForTests,
@@ -2083,6 +2084,36 @@ const pruneOperationsBefore = async (cutoffIso: string): Promise<number> => {
   return result.changes;
 };
 
+// Atomic "consume this SSO jti or fail if already consumed". Single
+// INSERT against a PRIMARY KEY — concurrent calls with the same jti
+// resolve to exactly one success + the rest throwing. Better-sqlite3
+// surfaces UNIQUE-constraint violations as SqliteError with
+// code === "SQLITE_CONSTRAINT_PRIMARYKEY"; the caller maps that to a
+// 401 (replay). Returns true if this call won the consume race,
+// false if it lost (the jti was already in the table).
+const consumeSsoJti = async (
+  jti: string,
+  nowEpochMs: number,
+  ttlMs: number
+): Promise<boolean> => {
+  // Opportunistically prune expired rows on every consume — single
+  // indexed range delete, cheap. Keeps the table from growing
+  // unbounded without a separate sweeper.
+  db.prepare("DELETE FROM sso_consumed_token WHERE consumed_at < ?").run(
+    nowEpochMs - ttlMs
+  );
+  try {
+    db.prepare(
+      "INSERT INTO sso_consumed_token (jti, consumed_at) VALUES (?, ?)"
+    ).run(jti, nowEpochMs);
+    return true;
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "SQLITE_CONSTRAINT_PRIMARYKEY") return false;
+    throw err;
+  }
+};
+
 // Pending = photos with coords that haven't been geocoded yet and
 // aren't flagged geocode_no_data. Mirrors the daemon's own
 // loadPhotosMissingGeocoded query for the en branch.
@@ -2118,5 +2149,6 @@ const _resetForTests = (): void => {
     DELETE FROM user WHERE id != ':guest';
     DELETE FROM meta WHERE key != 'schema_version';
     DELETE FROM operation_event;
+    DELETE FROM sso_consumed_token;
   `);
 };

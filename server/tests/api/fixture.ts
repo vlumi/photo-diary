@@ -18,6 +18,10 @@ export const TEST_CONFIG = {
   ENV: "test",
   PORT: "0",
   SECRET: "test-secret",
+  // Set for tests so the cross-host SSO endpoints (#664) are
+  // enabled by default. Real instances opt in by setting the env
+  // var; absence disables the endpoints.
+  SSO_SECRET: "test-sso-secret",
   DEBUG: false,
   DB_DRIVER: "sqlite3",
   DB_OPTS: ":memory:",

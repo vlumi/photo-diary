@@ -1,7 +1,14 @@
 import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
-import { InvalidTokenError, LoginError, RateLimitError } from "../lib/errors.js";
+import config from "../lib/config/index.js";
+import db from "../db/index.js";
+import {
+  AccessError,
+  InvalidTokenError,
+  LoginError,
+  RateLimitError,
+} from "../lib/errors.js";
 import {
   REFRESH_COOKIE,
   clearAuthCookies,
@@ -10,6 +17,11 @@ import {
 import logger from "../lib/logger.js";
 import authorizerFactory from "../lib/authorizer.js";
 import modelFactory from "../models/token.js";
+import {
+  mintSsoToken,
+  verifySsoToken,
+  SSO_TOKEN_TTL_MS,
+} from "../lib/sso.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -42,6 +54,26 @@ const SessionResponse = Type.Object({
 });
 
 const UserIdParam = Type.Object({ userId: Type.String() });
+
+// SSO mint (#664). `target` is the hostname the SPA wants to hop to;
+// `path` is the optional in-app path the target host should land
+// on after consuming the token (best-effort, validated to be a
+// leading-slash path so an attacker can't redirect cross-origin
+// after consume).
+const CrossHostBody = Type.Object({
+  target: Type.String({ minLength: 1 }),
+  path: Type.Optional(Type.String()),
+});
+const CrossHostResponse = Type.Object({
+  redirectUrl: Type.String(),
+});
+
+// SSO consume — the token + redirect both ride in the URL because
+// the browser is navigating (not the SPA making a fetch).
+const SsoConsumeQuery = Type.Object({
+  token: Type.String({ minLength: 1 }),
+  redirect: Type.Optional(Type.String()),
+});
 
 // Per-IP throttle on the login POST: 10 failed attempts per 15-min
 // window. Successful logins don't tick the counter (a typo'ing user
@@ -224,6 +256,105 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       await authorizer.authorizeAdmin(request.user.id);
       await model.revokeAllSessions(request.params.userId);
       reply.status(204).send();
+    }
+  );
+
+  /**
+   * Cross-host SSO mint (#664). Authed caller asks this host to mint
+   * a one-shot signed token bound to a target hostname; the SPA
+   * redirects the browser to the target's /sso endpoint, which
+   * verifies + sets cookies there. Disabled when SSO_SECRET is unset
+   * — operators who don't run multi-host setups don't pay for the
+   * machinery.
+   */
+  fastify.post(
+    "/cross-host",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Mint a one-shot SSO token for a sibling host (#664)",
+        body: CrossHostBody,
+        response: { 200: CrossHostResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      if (!config.SSO_SECRET) {
+        // Feature off on this instance. 503 (not 404) so the SPA
+        // can render a "switching disabled" hint instead of crashing.
+        throw new AccessError(
+          "Cross-host SSO is not configured on this instance."
+        );
+      }
+      if (request.user.id === ":guest") {
+        throw new AccessError();
+      }
+      const { target, path } = request.body;
+      const token = await mintSsoToken(
+        config.SSO_SECRET,
+        request.user.id,
+        target
+      );
+      const safePath =
+        path && path.startsWith("/") ? path : "/";
+      const redirectUrl =
+        `https://${target}/api/v1/tokens/sso` +
+        `?token=${encodeURIComponent(token)}` +
+        `&redirect=${encodeURIComponent(safePath)}`;
+      return { redirectUrl };
+    }
+  );
+
+  /**
+   * Cross-host SSO consume. Validates the signed token, checks the
+   * target audience matches this host, checks the jti is single-use
+   * (DB dedup), mints normal pd_access + pd_refresh cookies for the
+   * matching user, and 302s to the post-SSO path. GET because the
+   * browser is navigating; the token sits in the URL.
+   */
+  fastify.get(
+    "/sso",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Consume a cross-host SSO token + redirect (#664)",
+        querystring: SsoConsumeQuery,
+      },
+    },
+    async (request, reply) => {
+      if (!config.SSO_SECRET) {
+        throw new AccessError(
+          "Cross-host SSO is not configured on this instance."
+        );
+      }
+      const { token, redirect } = request.query;
+      const claims = await verifySsoToken(
+        config.SSO_SECRET,
+        request.hostname.toLowerCase(),
+        token
+      );
+      const won = await db.consumeSsoJti(
+        claims.jti,
+        Date.now(),
+        SSO_TOKEN_TTL_MS
+      );
+      if (!won) {
+        // Replay attempt — same jti already consumed (either by an
+        // earlier legitimate visit or a hostile re-send).
+        throw new InvalidTokenError();
+      }
+      // The user must exist on this host with the same id. SSO
+      // doesn't propagate user rows — the operator's identity is
+      // assumed to be provisioned on every instance they own.
+      const isAdmin = await authorizer
+        .authorizeAdmin(claims.sub)
+        .then(() => true)
+        .catch(() => false);
+      const pair = await model.createSession(claims.sub, isAdmin);
+      setAuthCookies(reply, pair.accessToken, pair.refreshToken);
+      const safeRedirect =
+        redirect && redirect.startsWith("/") ? redirect : "/";
+      reply.redirect(safeRedirect, 302);
     }
   );
 };

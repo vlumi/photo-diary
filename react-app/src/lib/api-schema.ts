@@ -47,7 +47,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions";
+                        key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
                         value: string;
                     };
                 };
@@ -81,7 +81,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions";
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
                 };
                 cookie?: never;
             };
@@ -106,7 +106,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions";
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
                 };
                 cookie?: never;
             };
@@ -134,7 +134,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions";
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
                 };
                 cookie?: never;
             };
@@ -308,6 +308,88 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tokens/cross-host": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mint a one-shot SSO token for a sibling host (#664) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        target: string;
+                        path?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            redirectUrl: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tokens/sso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consume a cross-host SSO token + redirect (#664) */
+        get: {
+            parameters: {
+                query: {
+                    token: string;
+                    redirect?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
