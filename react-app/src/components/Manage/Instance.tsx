@@ -68,6 +68,13 @@ const RenditionRowEl = styled.div`
   gap: 8px;
   align-items: center;
 `;
+const KnownHostRowEl = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr auto 40px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 4px;
+`;
 const SmallButton = styled.button`
   font: inherit;
   padding: 4px 10px;
@@ -138,6 +145,11 @@ const Notice = styled.div`
   color: var(--inactive-color);
 `;
 
+interface KnownHostMeta {
+  hostname?: unknown;
+  label?: unknown;
+  isMain?: unknown;
+}
 interface MetaShape {
   name?: string;
   description?: string;
@@ -150,6 +162,13 @@ interface MetaShape {
   firstWeekday?: string | number;
   betaFeatures?: Partial<Record<BetaFeature, BetaMode>>;
   renditions?: number[];
+  knownHosts?: KnownHostMeta[];
+}
+
+interface KnownHostRow {
+  hostname: string;
+  label: string;
+  isMain: boolean;
 }
 
 interface FormState {
@@ -166,6 +185,7 @@ interface FormState {
   // Edited as strings so partially-typed input doesn't blow up on
   // a non-numeric value; coerced to int on save.
   renditions: string[];
+  knownHosts: KnownHostRow[];
 }
 
 const SUPPORTED_LANGUAGES = ["en", "fi", "ja"] as const;
@@ -197,6 +217,7 @@ const emptyForm = (): FormState => ({
   firstWeekday: "",
   betaFeatures: emptyBeta(),
   renditions: [...DEFAULT_RENDITIONS],
+  knownHosts: [],
 });
 
 const formFromMeta = (meta: MetaShape | undefined): FormState => {
@@ -225,8 +246,50 @@ const formFromMeta = (meta: MetaShape | undefined): FormState => {
     base.renditions =
       valid.length > 0 ? valid.map((n) => String(n)) : [...DEFAULT_RENDITIONS];
   }
+  if (Array.isArray(meta.knownHosts)) {
+    base.knownHosts = meta.knownHosts
+      .filter(
+        (h): h is { hostname: string; label?: string; isMain?: boolean } =>
+          !!h && typeof h.hostname === "string"
+      )
+      .map((h) => ({
+        hostname: h.hostname,
+        label: typeof h.label === "string" ? h.label : "",
+        isMain: !!h.isMain,
+      }));
+  }
   return base;
 };
+
+const knownHostsAreValid = (rows: KnownHostRow[]): boolean => {
+  // Empty list is valid — feature off.
+  if (rows.length === 0) return true;
+  const seen = new Set<string>();
+  let mainCount = 0;
+  for (const row of rows) {
+    const trimmed = row.hostname.trim().toLowerCase();
+    // Bare-bones hostname check: non-empty, no slashes / whitespace /
+    // protocol. Allows dotted hostnames, IPs, ports for dev (e.g.
+    // `localhost:3000` is rejected because of the colon — that's
+    // intentional, the SPA hops via `window.location.href = https://<host>/`).
+    if (!/^[a-zA-Z0-9.-]+$/.test(trimmed)) return false;
+    if (seen.has(trimmed)) return false;
+    seen.add(trimmed);
+    if (row.isMain) mainCount++;
+  }
+  // 0 or 1 isMain — 0 is fine for symmetric setups; 2+ is ambiguous
+  // (the SPA uses isMain to pick the mint host).
+  return mainCount <= 1;
+};
+
+const serialiseKnownHosts = (rows: KnownHostRow[]): string =>
+  JSON.stringify(
+    rows.map((r) => ({
+      hostname: r.hostname.trim(),
+      ...(r.label.trim() ? { label: r.label.trim() } : {}),
+      ...(r.isMain ? { isMain: true } : {}),
+    }))
+  );
 
 const renditionRowsAreValid = (rows: string[]): boolean => {
   if (rows.length === 0) return false;
@@ -246,7 +309,7 @@ const serialiseRenditions = (rows: string[]): string =>
 // Stringified meta payloads for diffing — beta features collapse
 // to one JSON-encoded value, the rest are plain strings.
 const SCALAR_KEYS: Array<
-  Exclude<keyof FormState, "betaFeatures" | "renditions">
+  Exclude<keyof FormState, "betaFeatures" | "renditions" | "knownHosts">
 > = [
   "name",
   "description",
@@ -308,10 +371,16 @@ const Instance = (): React.ReactElement => {
       JSON.stringify(form.renditions) !== JSON.stringify(original.renditions)
     )
       return true;
+    if (
+      serialiseKnownHosts(form.knownHosts) !==
+      serialiseKnownHosts(original.knownHosts)
+    )
+      return true;
     return false;
   }, [form, original]);
 
   const renditionsValid = renditionRowsAreValid(form.renditions);
+  const knownHostsValid = knownHostsAreValid(form.knownHosts);
 
   const renderViewValue = (value: string | undefined): React.ReactNode =>
     value && value.length > 0 ? (
@@ -382,6 +451,21 @@ const Instance = (): React.ReactElement => {
           "renditions",
           serialiseRenditions(form.renditions)
         );
+      }
+      // knownHosts: empty list clears the meta row (effectively
+      // disables the UserMenu switcher); non-empty list overwrites.
+      const knownHostsChanged =
+        serialiseKnownHosts(form.knownHosts) !==
+        serialiseKnownHosts(original.knownHosts);
+      if (knownHostsChanged) {
+        if (form.knownHosts.length === 0) {
+          await metaService.remove("knownHosts");
+        } else {
+          await metaService.set(
+            "knownHosts",
+            serialiseKnownHosts(form.knownHosts)
+          );
+        }
       }
       await queryClient.invalidateQueries({ queryKey: ["meta"] });
       // Refetch to reseed `original` so `dirty` resets cleanly.
@@ -649,6 +733,108 @@ const Instance = (): React.ReactElement => {
       </Section>
 
       <Section>
+        <SectionTitle>{t("manage-instance-known-hosts")}</SectionTitle>
+        {editing && (
+          <FieldHint>{t("manage-instance-known-hosts-hint")}</FieldHint>
+        )}
+        {editing ? (
+          <>
+            {form.knownHosts.map((row, idx) => (
+              <KnownHostRowEl key={idx}>
+                <Input
+                  placeholder={t("manage-instance-known-hosts-hostname") ?? ""}
+                  value={row.hostname}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      knownHosts: prev.knownHosts.map((r, i) =>
+                        i === idx ? { ...r, hostname: e.target.value } : r
+                      ),
+                    }))
+                  }
+                />
+                <Input
+                  placeholder={t("manage-instance-known-hosts-label") ?? ""}
+                  value={row.label}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      knownHosts: prev.knownHosts.map((r, i) =>
+                        i === idx ? { ...r, label: e.target.value } : r
+                      ),
+                    }))
+                  }
+                />
+                <label
+                  title={
+                    t("manage-instance-known-hosts-is-main-title") ?? ""
+                  }
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.85em" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={row.isMain}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        knownHosts: prev.knownHosts.map((r, i) => ({
+                          ...r,
+                          // Only one isMain allowed; ticking this row
+                          // unticks every other.
+                          isMain:
+                            i === idx
+                              ? e.target.checked
+                              : e.target.checked
+                                ? false
+                                : r.isMain,
+                        })),
+                      }))
+                    }
+                  />
+                  {t("manage-instance-known-hosts-is-main")}
+                </label>
+                <SmallButton
+                  type="button"
+                  onClick={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      knownHosts: prev.knownHosts.filter((_, i) => i !== idx),
+                    }))
+                  }
+                  aria-label={t("manage-instance-known-hosts-remove") ?? ""}
+                  title={t("manage-instance-known-hosts-remove") ?? ""}
+                >
+                  ×
+                </SmallButton>
+              </KnownHostRowEl>
+            ))}
+            <SmallButton
+              type="button"
+              onClick={() =>
+                setForm((prev) => ({
+                  ...prev,
+                  knownHosts: [
+                    ...prev.knownHosts,
+                    { hostname: "", label: "", isMain: false },
+                  ],
+                }))
+              }
+            >
+              {t("manage-instance-known-hosts-add")}
+            </SmallButton>
+          </>
+        ) : form.knownHosts.length === 0 ? (
+          <ViewValueEmpty>{t("manage-instance-view-empty")}</ViewValueEmpty>
+        ) : (
+          <ViewValue>
+            {form.knownHosts
+              .map((h) => h.label || h.hostname)
+              .join(" · ")}
+          </ViewValue>
+        )}
+      </Section>
+
+      <Section>
         <SectionTitle>{t("manage-instance-beta")}</SectionTitle>
         {editing && <FieldHint>{t("manage-instance-beta-hint")}</FieldHint>}
         {BETA_FEATURES.map((feature) => (
@@ -689,7 +875,9 @@ const Instance = (): React.ReactElement => {
             <ButtonPrimary
               type="button"
               onClick={() => void save()}
-              disabled={!dirty || saving || !renditionsValid}
+              disabled={
+                !dirty || saving || !renditionsValid || !knownHostsValid
+              }
             >
               {saving
                 ? t("manage-user-button-saving")

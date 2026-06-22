@@ -12,6 +12,7 @@
 ### Frontend
 
 - `/m` no longer auto-opens the gallery edit modal on host-scoped or single-gallery-editor instances. Earlier the dashboard short-circuited straight to `/m/g/<id>` (which mounts the edit modal), so every visit to Manage landed inside a modal-over-dashboard overlay. Now the dashboard renders normally; the gallery tile opens the modal on click. Closes #663.
+- UserMenu now offers a virtual-host switcher (#664). Authed users see an "Other hosts" section listing the operator-curated `instance_knownHosts`; clicking a host hits the cross-host SSO mint, redirects via the target host's `/sso` endpoint, and lands on the equivalent path (best-effort: `/g/<id>/<y>/<m>` swaps the gallery for the target's default; admin routes collapse to `/m`). A new section in `/m/instance` lets admins edit the host list (hostname / label / isMain). Closes #664.
 
 ### Developer
 

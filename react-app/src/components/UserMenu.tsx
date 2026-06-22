@@ -2,21 +2,30 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
 import theme from "../lib/theme";
+import { translatePathForHost } from "../lib/cross-host-path";
 import { useHostScope } from "../lib/use-host-scope";
+import metaService from "../services/meta";
 import tokenService from "../services/tokens";
 import {
   useUserStore,
   useLoginModalStore,
   useChangePasswordModalStore,
+  useNotificationsStore,
   useBetaStore,
   useThemePreferenceStore,
   useThemePickerModalStore,
 } from "../stores";
 import { BETA_FEATURES } from "../stores/beta";
+
+interface KnownHost {
+  hostname: string;
+  label?: string;
+  isMain?: boolean;
+}
 
 const Root = styled.div`
   position: relative;
@@ -106,6 +115,40 @@ const ThemeMenuValue = styled.span`
   color: var(--inactive-color);
   font-size: 0.9em;
 `;
+// Host-switcher block (#664). Separator above so the operator can
+// tell at a glance "this is the cross-host nav, not just another
+// menu item". Heading label is the kind of muted overline `cdn` /
+// `defaultTheme` would carry if those had headings — same family.
+const SectionDivider = styled.div`
+  border-top: 1px solid var(--inactive-color);
+  margin: 4px 0;
+`;
+const SectionHeading = styled.div`
+  padding: 4px 14px 2px;
+  font-size: 0.7em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--inactive-color);
+`;
+const HostMenuItem = styled(MenuItem)<{ $current: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: ${({ $current }) => ($current ? "default" : "pointer")};
+  ${({ $current }) =>
+    $current
+      ? `
+        color: var(--inactive-color);
+        &:hover { background: none; color: var(--inactive-color); }
+      `
+      : ""}
+`;
+const HostMenuHostname = styled.span`
+  font-size: 0.85em;
+  color: var(--inactive-color);
+`;
 
 // Profile icon in the top-right of the top menu. Anonymous (outlined) when
 // not logged in — clicking opens the login modal. Filled when logged in —
@@ -128,6 +171,45 @@ const UserMenu = (): React.ReactElement => {
   );
   const themePreference = useThemePreferenceStore((s) => s.preference);
   const openThemeModal = useThemePickerModalStore((s) => s.open);
+  const notify = useNotificationsStore((s) => s.notify);
+
+  // knownHosts drives the cross-host switcher (#664). Shared cache
+  // key with /m/instance so the form's edits update the dropdown
+  // without a separate fetch.
+  const metaQuery = useQuery({
+    queryKey: ["meta"],
+    queryFn: () => metaService.getAll(),
+    enabled: !!user,
+  });
+  const knownHosts = (() => {
+    const raw = (metaQuery.data as { knownHosts?: unknown } | undefined)
+      ?.knownHosts;
+    if (!Array.isArray(raw)) return [] as KnownHost[];
+    return raw.filter(
+      (h): h is KnownHost =>
+        !!h && typeof (h as { hostname?: unknown }).hostname === "string"
+    );
+  })();
+  const currentHostname = typeof window !== "undefined"
+    ? window.location.hostname.toLowerCase()
+    : "";
+
+  const switchToHost = async (target: string) => {
+    setIsOpen(false);
+    if (target.toLowerCase() === currentHostname) return;
+    try {
+      const data = await tokenService.crossHost(
+        target,
+        translatePathForHost(window.location.pathname)
+      );
+      window.location.href = data.redirectUrl;
+    } catch (err) {
+      notify(
+        "error",
+        err instanceof Error ? err.message : t("user-menu-switch-failed")
+      );
+    }
+  };
   // Resolve the committed theme's display name for the menu item's
   // value suffix. `null` means "Follow gallery default" — fall back to
   // the i18n label. An unknown id (renamed / removed theme) falls back
@@ -267,6 +349,32 @@ const UserMenu = (): React.ReactElement => {
               {t(`beta-feature-${f}`)}
             </BetaToggle>
           ))}
+          {knownHosts.length > 0 && (
+            <>
+              <SectionDivider />
+              <SectionHeading>{t("user-menu-other-hosts")}</SectionHeading>
+              {knownHosts.map((h) => {
+                const isCurrent = h.hostname.toLowerCase() === currentHostname;
+                return (
+                  <HostMenuItem
+                    key={h.hostname}
+                    type="button"
+                    role="menuitem"
+                    aria-current={isCurrent ? "true" : undefined}
+                    $current={isCurrent}
+                    disabled={isCurrent}
+                    onClick={isCurrent ? undefined : () => void switchToHost(h.hostname)}
+                  >
+                    <span>{h.label || h.hostname}</span>
+                    {h.label && (
+                      <HostMenuHostname>{h.hostname}</HostMenuHostname>
+                    )}
+                  </HostMenuItem>
+                );
+              })}
+            </>
+          )}
+          <SectionDivider />
           <MenuItem type="button" role="menuitem" onClick={handleLogout}>
             {t("logout")}
           </MenuItem>
