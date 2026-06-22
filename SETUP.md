@@ -295,6 +295,12 @@ Gotchas:
 - The `/display/` and `/thumbnail/` aliases point at the **same** photo directory (the instance's `photos/`), so the bytes are shared across the per-gallery vhosts. That's intentional — galleries in the same instance are just different curations of the same photo pool.
 - `cdn` is a single meta value per instance, not per gallery. All the vhosts on one instance share it; usually that means setting `cdn` to one of the hostnames (say the primary one) and letting the others load images cross-origin from it.
 
+### UserMenu host switcher
+
+Authed visitors can hop between sibling hostnames without re-logging-in via the UserMenu's "Other hosts" section. Populate `instance_knownHosts` via `/m/instance` (or `./bin/meta.ts set instance_knownHosts '[{"hostname":"dailybw.example.com","label":"Daily B&W","isMain":true},{"hostname":"travel.example.com","label":"Travel"}]'`) — each click mints a 30 s SSO token bound to the target, redirects through its `/sso` endpoint, and lands on the equivalent path. The `isMain` flag tells the SPA which host to mint tokens from when the visitor lands on a non-primary host.
+
+The flow uses bare `SECRET` (not the per-user composite) so it works across separate instances too: if a deployment splits siblings into independent processes / DBs, set the **same** `SECRET` in every `.env` and the switcher works between them. For the operator's typical setup (one instance, multiple vhosts, one DB) no extra config is needed beyond the meta row.
+
 ### Operating an instance
 
 Common day-to-day operations after an instance is running:

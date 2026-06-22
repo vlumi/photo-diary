@@ -250,6 +250,8 @@ The authorization primitives live in [`server/lib/authorizer.ts`](lib/authorizer
 
 The **virtual-host scope** ([`server/lib/host-scope.ts`](lib/host-scope.ts)) layers on top: requests whose `Host` header matches a gallery's `hostname` regex are narrowed to that gallery's photos for both reads and writes. `requireUnscoped(request)` rejects cross-gallery admin operations on a bound hostname — `gh issue` examples in the top-level README.
 
+**Cross-host SSO** ([`server/lib/sso.ts`](lib/sso.ts)) lets an authed visitor jump between sibling hostnames without re-logging-in. The flow: SPA `POST /tokens/cross-host` with `{target, path}` → server validates `target` against `instance_knownHosts`, mints a 30 s HS256 JWT with the user id + path in the payload and the target hostname as the audience, returns `redirectUrl` → SPA navigates the browser there → target host's `GET /tokens/sso` verifies the token (audience, expiry), atomically claims the `jti` via the `sso_consumed_token` table (PRIMARY KEY collision = replay), sets the normal `pd_access` + `pd_refresh` cookies for the destination user, 302s to the supplied `path`. The path is leading-slash-only validated to prevent open-redirect. Tokens are signed with the bare `SECRET` (no per-user mix-in) so sibling instances sharing `SECRET` can validate each other's tokens; access JWTs use the per-user `${user.secret}${SECRET}` composite so a leaked SSO token can't be turned into a long-lived access token.
+
 ### RESTful resources
 
 The required tier is listed in brackets at the end of each route. From least to most privileged:
@@ -273,6 +275,8 @@ A bracketed `[unscoped]` suffix means the route is also rejected on hostname-bou
   - `GET` — Verify the current token **[any]**
   - `DELETE` — Logout the current session **[any]**
   - `DELETE ../:userId` — Force-logout every session for a user **[admin]**
+  - `POST ../cross-host` — Mint a one-shot SSO token bound to a target hostname, for the UserMenu host switcher **[user]**
+  - `GET ../sso` — Consume an SSO token on the target host, set normal auth cookies, 302 to the in-app path **[any]**
 - `/users` **[unscoped]**
   - `GET` — List users **[admin]**
   - `POST` — Create a user **[admin]**
