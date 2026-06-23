@@ -23,10 +23,8 @@ const Photo = React.lazy(() => import("./Photo"));
 import GalleryModel, { type Gallery as GalleryT } from "../../models/GalleryModel";
 import PhotoModel, { type Photo as PhotoT } from "../../models/PhotoModel";
 
-import collection from "../../lib/collection";
 import config from "../../lib/config";
 import filter from "../../lib/filter";
-import format from "../../lib/format";
 import { galleriesForHost } from "../../lib/host-scope";
 import stats, { type UniqueValues } from "../../lib/stats";
 import { buildUniqueValues } from "../../lib/uniqueValues";

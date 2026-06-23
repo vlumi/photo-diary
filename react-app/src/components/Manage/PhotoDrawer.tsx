@@ -698,15 +698,10 @@ const parseExposureTime = (raw: string): number | null => {
 
 // Photographer-friendly form-input representation: fractions for
 // sub-second exposures ("1/125"), bare seconds for slower ("2.5").
-// `formatExposureTime` adds the trailing "s" for view-mode display.
 const formatExposureTimeForInput = (seconds: number): string => {
   if (!Number.isFinite(seconds) || seconds <= 0) return "";
   if (seconds >= 1) return String(seconds);
   return `1/${Math.round(1 / seconds)}`;
-};
-const formatExposureTime = (seconds: number): string => {
-  const inputForm = formatExposureTimeForInput(seconds);
-  return inputForm ? `${inputForm}s` : "";
 };
 
 const localizedFrom = (

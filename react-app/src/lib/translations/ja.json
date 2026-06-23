@@ -62,7 +62,6 @@
     "manage-not-admin": "管理画面へのアクセス権がありません。",
     "manage-page-dashboard-title": "ダッシュボード",
     "manage-page-users-title": "ユーザー",
-    "manage-page-users-blurb": "ユーザー管理とアクセス権設定。準備中です。",
     "manage-users-create": "ユーザーを追加",
     "manage-users-load-error": "ユーザーの読み込みに失敗しました。",
     "manage-users-empty": "ユーザーがいません。",

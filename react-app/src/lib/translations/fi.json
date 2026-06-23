@@ -62,7 +62,6 @@
     "manage-not-admin": "Sinulla ei ole oikeuksia hallintaan.",
     "manage-page-dashboard-title": "Yleisnäkymä",
     "manage-page-users-title": "Käyttäjät",
-    "manage-page-users-blurb": "Käyttäjähallinta ja käyttöoikeudet. Tulossa.",
     "manage-users-create": "Lisää käyttäjä",
     "manage-users-load-error": "Käyttäjien lataus epäonnistui.",
     "manage-users-empty": "Ei käyttäjiä.",

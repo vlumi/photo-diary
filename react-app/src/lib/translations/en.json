@@ -62,7 +62,6 @@
     "manage-not-admin": "You don't have permission to access management.",
     "manage-page-dashboard-title": "Dashboard",
     "manage-page-users-title": "Users",
-    "manage-page-users-blurb": "User CRUD and per-user access. Coming soon.",
     "manage-users-create": "Add user",
     "manage-users-load-error": "Failed to load users.",
     "manage-users-empty": "No users.",
