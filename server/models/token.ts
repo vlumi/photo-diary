@@ -24,8 +24,22 @@ let reloadTimer: NodeJS.Timeout | undefined = undefined;
 const loadSecrets = async (): Promise<void> => {
   logger.debug("Loading secrets");
   const users = (await db.loadUsers()) as Array<{ id: string; secret: string }>;
+  // Clear before reloading: a `bin/user.ts delete` (or a test wiping the
+  // user table) removes the row, but a stale in-memory entry would still
+  // let tokens signed under the old secret verify until process restart.
+  for (const key of Object.keys(secrets)) delete secrets[key];
   users.forEach((user) => (secrets[user.id] = user.secret));
   logger.debug("Loading secrets done");
+};
+
+// Test-only: clear the in-memory secrets cache + cancel the reload
+// timer so the next file's seed starts from a known empty state.
+export const _resetTokenStateForTests = (): void => {
+  for (const key of Object.keys(secrets)) delete secrets[key];
+  if (reloadTimer) {
+    clearTimeout(reloadTimer);
+    reloadTimer = undefined;
+  }
 };
 
 const getSecret = (userId: string): string => {

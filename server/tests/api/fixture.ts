@@ -277,6 +277,17 @@ export const seedApiFixture = async (): Promise<void> => {
   // seed.
   const { _resetForTests } = await import("../../lib/stats-cache.js");
   _resetForTests();
+  // Same story for the login rate limiter and the token model's
+  // in-memory secret cache + reload timer — both module-level
+  // state that survives across test files in the same worker.
+  const { _resetLoginRateLimitForTests } = await import(
+    "../../controllers/tokens-v1.js"
+  );
+  _resetLoginRateLimitForTests();
+  const { _resetTokenStateForTests } = await import(
+    "../../models/token.js"
+  );
+  _resetTokenStateForTests();
 
   for (const [key, value] of Object.entries(META)) {
     await db.createMeta({ key, value });
