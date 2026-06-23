@@ -158,7 +158,7 @@ const freeTextPredicate = (
   };
 };
 
-export interface FilterInputs {
+interface FilterInputs {
   galleryMembers: Map<string, Set<string>>;
   orphanIds: Set<string>;
 }

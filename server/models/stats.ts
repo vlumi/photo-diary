@@ -57,7 +57,6 @@ export type {
   StatsSummary,
   YearMonthCounts,
 } from "../lib/stats-compute.js";
-export { UNKNOWN_BUCKET } from "../lib/stats-compute.js";
 
 // Cache namespace builder. `en` / no-lang shares the bare key so
 // the most common path accrues hits across requests that don't

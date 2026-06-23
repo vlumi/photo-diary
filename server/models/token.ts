@@ -50,7 +50,7 @@ const init = async (): Promise<void> => {
 
 type Credentials = { id: string; password: string };
 type StoredUser = { id: string; password: string; secret: string };
-export type TokenPair = { accessToken: string; refreshToken: string };
+type TokenPair = { accessToken: string; refreshToken: string };
 
 // Refresh tokens are sent to the client as `<sessionId>.<secret>`. The
 // session row stores `sessionId` directly and the bcrypt hash of the
@@ -196,7 +196,12 @@ const authenticateUser = async (credentials: Credentials): Promise<void> => {
     await checkUserPassword(credentials, user);
     // Make sure the secret is up-to-date
     secrets[user.id] = user.secret;
-  } catch {
+  } catch (error) {
+    // Log the underlying cause before normalising to LoginError —
+    // the public response intentionally hides whether the failure
+    // was bad-password / unknown-user / DB outage (timing attacks),
+    // but the operator needs to see DB issues in the log.
+    logger.error({ err: error, id: credentials.id }, "authenticateUser failed");
     throw new LoginError();
   }
 };
