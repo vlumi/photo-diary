@@ -38,22 +38,22 @@ describe("As guest", () => {
     await api.get("/api/v1/photos").expect(403);
   });
   test("Get gallery1photo.jpg", async () => {
-    await api.get("/api/v1/photo/gallery1photo.jpg").expect(404);
+    await getPhoto(undefined, "gallery1photo.jpg", 401);
   });
   test("Get gallery12photo.jpg", async () => {
-    await api.get("/api/v1/photo/gallery12photo.jpg").expect(404);
+    await getPhoto(undefined, "gallery12photo.jpg", 401);
   });
   test("Get gallery2photo.jpg", async () => {
-    await api.get("/api/v1/photo/gallery2photo.jpg").expect(404);
+    await getPhoto(undefined, "gallery2photo.jpg", 401);
   });
   test("Get gallery3photo.jpg", async () => {
-    await api.get("/api/v1/photo/gallery3photo.jpg").expect(404);
+    await getPhoto(undefined, "gallery3photo.jpg", 401);
   });
   test("Get orphanphoto.jpg", async () => {
-    await api.get("/api/v1/photo/orphanphoto.jpg").expect(404);
+    await getPhoto(undefined, "orphanphoto.jpg", 401);
   });
   test("Get invalid", async () => {
-    await api.get("/api/v1/photo/invalid.jpg").expect(404);
+    await getPhoto(undefined, "invalid.jpg", 401);
   });
 });
 

@@ -270,13 +270,31 @@ const Title = ({
   // Month view both render Title + Month/Content concurrently).
   const mapScopeBody = React.useMemo(() => {
     if (year !== undefined && month !== undefined) {
-      return { filter: serverFilters, dateRange, year, month, lang };
+      return {
+        filter: serverFilters,
+        dateRange,
+        numericRanges: wireNumericRanges,
+        year,
+        month,
+        lang,
+      };
     }
     if (year !== undefined) {
-      return { filter: serverFilters, dateRange, year, lang };
+      return {
+        filter: serverFilters,
+        dateRange,
+        numericRanges: wireNumericRanges,
+        year,
+        lang,
+      };
     }
-    return { filter: serverFilters, dateRange, lang };
-  }, [serverFilters, dateRange, year, month, lang]);
+    return {
+      filter: serverFilters,
+      dateRange,
+      numericRanges: wireNumericRanges,
+      lang,
+    };
+  }, [serverFilters, dateRange, wireNumericRanges, year, month, lang]);
   const { data: mapPhotosRaw } = useQuery({
     queryKey: ["gallery-photos-query", gallery.id(), mapScopeBody],
     queryFn: () => galleryPhotosService.query(gallery.id(), mapScopeBody),

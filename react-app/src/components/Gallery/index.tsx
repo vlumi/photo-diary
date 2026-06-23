@@ -327,30 +327,9 @@ const Gallery = ({
       return <i>{t("empty")}</i>;
     }
 
-    const escapeHTML = (str: string): string =>
-      str.replace(
-        /[&<>'"]/g,
-        (tag) =>
-          (({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            "'": "&#39;",
-            '"': "&quot;",
-          }) as Record<string, string>)[tag]
-      );
+    const title = meta.name ? <>{meta.name}</> : <>{t("nav-galleries")}</>;
 
-    const title = meta.name ? (
-      <>{escapeHTML(meta.name)}</>
-    ) : (
-      <>{t("nav-galleries")}</>
-    );
-
-    const description = meta.description ? (
-      <p>{escapeHTML(meta.description)}</p>
-    ) : (
-      <></>
-    );
+    const description = meta.description ? <p>{meta.description}</p> : <></>;
 
     return (
       <>
