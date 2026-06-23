@@ -33,7 +33,7 @@ Read at startup from a `.env` file in the **current working directory** (which i
 | Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
 | `SECRET` | ✓ | — | HMAC secret used to sign JWT tokens. The server refuses to start without it. Keep stable per instance; rotating invalidates every existing session. Also signs the one-shot cross-host SSO tokens (#664); multi-instance deploys that want the UserMenu switcher need the **same value** in every sibling instance's `.env`. Access JWTs stay safe across that sharing because they're signed with `${user.secret}${SECRET}` (per-user composite), so a leaked SSO token can't be turned into an access JWT. |
-| `DB_DRIVER` | ✓ | — | `sqlite3` (production) or `dummy` (test fixture). |
+| `DB_DRIVER` | ✓ | — | `sqlite3` (only driver currently shipped). Tests set `DB_OPTS=:memory:` to keep the DB ephemeral; prod points it at a file via `DB_OPTS` or defaults to `./db.sqlite3`. |
 | `PORT` | | `4200` | HTTP port nginx proxies to. One per instance. |
 | `INSTANCE_NAME` | | `photo-diary-server` | pm2 process name when launched via `bin/start-prod.sh`. The converter half is automatically suffixed `-converter`. |
 | `NODE_ENV` | | `prod` | `dev` / `prod` / `test`. Set by the npm scripts; don't override unless you know why. |
@@ -68,7 +68,7 @@ If you need the DB or photo dir on a separate disk, symlink the file (`db.sqlite
   - `npm run dev`
   - `npm run prod`
 - With the variables inlined:
-  - `SECRET=test DB_DRIVER=dummy npm run dev`
+  - `SECRET=test DB_DRIVER=sqlite3 DB_OPTS=:memory: npm run dev`
   - `SECRET=… DB_DRIVER=sqlite3 npm start` (creates `./db.sqlite3` in CWD)
   - `SECRET=… DB_DRIVER=sqlite3 npm run prod`
 
@@ -81,13 +81,13 @@ cd /var/photo-diary/dailybw
 ./bin/<name>.ts [options]   # via the per-instance bin/ symlinks created by instance.ts
 ```
 
-The per-instance `bin/` directory (`<instance>/bin/{photo,photo-rename,photo-geocode,gallery,user,group,meta}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognise them as TS source and apply the server's tsconfig via realpath.
+The per-instance `bin/` directory (`<instance>/bin/{photo,photo-rename,photo-geocode,photo-rerender,gallery,user,group,meta}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognise them as TS source and apply the server's tsconfig via realpath.
 
 #### `instance.ts <name> [--base <dir>] [--fix] [--edit]`
 
 Bootstrap, doctor, or upgrade a Photo Diary instance directory in one command. Default base is `/var/photo-diary`. Mode is auto-detected from existing state:
 
-- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root, and creates the per-instance `bin/{photo,photo-rename,photo-geocode,gallery,user,group,meta}.ts` shortcuts. On a TTY (and unless `--auto` is passed) prompts to create the first admin user via `./bin/user.ts passwd <username>` + `./bin/user.ts make-admin <username>` so the SPA's manage surface is reachable without walking through the printed instructions.
+- **New** — creates the directory tree, generates `.env` with a fresh random `SECRET`, creates a `code` symlink pointing at this script's own code root, and creates the per-instance `bin/{photo,photo-rename,photo-geocode,photo-rerender,gallery,user,group,meta}.ts` shortcuts. On a TTY (and unless `--auto` is passed) prompts to create the first admin user via `./bin/user.ts passwd <username>` + `./bin/user.ts make-admin <username>` so the SPA's manage surface is reachable without walking through the printed instructions.
 - **Doctor** — instance exists, `code` already points at this script's root. Reports missing `.env` keys with `✓`/`✗` markers. Refreshes any missing `bin/` shortcuts. Add `--fix` to append defaults to `.env`. Add `--edit` to walk every configurable `.env` key, show the current value, and prompt for a new one (Enter keeps it) — config-review / tweak pass without re-reading `.env` by hand. `SECRET` is read-only in this mode; rotate it manually only when you intentionally want to invalidate every session.
 - **Upgrade** — `code` points at a different version. Backs up the DB to `db.sqlite3.pre-<new-version>` and flips the symlink. Refreshes `bin/` shortcuts.
 
@@ -153,7 +153,7 @@ Creates or updates a single gallery row. The ID is positional and required; ever
 | `--description <s>` | Long description shown on the gallery list page. |
 | `--epoch <YYYY-MM-DD>` | Anchor date for the gallery (e.g. a birthday for a "day in the life" project). |
 | `--epoch_type <type>` | One of the supported epoch types — see [models/GalleryModel.ts](../react-app/src/models/GalleryModel.ts). |
-| `--theme <name>` | One of `blue`, `red`, `grayscale`, `bw`, `alert` (see [themes.css](../react-app/src/lib/theme.ts)). |
+| `--theme <name>` | Theme key — full list in [react-app/src/lib/theme.ts](../react-app/src/lib/theme.ts) (18 entries across the Coloured / Neutral / Dark / Showcase groups). |
 | `--initial_view <view>` | One of `year`, `month`, `day`, `photo` — where the gallery lands when entered. |
 | `--hostname <regex>` | Hostname regex (e.g. `^travel\.` ) that this gallery should be the default for. Lets a single instance serve multiple vhosts (see the nginx section in the top-level README). Also binds the **virtual-host scope** — requests reaching the server with a `Host` header matching this pattern are narrowed to this gallery (or to the set of galleries, if several match) for both reads and writes. Cross-gallery admin operations (user CRUD, gallery CRUD, instance meta) are unreachable. Off-scope reads collapse to the same empty placeholder shape that a non-existent gallery returns, so the hostname can't enumerate galleries beyond its scope. Instance meta (`GET /meta`) stays unscoped — it's SPA boot data. The SPA filters the breadcrumb dropdown to the matched set and redirects off-scope URLs. Global-admin work happens from the primary host (no `hostname` match). |
 
@@ -212,13 +212,25 @@ Order is recent-first by capture timestamp: visible photos get filled in earlies
 ./bin/photo-geocode.ts --apply --langs en,ja        # chunked backfill, fetch + write
 ```
 
+#### `photo-rerender.ts [scan | generate <maxDim> | prune]`
+
+Manages the `photo_rendition` table — the per-photo, per-size index of rendered display variants. The converter writes the default sizes at intake; `photo-rerender.ts` handles after-the-fact additions (a new size added to `instance_renditions`) and post-rsync cleanups.
+
+| Subcommand | Purpose |
+| --- | --- |
+| `scan` (default) | Walk `photos/display/<maxDim>/*.jpg` on disk and register every file in `photo_rendition`. Use after rsyncing a pre-rendered size up from a faster local box. |
+| `generate <maxDim>` | Server-side render any missing variants at the given size from `photos/original/<id>.jpg`. Skips photos whose original isn't on the server (common for the operator's setup where originals stay offline). |
+| `prune` | Drop `photo_rendition` rows whose backing file is gone. |
+
+Safe to run alongside the server. See [converter/README.md](../converter/README.md) for the rsync flow.
+
 #### `dump-exif.ts` (converter)
 
 Sibling utility in [converter/bin/](../converter/bin/). Prints the raw EXIF for one or more files — useful when debugging "why didn't this photo get processed" or "what tag is the converter looking at." Run via `npm run dumpexif -- <files>` from the converter directory.
 
 #### `start-prod.sh` / `start-dev.sh`
 
-Wrapper scripts that source `.env` from the current working directory, prepend the workspace's `node_modules/.bin` to `PATH`, and start the process under pm2 (prod) or in the foreground (dev). One pair per package — server, converter, and react-app. See the top-level README's Multi-Instance and Dev Mode sections for the invocation patterns.
+Wrapper scripts that source `.env` from the current working directory, prepend the workspace's `node_modules/.bin` to `PATH`, and start the process under pm2 (prod) or in the foreground (dev). The server and converter packages each ship both wrappers; the react-app workspace only has `start-dev.sh` (production frontend is a static build served by nginx, not a long-running process). See the top-level README's Multi-Instance and Dev Mode sections for the invocation patterns.
 
 ## Public API
 
@@ -274,6 +286,7 @@ A bracketed `[unscoped]` suffix means the route is also rejected on hostname-bou
   - `POST` — Login, mint an access + refresh token pair **[any]**
   - `GET` — Verify the current token **[any]**
   - `DELETE` — Logout the current session **[any]**
+  - `POST ../refresh` — Exchange a refresh cookie for a fresh access + refresh pair (rotates the refresh row) **[any]**
   - `DELETE ../:userId` — Force-logout every session for a user **[admin]**
   - `POST ../cross-host` — Mint a one-shot SSO token bound to a target hostname, for the UserMenu host switcher **[user]**
   - `GET ../sso` — Consume an SSO token on the target host, set normal auth cookies, 302 to the in-app path **[any]**
@@ -312,7 +325,7 @@ A bracketed `[unscoped]` suffix means the route is also rejected on hostname-bou
 - `/photos`
   - `GET` — Cross-gallery photo list (paginated, filterable) **[admin]**
   - `POST ../query` — Cross-gallery filtered fetch (same body shape as the gallery-scoped flavour) **[admin]**
-  - `GET ../:photoId` — Read a single photo **[gallery/view]** on any gallery it's linked to (orphans require **[admin]**)
+  - `GET ../:photoId` — Read a single photo **[gallery/editor]** on any gallery it's linked to (orphans **[admin]**) — admin/edit-tier because the response carries write-context fields the view tier doesn't see
   - `PUT ../:photoId` — Update photo data (title, location, exposure, …) **[gallery/editor]** on any gallery it's linked to (orphans **[admin]**)
   - `POST ../:photoId/regeocode` — Clear `geocoded_*` columns and drop a coord sidecar for the converter daemon **[gallery/editor]** on any of the photo's galleries
   - `POST ../by-ids` — Batch fetch (cap 500), out-of-scope ids silently dropped **[user]**
@@ -321,6 +334,9 @@ A bracketed `[unscoped]` suffix means the route is also rejected on hostname-bou
   - `DELETE ../:photoId` — Delete a photo row **[admin]**
 - `/stats` **[unscoped]**
   - `POST` — Cross-gallery aggregated stats; admin-only **[admin]**
+  - `POST ../evolution` — Cross-gallery time-series for a trendable category; admin-only **[admin]**
+- `/operations` **[unscoped]**
+  - `GET` — Recent converter / operator-script activity, pending-queue counts, recent failures (powers `/m/operations`) **[admin]**
 - `/filter-values` **[unscoped]**
   - `POST` — Cross-gallery filter widget universe + counts; admin-only **[admin]**
 
@@ -332,4 +348,4 @@ Wire shapes are generated from TypeBox-validated route handlers. See [server/ope
 
 ## Internal API
 
-The DB layer abstracts over driver implementations (`server/db/sqlite3/`, `server/db/dummy/`). The public surface is the union of methods exported from [server/db/index.ts](db/index.ts) — those are the calls models invoke. Driver internals (SQL, prepared statements, helper functions like `applyBaseline` for saved-filter galleries) live inside each driver subdirectory.
+The DB layer abstracts over driver implementations under `server/db/`. Only `sqlite3` is shipped today; the public surface is the union of methods exported from [server/db/index.ts](db/index.ts), and adding a second driver (e.g. Postgres, planned for 2.0) means satisfying that interface. Driver internals (SQL, prepared statements, helper functions like `applyBaseline` for saved-filter galleries) live inside the driver subdirectory.

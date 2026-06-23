@@ -16,11 +16,11 @@ The photo repository lives at a fixed path: `<cwd>/photos/`, where `<cwd>` is th
   - `thumbnail/` – Thumbnails are generated here.
   - `display/<maxDim>/` – One subdirectory per configured rendition size, auto-created on first intake.
 
-Operator scripts:
+Operator scripts (live under `server/bin/`, exposed per-instance as `<instance>/bin/photo-rerender.ts`):
 
-- `bin/photo-rerender.ts` (default `scan` mode) — register every `photos/display/<maxDim>/*.jpg` file in `photo_rendition`. The intended flow: render a larger variant locally, rsync `display/<maxDim>/` up, run the script.
-- `bin/photo-rerender.ts generate <maxDim>` — server-side render missing variants at the given size from `photos/original/<id>.jpg`. Skips photos whose original isn't on the server.
-- `bin/photo-rerender.ts prune` — drop `photo_rendition` rows whose file is gone.
+- `photo-rerender.ts` (default `scan` mode) — register every `photos/display/<maxDim>/*.jpg` file in `photo_rendition`. The intended flow: render a larger variant locally, rsync `display/<maxDim>/` up, run the script.
+- `photo-rerender.ts generate <maxDim>` — server-side render missing variants at the given size from `photos/original/<id>.jpg`. Skips photos whose original isn't on the server.
+- `photo-rerender.ts prune` — drop `photo_rendition` rows whose file is gone.
 
 If the photo repository lives on a different disk, symlink the `photos/` subdirectory (or the whole instance dir).
 
