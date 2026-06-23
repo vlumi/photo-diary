@@ -315,6 +315,14 @@ describe("Mutations as admin", () => {
       .send({ id: "freshuser", password: "freshpass" })
       .expect(200);
   });
+  test("Create with duplicate id → 409 with friendly message", async () => {
+    const res = await api
+      .post("/api/v1/users")
+      .set("Cookie", `pd_access=${token}`)
+      .send({ id: "admin", password: "x" })
+      .expect(409);
+    expect(res.body.error).toMatch(/admin.*already exists/i);
+  });
   test("Update user password (admin reset)", async () => {
     await api
       .put("/api/v1/users/plainuser")
