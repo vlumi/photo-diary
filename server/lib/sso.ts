@@ -1,4 +1,4 @@
-// Cross-host SSO mint + verify for the virtual-host switcher (#664).
+// Cross-host SSO mint + verify for the virtual-host switcher.
 //
 // Flow: the operator clicks a host in the UserMenu on host A. The
 // SPA hits POST /api/v1/tokens/cross-host (host A); the controller

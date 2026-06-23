@@ -200,7 +200,7 @@ const Title = ({
   const navigate = useNavigate();
   // MapModal open state lives in a Zustand store so the modal
   // survives URL-driven Title remounts during prev/next month and
-  // year nav (#321). Auto-closers below (gallery switch, context
+  // year nav. Auto-closers below (gallery switch, context
   // flip) call `closeMap()` explicitly; Photo-modal mount triggers
   // it from Gallery/index.tsx.
   const mapOpen = useTitleMapModalStore((s) => s.isOpen);

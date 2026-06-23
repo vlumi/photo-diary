@@ -87,7 +87,7 @@ export interface StatsCategory {
   kind?: "location";
   // `kind: "location"` carries its photo subset + counts; the modal
   // renders the map from these. `photos` is empty until the user
-  // requests it via `onRequestPhotos` (#532) — the inline card shows
+  // requests it via `onRequestPhotos` — the inline card shows
   // `geotaggedCount` from the stats response so no /query fires until
   // the modal opens. `onClosePhotos` fires when the user dismisses
   // the modal, letting the parent disable the query so subsequent
@@ -404,7 +404,7 @@ const collectTopics = (
               backgroundColor: colors,
               // Hairline in --primary-color keeps every band visible
               // even when its fill happens to land near the chart
-              // background (#590 — gradient endpoints can otherwise
+              // background ( — gradient endpoints can otherwise
               // blend into white / off-white surrounds on neutral
               // themes).
               borderColor: theme.get("primary-color"),
@@ -823,7 +823,7 @@ const collectTopics = (
         );
       }
       // Location card surfaces whenever the server reports any
-      // geotagged photos; the photo list itself is lazy (#532) —
+      // geotagged photos; the photo list itself is lazy —
       // the inline card shows the count, the MapModal fetches
       // pins on open via `onRequestPhotos`.
       const geotaggedCount = count.geotaggedCount ?? 0;
@@ -860,7 +860,7 @@ const collectTopics = (
             label: entry.key,
             backgroundColor: colorGradients[i],
             // Hairline in --primary-color keeps the band edge visible
-            // when the fill lands near the chart background (#590).
+            // when the fill lands near the chart background.
             borderColor: theme.get("primary-color"),
             borderWidth: 0.5,
             // Suppress the per-month point markers — they read as

@@ -312,7 +312,7 @@ const Photo = ({
   // (current photo) is centred in the viewport. Sliding right exposes
   // slot 0 (prev); sliding left exposes slot 2 (next).
   //
-  // Neighbors fetched per-photo from the server (#406) so the
+  // Neighbors fetched per-photo from the server so the
   // adjacency respects the active filter. `keepPreviousData`
   // holds the previous neighbors object while a navigation
   // refetch is in flight — animated slide-out lands on real

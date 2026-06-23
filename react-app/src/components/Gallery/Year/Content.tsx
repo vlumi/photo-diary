@@ -51,7 +51,7 @@ const Content = ({
     () => filter.toServerFilters(filters),
     [filters]
   );
-  // Per-day counts fetched from the server (#406). `keepPreviousData`
+  // Per-day counts fetched from the server. `keepPreviousData`
   // keeps the heatmap painted while a year / filter change refetches —
   // a chip toggle gets an in-place update, not a loader flash.
   const { data: counts = EMPTY_COUNTS } = useQuery({

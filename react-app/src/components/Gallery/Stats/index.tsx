@@ -47,7 +47,7 @@ interface Props {
   globalScope?: boolean;
   // Required for globalScope (legacy photo-walking path until the
   // global flavour migrates). For gallery-scoped, optional — the
-  // map fetch goes via /query against the gallery instead (#532).
+  // map fetch goes via /query against the gallery instead.
   photos?: Photo[];
   // For globalScope: parent owns the photos fetch (lazy-loaded). Stats
   // calls these when the user opens / dismisses the MapModal so the
@@ -130,7 +130,7 @@ const Stats = ({
     [serverStats]
   );
 
-  // Map photos: lazy-fetch (#532). The Stats grid renders the
+  // Map photos: lazy-fetch. The Stats grid renders the
   // Location card with a count from the server's geotaggedCount;
   // /query is enabled only while the MapModal is actually open, so
   // closed-modal filter changes don't refetch. Cached data persists

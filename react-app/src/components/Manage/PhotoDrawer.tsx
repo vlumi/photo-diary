@@ -493,7 +493,7 @@ interface PhotoData {
     // otherwise.
     noData?: boolean;
   };
-  // EXIF snapshot captured at converter intake (#416). Undefined on
+  // EXIF snapshot captured at converter intake. Undefined on
   // rows that pre-date migration 014. Drives the per-field revert
   // affordance and the "no backup" gate on EXIF-derived inputs.
   exifAtIntake?: {
@@ -521,10 +521,10 @@ interface PhotoData {
   // `getPhoto` / `listPhotos` so the drawer can render jump-link
   // chips into `/g/<gallery>/<photoId>` or `/m/galleries/<id>`.
   galleries?: string[];
-  // Photo-level visibility (#480) — flipped by the privacy switch
+  // Photo-level visibility — flipped by the privacy switch
   // in this drawer; surfaces the badge on the public Photo modal.
   isPrivate?: boolean;
-  // Display ladder per #615 — array of maxDim values the converter
+  // Display ladder — array of maxDim values the converter
   // (and bin/photo-rerender.ts) registered for this photo.
   renditions?: number[];
 }
@@ -938,7 +938,7 @@ const PhotoDrawer = ({
     // photo's row is opened — the parent grid stays put thanks to
     // keepPreviousData on `manage-photos`, and the drawer mirroring
     // that keeps the transition smooth instead of flashing "loading"
-    // mid-swap (#574).
+    // mid-swap.
     placeholderData: keepPreviousData,
   });
 
@@ -1002,7 +1002,7 @@ const PhotoDrawer = ({
     );
   };
   // Per-photo unlock toggle for EXIF-derived fields when the photo
-  // has no `exifAtIntake` blob (#416). Resets when the open photo
+  // has no `exifAtIntake` blob. Resets when the open photo
   // changes — the operator must consciously re-acknowledge "no
   // backup" on each row.
   const [unlocked, setUnlocked] = React.useState(false);

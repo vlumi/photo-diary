@@ -177,7 +177,7 @@ const IconCropper = ({
   React.useEffect(() => {
     // Capture-phase + stopImmediatePropagation so closing the
     // crop modal doesn't also trigger the Manage shell's Esc-up
-    // navigation (#612).
+    // navigation.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (busy) return;

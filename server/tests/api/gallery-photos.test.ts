@@ -719,7 +719,7 @@ describe("As publicuser", () => {
 });
 
 
-// New filtered + scoped query endpoint (#406) — drives the
+// New filtered + scoped query endpoint — drives the
 // per-view fetch the public gallery viewer migrates to.
 describe("POST /:galleryId/query (filtered + scoped fetch)", () => {
   const postQuery = (

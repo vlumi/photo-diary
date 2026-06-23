@@ -19,7 +19,7 @@ export interface DateRange {
 export const isBoundedDateRange = (range: DateRange | undefined): boolean =>
   !!range && (!!range.from || !!range.to);
 
-// Numeric range filter sibling of `filters` / `dateRange` (#264).
+// Numeric range filter sibling of `filters` / `dateRange`.
 // Keyed by kebab-case category name (focal-length / aperture /
 // exposure-time / iso / ev / lv); each entry carries half-open
 // `{min?, max?}` bounds. `anchor` is a UI-only hint that marks

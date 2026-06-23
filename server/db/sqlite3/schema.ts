@@ -73,7 +73,7 @@ export interface GalleryRow {
   // path) or 'en' as the column default.
   default_language: string;
   type: GalleryType;
-  // Operator-curated sort index (#585). Drives the primary sort
+  // Operator-curated sort index. Drives the primary sort
   // for `loadGalleries`; id is the tiebreak. Untouched rows
   // (all-zero) preserve the id-ASC order they had before.
   ordinal: number;
@@ -181,7 +181,7 @@ export interface Gallery {
   // Discriminates how the gallery's photos are resolved at read
   // time. See `GalleryType`.
   type: GalleryType;
-  // Operator-curated sort index (#585). 0 by default; lower comes
+  // Operator-curated sort index. 0 by default; lower comes
   // first. Tiebreak is gallery id ASC.
   ordinal: number;
   // Hybrid galleries only: source gallery IDs whose photos union
@@ -979,7 +979,7 @@ const SCHEMA = {
       "ordinal",
     ],
     primaryKey: ["id"],
-    // Operator-curated sort (#585) — `ordinal` is the primary key
+    // Operator-curated sort — `ordinal` is the primary key
     // and `id` the tiebreak so all-zero (untouched) rows preserve
     // their previous id-ASC order.
     order: ["ordinal ASC", "id ASC"],

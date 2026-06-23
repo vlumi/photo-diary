@@ -73,9 +73,9 @@ export const app = Fastify({
 // Replace Fastify's default Ajv-based validator with TypeBox's own
 // Compile/Check. TypeBox emits the same JSON Schema TypeBox-typed
 // routes are authored against, validates with no `coerceTypes` —
-// what the schema says is what the handler sees. Avoids the class
-// of bug fixed locally in #570 (`null` against `Type.Union([X,
-// Null])` coerced to the non-null branch's default). Closes #571.
+// what the schema says is what the handler sees. Avoids Ajv's
+// silent coercion of `null` against `Type.Union([X, Null])` to the
+// non-null branch's default value.
 app.setValidatorCompiler(TypeBoxValidatorCompiler);
 
 const STATIC_DIR =

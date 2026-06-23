@@ -58,7 +58,7 @@ const CloseButton = styled.button`
   }
 `;
 
-// Theme picker as a dedicated modal opened from the UserMenu (#576).
+// Theme picker as a dedicated modal opened from the UserMenu.
 // Owns the hover-preview state: open syncs `committedTheme` from the
 // store; hovering a swatch live-previews via `setPreference`; clicking
 // commits both; closing without a click reverts the preview. Same

@@ -591,7 +591,7 @@ const loadAllGallerySavedFilters = (): Map<string, GallerySavedFilterRow> => {
 
 // Virtual galleries: sibling `virtual_gallery_source` junction
 // table holds one row per (virtual, source) pair, ordered by
-// `ordinal` to preserve the operator's input order (#22). A
+// `ordinal` to preserve the operator's input order. A
 // gallery is virtual iff it has at least one row here. Loaders
 // below decorate the base Gallery row with `sources` when present.
 const loadAllVirtualGalleries = (): Map<string, string[]> => {
@@ -631,8 +631,8 @@ const isVirtualGallery = async (galleryId: string): Promise<boolean> => {
 // True iff some virtual gallery references this id as a source.
 // Used to block "convert a real gallery to virtual" when it's
 // already in another virtual's source list, preserving the
-// "real galleries only as sources" invariant from #22's design
-// decision #4.
+// "virtuals source only real galleries" invariant (no chained
+// virtuals).
 const isReferencedAsSource = async (galleryId: string): Promise<boolean> => {
   const row = db
     .prepare(
@@ -706,7 +706,7 @@ const deleteVirtualGallery = async (galleryId: string): Promise<void> => {
   tx(galleryId);
 };
 
-// Saved filters live as galleries of `type='saved_filter'` (#285).
+// Saved filters live as galleries of `type='saved_filter'`.
 // The saved-filter id IS the gallery id. Title / description /
 // localized maps come from the gallery row + gallery_localized;
 // source + definition come from the side table gallery_saved_filter.
@@ -1025,7 +1025,7 @@ const upsertGalleryLocalizedFields = (
 const deleteGallery = async (galleryId: string) =>
   deleteById(SCHEMA.gallery, galleryId);
 
-// Apply an operator-curated gallery order (#585). Caller has
+// Apply an operator-curated gallery order. Caller has
 // already validated that `ids` covers exactly the gallery id set,
 // so this just stamps each row's ordinal by position. Single
 // transaction so a half-applied reorder can't leak.
@@ -1047,7 +1047,7 @@ const loadGalleryPhotos = async (
   const schema = SCHEMA.photo;
   const ref = resolveGalleryRef(galleryId);
   if (ref.sources.length === 0) return [];
-  // Hybrid galleries (#22) widen the gallery_id check from `= ?`
+  // Hybrid galleries widen the gallery_id check from `= ?`
   // to `IN (?, ?, …)`. Real galleries resolve to `[galleryId]`,
   // producing the same single-id IN-clause. Saved-filter galleries
   // resolve to `[source_gallery_id]` + a baseline applied below in
@@ -1248,7 +1248,7 @@ const queryFilteredPhotoNeighbors = async (
 };
 
 // Filter pill universe + city localized-label map for a gallery
-// (#534). Loads the gallery's photos and projects per-category
+//. Loads the gallery's photos and projects per-category
 // distinct values via the shared `buildCategoryValues`, then maps
 // stats's camelCase category names to the kebab-case shape the
 // FilterShape wire format + the client filter UI both use. Adds
@@ -1280,9 +1280,9 @@ const isGeotagged = (photo: Photo): boolean => {
 };
 // Shared projection from the photo set into the kebab-case
 // FilterShape universe. Used by both the gallery-scoped
-// `queryGalleryFilterValues` (#534) and the global cross-gallery
-// flavour (followup to #532). Photos array is already filtered to
-// the appropriate scope by the caller.
+// `queryGalleryFilterValues` and the global cross-gallery flavour.
+// Photos array is already filtered to the appropriate scope by the
+// caller.
 //
 // `filter` + `dateRange` drive a single-pass facet for counts —
 // `categoryValues` stays the unfiltered universe (so search can

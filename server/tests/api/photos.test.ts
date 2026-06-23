@@ -261,10 +261,10 @@ describe("As gallery1admin", () => {
   });
 
   // /photos (list) stays admin-only. /photos/:id opens to editors
-  // on at least one of the photo's galleries post-#575 — same gate
-  // as PUT, so the public Photo modal's "Manage this photo" button
-  // can land the editor on the drawer without going through the
-  // cross-gallery grid.
+  // on at least one of the photo's galleries — same gate as PUT, so
+  // the public Photo modal's "Manage this photo" button can land
+  // the editor on the drawer without going through the cross-gallery
+  // grid.
   test("List photos", async () => {
     await getPhotos(token, 403);
   });
@@ -327,9 +327,8 @@ describe("As plainuser", () => {
     token = await loginUser(api, "plainuser");
   });
 
-  // plainuser previously had `:all VIEW`, granting access to the
-  // cross-gallery `/photos` endpoints. Under #394 these are admin-only;
-  // plainuser's per-gallery grants don't reach them.
+  // The cross-gallery /photos endpoints are admin-only; plainuser's
+  // per-gallery grants don't reach them.
   test("List photos", async () => {
     await getPhotos(token, 403);
   });
@@ -561,7 +560,7 @@ describe("Mutations as admin", () => {
       .set("Cookie", `pd_access=${token}`)
       .send({ exposure: { iso: 100 } })
       .expect(204));
-  test("Update with changed coords clears stale geocoded columns (#415)", async () => {
+  test("Update with changed coords clears stale geocoded columns", async () => {
     // Seed geocoded data, then PUT new coords. Expect the geocoded
     // payload to be wiped (handed off to the converter via the
     // inbox sidecar; tests don't write actual files since the

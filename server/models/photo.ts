@@ -41,7 +41,7 @@ const getPhotos = async () => {
 
 // Cross-gallery filtered photo list. Drives the GlobalStats map's
 // lazy fetch — filter applied server-side via the FilterShape
-// evaluator (#534), no pagination since the consumer wants the full
+// evaluator, no pagination since the consumer wants the full
 // match set for the map pins. Symmetric with the per-gallery
 // `gallery-photo.queryGalleryPhotos`.
 const queryFilteredGlobal = async (
@@ -60,13 +60,13 @@ const queryFilteredGlobal = async (
 
 // Filtered + paginated list. Loads every row and applies predicates in
 // memory — fine at current catalogue sizes; SQL-side optimisation is
-// deferred (#286 / #406).
+// deferred.
 export interface ListOptions {
   filter?: PhotoFilter;
   page?: number;
   pageSize?: number;
   // Additional id allow-list applied alongside the filter. The
-  // virtual-host scope (#386) passes its in-scope photo set here so
+  // virtual-host scope passes its in-scope photo set here so
   // pagination still produces a correctly-sized window.
   restrictToIds?: Set<string>;
   // When set, the response page is the one containing this photo

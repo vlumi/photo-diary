@@ -34,7 +34,7 @@ export interface GalleryUpdatePatch {
   theme?: Theme;
   initialView?: InitialView;
   hostname?: string;
-  // Hybrid gallery sources (#22 / #568). Non-empty stamps the
+  // Hybrid gallery sources. Non-empty stamps the
   // gallery as `type='hybrid'`; an empty array reverts to `'real'`.
   // Each entry is a source gallery id; the model layer enforces
   // "must be a real gallery" and "no self-reference".
@@ -104,7 +104,7 @@ const setIcon = async (
     })
   ) as Promise<{ icon: string }>;
 
-// Apply operator-curated gallery order (#585). `ids` must cover
+// Apply operator-curated gallery order. `ids` must cover
 // every current gallery exactly once — server rejects partial lists
 // with 422 so callers don't accidentally strand untouched galleries
 // at ordinal 0.

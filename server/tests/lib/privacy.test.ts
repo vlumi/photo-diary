@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 
-// Tests the post-#270 hide_map cascade against a fresh in-memory
-// SQLite, bypassing the dummy driver. Resolution order:
+// Tests the hide_map cascade against a fresh in-memory SQLite.
+// Resolution order:
 //
 //   1. user.is_admin = true                       → 0 (show, bypass)
 //   2. user-row hide_map (non-null)               → use it

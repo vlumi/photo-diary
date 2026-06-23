@@ -94,7 +94,7 @@ const Content = ({
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
 
-  // Per-view fetch (#406): server returns the month's photos
+  // Per-view fetch: server returns the month's photos
   // already filter-narrowed, so we group them by day client-side
   // and skip the in-memory gallery.photos walk.
   const filters = useFiltersStore((s) => s.filters);

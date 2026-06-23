@@ -19,7 +19,7 @@ interface QueryOpts {
   day?: number;
   lang?: string;
 }
-// Per-view + filtered fetch (#406). Backs the view-scoped photo
+// Per-view + filtered fetch. Backs the view-scoped photo
 // list for Month / Day; same wire shape as the unfiltered `get`.
 const query = async (galleryId: string, opts: QueryOpts = {}) =>
   unwrap(
@@ -29,7 +29,7 @@ const query = async (galleryId: string, opts: QueryOpts = {}) =>
     })
   );
 
-// Per-day photo counts for the Year heatmap (#406).
+// Per-day photo counts for the Year heatmap.
 const getCounts = async (
   galleryId: string,
   opts: {
@@ -47,10 +47,10 @@ const getCounts = async (
   );
 
 // Prev / next / first / last photos within the filtered set —
-// drives the Photo modal's carousel + keyboard nav (#406). `signal`
+// drives the Photo modal's carousel + keyboard nav. `signal`
 // lets TanStack's per-query AbortController cancel in-flight
 // requests when the user blasts through prev/next faster than the
-// network responds (#577).
+// network responds.
 const getNeighbors = async (
   galleryId: string,
   photoId: string,
@@ -70,7 +70,7 @@ const getNeighbors = async (
     })
   );
 
-// Filter pill universe (#532). Returns categoryValues + city
+// Filter pill universe. Returns categoryValues + city
 // localized-label map; shares the stats cache server-side, so a
 // warm cache costs nothing extra. Lets the gallery viewer skip the
 // full unfiltered photo fetch it previously did just to derive
@@ -93,8 +93,7 @@ const getFilterValues = async (
   );
 
 // One photo by id within a gallery context. Drives the Photo modal
-// mount under #532 phase 2 — replaces the in-memory `gallery.photo
-// (...)` lookup that needed the gallery's full photo array.
+// mount.
 const getOne = async (
   galleryId: string,
   photoId: string,

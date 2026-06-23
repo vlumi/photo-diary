@@ -322,7 +322,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mint a one-shot SSO token for a sibling host (#664) */
+        /** Mint a one-shot SSO token for a sibling host */
         post: {
             parameters: {
                 query?: never;
@@ -365,7 +365,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Consume a cross-host SSO token + redirect (#664) */
+        /** Consume a cross-host SSO token + redirect */
         get: {
             parameters: {
                 query: {

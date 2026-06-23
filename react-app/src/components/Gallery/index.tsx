@@ -114,7 +114,7 @@ const Gallery = ({
     };
   }, [location, setScroll]);
 
-  // Photo modal mount auto-closes the title-bar map (#321) — both
+  // Photo modal mount auto-closes the title-bar map — both
   // can't compete for the screen, and the photo's own
   // MetadataPanel map is a separate, pin-centric component anyway.
   const closeTitleMap = useTitleMapModalStore((s) => s.close);
@@ -179,7 +179,7 @@ const Gallery = ({
     enabled: galleryInList,
     placeholderData: keepPreviousData,
   });
-  // Unfiltered gallery shape (#532): drives lastPath in the gallery
+  // Unfiltered gallery shape: drives lastPath in the gallery
   // list, the "no photos" check below, and the calendar boundary
   // helpers that don't change with the active filter. Off /counts.
   const galleryCalendar = useGalleryCalendar(galleryId ?? "");
@@ -201,11 +201,10 @@ const Gallery = ({
     if (!from && !to) return undefined;
     return { from, to };
   }, [galleryCalendar]);
-  // Modal photo lookup (#532 phase 2). Resolves the `photoId` URL
-  // param to its metadata via the per-id endpoint; on 404, falls
-  // back to the originalFilename endpoint (pre-rename / camera-
-  // filename bookmarks). Both run as separate queries so the
-  // common case pays for one round trip, not two.
+  // Resolves the `photoId` URL param to its metadata via the per-id
+  // endpoint; on 404, falls back to the originalFilename endpoint
+  // (pre-rename / camera-filename bookmarks). Both run as separate
+  // queries so the common case pays for one round trip, not two.
   const photoByIdQuery = useQuery({
     queryKey: ["gallery-photo-by-id", galleryId, photoId, lang],
     queryFn: ({ signal }) =>
@@ -261,9 +260,9 @@ const Gallery = ({
     return buildUniqueValues(filterValues, lang, t, countryData);
   }, [filterValues, lang, t, countryData]);
 
-  // No more `withPhotos`: the gallery model is metadata-only after
-  // #532. Calendar shape comes from `useGalleryCalendar`; the modal's
-  // current photo + neighbors come from their own queries.
+  // The gallery model is metadata-only — calendar shape comes from
+  // `useGalleryCalendar`, the modal's current photo + neighbors from
+  // their own queries.
   const gallery = selectedGallery;
 
   // Load the persisted user preference once, against the current

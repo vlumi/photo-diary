@@ -4,7 +4,7 @@ import styled from "@emotion/styled";
 import { useIsFetching } from "@tanstack/react-query";
 
 // Top-of-viewport progress bar shown while any TanStack Query is
-// fetching. Pairs with the `keepPreviousData` sweep (#574) — the
+// fetching. Pairs with the `keepPreviousData` sweep — the
 // page no longer unmounts to a loader, but the operator still
 // wants feedback that a refetch is in flight after a chip toggle
 // or drawer open. 2px bar slides a gradient horizontally; hides

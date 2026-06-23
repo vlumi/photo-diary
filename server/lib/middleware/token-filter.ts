@@ -7,10 +7,8 @@ import logger from "../logger.js";
 
 const tokensModel = tokenFactory();
 
-// Cookie-only since #650 (the bearer-header fallback was a transition
-// affordance for cached pre-cookie SPA bundles). New tests set the
-// `pd_access` cookie via supertest; the SPA writes it via the
-// HttpOnly cookies issued at login.
+// Cookie-only auth. Tests set the `pd_access` cookie via supertest;
+// the SPA writes it via the HttpOnly cookies issued at login.
 const getToken = (request: FastifyRequest): string | undefined => {
   return request.cookies?.pd_access;
 };

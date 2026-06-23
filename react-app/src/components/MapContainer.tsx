@@ -55,7 +55,7 @@ const PopupLink = styled(Link)`
 // --primary-color + --header-color, plus a 2px --header-color
 // border so the cluster stays distinct against whatever the tile
 // layer paints behind it. The bucket-size colour coding is gone;
-// the inline count + cluster size still signal magnitude (#590).
+// the inline count + cluster size still signal magnitude.
 const mapClusterStyles = css`
   .marker-cluster {
     background-clip: padding-box;
@@ -100,7 +100,7 @@ const getPolyline = (positions: LatLngExpression[]) => {
 //
 //   - MetadataPanel pins to a single photo's coords; navigating
 //     between photos changes `singlePoint` and we re-`setView`.
-//   - Title-bar MapModal (#321) stays open across year/month nav.
+//   - Title-bar MapModal stays open across year/month nav.
 //     `boundsLatLngs` covers the new scope's pin set and we call
 //     `fitBounds` to refit.
 //
@@ -233,7 +233,7 @@ interface Props {
   height?: number;
   maxZoom?: number;
   drawLine?: boolean;
-  // Show the "Locate me" overlay button (#545). Defaults off — only
+  // Show the "Locate me" overlay button. Defaults off — only
   // surfaces on MapModal, not on per-photo metadata-panel maps.
   showLocate?: boolean;
   // When set, each marker popup links to that gallery's photo view

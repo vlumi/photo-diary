@@ -151,7 +151,7 @@ const CountrySelect = ({
     };
     // Capture-phase + stopImmediatePropagation so the dropdown
     // intercepts Esc before the Manage shell's Esc-up handler
-    // (#612) navigates the user out of /m/users/<id>/etc. when
+    // navigates the user out of /m/users/<id>/etc. when
     // they were just trying to close this dropdown.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;

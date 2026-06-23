@@ -387,7 +387,7 @@
     },
     "/api/v1/tokens/cross-host": {
       "post": {
-        "summary": "Mint a one-shot SSO token for a sibling host (#664)",
+        "summary": "Mint a one-shot SSO token for a sibling host",
         "tags": [
           "tokens"
         ],
@@ -442,7 +442,7 @@
     },
     "/api/v1/tokens/sso": {
       "get": {
-        "summary": "Consume a cross-host SSO token + redirect (#664)",
+        "summary": "Consume a cross-host SSO token + redirect",
         "tags": [
           "tokens"
         ],

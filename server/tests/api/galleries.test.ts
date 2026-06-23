@@ -108,7 +108,7 @@ describe("As blocked user", () => {
 
   test("List galleries", async () => {
     // blockeduser has no user_gallery rows. Falls through to :guest's
-    // grants under the post-#394 model — :guest sees gallery3.
+    // grants — :guest sees gallery3.
     const result = await getGalleries(token);
     expect(result.body.length).toBe(1);
   });
@@ -192,7 +192,8 @@ describe("As publicuser", () => {
     await expectGalleryUnavailable(token, ":all");
   });
   test("Get :public", async () => {
-    // :public is no longer ACL-accessible for non-admins under #394.
+    // :public is no longer ACL-accessible for non-admins (the wildcard
+    // pseudo-gallery was retired in migration 012).
     await expectGalleryUnavailable(token, ":public");
   });
   test("Get invalid", async () => {
@@ -640,7 +641,7 @@ describe("Mutations as admin", () => {
 });
 
 
-// Virtual galleries (#22): live-resolved unions of source galleries.
+// Virtual galleries: live-resolved unions of source galleries.
 describe("Virtual galleries", () => {
   let token: string;
   beforeAll(async () => {

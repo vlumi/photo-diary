@@ -241,7 +241,7 @@ export default {
     await db.deleteGallery(galleryId);
   },
 
-  // Virtual gallery (#22) plumbing.
+  // Virtual gallery plumbing.
   upsertVirtualGallery: async (
     galleryId: string,
     sources: string[]
@@ -258,7 +258,7 @@ export default {
     return (await db.isReferencedAsSource(galleryId)) as boolean;
   },
 
-  // Saved filters (#285): pseudo-galleries of type='saved_filter'
+  // Saved filters: pseudo-galleries of type='saved_filter'
   // anchored to a source gallery + a stored baseline. `sourceGalleryId`
   // identifies which gallery owns the saved filter for listing /
   // routing purposes; the saved filter's own id is a gallery id in

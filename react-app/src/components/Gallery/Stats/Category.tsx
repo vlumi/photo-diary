@@ -230,7 +230,7 @@ const Category = ({
   const hasSummaryExtras = !!category.summaryExtras;
   const isLocation = category.kind === "location";
   const hasExpandableContent = hasTable || hasSummaryExtras || isLocation;
-  // Location category lazy-fetches its photo list (#532): the
+  // Location category lazy-fetches its photo list: the
   // inline card shows the count from /stats; the MapModal triggers
   // the /query fetch via the parent's onRequestPhotos callback when
   // it opens, and onClosePhotos when it dismisses — the parent can
