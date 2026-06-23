@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import bcrypt from "bcrypt";
 
 import { SALT_ROUNDS } from "../lib/bcrypt-rounds.js";
-import { ValidationError } from "../lib/errors.js";
+import { ConflictError, NotFoundError, ValidationError } from "../lib/errors.js";
 import { assertSlugId } from "../lib/id-shape.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
@@ -35,6 +35,12 @@ const createUser = async (user: {
 }) => {
   assertSlugId(user.id);
   logger.debug("Creating user", { id: user.id, isAdmin: !!user.isAdmin });
+  try {
+    await db.loadUser(user.id);
+    throw new ConflictError(`User "${user.id}" already exists`);
+  } catch (err) {
+    if (!(err instanceof NotFoundError)) throw err;
+  }
   const password = await bcrypt.hash(user.password, SALT_ROUNDS);
   await db.createUser({
     id: user.id,

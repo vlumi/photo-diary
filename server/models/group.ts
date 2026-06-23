@@ -1,3 +1,4 @@
+import { ConflictError, NotFoundError } from "../lib/errors.js";
 import { assertSlugId } from "../lib/id-shape.js";
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
@@ -28,6 +29,12 @@ const createGroup = async (group: {
 }) => {
   assertSlugId(group.id);
   logger.debug("Creating group", { id: group.id });
+  try {
+    await db.loadGroup(group.id);
+    throw new ConflictError(`Group "${group.id}" already exists`);
+  } catch (err) {
+    if (!(err instanceof NotFoundError)) throw err;
+  }
   await db.createGroup({
     id: group.id,
     name: group.name ?? group.id,

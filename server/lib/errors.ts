@@ -81,6 +81,16 @@ export class ValidationError extends AppError {
   }
 }
 
+export class ConflictError extends AppError {
+  override status = 409;
+  constructor(
+    message = "Resource already exists",
+    context?: Record<string, unknown>
+  ) {
+    super(message, context);
+  }
+}
+
 export class NotImplementedError extends AppError {
   override status = 501;
   constructor(message = "Not implemented", context?: Record<string, unknown>) {

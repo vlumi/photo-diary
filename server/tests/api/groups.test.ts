@@ -57,6 +57,21 @@ describe("As admin", () => {
       .expect(400);
   });
 
+  test("Create with duplicate id → 409 with friendly message", async () => {
+    const auth = await adminToken();
+    await api
+      .post("/api/v1/groups")
+      .set("Cookie", auth)
+      .send({ id: "family" })
+      .expect(201);
+    const res = await api
+      .post("/api/v1/groups")
+      .set("Cookie", auth)
+      .send({ id: "family" })
+      .expect(409);
+    expect(res.body.error).toMatch(/family.*already exists/i);
+  });
+
   test("Update and delete", async () => {
     const auth = await adminToken();
     await api

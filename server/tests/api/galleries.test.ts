@@ -559,6 +559,14 @@ describe("Mutations as admin", () => {
       true
     );
   });
+  test("Create with duplicate id → 409 with friendly message", async () => {
+    const res = await api
+      .post("/api/v1/galleries")
+      .set("Cookie", `pd_access=${token}`)
+      .send({ id: "gallery1", title: "Dup" })
+      .expect(409);
+    expect(res.body.error).toMatch(/gallery1.*already exists/i);
+  });
   test("Update gallery", () =>
     api
       .put("/api/v1/galleries/gallery1")

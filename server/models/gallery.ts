@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
-import { NotFoundError, ValidationError } from "../lib/errors.js";
+import { ConflictError, NotFoundError, ValidationError } from "../lib/errors.js";
 import {
   removeGalleryIcon,
   writeGalleryIcon,
@@ -104,6 +104,15 @@ const applyVirtualSources = async (
 const createGallery = async (gallery: { id: string } & Record<string, any>) => {
   assertSlugId(gallery.id);
   logger.debug("Creating gallery", { id: gallery.id });
+  // db.loadGallery throws NotFoundError when the row is missing; that's
+  // the success path here. Anything else (e.g. the row resolved) means
+  // the id is taken.
+  try {
+    await db.loadGallery(gallery.id);
+    throw new ConflictError(`Gallery "${gallery.id}" already exists`);
+  } catch (err) {
+    if (!(err instanceof NotFoundError)) throw err;
+  }
   // Seed the gallery's primary language from the instance-level
   // `defaultLanguage` meta row when the caller didn't specify one,
   // with `en` as the final fallback.
