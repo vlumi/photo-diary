@@ -1,5 +1,5 @@
 // Best-effort path translation when the operator hops between
-// virtual hosts (#664). Each host serves a different gallery set,
+// virtual hosts. Each host serves a different gallery set,
 // so a deep URL like /g/dailybw/2024/3 only makes sense on its own
 // host; we keep the *shape* (year / month / day / stats) where
 // reasonable and let the target host pick a default gallery on

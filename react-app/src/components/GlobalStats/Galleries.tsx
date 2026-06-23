@@ -104,7 +104,7 @@ const RankCell = styled("th", {
 const ORPHAN_KEY = ":orphan";
 
 // Reads filter-aware per-gallery counts from the global stats
-// response (#446). Same queryKey as the sibling <Stats> component's
+// response. Same queryKey as the sibling <Stats> component's
 // internal fetch, so TanStack dedupes — one network call for
 // both sections.
 const Galleries = ({

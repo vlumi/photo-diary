@@ -108,6 +108,14 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       .expect(404);
   });
 
+  test("POST /galleries/_order → 404 (cross-gallery reorder is unscoped)", async () => {
+    const auth = await adminAuth();
+    await withHost(api.post("/api/v1/galleries/_order"), "gallery1.example.com")
+      .set("Cookie", auth)
+      .send({ ids: ["gallery1", "gallery2"] })
+      .expect(404);
+  });
+
   test("PUT /galleries/:id (in scope) → 204", async () => {
     const auth = await adminAuth();
     await withHost(

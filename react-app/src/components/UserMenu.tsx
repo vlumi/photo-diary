@@ -115,7 +115,7 @@ const ThemeMenuValue = styled.span`
   color: var(--inactive-color);
   font-size: 0.9em;
 `;
-// Host-switcher block (#664). Separator above so the operator can
+// Host-switcher block. Separator above so the operator can
 // tell at a glance "this is the cross-host nav, not just another
 // menu item". Heading label is the kind of muted overline `cdn` /
 // `defaultTheme` would carry if those had headings — same family.
@@ -173,7 +173,7 @@ const UserMenu = (): React.ReactElement => {
   const openThemeModal = useThemePickerModalStore((s) => s.open);
   const notify = useNotificationsStore((s) => s.notify);
 
-  // knownHosts drives the cross-host switcher (#664). Shared cache
+  // knownHosts drives the cross-host switcher. Shared cache
   // key with /m/instance so the form's edits update the dropdown
   // without a separate fetch.
   const metaQuery = useQuery({
@@ -232,7 +232,7 @@ const UserMenu = (): React.ReactElement => {
     };
     // Capture-phase + stopImmediatePropagation so closing this
     // dropdown doesn't also trigger the Manage shell's Esc-up
-    // navigation (#612) when opened from /m/*.
+    // navigation when opened from /m/*.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       e.preventDefault();

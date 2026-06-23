@@ -3,7 +3,7 @@
 
 /**
  * Rename every photo id (and its on-disk files) to the
- * <YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext> scheme that #272's converter
+ * <YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext> scheme the converter
  * produces for fresh imports.
  *
  *   photo-rename.ts                # default: --migrate, dry-run report
@@ -66,7 +66,7 @@ const buildRenameableSubdirs = (photoRoot: string): string[] => {
   return out;
 };
 
-// Matches the converter's #272 scheme: <YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext>
+// Matches the converter's scheme: <YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext>
 const NEW_ID_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-[0-9a-f]{16}\.[a-z0-9]+$/i;
 
 const formatIdTimestamp = (taken: string): string =>

@@ -29,7 +29,7 @@ const getGalleries = async () => {
   logger.debug("Getting all galleries");
   return await db.loadGalleries();
 };
-// Validate a virtual gallery's source list (#22): each id must
+// Validate a virtual gallery's source list: each id must
 // reference a real gallery (no self-reference, no other virtual
 // galleries — design decision #4 sidesteps cycle detection).
 const validateSources = async (
@@ -83,8 +83,8 @@ const applyVirtualSources = async (
     await db.deleteVirtualGallery(galleryId);
   } else {
     await validateSources(galleryId, sources);
-    // Preserve #22's design decision #4 (no chained virtuals) at
-    // *transition* time, not just at create time: if galleryId is
+    // Preserve the "no chained virtuals" invariant at *transition*
+    // time, not just at create time: if galleryId is
     // already referenced as a source by some virtual gallery,
     // turning it virtual now would silently break that referrer
     // (resolveGallerySources doesn't recurse, so the referrer

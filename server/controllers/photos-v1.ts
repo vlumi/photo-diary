@@ -173,7 +173,7 @@ const PhotosQuery = Type.Object(
 const toArray = <T>(v: T | T[] | undefined): T[] | undefined =>
   v === undefined ? undefined : Array.isArray(v) ? v : [v];
 
-// Coordinate-change helpers for the geocode auto-refresh path (#415).
+// Coordinate-change helpers for the geocode auto-refresh path.
 // The patch may omit some coord axes; merging with the existing row's
 // values lets the converter geocode using the actual post-update state.
 

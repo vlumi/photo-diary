@@ -451,7 +451,7 @@ const BulkActions = ({
     if (pending.kind === "none") return;
     // Capture-phase + stopImmediatePropagation so closing the bulk
     // modal doesn't also trigger the Manage shell's Esc-up
-    // navigation (#612).
+    // navigation.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       e.preventDefault();
@@ -493,7 +493,7 @@ const BulkActions = ({
       galleryPhotosService.unlink(galleryPick, id)
     );
   };
-  // Bulk privacy: photo-level (#480), so the same simple iterator
+  // Bulk privacy: photo-level, so the same simple iterator
   // pattern as edit-fields / regeocode works — no gallery picker
   // needed.
   const doSetPrivacy = (isPrivate: boolean) =>

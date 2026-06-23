@@ -100,7 +100,7 @@ interface Props {
   setSources?: (sources: string[]) => void;
 }
 
-// View + edit surface for a gallery's hybrid sources (#22 / #568).
+// View + edit surface for a gallery's hybrid sources.
 // View mode lists each source as a link to its own manage page;
 // edit mode adds an ordered list with arrow reorder + remove and a
 // dropdown picker filtered to real galleries (the model enforces

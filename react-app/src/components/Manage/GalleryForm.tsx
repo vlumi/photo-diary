@@ -40,7 +40,7 @@ export interface FormState {
   theme: string;
   initialView: string;
   hostname: string;
-  // Hybrid gallery sources (#22 / #568). Carried as an ordered list
+  // Hybrid gallery sources. Carried as an ordered list
   // of source gallery ids. Empty array means "real gallery"; the
   // server's `applyVirtualSources` stamps the type accordingly.
   sources: string[];

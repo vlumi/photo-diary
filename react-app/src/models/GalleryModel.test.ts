@@ -920,9 +920,9 @@ describe("With photos", () => {
       expect(g.testing.lastPath(populatedShape)).toBe("/g/testing/2020/05"));
     test("all", () =>
       expect(g.all.lastPath(populatedShape)).toBe("/g/all_photos/2020"));
-    // public has initialView "photo" — falls back to month-of-lastDay
-    // after #532 (pinning to a specific photo would need an extra fetch
-    // beyond /counts).
+    // public has initialView "photo" — falls back to month-of-lastDay,
+    // since pinning to a specific photo would need an extra fetch
+    // beyond /counts.
     test("public", () =>
       expect(g.public.lastPath(populatedShape)).toBe("/g/all_photos/2020/05"));
     test("daily", () =>

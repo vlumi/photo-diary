@@ -57,7 +57,6 @@ export type {
   StatsSummary,
   YearMonthCounts,
 } from "../lib/stats-compute.js";
-export { UNKNOWN_BUCKET } from "../lib/stats-compute.js";
 
 // Cache namespace builder. `en` / no-lang shares the bare key so
 // the most common path accrues hits across requests that don't
@@ -120,7 +119,7 @@ const getGalleryStats = async (
   return stats;
 };
 
-// Per-bucket time-series for the trend chart (#383). Lazy on
+// Per-bucket time-series for the trend chart. Lazy on
 // the client — only fires when the user opens the modal for a
 // trendable category. No cache layer yet; the compute is one
 // photo walk + one fan-out, fast at current scale.
@@ -150,7 +149,7 @@ const getGalleryEvolution = async (
 };
 
 // Global filter pill universe — cross-gallery flavour of the
-// gallery-scoped getGalleryFilterValues (#534). Drives the
+// gallery-scoped getGalleryFilterValues. Drives the
 // `<GlobalStats>` filter sidebar without that page having to load
 // the entire photo array client-side. Cached under the same
 // `:global` namespace stats uses; photo writes that call
@@ -224,7 +223,7 @@ const getGlobalStats = async (
     >,
   ]);
   // Attach gallery membership so computeStats can produce
-  // byGallery (#446). Single pass over the link table builds the
+  // byGallery. Single pass over the link table builds the
   // photoId → galleryIds map, then each photo gets its slice.
   const galleriesByPhoto = new Map<string, string[]>();
   for (const link of links) {

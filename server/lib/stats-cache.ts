@@ -1,7 +1,7 @@
 // In-process cache for the unfiltered stats response, keyed by
-// gallery id. Per #286: the unfiltered base is by far the most
-// common request (it's what every Stats landing view fetches);
-// filtered combinations skip the cache and compute on demand.
+// gallery id. The unfiltered base is by far the most common request
+// (it's what every Stats landing view fetches); filtered combinations
+// skip the cache and compute on demand.
 //
 // Entries expire after `CACHE_TTL_MS` so out-of-band mutations
 // (CLI tools running against the same DB, e.g. `bin/photo.ts`)

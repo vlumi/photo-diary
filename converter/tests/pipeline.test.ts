@@ -28,9 +28,8 @@ beforeEach(async () => {
     await fs.promises.mkdir(path.join(rootDir, sub));
   }
   sqlite3._resetForTests();
-  // Galleries the auto-link / sidecar tests target. The pre-#434
-  // dummy fixture preseeded these; with the real driver wiping the
-  // schema clean we recreate them in beforeEach.
+  // Galleries the auto-link / sidecar tests target. Recreated per
+  // test because the driver wipes the schema clean in _resetForTests.
   await db.createGallery({ id: "gallery1", title: "gallery 1" });
   await db.createGallery({ id: "gallery2", title: "gallery 2" });
 });

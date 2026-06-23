@@ -38,7 +38,7 @@ Per-instance runtime defaults are edited from `/m/instance` (admin UI) or `bin/m
 
 Per-gallery values (`theme`, `initial_view`, `hostname`, `default_language`) on each gallery row in the DB take precedence over the instance-level defaults above.
 
-Available themes: `blue`, `red`, `grayscale`, `bw`, `alert` (defined in `src/lib/theme.ts`). Supported languages: `en`, `fi`, `ja`.
+Available themes are defined in [`src/lib/theme.ts`](src/lib/theme.ts) — currently 18 entries across the Coloured, Neutral, Dark, and Showcase groups. Supported languages: `en`, `fi`, `ja`.
 
 ## Internationalization (i18n)
 
@@ -54,7 +54,7 @@ Country names come from [`i18n-iso-countries`](https://www.npmjs.com/package/i18
 - `src/App.tsx` — routes (`react-router-dom` 7), top menu, country-locale registration, persisted-user bootstrap
 - `src/components/` — UI components
   - `Gallery/` — gallery shell + `Year/Month/Photo/Filters/Stats` sub-views (Day was folded into Month in 0.10)
-  - `Manage/` — admin surface: `Galleries`, `Users`, `Groups`, `Access`, `GalleryEdit`/`GalleryForm`, `GalleryAccess`, `Photos`, `PhotoDrawer`, `Dashboard`
+  - `Manage/` — admin surface (lazy-loaded out of the main bundle): `Galleries` / `GalleryEdit` / `GallerySourcesSection` / `VirtualGalleryFilterSection` / `SavedFiltersSection`, `Users` / `UserEdit`, `Groups` / `GroupEdit`, `Access`, `Photos` / `PhotoDrawer`, `Dashboard`, `Operations`, `Instance`, plus the shared `ItemModal` / `Section` primitives
   - `GlobalStats/` — instance-wide stats view
   - `MapContainer.tsx` (+ `.lazy.tsx`) — Leaflet wrapper, lazy-loaded across consumers
   - `TopMenu.tsx`, `Login.tsx`, `UserMenu.tsx` — auth-aware top bar

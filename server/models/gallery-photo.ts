@@ -43,8 +43,8 @@ const getGalleryPhotos = async (
 };
 
 // View-scoped + filtered fetch — backs the per-view fetch path the
-// public gallery viewer migrates to in #406. Filter + scope eval
-// lives in the driver (#529) so this stays a thin wrapper.
+// public gallery viewer uses. Filter + scope eval lives in the driver
+// so this stays a thin wrapper.
 interface QueryOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
@@ -61,8 +61,8 @@ const queryGalleryPhotos = async (galleryId: string, opts: QueryOpts = {}) => {
 };
 
 // Adjacent + boundary photos for the Photo modal's carousel +
-// keyboard nav (#406). Driver does the filter + sort + index walk
-// (#529) and returns the response shape the controller serializes.
+// keyboard nav. Driver does the filter + sort + index walk
+// and returns the response shape the controller serializes.
 interface NeighborsOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
@@ -81,7 +81,7 @@ const getGalleryPhotoNeighbors = async (
 
 // Per-day photo counts for the Year heatmap. Returns
 // `{ "YYYY-MM-DD": count }` over the filtered + (optionally
-// year-scoped) photo set. Driver owns the aggregation (#529).
+// year-scoped) photo set. Driver owns the aggregation.
 interface CountsOpts {
   filter?: FilterShape;
   dateRange?: DateRange;
@@ -96,7 +96,7 @@ const queryGalleryPhotoCounts = async (
   logger.debug("Querying photo counts from gallery", { galleryId, opts });
   return await db.queryFilteredPhotoCounts(galleryId, opts);
 };
-// Filter pill universe + city localized-label map (#534). The
+// Filter pill universe + city localized-label map. The
 // driver owns the compute; this layer adds a one-key cache per
 // (gallery, lang) sharing the existing stats-cache machinery
 // (invalidateGallery sweeps `<galleryId>:*`, so the `:fv:`
@@ -191,7 +191,7 @@ const getGalleryPhotoByOriginalFilename = async (
     includePrivate
   );
 };
-// Virtual galleries are read-only (#22): membership is computed
+// Virtual galleries are read-only: membership is computed
 // live from the source galleries, so direct link/unlink ops on
 // the virtual id have no `gallery_photo` row to touch and would
 // silently no-op. Reject so the operator sees the structural
@@ -208,7 +208,7 @@ const rejectIfVirtual = async (
   }
 };
 // Gallery membership changes shift the global stats' `byGallery`
-// counts too (#446), so link / unlink invalidate both scopes.
+// counts too, so link / unlink invalidate both scopes.
 const linkGalleryPhoto = async (galleryId: string, photoId: string) => {
   await rejectIfVirtual(galleryId, "link a photo");
   logger.debug("Linking photo", photoId, "to gallery", galleryId);

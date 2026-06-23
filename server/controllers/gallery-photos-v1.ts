@@ -50,7 +50,7 @@ const FilterSchema = Type.Record(Type.String(), FilterTopic, {
 });
 // Date-range filter — sibling of `filter` rather than embedded in
 // FilterShape because the predicate is continuous, not discrete
-// (#264). Either `from` or `to` may be omitted for a half-open
+//. Either `from` or `to` may be omitted for a half-open
 // range; YYYY-MM-DD strings, inclusive on both ends.
 const DateRangeSchema = Type.Object(
   {
@@ -62,7 +62,7 @@ const DateRangeSchema = Type.Object(
 // Numeric range filters per kebab-case category — sibling of
 // `filter` / `dateRange`. Continuous-variable predicate
 // (focal length, aperture, shutter, ISO, EV, LV); both bounds
-// optional for half-open ranges. (#264)
+// optional for half-open ranges.
 const NumericRangeSchema = Type.Object(
   {
     min: Type.Optional(Type.Number()),
@@ -163,7 +163,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 
   /**
-   * Per-view + filtered fetch (#406). Body carries the same
+   * Per-view + filtered fetch. Body carries the same
    * FilterShape `useFiltersStore` produces on the client; optional
    * year/month/day narrows to the calendar slice the public viewer
    * is currently on. Same auth + privacy semantics as the
@@ -265,7 +265,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
   /**
    * Prev / next / first / last photos within the filtered set,
-   * for the Photo modal's carousel + keyboard nav (#406).
+   * for the Photo modal's carousel + keyboard nav.
    */
   fastify.post(
     "/:galleryId/neighbors",
@@ -319,7 +319,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 
   /**
-   * Filter pill universe (#532): the gallery's per-category value
+   * Filter pill universe: the gallery's per-category value
    * set, plus the city localized-label map. Subset of `/stats` —
    * shares the stats cache, same invalidation hooks. Drives the
    * Filters sidebar in the gallery viewer without the client having
@@ -374,7 +374,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 
   /**
-   * Pre-rename / camera-filename bookmark fallback (#532). When a
+   * Pre-rename / camera-filename bookmark fallback. When a
    * Photo URL's id doesn't resolve via the per-id endpoint, the
    * modal mount falls back to this lookup against the camera-given
    * original filename. Same auth + 404 semantics as the per-id

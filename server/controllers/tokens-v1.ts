@@ -78,7 +78,7 @@ const SessionResponse = Type.Object({
 
 const UserIdParam = Type.Object({ userId: Type.String() });
 
-// SSO mint (#664). `target` is the hostname the SPA wants to hop to;
+// SSO mint. `target` is the hostname the SPA wants to hop to;
 // `path` is the optional in-app path the target host should land
 // on after consuming the token (best-effort, validated to be a
 // leading-slash path so an attacker can't redirect cross-origin
@@ -283,7 +283,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 
   /**
-   * Cross-host SSO mint (#664). Authed caller asks this host to mint
+   * Cross-host SSO mint. Authed caller asks this host to mint
    * a one-shot signed token bound to a target hostname; the SPA
    * redirects the browser to the target's /sso endpoint, which
    * verifies + sets cookies there. Targets are validated against
@@ -295,7 +295,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
-        summary: "Mint a one-shot SSO token for a sibling host (#664)",
+        summary: "Mint a one-shot SSO token for a sibling host",
         body: CrossHostBody,
         response: { 200: CrossHostResponse },
         security: [{ bearer: [] }],
@@ -343,7 +343,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
-        summary: "Consume a cross-host SSO token + redirect (#664)",
+        summary: "Consume a cross-host SSO token + redirect",
         querystring: SsoConsumeQuery,
       },
     },

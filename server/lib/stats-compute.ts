@@ -47,7 +47,7 @@ export interface StatsResponse {
   // global stats). The `":orphan"` key counts photos linked to no
   // gallery. Absent (empty object) for single-gallery stats — that
   // scope is by definition one gallery, so the breakdown adds no
-  // information. (#446)
+  // information.
   byGallery: BucketCounts;
 }
 
@@ -268,7 +268,7 @@ const buildByCategory = (
   ),
 });
 
-// Cumulative time series per bucket for the trend chart (#383).
+// Cumulative time series per bucket for the trend chart.
 // Server hands the client a chart-ready shape: a sorted yearMonths
 // X axis, plus per-bucket parallel arrays of monthly counts +
 // running cumulative totals. weekday and hour are trendable too —
@@ -481,7 +481,7 @@ export const computeStats = (
   // Count of filtered photos with usable coordinates. Drives the
   // Stats Location card's inline "N geotagged" so the card stays
   // populated even though the photo list itself fetches lazily
-  // when the user opens the MapModal (#532).
+  // when the user opens the MapModal.
   let geotaggedCount = 0;
   for (const p of filtered) {
     if (
@@ -492,7 +492,7 @@ export const computeStats = (
     }
   }
   // Per-gallery filtered counts for the Global Stats Galleries
-  // section (#446). Only meaningful when the input carries gallery
+  // section. Only meaningful when the input carries gallery
   // membership — global stats decorates each photo with the joined
   // `galleries` list before calling computeStats; gallery-scoped
   // stats doesn't, so byGallery comes out empty there.

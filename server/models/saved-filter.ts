@@ -50,9 +50,9 @@ const createSavedFilter = async (
   assertSlugId(body.id);
   logger.debug("Creating saved filter", { sourceGalleryId, id: body.id });
   // Source gallery must exist + be a real gallery. Mirrors the hybrid
-  // gallery's "sources point at real galleries only" rule from #22 /
-  // migration 020 — chaining saved filters off hybrids or other saved
-  // filters runs into the same composition / cycle issues. The
+  // gallery's "sources point at real galleries only" rule — chaining
+  // saved filters off hybrids or other saved filters runs into the
+  // same composition / cycle issues. The
   // resolver in the driver doesn't recurse, so the query path would
   // return zero photos for non-real sources anyway; reject up-front
   // with a clear error instead.

@@ -72,7 +72,7 @@ const GalleryFields = {
   theme: Type.Optional(StringEnum(GALLERY_THEMES)),
   initialView: Type.Optional(StringEnum(GALLERY_INITIAL_VIEWS)),
   hostname: Type.Optional(Type.String()),
-  // Virtual gallery (#22): non-empty array makes the gallery a
+  // Virtual gallery: non-empty array makes the gallery a
   // virtual union of the listed source galleries; empty array
   // turns a virtual gallery back into a real one (drops the
   // virtual_gallery row); omitted leaves the type unchanged.
@@ -146,7 +146,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 
   /**
-   * Apply operator-curated gallery sort order (#585). Body is an
+   * Apply operator-curated gallery sort order. Body is an
    * ordered list of gallery ids covering exactly the current
    * gallery set. Admin-only. Underscore-prefix path keeps the
    * literal segment off the slug-id namespace (`assertSlugId`
@@ -166,6 +166,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request, reply) => {
+      requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
       await model.setGalleryOrder(request.body.ids);
       reply.status(204).send();

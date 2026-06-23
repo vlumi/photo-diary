@@ -88,12 +88,3 @@ export class NotImplementedError extends AppError {
   }
 }
 
-export class UnavailableError extends AppError {
-  override status = 503;
-  constructor(
-    message = "Service not available",
-    context?: Record<string, unknown>
-  ) {
-    super(message, context);
-  }
-}

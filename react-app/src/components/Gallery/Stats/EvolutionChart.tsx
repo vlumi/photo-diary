@@ -337,7 +337,7 @@ const EvolutionChart = ({
   };
   // Hairline between bands in --primary-color so adjacent bands
   // stay distinguishable even when the gradient endpoints land
-  // close to each other / to the chart background (#590).
+  // close to each other / to the chart background.
   const bandStroke = theme.get("primary-color");
   const datasets = ordered.map((entry, i) => {
     const colour = colourFor(entry, i);

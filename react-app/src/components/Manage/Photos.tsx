@@ -662,7 +662,7 @@ const AdminPhotos = (): React.ReactElement => {
     queryFn: () => photosService.list(filter, page, PAGE_SIZE, photoIdFocus),
     // Hold the previous grid while a chip toggle / page flip / drawer
     // open refetches under a new key — without this the whole grid
-    // unmounts to "loading" between renders (#574). isLoading still
+    // unmounts to "loading" between renders. isLoading still
     // fires on the very first mount; from then on cache misses paint
     // the previous data + refetch in the background.
     placeholderData: keepPreviousData,
@@ -742,7 +742,7 @@ const AdminPhotos = (): React.ReactElement => {
       (a.title || a.id).localeCompare(b.title || b.id)
     );
   }, [galleriesQuery.data]);
-  // Virtual gallery (#22) is a membership-computed concept; the
+  // Virtual gallery is a membership-computed concept; the
   // /m/photos page operates on real `gallery_photo` rows and the
   // bulk actions (link/unlink/regeocode/delete) all target real
   // galleries. If the operator's filter narrows to a virtual

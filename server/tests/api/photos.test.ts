@@ -38,22 +38,22 @@ describe("As guest", () => {
     await api.get("/api/v1/photos").expect(403);
   });
   test("Get gallery1photo.jpg", async () => {
-    await api.get("/api/v1/photo/gallery1photo.jpg").expect(404);
+    await getPhoto(undefined, "gallery1photo.jpg", 401);
   });
   test("Get gallery12photo.jpg", async () => {
-    await api.get("/api/v1/photo/gallery12photo.jpg").expect(404);
+    await getPhoto(undefined, "gallery12photo.jpg", 401);
   });
   test("Get gallery2photo.jpg", async () => {
-    await api.get("/api/v1/photo/gallery2photo.jpg").expect(404);
+    await getPhoto(undefined, "gallery2photo.jpg", 401);
   });
   test("Get gallery3photo.jpg", async () => {
-    await api.get("/api/v1/photo/gallery3photo.jpg").expect(404);
+    await getPhoto(undefined, "gallery3photo.jpg", 401);
   });
   test("Get orphanphoto.jpg", async () => {
-    await api.get("/api/v1/photo/orphanphoto.jpg").expect(404);
+    await getPhoto(undefined, "orphanphoto.jpg", 401);
   });
   test("Get invalid", async () => {
-    await api.get("/api/v1/photo/invalid.jpg").expect(404);
+    await getPhoto(undefined, "invalid.jpg", 401);
   });
 });
 
@@ -261,10 +261,10 @@ describe("As gallery1admin", () => {
   });
 
   // /photos (list) stays admin-only. /photos/:id opens to editors
-  // on at least one of the photo's galleries post-#575 — same gate
-  // as PUT, so the public Photo modal's "Manage this photo" button
-  // can land the editor on the drawer without going through the
-  // cross-gallery grid.
+  // on at least one of the photo's galleries — same gate as PUT, so
+  // the public Photo modal's "Manage this photo" button can land
+  // the editor on the drawer without going through the cross-gallery
+  // grid.
   test("List photos", async () => {
     await getPhotos(token, 403);
   });
@@ -327,9 +327,8 @@ describe("As plainuser", () => {
     token = await loginUser(api, "plainuser");
   });
 
-  // plainuser previously had `:all VIEW`, granting access to the
-  // cross-gallery `/photos` endpoints. Under #394 these are admin-only;
-  // plainuser's per-gallery grants don't reach them.
+  // The cross-gallery /photos endpoints are admin-only; plainuser's
+  // per-gallery grants don't reach them.
   test("List photos", async () => {
     await getPhotos(token, 403);
   });
@@ -561,7 +560,7 @@ describe("Mutations as admin", () => {
       .set("Cookie", `pd_access=${token}`)
       .send({ exposure: { iso: 100 } })
       .expect(204));
-  test("Update with changed coords clears stale geocoded columns (#415)", async () => {
+  test("Update with changed coords clears stale geocoded columns", async () => {
     // Seed geocoded data, then PUT new coords. Expect the geocoded
     // payload to be wiped (handed off to the converter via the
     // inbox sidecar; tests don't write actual files since the

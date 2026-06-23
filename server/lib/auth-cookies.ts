@@ -7,7 +7,7 @@ import CONST from "./constants.js";
 // browser drop the short-lived access cookie on its own without
 // touching the long-lived refresh cookie. New SPAs read neither
 // directly; same-origin requests pick up both automatically.
-export const ACCESS_COOKIE = "pd_access";
+const ACCESS_COOKIE = "pd_access";
 export const REFRESH_COOKIE = "pd_refresh";
 
 const ACCESS_COOKIE_MAX_AGE_S = Math.floor(

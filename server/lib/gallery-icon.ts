@@ -38,7 +38,7 @@ export interface CropPixels {
 
 // `gallery.icon` value the cropper writes. Resolves under
 // `PHOTO_ROOT_URL` on the client side (`{PHOTO_ROOT_URL}{icon}`).
-export const iconRelPath = (galleryId: string): string =>
+const iconRelPath = (galleryId: string): string =>
   `gallery-icons/${galleryId}.jpg`;
 
 // Crop the photo's display variant to the requested square, resize

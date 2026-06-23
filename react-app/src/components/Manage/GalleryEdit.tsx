@@ -530,7 +530,7 @@ const GalleryEdit = (): React.ReactElement => {
 
   // Compute today's date through the gallery's epoch scheme — reuses
   // the public viewer's per-day chip components so the rendering
-  // stays in sync with how visitors see dates (#569). Requires a
+  // stays in sync with how visitors see dates. Requires a
   // Gallery model instance since EpochAge / EpochDayIndex read via
   // gallery.epochYmd() / .hasEpoch().
   const today = new Date();

@@ -17,7 +17,7 @@ const init = async () => {
 // envelope (gallery-photos-v1, stats-v1). A saved filter's
 // `definition` is whatever you'd pass to `/query` today: an
 // optional `filter` (FilterShape) plus an optional `dateRange`
-// (#264). Future range / facet additions extend the JSON without
+//. Future range / facet additions extend the JSON without
 // schema work — the column stores TEXT and the route accepts
 // additionalProperties.
 const FilterKey = Type.Union([
@@ -60,9 +60,9 @@ const SavedFilterDefinition = Type.Object(
 );
 
 // Localized title / description overlays mirror the gallery
-// localization shape from #281 — `{lang: value}`. Empty string in
-// any entry clears that overlay row; omitting a lang leaves its
-// existing column untouched; an empty map is a no-op on update.
+// localization shape: `{lang: value}`. Empty string in any entry
+// clears that overlay row; omitting a lang leaves its existing
+// column untouched; an empty map is a no-op on update.
 const LocalizedMap = Type.Record(Type.String(), Type.String());
 
 const ParamsList = Type.Object({ galleryId: Type.String() });
@@ -71,7 +71,7 @@ const ParamsOne = Type.Object({
   filterId: Type.String(),
 });
 
-// Saved filters live as galleries of type='saved_filter' (#285).
+// Saved filters live as galleries of type='saved_filter'.
 // `id` is a gallery id in its own right (collision-checked against
 // every other gallery on create); `sourceGalleryId` points at the
 // gallery the saved filter is anchored to.

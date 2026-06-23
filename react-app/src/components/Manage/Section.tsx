@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-// Shared panel primitive for Manage view/edit surfaces (#605).
+// Shared panel primitive for Manage view/edit surfaces.
 // Each section is a bordered, slightly inset panel stacked top-to-
 // bottom; SectionTitle reads as a panel header. Replaces the per-
 // surface ad-hoc Section + SectionTitle styled components.

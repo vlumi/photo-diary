@@ -26,7 +26,7 @@ interface CountryData {
 const TOP_N = 12;
 const LOCATION_CATEGORIES = new Set(["country", "state", "city", "geotagged"]);
 // Continuous-variable categories that render a min/max range card
-// instead of value chips (#264). Photo-derived numbers benefit
+// instead of value chips. Photo-derived numbers benefit
 // from "between X and Y" more than "exactly any-of".
 const NUMERIC_RANGE_CATEGORIES = new Set([
   "focal-length",
@@ -500,7 +500,7 @@ const Builder = ({
     return String(a.value).localeCompare(String(b.value));
   };
 
-  // Numeric range card (#264): one row of clickable chips per
+  // Numeric range card: one row of clickable chips per
   // category, labelled with the category's own formatter
   // (`f/2.8`, `1/200`, `ISO 800`). Click semantics:
   //   - no range yet → anchor (min === max === clicked value)

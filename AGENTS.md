@@ -10,7 +10,7 @@ Monorepo with three workspaces:
 - `server/` — Fastify backend. TypeScript, `@fastify/type-provider-typebox`, SQLite by default, vitest + supertest.
 - `converter/` — back-end worker that pre-processes incoming photos (sharp, EXIF extraction). Less active.
 
-Top-level `bin/` has the bootstrap script `instance.ts` (creates / doctors / upgrades a per-instance dir) and the `sync-versions.mjs` helper used by the release flow. Per-instance dirs (created by `bin/instance.ts`) live outside the repo at `<base>/<name>/`; their own `bin/` carries symlinks back into `server/bin/` (`photo`, `photo-rename`, `photo-geocode`, `gallery`, `user`, `group`, `meta`).
+Top-level `bin/` has the bootstrap script `instance.ts` (creates / doctors / upgrades a per-instance dir) and the `sync-versions.mjs` helper used by the release flow. Per-instance dirs (created by `bin/instance.ts`) live outside the repo at `<base>/<name>/`; their own `bin/` carries symlinks back into `server/bin/` (`photo`, `photo-rename`, `photo-geocode`, `photo-rerender`, `gallery`, `user`, `group`, `meta`).
 
 ## Commands
 
@@ -22,7 +22,7 @@ Run inside the relevant subtree.
 | `server/` | `npm run typecheck` | `npm test` | (no build — tsx runtime) | `npm run dev` (tsx watch, SQLite at `server/db.sqlite3`) |
 | `converter/` | `npm run typecheck` | `npm test` | (no build — tsx runtime) | `npm run dev` |
 
-Server tests use `DB_DRIVER=dummy` via the npm script, so no SQLite file is touched.
+Server tests run against an in-memory SQLite (`DB_DRIVER=sqlite3`, `DB_OPTS=:memory:`) seeded by `tests/api/fixture.ts`, so no on-disk database is touched.
 
 Run `npm test`, `npm run typecheck`, and `npm run lint` (all three subtrees) before pushing — CI runs them all. The react-app build step rolls up bundle sizes — worth running for visual changes that might touch chunking.
 
@@ -76,7 +76,7 @@ The release step touches several files that need to stay in lockstep. Miss one a
 ### Server
 
 - Fastify routes under `server/controllers/*-v1.ts`, models under `server/models/`, typed errors in `server/lib/errors.ts` (don't return plain strings). Layout is flat — no `src/` subdirectory.
-- Pluggable DB via `DB_DRIVER` env (`sqlite3` for prod, `dummy` for tests). Driver implementations in `server/db/sqlite3/` and `server/db/dummy/`; the public surface is `server/db/index.ts`.
+- Pluggable DB via `DB_DRIVER` env (currently only `sqlite3`; tests run against `:memory:`). Driver implementation in `server/db/sqlite3/`; the public surface is `server/db/index.ts`.
 - **Access control.** Two columns carry the model: `user.is_admin` (global admin bypasses every per-gallery check) and `is_editor` on `user_gallery` / `group_gallery` (gallery-editor tier). A `user_gallery` or `group_gallery` row with `is_editor=0` is a view-only grant. The effective access is `MAX(is_editor)` across the union of direct user rows, group-derived rows, and `:guest`'s rows — individual rows can only broaden the `:guest` baseline, never narrow it. No wildcard gallery sentinels: migration 012 dropped `:all` and `:public` (the former promoted to `user.is_admin = 1`, the latter fanned out to a per-real-gallery row before delete).
 - **Gallery types.** `gallery.type` is `real` (default), `hybrid` (union of source galleries via `virtual_gallery_source` — sources must be real, no chained virtuals), or `saved_filter` (one source + a stored `{filter, dateRange, numericRanges}` baseline in `gallery_saved_filter`). The driver's `resolveGalleryRef` does the dispatch — every read path (load photos / counts / neighbors / filter values) routes through it.
 - **Filter wire shape.** `filter` (discrete FilterShape), `dateRange`, and `numericRanges` are the three predicates threaded through every read body. Evaluated by `matchesFilter` / `matchesDateRange` / `matchesNumericRanges` in `server/lib/photo-filter-eval.ts`. Saved-filter galleries apply the same predicates as a baseline before the request-side ones.

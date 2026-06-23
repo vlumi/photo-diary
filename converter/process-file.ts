@@ -81,11 +81,11 @@ const geocodeAtIntake = async (
     });
     // Backfill the operator-set country when it was empty and the
     // English pass resolved one. Makes regeocode (single-photo or
-    // bulk, #483) double as a fix for `missing-country` and the
+    // bulk) double as a fix for `missing-country` and the
     // backfill-candidate side of `countryMismatch`. Imports gain
     // the same behaviour: when EXIF has no country but Nominatim
     // resolves one, the photo's country slot is now populated.
-    // Once the country sentinel lands (#486), a row marked "no
+    // Once the country sentinel lands, a row marked "no
     // country" with the sentinel value won't be empty and the
     // backfill stays out of its way.
     if (lang === "en" && result.countryCode) {
@@ -213,7 +213,7 @@ const processJpeg = async (
   properties.originalFilename = originalFilename;
   // Capture the EXIF-at-intake snapshot before the write so the
   // admin UI can revert per-field overrides back to the camera's
-  // original value (#416). Stored as a JSON blob on the photo row;
+  // original value. Stored as a JSON blob on the photo row;
   // overwritten on re-imports so the blob always reflects the
   // last JPEG actually processed.
   const exifAtIntake = JSON.parse(JSON.stringify(properties)) as Record<

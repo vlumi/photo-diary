@@ -50,7 +50,7 @@ const authorizeAdmin = async (userId: string): Promise<void> => {
 // is now strictly admin.
 const authorizeView = authorizeAdmin;
 
-// Saved-filter pseudo-galleries (#285) inherit view + editor access
+// Saved-filter pseudo-galleries inherit view + editor access
 // from their source gallery: if the user can view / edit the source,
 // they can view / edit the saved filter. A direct grant on the saved
 // filter extends access (e.g., expose a slice to a user who has no

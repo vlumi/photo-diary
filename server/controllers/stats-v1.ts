@@ -41,7 +41,7 @@ const DateRangeSchema = Type.Object(
   { additionalProperties: false }
 );
 // Numeric range filters per kebab-case category — sibling of
-// `filter` / `dateRange`. (#264)
+// `filter` / `dateRange`.
 const NumericRangeSchema = Type.Object(
   {
     min: Type.Optional(Type.Number()),
@@ -138,7 +138,7 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
     }
   );
 
-  // Per-bucket time-series for the trend chart (#383). Lazy on the
+  // Per-bucket time-series for the trend chart. Lazy on the
   // client — only fires when a trendable category's modal opens.
   fastify.post(
     "/:galleryId/stats/evolution",

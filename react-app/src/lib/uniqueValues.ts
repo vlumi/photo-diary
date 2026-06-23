@@ -13,7 +13,7 @@ interface CountryData {
 // Topic → categories mapping. Mirrors PhotoModel.uniqueValues(): the
 // filter UI groups categories under topics ("general" / "time" /
 // "gear" / "exposure"). The server returns a flat
-// `Record<category, string[]>` from /filter-values (#532); this
+// `Record<category, string[]>` from /filter-values; this
 // shape is the only place that knows where each category lives.
 const TOPICS: Record<string, string[]> = {
   general: ["author", "country", "state", "city", "geotagged"],
@@ -83,7 +83,7 @@ const buildCityLabels = (
 };
 
 // Build the per-topic / per-category UniqueValues bag the filter UI
-// consumes from the server's /filter-values payload (#532). The
+// consumes from the server's /filter-values payload. The
 // server returns the universe of keys per category (already
 // deduplicated + sorted); this layer maps them to the topic-nested
 // shape, applies localization for country/city labels + numeric
