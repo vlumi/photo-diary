@@ -347,7 +347,7 @@ const EvolutionChart = ({
       borderColor: bandStroke,
       backgroundColor: colour,
       fill: true,
-      tension: 0,
+      tension: 0.4,
       pointRadius: 0,
       pointHoverRadius: 3,
       borderWidth: 0.5,
