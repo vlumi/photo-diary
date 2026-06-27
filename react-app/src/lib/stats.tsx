@@ -107,9 +107,16 @@ export interface StatsCategory {
   // alphabetical (the alpha case needs `valueSortByLabel` below
   // because collectTopics pre-sorts gear/people by count-desc).
   valueSortable?: boolean;
-  // "By value" re-sorts by display label (alphabetical) rather than
-  // trusting the natural order.
+  // "By value" re-sorts by display column label (alphabetical)
+  // rather than trusting the natural order.
   valueSortByLabel?: boolean;
+  // Inline card preserves the comparator's natural order instead of
+  // re-sorting to count-desc. Set on the time categories so the
+  // 10-row preview matches the chart's x-axis (chronological /
+  // cyclical) — without it, year-month / year / month / weekday /
+  // hour read inline as a top-N-by-count list that doesn't line up
+  // with the line / polar chart above it.
+  naturalInlineOrder?: boolean;
 }
 // Expanded Summary view (SummaryModal). Four sub-trees:
 // period (when), peaks (how concentrated), variety (how varied),
@@ -917,6 +924,7 @@ const collectTopics = (
       key: "year-month",
       title: t("stats-category-year-month"),
       valueSortable: true,
+      naturalInlineOrder: true,
       charts: [{ type: "line", data, options: chartOptions.line }],
       tableColumns: [
         { title: "rank", align: "right", header: true },
@@ -954,6 +962,7 @@ const collectTopics = (
       key: "year",
       title: t("stats-category-year"),
       valueSortable: true,
+      naturalInlineOrder: true,
       charts: [
         { type: "doughnut", data, options: chartOptions.doughnut },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -992,6 +1001,7 @@ const collectTopics = (
       key: "month",
       title: t("stats-category-month"),
       valueSortable: true,
+      naturalInlineOrder: true,
       charts: [
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1033,6 +1043,7 @@ const collectTopics = (
       key: "weekday",
       title: t("stats-category-weekday"),
       valueSortable: true,
+      naturalInlineOrder: true,
       charts: [
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1071,6 +1082,7 @@ const collectTopics = (
       key: "hour",
       title: t("stats-category-hour"),
       valueSortable: true,
+      naturalInlineOrder: true,
       charts: [
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },

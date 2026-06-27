@@ -251,18 +251,21 @@ const Table = ({
   const fullTable = category.table;
   const isInline = limit !== undefined;
   const shouldCap = isInline && fullTable.length > limit;
-  // Inline view always reads as top-by-count — even short categories
-  // (weekday's 7 rows, month's 12) sort more usefully by frequency
-  // than by their chronological default. The modal then offers "By
-  // value" as the alternate reading. The exposure modal's natural
-  // numeric sort and the gear modal's alphabetical sort are both
-  // handled here under `sortMode === "value"`:
-  //   - `valueSortByLabel` (gear, people-or-place) → alpha sort on
-  //     the display column (which lives at `row[category.key]`).
-  //   - Otherwise → the order from collectTopics (exposure numeric,
-  //     time chronological).
+  // Inline view defaults to top-by-count so the 10-row preview reads
+  // as "the headlines" for categories with no inherent ordering (gear,
+  // people, country, etc.). Time categories (year-month / year /
+  // month / weekday / hour) opt out via `naturalInlineOrder` — their
+  // chart axis is the value, and a by-count list would visually
+  // contradict the chart sitting above it. The modal still defaults
+  // to "By count" but offers "By value" as the alternate reading.
+  // `valueSortByLabel` (gear, people-or-place) → alpha sort on the
+  // display column (which lives at `row[category.key]`). Otherwise →
+  // the order from collectTopics (exposure numeric, time
+  // chronological).
+  const forceCount =
+    sortMode === "count" || (isInline && !category.naturalInlineOrder);
   const sortedTable = (() => {
-    if (sortMode === "count" || isInline) {
+    if (forceCount) {
       return [...fullTable].sort(
         (a, b) => Number(b._count ?? 0) - Number(a._count ?? 0)
       );
