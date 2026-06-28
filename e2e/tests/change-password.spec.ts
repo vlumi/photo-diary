@@ -40,9 +40,16 @@ test.describe("change password", () => {
 
     // Subsequent authed call still works under the new session. The
     // /api/v1/tokens GET keep-alive returns 200 when authed, 401
-    // otherwise.
-    const keepalive = await page.request.get("/api/v1/tokens");
-    expect(keepalive.ok()).toBe(true);
+    // otherwise. Routed through the browser via page.evaluate rather
+    // than page.request — the cookies carry the Secure flag, and
+    // Playwright's Node-side APIRequestContext (page.request) refuses
+    // to attach Secure cookies on plain HTTP, while chromium treats
+    // 127.0.0.1 as a secure context and sends them.
+    const keepaliveOk = await page.evaluate(async () => {
+      const r = await fetch("/api/v1/tokens", { credentials: "include" });
+      return r.ok;
+    });
+    expect(keepaliveOk).toBe(true);
 
     // Restore the fixture password so the next test / run starts
     // from a known baseline. The current session (rotated above) is
