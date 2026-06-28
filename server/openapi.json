@@ -236,13 +236,39 @@
     },
     "/api/v1/tokens": {
       "get": {
-        "summary": "Verify token (keep-alive)",
+        "summary": "Verify token + return current session identity",
         "tags": [
           "tokens"
         ],
         "responses": {
           "200": {
-            "description": "Default Response"
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "isAdmin",
+                    "editorGalleries"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "isAdmin": {
+                      "type": "boolean"
+                    },
+                    "editorGalleries": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },

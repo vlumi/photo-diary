@@ -161,7 +161,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Verify token (keep-alive) */
+        /** Verify token + return current session identity */
         get: {
             parameters: {
                 query?: never;
@@ -176,7 +176,13 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            id: string;
+                            isAdmin: boolean;
+                            editorGalleries: string[];
+                        };
+                    };
                 };
             };
         };

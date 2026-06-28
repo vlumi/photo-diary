@@ -29,3 +29,24 @@ export const useUserStore = create<UserState>((set) => ({
   user: rehydrate(),
   setUser: (user) => set({ user }),
 }));
+
+// Cross-tab sync: when another tab logs in / out / refreshes, the
+// shared localStorage["user"] entry changes but Zustand stays
+// frozen at its initial rehydrate. Without this, Tab A keeps
+// showing user A's identity even though the cookie has been
+// replaced with B's — and admin pages then fail with the generic
+// 403 the user has no path to recover from short of re-login.
+if (typeof window !== "undefined" && window.addEventListener) {
+  window.addEventListener("storage", (e) => {
+    if (e.key !== "user" || e.storageArea !== window.localStorage) return;
+    if (e.newValue === null) {
+      useUserStore.getState().setUser(undefined);
+      return;
+    }
+    try {
+      useUserStore.getState().setUser(UserModel(JSON.parse(e.newValue)));
+    } catch {
+      // Other tab wrote garbage — leave this tab's user as-is.
+    }
+  });
+}
