@@ -2,6 +2,7 @@ import { Type } from "typebox";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import config from "../lib/config/index.js";
+import CONST from "../lib/constants.js";
 import db from "../db/index.js";
 import {
   AccessError,
@@ -149,9 +150,29 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
    */
   fastify.get(
     "/",
-    { schema: { tags: TAGS, summary: "Verify token (keep-alive)" } },
-    async (_request, reply) => {
-      reply.status(200).send();
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Verify token + return current session identity",
+        response: { 200: SessionResponse },
+      },
+    },
+    async (request, reply) => {
+      // tokenFilter has already verified the cookie; an anonymous
+      // request lands on the guest user. The SPA uses this on boot
+      // to reconcile its localStorage-rehydrated view against the
+      // cookie's actual identity — needed when a sibling tab's
+      // login has replaced the shared cookie+localStorage out from
+      // under this tab, or when admin / editor grants changed in
+      // the DB since the cookie was minted.
+      if (request.user.id === CONST.GUEST_USER) {
+        throw new InvalidTokenError();
+      }
+      const isAdmin = await resolveIsAdmin(request.user.id);
+      const editorGalleries = await authorizer.loadEditorGalleries(
+        request.user.id
+      );
+      reply.status(200).send({ id: request.user.id, isAdmin, editorGalleries });
     }
   );
 

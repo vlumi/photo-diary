@@ -79,12 +79,15 @@ const GlobalStats = React.lazy(() => import("./components/GlobalStats"));
 
 import config from "./lib/config";
 import metaService from "./services/meta";
+import tokenService from "./services/tokens";
+import UserModel from "./models/UserModel";
 import theme from "./lib/theme";
 import {
   hadStoredLangAtBoot,
   useBetaStore,
   useLangStore,
   useThemePreferenceStore,
+  useUserStore,
 } from "./stores";
 import { BETA_FEATURES, type BetaFeature, type BetaMode } from "./stores/beta";
 
@@ -219,6 +222,40 @@ const App = (): React.ReactElement => {
     langAppliedRef.current = true;
     setLang(meta.defaultLanguage);
   }, [meta?.defaultLanguage, setLang]);
+
+  // Boot-time session reconcile. The user store rehydrates from
+  // localStorage synchronously at module load, so the UI may render
+  // a stale identity on first paint — e.g. a sibling tab replaced
+  // the shared cookie+localStorage out from under this tab, or the
+  // admin / editor grants changed in the DB since the cookie was
+  // minted. One GET /tokens with credentials reconciles both:
+  // server's view wins; 401 lets api.ts's onResponse handler run
+  // the refresh-or-clear path. Guarded by a ref so React strict-
+  // mode's double-invocation in dev doesn't fire two requests.
+  const storedUser = useUserStore((s) => s.user);
+  const setUser = useUserStore((s) => s.setUser);
+  const verifiedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (verifiedRef.current) return;
+    if (!storedUser) return;
+    verifiedRef.current = true;
+    tokenService
+      .verify()
+      .then((session) => {
+        const next = UserModel({
+          id: session.id,
+          isAdmin: session.isAdmin,
+          editorGalleries: session.editorGalleries,
+        });
+        if (next.toJson() === storedUser.toJson()) return;
+        window.localStorage.setItem("user", next.toJson());
+        setUser(next);
+      })
+      .catch(() => {
+        // 401 / 403 — api.ts's onResponse handler already cleared
+        // local auth + opened the login modal. Nothing extra here.
+      });
+  }, [storedUser, setUser]);
 
   const themePreference = useThemePreferenceStore((s) => s.preference);
   // Until `/meta` resolves, fall back to App.css's neutral defaults

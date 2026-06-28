@@ -135,16 +135,29 @@ describe("Login rate limit", () => {
 });
 
 describe("Keep-alive", () => {
-  let token: string | undefined = undefined;
-  beforeEach(async () => {
-    token = await loginUser(api, "admin");
-  });
-
-  test("Success", async () => {
-    await api
+  test("Admin: returns identity + isAdmin: true + editorGalleries", async () => {
+    const token = await loginUser(api, "admin");
+    const res = await api
       .get("/api/v1/tokens")
       .set("Cookie", `pd_access=${token}`)
       .expect(200);
+    expect(res.body).toEqual({
+      id: "admin",
+      isAdmin: true,
+      editorGalleries: expect.any(Array),
+    });
+  });
+  test("Non-admin: returns identity + isAdmin: false", async () => {
+    const token = await loginUser(api, "gallery1user");
+    const res = await api
+      .get("/api/v1/tokens")
+      .set("Cookie", `pd_access=${token}`)
+      .expect(200);
+    expect(res.body.id).toBe("gallery1user");
+    expect(res.body.isAdmin).toBe(false);
+  });
+  test("Guest: 401 so the SPA can clear stale localStorage", async () => {
+    await api.get("/api/v1/tokens").expect(401);
   });
 });
 
