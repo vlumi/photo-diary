@@ -92,6 +92,7 @@ The release step touches several files that need to stay in lockstep. Miss one a
 - **Modal content that intrinsically demands width** (a long unbreakable chip label, an inline-flex value chunk) pushes flex items past `max-width: 100%` because `min-width: auto` is the default. Cap modal `<Frame>` with `max-width: min(<px>, calc(100vw - 40px))`, set `overflow-x: hidden` on the frame, and use `overflow-wrap: anywhere` + `white-space: normal` + `display: inline-block` on chips so the text actually wraps.
 - **Server tests need every supertest call awaited.** Unawaited requests linger past the test, race with `afterAll(close)`, and surface as intermittent `ECONNRESET` / "Parse Error: Expected HTTP/, RTSP/ or ICE/" in CI.
 - **TypeBox schemas with `additionalProperties: false`** reject unknown fields. Client-only state (like the filter widget's `numericRanges[cat].anchor`) must be stripped before serialising to the wire — see `toWireNumericRanges`.
+- **`react-app` eslint is pinned to major 9.** `eslint-plugin-react` (7.37.5, latest as of 2026-07) caps its eslint peer at `^9.7`; bumping react-app to eslint 10 crashes the plugin at load time. Server + converter don't use `eslint-plugin-react` and are already on eslint 10. See the header comment in [`react-app/eslint.config.js`](react-app/eslint.config.js).
 
 ## When in doubt
 
