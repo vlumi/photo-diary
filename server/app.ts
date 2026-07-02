@@ -15,6 +15,7 @@ import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 
 import config from "./lib/config/index.js";
+import { getCspHeader, setCspCdn } from "./lib/csp.js";
 import db from "./db/index.js";
 
 import metaV1 from "./controllers/meta-v1.js";
@@ -149,70 +150,30 @@ if (DOCS_EXPOSED) {
 await app.register(fastifyCookie);
 
 // CDN origin is operator-configurable via `meta.instance_cdn`.
-// Read at boot + pinned into the CSP directives below, so the
-// `img-src` allowlist is the exact set of origins the SPA actually
-// loads images from. Operators changing the CDN need to restart pm2
-// for the new origin to land in the header — documented constraint;
-// alternative is a per-request header which adds DB read overhead
-// on every response.
-let cdnOrigin: string | undefined;
+// Prime the CSP cache at boot; subsequent writes to instance_cdn
+// (via /m/instance or `bin/meta.ts`) refresh the cache via a hook
+// in `models/meta.ts`, so the CSP header picks up new origins
+// without a pm2 restart. The `img-src` allowlist is the exact set
+// of origins the SPA loads images from.
 try {
   const metas = await db.loadMetas();
-  const cdn = metas.instance_cdn;
-  if (cdn) cdnOrigin = new URL(cdn).origin;
+  setCspCdn(metas.instance_cdn);
 } catch {
   // Malformed URL or empty meta — fall back to no CDN entry; the
   // SPA's default same-origin photo path covers it.
 }
 
-// Content-Security-Policy. Tuned to what the SPA actually needs:
-//
-// - `style-src` allows `'unsafe-inline'` because Emotion injects
-//   per-component <style> tags at runtime. A nonce strategy would
-//   need a SPA-side hook into Emotion's cache which isn't ergonomic;
-//   `'unsafe-inline'` for styles only is the pragmatic default.
-// - `script-src` is `'self'` — no inline scripts in index.html, no
-//   external script tags.
-// - `img-src` pins the exact set of image origins: same-origin (for
-//   the SPA's bundled assets + the photos when no CDN is set),
-//   OSM's tile subdomains (Leaflet map), the operator's
-//   `instance_cdn` origin if configured, and jsdelivr for the flag
-//   SVGs `react-country-flag` fetches from `lipis/flag-icons`
-//   (used in Stats + MetadataPanel country renderings). `data:`
-//   covers Leaflet's inline marker icons + similar embedded
-//   sprites. `blob:` covers the gallery-icon cropper's canvas
-//   preview.
-// - `connect-src 'self'` covers the API + same-origin /thumbnail,
-//   /display, /gallery-icons static paths.
-// - `frame-ancestors 'none'` — no embedding; clickjacking-clean.
-// - `object-src 'none'` — no <object> / <embed>.
-//
-// Referrer-Policy override stays — OSM tile servers block referrer-
-// less requests as bot traffic (the 0.7.4 regression).
+// Content-Security-Policy. Tuned to what the SPA actually needs
+// — full directive rationale is in `lib/csp.ts`. Fastify-helmet
+// still handles all the other security headers (HSTS, X-Frame-
+// Options, etc.); CSP alone gets set by the onSend hook below so
+// the CDN origin can change without a restart.
 await app.register(fastifyHelmet, {
-  contentSecurityPolicy: {
-    useDefaults: true,
-    directives: {
-      "default-src": ["'self'"],
-      "script-src": ["'self'"],
-      "style-src": ["'self'", "'unsafe-inline'"],
-      "img-src": [
-        "'self'",
-        "data:",
-        "blob:",
-        "https://*.tile.openstreetmap.org",
-        "https://cdn.jsdelivr.net",
-        ...(cdnOrigin ? [cdnOrigin] : []),
-      ],
-      "connect-src": ["'self'"],
-      "font-src": ["'self'", "data:"],
-      "frame-ancestors": ["'none'"],
-      "base-uri": ["'self'"],
-      "form-action": ["'self'"],
-      "object-src": ["'none'"],
-    },
-  },
+  contentSecurityPolicy: false,
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+});
+app.addHook("onSend", async (_request, reply) => {
+  reply.header("Content-Security-Policy", getCspHeader());
 });
 await app.register(fastifyCompress);
 
