@@ -78,8 +78,17 @@ const refreshOnce = async (): Promise<boolean> => {
 };
 
 const expireLocalAuth = () => {
+  // Only escalate to the login modal if there was actually a
+  // session to expire. Without this, the boot-time verify against
+  // /tokens fires the modal for every anonymous visitor (401 →
+  // refresh → 401 → here) — the SPA thinks a session was lost when
+  // in fact none ever existed. localStorage["user"] is the ground
+  // truth for "there was a session"; the Zustand store mirrors it.
+  const hadLocalUser =
+    !!window.localStorage.getItem("user") || !!useUserStore.getState().user;
   window.localStorage.removeItem("user");
   useUserStore.getState().setUser(undefined);
+  if (!hadLocalUser) return;
   // Close any other modal that might be open (e.g. change-password mid-
   // submit) so the login modal doesn't stack on top of it — two
   // backdrops at once reads as broken.
