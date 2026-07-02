@@ -18,30 +18,16 @@ export type KnownMetaKey = (typeof KNOWN_KEYS)[number];
 
 const getAll = async () => unwrap(api.GET("/api/v1/meta", {}));
 
-// Upsert a meta value. Tries PUT first (in-place update); on 404
-// (key doesn't yet exist) falls back to POST. The two routes
-// share an authorization gate, so callers don't have to know
-// which one fits — the result is the same persistent row.
+// Upsert a meta value. PUT is an upsert on the server (RFC 7231
+// §4.3.4) — a single request handles both first-time create and
+// in-place update.
 const set = async (key: KnownMetaKey, value: string): Promise<void> => {
-  try {
-    await unwrap(
-      api.PUT("/api/v1/meta/{key}", {
-        params: { path: { key } },
-        body: { value },
-      })
-    );
-  } catch (err) {
-    const status = (err as { status?: number } | undefined)?.status;
-    if (status === 404) {
-      await unwrap(
-        api.POST("/api/v1/meta", {
-          body: { key, value },
-        })
-      );
-      return;
-    }
-    throw err;
-  }
+  await unwrap(
+    api.PUT("/api/v1/meta/{key}", {
+      params: { path: { key } },
+      body: { value },
+    })
+  );
 };
 
 const remove = async (key: KnownMetaKey): Promise<void> => {

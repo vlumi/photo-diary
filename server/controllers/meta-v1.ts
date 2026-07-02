@@ -146,10 +146,15 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request, reply) => {
       requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
-      await model.updateMeta(
-        `instance_${request.params.key}`,
-        request.body.value
-      );
+      // PUT is an upsert (RFC 7231 §4.3.4). A brand-new meta key
+      // needs to persist on first save without the client having to
+      // fall back to a POST — before this the SQL UPDATE silently
+      // no-op'd on a missing row and PUT returned 204 with nothing
+      // actually written.
+      await model.upsertMeta({
+        key: `instance_${request.params.key}`,
+        value: request.body.value,
+      });
       reply.status(204).send();
     }
   );

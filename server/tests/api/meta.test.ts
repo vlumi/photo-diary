@@ -100,6 +100,40 @@ describe("As admin", () => {
     const result = await getMeta("name");
     expectMeta(result, "name", "renamed instance");
   });
+  test("PUT on a missing key creates it (upsert)", async () => {
+    // knownHosts isn't seeded by the fixture. The PUT endpoint is
+    // an upsert (RFC 7231 §4.3.4), so a first-time write persists
+    // in one request without the client needing a POST fallback.
+    const value = '[{"hostname":"a.example.com","isMain":true}]';
+    await api
+      .put("/api/v1/meta/knownHosts")
+      .set("Cookie", `pd_access=${token}`)
+      .send({ value })
+      .expect(204);
+    const result = await getMeta("knownHosts");
+    // knownHosts is JSON_META_KEYS — cleanMeta parses it back to
+    // an array on the way out.
+    expect(result.body.knownHosts).toEqual([
+      { hostname: "a.example.com", isMain: true },
+    ]);
+  });
+  test("PUT on an existing key updates in place", async () => {
+    // Second write hits the UPSERT's UPDATE branch. Verify the
+    // value overwrites the first write completely (no residual
+    // list items from the previous value).
+    await api
+      .put("/api/v1/meta/knownHosts")
+      .set("Cookie", `pd_access=${token}`)
+      .send({ value: '[{"hostname":"a.example.com","isMain":true}]' })
+      .expect(204);
+    await api
+      .put("/api/v1/meta/knownHosts")
+      .set("Cookie", `pd_access=${token}`)
+      .send({ value: '[{"hostname":"b.example.com"}]' })
+      .expect(204);
+    const result = await getMeta("knownHosts");
+    expect(result.body.knownHosts).toEqual([{ hostname: "b.example.com" }]);
+  });
   test("Delete existing meta", async () => {
     await api
       .delete("/api/v1/meta/name")
