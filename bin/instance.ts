@@ -449,16 +449,29 @@ const runGc = (opts: GcOpts): void => {
 // Best-effort post-cycle probe — server's /api/v1/meta is unauthenticated
 // and cheap. PORT is required in .env so we always have it. Non-fatal:
 // returns false on any error, caller decides what to do with that.
+//
+// Polls with a short interval up to a longer overall budget instead of
+// firing a single-shot 5 s fetch. The server's boot has a few
+// synchronous DB reads (migrations, secrets cache, CSP CDN prime) so
+// the first fetchable moment can drift past a single deadline on
+// slower disks or first-boot-after-upgrade. 15 s overall covers those
+// legitimate delays; anything past that is a real problem the
+// operator should see via pm2 logs.
 const probeMeta = async (port: number): Promise<boolean> => {
   const url = `http://127.0.0.1:${port}/api/v1/meta`;
-  try {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(5000),
-    });
-    return res.ok;
-  } catch {
-    return false;
+  const deadline = performance.now() + 15_000;
+  while (performance.now() < deadline) {
+    try {
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) return true;
+    } catch {
+      // ECONNREFUSED / timeout / etc. — retry after a short wait.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
+  return false;
 };
 
 const argv = yargs(hideBin(process.argv))
@@ -1072,7 +1085,7 @@ async function runPm2Cycle(kind: "upgrade" | "restart"): Promise<void> {
   if (Number.isFinite(port)) {
     const served = await probeMeta(port);
     log(
-      `  ${served ? "✓" : "✗"} GET http://127.0.0.1:${port}/api/v1/meta ${served ? "responded" : "didn't respond within 5s"}`
+      `  ${served ? "✓" : "✗"} GET http://127.0.0.1:${port}/api/v1/meta ${served ? "responded" : "didn't respond within 15s"}`
     );
     if (!served) {
       console.error();
