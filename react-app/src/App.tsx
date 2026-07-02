@@ -81,8 +81,7 @@ import config from "./lib/config";
 import {
   beginLogin,
   clearFederatedReturnFromUrl,
-  readFederatedReturnFromUrl,
-  type FederatedReturn,
+  readCapturedFederatedReturn,
 } from "./lib/auth-redirect";
 import metaService from "./services/meta";
 import tokenService from "./services/tokens";
@@ -275,21 +274,20 @@ const App = (): React.ReactElement => {
   //    the useEffect below once storedUser flips defined.
   // Gated on meta being loaded so we can validate `sso_to` against
   // `knownHosts` before trusting the request.
-  // Single effect. Reads the URL params, and on every storedUser
-  // change decides:
-  //  - guest with intent still in URL → open the login modal (or
-  //    redirect further on federated non-main deploys).
-  //  - logged in with intent in URL → fire the cross-host mint and
+  // Single effect. Reads the params captured at module load, and
+  // on every storedUser change decides:
+  //  - guest with intent → open the login modal (or redirect
+  //    further on federated non-main deploys).
+  //  - logged in with intent → fire the cross-host mint and
   //    navigate to the target's /sso.
   // No dependency on metaQuery — /tokens/cross-host validates
-  // `sso_to` against knownHosts server-side, so a slow or errored
-  // meta fetch doesn't block the flow. Guarded by a ref so the
-  // hop fires exactly once.
+  // sso_to against knownHosts server-side. Guarded by a ref so
+  // the hop fires exactly once.
   const federatedFiredRef = React.useRef(false);
+  const federatedReturn = readCapturedFederatedReturn();
   React.useEffect(() => {
     if (federatedFiredRef.current) return;
-    const ret = readFederatedReturnFromUrl();
-    if (!ret) return;
+    if (!federatedReturn) return;
     if (!storedUser) {
       beginLogin();
       return;
@@ -297,7 +295,7 @@ const App = (): React.ReactElement => {
     federatedFiredRef.current = true;
     clearFederatedReturnFromUrl();
     tokenService
-      .crossHost(ret.ssoTo, ret.ssoPath)
+      .crossHost(federatedReturn.ssoTo, federatedReturn.ssoPath)
       .then((data) => {
         window.location.href = data.redirectUrl;
       })
@@ -306,7 +304,7 @@ const App = (): React.ReactElement => {
         // transient failure). Fall through — the visitor is signed
         // in on this host and can navigate manually.
       });
-  }, [storedUser]);
+  }, [federatedReturn, storedUser]);
 
   const themePreference = useThemePreferenceStore((s) => s.preference);
   // Until `/meta` resolves, fall back to App.css's neutral defaults

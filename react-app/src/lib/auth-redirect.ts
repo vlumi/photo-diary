@@ -71,16 +71,17 @@ export const beginLogin = (message?: string): void => {
 };
 
 // Read the "?login=1&sso_to=…&sso_path=…" query params the main
-// host receives from a federated non-main host. Returns undefined
-// if the shape doesn't match. Doesn't validate `sso_to` against
-// the local knownHosts cache — `/tokens/cross-host` does that
-// server-side, and requiring meta to be loaded here would gate
-// the entire flow on the meta fetch completing.
+// host receives from a federated non-main host. Captured at module
+// load — Gallery's smart-landing does an immediate
+// `<Navigate replace>` on `/`, which strips the query params from
+// the URL before any React effect has a chance to run. If we
+// consulted `window.location` from an effect, we'd usually see the
+// already-navigated URL, not the original.
 export interface FederatedReturn {
   ssoTo: string;
   ssoPath: string;
 }
-export const readFederatedReturnFromUrl = (): FederatedReturn | undefined => {
+const parseFederatedReturnFromLocation = (): FederatedReturn | undefined => {
   if (typeof window === "undefined") return undefined;
   const params = new URLSearchParams(window.location.search);
   if (params.get("login") !== "1") return undefined;
@@ -90,6 +91,9 @@ export const readFederatedReturnFromUrl = (): FederatedReturn | undefined => {
   if (!ssoPath.startsWith("/")) return undefined;
   return { ssoTo, ssoPath };
 };
+const capturedFederatedReturn = parseFederatedReturnFromLocation();
+export const readCapturedFederatedReturn = (): FederatedReturn | undefined =>
+  capturedFederatedReturn;
 
 // Strip the federated-login query params from the current URL after
 // a successful hop (or when the visitor navigates elsewhere on the
