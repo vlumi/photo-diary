@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.0.0-rc.2] - 2026-07-02
+
+### Operator
+
+- Meta `PUT /api/v1/meta/:key` now upserts (RFC 7231 §4.3.4). A brand-new meta key (`instance_knownHosts` was the first case to hit this on a fresh instance) saved through `/m/instance` used to silently no-op — the SQL `UPDATE` ran against a missing row, 0 rows changed, no error, PUT returned 204 with nothing persisted. Client-side PUT-then-POST fallback existed but was gated on a 404 that never fired. The endpoint now creates the row on first save; the SPA drops its (broken) POST fallback. Closes #682.
+
 ## [1.0.0-rc.1] - 2026-07-01
 
 Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cookie transition, CSP enable pass, cross-host SSO for the UserMenu virtual-host switcher, Playwright e2e suite, docs overhaul, session-state reconcile on boot + across tabs, and a review-driven cleanup pass. Feature freeze holds through 1.0; rc.2+ ships only if prod verification surfaces regressions.
@@ -688,6 +694,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.0-rc.2]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.1...v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/vlumi/photo-diary/compare/v0.18.0...v1.0.0-rc.1
 [0.18.0]: https://github.com/vlumi/photo-diary/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/vlumi/photo-diary/compare/v0.17.0...v0.17.1

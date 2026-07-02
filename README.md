@@ -171,7 +171,7 @@ Per-instance state — the SQLite DB, the `photos/` tree, `.env` — lives in a 
 
 Active milestones on the way to 1.0, plus the far-out 2.0 direction. Each bullet links the GitHub milestone for live status.
 
-- [**1.0**](https://github.com/vlumi/photo-diary/milestone/4) — Soak the accumulated security + polish work in prod, then stamp. `1.0.0-rc.1` cut 2026-07-01; feature freeze holds until 1.0 (bugfix-only, rc.2+ ships only if verification surfaces regressions).
+- [**1.0**](https://github.com/vlumi/photo-diary/milestone/4) — Soak the accumulated security + polish work in prod, then stamp. `1.0.0-rc.2` cut 2026-07-02 (bugfix on top of rc.1: meta PUT upsert). Feature freeze until 1.0; rc.3+ ships only if further prod verification surfaces regressions.
 - [**2.0 — Thin server, cloud-native direction**](https://github.com/vlumi/photo-diary/milestone/18) *(direction-setting, far out)* — originals leave the server for client-side / cold storage, the converter's sharp pipeline becomes a bundled local uploader, all DB ops route through the API, storage backends behind a vendor-agnostic interface. Likely diverges from today's self-hosted-monolith shape enough that it may end up being a different product line.
 
 ## Backlog
@@ -200,6 +200,6 @@ Third structural take on a long-running personal photo-gallery side project — 
 - **0.16** (Jun 2026) — Filter & viewing UX polish: redesigned filter widget (inline strip + per-category modal cards with faceted counts), continuous-variable range filters, stacked-area evolution chart, virtual-gallery edit page + hybrid-source admin UI, persistent map modal.
 - **0.17** (Jun 2026) — Admin UI shift to layered modals + Section card primitive; per-photo visibility + editor-tier admin actions on `/g/`; `/m/instance` page with runtime-overridable `meta` defaults; configurable rendition ladder + collapsed `photos/display/<maxDim>/` layout; `/m/photos` filters move into a modal; Stats Evolution adds `weekday` and `hour`; Finnish geocoding cleanup (state-code lvl fallthrough + script-rule address blob filter).
 - **0.18** (Jun 2026) — Cleanup + observability: `meta` table is the only source for SPA runtime defaults (no `.env` fallback); `/m/operations` admin page surfaces converter activity, pending queues, and failures; tidied `bin/photo.ts` surface; vitest coverage wired; frontend security audit pass; auth tokens move from localStorage to HttpOnly cookies.
-- **1.0-rc.1** (Jul 2026) — Release candidate for 1.0. End of the JWT-cookie transition, CSP enable pass, cross-host SSO for the UserMenu virtual-host switcher, Playwright e2e suite, docs overhaul, session-state reconcile on boot + across tabs, review-driven cleanup pass. Feature freeze until 1.0.
+- **1.0-rc.2** (Jul 2026) — Release candidate for 1.0. End of the JWT-cookie transition, CSP enable pass, cross-host SSO for the UserMenu virtual-host switcher, Playwright e2e suite, docs overhaul, session-state reconcile on boot + across tabs, review-driven cleanup pass. Feature freeze until 1.0.
 
-See the [Roadmap](#roadmap) for what's in flight after 1.0-rc.1.
+See the [Roadmap](#roadmap) for what's in flight after 1.0.
