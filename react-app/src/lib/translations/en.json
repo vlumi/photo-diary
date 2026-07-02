@@ -14,6 +14,7 @@
     "login-rate-limited": "Too many failed login attempts. Try again later.",
     "login-success": "Logged in as {{userId}}",
     "login-title": "Log in",
+    "login-redirecting-to": "Signing in via {{host}}…",
     "login-username": "Username",
     "login-password": "Password",
     "login-close": "Close",
