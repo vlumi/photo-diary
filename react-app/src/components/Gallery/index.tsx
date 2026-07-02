@@ -291,13 +291,22 @@ const Gallery = ({
   const scopedGalleries = galleriesForHost(galleries, window.location.hostname);
   const isHostScoped = scopedGalleries.length > 0;
   // Off-scope URL on a scoped host: redirect to the first in-scope
-  // gallery rather than render the unreachable view.
+  // gallery, preserving the year / month / day / photoId trail so
+  // a cross-host hop from /g/somewhere/2026/07 lands on
+  // /g/<scoped-default>/2026/07 instead of stripping the visitor
+  // back to the gallery root.
   if (
     galleryId &&
     isHostScoped &&
     !scopedGalleries.some((gallery) => gallery.id() === galleryId)
   ) {
-    return <Navigate to={scopedGalleries[0].path()} replace />;
+    const base = scopedGalleries[0].path(
+      year || undefined,
+      month || undefined,
+      day || undefined
+    );
+    const target = photoId ? `${base}/${photoId}` : base;
+    return <Navigate to={target} replace />;
   }
   // On a scoped host, narrow `galleries` to the scope set so the
   // breadcrumb dropdown and landing picker can't navigate outside.

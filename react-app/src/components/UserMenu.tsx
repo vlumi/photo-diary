@@ -8,6 +8,8 @@ import { BsPersonFill, BsPerson } from "react-icons/bs";
 import theme from "../lib/theme";
 import { translatePathForHost } from "../lib/cross-host-path";
 import { useHostScope } from "../lib/use-host-scope";
+import GalleryModel, { type Gallery } from "../models/GalleryModel";
+import galleryService from "../services/galleries";
 import metaService from "../services/meta";
 import tokenService from "../services/tokens";
 import {
@@ -181,7 +183,22 @@ const UserMenu = (): React.ReactElement => {
     queryFn: () => metaService.getAll(),
     enabled: !!user,
   });
-  const knownHosts = (() => {
+  // Galleries the current user can see. Shared queryKey with
+  // Gallery/index.tsx so we don't double-fetch. Used to filter the
+  // knownHosts list — a scoped host (one whose regex matches a
+  // gallery) is only reachable if the user has some access to that
+  // gallery.
+  const galleriesQuery = useQuery({
+    queryKey: ["galleries", user?.id ?? null],
+    queryFn: async () => {
+      const data = await galleryService.getAll();
+      return data
+        .map((gallery) => GalleryModel(gallery))
+        .filter((g): g is Gallery => !!g);
+    },
+    enabled: !!user,
+  });
+  const rawKnownHosts = (() => {
     const raw = (metaQuery.data as { knownHosts?: unknown } | undefined)
       ?.knownHosts;
     if (!Array.isArray(raw)) return [] as KnownHost[];
@@ -193,6 +210,24 @@ const UserMenu = (): React.ReactElement => {
   const currentHostname = typeof window !== "undefined"
     ? window.location.hostname.toLowerCase()
     : "";
+  // Access-aware filter:
+  // - Main host (isMain === true) is always shown — by the operator
+  //   model, main exposes every gallery, so everyone can reach it.
+  // - Non-main host is scope-narrowed by a gallery.hostname regex.
+  //   Only show if the user has view access to at least one gallery
+  //   whose regex matches this host.
+  const visibleGalleries = galleriesQuery.data ?? [];
+  const knownHosts = rawKnownHosts.filter((h) => {
+    if (h.isMain) return true;
+    const hostname = h.hostname.toLowerCase();
+    return visibleGalleries.some((g) => g.matchesHostname(hostname));
+  });
+  // Only render the switcher when there's actually somewhere to
+  // switch to. A knownHosts list with a single entry (usually the
+  // current host itself) has no target and reads as noise.
+  const hasOtherHost = knownHosts.some(
+    (h) => h.hostname.toLowerCase() !== currentHostname
+  );
 
   const switchToHost = async (target: string) => {
     setIsOpen(false);
@@ -349,7 +384,7 @@ const UserMenu = (): React.ReactElement => {
               {t(`beta-feature-${f}`)}
             </BetaToggle>
           ))}
-          {knownHosts.length > 0 && (
+          {hasOtherHost && (
             <>
               <SectionDivider />
               <SectionHeading>{t("user-menu-other-hosts")}</SectionHeading>

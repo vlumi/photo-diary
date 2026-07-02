@@ -225,19 +225,20 @@ const App = (): React.ReactElement => {
 
   // Boot-time session reconcile. The user store rehydrates from
   // localStorage synchronously at module load, so the UI may render
-  // a stale identity on first paint — e.g. a sibling tab replaced
-  // the shared cookie+localStorage out from under this tab, or the
-  // admin / editor grants changed in the DB since the cookie was
-  // minted. One GET /tokens with credentials reconciles both:
-  // server's view wins; 401 lets api.ts's onResponse handler run
-  // the refresh-or-clear path. Guarded by a ref so React strict-
-  // mode's double-invocation in dev doesn't fire two requests.
+  // a stale identity on first paint (sibling-tab login, admin grant
+  // changed in the DB, etc.). Fires unconditionally: also catches
+  // the "cookies exist but localStorage doesn't" case — the cross-
+  // host SSO landing on a target host the browser has never visited,
+  // where cookies are set by /sso but localStorage is empty until
+  // this verify populates it. Guest → 401 → api.ts's onResponse
+  // handler silently drops it (anonymous visitors don't get a login
+  // modal). Guarded by a ref so React strict-mode's double-
+  // invocation in dev doesn't fire two requests.
   const storedUser = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
   const verifiedRef = React.useRef(false);
   React.useEffect(() => {
     if (verifiedRef.current) return;
-    if (!storedUser) return;
     verifiedRef.current = true;
     tokenService
       .verify()
@@ -247,13 +248,15 @@ const App = (): React.ReactElement => {
           isAdmin: session.isAdmin,
           editorGalleries: session.editorGalleries,
         });
-        if (next.toJson() === storedUser.toJson()) return;
+        if (storedUser && next.toJson() === storedUser.toJson()) return;
         window.localStorage.setItem("user", next.toJson());
         setUser(next);
       })
       .catch(() => {
-        // 401 / 403 — api.ts's onResponse handler already cleared
-        // local auth + opened the login modal. Nothing extra here.
+        // 401 for the anonymous / no-cookie case is normal — don't
+        // touch state. 401 with an expired cookie was already
+        // handled by api.ts's onResponse (refresh-or-clear); this
+        // catch is deliberately silent.
       });
   }, [storedUser, setUser]);
 
