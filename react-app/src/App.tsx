@@ -275,30 +275,34 @@ const App = (): React.ReactElement => {
   //    the useEffect below once storedUser flips defined.
   // Gated on meta being loaded so we can validate `sso_to` against
   // `knownHosts` before trusting the request.
-  const federatedReturnRef = React.useRef<FederatedReturn | null | undefined>(
-    undefined
-  );
+  const [federatedReturn, setFederatedReturn] =
+    React.useState<FederatedReturn | null>(null);
+  const federatedReadRef = React.useRef(false);
   React.useEffect(() => {
-    if (federatedReturnRef.current !== undefined) return;
+    if (federatedReadRef.current) return;
     if (!metaQuery.data) return;
-    federatedReturnRef.current = readFederatedReturnFromUrl() ?? null;
-    if (!federatedReturnRef.current) return;
-    // Not logged in yet → prompt. The completion effect below
-    // fires the hop once the login succeeds.
+    federatedReadRef.current = true;
+    const ret = readFederatedReturnFromUrl();
+    if (!ret) return;
+    setFederatedReturn(ret);
+    // Guest → open the login modal (or redirect further, on non-main
+    // deploys). The completion effect below fires the hop once
+    // storedUser flips defined.
     if (!storedUser) {
       beginLogin();
     }
   }, [metaQuery.data, storedUser]);
 
+  const federatedFiredRef = React.useRef(false);
   React.useEffect(() => {
-    const ret = federatedReturnRef.current;
-    if (!ret || !storedUser) return;
+    if (federatedFiredRef.current) return;
+    if (!federatedReturn || !storedUser) return;
     // Consume the intent so a subsequent user-state change doesn't
     // re-fire the hop.
-    federatedReturnRef.current = null;
+    federatedFiredRef.current = true;
     clearFederatedReturnFromUrl();
     tokenService
-      .crossHost(ret.ssoTo, ret.ssoPath)
+      .crossHost(federatedReturn.ssoTo, federatedReturn.ssoPath)
       .then((data) => {
         window.location.href = data.redirectUrl;
       })
@@ -308,7 +312,7 @@ const App = (): React.ReactElement => {
         // Fall through — user is logged in on the main host and
         // can navigate manually.
       });
-  }, [storedUser]);
+  }, [federatedReturn, storedUser]);
 
   const themePreference = useThemePreferenceStore((s) => s.preference);
   // Until `/meta` resolves, fall back to App.css's neutral defaults
