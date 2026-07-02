@@ -14,6 +14,7 @@
     "login-rate-limited": "Liian monta epäonnistunutta kirjautumisyritystä. Yritä myöhemmin uudelleen.",
     "login-success": "Kirjauduit sisään käyttäjänä {{userId}}",
     "login-title": "Kirjaudu sisään",
+    "login-redirecting-to": "Kirjaudutaan palvelun {{host}} kautta…",
     "login-username": "Käyttäjätunnus",
     "login-password": "Salasana",
     "login-close": "Sulje",

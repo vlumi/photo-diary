@@ -68,10 +68,37 @@ const ContextMessage = styled.div`
 // clicking the close button all close it. After dismissal the URL is
 // preserved, and the SPA's gallery routing already renders an empty view
 // for galleries the (now-guest) user can't see, so degradation is graceful.
+// Federated-login "redirecting" view: shown briefly while the
+// browser navigates to the main host (typical: a few hundred ms
+// before the page swaps). No form — the visitor's password lives
+// on the main host only.
+const RedirectingBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 12px;
+  color: var(--inactive-color);
+`;
+const Spinner = styled.div`
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--inactive-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
 const LoginModal = (): React.ReactElement | null => {
   const isOpen = useLoginModalStore((s) => s.isOpen);
   const close = useLoginModalStore((s) => s.close);
   const message = useLoginModalStore((s) => s.message);
+  const redirectingTo = useLoginModalStore((s) => s.redirectingTo);
   const { t } = useTranslation();
 
   React.useEffect(() => {
@@ -113,8 +140,19 @@ const LoginModal = (): React.ReactElement | null => {
             ╳
           </CloseButton>
         </Header>
-        {message && <ContextMessage>{message}</ContextMessage>}
-        <Login onSuccess={close} />
+        {redirectingTo ? (
+          <RedirectingBody>
+            <Spinner aria-hidden />
+            <div>
+              {t("login-redirecting-to", { host: redirectingTo })}
+            </div>
+          </RedirectingBody>
+        ) : (
+          <>
+            {message && <ContextMessage>{message}</ContextMessage>}
+            <Login onSuccess={close} />
+          </>
+        )}
       </ModalBox>
     </Backdrop>
   );

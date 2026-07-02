@@ -78,6 +78,12 @@ const ManageOperations = React.lazy(
 const GlobalStats = React.lazy(() => import("./components/GlobalStats"));
 
 import config from "./lib/config";
+import {
+  beginLogin,
+  clearFederatedReturnFromUrl,
+  readFederatedReturnFromUrl,
+  type FederatedReturn,
+} from "./lib/auth-redirect";
 import metaService from "./services/meta";
 import tokenService from "./services/tokens";
 import UserModel from "./models/UserModel";
@@ -259,6 +265,50 @@ const App = (): React.ReactElement => {
         // catch is deliberately silent.
       });
   }, [storedUser, setUser]);
+
+  // Federated login return leg. When a non-main host redirected the
+  // visitor here for authentication, the URL carries
+  // `?login=1&sso_to=<host>&sso_path=<path>`. On the main host:
+  //  - already logged in → mint an SSO token straight away and hop
+  //    the visitor back to their originating host.
+  //  - not yet logged in → open the login modal; the hop fires from
+  //    the useEffect below once storedUser flips defined.
+  // Gated on meta being loaded so we can validate `sso_to` against
+  // `knownHosts` before trusting the request.
+  const federatedReturnRef = React.useRef<FederatedReturn | null | undefined>(
+    undefined
+  );
+  React.useEffect(() => {
+    if (federatedReturnRef.current !== undefined) return;
+    if (!metaQuery.data) return;
+    federatedReturnRef.current = readFederatedReturnFromUrl() ?? null;
+    if (!federatedReturnRef.current) return;
+    // Not logged in yet → prompt. The completion effect below
+    // fires the hop once the login succeeds.
+    if (!storedUser) {
+      beginLogin();
+    }
+  }, [metaQuery.data, storedUser]);
+
+  React.useEffect(() => {
+    const ret = federatedReturnRef.current;
+    if (!ret || !storedUser) return;
+    // Consume the intent so a subsequent user-state change doesn't
+    // re-fire the hop.
+    federatedReturnRef.current = null;
+    clearFederatedReturnFromUrl();
+    tokenService
+      .crossHost(ret.ssoTo, ret.ssoPath)
+      .then((data) => {
+        window.location.href = data.redirectUrl;
+      })
+      .catch(() => {
+        // Mint refused (sso_to somehow slipped past client-side
+        // validation, or the target isn't a knownHost server-side).
+        // Fall through — user is logged in on the main host and
+        // can navigate manually.
+      });
+  }, [storedUser]);
 
   const themePreference = useThemePreferenceStore((s) => s.preference);
   // Until `/meta` resolves, fall back to App.css's neutral defaults

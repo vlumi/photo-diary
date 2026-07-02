@@ -1,13 +1,10 @@
 import createClient from "openapi-fetch";
 
 import type { paths } from "./api-schema";
+import { beginLogin } from "./auth-redirect";
 import i18n from "./i18n";
 import UserModel from "../models/UserModel";
-import {
-  useUserStore,
-  useLoginModalStore,
-  useChangePasswordModalStore,
-} from "../stores";
+import { useUserStore, useChangePasswordModalStore } from "../stores";
 
 // Single typed client for the entire server API. The `paths` type is
 // generated from the committed `server/openapi.json` (CI verifies the
@@ -93,7 +90,10 @@ const expireLocalAuth = () => {
   // submit) so the login modal doesn't stack on top of it — two
   // backdrops at once reads as broken.
   useChangePasswordModalStore.getState().close();
-  useLoginModalStore.getState().open(i18n.t("session-expired"));
+  // beginLogin delegates to the main host on federated non-main
+  // deploys; on a standalone / main host it opens the local login
+  // modal with the "session expired" banner.
+  beginLogin(i18n.t("session-expired"));
 };
 
 client.use({

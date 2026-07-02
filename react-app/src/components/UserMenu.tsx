@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BsPersonFill, BsPerson } from "react-icons/bs";
 
 import theme from "../lib/theme";
+import { beginLogin } from "../lib/auth-redirect";
 import { translatePathForHost } from "../lib/cross-host-path";
 import { useHostScope } from "../lib/use-host-scope";
 import GalleryModel, { type Gallery } from "../models/GalleryModel";
@@ -14,7 +15,6 @@ import metaService from "../services/meta";
 import tokenService from "../services/tokens";
 import {
   useUserStore,
-  useLoginModalStore,
   useChangePasswordModalStore,
   useNotificationsStore,
   useBetaStore,
@@ -161,7 +161,6 @@ const UserMenu = (): React.ReactElement => {
   const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
   const { isHostScoped } = useHostScope();
-  const openLoginModal = useLoginModalStore((s) => s.open);
   const openChangePasswordModal = useChangePasswordModalStore((s) => s.open);
   const setUser = useUserStore((s) => s.setUser);
   const queryClient = useQueryClient();
@@ -308,7 +307,7 @@ const UserMenu = (): React.ReactElement => {
         <IconButton
           type="button"
           aria-label={t("login")}
-          onClick={() => openLoginModal()}
+          onClick={() => beginLogin()}
         >
           <BsPerson />
         </IconButton>
