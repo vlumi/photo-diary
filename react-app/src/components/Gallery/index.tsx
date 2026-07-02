@@ -66,9 +66,12 @@ const globalStyles = (theme: ActiveTheme) => css`
     --photo-frame-mat: ${theme.get("photo-frame-mat")};
     --photo-frame-border: ${theme.get("photo-frame-border")};
     filter: ${theme.get("filter")};
-    overflow-x: hidden;
   }
   body {
+    /* Only body clips horizontal overflow — putting overflow-x on
+       html too triggers the CSS-spec rule that implicitly turns
+       overflow-y: visible into auto on both, creating a nested
+       scroll container and the classic "two scrollbars" bug. */
     overflow-x: hidden;
   }
 `;
