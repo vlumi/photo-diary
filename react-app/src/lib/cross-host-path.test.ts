@@ -1,19 +1,22 @@
 import { translatePathForHost } from "./cross-host-path";
 
 describe("translatePathForHost", () => {
-  test("strips the gallery id from /g/<id> shapes, keeps the date trail", () => {
-    expect(translatePathForHost("/g/dailybw")).toBe("/g");
-    expect(translatePathForHost("/g/dailybw/2024")).toBe("/g/2024");
-    expect(translatePathForHost("/g/dailybw/2024/3")).toBe("/g/2024/3");
-    expect(translatePathForHost("/g/dailybw/2024/3/15")).toBe("/g/2024/3/15");
+  test("gallery URLs carry the id + trail verbatim", () => {
+    // Main host has every gallery; non-main hosts scope-narrow.
+    // Passing the id verbatim gives non-main → main a direct hit,
+    // and main → non-main degrades into Gallery/index.tsx's
+    // off-scope handler which redirects to the scoped default
+    // while preserving the year / month / day / photoId trail.
+    expect(translatePathForHost("/g/dailybw")).toBe("/g/dailybw");
+    expect(translatePathForHost("/g/dailybw/2024/3")).toBe("/g/dailybw/2024/3");
     expect(translatePathForHost("/g/dailybw/2024/3/15/photo.jpg")).toBe(
-      "/g/2024/3/15/photo.jpg"
+      "/g/dailybw/2024/3/15/photo.jpg"
     );
   });
 
-  test("strips the gallery id from /s/<id>", () => {
-    expect(translatePathForHost("/s/dailybw")).toBe("/s");
-    expect(translatePathForHost("/s/dailybw/extra")).toBe("/s/extra");
+  test("stats URLs carry the id verbatim", () => {
+    expect(translatePathForHost("/s/dailybw")).toBe("/s/dailybw");
+    expect(translatePathForHost("/s/dailybw/extra")).toBe("/s/dailybw/extra");
   });
 
   test("admin paths land on the manage dashboard regardless of subpath", () => {
