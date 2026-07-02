@@ -175,10 +175,13 @@ try {
 //   external script tags.
 // - `img-src` pins the exact set of image origins: same-origin (for
 //   the SPA's bundled assets + the photos when no CDN is set),
-//   OSM's tile subdomains (Leaflet map), and the operator's
-//   `instance_cdn` origin if configured. `data:` covers Leaflet's
-//   inline marker icons + similar embedded sprites. `blob:` covers
-//   the gallery-icon cropper's canvas preview.
+//   OSM's tile subdomains (Leaflet map), the operator's
+//   `instance_cdn` origin if configured, and jsdelivr for the flag
+//   SVGs `react-country-flag` fetches from `lipis/flag-icons`
+//   (used in Stats + MetadataPanel country renderings). `data:`
+//   covers Leaflet's inline marker icons + similar embedded
+//   sprites. `blob:` covers the gallery-icon cropper's canvas
+//   preview.
 // - `connect-src 'self'` covers the API + same-origin /thumbnail,
 //   /display, /gallery-icons static paths.
 // - `frame-ancestors 'none'` — no embedding; clickjacking-clean.
@@ -198,6 +201,7 @@ await app.register(fastifyHelmet, {
         "data:",
         "blob:",
         "https://*.tile.openstreetmap.org",
+        "https://cdn.jsdelivr.net",
         ...(cdnOrigin ? [cdnOrigin] : []),
       ],
       "connect-src": ["'self'"],
