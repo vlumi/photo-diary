@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Cross-host SSO landing now actually logs the visitor in on the target host. The `/api/v1/tokens/sso` response was setting cookies correctly, but the SPA's boot-time `verify()` was gated on `storedUser` being defined and skipped on a first-ever visit — the SPA never noticed the freshly-set cookies. Verify now fires unconditionally on mount; anonymous 401 stays quiet (login modal only opens when there was actually a session to lose). Closes #684.
+- Cross-host URL hop preserves the gallery id + year/month/day trail. Previously `translatePathForHost` stripped the gallery id from `/g/<id>/…`, and the target's off-scope redirect then dropped the date trail on top of that — a hop from `/g/somewhere/2026/07` landed on `/g/<scoped-default>` instead of `/g/<scoped-default>/2026/07`. Now the URL carries verbatim; the target's off-scope handler redirects with the trail preserved. Closes #684.
+- UserMenu's Other hosts list is filtered to what the user can actually reach: main host (`isMain: true`) always shown; non-main host shown only when the user has view access to at least one gallery whose `hostname` regex matches the host. The section is hidden entirely if there's nothing to switch to. Closes #684.
+
 ## [1.0.0-rc.2] - 2026-07-02
 
 ### Operator
