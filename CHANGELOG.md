@@ -2,27 +2,43 @@
 
 ## [Unreleased]
 
+## [1.0.0-rc.1] - 2026-07-01
+
+Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cookie transition, CSP enable pass, cross-host SSO for the UserMenu virtual-host switcher, Playwright e2e suite, docs overhaul, session-state reconcile on boot + across tabs, and a review-driven cleanup pass. Feature freeze holds through 1.0; rc.2+ ships only if prod verification surfaces regressions.
+
 ### Operator
 
 - **Breaking:** end of the JWT-cookie transition window opened in 0.18. The server no longer accepts `Authorization: bearer` headers, no longer echoes `accessToken` / `refreshToken` in any response body, and `POST /api/v1/tokens/refresh` requires the `pd_refresh` cookie (the body field is gone). Pre-0.18 SPA bundles cached in any browser will need a one-time hard reload to pick up the cookie path. New SPAs handle the cookie flow entirely. Closes #650.
 - Content-Security-Policy headers are now sent on every response. Directive set tuned to what the SPA actually needs: `default-src 'self'`, `style-src 'self' 'unsafe-inline'` (Emotion's runtime style injection), `img-src 'self' data: https:` (covers operator-set `instance_cdn` URLs + OSM tile servers without per-request header computation), `frame-ancestors 'none'`, `object-src 'none'`. Closes #648.
 - New `bin/instance.ts gc` subcommand reports `/opt/photo-diary/` code dirs that no scanned instance under `/var/photo-diary/` references, with sizes and the `rm -rf` commands the operator would run. Read-only — never deletes. Closes #653.
-- Cross-host SSO endpoints for the upcoming virtual-host switcher (#664, server side): `POST /api/v1/tokens/cross-host` mints a short-lived HMAC-signed token; `GET /api/v1/tokens/sso` consumes it on the target host, sets normal auth cookies, and 302s to the in-app redirect path. Signed with the existing `SECRET` (without the per-user mix-in, so it doesn't share signing keys with access JWTs); multi-instance deploys share `SECRET` across siblings to enable the feature. The mint endpoint validates the target against `instance_knownHosts` — a new JSON-shaped meta key carrying the list of `{hostname, label, isMain}` entries the SPA's switcher will render — so tokens can't be minted for arbitrary hosts. Client side lands in #664 follow-up.
+- Cross-host SSO endpoints for the virtual-host switcher (#664, server side): `POST /api/v1/tokens/cross-host` mints a short-lived HMAC-signed token; `GET /api/v1/tokens/sso` consumes it on the target host, sets normal auth cookies, and 302s to the in-app redirect path. Signed with the existing `SECRET` (without the per-user mix-in, so it doesn't share signing keys with access JWTs); multi-instance deploys share `SECRET` across siblings to enable the feature. The mint endpoint validates the target against `instance_knownHosts` — a new JSON-shaped meta key carrying the list of `{hostname, label, isMain}` entries the SPA's switcher will render — so tokens can't be minted for arbitrary hosts.
+- Creating a gallery / user / group with an id that already exists now returns 409 with an "already exists" message instead of a 500 surfacing the raw SQLite UNIQUE constraint text. Closes #672.
+- `POST /api/v1/galleries/_order` now respects the virtual-host scope like its sibling admin-mutation routes (was the only cross-gallery admin mutation missing the guard). Closes #671.
 
 ### Frontend
 
 - `/m` no longer auto-opens the gallery edit modal on host-scoped or single-gallery-editor instances. Earlier the dashboard short-circuited straight to `/m/g/<id>` (which mounts the edit modal), so every visit to Manage landed inside a modal-over-dashboard overlay. Now the dashboard renders normally; the gallery tile opens the modal on click. Closes #663.
 - UserMenu now offers a virtual-host switcher (#664). Authed users see an "Other hosts" section listing the operator-curated `instance_knownHosts`; clicking a host hits the cross-host SSO mint, redirects via the target host's `/sso` endpoint, and lands on the equivalent path (best-effort: `/g/<id>/<y>/<m>` swaps the gallery for the target's default; admin routes collapse to `/m`). A new section in `/m/instance` lets admins edit the host list (hostname / label / isMain). Closes #664.
+- SPA session state now reconciles against the server on boot and across tabs. Previously a stale localStorage-vs-cookie divergence (sibling-tab login, admin flag flipped in the DB, or all cookies expired while the tab was rehydrating) left the UI showing a phantom identity where admin pages 403'd with a generic notice and only manual logout+login recovered. `GET /api/v1/tokens` now returns `{id, isAdmin, editorGalleries}` and App calls it once on mount; the user store also listens for cross-tab `storage` events so Tab A follows Tab B's login. Closes #677.
+- Gallery names / descriptions containing an ampersand no longer render double-escaped in the gallery-list heading — dropped a redundant hand-rolled `escapeHTML` that layered on top of JSX's own text-node escaping. Closes #671.
+- Title-bar map query now includes `numericRanges` so focal-length / aperture / ISO filters actually affect the map pins (and its queryKey matches Month's for TanStack dedup). Closes #671.
+- Inline category tables for year-month / year / month / weekday / hour now follow the chart's natural chronological or cyclical order instead of being force-sorted by count; the expanded modal still defaults to "By count" with the toggle. Closes #676.
+- EvolutionChart stacked bands render with smooth curves matching the year-month inline chart. Closes #675.
 
 ### Developer
 
 - Playwright e2e test suite under `e2e/` covers the regression-prone seams between SPA components, stores, and the API: login/logout cycle, session expiry → login modal, change-password (right + wrong current), non-existent gallery, and language persistence. Wired into CI as a separate workflow job. Closes #261.
 - `npm run coverage --workspace=e2e` produces a v8 coverage report of the server code exercised by the e2e suite (`e2e/coverage/`). Sits alongside the existing per-workspace vitest coverage; unifying the two reports tracks under a follow-up (the timing-sensitive vitest tests get flaky under raw v8 instrumentation). Closes #656.
+- Server test-suite flakiness reduced: cross-file module-state bleed (`failedLogins` rate-limiter Map, `secrets` cache + reload timer) is now cleared per fixture reset, and `retry: 1` added as tolerance. Closes the small-N transient failures; the residual "catastrophic cascade" mode where a hook hangs for 10 s and 30+ dependent tests inherit the failure tracks as #674.
+- Full outdated-dep sweep: fastify 5.9, sharp 0.35.2, typebox 1.3, vite 8.1, framer-motion 12.42, i18next 26.3.4, playwright 1.61.1, react-router-dom 7.18.1, @tanstack/react-query 5.101.2, plus eslint 10.6 on server / converter and typescript-eslint 8.62; @types/node bumped 25 → 26 to match the Node 26 CI + runtime.
+- Review-driven cleanup pass across 7 lenses (layout, dead-code, comments, docs, types-errors, react patterns, server surface). Bugfixes above; also stripped ~130 `#NNN` ticket refs from source comments (two of which shipped in the public OpenAPI dump); doc drift caught up (server/README.md route inventory, DB-driver docs, theme list, per-instance script list); dead-code deletions across react-app + server. Closes #671.
 
 ### Docs
 
 - Top-level `README.md` reorganized around the three audiences (visitor / operator / contributor) — Contents lists per-lane entry points, "What it looks like" surfaces the live-example links + a stub `docs/screenshots.md`, "Architecture" carries a mermaid diagram of the converter / server / SPA boundary. New `e2e/README.md` documents the e2e workspace. Closes #283.
 - `docs/screenshots/` now ships year-calendar / month-calendar / photo-modal / stats captures from a fixture under `docs/fixtures/screenshots/`. Seed + capture scripts are reproducible (`npx tsx seed.mjs && npx tsx capture.mjs`); the 7 placeholder photos can be swapped for AI-generated replacements per `docs/fixtures/screenshots/PROMPTS.md`. Closes #661.
+- Cross-host SSO endpoints and the multi-instance shared-`SECRET` deployment pattern documented in server/README.md and SETUP.md.
+- `react-app` eslint's pinned-to-major-9 constraint (until `eslint-plugin-react` ships an eslint-10 peer range) documented in `react-app/eslint.config.js` and AGENTS.md's Footguns.
 
 ## [0.18.0] - 2026-06-19
 
@@ -672,6 +688,7 @@
 
 ## Initial commit - 2020-07-04
 
+[1.0.0-rc.1]: https://github.com/vlumi/photo-diary/compare/v0.18.0...v1.0.0-rc.1
 [0.18.0]: https://github.com/vlumi/photo-diary/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/vlumi/photo-diary/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/vlumi/photo-diary/compare/v0.16.0...v0.17.0
