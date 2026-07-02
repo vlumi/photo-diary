@@ -169,6 +169,37 @@ const Footer = styled.div`
   color: var(--inactive-color);
 `;
 
+// Minimal landing shown while the SPA is processing a federated
+// login return — behind the login modal (guest) or briefly while
+// the cross-host mint is in flight (already signed in). Centered
+// on the viewport so nothing else competes for the visitor's
+// attention.
+const FederatedLanding = styled.div`
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--primary-background);
+  color: var(--inactive-color);
+  font-size: 0.95em;
+`;
+const FederatedLandingSpinner = styled.div`
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--inactive-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: federated-landing-spin 0.8s linear infinite;
+  @keyframes federated-landing-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
 const App = (): React.ReactElement => {
   const { t } = useTranslation();
 
@@ -322,6 +353,29 @@ const App = (): React.ReactElement => {
         themePreference ?? meta?.defaultTheme ?? config.DEFAULT_THEME
       )
     : null;
+
+  // Federated login intercept: when the URL says we're here to
+  // authenticate a visitor coming from a sibling host, don't render
+  // the gallery / manage routes underneath the login modal — that
+  // looked confusing (a full photo view or admin dashboard behind a
+  // login prompt). Show a minimal branded landing instead; the
+  // effect above opens the login modal / fires the SSO hop.
+  if (federatedReturn) {
+    return (
+      <>
+        {baseTheme && <Global styles={baseGlobalStyles(baseTheme)} />}
+        <title>Photo diary</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="robots" content="noindex" />
+        <Notifications />
+        <LoginModal />
+        <FederatedLanding>
+          <FederatedLandingSpinner aria-hidden />
+          <div>{t("login-redirecting-to", { host: federatedReturn.ssoTo })}</div>
+        </FederatedLanding>
+      </>
+    );
+  }
 
   return (
     <>

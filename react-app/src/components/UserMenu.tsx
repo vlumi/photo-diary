@@ -74,6 +74,12 @@ const Dropdown = styled.div`
   display: flex;
   flex-direction: column;
   padding: 4px 0;
+  /* Cap to what's below the trigger so a short viewport (dev tools
+     split-view, small window) still lets the visitor reach every
+     menu item. The 25px header offset matches the top-menu height;
+     the extra 8px is a bottom breathing gap. */
+  max-height: calc(100dvh - 25px - 8px);
+  overflow-y: auto;
 `;
 const UserLabel = styled.div`
   padding: 6px 14px;
