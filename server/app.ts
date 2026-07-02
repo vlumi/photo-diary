@@ -166,13 +166,19 @@ try {
 // Content-Security-Policy. Tuned to what the SPA actually needs
 // — full directive rationale is in `lib/csp.ts`. Fastify-helmet
 // still handles all the other security headers (HSTS, X-Frame-
-// Options, etc.); CSP alone gets set by the onSend hook below so
-// the CDN origin can change without a restart.
+// Options, etc.); CSP alone is set from an onRequest hook so the
+// CDN origin can change without a pm2 restart.
+//
+// onRequest, not onSend: `@fastify/compress` streams the response
+// body early on some paths (static assets), and any onSend that
+// runs after it tries to write headers → ERR_HTTP_HEADERS_SENT.
+// Setting the header on the reply at onRequest time queues it
+// with the rest of the headers before the response starts.
 await app.register(fastifyHelmet, {
   contentSecurityPolicy: false,
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 });
-app.addHook("onSend", async (_request, reply) => {
+app.addHook("onRequest", async (_request, reply) => {
   reply.header("Content-Security-Policy", getCspHeader());
 });
 await app.register(fastifyCompress);
