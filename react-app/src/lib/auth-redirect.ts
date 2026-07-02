@@ -72,9 +72,10 @@ export const beginLogin = (message?: string): void => {
 
 // Read the "?login=1&sso_to=…&sso_path=…" query params the main
 // host receives from a federated non-main host. Returns undefined
-// if the shape doesn't match or the sso_to target isn't a
-// knownHost (defense-in-depth against open-redirect abuse — server-
-// side `/tokens/cross-host` also validates).
+// if the shape doesn't match. Doesn't validate `sso_to` against
+// the local knownHosts cache — `/tokens/cross-host` does that
+// server-side, and requiring meta to be loaded here would gate
+// the entire flow on the meta fetch completing.
 export interface FederatedReturn {
   ssoTo: string;
   ssoPath: string;
@@ -87,17 +88,6 @@ export const readFederatedReturnFromUrl = (): FederatedReturn | undefined => {
   const ssoPath = params.get("sso_path");
   if (!ssoTo || !ssoPath) return undefined;
   if (!ssoPath.startsWith("/")) return undefined;
-  const meta = queryClient.getQueryData<{ knownHosts?: unknown }>(["meta"]);
-  const raw = meta?.knownHosts;
-  if (!Array.isArray(raw)) return undefined;
-  const known = raw.some(
-    (h) =>
-      !!h &&
-      typeof (h as { hostname?: unknown }).hostname === "string" &&
-      (h as { hostname: string }).hostname.toLowerCase() ===
-        ssoTo.toLowerCase()
-  );
-  if (!known) return undefined;
   return { ssoTo, ssoPath };
 };
 
