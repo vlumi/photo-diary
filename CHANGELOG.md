@@ -2,12 +2,23 @@
 
 ## [Unreleased]
 
+## [1.0.0-rc.3] - 2026-07-02
+
+Second bugfix rc on rc.1's virtual-host / SSO work. Ships the SSO story end-to-end (federated login from non-main hosts) plus polish surfaced by operator prod verification.
+
+### Operator
+
+- CSP `img-src` now reflects `instance_cdn` changes without a pm2 restart. The CDN origin was resolved once at server boot and pinned into fastify-helmet's config; changing it via `/m/instance` didn't update the running server's CSP until pm2 was recycled, leaving photos blocked in the meantime. In-memory cache primed at boot, refreshed on every meta write; an `onRequest` hook writes the header per response. `bin/meta.ts` writes still need a pm2 restart (out-of-process from the server) — noted in the CSP module comment. Closes #688, #689.
+- CSP `img-src` allows `https://cdn.jsdelivr.net` so `react-country-flag`'s flag SVGs render in Stats + MetadataPanel + filter chips. Closes #687.
+
 ### Frontend
 
 - Cross-host SSO landing now actually logs the visitor in on the target host. The `/api/v1/tokens/sso` response was setting cookies correctly, but the SPA's boot-time `verify()` was gated on `storedUser` being defined and skipped on a first-ever visit — the SPA never noticed the freshly-set cookies. Verify now fires unconditionally on mount; anonymous 401 stays quiet (login modal only opens when there was actually a session to lose). Closes #684.
 - Cross-host URL hop preserves the gallery id + year/month/day trail. Previously `translatePathForHost` stripped the gallery id from `/g/<id>/…`, and the target's off-scope redirect then dropped the date trail on top of that — a hop from `/g/somewhere/2026/07` landed on `/g/<scoped-default>` instead of `/g/<scoped-default>/2026/07`. Now the URL carries verbatim; the target's off-scope handler redirects with the trail preserved. Closes #684.
 - UserMenu's Other hosts list is filtered to what the user can actually reach: main host (`isMain: true`) always shown; non-main host shown only when the user has view access to at least one gallery whose `hostname` regex matches the host. The section is hidden entirely if there's nothing to switch to. Closes #684.
-- Federated login: on non-main hosts (any deploy with an `isMain: true` entry in `instance_knownHosts`), the Login button and the mid-session 401 handler both delegate to the main host instead of showing a local password form. The visitor sees a brief "Signing in via `<mainHost>`…" modal, gets redirected to the main host with `?login=1&sso_to=<currentHost>&sso_path=<path>` context, signs in there, and is bounced back with SSO cookies for the origin host. Credentials live on the main host only — non-main hosts don't accept passwords. On main / standalone deploys, the local password modal still applies. Closes #684.
+- Federated login: on non-main hosts (any deploy with an `isMain: true` entry in `instance_knownHosts`), the Login button and the mid-session 401 handler both delegate to the main host instead of showing a local password form. The visitor sees a brief "Signing in via `<mainHost>`…" modal, gets redirected to the main host with `?login=1&sso_to=<currentHost>&sso_path=<path>` context, signs in there, and is bounced back with SSO cookies for the origin host. Credentials live on the main host only — non-main hosts don't accept passwords. On main / standalone deploys, the local password modal still applies. Closes #685.
+- Gallery views no longer show two vertical scrollbars. Setting `overflow-x: hidden` on both `html` and `body` triggered a CSS-spec rule that turns `overflow-y: visible` into `auto` on both, giving each a scrollbar. `body` alone clips horizontal now. Closes #686.
+- UserMenu dropdown gains `max-height` + `overflow-y: auto` so short viewports (dev tools open, small windows) still reach Logout. Closes #685.
 
 ## [1.0.0-rc.2] - 2026-07-02
 
@@ -701,6 +712,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.0-rc.3]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.2...v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.1...v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/vlumi/photo-diary/compare/v0.18.0...v1.0.0-rc.1
 [0.18.0]: https://github.com/vlumi/photo-diary/compare/v0.17.1...v0.18.0
