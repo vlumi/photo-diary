@@ -287,15 +287,20 @@ const UserMenu = (): React.ReactElement => {
     };
   }, [isOpen]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsOpen(false);
-    // Server-side revoke first so the session row is gone before we
-    // throw away local state. The server identifies the session via
-    // the refresh cookie and clears both auth cookies in the response.
-    // Fire-and-forget — local state is cleared regardless of whether
-    // the network call succeeds, so a user offline can still log out
-    // locally.
-    tokenService.logout().catch(() => {});
+    // Await server-side revoke so the cookies are actually cleared
+    // in the browser before the useQuery re-fetch (triggered by the
+    // user-state change below) fires. Otherwise the new fetch races
+    // the DELETE response and goes out with the previous user's
+    // cookies still attached — the SPA ends up showing the admin's
+    // gallery list until the next natural refetch. Fall through on
+    // network failure so an offline user can still log out locally.
+    try {
+      await tokenService.logout();
+    } catch {
+      // no-op — offline logout still clears local state below.
+    }
     // localStorage is narrowed to the `user` key so the `lang`
     // preference survives.
     window.localStorage.removeItem("user");
