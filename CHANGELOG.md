@@ -6,6 +6,10 @@
 
 - `tokenFilter` no longer runs on non-API URLs and no longer verifies `pd_access` on recovery / public endpoints. Two changes: it short-circuits for anything not under `/api/` (a page refresh mid-session with an expired cookie was returning raw JSON `{"error":"Token expired"}` in the address bar instead of loading the SPA's `index.html`), and it skips verification entirely for `POST /tokens`, `POST /tokens/refresh`, `DELETE /tokens`, and `GET /meta` — the endpoints the SPA reaches for when it needs to recover from a stale cookie or read public defaults on boot. With rc.4's 90-day `pd_access` Max-Age the browser holds stale access cookies across sessions; the previous behavior 401'd every recovery path before the controller ran, so the SPA couldn't unstick itself. Everything else still throws 401 on expiry / invalid signature so the client-side refresh flow triggers — degrading to anonymous instead would silently downgrade authed responses to guest data, making private galleries appear empty with no signal to refresh.
 
+### Frontend
+
+- Photo modal `<img>` remounts on photo change. The DOM `<img>` node was reused across navigations, so a `src` swap paired with new `width`/`height` attrs briefly rendered the previous (cached) image stretched to the new photo's aspect ratio before the new image loaded. Keying the `<Image>` on `photo.id()` forces an unmount so the frame stays empty until the fresh image is decoded.
+
 ## [1.0.0-rc.4] - 2026-07-08
 
 Session-hardening rc surfaced by longer prod verification. Focus is on the "session goes stale mid-session while the UI still shows logged in" pattern and its adjacent cases (logout race, cross-tab refresh, arrow-key nav during in-flight neighbor fetch). Plus operator-tooling polish.
