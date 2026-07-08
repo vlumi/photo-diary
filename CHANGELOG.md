@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [1.0.0-rc.4] - 2026-07-08
+
+Session-hardening rc surfaced by longer prod verification. Focus is on the "session goes stale mid-session while the UI still shows logged in" pattern and its adjacent cases (logout race, cross-tab refresh, arrow-key nav during in-flight neighbor fetch). Plus operator-tooling polish.
+
+### Operator
+
+- `bin/instance.ts --cycle`'s post-restart `/api/v1/meta` probe polls with a 500 ms interval up to a 15 s overall budget instead of one-shot with a 5 s timeout. The rc.3 boot-time CSP prime added enough synchronous DB work that first-boot-after-upgrade could push the first responding moment past 5 s on slower disks — false-alarming an otherwise-healthy cycle. Closes #691.
+
+### Frontend
+
+- `pd_access` cookie Max-Age now matches `pd_refresh` (session length). Under the old 15-minute Max-Age, if the SPA didn't fire an authed request within any 15-minute window (TanStack's 5-minute staleTime + reading-in-one-gallery flow could produce this), the browser removed the cookie from the jar. Subsequent requests carried no `pd_access`; `tokenFilter` treats a missing cookie as anonymous `:guest` (no 401 raised — anonymous access is a supported code path), so the SPA got 200s with guest-view data and no signal to refresh. Session appeared to drift silently: private galleries dropped from the list, gated endpoints 403'd. The JWT's own `exp` claim (still 15 min) is what enforces access lifetime server-side — an expired-but-present JWT returns 401, which the client's refresh flow handles cleanly. Closes #695.
+- Refresh-token rotation is now an atomic check-and-swap. New `db.rotateSessionHash(id, expectedHash, newHash, at)` driver op does `UPDATE session SET hash = ?, last_used_at = ? WHERE id = ? AND refresh_token_hash = ?` — the loser in a cross-tab race gets a deterministic 0-rows-changed instead of a fuzzy bcrypt-mismatch fallout. The client-side `onResponse` handler retries the original request once on refresh failure so a cross-tab race resolves by picking up the winner's tokens from the shared cookie jar instead of spuriously firing a "session expired" modal in the losing tab. Closes #696.
+- Photo-modal arrow-key navigation waits for fresh neighbors. The neighbors query's `keepPreviousData` (kept for the slide animation) meant rapid arrow presses within the ~50-100 ms refetch window read stale prev/next values — Right-then-Right could re-animate the same photo, Right-then-Left could skip. `animateToPrev` / `animateToNext` / Home / End now gate on `!isPlaceholderData`. Closes #697.
+- Refresh path invalidates access-derived caches (`galleries`, `gallery-photos`) so grant / admin-flag changes surfaced by a refresh response don't leave stale cached lists behind. Retry loop broken with an `x-pd-retried-after-refresh` header so a retried 401 expires cleanly instead of recursing. Closes #694.
+- Logout awaits the server-side revoke before invalidating the gallery cache. Previously fire-and-forget: the invalidate's follow-up refetch raced the DELETE and sometimes went out with the previous user's cookies, leaving the SPA showing admin's gallery list to a guest until the next reload. Closes #693.
+- Finnish translations for the virtual-host switcher and `/m/instance` known-hosts editor: `isäntä` → `sivusto` (site), `isäntänimi` → `verkkotunnus`, `selite` → `kuvaus`. The literal Finnish "host" reads as party-host in a tech UI. Closes #692.
+
 ## [1.0.0-rc.3] - 2026-07-02
 
 Second bugfix rc on rc.1's virtual-host / SSO work. Ships the SSO story end-to-end (federated login from non-main hosts) plus polish surfaced by operator prod verification.
@@ -712,6 +729,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.0-rc.4]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.3...v1.0.0-rc.4
 [1.0.0-rc.3]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.2...v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.1...v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/vlumi/photo-diary/compare/v0.18.0...v1.0.0-rc.1
