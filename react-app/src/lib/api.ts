@@ -3,6 +3,7 @@ import createClient from "openapi-fetch";
 import type { paths } from "./api-schema";
 import { beginLogin } from "./auth-redirect";
 import i18n from "./i18n";
+import { queryClient } from "./query-client";
 import UserModel from "../models/UserModel";
 import { useUserStore, useChangePasswordModalStore } from "../stores";
 
@@ -64,6 +65,15 @@ const refreshOnce = async (): Promise<boolean> => {
       } catch {
         // Body wasn't JSON-shaped — cookies still rotated, ignore.
       }
+      // Any grant / admin-flag change server-side is reflected in
+      // the refresh response (see above), but the queryKeys for
+      // access-derived caches (galleries, gallery-photos) don't
+      // include the grant set — they'd stay pinned to the stale
+      // pre-change data until the user id itself changed. Invalidate
+      // them so the next render fetches fresh. Cheap; refresh only
+      // fires every ~15 min under normal load.
+      queryClient.invalidateQueries({ queryKey: ["galleries"] });
+      queryClient.invalidateQueries({ queryKey: ["gallery-photos"] });
       return true;
     } catch {
       return false;
@@ -96,6 +106,13 @@ const expireLocalAuth = () => {
   beginLogin(i18n.t("session-expired"));
 };
 
+// Marker on the retry to prevent double-refresh loops. If the
+// refresh-and-retry response ALSO comes back 401, we've hit a case
+// the refresh didn't cure (server-side session gone, weird cookie
+// desync, etc.) — expire local auth once and give up rather than
+// looping the refresh forever.
+const RETRIED_HEADER = "x-pd-retried-after-refresh";
+
 client.use({
   // Mid-session 401 handler with refresh fallback. If a request comes
   // back 401 and a refresh succeeds (cookie or legacy localStorage),
@@ -113,13 +130,22 @@ client.use({
     if (request.method === "POST" && request.url.endsWith("/api/v1/tokens")) {
       return;
     }
+    // Already retried once and still 401 — refresh didn't fix it.
+    // Stop looping.
+    if (request.headers.get(RETRIED_HEADER)) {
+      expireLocalAuth();
+      return;
+    }
     const ok = await refreshOnce();
     if (!ok) {
       expireLocalAuth();
       return;
     }
-    // Retry the original request — cookies are now refreshed.
-    return await globalThis.fetch(request);
+    // Retry the original request — cookies are now refreshed. Mark
+    // it so a repeat 401 doesn't re-enter this handler.
+    const retryHeaders = new Headers(request.headers);
+    retryHeaders.set(RETRIED_HEADER, "1");
+    return await globalThis.fetch(request, { headers: retryHeaders });
   },
 });
 
