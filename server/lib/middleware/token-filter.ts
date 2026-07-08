@@ -1,6 +1,7 @@
 import type { FastifyRequest, onRequestHookHandler } from "fastify";
 
 import CONST from "../constants.js";
+import { InvalidTokenError, TokenExpiredError } from "../errors.js";
 import tokenFactory from "../../models/token.js";
 import logger from "../logger.js";
 
@@ -10,6 +11,26 @@ const tokensModel = tokenFactory();
 // the SPA writes it via the HttpOnly cookies issued at login.
 const getToken = (request: FastifyRequest): string | undefined => {
   return request.cookies?.pd_access;
+};
+
+// Paths that must never verify pd_access — the browser may still be
+// holding a stale/expired access cookie, and these are precisely the
+// endpoints the SPA reaches for when trying to recover from that
+// state. Verifying would 401 before the controller runs and strand
+// the client with no way forward. Static/SPA routes are handled by a
+// separate short-circuit in `tokenFilter`.
+const isNoAuthEndpoint = (url: string, method: string): boolean => {
+  const path = url.split("?")[0];
+  // Login / refresh / logout: recovery paths.
+  if (path === "/api/v1/tokens/refresh" && method === "POST") return true;
+  if (path === "/api/v1/tokens" && (method === "POST" || method === "DELETE")) {
+    return true;
+  }
+  // /api/v1/meta is public — SPA reads it on every boot for the
+  // instance's default theme / feature flags. A stale pd_access
+  // cookie must not block SPA boot.
+  if (path.startsWith("/api/v1/meta") && method === "GET") return true;
+  return false;
 };
 
 const tokenFilter: onRequestHookHandler = async (request) => {
@@ -26,6 +47,13 @@ const tokenFilter: onRequestHookHandler = async (request) => {
     return;
   }
 
+  // Recovery + public endpoints: skip verification entirely so a stale
+  // pd_access cookie doesn't block SPA boot or the refresh flow.
+  if (isNoAuthEndpoint(request.url, request.method)) {
+    request.user = { id: CONST.GUEST_USER };
+    return;
+  }
+
   const token = getToken(request);
   if (!token) {
     logger.debug("Using anonymous guest");
@@ -38,14 +66,16 @@ const tokenFilter: onRequestHookHandler = async (request) => {
     request.user = user as unknown as FastifyRequest["user"];
     request.token = token;
   } catch (error) {
-    // Degrade to anonymous on any verification failure (expired,
-    // invalid signature, malformed). Routes that require auth throw
-    // their own 401 downstream via the authorizer; routes that don't
-    // (meta, public gallery reads) proceed as guest. Throwing here
-    // would 401 the meta endpoint too, breaking SPA boot when the
-    // browser still holds a stale cookie.
-    logger.debug("Token verification failed; falling back to guest", error);
-    request.user = { id: CONST.GUEST_USER };
+    // Throw 401 on any verification failure so the SPA's client-side
+    // refresh flow kicks in. Degrading to anonymous would silently
+    // downgrade the response to guest data — the SPA would think the
+    // request succeeded, private galleries would appear empty, and
+    // the user would see stale UI with no signal to refresh.
+    logger.debug("Token verification failed", error);
+    if (error instanceof TokenExpiredError) {
+      throw error;
+    }
+    throw new InvalidTokenError();
   }
 };
 
