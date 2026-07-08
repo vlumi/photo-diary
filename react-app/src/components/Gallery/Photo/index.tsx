@@ -324,7 +324,7 @@ const Photo = ({
     () => filter.toServerFilters(filters),
     [filters]
   );
-  const { data: neighbors } = useQuery({
+  const { data: neighbors, isPlaceholderData } = useQuery({
     queryKey: [
       "gallery-photo-neighbors",
       gallery.id(),
@@ -405,24 +405,38 @@ const Photo = ({
   const SPRING = { type: "spring", stiffness: 400, damping: 40 } as const;
   const SLIDE = { duration: 0.18, ease: "easeOut" } as const;
 
+  // Gate arrow-key / swipe navigation on having FRESH neighbors for
+  // the current photo. `keepPreviousData` keeps the previous photo's
+  // neighbors visible while the new photo's fetch is in flight so
+  // the slide-out lands on a real neighbor thumbnail — but the
+  // navigation callbacks were reading those stale neighbors too. A
+  // second arrow press within that ~50–100 ms fetch window would
+  // navigate against the OLD photo's prev/next: same-photo "double
+  // transition" on repeated Right, or a skipped photo on
+  // Right-then-Left. Once fresh neighbors arrive, isPlaceholderData
+  // flips false and navigation re-enables.
+  const canNavigate = !isPlaceholderData;
+
   const animateToPrev = React.useCallback(async () => {
-    if (!prevPhoto) return;
+    if (!prevPhoto || !canNavigate) return;
     await trackControls.start({ x: TRACK_PREV, transition: SLIDE });
     navigate(prevPhoto.path(gallery));
-  }, [prevPhoto, gallery, navigate, trackControls]);
+  }, [prevPhoto, canNavigate, gallery, navigate, trackControls]);
 
   const animateToNext = React.useCallback(async () => {
-    if (!nextPhoto) return;
+    if (!nextPhoto || !canNavigate) return;
     await trackControls.start({ x: TRACK_NEXT, transition: SLIDE });
     navigate(nextPhoto.path(gallery));
-  }, [nextPhoto, gallery, navigate, trackControls]);
+  }, [nextPhoto, canNavigate, gallery, navigate, trackControls]);
 
   const handlMoveToFirst = () => {
+    if (!canNavigate) return;
     if (firstPhoto && firstPhoto.id() !== photo.id()) {
       navigate(firstPhoto.path(gallery));
     }
   };
   const handlMoveToLast = () => {
+    if (!canNavigate) return;
     if (lastPhoto && lastPhoto.id() !== photo.id()) {
       navigate(lastPhoto.path(gallery));
     }
