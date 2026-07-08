@@ -150,6 +150,7 @@ const Content = ({ photo }: Props): React.ReactElement => {
       <Frame $width={imageWidth} $height={imageHeight}>
         <ImageClip>
           <Image
+            key={photo.id()}
             src={path}
             srcSet={srcSet || undefined}
             sizes={srcSet ? "100vw" : undefined}
