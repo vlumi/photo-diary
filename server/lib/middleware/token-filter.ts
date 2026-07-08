@@ -1,7 +1,6 @@
 import type { FastifyRequest, onRequestHookHandler } from "fastify";
 
 import CONST from "../constants.js";
-import { InvalidTokenError, TokenExpiredError } from "../errors.js";
 import tokenFactory from "../../models/token.js";
 import logger from "../logger.js";
 
@@ -28,7 +27,7 @@ const tokenFilter: onRequestHookHandler = async (request) => {
   }
 
   const token = getToken(request);
-  if (!token || (request.url === "/api/tokens" && request.method === "POST")) {
+  if (!token) {
     logger.debug("Using anonymous guest");
     request.user = { id: CONST.GUEST_USER };
     return;
@@ -39,15 +38,14 @@ const tokenFilter: onRequestHookHandler = async (request) => {
     request.user = user as unknown as FastifyRequest["user"];
     request.token = token;
   } catch (error) {
-    logger.debug("Token verification failed", error);
-    // Surface the expired-vs-invalid distinction the model throws so the
-    // SPA can show the re-login modal on expiry; opaque verification
-    // failures (signature mismatch, malformed, tampered) stay as
-    // `InvalidTokenError`.
-    if (error instanceof TokenExpiredError) {
-      throw error;
-    }
-    throw new InvalidTokenError();
+    // Degrade to anonymous on any verification failure (expired,
+    // invalid signature, malformed). Routes that require auth throw
+    // their own 401 downstream via the authorizer; routes that don't
+    // (meta, public gallery reads) proceed as guest. Throwing here
+    // would 401 the meta endpoint too, breaking SPA boot when the
+    // browser still holds a stale cookie.
+    logger.debug("Token verification failed; falling back to guest", error);
+    request.user = { id: CONST.GUEST_USER };
   }
 };
 
