@@ -63,6 +63,7 @@ export default () => {
     createSession,
     loadSession,
     updateSession,
+    rotateSessionHash,
     deleteSession,
     deleteUserSessions,
 
@@ -226,6 +227,28 @@ const updateSession = async (
   const { query, values } = SCHEMA.session.buildUpdateByIdQuery(patch);
   if (!query || !values) return;
   db.prepare(query).run([...values, sessionId]);
+};
+// Atomic check-and-swap for the refresh-token rotation. Returns true
+// if exactly one row was updated — meaning we are the winning caller
+// in a concurrent-refresh race. Returns false if 0 rows matched —
+// some other request already rotated the same session (the WHERE
+// clause's `refresh_token_hash = ?` no longer matches). The caller
+// throws InvalidTokenError in that case; the client's cross-tab
+// retry path picks up the winner's fresh cookies from the shared
+// jar and re-issues the original request.
+const rotateSessionHash = async (
+  sessionId: string,
+  expectedHash: string,
+  newHash: string,
+  lastUsedAt: number
+): Promise<boolean> => {
+  const info = db
+    .prepare(
+      "UPDATE session SET refresh_token_hash = ?, last_used_at = ? " +
+        "WHERE id = ? AND refresh_token_hash = ?"
+    )
+    .run(newHash, lastUsedAt, sessionId, expectedHash);
+  return info.changes === 1;
 };
 const deleteSession = async (sessionId: string): Promise<void> =>
   deleteById(SCHEMA.session, sessionId);

@@ -122,6 +122,19 @@ export default {
   ): Promise<void> => {
     await db.updateSession(sessionId, patch);
   },
+  rotateSessionHash: async (
+    sessionId: string,
+    expectedHash: string,
+    newHash: string,
+    lastUsedAt: number
+  ): Promise<boolean> => {
+    return await db.rotateSessionHash(
+      sessionId,
+      expectedHash,
+      newHash,
+      lastUsedAt
+    );
+  },
   deleteSession: async (sessionId: string): Promise<void> => {
     await db.deleteSession(sessionId);
   },
