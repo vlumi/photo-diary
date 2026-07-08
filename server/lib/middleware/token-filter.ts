@@ -16,6 +16,17 @@ const getToken = (request: FastifyRequest): string | undefined => {
 const tokenFilter: onRequestHookHandler = async (request) => {
   request.token = undefined;
 
+  // Static assets + SPA routes never inspect request.user. Throwing a
+  // 401 here on an expired token would return raw JSON in place of
+  // index.html — a page refresh mid-session would surface
+  // `{"error":"Token expired"}` in the address bar instead of loading
+  // the SPA. Skip cleanly; the SPA reactively refreshes on the first
+  // /api/* 401 after it boots.
+  if (!request.url.startsWith("/api/")) {
+    request.user = { id: CONST.GUEST_USER };
+    return;
+  }
+
   const token = getToken(request);
   if (!token || (request.url === "/api/tokens" && request.method === "POST")) {
     logger.debug("Using anonymous guest");

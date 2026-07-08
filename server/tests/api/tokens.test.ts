@@ -159,6 +159,18 @@ describe("Keep-alive", () => {
   test("Guest: 401 so the SPA can clear stale localStorage", async () => {
     await api.get("/api/v1/tokens").expect(401);
   });
+  test("Expired access cookie on an SPA path never returns JSON 401", async () => {
+    // Regression: tokenFilter used to run for every request, so a
+    // page refresh mid-session with an expired pd_access cookie would
+    // surface `{"error":"Token expired"}` in the address bar instead
+    // of loading index.html. The filter must skip non-API URLs so the
+    // static/SPA fallback runs.
+    const res = await api
+      .get("/g/gallery1")
+      .set("Cookie", "pd_access=eyJmYWtl.fake.token");
+    expect(res.status).not.toBe(401);
+    expect(res.body?.error).not.toBe("Token expired");
+  });
 });
 
 describe("Refresh", () => {

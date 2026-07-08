@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Server
+
+- `tokenFilter` no longer runs on non-API URLs. It was a global `onRequest` hook, so a page refresh mid-session with an expired `pd_access` cookie threw `TokenExpiredError` before Fastify could serve the SPA's `index.html` — the browser rendered raw JSON (`{"error":"Token expired"}`) in the address bar instead of loading the SPA. Static and SPA-fallback paths never inspect `request.user`, so short-circuiting the filter for anything not under `/api/` restores the intended behavior: the SPA loads, hits an API endpoint, gets 401, and the existing refresh flow handles the rest.
+
 ## [1.0.0-rc.4] - 2026-07-08
 
 Session-hardening rc surfaced by longer prod verification. Focus is on the "session goes stale mid-session while the UI still shows logged in" pattern and its adjacent cases (logout race, cross-tab refresh, arrow-key nav during in-flight neighbor fetch). Plus operator-tooling polish.
