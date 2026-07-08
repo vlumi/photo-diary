@@ -4,7 +4,7 @@
 
 ### Server
 
-- `tokenFilter` no longer runs on non-API URLs. It was a global `onRequest` hook, so a page refresh mid-session with an expired `pd_access` cookie threw `TokenExpiredError` before Fastify could serve the SPA's `index.html` — the browser rendered raw JSON (`{"error":"Token expired"}`) in the address bar instead of loading the SPA. Static and SPA-fallback paths never inspect `request.user`, so short-circuiting the filter for anything not under `/api/` restores the intended behavior: the SPA loads, hits an API endpoint, gets 401, and the existing refresh flow handles the rest.
+- `tokenFilter` no longer 401s on a stale or expired `pd_access` cookie. Two changes: it now short-circuits for non-API URLs (a page refresh mid-session with an expired cookie was returning raw JSON `{"error":"Token expired"}` in the address bar instead of loading the SPA's `index.html`), and it degrades to anonymous instead of throwing on any verification failure (expired, invalid signature, malformed). With rc.4's 90-day `pd_access` Max-Age the browser holds stale access cookies across sessions; the throw-on-failure behaviour was 401'ing every recovery path (login POST, refresh POST, even the public `/meta`) before the controller could run, so the SPA couldn't unstick itself. Routes that require auth still throw 401 via the authorizer; `GET /tokens` still 401s on anonymous so the SPA's boot identity check triggers the refresh flow correctly.
 
 ## [1.0.0-rc.4] - 2026-07-08
 

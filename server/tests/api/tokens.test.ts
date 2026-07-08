@@ -171,6 +171,34 @@ describe("Keep-alive", () => {
     expect(res.status).not.toBe(401);
     expect(res.body?.error).not.toBe("Token expired");
   });
+  test("Stale pd_access on public /meta degrades to anonymous, still 200", async () => {
+    // Regression: with rc.4's 90-day pd_access Max-Age, browsers hold
+    // stale/invalid access cookies across sessions. tokenFilter used
+    // to throw on verification failure, 401'ing public endpoints
+    // (meta) before the controller ran — the SPA couldn't even load
+    // its instance defaults.
+    await api
+      .get("/api/v1/meta")
+      .set("Cookie", "pd_access=eyJmYWtl.fake.token")
+      .expect(200);
+  });
+  test("Stale pd_access on POST /tokens (login) doesn't block login", async () => {
+    // Regression: same-root-cause as /meta. A stale pd_access cookie
+    // paired with a fresh login attempt used to 401 in tokenFilter
+    // before the login controller could accept the credentials.
+    await api
+      .post("/api/v1/tokens")
+      .set("Cookie", "pd_access=eyJmYWtl.fake.token")
+      .send({ id: "admin", password: "foobar" })
+      .expect(200);
+  });
+  test("Stale pd_access on POST /tokens/refresh doesn't block refresh", async () => {
+    const pair = await loginUserPair(api, "admin");
+    await api
+      .post("/api/v1/tokens/refresh")
+      .set("Cookie", `pd_refresh=${pair.refreshToken}; pd_access=eyJmYWtl.fake.token`)
+      .expect(200);
+  });
 });
 
 describe("Refresh", () => {
