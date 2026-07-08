@@ -136,15 +136,25 @@ client.use({
       expireLocalAuth();
       return;
     }
+    const retryHeaders = new Headers(request.headers);
+    retryHeaders.set(RETRIED_HEADER, "1");
     const ok = await refreshOnce();
     if (!ok) {
+      // Refresh failed — could be a cross-tab race where a sibling
+      // tab won the rotation and invalidated our submitted refresh
+      // cookie. The browser's shared jar has the sibling's fresh
+      // tokens by now, so retry the original once before giving up.
+      // If cookies weren't updated (genuine session loss), the
+      // retry 401s and we fall through to expire.
+      const retry = await globalThis.fetch(request, {
+        headers: retryHeaders,
+      });
+      if (retry.ok) return retry;
       expireLocalAuth();
-      return;
+      return retry;
     }
     // Retry the original request — cookies are now refreshed. Mark
     // it so a repeat 401 doesn't re-enter this handler.
-    const retryHeaders = new Headers(request.headers);
-    retryHeaders.set(RETRIED_HEADER, "1");
     return await globalThis.fetch(request, { headers: retryHeaders });
   },
 });

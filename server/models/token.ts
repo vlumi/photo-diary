@@ -140,13 +140,22 @@ const verifyAndRotateRefresh = async (
   }
   const ok = await bcrypt.compare(parsed.secret, row.refresh_token_hash);
   if (!ok) throw new InvalidTokenError();
-  // Rotate: generate a new secret, replace the hash, and update last_used_at.
+  // Rotate: generate a new secret, replace the hash, and update
+  // last_used_at. Atomic check-and-swap: the DB UPDATE only lands
+  // if the row's hash is still what we compared against — if a
+  // concurrent refresh call (typically a sibling tab) already
+  // rotated, we lose the race and throw. The client retries the
+  // original request; the browser's cookie jar has the winner's
+  // fresh tokens by then, so the retry succeeds.
   const newSecret = randomBytes(REFRESH_SECRET_BYTES).toString("base64url");
   const newHash = await bcrypt.hash(newSecret, SALT_ROUNDS);
-  await db.updateSession(parsed.sessionId, {
-    refresh_token_hash: newHash,
-    last_used_at: Date.now(),
-  });
+  const won = await db.rotateSessionHash(
+    parsed.sessionId,
+    row.refresh_token_hash,
+    newHash,
+    Date.now()
+  );
+  if (!won) throw new InvalidTokenError();
   return {
     userId: row.user_id,
     refreshToken: `${parsed.sessionId}.${newSecret}`,
