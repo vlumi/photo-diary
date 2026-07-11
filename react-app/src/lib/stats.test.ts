@@ -459,6 +459,26 @@ describe("collectTopics", () => {
     expect((topics[0].categories[3] as any).photos).toBe(mapPhotos);
   });
 
+  test("inlineShowAll is set on bounded time categories (month/weekday/hour) only", () => {
+    const topics = stats.collectTopics(
+      baseData(),
+      "en",
+      mockT,
+      mockCountryData,
+      mockTheme
+    );
+    const time = topics.find((tt) => tt.key === "time")!;
+    const byKey = Object.fromEntries(
+      time.categories.map((c) => [c.key, c.inlineShowAll ?? false])
+    );
+    expect(byKey.month).toBe(true);
+    expect(byKey.weekday).toBe(true);
+    expect(byKey.hour).toBe(true);
+    // Unbounded time categories keep the cap.
+    expect(byKey.year).toBe(false);
+    expect(byKey["year-month"]).toBe(false);
+  });
+
   test("geotaggedCount=0 does not emit location category", () => {
     const data = baseData();
     data.count.geotaggedCount = 0;

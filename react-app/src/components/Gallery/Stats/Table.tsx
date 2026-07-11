@@ -250,7 +250,11 @@ const Table = ({
 
   const fullTable = category.table;
   const isInline = limit !== undefined;
-  const shouldCap = isInline && fullTable.length > limit;
+  // Categories with a finite, well-defined value set (month, weekday,
+  // hour) opt out of the cap so the reader sees the full distribution
+  // inline instead of an arbitrary "+ N more…" cut.
+  const shouldCap =
+    isInline && !category.inlineShowAll && fullTable.length > limit;
   // Inline view defaults to top-by-count so the 10-row preview reads
   // as "the headlines" for categories with no inherent ordering (gear,
   // people, country, etc.). Time categories (year-month / year /

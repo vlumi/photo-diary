@@ -117,6 +117,11 @@ export interface StatsCategory {
   // hour read inline as a top-N-by-count list that doesn't line up
   // with the line / polar chart above it.
   naturalInlineOrder?: boolean;
+  // Skip the inline row cap for categories whose value set is finite
+  // and small (month = 12, weekday = 7, hour = 24). A "+ N more…"
+  // trailer on a bounded distribution reads as an arbitrary cut of a
+  // list the reader already knows in full.
+  inlineShowAll?: boolean;
 }
 // Expanded Summary view (SummaryModal). Four sub-trees:
 // period (when), peaks (how concentrated), variety (how varied),
@@ -1002,6 +1007,7 @@ const collectTopics = (
       title: t("stats-category-month"),
       valueSortable: true,
       naturalInlineOrder: true,
+      inlineShowAll: true,
       charts: [
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1044,6 +1050,7 @@ const collectTopics = (
       title: t("stats-category-weekday"),
       valueSortable: true,
       naturalInlineOrder: true,
+      inlineShowAll: true,
       charts: [
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
@@ -1083,6 +1090,7 @@ const collectTopics = (
       title: t("stats-category-hour"),
       valueSortable: true,
       naturalInlineOrder: true,
+      inlineShowAll: true,
       charts: [
         { type: "polar", data, options: chartOptions.polar },
         { type: "horizontal-bar", data, options: chartOptions.bar },
