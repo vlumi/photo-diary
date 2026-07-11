@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Stats inline category card shows every row for month / weekday / hour instead of capping at 10. Those categories have a finite, well-defined value set (12 / 7 / 24 rows) — a "+ N more…" trailer read as an arbitrary cut of a distribution the reader already knows in full. Year and year-month keep the cap; their domains grow with the collection. Closes #701.
+
 ## [1.0.0-rc.5] - 2026-07-08
 
 Follow-up to rc.4's session-hardening pass. rc.4's 90-day `pd_access` Max-Age (#695) was the right fix in isolation, but it exposed two adjacent behaviours in the token filter that stranded the SPA when the browser was holding a stale access cookie. Plus one small photo-modal render race.
