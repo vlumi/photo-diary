@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Server
+
+- Cross-host SSO consume (`GET /api/v1/tokens/sso`) skips `pd_access` verification. It's the target-host equivalent of login/refresh/logout — the endpoint exists to establish a fresh session from a signed ticket, so requiring a valid access cookie to get there is a chicken-and-egg block. A user switching hosts via the UserMenu with a stale/expired cookie left on the target from a prior session used to land on raw `{"error":"Token expired"}` JSON on the target's URL bar instead of the redirect.
+
 ### Frontend
 
 - Stats inline category card shows every row for month / weekday / hour instead of capping at 10. Those categories have a finite, well-defined value set (12 / 7 / 24 rows) — a "+ N more…" trailer read as an arbitrary cut of a distribution the reader already knows in full. Year and year-month keep the cap; their domains grow with the collection. Closes #701.
