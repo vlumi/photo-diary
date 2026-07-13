@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
+## [1.0.0-rc.6] - 2026-07-13
+
+Small follow-up. One recovery-path gap in the token filter (cross-host SSO consume was missed by the rc.5 refactor), plus a stats-card polish surfaced by prod use.
+
 ### Server
 
-- Cross-host SSO consume (`GET /api/v1/tokens/sso`) skips `pd_access` verification. It's the target-host equivalent of login/refresh/logout — the endpoint exists to establish a fresh session from a signed ticket, so requiring a valid access cookie to get there is a chicken-and-egg block. A user switching hosts via the UserMenu with a stale/expired cookie left on the target from a prior session used to land on raw `{"error":"Token expired"}` JSON on the target's URL bar instead of the redirect.
+- Cross-host SSO consume (`GET /api/v1/tokens/sso`) skips `pd_access` verification. It's the target-host equivalent of login/refresh/logout — the endpoint exists to establish a fresh session from a signed ticket, so requiring a valid access cookie to get there is a chicken-and-egg block. A user switching hosts via the UserMenu with a stale/expired cookie left on the target from a prior session used to land on raw `{"error":"Token expired"}` JSON on the target's URL bar instead of the redirect. Closes #703.
 
 ### Frontend
 
@@ -749,6 +753,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.0-rc.6]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.5...v1.0.0-rc.6
 [1.0.0-rc.5]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.4...v1.0.0-rc.5
 [1.0.0-rc.4]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.3...v1.0.0-rc.4
 [1.0.0-rc.3]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.2...v1.0.0-rc.3
