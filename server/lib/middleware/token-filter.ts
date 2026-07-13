@@ -26,6 +26,12 @@ const isNoAuthEndpoint = (url: string, method: string): boolean => {
   if (path === "/api/v1/tokens" && (method === "POST" || method === "DELETE")) {
     return true;
   }
+  // Cross-host SSO: the browser navigates to /api/v1/tokens/sso on the
+  // target host with a signed ticket in the query. The endpoint mints
+  // a fresh session from that ticket — running the token filter here
+  // would 401 out the recovery flow when the target host holds a
+  // stale pd_access from a prior session.
+  if (path === "/api/v1/tokens/sso" && method === "GET") return true;
   // /api/v1/meta is public — SPA reads it on every boot for the
   // instance's default theme / feature flags. A stale pd_access
   // cookie must not block SPA boot.

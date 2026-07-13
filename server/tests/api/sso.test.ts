@@ -161,6 +161,23 @@ describe("Cross-host SSO consume", () => {
     expect(res.headers["location"]).toBe("/");
   });
 
+  test("stale pd_access on the target host doesn't block the SSO consume", async () => {
+    // Regression: /api/v1/tokens/sso is the recovery path a cross-host
+    // hop uses to establish a fresh session on the target host. If the
+    // browser still holds a stale/expired pd_access cookie from an
+    // earlier session there, tokenFilter used to 401 before /sso ran
+    // — the user saw raw `{"error":"Token expired"}` JSON on the
+    // target host's URL bar after clicking the UserMenu host link.
+    const token = await mintTokenFor("admin", "127.0.0.1");
+    const res = await api
+      .get(
+        `/api/v1/tokens/sso?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent("/g/dailybw")}`
+      )
+      .set("Cookie", "pd_access=eyJmYWtl.fake.token")
+      .expect(302);
+    expect(res.headers["location"]).toBe("/g/dailybw");
+  });
+
   test("session cookies issued by the consume verify on the next request", async () => {
     const token = await mintTokenFor("admin", "127.0.0.1");
     const ssoRes = await api
