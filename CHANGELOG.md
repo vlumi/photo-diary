@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-19
+
+Released unchanged from `1.0.0-rc.6` after prod verification. See the [Version History](README.md#version-history) in the README for the milestone-level summary of what this release covers.
+
 ## [1.0.0-rc.6] - 2026-07-13
 
 Small follow-up. One recovery-path gap in the token filter (cross-host SSO consume was missed by the rc.5 refactor), plus a stats-card polish surfaced by prod use.
@@ -753,6 +757,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.0]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.6...v1.0.0
 [1.0.0-rc.6]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.5...v1.0.0-rc.6
 [1.0.0-rc.5]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.4...v1.0.0-rc.5
 [1.0.0-rc.4]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.3...v1.0.0-rc.4
