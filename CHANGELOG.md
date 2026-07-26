@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-07-26
+
+Dependency refresh across all workspaces after the 1.0 tag. In-range patch/minor bumps for the Fastify family, React 19.2.8, TanStack Query 5.101.4, i18next 26.3.6, react-easy-crop 6.2.3, jose 6.2.4, sharp 0.35.3, vite 8.1.5, vitest 4.1.10, typescript-eslint 8.65, and eslint 10.8 (server + converter). Then four majors, each on its own PR:
+
+### Dependencies
+
+- Bump `better-sqlite3` 12 → 13 (#710). Migrates the DB driver to N-API; prebuilt binaries now ship with the package instead of being fetched via the deprecated `prebuild-install`. No SQL / statement / transaction API changes — additions only (`db.explain()` for parameterless EXPLAIN queries, `preparedStatement.toString()` for expanded SQL).
+- Bump `@fastify/static` 9 → 10 (#711). The `setHeaders` callback receives a `FastifyReply` instead of a raw `Response`; the `fastifyStatic` register in `server/app.ts` doesn't use `setHeaders` so the change is transparent.
+- Bump `@testing-library/jest-dom` 6 → 7 (#712). `@testing-library/dom` becomes a required (not implicit) peer, so it's now an explicit react-app devDep. Node engine already met (`>=22`).
+- Bump `c8` 11 → 12 (#713). Yargs 18 internally, which tightens Node to `^20.19.0 || ^22.12.0 || >=23`; already met.
+
+### Deferred
+
+Two majors couldn't ship in this refresh because their downstream tooling doesn't support the new version yet: `typescript` 6 → 7 (blocked — `typescript-eslint` throws "does not support TS 7.0" at load) and `eslint` 9 → 10 in react-app (blocked — `eslint-plugin-react@^7.37`'s `eslint@^9.7` peer cap, still). Server + converter already run eslint 10.
+
 ## [1.0.0] - 2026-07-19
 
 Released unchanged from `1.0.0-rc.6` after prod verification. See the [Version History](README.md#version-history) in the README for the milestone-level summary of what this release covers.
@@ -757,6 +772,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.1]: https://github.com/vlumi/photo-diary/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.6...v1.0.0
 [1.0.0-rc.6]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.5...v1.0.0-rc.6
 [1.0.0-rc.5]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.4...v1.0.0-rc.5
