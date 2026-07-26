@@ -171,7 +171,7 @@ Per-instance state — the SQLite DB, the `photos/` tree, `.env` — lives in a 
 
 Where the project is headed. Each bullet links the GitHub milestone for live status.
 
-- **1.0** — shipped 2026-07-19 (see the [Version History](#version-history) entry below).
+- **1.0** — shipped 2026-07-19; latest patch `1.0.1` 2026-07-26 (see the [Version History](#version-history) entry below).
 - [**2.0 — Thin server, cloud-native direction**](https://github.com/vlumi/photo-diary/milestone/18) *(direction-setting, far out)* — originals leave the server for client-side / cold storage, the converter's sharp pipeline becomes a bundled local uploader, all DB ops route through the API, storage backends behind a vendor-agnostic interface. Likely diverges from today's self-hosted-monolith shape enough that it may end up being a different product line.
 
 ## Backlog
@@ -200,6 +200,6 @@ Third structural take on a long-running personal photo-gallery side project — 
 - **0.16** (Jun 2026) — Filter & viewing UX polish: redesigned filter widget (inline strip + per-category modal cards with faceted counts), continuous-variable range filters, stacked-area evolution chart, virtual-gallery edit page + hybrid-source admin UI, persistent map modal.
 - **0.17** (Jun 2026) — Admin UI shift to layered modals + Section card primitive; per-photo visibility + editor-tier admin actions on `/g/`; `/m/instance` page with runtime-overridable `meta` defaults; configurable rendition ladder + collapsed `photos/display/<maxDim>/` layout; `/m/photos` filters move into a modal; Stats Evolution adds `weekday` and `hour`; Finnish geocoding cleanup (state-code lvl fallthrough + script-rule address blob filter).
 - **0.18** (Jun 2026) — Cleanup + observability: `meta` table is the only source for SPA runtime defaults (no `.env` fallback); `/m/operations` admin page surfaces converter activity, pending queues, and failures; tidied `bin/photo.ts` surface; vitest coverage wired; frontend security audit pass; auth tokens move from localStorage to HttpOnly cookies.
-- **1.0** (Jul 2026) — Stable milestone. End of the JWT-cookie transition, CSP enable pass, cross-host SSO for the UserMenu virtual-host switcher (with federated login from non-main hosts), Playwright e2e suite, docs overhaul, session-state reconcile on boot + across tabs, session-hardening pass across six rcs. From here, further work ships as patch releases or moves onto the 2.0 direction.
+- **1.0** (Jul 2026) — Stable milestone. End of the JWT-cookie transition, CSP enable pass, cross-host SSO for the UserMenu virtual-host switcher (with federated login from non-main hosts), Playwright e2e suite, docs overhaul, session-state reconcile on boot + across tabs, session-hardening pass across six rcs. `1.0.1` (Jul 26) is a dependency-refresh patch (better-sqlite3 13, @fastify/static 10, jest-dom 7, c8 12, plus in-range bumps across the tree). From here, further work ships as patch releases or moves onto the 2.0 direction.
 
 See the [Roadmap](#roadmap) for what's in flight after 1.0.
