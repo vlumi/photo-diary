@@ -22,11 +22,10 @@
  *   4. Promote CHANGELOG's [Unreleased] → [<new>] - <today> + add empty
  *      [Unreleased] + append diff-link at the footer
  *   5. Rewrite SETUP.md's install/upgrade/gc examples to the new version
- *   6. Validate: typecheck + lint + tests across react-app, server,
- *      converter, plus the react-app production build
- *   7. Commit on release/<new>, push, open a PR titled "Release <new>"
- *   8. gh pr merge --auto --squash, poll until merged
- *   9. git tag v<new>, push, gh release create v<new> --latest with the
+ *   6. Commit on release/<new>, push, open a PR titled "Release <new>"
+ *   7. gh pr merge --auto, poll until merged (CI is authoritative on
+ *      test/typecheck/lint — no local re-run gate here)
+ *   8. git tag v<new>, push, gh release create v<new> --latest with the
  *      new CHANGELOG section as notes
  *
  * Any step failing exits non-zero and leaves the working tree at the
@@ -243,18 +242,6 @@ const main = async (): Promise<void> => {
   console.log("\n→ Bumping SETUP.md");
   bumpSetupMd(current, next);
 
-  console.log("\n→ Validating (typecheck + lint + tests + build)");
-  for (const ws of ["react-app", "server", "converter"]) {
-    console.log(`  · ${ws} typecheck`);
-    sh("npm run typecheck", { cwd: path.join(ROOT, ws) });
-    console.log(`  · ${ws} lint`);
-    sh("npm run lint", { cwd: path.join(ROOT, ws) });
-    console.log(`  · ${ws} test`);
-    sh("npm test", { cwd: path.join(ROOT, ws) });
-  }
-  console.log("  · react-app build");
-  sh("npm run build", { cwd: path.join(ROOT, "react-app") });
-
   console.log("\n→ Committing");
   sh("git add -A");
   sh(`git commit -m "Release ${next}"`);
@@ -281,7 +268,7 @@ const main = async (): Promise<void> => {
   console.log(`✓ PR #${prNumber} opened`);
 
   console.log(`\n→ Enabling auto-merge on PR #${prNumber}`);
-  sh(`gh pr merge ${prNumber} --auto --squash`);
+  sh(`gh pr merge ${prNumber} --auto --merge`);
 
   await pollUntilMerged(prNumber);
 

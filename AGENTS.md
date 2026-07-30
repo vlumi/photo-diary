@@ -44,12 +44,11 @@ What the script does:
 3. Regenerates `server/openapi.json` and `react-app/src/lib/api-schema.ts`.
 4. Promotes `## [Unreleased]` to `## [<next>] - <today>`, adds a fresh empty `[Unreleased]` above it, and appends the diff-link entry to the footer.
 5. Rewrites SETUP.md's version literals (replaces every occurrence of the previous version string).
-6. Runs `typecheck` + `lint` + `test` in all three subtrees, plus the react-app production build. Any failure aborts before touching git.
-7. Commits, pushes the branch, opens the PR (title `Release <next>`, body summarises the promoted CHANGELOG section).
-8. `gh pr merge --auto --squash`, then polls until GitHub reports the PR as merged (30 min timeout, 15 s cadence).
-9. Pulls the merged main, tags `v<next>`, pushes the tag, and publishes the GitHub Release as `--latest` with the promoted CHANGELOG section as the notes file.
+6. Commits, pushes the branch, opens the PR (title `Release <next>`, body summarises the promoted CHANGELOG section).
+7. `gh pr merge --auto --merge` (regular merge commits, matching the repo's history), then polls until GitHub reports the PR as merged (30 min timeout, 15 s cadence). CI is authoritative on `typecheck`/`lint`/`test`/`build` — no local re-run gate here.
+8. Pulls the merged main, tags `v<next>`, pushes the tag, and publishes the GitHub Release as `--latest` with the promoted CHANGELOG section as the notes file.
 
-Any step failing exits non-zero and leaves the working tree at the failure point so you can investigate. Steps 1–6 are safe to re-run after a fix; from step 7 onward the branch / PR / tag names carry the target version, so a same-version re-run would collide — resume manually.
+Any step failing exits non-zero and leaves the working tree at the failure point so you can investigate. Steps 1–5 are safe to re-run after a fix; from step 6 onward the branch / PR / tag names carry the target version, so a same-version re-run would collide — resume manually.
 
 ## Workflow conventions
 
