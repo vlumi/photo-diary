@@ -77,17 +77,21 @@ describe("response shape (unfiltered)", () => {
     });
   });
 
-  test("daysInYear is the calendar year length", async () => {
+  test("daysInYear clips boundary years to the [first, last] range", async () => {
     const res = await postStats(token, "gallery1");
-    // 2020 is a leap year; 2018 is not.
-    expect(res.body.daysInYear).toEqual({ "2018": 365, "2020": 366 });
+    // gallery1: first photo 2018-05-04, last photo 2020-07-04.
+    // 2018 counts May 4 → Dec 31 = 28 + 30 + 31 + 31 + 30 + 31 + 30 + 31 = 242.
+    // 2020 (leap) counts Jan 1 → Jul 4 = 31 + 29 + 31 + 30 + 31 + 30 + 4 = 186.
+    // Interior years with no photos aren't in the map (loop is over years
+    // that actually carry photos).
+    expect(res.body.daysInYear).toEqual({ "2018": 242, "2020": 186 });
   });
 
-  test("daysInYearMonth has the calendar month length", async () => {
+  test("daysInYearMonth clips boundary months to the [first, last] range", async () => {
     const res = await postStats(token, "gallery1");
-    // May 2018 = 31 days, July 2020 = 31 days
-    expect(res.body.daysInYearMonth["2018"]["5"]).toBe(31);
-    expect(res.body.daysInYearMonth["2020"]["7"]).toBe(31);
+    // May 2018 = 28 (May 4 → May 31), July 2020 = 4 (Jul 1 → Jul 4).
+    expect(res.body.daysInYearMonth["2018"]["5"]).toBe(28);
+    expect(res.body.daysInYearMonth["2020"]["7"]).toBe(4);
   });
 
   test("camera bucket uses formatGear output", async () => {
