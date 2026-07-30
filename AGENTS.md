@@ -28,18 +28,28 @@ Run `npm test`, `npm run typecheck`, and `npm run lint` (all three subtrees) bef
 
 ## Cutting a release
 
-The release step touches several files that need to stay in lockstep. Miss one and CI fails (the openapi-version check, the version-string assertions in the docs).
+The mechanical parts of a release are automated by `bin/release.ts`. Before running it, hand-write the release-theme summary paragraph in `[Unreleased]` and any Version History entry in `README.md` for themed releases — the script only handles the strictly-mechanical work. Milestone hygiene is manual too (verify open issues on the milestone, close it via `gh api repos/vlumi/photo-diary/milestones/<n> -X PATCH -f state=closed`).
 
-1. **Close the milestone.** Verify all open issues in `<version>` are merged or moved out, then `gh api repos/vlumi/photo-diary/milestones/<n> -X PATCH -f state=closed`.
-2. **Branch.** `git checkout -b release/<version>` off main.
-3. **Bump `version`** in all four `package.json` files: root, `server/`, `react-app/`, `converter/`. Same value everywhere.
-4. **Regenerate the OpenAPI dump.** `cd server && npm run docs:dump` writes `server/openapi.json` with `info.version` from `server/package.json`. Then `cd ../react-app && npm run api:codegen` regenerates `src/lib/api-schema.ts` from the new dump. Both must be committed — CI rejects a version bump without the matching regen.
-5. **Stamp CHANGELOG.** Rename `[Unreleased]` to `[<version>] - <YYYY-MM-DD>`; add a fresh empty `[Unreleased]` heading above it. Add a diff-link entry at the footer: `[<version>]: https://github.com/vlumi/photo-diary/compare/v<prev>...v<version>`.
-6. **README + SETUP.** Bump the install / upgrade `0.x.y` examples (in `SETUP.md`, since Setup lives there) to the new version — `grep` the prior version string to catch every site. In `README.md`, add a one-line entry to the Version History list with the release theme, and update the "what's in flight after 0.x" footer pointer. The Roadmap section only lists upcoming major milestones (1.0 / 2.0) now, no per-version reorg needed.
-7. **Validate.** `npm test`, `npm run typecheck`, `npm run lint` across all three subtrees.
-8. **Open the release PR.** Title `Release <version>`. Body summarises what shipped + any milestone reorg.
-9. **After merge, tag.** `git checkout main && git pull && git tag -a v<version> -m "Release <version>" && git push origin v<version>`. GitHub auto-generates the tarball that `bin/instance.ts` examples reference.
-10. **Publish the GitHub Release.** The tag alone doesn't create a release object — extract the `[<version>]` section from `CHANGELOG.md` into a temp file and `gh release create v<version> --title v<version> --notes-file <file> --latest`. The release body becomes the human-readable changelog on the releases page.
+Run:
+
+```shell
+npm run release           # prompts for major/minor/patch
+npm run release -- patch  # same, skipping the prompt
+```
+
+What the script does:
+
+1. Refuses to run on a dirty working tree; checks out `main`, pulls.
+2. Creates `release/<next>`, bumps the version in all four `package.json` files (via `npm run version:sync`) and refreshes the lockfile.
+3. Regenerates `server/openapi.json` and `react-app/src/lib/api-schema.ts`.
+4. Promotes `## [Unreleased]` to `## [<next>] - <today>`, adds a fresh empty `[Unreleased]` above it, and appends the diff-link entry to the footer.
+5. Rewrites SETUP.md's version literals (replaces every occurrence of the previous version string).
+6. Runs `typecheck` + `lint` + `test` in all three subtrees, plus the react-app production build. Any failure aborts before touching git.
+7. Commits, pushes the branch, opens the PR (title `Release <next>`, body summarises the promoted CHANGELOG section).
+8. `gh pr merge --auto --squash`, then polls until GitHub reports the PR as merged (30 min timeout, 15 s cadence).
+9. Pulls the merged main, tags `v<next>`, pushes the tag, and publishes the GitHub Release as `--latest` with the promoted CHANGELOG section as the notes file.
+
+Any step failing exits non-zero and leaves the working tree at the failure point so you can investigate. Steps 1–6 are safe to re-run after a fix; from step 7 onward the branch / PR / tag names carry the target version, so a same-version re-run would collide — resume manually.
 
 ## Workflow conventions
 

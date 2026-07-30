@@ -17,7 +17,8 @@
   "scripts": {
     "setup": "npm install && npm run build",
     "build": "npm run build --workspace=react-app && rm -rf server/build && cp -r react-app/build server/build",
-    "version:sync": "node bin/sync-versions.mjs && npm install --package-lock-only"
+    "version:sync": "node bin/sync-versions.mjs && npm install --package-lock-only --legacy-peer-deps",
+    "release": "bin/release.ts"
   },
   "repository": {
     "type": "git",
