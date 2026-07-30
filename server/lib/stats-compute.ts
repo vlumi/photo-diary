@@ -140,22 +140,62 @@ const buildByYearMonth = (photos: Photo[]): YearMonthCounts => {
   return out;
 };
 
-const daysInCalendarYear = (year: number): number => {
-  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  return leap ? 366 : 365;
-};
 const daysInCalendarMonth = (year: number, month: number): number =>
   new Date(year, month, 0).getDate();
 
-const buildDaysInYear = (photos: Photo[]): Record<string, number> => {
+// Days elapsed in the (year, month) bucket, clipped to the dataset's
+// [first-photo, last-photo] range. Full months in the interior return
+// the calendar length; the first / last months of the dataset are
+// clipped so the average reflects the days the project was actually
+// active. Buckets outside the dataset range return 0.
+const daysInMonthBucket = (
+  year: number,
+  month: number,
+  first: { year: number; month: number; day: number },
+  last: { year: number; month: number; day: number }
+): number => {
+  const bucketStart = { year, month, day: 1 };
+  const bucketEnd = { year, month, day: daysInCalendarMonth(year, month) };
+  const cmp = (
+    a: { year: number; month: number; day: number },
+    b: { year: number; month: number; day: number }
+  ): number =>
+    a.year !== b.year
+      ? a.year - b.year
+      : a.month !== b.month
+        ? a.month - b.month
+        : a.day - b.day;
+  const lo = cmp(first, bucketStart) > 0 ? first : bucketStart;
+  const hi = cmp(last, bucketEnd) < 0 ? last : bucketEnd;
+  if (cmp(lo, hi) > 0) return 0;
+  return hi.day - lo.day + 1;
+};
+
+const buildDaysInYear = (
+  photos: Photo[],
+  first: Photo | undefined,
+  last: Photo | undefined
+): Record<string, number> => {
+  if (!first || !last) return {};
   const years = new Set<number>();
   for (const photo of photos) years.add(photo.taken.instant.year);
   const out: Record<string, number> = {};
-  for (const year of years) out[String(year)] = daysInCalendarYear(year);
+  for (const year of years) {
+    let total = 0;
+    for (let m = 1; m <= 12; m++) {
+      total += daysInMonthBucket(year, m, first.taken.instant, last.taken.instant);
+    }
+    out[String(year)] = total;
+  }
   return out;
 };
 
-const buildDaysInYearMonth = (photos: Photo[]): YearMonthCounts => {
+const buildDaysInYearMonth = (
+  photos: Photo[],
+  first: Photo | undefined,
+  last: Photo | undefined
+): YearMonthCounts => {
+  if (!first || !last) return {};
   const seen = new Map<number, Set<number>>();
   for (const photo of photos) {
     const year = photo.taken.instant.year;
@@ -167,7 +207,12 @@ const buildDaysInYearMonth = (photos: Photo[]): YearMonthCounts => {
   for (const [year, months] of seen.entries()) {
     out[String(year)] = {};
     for (const month of months) {
-      out[String(year)][String(month)] = daysInCalendarMonth(year, month);
+      out[String(year)][String(month)] = daysInMonthBucket(
+        year,
+        month,
+        first.taken.instant,
+        last.taken.instant
+      );
     }
   }
   return out;
@@ -514,8 +559,8 @@ export const computeStats = (
     byCategory,
     byYearMonth,
     summary,
-    daysInYear: buildDaysInYear(filtered),
-    daysInYearMonth: buildDaysInYearMonth(filtered),
+    daysInYear: buildDaysInYear(filtered, first, last),
+    daysInYearMonth: buildDaysInYearMonth(filtered, first, last),
     byStateCountry: annotations.byStateCountry,
     byCityCountry: annotations.byCityCountry,
     byCityLocalized: annotations.byCityLocalized,

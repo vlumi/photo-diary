@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Server
+
+- Stats `daysInYear` and `daysInYearMonth` clip the first and last buckets to the [first-photo, last-photo] date range, restoring the pre-server-move behaviour. The first year's May counted 31 days when the earliest photo was on the 5th; the last year's current month counted 31 even mid-month. Both surfaces are now "days the project was actually active" in the boundary buckets, so `photos/day` averages for boundary years and months read as intended instead of being diluted by empty pre-first / post-last days. Interior years and months keep the full calendar length (leap-aware).
+
 ## [1.0.1] - 2026-07-26
 
 Dependency refresh across all workspaces after the 1.0 tag. In-range patch/minor bumps for the Fastify family, React 19.2.8, TanStack Query 5.101.4, i18next 26.3.6, react-easy-crop 6.2.3, jose 6.2.4, sharp 0.35.3, vite 8.1.5, vitest 4.1.10, typescript-eslint 8.65, and eslint 10.8 (server + converter). Then four majors, each on its own PR:
