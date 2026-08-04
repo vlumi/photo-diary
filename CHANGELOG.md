@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Dependencies
+
+- Security bump `fast-uri` 3.1.4 → 3.1.5 / 4.1.1 → 4.1.2 (GHSA-7p8r-x3mc-p8w7, transitive via Fastify's URL parsing stack) plus a safe in-range refresh across the tree: fastify 5.11.2, jose 6.2.8, framer-motion 12.43, better-sqlite3 13.0.2, tsx 4.23.5, and small bumps on @tanstack, @types/react, @playwright/test, typebox, globals, and @vitejs/plugin-react. Closes #718, #719.
+
 ## [1.0.2] - 2026-07-30
 
 ### Server
