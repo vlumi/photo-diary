@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-08-11
+
 ### Server
 
 - Drop the `image-size` dep; read dimensions via `sharp().metadata()` instead. `image-size` had two open CVE advisories (GHSA-w3rx-r6r6-pgpr for the ICNS parser, GHSA-5p2g-fcmc-qvqq for the JXL / HEIF parsers — both infinite-loop DoS) with no upstream patch available. `sharp` was already a converter dep for the resize pipeline, and its `.metadata()` returns the same `{ width, height, orientation }` shape used at intake, so the swap is a direct API replacement. Closes #722.
@@ -789,6 +791,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.3]: https://github.com/vlumi/photo-diary/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/vlumi/photo-diary/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/vlumi/photo-diary/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/vlumi/photo-diary/compare/v1.0.0-rc.6...v1.0.0
