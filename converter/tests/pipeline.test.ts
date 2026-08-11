@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import processFile from "../process-file.js";
-import { imageSizeFromFile } from "image-size/fromFile";
+import sharp from "sharp";
 import db from "photo-diary-server/db/index.js";
 import sqlite3Factory from "photo-diary-server/db/sqlite3/index.js";
 
@@ -78,17 +78,17 @@ test("processes a JPEG with EXIF end-to-end and renames to <ts>-<uuid>.jpg", asy
   assert.equal(await onlyFile(path.join(rootDir, "display", "1500")), id);
   assert.equal(await onlyFile(path.join(rootDir, "thumbnail")), id);
 
-  const displayDims = await imageSizeFromFile(
+  const displayDims = await sharp(
     path.join(rootDir, "display", "1500", id)
-  );
-  assert.ok(displayDims.width <= 1500);
-  assert.ok(displayDims.height <= 1500);
+  ).metadata();
+  assert.ok((displayDims.width ?? 0) <= 1500);
+  assert.ok((displayDims.height ?? 0) <= 1500);
 
-  const thumbDims = await imageSizeFromFile(
+  const thumbDims = await sharp(
     path.join(rootDir, "thumbnail", id)
-  );
-  assert.ok(thumbDims.width <= 600);
-  assert.ok(thumbDims.height <= 200);
+  ).metadata();
+  assert.ok((thumbDims.width ?? 0) <= 600);
+  assert.ok((thumbDims.height ?? 0) <= 200);
 
   // DB row holds the EXIF-extracted properties + the original filename.
   const row = (await db.loadPhoto(id)) as any;

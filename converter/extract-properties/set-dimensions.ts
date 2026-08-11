@@ -1,5 +1,5 @@
 import path from "node:path";
-import { imageSizeFromFile } from "image-size/fromFile";
+import sharp from "sharp";
 
 import {
   DIR_ORIGINAL,
@@ -19,12 +19,17 @@ export default async (
     target: string,
     filePath: string
   ): Promise<void> => {
-    const dims = await imageSizeFromFile(filePath);
+    // sharp().metadata() returns raw pixel width/height (EXIF orientation
+    // not applied) plus the tag itself. Values 5-8 are the 90°/270°
+    // rotated cases where the "logical" width and height swap.
+    const meta = await sharp(filePath).metadata();
+    const width = meta.width ?? 0;
+    const height = meta.height ?? 0;
     properties.dimensions = properties.dimensions ?? {};
-    if ((dims.orientation ?? 0) >= 5) {
-      properties.dimensions[target] = { width: dims.height, height: dims.width };
+    if ((meta.orientation ?? 0) >= 5) {
+      properties.dimensions[target] = { width: height, height: width };
     } else {
-      properties.dimensions[target] = { width: dims.width, height: dims.height };
+      properties.dimensions[target] = { width, height };
     }
   };
 
