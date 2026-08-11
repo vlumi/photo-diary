@@ -20,6 +20,14 @@ const encodeSecret = (secret: string): Uint8Array =>
 
 const secrets: Record<string, string> = {};
 let reloadTimer: NodeJS.Timeout | undefined = undefined;
+// Generation counter for the reload timer. Every `_resetTokenStateForTests`
+// bumps it; every fired timer captures the generation active at schedule
+// time and refuses to reschedule if it no longer matches. Prevents an
+// in-flight `init()` (whose `await db.loadUsers()` was resolving while
+// the reset ran) from installing an orphan follow-up timer that would
+// then fire mid-next-file's tests. Was the source of the #674 cascade
+// hook-timeout flake.
+let reloadGeneration = 0;
 
 const loadSecrets = async (): Promise<void> => {
   logger.debug("Loading secrets");
@@ -40,6 +48,7 @@ export const _resetTokenStateForTests = (): void => {
     clearTimeout(reloadTimer);
     reloadTimer = undefined;
   }
+  reloadGeneration++;
 };
 
 const getSecret = (userId: string): string => {
@@ -49,17 +58,24 @@ const getSecret = (userId: string): string => {
   return `${secrets[userId]}${config.SECRET}`;
 };
 
-const init = async (): Promise<void> => {
-  await loadSecrets();
+const scheduleReload = (generation: number): void => {
+  if (generation !== reloadGeneration) return;
   if (reloadTimer) clearTimeout(reloadTimer);
   // 5-second reload so a `bin/user.ts passwd` rotation (which kills sessions
   // by rotating the user's `secret`) takes effect quickly. The DB read is one
   // indexed SELECT against a small table; trivial cost. unref() so the timer
   // doesn't keep the event loop alive on its own (matters in tests).
   reloadTimer = setTimeout(() => {
+    if (generation !== reloadGeneration) return;
     init().catch(() => {});
   }, 5000);
   reloadTimer.unref();
+};
+
+const init = async (): Promise<void> => {
+  const gen = reloadGeneration;
+  await loadSecrets();
+  scheduleReload(gen);
 };
 
 type Credentials = { id: string; password: string };
