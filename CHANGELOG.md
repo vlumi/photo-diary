@@ -2,9 +2,16 @@
 
 ## [Unreleased]
 
+### Server
+
+- Drop the `image-size` dep; read dimensions via `sharp().metadata()` instead. `image-size` had two open CVE advisories (GHSA-w3rx-r6r6-pgpr for the ICNS parser, GHSA-5p2g-fcmc-qvqq for the JXL / HEIF parsers — both infinite-loop DoS) with no upstream patch available. `sharp` was already a converter dep for the resize pipeline, and its `.metadata()` returns the same `{ width, height, orientation }` shape used at intake, so the swap is a direct API replacement. Closes #722.
+- Test-only: fix the cascading hook-timeout flake (#674) by guarding the token model's reload timer against generation drift. `_resetTokenStateForTests` only cancelled the tracked timer; a timer that had already fired left its `init()` callback in-flight, which then scheduled an orphan follow-up timer that would fire mid-next-file's tests and poison the in-memory secrets cache. Every `_resetTokenStateForTests` now bumps a generation counter; `init()` captures it at entry and refuses to install a follow-up timer if the generation has drifted. Validated with 35 consecutive clean runs. Closes #723.
+
 ### Dependencies
 
-- Security bump `fast-uri` 3.1.4 → 3.1.5 / 4.1.1 → 4.1.2 (GHSA-7p8r-x3mc-p8w7, transitive via Fastify's URL parsing stack) plus a safe in-range refresh across the tree: fastify 5.11.2, jose 6.2.8, framer-motion 12.43, better-sqlite3 13.0.2, tsx 4.23.5, and small bumps on @tanstack, @types/react, @playwright/test, typebox, globals, and @vitejs/plugin-react. Closes #718, #719.
+- Security bump `fast-uri` 3.1.4 → 3.1.5 / 4.1.1 → 4.1.2 (GHSA-7p8r-x3mc-p8w7, transitive via Fastify's URL parsing stack). Closes #718.
+- Safe in-range refresh across the tree over multiple rounds: fastify 5.11.3, jose 6.2.8, framer-motion 12.43, better-sqlite3 13.0.3, tsx 4.23.12, @fastify/static 10.1.3, @fastify/compress 9.2, @testing-library/jest-dom 7.0.1, eslint 10.8.1 (server + converter), typebox 1.3.12, @types/node 26.2, and smaller bumps across @tanstack, @types/react, @playwright/test, globals, @vitejs/plugin-react. Closes #719, and the follow-up sweep bundled with this release.
+- Security bump `js-yaml` 4.3.0 → 4.3.1 + `@redocly/openapi-core` (dependabot combined PR; quadratic-complexity fix on `!!omap` duplicate-key detection). Closes #721.
 
 ## [1.0.2] - 2026-07-30
 
