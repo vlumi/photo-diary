@@ -347,13 +347,21 @@ const MapContainer = ({
   const positionKey = (positions as [number, number][])
     .map(([lat, lng]) => `${lat},${lng}`)
     .join("|");
+  // react-leaflet's <Map> reads init props once at mount. When a
+  // saved view is in play we want center+zoom to win — passing
+  // `bounds={undefined}` still marks the prop as present in some
+  // versions of react-leaflet and defeats center+zoom, so spread
+  // conditionally instead of setting the field to undefined.
+  const initProps = initialView
+    ? { center, zoom: initialZoom }
+    : singlePhoto
+      ? { center, zoom: initialZoom }
+      : { bounds };
   return (
     <Root $height={height}>
       <Global styles={mapClusterStyles} />
       <Map
-        bounds={bounds}
-        center={center}
-        zoom={initialZoom}
+        {...initProps}
         maxZoom={resolvedMaxZoom}
         style={{ height: "100%" }}
       >
