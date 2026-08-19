@@ -113,18 +113,28 @@ const Refit = ({
   boundsLatLngs,
   maxZoom,
   positionKey,
+  suppressInitial,
 }: {
   singlePoint: LatLngExpression | undefined;
   boundsLatLngs: LatLngExpression[] | undefined;
   maxZoom: number;
   positionKey: string;
+  // Set when the caller has already positioned the map from a saved
+  // view (map-view store) — skip the first mount-time fit, still
+  // refit on subsequent positionKey changes (e.g. TitleMap year nav).
+  suppressInitial?: boolean;
 }): null => {
   const map = useMap();
   const pointRef = React.useRef(singlePoint);
   pointRef.current = singlePoint;
   const boundsRef = React.useRef(boundsLatLngs);
   boundsRef.current = boundsLatLngs;
+  const initialSkipped = React.useRef(false);
   React.useEffect(() => {
+    if (suppressInitial && !initialSkipped.current) {
+      initialSkipped.current = true;
+      return;
+    }
     if (pointRef.current) {
       map.setView(pointRef.current, maxZoom, { animate: false });
       return;
@@ -134,7 +144,42 @@ const Refit = ({
         animate: false,
       });
     }
-  }, [map, positionKey, maxZoom]);
+  }, [map, positionKey, maxZoom, suppressInitial]);
+  return null;
+};
+
+// Emits map center/zoom on Leaflet's `moveend`, debounced so a pan
+// gesture (which fires `moveend` many times as inertia settles)
+// doesn't hammer localStorage.
+const ViewTracker = ({
+  onViewChange,
+}: {
+  onViewChange: (view: { lat: number; lng: number; zoom: number }) => void;
+}): null => {
+  const map = useMap();
+  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
+  const cbRef = React.useRef(onViewChange);
+  cbRef.current = onViewChange;
+  React.useEffect(() => {
+    const handler = () => {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        const center = map.getCenter();
+        cbRef.current({
+          lat: center.lat,
+          lng: center.lng,
+          zoom: map.getZoom(),
+        });
+      }, 250);
+    };
+    map.on("moveend", handler);
+    return () => {
+      map.off("moveend", handler);
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [map]);
   return null;
 };
 
@@ -246,6 +291,13 @@ interface Props {
   // `/m/photos/<photoId>` (the admin drawer) instead of any
   // `/g/<gallery>/...` view. Takes precedence over `galleryId`.
   adminLink?: boolean;
+  // Optional saved view (from stores/map-view). When set, overrides
+  // the default bounds-fit at mount time. Refit still runs on
+  // subsequent position-set changes.
+  initialView?: { lat: number; lng: number; zoom: number };
+  // Fired after every pan / zoom (debounced ~250 ms). Consumer
+  // typically writes the value into the map-view store.
+  onViewChange?: (view: { lat: number; lng: number; zoom: number }) => void;
 }
 
 const MapContainer = ({
@@ -256,6 +308,8 @@ const MapContainer = ({
   showLocate,
   galleryId,
   adminLink,
+  initialView,
+  onViewChange,
 }: Props): React.ReactElement => {
   const [userPosition, setUserPosition] =
     React.useState<LatLngExpression | undefined>(undefined);
@@ -268,13 +322,23 @@ const MapContainer = ({
   );
   const resolvedMaxZoom = maxZoom ? maxZoom : 14;
   const singlePhoto = positions.length === 1;
-  // Single-photo: initialise with explicit center + zoom so the
-  // map never goes through Leaflet's fitBounds path for a
-  // zero-area bound. Multi-photo: use bounds to fit all
-  // coordinates.
-  const bounds = singlePhoto ? undefined : Leaflet.latLngBounds(positions);
-  const center = singlePhoto ? positions[0] : undefined;
-  const initialZoom = singlePhoto ? resolvedMaxZoom : undefined;
+  // Priority: saved view (if provided) → single-photo center+zoom →
+  // multi-photo bounds. Saved view feeds Leaflet's initial `center`
+  // + `zoom` props directly; the Refit component's initial fit is
+  // suppressed via `suppressInitial`.
+  const savedCenter: LatLngExpression | undefined = initialView
+    ? [initialView.lat, initialView.lng]
+    : undefined;
+  const bounds =
+    !initialView && !singlePhoto
+      ? Leaflet.latLngBounds(positions)
+      : undefined;
+  const center = savedCenter ?? (singlePhoto ? positions[0] : undefined);
+  const initialZoom = initialView
+    ? initialView.zoom
+    : singlePhoto
+      ? resolvedMaxZoom
+      : undefined;
   // Stable key from the position signature so `Refit` re-runs
   // only when the actual location changes (navigating to a
   // different photo), not on every parent render.
@@ -294,11 +358,13 @@ const MapContainer = ({
         style={{ height: "100%" }}
       >
         <Refit
-          singlePoint={center}
+          singlePoint={singlePhoto ? positions[0] : undefined}
           boundsLatLngs={singlePhoto ? undefined : positions}
           maxZoom={resolvedMaxZoom}
           positionKey={positionKey}
+          suppressInitial={!!initialView}
         />
+        {onViewChange && <ViewTracker onViewChange={onViewChange} />}
         {showLocate && (
           <LocateControl onLocated={(pos) => setUserPosition(pos)} />
         )}

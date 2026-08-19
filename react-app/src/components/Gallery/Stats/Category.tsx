@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { BsArrowsFullscreen, BsGeoAlt } from "react-icons/bs";
 
 import Summary from "./Summary";
@@ -12,6 +13,7 @@ import MapModal from "../../MapModal";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
 import stats, { type StatsTopic, type StatsCategory } from "../../../lib/stats";
+import { useMapViewStore } from "../../../stores";
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -219,17 +221,32 @@ const Category = ({
   countryData,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
-  const [modalOpen, setModalOpen] = React.useState(false);
-  // Three flavours of modal:
-  // - Chart + table categories use TableModal (full distribution).
-  // - The summary category uses SummaryModal (period / peaks / variety
-  //   / most-used overview).
-  // - The location category uses MapModal (the full-size map).
-  // Either way the category title is the click affordance.
   const hasTable = !!category.table;
   const hasSummaryExtras = !!category.summaryExtras;
   const isLocation = category.kind === "location";
   const hasExpandableContent = hasTable || hasSummaryExtras || isLocation;
+
+  // Location-map open state lives in the URL (`?map=1`) so a Safari
+  // reload that evicts the tab lands the user back on the map. Every
+  // other modal shape stays in local component state — they don't
+  // have the same "lose your place mid-task" concern the map does.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mapOpenInUrl = searchParams.get("map") === "1";
+  const [nonMapModalOpen, setNonMapModalOpen] = React.useState(false);
+  const modalOpen = isLocation ? mapOpenInUrl : nonMapModalOpen;
+
+  // Saved center/zoom for the location card's map. Scoped per
+  // gallery (global-stats maps get their own key). Restore only if
+  // the context matches on mount.
+  const surfaceKey = isLocation
+    ? `stats-location:${globalScope ? ":global" : galleryId ?? ""}`
+    : undefined;
+  const contextId = globalScope ? ":global" : galleryId ?? "";
+  const savedView = useMapViewStore((s) =>
+    surfaceKey ? s.getView(surfaceKey, contextId) : undefined
+  );
+  const saveView = useMapViewStore((s) => s.saveView);
+
   // Location category lazy-fetches its photo list: the
   // inline card shows the count from /stats; the MapModal triggers
   // the /query fetch via the parent's onRequestPhotos callback when
@@ -238,14 +255,37 @@ const Category = ({
   // changes don't refetch.
   const openModal = hasExpandableContent
     ? () => {
-        if (isLocation) category.onRequestPhotos?.();
-        setModalOpen(true);
+        if (isLocation) {
+          category.onRequestPhotos?.();
+          const next = new URLSearchParams(searchParams);
+          next.set("map", "1");
+          setSearchParams(next, { replace: false });
+          return;
+        }
+        setNonMapModalOpen(true);
       }
     : undefined;
   const closeMapModal = () => {
     if (isLocation) category.onClosePhotos?.();
-    setModalOpen(false);
+    if (isLocation) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("map");
+      setSearchParams(next, { replace: false });
+      return;
+    }
+    setNonMapModalOpen(false);
   };
+
+  // If the URL says `?map=1` on mount and this is the location
+  // category, trigger the lazy photo fetch — normally that runs
+  // inside `openModal`, but on reload we bypass `openModal` and
+  // the modal renders itself open from URL state.
+  const lazyFetch = category.onRequestPhotos;
+  React.useEffect(() => {
+    if (isLocation && mapOpenInUrl) lazyFetch?.();
+    // Only run when the open state flips; not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocation, mapOpenInUrl]);
   return (
     <Root
       key={`${topic.key}:${category.key}`}
@@ -294,7 +334,7 @@ const Category = ({
           theme={theme}
           lang={lang}
           countryData={countryData}
-          onClose={() => setModalOpen(false)}
+          onClose={() => setNonMapModalOpen(false)}
         />
       )}
       {modalOpen && hasSummaryExtras && !hasTable && (
@@ -302,7 +342,7 @@ const Category = ({
           category={category}
           lang={lang}
           countryData={countryData}
-          onClose={() => setModalOpen(false)}
+          onClose={() => setNonMapModalOpen(false)}
         />
       )}
       {modalOpen && isLocation && (
@@ -311,6 +351,11 @@ const Category = ({
           photos={category.photos ?? []}
           galleryId={galleryId}
           adminLink={globalScope}
+          initialView={savedView}
+          onViewChange={(v) => {
+            if (!surfaceKey) return;
+            saveView(surfaceKey, { ...v, contextId, savedAt: Date.now() });
+          }}
           onClose={closeMapModal}
         />
       )}

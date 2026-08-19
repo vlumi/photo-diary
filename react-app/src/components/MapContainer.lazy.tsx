@@ -29,6 +29,8 @@ interface Props {
   showLocate?: boolean;
   galleryId?: string;
   adminLink?: boolean;
+  initialView?: { lat: number; lng: number; zoom: number };
+  onViewChange?: (view: { lat: number; lng: number; zoom: number }) => void;
 }
 
 const LazyMapContainer = (props: Props): React.ReactElement => (

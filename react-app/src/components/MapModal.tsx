@@ -66,6 +66,9 @@ interface Props {
   galleryId?: string;
   // Global stats / admin map — popup links to /m/photos/<id> instead.
   adminLink?: boolean;
+  // Saved center/zoom to restore across a reload. See stores/map-view.
+  initialView?: { lat: number; lng: number; zoom: number };
+  onViewChange?: (view: { lat: number; lng: number; zoom: number }) => void;
   onClose: () => void;
 }
 
@@ -75,6 +78,8 @@ const MapModal = ({
   drawLine,
   galleryId,
   adminLink,
+  initialView,
+  onViewChange,
   onClose,
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
@@ -126,6 +131,8 @@ const MapModal = ({
             showLocate
             galleryId={galleryId}
             adminLink={adminLink}
+            initialView={initialView}
+            onViewChange={onViewChange}
           />
         </MapArea>
       </ModalBox>

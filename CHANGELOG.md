@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Stats location-card map open state moves into the URL as `?map=1`, and its center + zoom persist to localStorage across reloads. iOS Safari aggressively evicts backgrounded tabs from memory; on return the SPA reloads and used to lose the map view entirely — a real pain during walk-around checks. Now the reload lands on the map open at wherever the user had panned/zoomed. Scoped per-gallery so global-stats and per-gallery maps keep their own saved positions. Closes #729.
+
 ## [1.0.3] - 2026-08-11
 
 ### Server
