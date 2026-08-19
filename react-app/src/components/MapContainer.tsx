@@ -113,26 +113,32 @@ const Refit = ({
   boundsLatLngs,
   maxZoom,
   positionKey,
-  suppressInitial,
+  initialView,
 }: {
   singlePoint: LatLngExpression | undefined;
   boundsLatLngs: LatLngExpression[] | undefined;
   maxZoom: number;
   positionKey: string;
-  // Set when the caller has already positioned the map from a saved
-  // view (map-view store) — skip the first mount-time fit, still
-  // refit on subsequent positionKey changes (e.g. TitleMap year nav).
-  suppressInitial?: boolean;
+  // A saved center+zoom from the map-view store. When present, the
+  // first mount-time run sets the view to this instead of fitting
+  // bounds / centering on a single photo — subsequent positionKey
+  // changes (e.g. TitleMap year nav) fall back to the normal fit
+  // logic because a new photo set doesn't match the saved view.
+  initialView?: { lat: number; lng: number; zoom: number };
 }): null => {
   const map = useMap();
   const pointRef = React.useRef(singlePoint);
   pointRef.current = singlePoint;
   const boundsRef = React.useRef(boundsLatLngs);
   boundsRef.current = boundsLatLngs;
-  const initialSkipped = React.useRef(false);
+  const initialViewRef = React.useRef(initialView);
+  initialViewRef.current = initialView;
+  const restoredInitial = React.useRef(false);
   React.useEffect(() => {
-    if (suppressInitial && !initialSkipped.current) {
-      initialSkipped.current = true;
+    if (!restoredInitial.current && initialViewRef.current) {
+      restoredInitial.current = true;
+      const v = initialViewRef.current;
+      map.setView([v.lat, v.lng], v.zoom, { animate: false });
       return;
     }
     if (pointRef.current) {
@@ -144,7 +150,7 @@ const Refit = ({
         animate: false,
       });
     }
-  }, [map, positionKey, maxZoom, suppressInitial]);
+  }, [map, positionKey, maxZoom]);
   return null;
 };
 
@@ -322,23 +328,13 @@ const MapContainer = ({
   );
   const resolvedMaxZoom = maxZoom ? maxZoom : 14;
   const singlePhoto = positions.length === 1;
-  // Priority: saved view (if provided) → single-photo center+zoom →
-  // multi-photo bounds. Saved view feeds Leaflet's initial `center`
-  // + `zoom` props directly; the Refit component's initial fit is
-  // suppressed via `suppressInitial`.
-  const savedCenter: LatLngExpression | undefined = initialView
-    ? [initialView.lat, initialView.lng]
-    : undefined;
-  const bounds =
-    !initialView && !singlePhoto
-      ? Leaflet.latLngBounds(positions)
-      : undefined;
-  const center = savedCenter ?? (singlePhoto ? positions[0] : undefined);
-  const initialZoom = initialView
-    ? initialView.zoom
-    : singlePhoto
-      ? resolvedMaxZoom
-      : undefined;
+  // Fresh-map init props (no saved view). Refit handles the
+  // saved-view case actively via setView; letting the initial
+  // props stay bounds/center-and-zoom means the map still paints
+  // reasonably during the ~1-tick before Refit's effect runs.
+  const bounds = singlePhoto ? undefined : Leaflet.latLngBounds(positions);
+  const center = singlePhoto ? positions[0] : undefined;
+  const initialZoom = singlePhoto ? resolvedMaxZoom : undefined;
   // Stable key from the position signature so `Refit` re-runs
   // only when the actual location changes (navigating to a
   // different photo), not on every parent render.
@@ -347,21 +343,13 @@ const MapContainer = ({
   const positionKey = (positions as [number, number][])
     .map(([lat, lng]) => `${lat},${lng}`)
     .join("|");
-  // react-leaflet's <Map> reads init props once at mount. When a
-  // saved view is in play we want center+zoom to win — passing
-  // `bounds={undefined}` still marks the prop as present in some
-  // versions of react-leaflet and defeats center+zoom, so spread
-  // conditionally instead of setting the field to undefined.
-  const initProps = initialView
-    ? { center, zoom: initialZoom }
-    : singlePhoto
-      ? { center, zoom: initialZoom }
-      : { bounds };
   return (
     <Root $height={height}>
       <Global styles={mapClusterStyles} />
       <Map
-        {...initProps}
+        bounds={bounds}
+        center={center}
+        zoom={initialZoom}
         maxZoom={resolvedMaxZoom}
         style={{ height: "100%" }}
       >
@@ -370,7 +358,7 @@ const MapContainer = ({
           boundsLatLngs={singlePhoto ? undefined : positions}
           maxZoom={resolvedMaxZoom}
           positionKey={positionKey}
-          suppressInitial={!!initialView}
+          initialView={initialView}
         />
         {onViewChange && <ViewTracker onViewChange={onViewChange} />}
         {showLocate && (
