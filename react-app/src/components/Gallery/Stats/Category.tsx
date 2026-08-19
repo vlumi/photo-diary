@@ -246,6 +246,16 @@ const Category = ({
     surfaceKey ? s.getView(surfaceKey, contextId) : undefined
   );
   const saveView = useMapViewStore((s) => s.saveView);
+  if (isLocation) {
+    // eslint-disable-next-line no-console
+    console.log("[Category location]", {
+      surfaceKey,
+      contextId,
+      mapOpenInUrl,
+      photosCount: category.photos?.length ?? 0,
+      savedView,
+    });
+  }
 
   // Location category lazy-fetches its photo list: the
   // inline card shows the count from /stats; the MapModal triggers

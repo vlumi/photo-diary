@@ -135,17 +135,32 @@ const Refit = ({
   initialViewRef.current = initialView;
   const restoredInitial = React.useRef(false);
   React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log("[Refit] effect fires", {
+      positionKey,
+      hasInitialView: !!initialViewRef.current,
+      initialView: initialViewRef.current,
+      restoredAlready: restoredInitial.current,
+      hasSinglePoint: !!pointRef.current,
+      hasBounds: !!(boundsRef.current && boundsRef.current.length > 0),
+    });
     if (!restoredInitial.current && initialViewRef.current) {
       restoredInitial.current = true;
       const v = initialViewRef.current;
+      // eslint-disable-next-line no-console
+      console.log("[Refit] applying saved view", v);
       map.setView([v.lat, v.lng], v.zoom, { animate: false });
       return;
     }
     if (pointRef.current) {
+      // eslint-disable-next-line no-console
+      console.log("[Refit] single point", pointRef.current);
       map.setView(pointRef.current, maxZoom, { animate: false });
       return;
     }
     if (boundsRef.current && boundsRef.current.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log("[Refit] fitBounds");
       map.fitBounds(Leaflet.latLngBounds(boundsRef.current), {
         animate: false,
       });
