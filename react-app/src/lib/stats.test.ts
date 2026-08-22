@@ -479,6 +479,41 @@ describe("collectTopics", () => {
     expect(byKey["year-month"]).toBe(false);
   });
 
+  test("camera-lens formatter renders null half as the unknown label", () => {
+    // Server encodes a missing camera or lens as `null` in the pair
+    // key; the formatter has to substitute the localized "Unknown"
+    // string instead of joining an empty part after " + ".
+    const data = baseData();
+    data.count.byGear.byCameraLens = {
+      '["CMake CModel","LMake LModel"]': 2,
+      '["CMake CModel",null]': 1,
+      '[null,"LMake LModel"]': 1,
+    };
+    const topics = stats.collectTopics(
+      data,
+      "en",
+      mockT,
+      mockCountryData,
+      mockTheme
+    );
+    const gear = topics.find((tt) => tt.key === "gear")!;
+    const cameraLens = gear.categories.find((c) => c.key === "camera-lens")!;
+    const labels = cameraLens.table!.map(
+      (row) => row["camera-lens"] as string
+    );
+    // Fully-populated pair joins as usual.
+    expect(labels).toContain("CMake CModel + LMake LModel");
+    // Missing lens: localized unknown label, no trailing whitespace.
+    expect(labels).toContain("CMake CModel + stats-unknown");
+    // Missing camera: same, on the leading half.
+    expect(labels).toContain("stats-unknown + LMake LModel");
+    // Bad label shape guard — no row should end or start with the raw " + ".
+    for (const l of labels) {
+      expect(l.endsWith(" + ")).toBe(false);
+      expect(l.startsWith(" + ")).toBe(false);
+    }
+  });
+
   test("geotaggedCount=0 does not emit location category", () => {
     const data = baseData();
     data.count.geotaggedCount = 0;
