@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Stats Camera+Lens rows and chart labels render "Unknown" for a missing half instead of "FUJIFILM X100F + " (trailing space with an empty half). The server encodes a missing camera / lens in the compound key as JSON `null`; the client formatter now maps `null` to the localized unknown label the same way the single-column categories do.
+
 ## [1.0.3] - 2026-08-11
 
 ### Server

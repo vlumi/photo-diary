@@ -1244,9 +1244,21 @@ const collectTopics = (
     };
   };
   const collectCameraLens = (byCameraLens: any, total: any) => {
+    // Server-side pair key is JSON `[camera, lens]` where a missing
+    // half is `null`. Localize null → "Unknown" (or the unknown
+    // string bucket that server-side `localizeUnknownKey` already
+    // handles) so a null lens doesn't render as trailing whitespace
+    // after the " + " separator.
+    const unknownLabel = String(t("stats-unknown"));
+    const formatPair = (raw: string): string =>
+      JSON.parse(raw)
+        .map((part: unknown) =>
+          part === null || part === UNKNOWN ? unknownLabel : String(part)
+        )
+        .join(" + ");
     const [flat, data, valueRanks] = transformData({
       original: byCameraLens,
-      formatter: (cameraLens: any) => JSON.parse(cameraLens).join(" + "),
+      formatter: formatPair,
       limit: 20,
       otherLabel: JSON.stringify([t("stats-other-beyond", { n: 21 })]),
     });
@@ -1271,7 +1283,7 @@ const collectTopics = (
         return {
           key: encodeTableKey(entry.key),
           rank: formatNumber.default(valueRanks[entry.value] + 1),
-          "camera-lens": JSON.parse(localizeUnknownKey(entry.key)).join(" + "),
+          "camera-lens": formatPair(entry.key),
           count: formatNumber.default(entry.value),
           share: `${formatNumber.oneDecimal(
             format.share(entry.value, total)
