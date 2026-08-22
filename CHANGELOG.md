@@ -5,6 +5,7 @@
 ### Frontend
 
 - Stats Camera+Lens rows and chart labels render "Unknown" for a missing half instead of "FUJIFILM X100F + " (trailing space with an empty half). The server encodes a missing camera / lens in the compound key as JSON `null`; the client formatter now maps `null` to the localized unknown label the same way the single-column categories do.
+- Stats charts show every value individually (no "Other (N+)" aggregated wedge) but compress the color gradient onto whichever is tighter — the top 20 slices, or the top slices needed to cover 95% cumulative share. Everything past that shares the gradient's endpoint color. Before, uncapped categories (focal length / aperture / exposure time / ISO / EV / 35mm-equiv focal length) spread the gradient across every slice and dominant slices ended up in near-identical colors; capped categories (state / city / camera / lens / camera+lens / camera-make) hid the tail behind an aggregated bucket, obscuring it entirely. Uniform now: chart carries every value, colors give real contrast to the dominant slices (e.g. Aperture where the top 3 alone sum to ~90%), table below stays the full list.
 
 ## [1.0.3] - 2026-08-11
 

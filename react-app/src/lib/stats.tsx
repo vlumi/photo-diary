@@ -388,6 +388,17 @@ const collectTopics = (
     );
     const truncated =
       maxEntries > 0 && foldedData && foldedData.length > maxEntries;
+    // Cap the color gradient at `min(20, top-95%-by-share)` visible
+    // bands. Spreading the gradient across every bucket makes
+    // dominating slices share near-identical mid-gradient colors
+    // (visible on 80+ distinct focal lengths); capping at 20 fixes
+    // the flat-tail case but still wastes half the gradient on
+    // near-invisible slices when the distribution is top-heavy
+    // (e.g. aperture where the top 3 already sum to 89%). The
+    // share-based cap picks up that case — everything past the 95%
+    // cumulative mark collapses to the endpoint color.
+    const COLOR_TOP_N = 20;
+    const COLOR_SHARE_THRESHOLD = 0.95;
     const doMap = (data: any) => {
       // Color rank is computed on the truncated data so "Other" gets
       // a gradient slot proportional to its aggregated value (instead
@@ -397,14 +408,46 @@ const collectTopics = (
       const colorRanks = collection.calculateRanks(data, (_: any) =>
         Number(_.value)
       );
+      const sortedCounts = data
+        .map((_: any) => Number(_.value))
+        .sort((a: number, b: number) => b - a);
+      const total = sortedCounts.reduce((s: number, v: number) => s + v, 0);
+      // How many top slices are needed to reach the share threshold.
+      // At least 1 so the color assignment stays well-defined even
+      // for zero-total or single-bucket data.
+      let shareWindow = 1;
+      if (total > 0) {
+        let cumulative = 0;
+        for (let i = 0; i < sortedCounts.length; i++) {
+          cumulative += sortedCounts[i];
+          if (cumulative / total >= COLOR_SHARE_THRESHOLD) {
+            shareWindow = i + 1;
+            break;
+          }
+        }
+      }
+      const windowSize = Math.min(data.length, COLOR_TOP_N, shareWindow);
+      const gradientSteps = Math.max(1, windowSize);
       const colorGradients = color.colorGradient(
         theme.get("header-background"),
         theme.get("header-color"),
-        data.length
+        gradientSteps
       );
+      // colorRanks is descending: rank 0 = largest slice. The
+      // uncapped mapping used `colorGradients[rank]` so rank 0 got
+      // the start-color and the tail got the end-color. Preserve
+      // that direction for the top-N and clamp everything past N to
+      // the end-color (last gradient index) — visually identical to
+      // "smallest-slice color" from the reader's perspective.
+      const tailIndex = gradientSteps - 1;
       const colors = data
         .map((_: any) => Number(_.value))
-        .map((value: any) => colorGradients[colorRanks[value]]);
+        .map((value: any) => {
+          const rank = colorRanks[value];
+          return rank < windowSize
+            ? colorGradients[rank]
+            : colorGradients[tailIndex];
+        });
       return [
         {
           labels: data
@@ -675,7 +718,6 @@ const collectTopics = (
     const [flat, data, valueRanks] = transformData({
       original: byState,
       formatter: (code: any) => format.subdivisionName(lang, code),
-      limit: 20,
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -744,7 +786,6 @@ const collectTopics = (
     const [flat, data, valueRanks] = transformData({
       original: byCity,
       formatter: (key: any) => cityLabels[key] ?? fallbackLabel(key),
-      limit: 20,
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -1135,7 +1176,6 @@ const collectTopics = (
   const collectCameraMake = (byCameraMake: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byCameraMake,
-      limit: 20,
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -1172,7 +1212,6 @@ const collectTopics = (
   const collectCamera = (byCamera: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byCamera,
-      limit: 20,
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -1209,7 +1248,6 @@ const collectTopics = (
   const collectLens = (byLens: any, total: any) => {
     const [flat, data, valueRanks] = transformData({
       original: byLens,
-      limit: 20,
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
@@ -1259,8 +1297,6 @@ const collectTopics = (
     const [flat, data, valueRanks] = transformData({
       original: byCameraLens,
       formatter: formatPair,
-      limit: 20,
-      otherLabel: JSON.stringify([t("stats-other-beyond", { n: 21 })]),
     });
     const values = flat.map((entry: any) => entry.value);
     const { mean, stddev } = calculateStatistics(values);
