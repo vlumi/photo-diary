@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-08-22
+
 ### Frontend
 
 - Stats Camera+Lens rows and chart labels render "Unknown" for a missing half instead of "FUJIFILM X100F + " (trailing space with an empty half). The server encodes a missing camera / lens in the compound key as JSON `null`; the client formatter now maps `null` to the localized unknown label the same way the single-column categories do.
@@ -796,6 +798,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.4]: https://github.com/vlumi/photo-diary/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/vlumi/photo-diary/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/vlumi/photo-diary/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/vlumi/photo-diary/compare/v1.0.0...v1.0.1
