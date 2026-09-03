@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-09-03
+
 ### Frontend
 
 - Stats category cards now show a compact "over time" chart below the pie/bar charts, previously only visible in the expanded modal. Feature was there but easy to miss — needed the modal to know it existed. Compact preview is a 130px stacked-area strip with no title / no granularity toggle; the modal keeps the 280px full chart with the month↔year toggle and the multi-series tooltip.
@@ -816,6 +818,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.5]: https://github.com/vlumi/photo-diary/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/vlumi/photo-diary/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/vlumi/photo-diary/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/vlumi/photo-diary/compare/v1.0.1...v1.0.2
