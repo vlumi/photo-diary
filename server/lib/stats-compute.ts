@@ -328,6 +328,8 @@ export interface EvolutionResult {
 const EVOLUTION_BUCKETERS: Record<string, (p: Photo) => unknown> = {
   author: (p) => p.taken.author,
   country: (p) => p.taken.location?.country,
+  state: (p) => p.geocoded?.stateCode,
+  city: geocodedCityKey,
   weekday: (p) =>
     derived.weekday(
       p.taken.instant.year,

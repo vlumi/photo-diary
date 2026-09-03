@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Stats category cards now show a compact "over time" chart below the pie/bar charts, previously only visible in the expanded modal. Feature was there but easy to miss — needed the modal to know it existed. Compact preview is a 130px stacked-area strip with no title / no granularity toggle; the modal keeps the 280px full chart with the month↔year toggle and the multi-series tooltip.
+- Add `state` and `city` to the trendable category list on both server (`EVOLUTION_BUCKETERS`) and client (`CATEGORY_KEY_TO_SERVER`). City has high cardinality but the chart's legend is off and the tooltip already caps to the top 10 per period, so the visual holds up; the payload's still small (per-bucket per-year-month integer counts).
+
 ### Server
 
 - Fastify 5.11.3 → 5.12.1 (#737). Security release (GHSA-w2qp-rph6-63g4 + GHSA-3m5p-2c4r-xxw2), plus a `trustProxy` typing tightening. `trustProxy: 1` (trust one hop) → `trustProxy: "loopback"` (trust `X-Forwarded-*` only from 127.0.0.1 / ::1). Same intended semantic — the local nginx — expressed more precisely. Slightly more secure too: a spoofed `X-Forwarded-*` from a remote origin is now ignored regardless of hop count.
