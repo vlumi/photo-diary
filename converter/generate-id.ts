@@ -1,7 +1,8 @@
 import path from "node:path";
 import fs from "node:fs";
 import { randomUUID } from "node:crypto";
-import exifr from "exifr";
+import sharp from "sharp";
+import exifReader from "exif-reader";
 
 // `<YYYY-MM-DDTHH-MM-SS>-<16-hex>.<ext>`. Timestamp from EXIF
 // DateTimeOriginal (fallback CreateDate, then file mtime). The
@@ -40,15 +41,39 @@ export interface GenerateIdResult {
 export default async (filePath: string): Promise<GenerateIdResult> => {
   let exifDate: Date | undefined;
   try {
-    const exif = (await exifr.parse(filePath, {
-      pick: ["DateTimeOriginal", "CreateDate"],
-    })) as { DateTimeOriginal?: Date; CreateDate?: Date } | undefined;
-    const t = exif?.DateTimeOriginal ?? exif?.CreateDate;
-    if (t instanceof Date && !Number.isNaN(t.getTime())) {
-      exifDate = t;
+    // Read the EXIF blob via sharp (already a converter dep) and parse
+    // with exif-reader — same output shape read-exif.ts uses. Only
+    // needs the capture timestamp here, so the extra fields are
+    // ignored.
+    const meta = await sharp(filePath).metadata();
+    if (meta.exif) {
+      const parsed = exifReader(meta.exif);
+      // Prefer DateTimeOriginal (shutter moment) → DateTimeDigitized
+      // (converted-from-analog) → DateTime (file-modified). Same
+      // priority the previous exifr call used via its CreateDate alias.
+      const t =
+        parsed.Photo?.DateTimeOriginal ??
+        parsed.Photo?.DateTimeDigitized ??
+        parsed.Image?.DateTime;
+      if (t instanceof Date && !Number.isNaN(t.getTime())) {
+        // exif-reader builds the Date via Date.UTC, so the wall-clock
+        // digits live in getUTC*(). Re-encode as a local-time Date so
+        // the downstream formatters (`getFullYear` etc.) recover the
+        // same digits regardless of runner timezone. The mtime
+        // fallback below stays a real instant — its wall-clock IS the
+        // user's local time by definition.
+        exifDate = new Date(
+          t.getUTCFullYear(),
+          t.getUTCMonth(),
+          t.getUTCDate(),
+          t.getUTCHours(),
+          t.getUTCMinutes(),
+          t.getUTCSeconds()
+        );
+      }
     }
   } catch {
-    // exifr throws on EXIF-less files; fall through to mtime.
+    // Non-image / corrupt / EXIF-less — fall through to mtime.
   }
   const timestamp =
     exifDate ?? (await fs.promises.stat(filePath)).mtime;

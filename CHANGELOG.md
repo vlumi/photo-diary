@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Converter
+
+- Replace the unmaintained `exifr` dep (last release 2020) with `sharp().metadata().exif` + `exif-reader`. `exifr@7.1.3` was calling `FileHandle.stat` with a string where Node 26.8+ now requires an options object, breaking every EXIF read on modern Node. `sharp` was already a converter dep for the resize + dimensions pipeline, so the swap adds no new production dep — just a small `exif-reader` layer that turns sharp's raw EXIF buffer into pre-typed JS values (Date, number, string), grouped by IFD. Legacy field-name aliases (`ISOSpeedRatings`→`ISO`, `BodySerialNumber`→`SerialNumber`, `FocalLengthIn35mmFilm`→`FocalLengthIn35mmFormat`) map the exif-reader output to the shape the downstream normalizer was built for; wall-clock timestamp parsing switches to `getUTC*` since exif-reader builds EXIF timestamps via `Date.UTC`. Fixes #739; CI Node pin from #738 is dropped back to floating "26".
+- Fix an incidental long-standing bug in `bin/dump-exif.ts`: the script was calling `readExif(basename, dirname)` where the API is `(sourcePath, id)` — worked before by exifr's cwd-relative fallback path, would have broken silently on sharp. Now passes the full path.
+
 ## [1.0.4] - 2026-08-22
 
 ### Frontend

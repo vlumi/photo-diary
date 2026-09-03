@@ -5,8 +5,11 @@ import readExif from "../extract-properties/read-exif.js";
 
 process.argv.slice(2).forEach((filePath) => {
   const fileName = path.basename(filePath);
-  const rootDir = path.dirname(filePath);
-  readExif(fileName, rootDir)
+  // `readExif` takes (sourcePath, id): the full path to open, and the
+  // logical id to stamp on the returned properties. Emit under the
+  // file's basename so the JSON is portable and matches how the
+  // converter later renames the photo.
+  readExif(filePath, fileName)
     .then((properties) => {
       // Include originalFilename so the output is ready to feed
       // through the converter's JSON sidecar pipeline without the
