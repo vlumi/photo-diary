@@ -1,4 +1,5 @@
-import exifr from "exifr";
+import sharp from "sharp";
+import exifReader from "exif-reader";
 
 import * as logger from "../lib/logger.js";
 import { GeoCoord } from "geo-coord";
@@ -71,8 +72,12 @@ export default async (
     }
   };
 
-  // EXIF DateTime is "YYYY:MM:DD HH:mm:ss", but exifr parses it into a
-  // Date object by default.
+  // EXIF DateTimeOriginal carries wall-clock time with no timezone
+  // ("2024:01:15 10:30:45"). exif-reader returns it as a Date built
+  // via Date.UTC, so the wall-clock digits are recoverable via
+  // getUTC*() regardless of the runner's local TZ. The string branch
+  // catches the rare non-Date payload and parses it into the same
+  // shape.
   const parseTimestamp = (input: Date | string | undefined) => {
     const invalid = {
       timestamp: "Invalid date",
@@ -88,18 +93,23 @@ export default async (
         ? input
         : typeof input === "string" &&
             /^\d{4}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}$/.test(input)
-          ? new Date(input.replace(":", "-").replace(":", "-"))
+          ? (() => {
+            const [datePart, timePart] = input.split(" ");
+            const [y, mo, d] = datePart.split(":").map(Number);
+            const [h, mi, se] = timePart.split(":").map(Number);
+            return new Date(Date.UTC(y, mo - 1, d, h, mi, se));
+          })()
           : undefined;
     if (!date || Number.isNaN(date.getTime())) {
       return invalid;
     }
     const pad = (n: number) => String(n).padStart(2, "0");
-    const y = date.getFullYear();
-    const mo = date.getMonth() + 1;
-    const d = date.getDate();
-    const h = date.getHours();
-    const mi = date.getMinutes();
-    const se = date.getSeconds();
+    const y = date.getUTCFullYear();
+    const mo = date.getUTCMonth() + 1;
+    const d = date.getUTCDate();
+    const h = date.getUTCHours();
+    const mi = date.getUTCMinutes();
+    const se = date.getUTCSeconds();
     return {
       timestamp: `${y}-${pad(mo)}-${pad(d)} ${pad(h)}:${pad(mi)}:${pad(se)}`,
       year: y,
@@ -151,6 +161,31 @@ export default async (
     dimensions: {},
   });
 
-  const exifData = ((await exifr.parse(sourcePath)) ?? {}) as ExifData;
+  // sharp reads the EXIF segment as a Buffer alongside the dimensions
+  // pipeline that runs later; exif-reader parses that buffer into
+  // pre-typed native values (Date, number, string), grouped by EXIF
+  // IFD (Image / Photo / GPSInfo). Flatten the groups into a single
+  // record, and alias the three tags whose EXIF-spec name differs
+  // from what the downstream normalizer above expects:
+  //
+  //   Photo.ISOSpeedRatings          → ISO
+  //   Photo.BodySerialNumber         → SerialNumber (camera body)
+  //   Photo.FocalLengthIn35mmFilm    → FocalLengthIn35mmFormat
+  const meta = await sharp(sourcePath).metadata();
+  const parsed: ReturnType<typeof exifReader> | undefined = meta.exif
+    ? exifReader(meta.exif)
+    : undefined;
+  const flat = {
+    ...parsed?.Image,
+    ...parsed?.Photo,
+    ...parsed?.GPSInfo,
+  } as Record<string, unknown>;
+  const exifData: ExifData = {
+    ...flat,
+    ISO: flat.ISO ?? flat.ISOSpeedRatings,
+    SerialNumber: flat.SerialNumber ?? flat.BodySerialNumber,
+    FocalLengthIn35mmFormat:
+      flat.FocalLengthIn35mmFormat ?? flat.FocalLengthIn35mmFilm,
+  } as ExifData;
   return parseExif(exifData);
 };
