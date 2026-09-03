@@ -8,9 +8,11 @@ import Charts from "./Charts";
 import Table from "./Table";
 import TableModal from "./TableModal";
 import SummaryModal from "./SummaryModal";
+import EvolutionChart, { isTrendable } from "./EvolutionChart";
 import MapModal from "../../MapModal";
 
 import filter, { type Filters as FiltersT } from "../../../lib/filter";
+import format from "../../../lib/format";
 import stats, { type StatsTopic, type StatsCategory } from "../../../lib/stats";
 
 interface CountryData {
@@ -246,6 +248,30 @@ const Category = ({
     if (isLocation) category.onClosePhotos?.();
     setModalOpen(false);
   };
+  // Trendable label resolver — the evolution endpoint returns bucket
+  // keys as strings; format them so the tooltip reads "1/250 s" not
+  // "0.004". Same shape as TableModal's; kept inline here so the
+  // parent doesn't have to pass it through.
+  const NUMERIC_TRENDABLE = new Set([
+    "focal-length",
+    "focal-length-eq",
+    "aperture",
+    "exposure-time",
+    "iso",
+    "ev",
+    "lv",
+    "resolution",
+    "weekday",
+    "hour",
+  ]);
+  const bucketLabelFormatter = format.categoryValue(lang, t, countryData)(
+    category.key
+  );
+  const labelForBucket = (raw: string): string => {
+    if (raw === "" || raw === "unknown") return String(t("stats-unknown"));
+    const typed = NUMERIC_TRENDABLE.has(category.key) ? Number(raw) : raw;
+    return bucketLabelFormatter(typed);
+  };
   return (
     <Root
       key={`${topic.key}:${category.key}`}
@@ -272,6 +298,17 @@ const Category = ({
         <>
           <Summary category={category} />
           <Charts category={category} />
+          {(galleryId || globalScope) && isTrendable(category.key) && (
+            <EvolutionChart
+              galleryId={galleryId}
+              globalScope={globalScope}
+              categoryKey={category.key}
+              categoryTitle={category.title}
+              theme={theme}
+              labelFor={labelForBucket}
+              compact
+            />
+          )}
           <Table
             topic={topic}
             category={category}

@@ -24,6 +24,8 @@ type ActiveTheme = ReturnType<(typeof theme)["setTheme"]>;
 const CATEGORY_KEY_TO_SERVER: Record<string, string> = {
   author: "author",
   country: "country",
+  state: "state",
+  city: "city",
   weekday: "weekday",
   hour: "hour",
   "camera-make": "cameraMake",
@@ -44,16 +46,19 @@ const CATEGORY_KEY_TO_SERVER: Record<string, string> = {
 export const isTrendable = (categoryKey: string): boolean =>
   categoryKey in CATEGORY_KEY_TO_SERVER;
 
-const Root = styled.div`
-  margin: 12px 0 18px;
+const Root = styled.div<{ $compact?: boolean }>`
+  margin: ${({ $compact }) => ($compact ? "4px 0 8px" : "12px 0 18px")};
 `;
 // Fixed-height wrapper so chart.js's `responsive: true` +
 // `maintainAspectRatio: false` has a bound to size into. Without
 // it, the canvas natural-sizes, drives its parent's height up,
-// triggers a re-render, and grows the chart unboundedly.
-const ChartBox = styled.div`
+// triggers a re-render, and grows the chart unboundedly. Compact
+// mode drops the height for an inline sparkline-ish preview under
+// the pie/bar charts; the modal keeps the full 280px so the trend
+// reads properly there.
+const ChartBox = styled.div<{ $compact?: boolean }>`
   position: relative;
-  height: 280px;
+  height: ${({ $compact }) => ($compact ? "130px" : "280px")};
   width: 100%;
 `;
 const Header = styled.div`
@@ -125,6 +130,11 @@ interface Props {
   // keys ("jp", "fi") localized for the legend. Defaults to the
   // raw key when the category doesn't carry localized labels.
   labelFor?: (bucketKey: string) => string;
+  // Compact = inline preview under the pie/bar charts. Drops the
+  // title header + granularity toggle, halves the height. Tooltip
+  // still works; the modal renders the full-height version with
+  // the toggle so the user can dig in there.
+  compact?: boolean;
 }
 
 // Compare two bucket entries by natural order: numeric when both
@@ -196,6 +206,7 @@ const EvolutionChart = ({
   categoryTitle,
   theme,
   labelFor,
+  compact = false,
 }: Props): React.ReactElement | null => {
   const { t } = useTranslation();
   const granularity = useEvolutionGranularityStore((s) => s.granularity);
@@ -243,6 +254,10 @@ const EvolutionChart = ({
 
   if (!serverCategory) return null;
   if (isLoading || !data) {
+    // Compact mode reserves no space while loading — the inline
+    // preview shouldn't reflow the card. Full mode gets the
+    // titled placeholder as before.
+    if (compact) return null;
     return (
       <Root>
         <Header>
@@ -257,6 +272,7 @@ const EvolutionChart = ({
   const { yearMonths, buckets } = data;
   const bucketEntries = Object.entries(buckets);
   if (yearMonths.length === 0 || bucketEntries.length === 0) {
+    if (compact) return null;
     return (
       <Root>
         <Header>
@@ -359,29 +375,31 @@ const EvolutionChart = ({
   // hidden.
   let hiddenCount = 0;
   return (
-    <Root>
-      <Header>
-        <Title>
-          {t("stats-evolution-title", { category: categoryTitle })}
-        </Title>
-        <Toggle role="group" aria-label={String(t("stats-evolution-granularity-label"))}>
-          <ToggleButton
-            type="button"
-            active={granularity === "month"}
-            onClick={() => setGranularity("month")}
-          >
-            {t("stats-evolution-granularity-month")}
-          </ToggleButton>
-          <ToggleButton
-            type="button"
-            active={granularity === "year"}
-            onClick={() => setGranularity("year")}
-          >
-            {t("stats-evolution-granularity-year")}
-          </ToggleButton>
-        </Toggle>
-      </Header>
-      <ChartBox>
+    <Root $compact={compact}>
+      {!compact && (
+        <Header>
+          <Title>
+            {t("stats-evolution-title", { category: categoryTitle })}
+          </Title>
+          <Toggle role="group" aria-label={String(t("stats-evolution-granularity-label"))}>
+            <ToggleButton
+              type="button"
+              active={granularity === "month"}
+              onClick={() => setGranularity("month")}
+            >
+              {t("stats-evolution-granularity-month")}
+            </ToggleButton>
+            <ToggleButton
+              type="button"
+              active={granularity === "year"}
+              onClick={() => setGranularity("year")}
+            >
+              {t("stats-evolution-granularity-year")}
+            </ToggleButton>
+          </Toggle>
+        </Header>
+      )}
+      <ChartBox $compact={compact}>
         <Line
           data={{ labels: aggregated.labels, datasets }}
           options={{
