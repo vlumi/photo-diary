@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Fix the city category's evolution-chart tooltip rendering the raw `["country","state","city"]` JSON tuple as each row's label. Same disambiguation the stats table uses (`format.buildCityLabels`) — Fukuoka vs Kasuya, Fukuoka.
+
 ## [1.0.5] - 2026-09-03
 
 ### Frontend

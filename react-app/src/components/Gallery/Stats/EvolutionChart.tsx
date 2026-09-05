@@ -9,10 +9,12 @@ import statsService from "../../../services/stats";
 import color from "../../../lib/color";
 import config from "../../../lib/config";
 import filter from "../../../lib/filter";
+import format from "../../../lib/format";
 import type theme from "../../../lib/theme";
 import {
   useFiltersStore,
   useEvolutionGranularityStore,
+  useLangStore,
   useWireNumericRanges,
 } from "../../../stores";
 
@@ -216,6 +218,8 @@ const EvolutionChart = ({
   const filters = useFiltersStore((s) => s.filters);
   const dateRange = useFiltersStore((s) => s.dateRange);
   const wireNumericRanges = useWireNumericRanges();
+  const lang = useLangStore((s) => s.lang);
+  const countryData = useLangStore((s) => s.countryData);
   const serverFilters = React.useMemo(
     () => filter.toServerFilters(filters),
     [filters]
@@ -301,10 +305,30 @@ const EvolutionChart = ({
   // largest total). Drawn stacked so each band's height reads
   // directly as the period's count and the topmost line is the
   // overall total.
+  // City bucket keys are JSON-encoded [country, state, city] tuples
+  // (see server EVOLUTION_BUCKETERS). The generic labelFor from
+  // format.categoryValue is identity for "city" and can't disambiguate
+  // same-named cities across states — build the label map here from
+  // the full bucket-key set so tooltips read as e.g. "Fukuoka" /
+  // "Kasuya, Fukuoka" rather than the raw JSON. Localization overlay
+  // (cities/<lang>.json) isn't in the evolution response, so the
+  // canonical tuple[2] is the display name.
+  const cityLabels =
+    categoryKey === "city" && countryData
+      ? format.buildCityLabels(
+          aggregatedEntries.map(([key]) => key),
+          lang,
+          format.countryName(lang, countryData, t)
+        )
+      : null;
+  const labelForKey = (key: string): string => {
+    if (cityLabels && cityLabels[key]) return cityLabels[key];
+    return labelFor ? labelFor(key) : key;
+  };
   const ordered = aggregatedEntries
     .map(([key, counts]) => ({
       key,
-      label: labelFor ? labelFor(key) : key,
+      label: labelForKey(key),
       counts,
     }))
     .sort(categoryKey === "weekday" ? compareByWeekday : compareByLabel);
