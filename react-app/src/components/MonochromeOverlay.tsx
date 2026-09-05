@@ -1,5 +1,4 @@
 import React from "react";
-import { createPortal } from "react-dom";
 import styled from "@emotion/styled";
 
 // The monochrome theme effect is a saturation-blend overlay rather
@@ -11,10 +10,13 @@ import styled from "@emotion/styled";
 // stacking order; the picker's <dialog> in the top layer paints above
 // it in every engine.
 //
-// Portaled to <body> so it sits in the root stacking context and
-// blends against the canvas too, not just #root's subtree. z-index
-// is the max so every in-flow overlay (the app's ladder tops out at
-// 2500) is beneath it; the top layer is above regardless.
+// Rendered inside #root, not portaled to <body>: the Photo view's
+// fullscreen button calls requestFullscreen() on #root, which puts
+// #root itself in the top layer. A body-level sibling would be left
+// beneath it and the whole fullscreened app would paint in colour.
+// As a descendant it rides along and keeps covering the content.
+// z-index is the max so every in-flow overlay (the app's ladder tops
+// out at 2500) is beneath it; top-layer dialogs are above regardless.
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
@@ -24,7 +26,6 @@ const Overlay = styled.div`
   z-index: 2147483647;
 `;
 
-const MonochromeOverlay = (): React.ReactPortal =>
-  createPortal(<Overlay aria-hidden />, document.body);
+const MonochromeOverlay = (): React.ReactElement => <Overlay aria-hidden />;
 
 export default MonochromeOverlay;
