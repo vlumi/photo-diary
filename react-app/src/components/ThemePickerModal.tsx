@@ -9,12 +9,10 @@ import {
 } from "../stores";
 
 // A native <dialog> opened with showModal() so the picker renders in
-// the top layer — painted as a sibling of the root's stacking
-// context, not inside it. That is the only way the swatches escape
-// the theme's page-wide `filter` on <html>: under the grayscale
-// theme a plain fixed overlay would show every swatch desaturated,
-// and there is no descendant-side opt-out for an ancestor filter.
-// Top layer also puts the modal above everything without z-index.
+// the top layer. The swatches are the one place the page shows other
+// themes' colours, and on the grayscale theme they must paint above
+// the MonochromeOverlay — the top layer is above every in-flow
+// z-index in every engine, so no ladder to climb.
 //
 // The <dialog> itself is the full-viewport scroll container (the
 // swatch grid grows with the theme count); ::backdrop paints the

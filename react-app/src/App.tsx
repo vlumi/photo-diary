@@ -18,6 +18,7 @@ import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 import ThemePickerModal from "./components/ThemePickerModal";
+import MonochromeOverlay from "./components/MonochromeOverlay";
 import GlobalFetchIndicator from "./components/GlobalFetchIndicator";
 import { useModalStackStore } from "./stores/modal-stack";
 
@@ -116,7 +117,7 @@ const baseGlobalStyles = (active: ActiveTheme) => css`
     --tile-background: ${active.get("tile-background")};
     --photo-frame-mat: ${active.get("photo-frame-mat")};
     --photo-frame-border: ${active.get("photo-frame-border")};
-    filter: ${active.get("filter")};
+    --monochrome-overlay: ${active.get("monochrome-overlay")};
   }
 `;
 
@@ -386,6 +387,7 @@ const App = (): React.ReactElement => {
       <GlobalFetchIndicator />
       <Notifications />
       <BodyScrollLock />
+      <MonochromeOverlay />
       <LoginModal />
       <ChangePasswordModal />
       <ThemePickerModal />
