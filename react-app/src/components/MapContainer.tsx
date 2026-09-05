@@ -49,9 +49,8 @@ const PopupLink = styled(Link)`
 // react-leaflet-markercluster ships pastel fills (green / yellow /
 // orange, alpha 0.6) that wash out on neutral / dark themes — and
 // disappear entirely on the grayscale theme, where the page-wide
-// `filter: grayscale(100%)` desaturates the otherwise-distinct
-// hues into near-identical mid-grays that blend into the OSM tile
-// layer. Override every cluster bucket with the theme's
+// MonochromeOverlay desaturates the otherwise-distinct hues into
+// near-identical mid-grays that blend into the OSM tile layer. Override every cluster bucket with the theme's
 // --primary-color + --header-color, plus a 2px --header-color
 // border so the cluster stays distinct against whatever the tile
 // layer paints behind it. The bucket-size colour coding is gone;

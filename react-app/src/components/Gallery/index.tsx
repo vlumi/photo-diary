@@ -65,7 +65,7 @@ const globalStyles = (theme: ActiveTheme) => css`
     --tile-background: ${theme.get("tile-background")};
     --photo-frame-mat: ${theme.get("photo-frame-mat")};
     --photo-frame-border: ${theme.get("photo-frame-border")};
-    filter: ${theme.get("filter")};
+    --monochrome-overlay: ${theme.get("monochrome-overlay")};
   }
   body {
     /* Only body clips horizontal overflow — putting overflow-x on

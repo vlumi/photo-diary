@@ -5,6 +5,7 @@
 ### Frontend
 
 - Fix the city category's evolution-chart tooltip rendering the raw `["country","state","city"]` JSON tuple as each row's label. Same disambiguation the stats table uses (`format.buildCityLabels`) — Fukuoka vs Kasuya, Fukuoka.
+- The grayscale theme's monochrome effect is now a saturation-blend overlay instead of a root `filter`, and the theme picker is a native `<dialog>` in the top layer above it — so the picker's swatches show each theme's real colors in every browser instead of coming out gray.
 
 ## [1.0.5] - 2026-09-03
 

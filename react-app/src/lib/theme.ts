@@ -28,7 +28,8 @@ type ThemeName =
 //   tile-background      background of the Year view's month tiles (distinct from page bg so tiles read as cards)
 //   photo-frame-mat      matte colour around the photo (intentionally neutral, not theme-tinted)
 //   photo-frame-border   thin border between matte and photo (neutral)
-//   filter               CSS filter applied to the photos themselves (grayscale, sepia, ...)
+//   monochrome-overlay   fill of the full-viewport saturation-blend overlay (MonochromeOverlay.tsx):
+//                        transparent = off, a neutral gray = the whole page renders monochrome
 type ThemeKey =
   | "primary-color"
   | "primary-background"
@@ -39,7 +40,7 @@ type ThemeKey =
   | "tile-background"
   | "photo-frame-mat"
   | "photo-frame-border"
-  | "filter";
+  | "monochrome-overlay";
 type Theme = Record<ThemeKey, string>;
 
 // Photo-frame variables are deliberately kept neutral (not tinted) so the
@@ -65,7 +66,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#004",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   red: {
     "primary-color": "#4a1424",
@@ -76,7 +77,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#4a1424",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   grayscale: {
     "primary-color": "#444",
@@ -87,7 +88,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#444",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "grayscale(100%)",
+    "monochrome-overlay": "gray",
   },
   // High-contrast light: pure black on white, no photo filter. Renamed
   // from `bw` since the monochrome-photo filter is gone — too close to
@@ -101,7 +102,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#000",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Loud red-on-yellow surface intended as a visibility flag — apply
   // to a gallery the operator wants to mark as draft, sensitive, or
@@ -116,7 +117,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#f00",
     "tile-background": "#ff6",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   dark: {
     "primary-color": "#e0e0e0",
@@ -127,7 +128,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#2a2a2a",
     "tile-background": "#2a2a2a",
     ...FRAME_DARK,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   amoled: {
     "primary-color": "#fff",
@@ -138,7 +139,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#000",
     "tile-background": "#1a1a1a",
     ...FRAME_DARK,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   forest: {
     "primary-color": "#1e3a2a",
@@ -149,7 +150,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#1e3a2a",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Light overall: dark-text-on-light header, no dark header band.
   silver: {
@@ -161,7 +162,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#d4dadf",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Photo-focused: dark backdrop so photos read like prints on a museum
   // wall, muted UI chrome so it doesn't compete.
@@ -174,7 +175,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#0a0a0a",
     "tile-background": "#1f1f1f",
     ...FRAME_DARK,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   teal: {
     "primary-color": "#114040",
@@ -185,7 +186,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#114040",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Creamy printed-album feel without the photo desaturation that sepia
   // carried — page + header are both light cream, dark text reads on top.
@@ -198,7 +199,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#ece1ce",
     "tile-background": "#fefaf0",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Warm orange / burnt gold, fills the warm gap in the coloured set
   // between `red` and the greens.
@@ -211,7 +212,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#4a2008",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Cool purple, fills the violet gap between blue and red.
   lavender: {
@@ -223,7 +224,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#2a1a4a",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Muted, dusty greyish-green — calmer than forest, less neutral than
   // silver.
@@ -236,7 +237,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#34423a",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Darker neutral than silver; mid-grey background with a deep-slate
   // header band. Light theme, no photo desaturation.
@@ -249,7 +250,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#1e2530",
     "tile-background": "#fff",
     ...FRAME_LIGHT,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Navy-tinted dark theme — adds chromatic warmth missing from `dark`
   // (charcoal-grey) and `amoled` (pure black).
@@ -262,7 +263,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#1a2840",
     "tile-background": "#1a2840",
     ...FRAME_DARK,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
   // Warm dark counterpart to midnight — espresso brown tint.
   espresso: {
@@ -274,7 +275,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "header-background": "#2a1f15",
     "tile-background": "#2a1f15",
     ...FRAME_DARK,
-    filter: "none",
+    "monochrome-overlay": "transparent",
   },
 };
 

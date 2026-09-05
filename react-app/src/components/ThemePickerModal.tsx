@@ -8,21 +8,36 @@ import {
   useThemePreferenceStore,
 } from "../stores";
 
-// `position: fixed; inset: 0` overlay over the rest of the app. The
-// picker has a swatch grid that grows with the theme count, so the
-// modal needs to scroll when it doesn't fit — `align-items: flex-
-// start` + `overflow: auto` on the backdrop. z-index above
-// MetadataPanel + Photo modal.
-const Backdrop = styled.div`
+// A native <dialog> opened with showModal() so the picker renders in
+// the top layer. The swatches are the one place the page shows other
+// themes' colours, and on the grayscale theme they must paint above
+// the MonochromeOverlay — the top layer is above every in-flow
+// z-index in every engine, so no ladder to climb.
+//
+// The <dialog> itself is the full-viewport scroll container (the
+// swatch grid grows with the theme count); ::backdrop paints the
+// scrim. UA dialog box styles are reset to get there.
+const Dialog = styled.dialog`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  z-index: 2000;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
   padding: 20px;
+  border: none;
+  background: transparent;
+  color: inherit;
   overflow: auto;
+  &[open] {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.55);
+  }
 `;
 const ModalBox = styled.div`
   background: var(--primary-background);
@@ -102,10 +117,27 @@ const ThemePickerModal = (): React.ReactElement | null => {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [isOpen, close]);
 
+  const dialogRef = React.useRef<HTMLDialogElement>(null);
+  React.useEffect(() => {
+    // The element only exists while open, so this runs right after
+    // it mounts. Unmounting an open <dialog> drops it from the top
+    // layer on its own — no close() needed on the way out.
+    if (isOpen) dialogRef.current?.showModal();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
+  // Backdrop clicks target the <dialog> element itself; clicks inside
+  // ModalBox target its descendants.
   const onBackdropClick = (event: React.MouseEvent) => {
     if (event.target === event.currentTarget) close();
+  };
+  // Native dismissal (Escape → cancel) syncs back to the store so it
+  // stays the single source of truth; preventDefault keeps the
+  // browser from closing the element out from under React.
+  const onCancel = (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    close();
   };
   const onPreview = (id: string | null) => {
     // null from ThemePicker means "mouse left the grid" — restore
@@ -124,10 +156,10 @@ const ThemePickerModal = (): React.ReactElement | null => {
   };
 
   return (
-    <Backdrop
+    <Dialog
+      ref={dialogRef}
       onClick={onBackdropClick}
-      role="dialog"
-      aria-modal="true"
+      onCancel={onCancel}
       aria-labelledby="theme-picker-modal-title"
     >
       <ModalBox>
@@ -148,7 +180,7 @@ const ThemePickerModal = (): React.ReactElement | null => {
           defaultLabel={String(t("theme-follow-default"))}
         />
       </ModalBox>
-    </Backdrop>
+    </Dialog>
   );
 };
 export default ThemePickerModal;
