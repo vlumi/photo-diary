@@ -91,7 +91,7 @@ const Cell = styled("td", {
   overflow: hidden;
   overflow-wrap: anywhere;
 `;
-const RankCell = styled("th", {
+const RankCell = styled("td", {
   shouldForwardProp: (prop) => prop !== "$align",
 })<{ $align: "left" | "right" }>`
   font-weight: bold;

@@ -436,14 +436,14 @@ const Galleries = (): React.ReactElement => {
             <Table>
               <thead>
                 <tr>
-                  <Th></Th>
-                  <Th></Th>
-                  <Th>{t("manage-galleries-col-id")}</Th>
-                  <Th>{t("manage-galleries-col-title")}</Th>
-                  <Th>{t("manage-galleries-col-epoch")}</Th>
-                  <Th>{t("manage-galleries-col-hostname")}</Th>
-                  <Th>{t("manage-galleries-col-theme")}</Th>
-                  <Th></Th>
+                  <Th scope="col"></Th>
+                  <Th scope="col"></Th>
+                  <Th scope="col">{t("manage-galleries-col-id")}</Th>
+                  <Th scope="col">{t("manage-galleries-col-title")}</Th>
+                  <Th scope="col">{t("manage-galleries-col-epoch")}</Th>
+                  <Th scope="col">{t("manage-galleries-col-hostname")}</Th>
+                  <Th scope="col">{t("manage-galleries-col-theme")}</Th>
+                  <Th scope="col"></Th>
                 </tr>
               </thead>
               <SortableContext

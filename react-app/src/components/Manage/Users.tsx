@@ -143,7 +143,7 @@ const Users = (): React.ReactElement => {
       {isLoading ? (
         <Notice>{t("loading")}</Notice>
       ) : isError ? (
-        <Notice>{t("manage-users-load-error")}</Notice>
+        <Notice role="alert">{t("manage-users-load-error")}</Notice>
       ) : rows.length === 0 ? (
         <Notice>{t("manage-users-empty")}</Notice>
       ) : (
@@ -151,9 +151,9 @@ const Users = (): React.ReactElement => {
           <Table>
           <thead>
             <tr>
-              <Th>{t("manage-users-col-id")}</Th>
-              <Th>{t("manage-users-col-name")}</Th>
-              <Th>{t("manage-users-col-role")}</Th>
+              <Th scope="col">{t("manage-users-col-id")}</Th>
+              <Th scope="col">{t("manage-users-col-name")}</Th>
+              <Th scope="col">{t("manage-users-col-role")}</Th>
             </tr>
           </thead>
           <tbody>

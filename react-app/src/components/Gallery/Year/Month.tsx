@@ -64,9 +64,10 @@ const MonthGrid = styled.table`
 const Header = styled.thead``;
 const Body = styled.tbody``;
 const Row = styled.tr``;
-const WeekDay = styled(DayCell)`
+const WeekDay = styled(DayCell.withComponent("th"))`
   height: 20px;
   font-size: small;
+  font-weight: inherit;
   color: var(--inactive-color);
 `;
 
@@ -98,7 +99,7 @@ const Month = ({
           <Header>
             <Row>
               {calendar.daysOfWeek().map((dow) => (
-                <WeekDay key={dow}>{t(`weekday-short-${dow}`)}</WeekDay>
+                <WeekDay key={dow} scope="col">{t(`weekday-short-${dow}`)}</WeekDay>
               ))}
             </Row>
           </Header>
