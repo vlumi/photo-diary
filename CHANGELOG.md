@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-09-06
+
 ### Frontend
 
 - Fix the city category's evolution-chart tooltip rendering the raw `["country","state","city"]` JSON tuple as each row's label. Same disambiguation the stats table uses (`format.buildCityLabels`) — Fukuoka vs Kasuya, Fukuoka.
@@ -827,6 +829,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.6]: https://github.com/vlumi/photo-diary/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/vlumi/photo-diary/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/vlumi/photo-diary/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/vlumi/photo-diary/compare/v1.0.2...v1.0.3
