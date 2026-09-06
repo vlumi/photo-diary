@@ -409,6 +409,7 @@ const EvolutionChart = ({
             <ToggleButton
               type="button"
               active={granularity === "month"}
+              aria-pressed={granularity === "month"}
               onClick={() => setGranularity("month")}
             >
               {t("stats-evolution-granularity-month")}
@@ -416,6 +417,7 @@ const EvolutionChart = ({
             <ToggleButton
               type="button"
               active={granularity === "year"}
+              aria-pressed={granularity === "year"}
               onClick={() => setGranularity("year")}
             >
               {t("stats-evolution-granularity-year")}

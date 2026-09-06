@@ -6,6 +6,9 @@
 
 - Fix the city category's evolution-chart tooltip rendering the raw `["country","state","city"]` JSON tuple as each row's label. Same disambiguation the stats table uses (`format.buildCityLabels`) — Fukuoka vs Kasuya, Fukuoka.
 - The grayscale theme's monochrome effect is now a saturation-blend overlay instead of a root `filter`, and the theme picker is a native `<dialog>` in the top layer above it — so the picker's swatches show each theme's real colors in every browser instead of coming out gray.
+- Landmarks: the top bar is a `<header>`, routed content sits in `<main>`, and the footer is a `<footer>`.
+- Table headers carry `scope="col"`, the stats table's header row lives in `<thead>`, month-tile weekday headers are `<th>`, and the global-stats rank column is a data cell rather than a header.
+- Load-error notices are announced as alerts, the language switcher is a named radio group with a legend (arrow keys now switch language), the evolution chart's month/year toggle exposes its pressed state, and country flags have a localized accessible name.
 
 ## [1.0.5] - 2026-09-03
 

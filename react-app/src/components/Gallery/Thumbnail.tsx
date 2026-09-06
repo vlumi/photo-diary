@@ -71,13 +71,14 @@ const Thumbnail = ({
   const renderFlag = () => {
     const countryCode = photo.countryCode();
     if (!photo.hasCountry() || !countryCode) return "";
+    const countryLabel = photo.countryName(lang, countryData, t);
     // No-country sentinel — render the localised label as a tooltip
     // but skip the flag icon (the sentinel isn't a real ISO code).
     if (isCountrySentinel(countryCode)) {
-      return <Flag title={photo.countryName(lang, countryData, t)} />;
+      return <Flag role="img" aria-label={countryLabel} title={countryLabel} />;
     }
     return (
-      <Flag title={photo.countryName(lang, countryData, t)}>
+      <Flag role="img" aria-label={countryLabel} title={countryLabel}>
         <StyledFlagIcon code={countryCode} />
       </Flag>
     );

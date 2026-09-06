@@ -281,7 +281,7 @@ const UserEdit = (): React.ReactElement => {
       <ItemModal closeTo="/m/users">
         {() => (
           <Root>
-            <Notice>{t("manage-user-load-error")}</Notice>
+            <Notice role="alert">{t("manage-user-load-error")}</Notice>
           </Root>
         )}
       </ItemModal>
