@@ -1,6 +1,7 @@
 {
   "translation": {
     "loading": "Loading...",
+    "lang-label": "Language",
     "empty": "Empty",
     "close": "Close",
     "manage-modal-confirm-discard": "You have unsaved changes. Discard them?",
