@@ -211,7 +211,12 @@ const EvolutionChart = ({
   compact = false,
 }: Props): React.ReactElement | null => {
   const { t } = useTranslation();
-  const granularity = useEvolutionGranularityStore((s) => s.granularity);
+  const storeGranularity = useEvolutionGranularityStore((s) => s.granularity);
+  // The store is one global (and persisted). Only the modal shows the
+  // toggle, so only the modal follows it — otherwise flipping it in
+  // one expanded view re-aggregates every compact preview on the page
+  // behind the modal, which reads as the whole page changing state.
+  const granularity = compact ? "month" : storeGranularity;
   const setGranularity = useEvolutionGranularityStore(
     (s) => s.setGranularity
   );

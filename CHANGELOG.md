@@ -9,6 +9,7 @@
 - Landmarks: the top bar is a `<header>`, routed content sits in `<main>`, and the footer is a `<footer>`.
 - Table headers carry `scope="col"`, the stats table's header row lives in `<thead>`, month-tile weekday headers are `<th>`, and the global-stats rank column is a data cell rather than a header.
 - Load-error notices are announced as alerts, the language switcher is a named radio group with a legend (arrow keys now switch language), the evolution chart's month/year toggle exposes its pressed state, and country flags have a localized accessible name.
+- The compact "over time" previews on stats category cards are fixed to month granularity; the month/year toggle now only affects the expanded modal instead of re-aggregating every card on the page.
 
 ## [1.0.5] - 2026-09-03
 
