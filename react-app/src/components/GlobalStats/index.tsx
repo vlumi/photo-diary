@@ -196,7 +196,7 @@ const GlobalStats = (): React.ReactElement => {
     return frame(<Notice>{t("loading")}</Notice>);
   }
   if (filterValuesQuery.isError || photosQuery.isError) {
-    return frame(<Notice>{t("stats-global-load-error")}</Notice>);
+    return frame(<Notice role="alert">{t("stats-global-load-error")}</Notice>);
   }
   // Empty instance: filter universe has no years (any photo would
   // contribute one). Cheap signal without fetching the photo array.

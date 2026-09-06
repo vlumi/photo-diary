@@ -2,6 +2,7 @@ import React from "react";
 import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
 import { useIsFetching } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 // Top-of-viewport progress bar shown while any TanStack Query is
 // fetching. Pairs with the `keepPreviousData` sweep — the
@@ -46,6 +47,7 @@ const Pulse = styled.div`
 const SHOW_AFTER_MS = 120;
 
 const GlobalFetchIndicator = (): React.ReactElement | null => {
+  const { t } = useTranslation();
   const fetching = useIsFetching();
   const [show, setShow] = React.useState(false);
   React.useEffect(() => {
@@ -58,7 +60,7 @@ const GlobalFetchIndicator = (): React.ReactElement | null => {
   }, [fetching]);
   if (!show) return null;
   return (
-    <Bar role="status" aria-live="polite" aria-label="Loading">
+    <Bar role="status" aria-live="polite" aria-label={String(t("loading"))}>
       <Pulse />
     </Bar>
   );

@@ -161,7 +161,7 @@ const BodyScrollLock = (): null => {
   }, [modalCount]);
   return null;
 };
-const Footer = styled.div`
+const Footer = styled.footer`
   width: 100%;
   text-align: right;
   font-size: x-small;
@@ -393,72 +393,74 @@ const App = (): React.ReactElement => {
       <ThemePickerModal />
       <Router>
         <TopMenu />
-        <ScrollToPosition>
-          {!countryDataReady ? (
-            <div>{t("loading")}</div>
-          ) : (
-            <React.Suspense fallback={<div>{t("loading")}</div>}>
-              <Routes>
-                <Route
-                  path="/s/:galleryId"
-                  element={<Gallery isStats={true} />}
-                />
-                <Route path="/s" element={<GlobalStats />} />
-                <Route
-                  path="/g/:galleryId/:year/:month/:day/:photoId"
-                  element={<Gallery />}
-                />
-                <Route
-                  path="/g/:galleryId/:year?/:month?/:day?"
-                  element={<Gallery />}
-                />
-                <Route path="/g" element={<Gallery />} />
-                <Route path="/m" element={<Manage />}>
-                  <Route element={<ManageDashboardLayout />}>
-                    <Route index element={null} />
-                    <Route path="instance" element={<ManageInstance />} />
-                  </Route>
-                  <Route element={<ManageUsersLayout />}>
-                    <Route path="users" element={null} />
-                    <Route path="users/new" element={<ManageUserCreate />} />
-                    <Route path="users/:userId" element={<ManageUserEdit />} />
-                  </Route>
-                  <Route element={<ManageGroupsLayout />}>
-                    <Route path="groups" element={null} />
-                    <Route path="groups/new" element={<ManageGroupCreate />} />
-                    <Route
-                      path="groups/:groupId"
-                      element={<ManageGroupEdit />}
-                    />
-                  </Route>
-                  <Route path="access" element={<ManageAccess />} />
-                  <Route path="operations" element={<ManageOperations />} />
-                  <Route element={<ManageGalleriesLayout />}>
-                    <Route path="galleries" element={null} />
-                    <Route
-                      path="galleries/new"
-                      element={<ManageGalleryCreate />}
-                    />
-                    <Route element={<ManageGalleryItemShell />}>
+        <main>
+          <ScrollToPosition>
+            {!countryDataReady ? (
+              <div>{t("loading")}</div>
+            ) : (
+              <React.Suspense fallback={<div>{t("loading")}</div>}>
+                <Routes>
+                  <Route
+                    path="/s/:galleryId"
+                    element={<Gallery isStats={true} />}
+                  />
+                  <Route path="/s" element={<GlobalStats />} />
+                  <Route
+                    path="/g/:galleryId/:year/:month/:day/:photoId"
+                    element={<Gallery />}
+                  />
+                  <Route
+                    path="/g/:galleryId/:year?/:month?/:day?"
+                    element={<Gallery />}
+                  />
+                  <Route path="/g" element={<Gallery />} />
+                  <Route path="/m" element={<Manage />}>
+                    <Route element={<ManageDashboardLayout />}>
+                      <Route index element={null} />
+                      <Route path="instance" element={<ManageInstance />} />
+                    </Route>
+                    <Route element={<ManageUsersLayout />}>
+                      <Route path="users" element={null} />
+                      <Route path="users/new" element={<ManageUserCreate />} />
+                      <Route path="users/:userId" element={<ManageUserEdit />} />
+                    </Route>
+                    <Route element={<ManageGroupsLayout />}>
+                      <Route path="groups" element={null} />
+                      <Route path="groups/new" element={<ManageGroupCreate />} />
                       <Route
-                        path="g/:galleryId"
-                        element={<ManageGalleryEdit />}
-                      />
-                      <Route
-                        path="g/:galleryId/access"
-                        element={<ManageGalleryAccess />}
+                        path="groups/:groupId"
+                        element={<ManageGroupEdit />}
                       />
                     </Route>
+                    <Route path="access" element={<ManageAccess />} />
+                    <Route path="operations" element={<ManageOperations />} />
+                    <Route element={<ManageGalleriesLayout />}>
+                      <Route path="galleries" element={null} />
+                      <Route
+                        path="galleries/new"
+                        element={<ManageGalleryCreate />}
+                      />
+                      <Route element={<ManageGalleryItemShell />}>
+                        <Route
+                          path="g/:galleryId"
+                          element={<ManageGalleryEdit />}
+                        />
+                        <Route
+                          path="g/:galleryId/access"
+                          element={<ManageGalleryAccess />}
+                        />
+                      </Route>
+                    </Route>
+                    <Route path="photos" element={<ManagePhotos />}>
+                      <Route path=":photoId" element={<ManagePhotoDrawer />} />
+                    </Route>
                   </Route>
-                  <Route path="photos" element={<ManagePhotos />}>
-                    <Route path=":photoId" element={<ManagePhotoDrawer />} />
-                  </Route>
-                </Route>
-                <Route path="/" element={<Gallery smartLanding />} />
-              </Routes>
-            </React.Suspense>
-          )}
-        </ScrollToPosition>
+                  <Route path="/" element={<Gallery smartLanding />} />
+                </Routes>
+              </React.Suspense>
+            )}
+          </ScrollToPosition>
+        </main>
         <AppFooter />
       </Router>
     </>

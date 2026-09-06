@@ -106,11 +106,11 @@ const EventTable = ({ events }: { events: Event[] }): React.ReactElement => {
     <Table>
       <thead>
         <tr>
-          <Th>{t("manage-operations-col-time")}</Th>
-          <Th>{t("manage-operations-col-action")}</Th>
-          <Th>{t("manage-operations-col-status")}</Th>
-          <Th>{t("manage-operations-col-photo")}</Th>
-          <Th>{t("manage-operations-col-detail")}</Th>
+          <Th scope="col">{t("manage-operations-col-time")}</Th>
+          <Th scope="col">{t("manage-operations-col-action")}</Th>
+          <Th scope="col">{t("manage-operations-col-status")}</Th>
+          <Th scope="col">{t("manage-operations-col-photo")}</Th>
+          <Th scope="col">{t("manage-operations-col-detail")}</Th>
         </tr>
       </thead>
       <tbody>

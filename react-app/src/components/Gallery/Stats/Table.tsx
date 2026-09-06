@@ -295,10 +295,11 @@ const Table = ({
 
   return (
     <Root>
-      <Block>
+      <thead>
         <HeaderRow>
           {tableColumns.map((column: TableColumn) => (
             <Header
+              scope="col"
               key={`${topic.key}:header:${column.title}`}
               $align={column.align}
             >
@@ -306,6 +307,8 @@ const Table = ({
             </Header>
           ))}
         </HeaderRow>
+      </thead>
+      <Block>
         {renderRows(topic.key, category.key, visibleTable)}
         {hiddenCount > 0 && onExpand && (
           <ExpandRow onClick={onExpand}>

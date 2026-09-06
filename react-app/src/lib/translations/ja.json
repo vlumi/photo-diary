@@ -1,6 +1,7 @@
 {
   "translation": {
     "loading": "ロード中",
+    "lang-label": "言語",
     "empty": "空",
     "close": "閉じる",
     "manage-modal-confirm-discard": "保存していない変更があります。破棄しますか?",

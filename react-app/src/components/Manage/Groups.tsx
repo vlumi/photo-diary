@@ -119,9 +119,9 @@ const Groups = (): React.ReactElement => {
           <Table>
           <thead>
             <tr>
-              <Th>{t("manage-groups-col-id")}</Th>
-              <Th>{t("manage-groups-col-name")}</Th>
-              <Th>{t("manage-groups-col-description")}</Th>
+              <Th scope="col">{t("manage-groups-col-id")}</Th>
+              <Th scope="col">{t("manage-groups-col-name")}</Th>
+              <Th scope="col">{t("manage-groups-col-description")}</Th>
             </tr>
           </thead>
           <tbody>

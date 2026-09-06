@@ -420,10 +420,10 @@ const UserGrantsTable = ({
     <Table>
       <thead>
         <tr>
-          <Th>{t("manage-gallery-access-col-user")}</Th>
-          <Th>{t("manage-gallery-access-col-admin")}</Th>
-          <Th>{t("manage-gallery-access-col-hidemap")}</Th>
-          <Th></Th>
+          <Th scope="col">{t("manage-gallery-access-col-user")}</Th>
+          <Th scope="col">{t("manage-gallery-access-col-admin")}</Th>
+          <Th scope="col">{t("manage-gallery-access-col-hidemap")}</Th>
+          <Th scope="col"></Th>
         </tr>
       </thead>
       <tbody>
@@ -467,10 +467,10 @@ const GroupGrantsTable = ({
     <Table>
       <thead>
         <tr>
-          <Th>{t("manage-gallery-access-col-group")}</Th>
-          <Th>{t("manage-gallery-access-col-admin")}</Th>
-          <Th>{t("manage-gallery-access-col-hidemap")}</Th>
-          <Th></Th>
+          <Th scope="col">{t("manage-gallery-access-col-group")}</Th>
+          <Th scope="col">{t("manage-gallery-access-col-admin")}</Th>
+          <Th scope="col">{t("manage-gallery-access-col-hidemap")}</Th>
+          <Th scope="col"></Th>
         </tr>
       </thead>
       <tbody>

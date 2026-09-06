@@ -1,6 +1,7 @@
 {
   "translation": {
     "loading": "Ladataan...",
+    "lang-label": "Kieli",
     "empty": "Tyhjä",
     "close": "Sulje",
     "manage-modal-confirm-discard": "Sinulla on tallentamattomia muutoksia. Hylätäänkö ne?",

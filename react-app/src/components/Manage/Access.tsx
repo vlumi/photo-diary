@@ -636,7 +636,7 @@ const Access = (): React.ReactElement => {
       {isLoading ? (
         <Notice>{t("loading")}</Notice>
       ) : isError ? (
-        <Notice>{t("manage-access-load-error")}</Notice>
+        <Notice role="alert">{t("manage-access-load-error")}</Notice>
       ) : sorted.length === 0 ? (
         <Notice>{t("manage-access-empty")}</Notice>
       ) : (
@@ -644,27 +644,27 @@ const Access = (): React.ReactElement => {
           <Table>
           <thead>
             <tr>
-              <Th $sortable $wide onClick={() => setSort("subject")}>
+              <Th scope="col" $sortable $wide onClick={() => setSort("subject")}>
                 {t("manage-access-col-subject")}
                 {sortIndicator("subject")}
               </Th>
-              <Th $sortable onClick={() => setSort("gallery")}>
+              <Th scope="col" $sortable onClick={() => setSort("gallery")}>
                 {t("manage-access-col-gallery")}
                 {sortIndicator("gallery")}
               </Th>
-              <Th $sortable $center onClick={() => setSort("admin")}>
+              <Th scope="col" $sortable $center onClick={() => setSort("admin")}>
                 {t("manage-gallery-access-col-admin")}
                 {sortIndicator("admin")}
               </Th>
-              <Th $sortable $center onClick={() => setSort("private")}>
+              <Th scope="col" $sortable $center onClick={() => setSort("private")}>
                 {t("manage-gallery-access-col-private")}
                 {sortIndicator("private")}
               </Th>
-              <Th $sortable $center onClick={() => setSort("hidemap")}>
+              <Th scope="col" $sortable $center onClick={() => setSort("hidemap")}>
                 {t("manage-gallery-access-col-hidemap")}
                 {sortIndicator("hidemap")}
               </Th>
-              <Th></Th>
+              <Th scope="col"></Th>
             </tr>
           </thead>
           <tbody>

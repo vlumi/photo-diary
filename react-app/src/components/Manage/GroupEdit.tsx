@@ -362,7 +362,7 @@ const GroupEdit = (): React.ReactElement => {
       <ItemModal closeTo="/m/groups">
         {() => (
           <Root>
-            <Notice>{t("manage-group-load-error")}</Notice>
+            <Notice role="alert">{t("manage-group-load-error")}</Notice>
           </Root>
         )}
       </ItemModal>
