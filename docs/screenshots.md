@@ -24,6 +24,6 @@ Full-screen photo with the corner Photo Details panel — EXIF (camera / lens / 
 
 ## Statistics
 
-Per-gallery stats — Summary tile (photos / average per day / years / months / days), Author / Country / City donuts, Location card, and the start of the Time row (Year and Month, Year, Month, Weekday). Each chart segment is clickable as a filter; scrolling continues with Hour, Gear, Exposure, and Image topics.
+Per-gallery stats — Summary tile (photos / average per day / years / months / days), Author / Country / City donuts each with a compact "over time" strip beneath (month granularity; the expanded view adds a month / year toggle), Location card, and the start of the Time row (Year and Month, Year, Month, Weekday). Each chart segment is clickable as a filter; scrolling continues with Hour, Gear, Exposure, and Image topics.
 
 ![Statistics](screenshots/04-stats.png)
