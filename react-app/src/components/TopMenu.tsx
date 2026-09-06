@@ -4,7 +4,7 @@ import styled from "@emotion/styled";
 import TopMenuLang from "./TopMenuLang";
 import UserMenu from "./UserMenu";
 
-const Root = styled.div`
+const Root = styled.header`
   height: 25px;
   color: var(--header-color);
   background: var(--header-background);
