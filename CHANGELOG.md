@@ -4,12 +4,11 @@
 
 ### Frontend
 
-- "Pair a device" in the user menu shows a one-use pairing code for the companion app as a QR, an "Open in app" link, and a copyable string, with a two-minute countdown after which the code is replaced by a "New code" prompt; requesting a new code invalidates the one it replaces.
-- The pairing link targets the instance's main host (`isMain` in known hosts), so pairing from a virtual host yields one app instance for the whole server; without a main host it targets the host the page reached — port included, plus `scheme=http` for plain http — so a dev instance on a non-standard port can pair.
+- "Pair a device" in the user menu shows a one-use pairing code for the companion app as a QR, an "Open in app" link, and a copyable string — pointing at the instance's main host, or at the host the page reached (port and scheme included) when none is configured — with a two-minute countdown after which the code is replaced by a "New code" prompt; requesting a new code invalidates the one it replaces.
 
 ### Server
 
-- New `POST /api/v1/tokens/pairing` mints a one-shot SSO ticket bound to the current host for the companion app to consume via the existing `GET /api/v1/tokens/sso`; consumed ticket ids are now retained for the longest ticket TTL so a longer-lived pairing ticket can't be replayed after the cross-host window.
+- New `POST /api/v1/tokens/pairing` mints a one-shot SSO ticket bound to the instance's main host (`isMain` in known hosts, else the request's host) for the companion app to consume via the existing `GET /api/v1/tokens/sso`; consumed ticket ids are now retained for the longest ticket TTL so a longer-lived pairing ticket can't be replayed after the cross-host window.
 - Auth cookies carry `Secure` only when the request actually arrived over HTTPS; Safari (including the iOS Simulator) drops `Secure` cookies on plain-http origins, which left a dev login "signed in" with every request arriving as guest.
 
 ## [1.0.6] - 2026-09-06
