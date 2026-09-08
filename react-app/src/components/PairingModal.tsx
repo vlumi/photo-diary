@@ -189,7 +189,7 @@ const PairingModal = (): React.ReactElement | null => {
     setCopied(false);
   }, [isOpen, mint]);
 
-  const url = ticket ? pairingUrl(ticket.host, ticket.token) : null;
+  const url = ticket ? pairingUrl(window.location, ticket.token) : null;
 
   React.useEffect(() => {
     if (!url) return;

@@ -3,17 +3,28 @@ import { describe, expect, test } from "vitest";
 import { formatRemaining, pairingUrl } from "./pairing";
 
 describe("pairingUrl", () => {
-  test("uses the photodiary scheme with host + token as query params", () => {
-    expect(pairingUrl("photos.example.com", "abc.def.ghi")).toBe(
+  const https = { protocol: "https:", host: "photos.example.com" };
+
+  test("uses the photodiary scheme with the page's host + token as query params", () => {
+    expect(pairingUrl(https, "abc.def.ghi")).toBe(
       "photodiary://sso?host=photos.example.com&token=abc.def.ghi"
     );
   });
 
+  test("carries the port when the page has one", () => {
+    const url = pairingUrl({ protocol: "https:", host: "photos.example.com:8443" }, "t");
+    expect(new URL(url).searchParams.get("host")).toBe("photos.example.com:8443");
+  });
+
+  test("adds scheme=http only for a non-https page", () => {
+    const dev = pairingUrl({ protocol: "http:", host: "localhost:3000" }, "t");
+    expect(new URL(dev).searchParams.get("scheme")).toBe("http");
+    expect(new URL(dev).searchParams.get("host")).toBe("localhost:3000");
+    expect(new URL(pairingUrl(https, "t")).searchParams.has("scheme")).toBe(false);
+  });
+
   test("percent-encodes characters that would break the query string", () => {
-    const url = pairingUrl("host.example.com", "a+b/c=d&e");
-    expect(url).toBe(
-      "photodiary://sso?host=host.example.com&token=a%2Bb%2Fc%3Dd%26e"
-    );
+    const url = pairingUrl(https, "a+b/c=d&e");
     expect(new URL(url).searchParams.get("token")).toBe("a+b/c=d&e");
   });
 });

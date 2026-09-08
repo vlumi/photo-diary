@@ -398,6 +398,7 @@ export interface paths {
                         "application/json": {
                             token: string;
                             host: string;
+                            scheme: "http" | "https";
                             expiresAt: number;
                         };
                     };

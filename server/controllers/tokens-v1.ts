@@ -37,6 +37,29 @@ const init = async () => {
 // unset / malformed — the cross-host endpoint then rejects every
 // target, effectively disabling the feature without an explicit
 // toggle.
+// The operator's designated main host (`isMain` in knownHosts). The
+// companion app pairs with this host regardless of which virtual host
+// the user is browsing: vhosts are a web landing-page concern, while
+// access is per-user, so one server is one instance in the app.
+const loadMainHost = async (): Promise<string | null> => {
+  try {
+    const metas = await db.loadMetas();
+    const raw = metas.instance_knownHosts;
+    if (typeof raw !== "string" || raw.length === 0) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    const main = parsed.find(
+      (e): e is { hostname: string; isMain?: boolean } =>
+        !!e &&
+        typeof (e as { hostname?: unknown }).hostname === "string" &&
+        (e as { isMain?: unknown }).isMain === true
+    );
+    return main ? main.hostname.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+};
+
 const loadKnownHosts = async (): Promise<string[]> => {
   try {
     const metas = await db.loadMetas();
@@ -99,7 +122,10 @@ const CrossHostResponse = Type.Object({
 // the SPA can render a countdown.
 const PairingResponse = Type.Object({
   token: Type.String(),
+  // Where the app should connect: the main host when one is configured,
+  // otherwise the host this request arrived on (port included).
   host: Type.String(),
+  scheme: Type.Union([Type.Literal("http"), Type.Literal("https")]),
   expiresAt: Type.Integer(),
 });
 // `previous` is the ticket a "New code" replaces: it gets revoked so
@@ -412,18 +438,22 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       if (request.user.id === ":guest") {
         throw new AccessError();
       }
-      const host = request.hostname.toLowerCase();
+      const host = (await loadMainHost()) ?? request.host.toLowerCase();
+      // The ticket's audience is a hostname (consume compares against
+      // request.hostname, which never carries a port).
+      const audience = host.replace(/:\d+$/, "");
       if (request.body.previous) {
-        await revokePairingTicket(request.user.id, host, request.body.previous);
+        await revokePairingTicket(request.user.id, audience, request.body.previous);
       }
+      const scheme: "http" | "https" = request.protocol === "https" ? "https" : "http";
       const expiresAt = Date.now() + PAIRING_TOKEN_TTL_MS;
       const token = await mintSsoToken(
         config.SECRET,
         request.user.id,
-        host,
+        audience,
         PAIRING_TOKEN_TTL_MS
       );
-      return { token, host, expiresAt };
+      return { token, host, scheme, expiresAt };
     }
   );
 

@@ -192,7 +192,8 @@ describe("Cross-host SSO consume", () => {
 });
 
 describe("Device pairing mint", () => {
-  test("authed user gets a ticket bound to this host, expiring ~2 min out", async () => {
+  test("authed user gets a ticket for the main host, expiring ~2 min out", async () => {
+    // seedKnownHosts marks 127.0.0.1 as isMain.
     const access = await loginUser(api, "admin");
     const before = Date.now();
     const res = await api
@@ -202,8 +203,46 @@ describe("Device pairing mint", () => {
       .expect(200);
     expect(typeof res.body.token).toBe("string");
     expect(res.body.host).toBe("127.0.0.1");
+    expect(res.body.scheme).toBe("http");
     expect(res.body.expiresAt).toBeGreaterThanOrEqual(before + 120_000 - 2_000);
     expect(res.body.expiresAt).toBeLessThanOrEqual(Date.now() + 120_000 + 2_000);
+  });
+
+  test("ticket targets the configured main host even when minted from a vhost", async () => {
+    const { default: db } = await import("../../db/index.js");
+    await db.updateMeta("instance_knownHosts", {
+      value: JSON.stringify([
+        { hostname: "photos.example.com", label: "Main", isMain: true },
+        { hostname: "127.0.0.1", label: "Self" },
+      ]),
+    });
+    const access = await loginUser(api, "admin");
+    const res = await api
+      .post("/api/v1/tokens/pairing")
+      .set("Cookie", `pd_access=${access}`)
+      .send({})
+      .expect(200);
+    expect(res.body.host).toBe("photos.example.com");
+    // Bound to the main host: this host (127.0.0.1) can't consume it.
+    await api
+      .get(`/api/v1/tokens/sso?token=${encodeURIComponent(res.body.token)}`)
+      .expect(401);
+  });
+
+  test("without a main host the ticket targets the request's host, port included", async () => {
+    const { default: db } = await import("../../db/index.js");
+    await db.deleteMeta("instance_knownHosts");
+    const access = await loginUser(api, "admin");
+    const res = await api
+      .post("/api/v1/tokens/pairing")
+      .set("Cookie", `pd_access=${access}`)
+      .send({})
+      .expect(200);
+    expect(res.body.host).toMatch(/^127\.0\.0\.1:\d+$/);
+    // Audience is the hostname alone, so the round trip still works.
+    await api
+      .get(`/api/v1/tokens/sso?token=${encodeURIComponent(res.body.token)}`)
+      .expect(302);
   });
 
   test("guest can't mint", async () => {
