@@ -21,7 +21,8 @@ import modelFactory from "../models/token.js";
 import {
   mintSsoToken,
   verifySsoToken,
-  SSO_TOKEN_TTL_MS,
+  PAIRING_TOKEN_TTL_MS,
+  SSO_JTI_RETENTION_MS,
 } from "../lib/sso.js";
 
 const authorizer = authorizerFactory();
@@ -90,6 +91,16 @@ const CrossHostBody = Type.Object({
 });
 const CrossHostResponse = Type.Object({
   redirectUrl: Type.String(),
+});
+
+// Device-pairing mint. Same ticket primitive as cross-host, bound to
+// this host, handed to the companion app as a QR / app link / pasted
+// string and consumed via GET /sso. `expiresAt` is epoch millis so
+// the SPA can render a countdown.
+const PairingResponse = Type.Object({
+  token: Type.String(),
+  host: Type.String(),
+  expiresAt: Type.Integer(),
 });
 
 // SSO consume — the token + redirect both ride in the URL because
@@ -353,6 +364,39 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   );
 
   /**
+   * Device-pairing mint. Authed caller asks for a one-shot ticket
+   * bound to *this* host; the SPA shows it as a QR / app link /
+   * pastable string and the companion app consumes it via GET /sso
+   * exactly like a cross-host hop. Longer TTL than cross-host
+   * because a human scan is in the loop.
+   */
+  fastify.post(
+    "/pairing",
+    {
+      schema: {
+        tags: TAGS,
+        summary: "Mint a one-shot device-pairing ticket for this host",
+        response: { 200: PairingResponse },
+        security: [{ bearer: [] }],
+      },
+    },
+    async (request) => {
+      if (request.user.id === ":guest") {
+        throw new AccessError();
+      }
+      const host = request.hostname.toLowerCase();
+      const expiresAt = Date.now() + PAIRING_TOKEN_TTL_MS;
+      const token = await mintSsoToken(
+        config.SECRET,
+        request.user.id,
+        host,
+        PAIRING_TOKEN_TTL_MS
+      );
+      return { token, host, expiresAt };
+    }
+  );
+
+  /**
    * Cross-host SSO consume. Validates the signed token, checks the
    * target audience matches this host, checks the jti is single-use
    * (DB dedup), mints normal pd_access + pd_refresh cookies for the
@@ -378,7 +422,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const won = await db.consumeSsoJti(
         claims.jti,
         Date.now(),
-        SSO_TOKEN_TTL_MS
+        SSO_JTI_RETENTION_MS
       );
       if (!won) {
         // Replay attempt — same jti already consumed (either by an
