@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-09-08
+
 ### Frontend
 
 - "Pair a device" in the user menu shows a one-use pairing code for the companion app as a QR, an "Open in app" link, and a copyable string — pointing at the instance's main host, or at the host the page reached (port and scheme included) when none is configured — with a two-minute countdown after which the code is replaced by a "New code" prompt; requesting a new code invalidates the one it replaces.
@@ -838,6 +840,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.7]: https://github.com/vlumi/photo-diary/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/vlumi/photo-diary/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/vlumi/photo-diary/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/vlumi/photo-diary/compare/v1.0.3...v1.0.4
