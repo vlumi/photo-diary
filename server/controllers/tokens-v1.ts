@@ -262,7 +262,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const editorGalleries = await authorizer.loadEditorGalleries(
         credentials.id
       );
-      setAuthCookies(reply, pair.accessToken, pair.refreshToken);
+      setAuthCookies(request, reply, pair.accessToken, pair.refreshToken);
       logger.debug(`User "${credentials.id}" logged in successfully.`);
       reply.status(200).send({ id: credentials.id, isAdmin, editorGalleries });
     }
@@ -292,7 +292,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const isAdmin = await resolveIsAdmin(userId);
       const accessToken = await model.signAccessToken(userId, isAdmin);
       const editorGalleries = await authorizer.loadEditorGalleries(userId);
-      setAuthCookies(reply, accessToken, refreshToken);
+      setAuthCookies(request, reply, accessToken, refreshToken);
       reply.status(200).send({ id: userId, isAdmin, editorGalleries });
     }
   );
@@ -468,7 +468,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         .then(() => true)
         .catch(() => false);
       const pair = await model.createSession(claims.sub, isAdmin);
-      setAuthCookies(reply, pair.accessToken, pair.refreshToken);
+      setAuthCookies(request, reply, pair.accessToken, pair.refreshToken);
       const safeRedirect =
         redirect && redirect.startsWith("/") ? redirect : "/";
       reply.redirect(safeRedirect, 302);

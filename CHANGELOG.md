@@ -9,6 +9,7 @@
 ### Server
 
 - New `POST /api/v1/tokens/pairing` mints a one-shot SSO ticket bound to the current host for the companion app to consume via the existing `GET /api/v1/tokens/sso`; consumed ticket ids are now retained for the longest ticket TTL so a longer-lived pairing ticket can't be replayed after the cross-host window.
+- Auth cookies carry `Secure` only when the request actually arrived over HTTPS; Safari (including the iOS Simulator) drops `Secure` cookies on plain-http origins, which left a dev login "signed in" with every request arriving as guest.
 
 ## [1.0.6] - 2026-09-06
 
