@@ -6,6 +6,7 @@ export { useScrollStore } from "./scroll";
 export { useNotificationsStore } from "./notifications";
 export { useLoginModalStore } from "./login-modal";
 export { useChangePasswordModalStore } from "./change-password-modal";
+export { usePairingModalStore } from "./pairing-modal";
 export { useLastGalleryPathStore } from "./last-gallery-path";
 export { useBetaStore } from "./beta";
 export { useThemePreferenceStore } from "./theme-preference";

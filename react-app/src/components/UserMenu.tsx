@@ -20,6 +20,7 @@ import {
   useBetaStore,
   useThemePreferenceStore,
   useThemePickerModalStore,
+  usePairingModalStore,
 } from "../stores";
 import { BETA_FEATURES } from "../stores/beta";
 
@@ -178,6 +179,7 @@ const UserMenu = (): React.ReactElement => {
   );
   const themePreference = useThemePreferenceStore((s) => s.preference);
   const openThemeModal = useThemePickerModalStore((s) => s.open);
+  const openPairingModal = usePairingModalStore((s) => s.open);
   const notify = useNotificationsStore((s) => s.notify);
 
   // knownHosts drives the cross-host switcher. Shared cache
@@ -384,6 +386,16 @@ const UserMenu = (): React.ReactElement => {
             <span>{t("theme-label")}</span>
             <ThemeMenuValue>{themeLabel}</ThemeMenuValue>
           </ThemeMenuItem>
+          <MenuItem
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setIsOpen(false);
+              openPairingModal();
+            }}
+          >
+            {t("pairing-title")}
+          </MenuItem>
           {userBetaFeatures.map((f) => (
             <BetaToggle key={f}>
               <input
