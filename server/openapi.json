@@ -503,6 +503,7 @@
                   "required": [
                     "token",
                     "host",
+                    "scheme",
                     "expiresAt"
                   ],
                   "properties": {
@@ -511,6 +512,22 @@
                     },
                     "host": {
                       "type": "string"
+                    },
+                    "scheme": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "http"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "https"
+                          ]
+                        }
+                      ]
                     },
                     "expiresAt": {
                       "type": "integer"
