@@ -205,7 +205,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.user.id,
         !!request.user.isAdmin
       );
-      setAuthCookies(reply, pair.accessToken, pair.refreshToken);
+      setAuthCookies(request, reply, pair.accessToken, pair.refreshToken);
       return {};
     }
   );

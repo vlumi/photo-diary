@@ -52,21 +52,46 @@ describe("Login", () => {
     expect(result.body.isAdmin).toBe(true);
     expect(Array.isArray(result.body.editorGalleries)).toBe(true);
   });
-  test("Login sets HttpOnly auth cookies", async () => {
+  const authCookies = (result: { headers: Record<string, unknown> }) => {
+    const cookies = result.headers["set-cookie"] as unknown as string[];
+    expect(Array.isArray(cookies)).toBe(true);
+    return [
+      cookies.find((c) => c.startsWith("pd_access=")),
+      cookies.find((c) => c.startsWith("pd_refresh=")),
+    ];
+  };
+  test("Login sets HttpOnly, SameSite=Lax auth cookies", async () => {
     const result = await api
       .post("/api/v1/tokens")
       .send({ id: "admin", password: "foobar" })
       .expect(200);
-    const cookies = result.headers["set-cookie"] as unknown as string[];
-    expect(Array.isArray(cookies)).toBe(true);
-    const accessCookie = cookies.find((c) => c.startsWith("pd_access="));
-    const refreshCookie = cookies.find((c) => c.startsWith("pd_refresh="));
-    expect(accessCookie).toMatch(/HttpOnly/i);
-    expect(accessCookie).toMatch(/Secure/i);
-    expect(accessCookie).toMatch(/SameSite=Lax/i);
-    expect(refreshCookie).toMatch(/HttpOnly/i);
-    expect(refreshCookie).toMatch(/Secure/i);
-    expect(refreshCookie).toMatch(/SameSite=Lax/i);
+    for (const cookie of authCookies(result)) {
+      expect(cookie).toMatch(/HttpOnly/i);
+      expect(cookie).toMatch(/SameSite=Lax/i);
+    }
+  });
+  test("Auth cookies are not marked Secure on a plain-http request", async () => {
+    // WebKit drops Secure cookies set over http (localhost included),
+    // which left a Simulator-Safari login "signed in" with no cookies.
+    const result = await api
+      .post("/api/v1/tokens")
+      .send({ id: "admin", password: "foobar" })
+      .expect(200);
+    for (const cookie of authCookies(result)) {
+      expect(cookie).not.toMatch(/;\s*Secure/i);
+    }
+  });
+  test("Auth cookies are marked Secure when the request arrived over https", async () => {
+    // Prod sits behind nginx on loopback; trustProxy: "loopback" makes
+    // the forwarded protocol authoritative.
+    const result = await api
+      .post("/api/v1/tokens")
+      .set("X-Forwarded-Proto", "https")
+      .send({ id: "admin", password: "foobar" })
+      .expect(200);
+    for (const cookie of authCookies(result)) {
+      expect(cookie).toMatch(/;\s*Secure/i);
+    }
   });
   test("Cookie auth — requests with pd_access cookie are authenticated", async () => {
     const cookies = (await api

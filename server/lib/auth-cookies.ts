@@ -1,4 +1,4 @@
-import type { FastifyReply } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
 
 import CONST from "./constants.js";
 
@@ -20,25 +20,36 @@ export const REFRESH_COOKIE = "pd_refresh";
 
 const COOKIE_MAX_AGE_S = Math.floor(CONST.SESSION_LENGTH_MS / 1000);
 
-const cookieOptions = (maxAgeS: number) => ({
+// Secure follows the request's actual protocol. Behind nginx on prod
+// `trustProxy: "loopback"` reports https and the attribute stays on;
+// on a plain-http dev origin it must be off — Chrome and Firefox
+// accept Secure cookies on http://localhost, but WebKit (Safari, the
+// iOS Simulator) drops them on any http origin, which left the SPA
+// "logged in" in localStorage while every request arrived as guest.
+const cookieOptions = (maxAgeS: number, secure: boolean) => ({
   httpOnly: true,
-  // Browsers allow Secure on http://localhost too, so this is safe in dev.
-  secure: true,
+  secure,
   sameSite: "lax" as const,
   path: "/",
   maxAge: maxAgeS,
 });
 
 export const setAuthCookies = (
+  request: FastifyRequest,
   reply: FastifyReply,
   accessToken: string,
   refreshToken: string
 ): void => {
-  reply.setCookie(ACCESS_COOKIE, accessToken, cookieOptions(COOKIE_MAX_AGE_S));
+  const secure = request.protocol === "https";
+  reply.setCookie(
+    ACCESS_COOKIE,
+    accessToken,
+    cookieOptions(COOKIE_MAX_AGE_S, secure)
+  );
   reply.setCookie(
     REFRESH_COOKIE,
     refreshToken,
-    cookieOptions(COOKIE_MAX_AGE_S)
+    cookieOptions(COOKIE_MAX_AGE_S, secure)
   );
 };
 
