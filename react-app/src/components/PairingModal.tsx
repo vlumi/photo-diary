@@ -143,6 +143,7 @@ const LinkInput = styled.input`
 interface Ticket {
   token: string;
   host: string;
+  scheme: "http" | "https";
   expiresAt: number;
 }
 
@@ -189,7 +190,7 @@ const PairingModal = (): React.ReactElement | null => {
     setCopied(false);
   }, [isOpen, mint]);
 
-  const url = ticket ? pairingUrl(window.location, ticket.token) : null;
+  const url = ticket ? pairingUrl(ticket, ticket.token) : null;
 
   React.useEffect(() => {
     if (!url) return;

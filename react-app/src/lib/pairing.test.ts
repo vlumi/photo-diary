@@ -3,21 +3,21 @@ import { describe, expect, test } from "vitest";
 import { formatRemaining, pairingUrl } from "./pairing";
 
 describe("pairingUrl", () => {
-  const https = { protocol: "https:", host: "photos.example.com" };
+  const https = { scheme: "https", host: "photos.example.com" };
 
-  test("uses the photodiary scheme with the page's host + token as query params", () => {
+  test("uses the photodiary scheme with the server-given host + token as query params", () => {
     expect(pairingUrl(https, "abc.def.ghi")).toBe(
       "photodiary://sso?host=photos.example.com&token=abc.def.ghi"
     );
   });
 
-  test("carries the port when the page has one", () => {
-    const url = pairingUrl({ protocol: "https:", host: "photos.example.com:8443" }, "t");
+  test("carries a port when the server gives one", () => {
+    const url = pairingUrl({ scheme: "https", host: "photos.example.com:8443" }, "t");
     expect(new URL(url).searchParams.get("host")).toBe("photos.example.com:8443");
   });
 
-  test("adds scheme=http only for a non-https page", () => {
-    const dev = pairingUrl({ protocol: "http:", host: "localhost:3000" }, "t");
+  test("adds scheme=http only for plain http", () => {
+    const dev = pairingUrl({ scheme: "http", host: "localhost:3000" }, "t");
     expect(new URL(dev).searchParams.get("scheme")).toBe("http");
     expect(new URL(dev).searchParams.get("host")).toBe("localhost:3000");
     expect(new URL(pairingUrl(https, "t")).searchParams.has("scheme")).toBe(false);

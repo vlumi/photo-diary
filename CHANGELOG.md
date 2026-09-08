@@ -5,7 +5,7 @@
 ### Frontend
 
 - "Pair a device" in the user menu shows a one-use pairing code for the companion app as a QR, an "Open in app" link, and a copyable string, with a two-minute countdown after which the code is replaced by a "New code" prompt; requesting a new code invalidates the one it replaces.
-- The pairing link now carries the origin the browser is on — port included, plus `scheme=http` for a non-https page — instead of the server's port-less hostname, so a dev instance on a non-standard port can pair.
+- The pairing link targets the instance's main host (`isMain` in known hosts), so pairing from a virtual host yields one app instance for the whole server; without a main host it targets the host the page reached — port included, plus `scheme=http` for plain http — so a dev instance on a non-standard port can pair.
 
 ### Server
 

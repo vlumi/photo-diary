@@ -2,19 +2,20 @@
 // pairing action. Host and ticket ride as query params so the app can
 // show "Add <host>?" before it consumes anything.
 //
-// The host is the origin the browser is on — `location.host`, port
-// included — not the server's `request.hostname`: that one is the
-// ticket's audience and is port-less by design, but the phone has to
-// reach the same place this page did (a dev instance on :3000, a
-// proxy port). `scheme=http` is added only when this page isn't on
-// https, so the app can allow plain http for local instances while
+// Host and scheme come from the server's pairing response, not from
+// this page's location: the server points the app at the instance's
+// main host (so pairing from a virtual host still yields one app
+// instance for the whole server) and, when no main host is
+// configured, at the host this page reached it on — port included,
+// which is what a dev instance needs. `scheme=http` is added only
+// for plain http so the app can allow it for local instances while
 // defaulting to https everywhere else.
 export const pairingUrl = (
-  location: { protocol: string; host: string },
+  target: { host: string; scheme: string },
   token: string
 ): string => {
-  const params = new URLSearchParams({ host: location.host, token });
-  if (location.protocol !== "https:") params.set("scheme", "http");
+  const params = new URLSearchParams({ host: target.host, token });
+  if (target.scheme !== "https") params.set("scheme", "http");
   return `photodiary://sso?${params.toString()}`;
 };
 
