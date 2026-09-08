@@ -381,7 +381,13 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        previous?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Default Response */
                 200: {

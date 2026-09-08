@@ -25,7 +25,13 @@ const crossHost = async (target: string, path?: string) =>
   );
 
 // Device-pairing ticket for the companion app: one-shot, bound to
-// this host, consumed by the app via GET /api/v1/tokens/sso.
-const pairing = async () => unwrap(api.POST("/api/v1/tokens/pairing", {}));
+// this host, consumed by the app via GET /api/v1/tokens/sso. Passing
+// the previous ticket revokes it — "New code" kills the old one.
+const pairing = async (previous?: string) =>
+  unwrap(
+    api.POST("/api/v1/tokens/pairing", {
+      body: previous ? { previous } : {},
+    })
+  );
 
 export default { login, verify, logout, crossHost, pairing };

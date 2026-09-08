@@ -4,7 +4,7 @@
 
 ### Frontend
 
-- "Pair a device" in the user menu shows a one-use pairing code for the companion app as a QR, an "Open in app" link, and a copyable string, with a two-minute countdown after which the code is replaced by a "New code" prompt.
+- "Pair a device" in the user menu shows a one-use pairing code for the companion app as a QR, an "Open in app" link, and a copyable string, with a two-minute countdown after which the code is replaced by a "New code" prompt; requesting a new code invalidates the one it replaces.
 
 ### Server
 

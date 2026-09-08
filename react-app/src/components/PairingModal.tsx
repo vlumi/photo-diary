@@ -163,13 +163,15 @@ const PairingModal = (): React.ReactElement | null => {
   const [copied, setCopied] = React.useState(false);
   const [now, setNow] = React.useState(() => Date.now());
 
-  const mint = React.useCallback(async () => {
+  // `previous` is the ticket being replaced; the server revokes it so
+  // a code the user discarded can't still be scanned.
+  const mint = React.useCallback(async (previous?: string) => {
     setFailed(false);
     setTicket(null);
     setQr(null);
     setCopied(false);
     try {
-      setTicket(await tokenService.pairing());
+      setTicket(await tokenService.pairing(previous));
     } catch {
       setFailed(true);
     }
@@ -254,7 +256,7 @@ const PairingModal = (): React.ReactElement | null => {
   };
 
   const regenerate = (
-    <ActionButton type="button" onClick={() => void mint()}>
+    <ActionButton type="button" onClick={() => void mint(ticket?.token)}>
       {t("pairing-regenerate")}
     </ActionButton>
   );
@@ -307,7 +309,7 @@ const PairingModal = (): React.ReactElement | null => {
               <SecondaryButton
                 type="button"
                 disabled={!ticket}
-                onClick={() => void mint()}
+                onClick={() => void mint(ticket?.token)}
               >
                 {t("pairing-regenerate")}
               </SecondaryButton>

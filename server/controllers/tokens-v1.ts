@@ -102,6 +102,11 @@ const PairingResponse = Type.Object({
   host: Type.String(),
   expiresAt: Type.Integer(),
 });
+// `previous` is the ticket a "New code" replaces: it gets revoked so
+// a code the user deliberately discarded can't still be scanned.
+const PairingBody = Type.Object({
+  previous: Type.Optional(Type.String({ minLength: 1 })),
+});
 
 // SSO consume — the token + redirect both ride in the URL because
 // the browser is navigating (not the SPA making a fetch).
@@ -109,6 +114,28 @@ const SsoConsumeQuery = Type.Object({
   token: Type.String({ minLength: 1 }),
   redirect: Type.Optional(Type.String()),
 });
+
+// Tickets are stateless JWTs, so revoking one means marking its jti
+// consumed — the same dedup the consume path checks. The SPA hands
+// back the raw previous token; it must verify and belong to the
+// caller before its jti is trusted. Expired or malformed input is a
+// no-op: there is nothing left to revoke.
+const revokePairingTicket = async (
+  userId: string,
+  host: string,
+  previous: string
+): Promise<void> => {
+  let claims;
+  try {
+    claims = await verifySsoToken(config.SECRET, host, previous);
+  } catch {
+    return;
+  }
+  if (claims.sub !== userId) {
+    throw new AccessError("Previous pairing ticket belongs to another user.");
+  }
+  await db.consumeSsoJti(claims.jti, Date.now(), SSO_JTI_RETENTION_MS);
+};
 
 // Per-IP throttle on the login POST: 10 failed attempts per 15-min
 // window. Successful logins don't tick the counter (a typo'ing user
@@ -376,6 +403,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Mint a one-shot device-pairing ticket for this host",
+        body: PairingBody,
         response: { 200: PairingResponse },
         security: [{ bearer: [] }],
       },
@@ -385,6 +413,9 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         throw new AccessError();
       }
       const host = request.hostname.toLowerCase();
+      if (request.body.previous) {
+        await revokePairingTicket(request.user.id, host, request.body.previous);
+      }
       const expiresAt = Date.now() + PAIRING_TOKEN_TTL_MS;
       const token = await mintSsoToken(
         config.SECRET,
