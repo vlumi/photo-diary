@@ -466,6 +466,47 @@
         }
       }
     },
+    "/api/v1/tokens/pairing": {
+      "post": {
+        "summary": "Mint a one-shot device-pairing ticket for this host",
+        "tags": [
+          "tokens"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "token",
+                    "host",
+                    "expiresAt"
+                  ],
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "host": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tokens/sso": {
       "get": {
         "summary": "Consume a cross-host SSO token + redirect",
