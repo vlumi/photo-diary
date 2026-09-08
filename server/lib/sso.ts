@@ -1,4 +1,6 @@
-// Cross-host SSO mint + verify for the virtual-host switcher.
+// One-shot SSO ticket mint + verify. Two consumers share it: the
+// virtual-host switcher (cross-host hop) and device pairing for the
+// companion app (same ticket, bound to this host, longer TTL).
 //
 // Flow: the operator clicks a host in the UserMenu on host A. The
 // SPA hits POST /api/v1/tokens/cross-host (host A); the controller
@@ -27,6 +29,18 @@ import {
 } from "./errors.js";
 
 export const SSO_TOKEN_TTL_MS = 30_000;
+// Pairing tickets are scanned or pasted by a human on another
+// device; two minutes keeps that comfortable while still making a
+// screenshot of the QR useless within a coffee break.
+export const PAIRING_TOKEN_TTL_MS = 120_000;
+// How long a consumed jti must stay in `sso_consumed_token`: the
+// longest TTL any ticket kind carries. Pruning by the consumer's
+// own TTL would let a longer-lived ticket replay once its row aged
+// out of the shorter window.
+export const SSO_JTI_RETENTION_MS = Math.max(
+  SSO_TOKEN_TTL_MS,
+  PAIRING_TOKEN_TTL_MS
+);
 
 const ALG = "HS256";
 
@@ -52,9 +66,10 @@ const encodeSecret = (secret: string): Uint8Array =>
 export const mintSsoToken = async (
   secret: string,
   userId: string,
-  targetHost: string
+  targetHost: string,
+  ttlMs: number = SSO_TOKEN_TTL_MS
 ): Promise<string> => {
-  const expSeconds = Math.floor((Date.now() + SSO_TOKEN_TTL_MS) / 1000);
+  const expSeconds = Math.floor((Date.now() + ttlMs) / 1000);
   return new SignJWT({})
     .setProtectedHeader({ alg: ALG })
     .setSubject(userId)

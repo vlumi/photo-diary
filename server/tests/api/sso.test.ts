@@ -190,3 +190,104 @@ describe("Cross-host SSO consume", () => {
       .expect(200);
   });
 });
+
+describe("Device pairing mint", () => {
+  test("authed user gets a ticket bound to this host, expiring ~2 min out", async () => {
+    const access = await loginUser(api, "admin");
+    const before = Date.now();
+    const res = await api
+      .post("/api/v1/tokens/pairing")
+      .set("Cookie", `pd_access=${access}`)
+      .send({})
+      .expect(200);
+    expect(typeof res.body.token).toBe("string");
+    expect(res.body.host).toBe("127.0.0.1");
+    expect(res.body.expiresAt).toBeGreaterThanOrEqual(before + 120_000 - 2_000);
+    expect(res.body.expiresAt).toBeLessThanOrEqual(Date.now() + 120_000 + 2_000);
+  });
+
+  test("guest can't mint", async () => {
+    await api.post("/api/v1/tokens/pairing").send({}).expect(403);
+  });
+
+  test("ticket round-trips through /sso: cookies issued, second consume is a replay", async () => {
+    const access = await loginUser(api, "admin");
+    const res = await api
+      .post("/api/v1/tokens/pairing")
+      .set("Cookie", `pd_access=${access}`)
+      .send({})
+      .expect(200);
+    const consume = await api
+      .get(`/api/v1/tokens/sso?token=${encodeURIComponent(res.body.token)}`)
+      .expect(302);
+    const cookies = consume.headers["set-cookie"] as unknown as string[];
+    expect(cookies.find((c) => c.startsWith("pd_access="))).toBeDefined();
+    expect(cookies.find((c) => c.startsWith("pd_refresh="))).toBeDefined();
+    await api
+      .get(`/api/v1/tokens/sso?token=${encodeURIComponent(res.body.token)}`)
+      .expect(401);
+  });
+
+  test("consumed jti stays blocked past the cross-host window for the full pairing TTL", async () => {
+    // Regression guard for the retention window: pruning by the 30 s
+    // cross-host TTL would have let a 2 min pairing ticket replay
+    // once its row aged out.
+    const { default: db } = await import("../../db/index.js");
+    const { SSO_JTI_RETENTION_MS, SSO_TOKEN_TTL_MS, PAIRING_TOKEN_TTL_MS } =
+      await import("../../lib/sso.js");
+    const t0 = Date.now();
+    expect(await db.consumeSsoJti("pairing-jti", t0, SSO_JTI_RETENTION_MS)).toBe(true);
+    const insideWindow = t0 + SSO_TOKEN_TTL_MS + 1_000;
+    expect(insideWindow).toBeLessThan(t0 + PAIRING_TOKEN_TTL_MS);
+    expect(await db.consumeSsoJti("pairing-jti", insideWindow, SSO_JTI_RETENTION_MS)).toBe(false);
+  });
+
+  test("'New code' with the previous ticket revokes it: old consume 401, new consume 302", async () => {
+    const access = await loginUser(api, "admin");
+    const first = await api
+      .post("/api/v1/tokens/pairing")
+      .set("Cookie", `pd_access=${access}`)
+      .send({})
+      .expect(200);
+    const second = await api
+      .post("/api/v1/tokens/pairing")
+      .set("Cookie", `pd_access=${access}`)
+      .send({ previous: first.body.token })
+      .expect(200);
+    expect(second.body.token).not.toBe(first.body.token);
+    await api
+      .get(`/api/v1/tokens/sso?token=${encodeURIComponent(first.body.token)}`)
+      .expect(401);
+    await api
+      .get(`/api/v1/tokens/sso?token=${encodeURIComponent(second.body.token)}`)
+      .expect(302);
+  });
+
+  test("previous ticket belonging to another user is refused", async () => {
+    const other = await loginUser(api, "plainuser");
+    const theirs = await api
+      .post("/api/v1/tokens/pairing")
+      .set("Cookie", `pd_access=${other}`)
+      .send({})
+      .expect(200);
+    const access = await loginUser(api, "admin");
+    await api
+      .post("/api/v1/tokens/pairing")
+      .set("Cookie", `pd_access=${access}`)
+      .send({ previous: theirs.body.token })
+      .expect(403);
+    // Their ticket is untouched by the refused attempt.
+    await api
+      .get(`/api/v1/tokens/sso?token=${encodeURIComponent(theirs.body.token)}`)
+      .expect(302);
+  });
+
+  test("malformed previous is ignored — nothing to revoke", async () => {
+    const access = await loginUser(api, "admin");
+    await api
+      .post("/api/v1/tokens/pairing")
+      .set("Cookie", `pd_access=${access}`)
+      .send({ previous: "not.a.real.jwt" })
+      .expect(200);
+  });
+});

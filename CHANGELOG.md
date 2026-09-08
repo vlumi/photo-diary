@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- "Pair a device" in the user menu shows a one-use pairing code for the companion app as a QR, an "Open in app" link, and a copyable string, with a two-minute countdown after which the code is replaced by a "New code" prompt; requesting a new code invalidates the one it replaces.
+
+### Server
+
+- New `POST /api/v1/tokens/pairing` mints a one-shot SSO ticket bound to the current host for the companion app to consume via the existing `GET /api/v1/tokens/sso`; consumed ticket ids are now retained for the longest ticket TTL so a longer-lived pairing ticket can't be replayed after the cross-host window.
+
 ## [1.0.6] - 2026-09-06
 
 ### Frontend

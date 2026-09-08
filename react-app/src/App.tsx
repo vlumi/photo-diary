@@ -18,6 +18,7 @@ import Notifications from "./components/Notifications";
 import LoginModal from "./components/LoginModal";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 import ThemePickerModal from "./components/ThemePickerModal";
+import PairingModal from "./components/PairingModal";
 import MonochromeOverlay from "./components/MonochromeOverlay";
 import GlobalFetchIndicator from "./components/GlobalFetchIndicator";
 import { useModalStackStore } from "./stores/modal-stack";
@@ -391,6 +392,7 @@ const App = (): React.ReactElement => {
       <LoginModal />
       <ChangePasswordModal />
       <ThemePickerModal />
+      <PairingModal />
       <Router>
         <TopMenu />
         <main>
