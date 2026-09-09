@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- The site has a favicon and home-screen icon: the companion app's lens-and-sunrise mark, as an SVG for the tab with a PNG fallback for Safari, plus the manifest and Apple touch icons.
+
 ## [1.0.7] - 2026-09-08
 
 ### Frontend
