@@ -6,6 +6,23 @@ import { app } from "../../app.js";
 // whole test run. Routes are registered at module load, so `app.server`
 // already knows the full pipeline — `init()` only needs to finish
 // before the first request fires (handled by each file's `beforeEach`).
+// One listening server per test file. When the server handed to
+// supertest isn't listening, supertest calls listen(0) before every
+// request and close() after it — and on the app shared by every test
+// in the file, a close still draining a keep-alive socket races the
+// next request's listen. That race is what surfaced as ECONNRESET and
+// "Parse Error: Expected HTTP/", as empty-body 400s on valid requests,
+// and, once the server wedged, as every later request in the file
+// timing out.
+beforeAll(async () => {
+  await app.ready();
+  await app.listen({ port: 0, host: "127.0.0.1" });
+});
+
+afterAll(async () => {
+  await app.close();
+});
+
 export const createApi = () => {
   const api = supertest(app.server);
   return { api };
