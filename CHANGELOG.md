@@ -10,6 +10,11 @@
 
 - Test-only: the API suite keeps one listening server per test file instead of letting supertest start and close the shared Fastify server around every request; that close racing the next request's listen was the source of the long-standing intermittent flakes — ECONNRESET, "Parse Error: Expected HTTP/", empty-body 400s on valid requests, and a whole file's remaining tests timing out once the server wedged — so the retry that papered over them is gone too.
 
+### Dependencies
+
+- Security bump `js-yaml` 4.3.1 → 4.3.2 (with `@redocly/openapi-core`), plus `sharp` 0.35.4 and `vitest` 4.1.11 from dependabot; the vitest bump needed its lockfile re-hoisted so the shared `jest-dom` could find it.
+- Safe in-range refresh across the tree: fastify 5.12.3, jose 6.2.12, react 19.3, @tanstack/react-query 5.102, i18next 26.4, react-router-dom 7.18.3, zustand 5.0.15, vite 8.2.2, @vitejs/plugin-react 6.1, @playwright/test 1.63, tsx 4.23.13, eslint 10.10 (server + converter), typescript-eslint 8.70, @types/node 26.5, typebox 1.3.30, and smaller bumps across @fastify/helmet, @inquirer/prompts and the type packages.
+
 ## [1.0.7] - 2026-09-08
 
 ### Frontend
