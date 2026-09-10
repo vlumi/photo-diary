@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-09-10
+
 ### Frontend
 
 - The site has a favicon and home-screen icon: the companion app's lens-and-sunrise mark, as an SVG for the tab with a PNG fallback for Safari, plus the manifest and Apple touch icons.
@@ -853,6 +855,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.8]: https://github.com/vlumi/photo-diary/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/vlumi/photo-diary/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/vlumi/photo-diary/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/vlumi/photo-diary/compare/v1.0.4...v1.0.5
