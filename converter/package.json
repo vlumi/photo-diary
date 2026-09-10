@@ -23,7 +23,7 @@
     "exif-reader": "^2.0.3",
     "geo-coord": "^0.2.0",
     "photo-diary-server": "*",
-    "sharp": "^0.35.1"
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
