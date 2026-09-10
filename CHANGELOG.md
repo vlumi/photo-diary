@@ -6,6 +6,11 @@
 
 - The site has a favicon and home-screen icon: the companion app's lens-and-sunrise mark, as an SVG for the tab with a PNG fallback for Safari, plus the manifest and Apple touch icons.
 
+### Dependencies
+
+- Security bump `js-yaml` 4.3.1 → 4.3.2 (with `@redocly/openapi-core`), plus `sharp` 0.35.4 and `vitest` 4.1.11 from dependabot; the vitest bump needed its lockfile re-hoisted so the shared `jest-dom` could find it.
+- Safe in-range refresh across the tree: fastify 5.12.3, jose 6.2.12, react 19.3, @tanstack/react-query 5.102, i18next 26.4, react-router-dom 7.18.3, zustand 5.0.15, vite 8.2.2, @vitejs/plugin-react 6.1, @playwright/test 1.63, tsx 4.23.13, eslint 10.10 (server + converter), typescript-eslint 8.70, @types/node 26.5, typebox 1.3.30, and smaller bumps across @fastify/helmet, @inquirer/prompts and the type packages.
+
 ## [1.0.7] - 2026-09-08
 
 ### Frontend
