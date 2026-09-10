@@ -6,6 +6,10 @@
 
 - The site has a favicon and home-screen icon: the companion app's lens-and-sunrise mark, as an SVG for the tab with a PNG fallback for Safari, plus the manifest and Apple touch icons.
 
+### Server
+
+- Test-only: the API suite keeps one listening server per test file instead of letting supertest start and close the shared Fastify server around every request; that close racing the next request's listen was the source of the long-standing intermittent flakes — ECONNRESET, "Parse Error: Expected HTTP/", empty-body 400s on valid requests, and a whole file's remaining tests timing out once the server wedged — so the retry that papered over them is gone too.
+
 ### Dependencies
 
 - Security bump `js-yaml` 4.3.1 → 4.3.2 (with `@redocly/openapi-core`), plus `sharp` 0.35.4 and `vitest` 4.1.11 from dependabot; the vitest bump needed its lockfile re-hoisted so the shared `jest-dom` could find it.
