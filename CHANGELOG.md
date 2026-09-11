@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Dependencies
+
+- `geo-coord` 0.2 → 1.0.0, its first stable release; the `GeoCoord` class the converter and the site use is unchanged, the rest is new API.
+
 ## [1.0.8] - 2026-09-10
 
 ### Frontend
