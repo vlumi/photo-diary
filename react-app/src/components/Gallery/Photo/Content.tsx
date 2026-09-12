@@ -35,13 +35,19 @@ const Frame = styled("span", {
   width: ${(props) => props.$width}px;
   height: ${(props) => props.$height}px;
 `;
-const ImageClip = styled.span`
+const ImageClip = styled("span", {
+  shouldForwardProp: (prop) => prop !== "$placeholder",
+})<{ $placeholder?: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
   overflow: hidden;
+  ${(props) =>
+    props.$placeholder
+      ? `background: center / cover no-repeat url("${props.$placeholder}");`
+      : ""}
 `;
 // HTML width/height attrs drive the box so the browser builds the
 // aspect-ratio reservation from them — keeps the frame from
@@ -144,11 +150,19 @@ const Content = ({ photo }: Props): React.ReactElement => {
   const srcSet = sortedDims
     .map((dim) => `${urlFor(dim)} ${naturalWidthFor(dim)}w`)
     .join(", ");
+  // The thumbnail the user just tapped is already in the browser's
+  // cache; it fills the frame until the display rendition arrives,
+  // so the modal opens with the picture in it rather than a blank.
+  const [loadedId, setLoadedId] = React.useState<string | null>(null);
+  const placeholder =
+    loadedId === photo.id()
+      ? undefined
+      : `${config.PHOTO_ROOT_URL}thumbnail/${photo.id()}`;
 
   return (
     <Root ref={rootRef}>
       <Frame $width={imageWidth} $height={imageHeight}>
-        <ImageClip>
+        <ImageClip $placeholder={placeholder}>
           <Image
             key={photo.id()}
             src={path}
@@ -158,6 +172,7 @@ const Content = ({ photo }: Props): React.ReactElement => {
             width={imageWidth}
             height={imageHeight}
             draggable={false}
+            onLoad={() => setLoadedId(photo.id())}
           />
         </ImageClip>
       </Frame>

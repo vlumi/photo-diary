@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import EpochAge from "../EpochAge";
 import EpochDayIndex from "../EpochDayIndex";
@@ -122,6 +122,19 @@ const Content = ({
     queryFn: () => galleryPhotosService.query(gallery.id(), queryBody),
     placeholderData: keepPreviousData,
   });
+  // Every photo on the page is already in hand; seed the per-id
+  // cache Gallery/index.tsx reads for the modal, so tapping a
+  // thumbnail opens it on the tap rather than after a round trip.
+  const queryClient = useQueryClient();
+  React.useEffect(() => {
+    for (const raw of (photosRaw ?? []) as Array<{ id?: unknown }>) {
+      if (typeof raw.id !== "string" || !raw.id) continue;
+      queryClient.setQueryData(
+        ["gallery-photo-by-id", gallery.id(), raw.id, lang],
+        raw
+      );
+    }
+  }, [photosRaw, queryClient, gallery, lang]);
   const photosByDay = React.useMemo(() => {
     const out: Record<number, PhotoT[]> = {};
     for (const raw of (photosRaw ?? []) as Array<Record<string, unknown>>) {

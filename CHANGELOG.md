@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Frontend
+
+- Opening a photo responds on the tap: the modal appears at once with the thumbnail filling the frame until the full-size image arrives, instead of the page going blank while the photo's details load.
+
 ### Dependencies
 
 - `geo-coord` 0.2 → 1.0.0, its first stable release; the `GeoCoord` class the converter and the site use is unchanged, the rest is new API.

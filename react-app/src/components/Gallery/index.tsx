@@ -443,43 +443,46 @@ const Gallery = ({
     }
     // `day` is optional — when set, Month scrolls to and highlights
     // that day's thumbnails on initial mount.
-    if (!photoId) {
-      return (
-        <Month
+    const monthView = (photo?: PhotoT): React.ReactElement => (
+      <Month
+        gallery={gallery}
+        year={year}
+        month={month}
+        day={day || undefined}
+        lang={lang}
+        countryData={countryData}
+        modalActive={!!photo}
+      >
+        <Title
+          galleries={visibleGalleries}
           gallery={gallery}
+          context={context}
           year={year}
           month={month}
           day={day || undefined}
+          photo={photo}
+          lang={lang}
+        />
+        <Filters
+          uniqueValues={uniqueValues}
           lang={lang}
           countryData={countryData}
-        >
-          <Title
-            galleries={visibleGalleries}
-            gallery={gallery}
-            context={context}
-            year={year}
-            month={month}
-            day={day || undefined}
-            lang={lang}
-          />
-          <Filters
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
-        </Month>
-      );
+        />
+      </Month>
+    );
+    if (!photoId) {
+      return monthView();
     }
-    // Per-id lookup pending: hold the previous Month/Photo render
-    // (or render Month while the modal mounts).
+    // Per-id lookup pending (a direct link; a tap on a thumbnail
+    // finds the photo primed by Month): show the month meanwhile.
     if (photoByIdQuery.isLoading) {
-      return <div>{t("loading")}</div>;
+      return monthView();
     }
     const photo = modalPhoto;
     if (!photo) {
       // Per-id 404'd. originalFilename fallback in flight?
       if (photoByOriginalQuery.isLoading) {
-        return <div>{t("loading")}</div>;
+        return monthView();
       }
       if (modalPhotoByOriginal) {
         return <Navigate to={modalPhotoByOriginal.path(gallery)} replace />;
@@ -490,31 +493,7 @@ const Gallery = ({
     // a real Month underneath (closing returns there without remount).
     return (
       <>
-        <Month
-          gallery={gallery}
-          year={year}
-          month={month}
-          day={day || undefined}
-          lang={lang}
-          countryData={countryData}
-          modalActive
-        >
-          <Title
-            galleries={visibleGalleries}
-            gallery={gallery}
-            context={context}
-            year={year}
-            month={month}
-            day={day || undefined}
-            photo={photo}
-            lang={lang}
-          />
-          <Filters
-            uniqueValues={uniqueValues}
-            lang={lang}
-            countryData={countryData}
-          />
-        </Month>
+        {monthView(photo)}
         <Photo
           gallery={gallery}
           year={year}
