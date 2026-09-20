@@ -21,6 +21,11 @@ import type {
   PhotoFilter,
 } from "../lib/photo-filter.js";
 import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
+import {
+  PhotoRef,
+  photosForWire,
+  type PhotoWire,
+} from "../lib/photo-schema.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -179,7 +184,7 @@ const toArray = <T>(v: T | T[] | undefined): T[] | undefined =>
 // values lets the converter geocode using the actual post-update state.
 
 // Permissive — joined photo metadata, wider than any tight contract.
-const PhotoItem = Type.Object({}, { additionalProperties: true });
+const PhotoItem = PhotoRef;
 const PhotosListResponse = Type.Object({
   photos: Type.Array(PhotoItem),
   page: Type.Integer(),
@@ -279,6 +284,10 @@ const PhotosQueryResponse = Type.Array(PhotoItem);
 const TAGS = ["photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
+  fastify.addHook("preSerialization", async (_request, _reply, payload) =>
+    photosForWire(payload)
+  );
+
   /**
    * Get all photos.
    */
@@ -435,7 +444,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const hostScoped = inScope
         ? requested.filter((id) => inScope.has(id))
         : requested;
-      const photos: Record<string, unknown>[] = [];
+      const photos: PhotoWire[] = [];
       for (const id of hostScoped) {
         try {
           await authorizer.authorizePhotoEditor(request.user.id, id);
@@ -444,7 +453,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         }
         const row = (await model
           .getPhoto(id)
-          .catch(() => null)) as Record<string, unknown> | null;
+          .catch(() => null)) as PhotoWire | null;
         if (row) photos.push(row);
       }
       return { photos };
@@ -508,7 +517,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.params.photoId
       );
       const photo = await model.getPhoto(request.params.photoId);
-      return photo;
+      return photo as PhotoWire;
     }
   );
 
