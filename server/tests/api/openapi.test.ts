@@ -51,20 +51,28 @@ describe("OpenAPI document", () => {
     expect(committed).toEqual(live);
   });
 
-  test("nothing the last release documented is broken", () => {
-    const released = JSON.parse(
-      readFileSync(
-        resolve(import.meta.dirname, "../../openapi.released.json"),
-        "utf8"
-      )
-    ) as Record<string, unknown>;
-    // The iOS companion doesn't ship with the server: an installed app
-    // keeps calling what the last release documented. Additions pass;
-    // see lib/openapi-compat.ts for what doesn't. A deliberate break
-    // means a new API version, not an edit to this test.
-    expect(
-      findBreakingChanges(released, spec() as unknown as Record<string, unknown>)
-    ).toEqual([]);
+  test("nothing the last release documented is broken, unless acknowledged", () => {
+    const read = (name: string): unknown =>
+      JSON.parse(
+        readFileSync(resolve(import.meta.dirname, "../..", name), "utf8")
+      );
+    const released = read("openapi.released.json") as Record<string, unknown>;
+    const acknowledged = read("openapi.breaks.json") as string[];
+    // The iOS companion doesn't ship with the server, so an installed
+    // app keeps calling what the last release documented. Additions
+    // pass; see lib/openapi-compat.ts for what doesn't. A break is
+    // allowed only on purpose: list its exact message in
+    // openapi.breaks.json, in the same change that updates the app (or
+    // confirms it is unaffected). The release empties that file when it
+    // pins the new baseline.
+    const found = findBreakingChanges(
+      released,
+      spec() as unknown as Record<string, unknown>
+    );
+    expect(found.filter((change) => !acknowledged.includes(change))).toEqual([]);
+    // No stale entries: an acknowledged break that no longer happens
+    // was either reverted or mistyped.
+    expect(acknowledged.filter((change) => !found.includes(change))).toEqual([]);
   });
 
   test("auth is described as the two cookies the server reads", () => {

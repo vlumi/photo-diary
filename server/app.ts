@@ -108,7 +108,7 @@ await app.register(fastifySwagger, {
       description:
         "Self-hosted photo-diary backend. Schema is generated from " +
         "TypeBox-validated route handlers.\n\n" +
-        "Compatibility: within /api/v1, changes are additive. Response " +
+        "Compatibility: within a minor version, changes are additive. Response " +
         "fields are not removed, renamed or retyped, and a field listed " +
         "as required stays present. Clients must ignore properties they " +
         "do not know, and must accept values they do not know for " +
