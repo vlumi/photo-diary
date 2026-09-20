@@ -1,19 +1,17 @@
 import db from "../db/index.js";
 
 /**
- * Resolves the privacy cascade for the map / photo coordinates.
+ * Whether the map, and with it photo coordinates, is hidden from this
+ * requester in this gallery. The most specific non-null `hide_map`
+ * wins (see `resolveHideMap` in the driver for the queries):
  *
- * The cascade lives entirely in the `user_gallery` table, leveraging the
- * existing `:guest` user and `:all` gallery sentinels. The most specific
- * row with a non-null `hide_map` wins:
+ *   1. a global admin always sees the map;
+ *   2. the user's own grant on the gallery;
+ *   3. the grants of the user's groups on it, where any "hide" beats
+ *      a "show";
+ *   4. the `:guest` grant on the gallery, which is its default.
  *
- *   1. (userId,  galleryId) — per-user, per-gallery
- *   2. (:guest,  galleryId) — per-gallery default
- *   3. (userId,  :all)      — per-user default
- *   4. (:guest,  :all)      — global default
- *
- * If no row at any level has a non-null `hide_map`, coordinates are shown
- * (default false).
+ * With nothing set at any level, the map is shown.
  */
 export const shouldHideMap = async (
   userId: string,

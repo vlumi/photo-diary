@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { readFileSync } from "node:fs";
 
-import Fastify from "fastify";
+import Fastify, { LogController } from "fastify";
 import {
   TypeBoxValidatorCompiler,
   type TypeBoxTypeProvider,
@@ -76,7 +76,7 @@ export const app = Fastify({
               : undefined,
       },
   // `requestLogger` (below) emits the structured per-response line.
-  disableRequestLogging: true,
+  logController: new LogController({ disableRequestLogging: true }),
 }).withTypeProvider<TypeBoxTypeProvider>();
 
 // Replace Fastify's default Ajv-based validator with TypeBox's own
