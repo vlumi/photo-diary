@@ -6,6 +6,7 @@ import { TEST_CONFIG, seedApiFixture } from "./fixture.js";
 vi.mock("../../lib/config/index.js", () => ({ default: TEST_CONFIG }));
 
 import { app, init } from "../../app.js";
+import { findBreakingChanges } from "../../lib/openapi-compat.js";
 import { createApi } from "./helper.js";
 
 const { api } = createApi();
@@ -48,6 +49,22 @@ describe("OpenAPI document", () => {
     // Stale? Run `npm run docs:dump` in server/, then `npm run api:codegen`
     // in react-app/.
     expect(committed).toEqual(live);
+  });
+
+  test("nothing the last release documented is broken", () => {
+    const released = JSON.parse(
+      readFileSync(
+        resolve(import.meta.dirname, "../../openapi.released.json"),
+        "utf8"
+      )
+    ) as Record<string, unknown>;
+    // The iOS companion doesn't ship with the server: an installed app
+    // keeps calling what the last release documented. Additions pass;
+    // see lib/openapi-compat.ts for what doesn't. A deliberate break
+    // means a new API version, not an edit to this test.
+    expect(
+      findBreakingChanges(released, spec() as unknown as Record<string, unknown>)
+    ).toEqual([]);
   });
 
   test("auth is described as the two cookies the server reads", () => {
