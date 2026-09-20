@@ -1715,8 +1715,7 @@ const loadOrphanGalleryPhotoLinks = async (): Promise<
     })),
   ];
 };
-// Gallery IDs with no photos linked. The `:all`/`:public` sentinels
-// aren't gallery rows; they don't show up here.
+// Gallery IDs with no photos linked.
 const loadEmptyGalleryIds = async (): Promise<string[]> => {
   const rows = db
     .prepare(
