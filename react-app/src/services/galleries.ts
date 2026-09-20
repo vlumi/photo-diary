@@ -102,7 +102,7 @@ const setIcon = async (
       params: { path: { galleryId } },
       body: { sourcePhotoId, crop, sourceMaxDim },
     })
-  ) as Promise<{ icon: string }>;
+  );
 
 // Apply operator-curated gallery order. `ids` must cover
 // every current gallery exactly once — server rejects partial lists

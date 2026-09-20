@@ -40,8 +40,8 @@ export const GallerySchema = Type.Object(
     savedFilter: Type.Optional(
       Type.Object(
         {
-          sourceGalleryId: Type.Optional(Type.String()),
-          definition: Type.Optional(Type.Object({}, open)),
+          sourceGalleryId: Type.String(),
+          definition: Type.Object({}, open),
         },
         open
       )

@@ -17,6 +17,7 @@ import LocalizedInputs, {
   languageNameIn,
 } from "./LocalizedInputs";
 import config from "../../lib/config";
+import type { ApiGallery } from "../../lib/api-types";
 
 // Enum values must mirror server's GalleryUpdateBody. Kept inline
 // rather than importing from api-schema so the dropdowns don't
@@ -67,20 +68,8 @@ export const EMPTY_FORM: FormState = {
   sources: [],
 };
 
-interface GalleryData {
-  title?: string;
-  description?: string;
-  titleLocalized?: Record<string, string>;
-  descriptionLocalized?: Record<string, string>;
-  defaultLanguage?: string;
-  icon?: string;
-  epoch?: string;
-  epochType?: string;
-  theme?: string;
-  initialView?: string;
-  hostname?: string;
-  sources?: string[];
-}
+// The parts of the server's gallery the form starts from.
+type GalleryData = Partial<ApiGallery>;
 
 const localizedFrom = (
   map: Record<string, string> | undefined

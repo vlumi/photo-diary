@@ -1,10 +1,7 @@
 import api, { unwrap } from "../lib/api";
+import type { ResponseOf } from "../lib/api-types";
 
-export interface GroupRow {
-  id: string;
-  name: string;
-  description: string;
-}
+export type GroupRow = ResponseOf<"/api/v1/groups", "get">[number];
 
 export interface GroupCreateBody {
   id: string;
@@ -18,14 +15,14 @@ export interface GroupUpdatePatch {
 }
 
 const getAll = async (): Promise<GroupRow[]> =>
-  unwrap(api.GET("/api/v1/groups", {})) as Promise<GroupRow[]>;
+  unwrap(api.GET("/api/v1/groups", {}));
 
 const get = async (groupId: string): Promise<GroupRow> =>
   unwrap(
     api.GET("/api/v1/groups/{groupId}", {
       params: { path: { groupId } },
     })
-  ) as Promise<GroupRow>;
+  );
 
 const create = async (body: GroupCreateBody): Promise<void> => {
   await unwrap(
@@ -61,7 +58,7 @@ const getMembers = async (groupId: string): Promise<string[]> =>
     api.GET("/api/v1/groups/{groupId}/members", {
       params: { path: { groupId } },
     })
-  ) as Promise<string[]>;
+  );
 
 const addMember = async (groupId: string, userId: string): Promise<void> => {
   await unwrap(

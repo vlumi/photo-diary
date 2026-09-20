@@ -1,10 +1,7 @@
 import api, { unwrap } from "../lib/api";
+import type { ResponseOf } from "../lib/api-types";
 
-export interface UserRow {
-  id: string;
-  name: string;
-  isAdmin: boolean;
-}
+export type UserRow = ResponseOf<"/api/v1/users", "get">[number];
 
 export interface UserCreateBody {
   id: string;
@@ -20,7 +17,7 @@ export interface UserUpdatePatch {
 }
 
 const getAll = async (): Promise<UserRow[]> =>
-  unwrap(api.GET("/api/v1/users", {})) as Promise<UserRow[]>;
+  unwrap(api.GET("/api/v1/users", {}));
 
 const get = async (userId: string) =>
   unwrap(

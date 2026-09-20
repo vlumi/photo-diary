@@ -17,6 +17,7 @@ import { Section, SectionTitle, ModalHeader } from "./Section";
 import GalleryModel from "../../models/GalleryModel";
 import config from "../../lib/config";
 import filter, { type Filters as FiltersT, type ServerFilters } from "../../lib/filter";
+import type { ApiGallery } from "../../lib/api-types";
 import galleriesService from "../../services/galleries";
 import galleryPhotosService from "../../services/gallery-photos";
 import savedFiltersService, {
@@ -237,33 +238,8 @@ const SummaryEmpty = styled.span`
   font-style: italic;
 `;
 
-interface GalleryData {
-  id: string;
-  title?: string;
-  description?: string;
-  icon?: string;
-  iconSource?: string | null;
-  epoch?: string;
-  epochType?: string;
-  theme?: string;
-  initialView?: string;
-  hostname?: string;
-  defaultLanguage?: string;
-  type?: "real" | "hybrid" | "saved_filter";
-  // Decorated by the server for `saved_filter` galleries: which
-  // gallery owns the saved filter and its stored `{filter, dateRange}`
-  // envelope. Used by `<VirtualGalleryFilterSection>` to surface the
-  // parent and mount the shared filter builder.
-  savedFilter?: {
-    sourceGalleryId: string;
-    definition?: {
-      filter?: Record<string, unknown>;
-      dateRange?: { from?: string; to?: string };
-      numericRanges?: Record<string, { min?: number; max?: number }>;
-      [key: string]: unknown;
-    };
-  };
-}
+// What the server sends for a gallery, from its own schema.
+type GalleryData = ApiGallery;
 
 interface ParsedIconSource {
   photoId: string;

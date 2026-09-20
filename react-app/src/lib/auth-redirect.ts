@@ -11,11 +11,11 @@
 
 import { queryClient } from "./query-client";
 import { useLoginModalStore } from "../stores";
+import type { ResponseOf } from "./api-types";
 
-interface KnownHostEntry {
-  hostname: string;
-  isMain?: boolean;
-}
+type KnownHostEntry = NonNullable<
+  ResponseOf<"/api/v1/meta", "get">["knownHosts"]
+>[number];
 
 // Read the main host from the meta cache. Returns undefined when
 // meta hasn't loaded yet, no main is configured, or we're already

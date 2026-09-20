@@ -135,7 +135,10 @@ const applyNewFilter = (
 // sentinel (the literal string "unknown") to `null` on the wire.
 // JSON-encoded compound keys (camera-lens, city) keep their string
 // form; the server eval parses them at predicate time.
-export type ServerFilterKey = string | null;
+// The front end only ever writes strings and null ("unknown"), but the
+// server accepts and stores numbers and booleans too, so that is what a
+// stored definition may hand back.
+export type ServerFilterKey = string | number | boolean | null;
 export type ServerFilters = Record<
   string,
   Record<string, ServerFilterKey[]>

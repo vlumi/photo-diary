@@ -30,6 +30,7 @@ import {
 } from "./Photos";
 import galleriesService from "../../services/galleries";
 import metaService from "../../services/meta";
+import type { ApiPhoto } from "../../lib/api-types";
 import photosService, {
   type MissingField,
   type PhotoUpdatePatch,
@@ -448,20 +449,16 @@ const ErrorBanner = styled.div`
   font-size: 0.85em;
 `;
 
-interface PhotoData {
-  id: string;
-  title?: string;
-  description?: string;
-  titleLocalized?: Record<string, string>;
-  descriptionLocalized?: Record<string, string>;
-  originalFilename?: string;
+// The photo as the server sends it, from its own schema. Only the
+// intake snapshot is described here: the server passes it through as
+// an open blob, and the drawer reads these parts of it.
+// EXIF snapshot captured at converter intake. Undefined on
+// rows that pre-date migration 014. Drives the per-field revert
+// affordance and the "no backup" gate on EXIF-derived inputs.
+interface IntakeSnapshot {
   taken?: {
     author?: string;
-    instant?: { timestamp?: string };
     location?: {
-      country?: string;
-      place?: string;
-      placeLocalized?: Record<string, string>;
       coordinates?: {
         latitude?: number | null;
         longitude?: number | null;
@@ -475,59 +472,15 @@ interface PhotoData {
     focalLength?: number;
     focalLength35mmEquiv?: number;
     aperture?: number;
-    iso?: number;
     exposureTime?: number;
+    iso?: number;
   };
-  geocoded?: {
-    countryCode?: string;
-    stateCode?: string;
-    state?: string;
-    city?: string;
-    // Verbatim Nominatim address blob — used to surface maritime
-    // names (`ocean`, `sea`, `bay`, `strait`, `gulf`) when no city
-    // applies, e.g. photos taken in international waters.
-    address?: Record<string, unknown>;
-    // True if `markGeocodeNoData` ran (geocoder ran and reported
-    // nothing). Distinguishes "no data here" from "daemon hasn't
-    // gotten to this row yet" — both have empty city / countryCode
-    // otherwise.
-    noData?: boolean;
-  };
-  // EXIF snapshot captured at converter intake. Undefined on
-  // rows that pre-date migration 014. Drives the per-field revert
-  // affordance and the "no backup" gate on EXIF-derived inputs.
-  exifAtIntake?: {
-    taken?: {
-      author?: string;
-      location?: {
-        coordinates?: {
-          latitude?: number | null;
-          longitude?: number | null;
-          altitude?: number | null;
-        };
-      };
-    };
-    camera?: { make?: string; model?: string };
-    lens?: { make?: string; model?: string };
-    exposure?: {
-      focalLength?: number;
-      focalLength35mmEquiv?: number;
-      aperture?: number;
-      exposureTime?: number;
-      iso?: number;
-    };
-  };
-  // Gallery ids the photo is linked to. Decorated server-side by
-  // `getPhoto` / `listPhotos` so the drawer can render jump-link
-  // chips into `/g/<gallery>/<photoId>` or `/m/galleries/<id>`.
-  galleries?: string[];
-  // Photo-level visibility — flipped by the privacy switch
-  // in this drawer; surfaces the badge on the public Photo modal.
-  isPrivate?: boolean;
-  // Display ladder — array of maxDim values the converter
-  // (and bin/photo-rerender.ts) registered for this photo.
-  renditions?: number[];
 }
+
+// An intersection, not `Omit`: the schema's types carry an index
+// signature (the server may add fields), and `Omit` over one of those
+// collapses the known keys.
+type PhotoData = ApiPhoto & { exifAtIntake?: IntakeSnapshot };
 
 // Maritime address keys Nominatim emits when reverse-geocoding
 // open water. Falling back to the first populated one lets the

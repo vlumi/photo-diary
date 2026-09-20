@@ -1,12 +1,7 @@
 import api, { unwrap } from "../lib/api";
+import type { ResponseOf } from "../lib/api-types";
 
-export interface UserGalleryRow {
-  userId: string;
-  galleryId: string;
-  isEditor: boolean;
-  hideMap: boolean | null;
-  canSeePrivate: boolean;
-}
+export type UserGalleryRow = ResponseOf<"/api/v1/user-gallery", "get">[number];
 
 export interface UserGalleryUpsertBody {
   isEditor: boolean;
@@ -25,7 +20,7 @@ const list = async (filter: {
     api.GET("/api/v1/user-gallery", {
       params: { query },
     })
-  ) as Promise<UserGalleryRow[]>;
+  );
 };
 
 const upsert = async (
