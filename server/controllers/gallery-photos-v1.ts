@@ -7,6 +7,10 @@ import { requireScopeMatches } from "../lib/host-scope.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/gallery-photo.js";
 import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
+import {
+  PhotoRef,
+  photosForWire,
+} from "../lib/photo-schema.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -29,8 +33,7 @@ const GalleryOriginalFilenameParams = Type.Object({
 const LangQuery = Type.Object({
   lang: Type.Optional(Type.String()),
 });
-// Permissive — joined photo metadata, wider than the contract.
-const PhotoItem = Type.Object({}, { additionalProperties: true });
+const PhotoItem = PhotoRef;
 const GalleryPhotosListResponse = Type.Array(PhotoItem);
 
 // Filter shape mirrors stats-v1.ts — same wire envelope.
@@ -117,6 +120,10 @@ const FilterValuesResponse = Type.Object({
 const TAGS = ["gallery-photos"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
+  fastify.addHook("preSerialization", async (_request, _reply, payload) =>
+    photosForWire(payload)
+  );
+
   /**
    * Get all photos in the gallery.
    */

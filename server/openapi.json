@@ -31,6 +31,325 @@
         "required": [
           "error"
         ]
+      },
+      "Photo": {
+        "type": "object",
+        "required": [
+          "id",
+          "index",
+          "taken",
+          "dimensions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer",
+            "description": "Position in the gallery's date order, from 0."
+          },
+          "originalFilename": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "titleLocalized": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "descriptionLocalized": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "taken": {
+            "type": "object",
+            "required": [
+              "instant"
+            ],
+            "properties": {
+              "instant": {
+                "type": "object",
+                "required": [
+                  "year",
+                  "month",
+                  "day"
+                ],
+                "properties": {
+                  "timestamp": {
+                    "type": "string",
+                    "description": "Local capture time, no zone."
+                  },
+                  "year": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "month": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "day": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "hour": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "minute": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "second": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": true,
+                "description": "Capture time in the photo's own local time. Every part is null for a photo without a capture date."
+              },
+              "author": {
+                "type": "string"
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "country": {
+                    "type": "string",
+                    "description": "ISO 3166-1 alpha-2, lower case."
+                  },
+                  "place": {
+                    "type": "string"
+                  },
+                  "placeLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "coordinates": {
+                    "type": "object",
+                    "properties": {
+                      "latitude": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "longitude": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "altitude": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": true,
+                    "description": "All null when the photo has no position, or when the gallery hides its map from the requester."
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          },
+          "camera": {
+            "type": "object",
+            "properties": {
+              "make": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "serial": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          "lens": {
+            "type": "object",
+            "properties": {
+              "make": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "serial": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          "exposure": {
+            "type": "object",
+            "properties": {
+              "focalLength": {
+                "type": "number"
+              },
+              "focalLength35mmEquiv": {
+                "type": "number"
+              },
+              "aperture": {
+                "type": "number"
+              },
+              "exposureTime": {
+                "type": "number",
+                "description": "Seconds."
+              },
+              "iso": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": true
+          },
+          "dimensions": {
+            "type": "object",
+            "required": [
+              "original",
+              "thumbnail"
+            ],
+            "properties": {
+              "original": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "thumbnail": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          },
+          "geocoded": {
+            "type": "object",
+            "properties": {
+              "countryCode": {
+                "type": "string"
+              },
+              "stateCode": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string",
+                "description": "In the requested `lang` when known."
+              },
+              "cityEn": {
+                "type": "string"
+              },
+              "address": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": true
+              },
+              "noData": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
+          },
+          "exifAtIntake": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "isPrivate": {
+            "type": "boolean"
+          },
+          "renditions": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "Longest-edge sizes with a display rendition at `display/<size>/<id>`. Absent or empty: assume 1500."
+          },
+          "galleries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Galleries holding the photo; cross-gallery routes only."
+          }
+        },
+        "additionalProperties": true
       }
     }
   },
@@ -2778,9 +3097,7 @@
                     "photos": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {},
-                        "additionalProperties": true
+                        "$ref": "#/components/schemas/Photo"
                       }
                     },
                     "page": {
@@ -3389,9 +3706,7 @@
                     "photos": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {},
-                        "additionalProperties": true
+                        "$ref": "#/components/schemas/Photo"
                       }
                     }
                   }
@@ -3512,9 +3827,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {},
-                    "additionalProperties": true
+                    "$ref": "#/components/schemas/Photo"
                   }
                 }
               }
@@ -3571,9 +3884,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/Photo"
                 }
               }
             }
@@ -3912,9 +4223,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {},
-                    "additionalProperties": true
+                    "$ref": "#/components/schemas/Photo"
                   }
                 }
               }
@@ -4059,9 +4368,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {},
-                    "additionalProperties": true
+                    "$ref": "#/components/schemas/Photo"
                   }
                 }
               }
@@ -4332,24 +4639,16 @@
                   ],
                   "properties": {
                     "previous": {
-                      "type": "object",
-                      "properties": {},
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/Photo"
                     },
                     "next": {
-                      "type": "object",
-                      "properties": {},
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/Photo"
                     },
                     "first": {
-                      "type": "object",
-                      "properties": {},
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/Photo"
                     },
                     "last": {
-                      "type": "object",
-                      "properties": {},
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/Photo"
                     },
                     "position": {
                       "type": "integer",
@@ -4589,9 +4888,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/Photo"
                 }
               }
             }
@@ -4663,9 +4960,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/Photo"
                 }
               }
             }

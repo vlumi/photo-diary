@@ -1655,9 +1655,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            photos: {
-                                [key: string]: unknown;
-                            }[];
+                            photos: components["schemas"]["Photo"][];
                             page: number;
                             pageSize: number;
                             total: number;
@@ -1932,9 +1930,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            photos: {
-                                [key: string]: unknown;
-                            }[];
+                            photos: components["schemas"]["Photo"][];
                         };
                     };
                 };
@@ -2007,9 +2003,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            [key: string]: unknown;
-                        }[];
+                        "application/json": components["schemas"]["Photo"][];
                     };
                 };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
@@ -2063,9 +2057,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            [key: string]: unknown;
-                        };
+                        "application/json": components["schemas"]["Photo"];
                     };
                 };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
@@ -2276,9 +2268,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            [key: string]: unknown;
-                        }[];
+                        "application/json": components["schemas"]["Photo"][];
                     };
                 };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
@@ -2360,9 +2350,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            [key: string]: unknown;
-                        }[];
+                        "application/json": components["schemas"]["Photo"][];
                     };
                 };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
@@ -2520,18 +2508,10 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            previous?: {
-                                [key: string]: unknown;
-                            };
-                            next?: {
-                                [key: string]: unknown;
-                            };
-                            first?: {
-                                [key: string]: unknown;
-                            };
-                            last?: {
-                                [key: string]: unknown;
-                            };
+                            previous?: components["schemas"]["Photo"];
+                            next?: components["schemas"]["Photo"];
+                            first?: components["schemas"]["Photo"];
+                            last?: components["schemas"]["Photo"];
                             position?: number;
                             total: number;
                         };
@@ -2680,9 +2660,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            [key: string]: unknown;
-                        };
+                        "application/json": components["schemas"]["Photo"];
                     };
                 };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
@@ -2741,9 +2719,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            [key: string]: unknown;
-                        };
+                        "application/json": components["schemas"]["Photo"];
                     };
                 };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
@@ -4088,6 +4064,119 @@ export interface components {
     schemas: {
         ErrorResponse: {
             error: string;
+        };
+        Photo: {
+            id: string;
+            /** @description Position in the gallery's date order, from 0. */
+            index: number;
+            originalFilename?: string;
+            title?: string;
+            description?: string;
+            titleLocalized?: {
+                [key: string]: string;
+            };
+            descriptionLocalized?: {
+                [key: string]: string;
+            };
+            taken: {
+                /** @description Capture time in the photo's own local time. Every part is null for a photo without a capture date. */
+                instant: {
+                    /** @description Local capture time, no zone. */
+                    timestamp?: string;
+                    year: number | null;
+                    month: number | null;
+                    day: number | null;
+                    hour?: number | null;
+                    minute?: number | null;
+                    second?: number | null;
+                } & {
+                    [key: string]: unknown;
+                };
+                author?: string;
+                location?: {
+                    /** @description ISO 3166-1 alpha-2, lower case. */
+                    country?: string;
+                    place?: string;
+                    placeLocalized?: {
+                        [key: string]: string;
+                    };
+                    /** @description All null when the photo has no position, or when the gallery hides its map from the requester. */
+                    coordinates?: {
+                        latitude?: number | null;
+                        longitude?: number | null;
+                        altitude?: number | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                } & {
+                    [key: string]: unknown;
+                };
+            } & {
+                [key: string]: unknown;
+            };
+            camera?: {
+                make?: string;
+                model?: string;
+                serial?: string;
+            } & {
+                [key: string]: unknown;
+            };
+            lens?: {
+                make?: string;
+                model?: string;
+                serial?: string;
+            } & {
+                [key: string]: unknown;
+            };
+            exposure?: {
+                focalLength?: number;
+                focalLength35mmEquiv?: number;
+                aperture?: number;
+                /** @description Seconds. */
+                exposureTime?: number;
+                iso?: number;
+            } & {
+                [key: string]: unknown;
+            };
+            dimensions: {
+                original: {
+                    width?: number;
+                    height?: number;
+                } & {
+                    [key: string]: unknown;
+                };
+                thumbnail: {
+                    width?: number;
+                    height?: number;
+                } & {
+                    [key: string]: unknown;
+                };
+            } & {
+                [key: string]: unknown;
+            };
+            geocoded?: {
+                countryCode?: string;
+                stateCode?: string;
+                /** @description In the requested `lang` when known. */
+                city?: string;
+                cityEn?: string;
+                address?: {
+                    [key: string]: unknown;
+                };
+                noData?: boolean;
+            } & {
+                [key: string]: unknown;
+            };
+            exifAtIntake?: {
+                [key: string]: unknown;
+            };
+            isPrivate?: boolean;
+            /** @description Longest-edge sizes with a display rendition at `display/<size>/<id>`. Absent or empty: assume 1500. */
+            renditions?: number[];
+            /** @description Galleries holding the photo; cross-gallery routes only. */
+            galleries?: string[];
+        } & {
+            [key: string]: unknown;
         };
     };
     responses: never;
