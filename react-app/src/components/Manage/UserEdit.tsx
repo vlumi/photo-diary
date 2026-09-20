@@ -176,16 +176,11 @@ const Mono = styled.span`
 
 interface UserData {
   id: string;
-  name?: string;
-  is_admin?: number | boolean;
-  isAdmin?: boolean;
+  name: string;
+  isAdmin: boolean;
 }
 
-const isAdminFlag = (data: UserData | undefined): boolean => {
-  if (!data) return false;
-  if (typeof data.isAdmin === "boolean") return data.isAdmin;
-  return !!data.is_admin;
-};
+const isAdminFlag = (data: UserData | undefined): boolean => !!data?.isAdmin;
 
 const UserEdit = (): React.ReactElement => {
   const { t } = useTranslation();

@@ -743,6 +743,19 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            name: string;
+                            isAdmin: boolean;
+                        };
+                    };
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
