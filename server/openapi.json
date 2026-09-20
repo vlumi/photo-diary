@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Photo Diary API",
-    "description": "Self-hosted photo-diary backend. Schema is generated from TypeBox-validated route handlers.",
+    "description": "Self-hosted photo-diary backend. Schema is generated from TypeBox-validated route handlers.\n\nCompatibility: within /api/v1, changes are additive. Response fields are not removed, renamed or retyped, and a field listed as required stays present. Clients must ignore properties they do not know, and must accept values they do not know for string fields whose value set may grow.",
     "version": "1.0.9"
   },
   "components": {
@@ -48,7 +48,68 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "cdn": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "defaultGallery": {
+                      "type": "string"
+                    },
+                    "defaultTheme": {
+                      "type": "string"
+                    },
+                    "defaultLanguage": {
+                      "type": "string"
+                    },
+                    "initialGalleryView": {
+                      "type": "string"
+                    },
+                    "firstWeekday": {
+                      "type": "string"
+                    },
+                    "betaFeatures": {
+                      "type": "object",
+                      "description": "Feature name to \"on\", \"off\" or \"user\".",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "renditions": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "description": "Display rendition sizes the converter generates, in pixels."
+                    },
+                    "knownHosts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "hostname"
+                        ],
+                        "properties": {
+                          "hostname": {
+                            "type": "string"
+                          },
+                          "isMain": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "description": "Hostnames this instance answers on; one may be the main host."
+                    }
+                  },
                   "additionalProperties": true
                 }
               }
@@ -163,7 +224,68 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "cdn": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "defaultGallery": {
+                      "type": "string"
+                    },
+                    "defaultTheme": {
+                      "type": "string"
+                    },
+                    "defaultLanguage": {
+                      "type": "string"
+                    },
+                    "initialGalleryView": {
+                      "type": "string"
+                    },
+                    "firstWeekday": {
+                      "type": "string"
+                    },
+                    "betaFeatures": {
+                      "type": "object",
+                      "description": "Feature name to \"on\", \"off\" or \"user\".",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "renditions": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "description": "Display rendition sizes the converter generates, in pixels."
+                    },
+                    "knownHosts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "hostname"
+                        ],
+                        "properties": {
+                          "hostname": {
+                            "type": "string"
+                          },
+                          "isMain": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "description": "Hostnames this instance answers on; one may be the main host."
+                    }
+                  },
                   "additionalProperties": true
                 }
               }

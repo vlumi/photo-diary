@@ -1,4 +1,5 @@
 import { Type } from "typebox";
+import { Value } from "typebox/value";
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 
 import authorizerFactory from "../lib/authorizer.js";
@@ -15,32 +16,54 @@ const init = async () => {
   await model.init();
 };
 
-// JSON-shaped meta rows the SPA wants as parsed objects, not the
-// stringified blob the DB stores. Centralised so a future "settings
-// store nested structure under one row" key can join cleanly.
-const JSON_META_KEYS = new Set(["betaFeatures", "renditions", "knownHosts"]);
+// What each known key holds once read. Plain keys are the stored
+// string; the structured ones are stored as JSON and returned parsed.
+// Value sets that may grow (themes, views, feature states) stay plain
+// strings rather than enums, so a client built against today's
+// document still accepts tomorrow's value.
+const STRUCTURED_META = {
+  betaFeatures: Type.Record(Type.String(), Type.String(), {
+    description: 'Feature name to "on", "off" or "user".',
+  }),
+  renditions: Type.Array(Type.Number(), {
+    description: "Display rendition sizes the converter generates, in pixels.",
+  }),
+  knownHosts: Type.Array(
+    Type.Object(
+      { hostname: Type.String(), isMain: Type.Optional(Type.Boolean()) },
+      { additionalProperties: true }
+    ),
+    { description: "Hostnames this instance answers on; one may be the main host." }
+  ),
+} as const;
+type StructuredKey = keyof typeof STRUCTURED_META;
+const isStructured = (key: string): key is StructuredKey =>
+  Object.hasOwn(STRUCTURED_META, key);
+
+// Rows are operator-written strings nothing validated on the way in.
+// A structured one that doesn't parse, or parses into another shape,
+// is dropped rather than surfaced: clients fall back to their default,
+// where a wrong shape would crash them or fail the response.
+const readValue = (publicKey: string, raw: unknown): unknown => {
+  if (!isStructured(publicKey)) return raw;
+  if (typeof raw !== "string" || raw.length === 0) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Value.Check(STRUCTURED_META[publicKey], parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
-  return Object.keys(meta)
-    .filter((key) => key.startsWith("instance_"))
-    .reduce<Record<string, unknown>>((obj, key) => {
-      const publicKey = key.replace("instance_", "");
-      const raw = meta[key];
-      let value: unknown = raw;
-      if (JSON_META_KEYS.has(publicKey) && typeof raw === "string" && raw.length > 0) {
-        try {
-          value = JSON.parse(raw);
-        } catch {
-          // Malformed row — drop instead of surfacing a string the
-          // SPA would crash trying to use as a map.
-          return obj;
-        }
-      }
-      return {
-        ...obj,
-        [publicKey]: value,
-      };
-    }, {});
+  const cleaned: Record<string, unknown> = {};
+  for (const key of Object.keys(meta)) {
+    if (!key.startsWith("instance_")) continue;
+    const publicKey = key.replace("instance_", "");
+    const value = readValue(publicKey, meta[key]);
+    if (value !== undefined) cleaned[publicKey] = value;
+  }
+  return cleaned;
 };
 
 // Mutation routes lock `key` to the schema-seeded public-facing set
@@ -50,8 +73,23 @@ const cleanMeta = (meta: Record<string, unknown>): Record<string, unknown> => {
 // reach for `./bin/meta.ts set --force`.
 const MetaKeyEnum = StringEnum(KNOWN_META_KEYS_PUBLIC);
 const KnownKeyParam = Type.Object({ key: MetaKeyEnum });
-// Open shape — meta keys vary per deploy.
-const MetaResponse = Type.Object({}, { additionalProperties: true });
+// Every known key, each optional: an unset key is absent and the
+// client uses its own default. Open on purpose — an operator can force
+// an experimental key with `bin/meta.ts set --force`, a newer server
+// may know keys an older client doesn't, and either way a client must
+// pass over what it doesn't recognize.
+const plainKeys = KNOWN_META_KEYS_PUBLIC.filter((key) => !isStructured(key));
+const MetaResponse = Type.Object(
+  {
+    ...Object.fromEntries(
+      plainKeys.map((key) => [key, Type.Optional(Type.String())])
+    ),
+    betaFeatures: Type.Optional(STRUCTURED_META.betaFeatures),
+    renditions: Type.Optional(STRUCTURED_META.renditions),
+    knownHosts: Type.Optional(STRUCTURED_META.knownHosts),
+  },
+  { additionalProperties: true }
+);
 // POST body: user-facing key + value. PUT body is just the value —
 // the key comes from the URL.
 const MetaCreateBody = Type.Object({

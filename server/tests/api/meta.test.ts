@@ -5,6 +5,8 @@ vi.mock("../../lib/config/index.js", () => ({ default: TEST_CONFIG }));
 
 import { init } from "../../app.js";
 import { createApi, loginUser } from "./helper.js";
+import { KNOWN_META_KEYS_PUBLIC } from "../../lib/meta-keys.js";
+import metaModel from "../../models/meta.js";
 
 const { api } = createApi();
 
@@ -210,6 +212,61 @@ describe("SPA runtime defaults", () => {
       .expect(201);
     const result = await getMetas();
     expect(result.body.betaFeatures).toBeUndefined();
+  });
+
+  test("Every known key comes back exactly as stored, through the typed response", async () => {
+    const stored: Record<string, unknown> = {
+      name: "An instance",
+      description: "",
+      cdn: "https://cdn.example.com",
+      image: "cover.jpg",
+      defaultGallery: "gallery1",
+      defaultTheme: "grayscale",
+      defaultLanguage: "ja",
+      initialGalleryView: "year",
+      firstWeekday: "1",
+      betaFeatures: { regions: "on", somethingNewer: "staged" },
+      renditions: [1500, 3000],
+      knownHosts: [
+        { hostname: "a.example.com", isMain: true },
+        { hostname: "b.example.com", note: "kept: entries are open" },
+      ],
+    };
+    expect(Object.keys(stored).sort()).toEqual([...KNOWN_META_KEYS_PUBLIC].sort());
+    for (const [key, value] of Object.entries(stored)) {
+      await api
+        .put(`/api/v1/meta/${key}`)
+        .set("Cookie", `pd_access=${token}`)
+        .send({ value: typeof value === "string" ? value : JSON.stringify(value) })
+        .expect(204);
+    }
+    const result = await getMetas();
+    expect(result.body).toEqual(stored);
+  });
+
+  test.each([
+    ["renditions", '{"a":1}'],
+    ["renditions", '["1500"]'],
+    ["knownHosts", '"a.example.com"'],
+    ["knownHosts", '[{"isMain":true}]'],
+    ["betaFeatures", "[1]"],
+  ])("A %s row of the wrong shape (%s) is dropped, not served", async (key, value) => {
+    await api
+      .put(`/api/v1/meta/${key}`)
+      .set("Cookie", `pd_access=${token}`)
+      .send({ value })
+      .expect(204);
+    const all = await getMetas();
+    expect(all.body[key]).toBeUndefined();
+    expect(all.body.name).toBe("dummy instance");
+    const one = await getMeta(key);
+    expect(one.body).toEqual({});
+  });
+
+  test("A key the server doesn't know (forced by the operator) still reaches clients", async () => {
+    await metaModel().upsertMeta({ key: "instance_experimental", value: "42" });
+    const result = await getMetas();
+    expect(result.body.experimental).toBe("42");
   });
 });
 

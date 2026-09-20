@@ -103,7 +103,12 @@ await app.register(fastifySwagger, {
       title: "Photo Diary API",
       description:
         "Self-hosted photo-diary backend. Schema is generated from " +
-        "TypeBox-validated route handlers.",
+        "TypeBox-validated route handlers.\n\n" +
+        "Compatibility: within /api/v1, changes are additive. Response " +
+        "fields are not removed, renamed or retyped, and a field listed " +
+        "as required stays present. Clients must ignore properties they " +
+        "do not know, and must accept values they do not know for " +
+        "string fields whose value set may grow.",
       version: pkg.version,
     },
     tags: [
