@@ -5,7 +5,7 @@ import authorizerFactory from "../lib/authorizer.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import modelFactory from "../models/saved-filter.js";
-import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
+import { CREATED, GUEST_OR_SESSION, NO_CONTENT, SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -169,6 +169,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: CREATED,
         summary: "Create a saved filter",
         params: ParamsList,
         body: CreateBody,
@@ -191,6 +192,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Update a saved filter (partial)",
         params: ParamsOne,
         body: UpdateBody,
@@ -217,6 +219,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Delete a saved filter",
         params: ParamsOne,
         security: SESSION,

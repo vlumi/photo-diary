@@ -583,6 +583,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -765,6 +768,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -822,6 +828,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1092,6 +1101,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1444,6 +1456,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1580,6 +1595,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1623,6 +1641,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1682,22 +1703,14 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response",
+          "204": {
+            "description": "Changed; this device is signed in afresh.",
             "headers": {
               "Set-Cookie": {
                 "schema": {
                   "type": "string"
                 },
                 "description": "Two headers, `pd_access` and `pd_refresh`, both HttpOnly."
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
               }
             }
           },
@@ -1881,6 +1894,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1939,6 +1955,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -2138,6 +2157,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -2191,6 +2213,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -2613,6 +2638,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -2914,6 +2942,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -2965,6 +2996,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -3426,6 +3460,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -4204,6 +4241,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -4247,6 +4287,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -4292,6 +4335,19 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
+          "400": {
+            "description": "The photo has no coordinates to geocode from.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -4642,11 +4698,12 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Photos per day, keyed by date as YYYY-MM-DD. Days without photos are absent.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "description": "Photos per day, keyed by date as YYYY-MM-DD. Days without photos are absent.",
                   "additionalProperties": {
                     "type": "number"
                   }
@@ -5216,6 +5273,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5277,6 +5337,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5471,6 +5534,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5524,6 +5590,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5648,6 +5717,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5785,6 +5857,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5830,6 +5905,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5946,6 +6024,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -6000,6 +6081,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -6184,6 +6268,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -6237,6 +6324,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {

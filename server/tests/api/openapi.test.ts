@@ -75,6 +75,28 @@ describe("OpenAPI document", () => {
     expect(acknowledged.filter((change) => !found.includes(change))).toEqual([]);
   });
 
+  test("every operation states the success it really sends", () => {
+    // A route without a `response` gets the generator's placeholder,
+    // "200 Default Response", whatever it answers. It also gets no
+    // filtering: that is how a raw user row once went out.
+    const undocumented = operations(spec())
+      .filter(({ operation }) =>
+        Object.entries(operation.responses).every(
+          ([status, response]) =>
+            !/^[23]/.test(status) ||
+            // The placeholder is that text with nothing behind it; a
+            // described body without a description of its own gets the
+            // same text and is fine.
+            ((response as { description?: string }).description ===
+              "Default Response" &&
+              !response.content &&
+              !response.headers)
+        )
+      )
+      .map(({ name }) => name);
+    expect(undocumented).toEqual([]);
+  });
+
   test("auth is described as the two cookies the server reads", () => {
     expect(spec().components.securitySchemes).toMatchObject({
       accessCookie: { in: "cookie", name: "pd_access" },
@@ -137,7 +159,7 @@ describe("OpenAPI document", () => {
       paths["/api/v1/tokens"]!.post!.responses["200"],
       paths["/api/v1/tokens/refresh"]!.post!.responses["200"],
       paths["/api/v1/tokens/sso"]!.get!.responses["302"],
-      paths["/api/v1/users/self/password"]!.put!.responses["200"],
+      paths["/api/v1/users/self/password"]!.put!.responses["204"],
     ];
     for (const response of starters) {
       expect(response?.headers).toHaveProperty("Set-Cookie");

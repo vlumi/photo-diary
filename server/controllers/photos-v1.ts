@@ -20,7 +20,13 @@ import type {
   MissingField,
   PhotoFilter,
 } from "../lib/photo-filter.js";
-import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
+import {
+  CREATED,
+  errorResponse,
+  GUEST_OR_SESSION,
+  NO_CONTENT,
+  SESSION,
+} from "../lib/api-docs.js";
 import {
   PhotoRef,
   photosForWire,
@@ -403,6 +409,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: CREATED,
         summary: "Create a photo (admin)",
         body: PhotoCreateBody,
         security: SESSION,
@@ -529,6 +536,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Update one photo (admin)",
         params: PhotoIdParam,
         body: PhotoUpdateBody,
@@ -584,6 +592,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: {
+          ...NO_CONTENT,
+          400: errorResponse("The photo has no coordinates to geocode from."),
+        },
         summary: "Clear and re-fetch geocoded data for one photo (admin)",
         params: PhotoIdParam,
         security: SESSION,
@@ -623,6 +635,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Delete one photo (admin)",
         params: PhotoIdParam,
         security: SESSION,
