@@ -3,7 +3,7 @@
   "info": {
     "title": "Photo Diary API",
     "description": "Self-hosted photo-diary backend. Schema is generated from TypeBox-validated route handlers.\n\nCompatibility: within a minor version, changes are additive. Response fields are not removed, renamed or retyped, and a field listed as required stays present. Clients must ignore properties they do not know, and must accept values they do not know for string fields whose value set may grow. A value that does not exist is absent: text is never sent as an empty string.",
-    "version": "1.0.9"
+    "version": "1.1.0"
   },
   "components": {
     "securitySchemes": {

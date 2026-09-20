@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-20
+
 This release cleans up the API, with changes that are not backward compatible; the site's own front end and the iOS companion are updated in step, and nothing else is known to call it. It also closes two disclosures found along the way: an admin route that returned a user's password hash and token-signing secret, and photo responses that carried raw EXIF, original filenames and equipment serial numbers to every viewer. Upgrading needs no migration and no configuration change.
 
 ### Frontend
@@ -893,6 +895,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.1.0]: https://github.com/vlumi/photo-diary/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/vlumi/photo-diary/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/vlumi/photo-diary/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/vlumi/photo-diary/compare/v1.0.6...v1.0.7
