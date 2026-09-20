@@ -148,7 +148,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      // Both "no access" and "no such gallery" → empty array, so
+      // Both "no access" and "no such gallery" → the same 404, so
       // gallery existence can't be enumerated. On a scoped host an
       // off-scope gallery joins the same bucket. See galleries-v1.ts.
       try {
@@ -172,8 +172,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         );
         return photos;
       } catch (error) {
-        if (error instanceof AccessError || error instanceof NotFoundError) {
-          return [];
+        if (error instanceof AccessError) {
+          throw new NotFoundError();
         }
         throw error;
       }
@@ -229,8 +229,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         );
         return photos;
       } catch (error) {
-        if (error instanceof AccessError || error instanceof NotFoundError) {
-          return [];
+        if (error instanceof AccessError) {
+          throw new NotFoundError();
         }
         throw error;
       }
@@ -276,8 +276,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           }
         );
       } catch (error) {
-        if (error instanceof AccessError || error instanceof NotFoundError) {
-          return {};
+        if (error instanceof AccessError) {
+          throw new NotFoundError();
         }
         throw error;
       }
@@ -328,8 +328,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         );
         return result;
       } catch (error) {
-        if (error instanceof AccessError || error instanceof NotFoundError) {
-          return { total: 0 };
+        if (error instanceof AccessError) {
+          throw new NotFoundError();
         }
         throw error;
       }
@@ -380,12 +380,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           includePrivate
         );
       } catch (error) {
-        if (error instanceof AccessError || error instanceof NotFoundError) {
-          return {
-            categoryValues: {},
-            categoryCounts: {},
-            byCityLocalized: {},
-          };
+        if (error instanceof AccessError) {
+          throw new NotFoundError();
         }
         throw error;
       }

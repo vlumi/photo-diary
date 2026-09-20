@@ -68,6 +68,9 @@ const errorBody = (description: string) => ({
   $ref: "ErrorResponse#",
 });
 
+const VIEWER_GALLERY_ROUTE =
+  /^\/api\/v1\/(gallery-photos\/[:{]galleryId|galleries\/[:{]galleryId\}?$)/;
+
 const OWN_401: Record<string, string> = {
   "POST /api/v1/tokens": "Wrong user id or password.",
   "POST /api/v1/tokens/refresh":
@@ -92,6 +95,14 @@ export const documentAuthErrors = <S extends FastifySchema | undefined>(
   } else if (!isNoAuthEndpoint(url, method)) {
     added[401] = errorBody(
       "The `pd_access` cookie is invalid or expired. Refresh, then retry once."
+    );
+  }
+  // Viewer routes under a gallery never say whether it exists: "no
+  // such gallery" and "not one you may see" are the same answer.
+  if (VIEWER_GALLERY_ROUTE.test(url)) {
+    added[404] = errorBody(
+      "No such gallery or photo, or none the requester may see. The two " +
+        "are deliberately not told apart."
     );
   }
   if (schema.security?.some((entry) => "accessCookie" in entry)) {

@@ -1995,6 +1995,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -2128,6 +2138,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -2164,6 +2184,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4329,6 +4359,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4474,6 +4514,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4597,6 +4647,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4763,6 +4823,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4921,6 +4991,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4986,6 +5066,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5065,6 +5155,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -5116,6 +5216,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -5160,6 +5270,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {

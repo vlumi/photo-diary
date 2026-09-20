@@ -47,8 +47,8 @@ describe("As admin", () => {
     const before = await api
       .get("/api/v1/galleries/gallery2")
       .set("Cookie", `pd_access=${await loginUser(api, "gallery1admin")}`)
-      .expect(200);
-    expect(before.body).toStrictEqual({ id: "gallery2", hideMap: false });
+      .expect(404);
+    expect(before.body).toStrictEqual({ error: expect.any(String) });
 
     // Grant the family group view on gallery2.
     await api
@@ -98,8 +98,8 @@ describe("As admin", () => {
     const after = await api
       .get("/api/v1/galleries/gallery2")
       .set("Cookie", `pd_access=${await loginUser(api, "gallery1admin")}`)
-      .expect(200);
-    expect(after.body).toStrictEqual({ id: "gallery2", hideMap: false });
+      .expect(404);
+    expect(after.body).toStrictEqual({ error: expect.any(String) });
   });
 
   test("Upsert with hideMap=null persists NULL (inherit)", async () => {
@@ -174,7 +174,7 @@ describe("As admin", () => {
     const without = await api
       .get("/api/v1/galleries/gallery2")
       .set("Cookie", `pd_access=${await loginUser(api, "gallery1admin")}`)
-      .expect(200);
-    expect(without.body).toStrictEqual({ id: "gallery2", hideMap: false });
+      .expect(404);
+    expect(without.body).toStrictEqual({ error: expect.any(String) });
   });
 });

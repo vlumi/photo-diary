@@ -273,23 +273,23 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
     ).toStrictEqual(["gallery1"]);
   });
 
-  test("GET /galleries/:id (off scope) returns the empty placeholder", async () => {
+  test("GET /galleries/:id (off scope) → 404", async () => {
     // Same shape as "no access" / "no such gallery" — off-scope joins
     // the same bucket so a scoped host can't enumerate other galleries
     // via the API.
     const result = await withHost(
       api.get("/api/v1/galleries/gallery3"),
       "gallery1.example.com"
-    ).expect(200);
-    expect(result.body).toStrictEqual({ id: "gallery3", hideMap: false });
+    ).expect(404);
+    expect(result.body).toStrictEqual({ error: expect.any(String) });
   });
 
-  test("GET /gallery-photos/:gallery (off scope) → empty array", async () => {
+  test("GET /gallery-photos/:gallery (off scope) → 404", async () => {
     const result = await withHost(
       api.get("/api/v1/gallery-photos/gallery3"),
       "gallery1.example.com"
-    ).expect(200);
-    expect(result.body).toStrictEqual([]);
+    ).expect(404);
+    expect(result.body).toStrictEqual({ error: expect.any(String) });
   });
 
   test("GET /gallery-photos/:gallery/:photo (off scope) → 404", async () => {
