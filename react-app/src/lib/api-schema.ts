@@ -28,6 +28,29 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            name?: string;
+                            description?: string;
+                            cdn?: string;
+                            image?: string;
+                            defaultGallery?: string;
+                            defaultTheme?: string;
+                            defaultLanguage?: string;
+                            initialGalleryView?: string;
+                            firstWeekday?: string;
+                            /** @description Feature name to "on", "off" or "user". */
+                            betaFeatures?: {
+                                [key: string]: string;
+                            };
+                            /** @description Display rendition sizes the converter generates, in pixels. */
+                            renditions?: number[];
+                            /** @description Hostnames this instance answers on; one may be the main host. */
+                            knownHosts?: ({
+                                hostname: string;
+                                isMain?: boolean;
+                            } & {
+                                [key: string]: unknown;
+                            })[];
+                        } & {
                             [key: string]: unknown;
                         };
                     };
@@ -105,6 +128,29 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            name?: string;
+                            description?: string;
+                            cdn?: string;
+                            image?: string;
+                            defaultGallery?: string;
+                            defaultTheme?: string;
+                            defaultLanguage?: string;
+                            initialGalleryView?: string;
+                            firstWeekday?: string;
+                            /** @description Feature name to "on", "off" or "user". */
+                            betaFeatures?: {
+                                [key: string]: string;
+                            };
+                            /** @description Display rendition sizes the converter generates, in pixels. */
+                            renditions?: number[];
+                            /** @description Hostnames this instance answers on; one may be the main host. */
+                            knownHosts?: ({
+                                hostname: string;
+                                isMain?: boolean;
+                            } & {
+                                [key: string]: unknown;
+                            })[];
+                        } & {
                             [key: string]: unknown;
                         };
                     };

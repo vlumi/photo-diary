@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Server
+
+- `GET /api/v1/meta` describes its known keys and their value shapes in the OpenAPI document while staying open to keys a client doesn't know; structured rows (`betaFeatures`, `renditions`, `knownHosts`) of the wrong shape are now dropped on read like unparseable ones, and the document states the API's additive-change rule for clients that don't ship with the server.
+
 ## [1.0.9] - 2026-09-20
 
 ### Server
