@@ -67,6 +67,25 @@ describe("As admin", () => {
   test("Get invalid", async () => {
     await getUser(token, "invalid", 404);
   });
+
+  test("A user is sent as id, name and role, never with its credentials", async () => {
+    const single = await getUser(token, "plainuser");
+    expect(single.body).toStrictEqual({
+      id: "plainuser",
+      name: expect.any(String),
+      isAdmin: false,
+    });
+    const admin = await getUser(token, "admin");
+    expect(admin.body.isAdmin).toBe(true);
+    const list = await api
+      .get("/api/v1/users")
+      .set("Cookie", `pd_access=${token}`)
+      .expect(200);
+    for (const user of [single.body, admin.body, ...list.body]) {
+      expect(Object.keys(user).sort()).toEqual(["id", "isAdmin", "name"]);
+    }
+    expect(list.body).toContainEqual(single.body);
+  });
 });
 
 describe("As gallery1admin", () => {

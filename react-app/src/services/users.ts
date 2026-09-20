@@ -22,16 +22,12 @@ export interface UserUpdatePatch {
 const getAll = async (): Promise<UserRow[]> =>
   unwrap(api.GET("/api/v1/users", {})) as Promise<UserRow[]>;
 
-// The OpenAPI schema marks the GET /users/{userId} response body
-// as `never` (it pre-dates the response-body typing pass), so the
-// typed return collapses to `undefined`. Cast through `unknown`
-// until the route gets a real response schema.
-const get = async (userId: string): Promise<Record<string, unknown> & { id: string }> =>
+const get = async (userId: string) =>
   unwrap(
     api.GET("/api/v1/users/{userId}", {
       params: { path: { userId } },
     })
-  ) as unknown as Promise<Record<string, unknown> & { id: string }>;
+  );
 
 const create = async (body: UserCreateBody): Promise<void> => {
   await unwrap(

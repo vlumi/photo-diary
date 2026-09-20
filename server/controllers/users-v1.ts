@@ -26,6 +26,15 @@ const UserSummary = Type.Object({
   isAdmin: Type.Boolean(),
 });
 const UsersListResponse = Type.Array(UserSummary);
+const summarize = (user: {
+  id: string;
+  name?: string;
+  is_admin?: number | boolean;
+}) => ({
+  id: user.id,
+  name: user.name || user.id,
+  isAdmin: !!user.is_admin,
+});
 const UserCreateBody = Type.Object({
   // `:guest` is seeded via migration 015, not this endpoint —
   // rejecting colon-prefixed ids here is safe.
@@ -68,16 +77,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request) => {
       requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
-      const users = (await model.getUsers()) as Array<{
-        id: string;
-        name?: string;
-        is_admin?: number | boolean;
-      }>;
-      return users.map((user) => ({
-        id: user.id,
-        name: user.name ?? user.id,
-        isAdmin: !!user.is_admin,
-      }));
+      const users = await model.getUsers();
+      return users.map(summarize);
     }
   );
 
@@ -111,13 +112,18 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Get a user by id (admin)",
+        response: { 200: UserSummary },
         params: UserIdParam,
         security: SESSION,
       },
     },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
-      return await model.getUser(request.params.userId);
+      // The row also holds the password hash and the secret that
+      // signs the user's tokens. Neither leaves the server: build the
+      // answer field by field rather than trusting a schema to filter.
+      const user = await model.getUser(request.params.userId);
+      return summarize(user);
     }
   );
 
