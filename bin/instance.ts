@@ -237,7 +237,7 @@ const setEnvKey = (filePath: string, key: string, value: string): void => {
 
 // ---- args ----------------------------------------------------------------
 
-// An instance dir is recognisable by the combination of `.env` + the `code`
+// An instance dir is recognizable by the combination of `.env` + the `code`
 // symlink. If both are present and no explicit positional was passed, infer
 // the instance dir from cwd — saves operators retyping the name for doctor
 // / --fix runs they're already cd'd into.
@@ -539,13 +539,13 @@ const argv = yargs(hideBin(process.argv))
         })
         .option("auto", {
           describe:
-            "Upgrade only: skip the proceed-with-pm2-cycle prompt and run unattended. Default behaviour prompts on a TTY and prints copy-paste instructions otherwise.",
+            "Upgrade only: skip the proceed-with-pm2-cycle prompt and run unattended. Default behavior prompts on a TTY and prints copy-paste instructions otherwise.",
           type: "boolean",
           default: false,
         })
         .option("print-only", {
           describe:
-            "Upgrade only: never run the pm2 cycle; just print the instructions (the pre-cycle-automation behaviour). Wins over --auto if both are set.",
+            "Upgrade only: never run the pm2 cycle; just print the instructions (the pre-cycle-automation behavior). Wins over --auto if both are set.",
           type: "boolean",
           default: false,
         })
@@ -1030,7 +1030,7 @@ async function runPm2Cycle(kind: "upgrade" | "restart"): Promise<void> {
     } catch {
       // Ctrl+C inside the prompt — fall back to manual.
       log();
-      log("Cancelled. Printing instructions instead:");
+      log("Canceled. Printing instructions instead:");
       log();
       printInstructions();
       log();

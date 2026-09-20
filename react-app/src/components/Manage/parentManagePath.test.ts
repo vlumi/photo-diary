@@ -38,7 +38,7 @@ describe("parentManagePath", () => {
     expect(parentManagePath("")).toBe(null);
   });
 
-  test("trailing slash is normalised", () => {
+  test("trailing slash is normalized", () => {
     expect(parentManagePath("/m/galleries/")).toBe("/m");
     expect(parentManagePath("/m/g/abc/")).toBe("/m/galleries");
     expect(parentManagePath("/m/g/abc/access/")).toBe("/m/galleries");

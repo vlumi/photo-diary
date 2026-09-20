@@ -348,7 +348,7 @@ const ThumbWrap = styled.div`
 // 100%` on a replaced element (img/video) doesn't resolve when the
 // parent's height comes from `aspect-ratio` rather than an explicit
 // dimension. Chrome falls back to the img's intrinsic ratio and
-// portraits overflow vertically; Firefox honours the percentage and
+// portraits overflow vertically; Firefox honors the percentage and
 // renders correctly. Absolute positioning forces the box to the
 // wrap's resolved rect in both engines.
 const Thumb = styled.img`
@@ -441,7 +441,7 @@ const MISSING_FIELDS: MissingField[] = [
 // Parse the searchParams into a typed PhotoFilter. Filters that aren't
 // present in the URL collapse to undefined / false / [].
 // Exported so the modal drawer can mirror the table's queryKey and
-// read prev/next neighbours from the same cache entry.
+// read prev/next neighbors from the same cache entry.
 export const filterFromSearchParams = (
   searchParams: URLSearchParams
 ): PhotoFilter => {
@@ -632,7 +632,7 @@ const AdminPhotos = (): React.ReactElement => {
   // The drawer mounts at /m/photos/:photoId via a nested
   // <Outlet>; this Photos page is the parent.
   const openPhoto = (id: string) => {
-    // pathname is /m/photos[/<oldId>]; normalise to "/m/photos"
+    // pathname is /m/photos[/<oldId>]; normalize to "/m/photos"
     // and append the new id, preserving the filter query.
     const base = location.pathname.endsWith("/photos")
       ? location.pathname

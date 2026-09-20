@@ -1146,7 +1146,7 @@ const matchesScope = (
 // day) scope in JS. For SQLite the round-trip is free, so load-all-
 // and-filter is the right shape; the boundary moves here so the
 // model layer doesn't have to know which is which. A Postgres
-// driver can replace this body with a parameterised WHERE.
+// driver can replace this body with a parameterized WHERE.
 const queryFilteredPhotos = async (
   galleryId: string,
   opts: QueryFilteredOpts = {}
@@ -1303,7 +1303,7 @@ const isGeotagged = (photo: Photo): boolean => {
 };
 // Shared projection from the photo set into the kebab-case
 // FilterShape universe. Used by both the gallery-scoped
-// `queryGalleryFilterValues` and the global cross-gallery flavour.
+// `queryGalleryFilterValues` and the global cross-gallery flavor.
 // Photos array is already filtered to the appropriate scope by the
 // caller.
 //
@@ -1894,7 +1894,7 @@ const upsertGeocoded = async (
   // the language (Nominatim's `?accept-language=<lang>` falls back
   // to OSM local labels when no localized form exists). When the
   // city is rejected, drop the address blob too — every per-row
-  // label inside it (`city`, `neighbourhood`, `suburb`, `town`…)
+  // label inside it (`city`, `neighborhood`, `suburb`, `town`…)
   // carries the same script and would leak through to consumers
   // that read the raw blob (PhotoDrawer's maritime fallback, state
   // / city derivation, future address-aware UIs). Read path falls
@@ -2012,7 +2012,7 @@ const clearLocalizedCity = async (
   lang: string
 ): Promise<void> => {
   // Clears both the derived city AND the raw address blob — the
-  // blob's labels (city, suburb, neighbourhood…) share the script
+  // blob's labels (city, suburb, neighborhood…) share the script
   // that just failed `acceptLocalizedCity`, so keeping the blob
   // would leak the same characters via PhotoDrawer's maritime
   // fallback / address-aware UIs. Row stays (no DELETE) so the

@@ -142,7 +142,7 @@ interface Props {
 // Compare two bucket entries by natural order: numeric when both
 // keys parse as numbers, alphabetic otherwise. `labelFor`-derived
 // display label takes precedence so country chips sort by their
-// localised name rather than raw "jp" / "fi" codes.
+// localized name rather than raw "jp" / "fi" codes.
 const compareByLabel = (
   a: { key: string; label: string },
   b: { key: string; label: string }
@@ -340,11 +340,11 @@ const EvolutionChart = ({
   // Categories whose keys form a linear scale (focal length,
   // aperture, exposure time, ISO, EV, LV, …) read more naturally
   // as a hue ramp than a categorical palette — adjacent bucket =
-  // adjacent colour. Same `colorGradient` helper the other Stats
+  // adjacent color. Same `colorGradient` helper the other Stats
   // charts use, against the same theme endpoints, for visual
   // consistency. The "unknown" bucket is excluded from the
   // numeric check (one missing-value photo would otherwise flip
-  // the whole category back to categorical) and rendered grey.
+  // the whole category back to categorical) and rendered gray.
   const UNKNOWN_KEY = "unknown";
   const numericKeys = ordered.filter((e) => e.key !== UNKNOWN_KEY);
   const isLinear =
@@ -369,7 +369,7 @@ const EvolutionChart = ({
     numericKeys.forEach((e, idx) => numericIndex.set(e.key, idx));
   }
   const stride = isLinear ? 1 : goldenCoprimeStride(paletteSize);
-  const colourFor = (entry: { key: string }, i: number): string => {
+  const colorFor = (entry: { key: string }, i: number): string => {
     if (entry.key === UNKNOWN_KEY) {
       return "hsl(0, 0%, 55%)";
     }
@@ -385,12 +385,12 @@ const EvolutionChart = ({
   // close to each other / to the chart background.
   const bandStroke = theme.get("primary-color");
   const datasets = ordered.map((entry, i) => {
-    const colour = colourFor(entry, i);
+    const color = colorFor(entry, i);
     return {
       label: entry.label,
       data: entry.counts,
       borderColor: bandStroke,
-      backgroundColor: colour,
+      backgroundColor: color,
       fill: true,
       tension: 0.4,
       pointRadius: 0,

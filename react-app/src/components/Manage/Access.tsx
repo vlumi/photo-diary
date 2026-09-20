@@ -339,7 +339,7 @@ const Access = (): React.ReactElement => {
   );
   const allRows = [...userRows, ...groupRows];
 
-  // Filters (URL-parameterised so a narrowed view is shareable).
+  // Filters (URL-parameterized so a narrowed view is shareable).
   const typeFilter = searchParams.get("type") ?? ""; // "user" | "group" | ""
   const galleryFilter = searchParams.get("gallery") ?? "";
   const adminFilter = searchParams.get("admin") ?? ""; // "1" | "0" | ""

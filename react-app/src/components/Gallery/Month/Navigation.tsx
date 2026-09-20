@@ -20,12 +20,12 @@ const Group = styled.div`
   align-items: center;
   gap: 16px;
 `;
-// Current month name (localised) shown in the middle of the bar
+// Current month name (localized) shown in the middle of the bar
 // so it doesn't read empty between the left and right control
 // clusters. The breadcrumb above already shows the year, so the
-// centre stays month-only — and avoids a hardcoded English-style
+// center stays month-only — and avoids a hardcoded English-style
 // "Month YYYY" order that wouldn't survive ja/fi locales.
-const Centre = styled.div`
+const Center = styled.div`
   flex: 0 1 auto;
   min-width: 0;
   font-size: 0.7em;
@@ -90,7 +90,7 @@ const Navigation = ({
           <BsCaretLeftFill />
         </NavLink>
       </Group>
-      <Centre>{t(`month-long-${month}`)}</Centre>
+      <Center>{t(`month-long-${month}`)}</Center>
       <Group>
         <NavLink
           gallery={gallery}

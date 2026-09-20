@@ -11,7 +11,7 @@
 // Public form (what the HTTP API accepts). Keep this in sync with
 // `KNOWN_META_KEYS_INTERNAL` below.
 //
-// Two flavours sit in the same key namespace:
+// Two flavors sit in the same key namespace:
 //
 // 1. Instance identity rows (`name`, `description`, `cdn`, `image`)
 //    — DB-backed, edited via the admin UI or `bin/meta.ts`.

@@ -41,7 +41,7 @@ export const seedE2eDb = async (): Promise<void> => {
 
   // Server config reads these at module load — must be set before the
   // dynamic import resolves. NODE_ENV=test selects the only config
-  // branch that honours DB_OPTS; the prod branch hardcodes the DB
+  // branch that honors DB_OPTS; the prod branch hardcodes the DB
   // path to `<cwd>/db.sqlite3`.
   process.env.NODE_ENV = "test";
   process.env.DB_DRIVER = "sqlite3";

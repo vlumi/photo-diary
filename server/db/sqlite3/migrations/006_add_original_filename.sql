@@ -2,7 +2,7 @@
 -- rename-on-import the converter does). Today id == originalFilename for
 -- every row, so the backfill is trivial; #272's stable-ID rename makes them
 -- diverge going forward, at which point the operator's enrichment JSONs
--- (and `bin/photo.ts search`) can still find rows via the human-recognised
+-- (and `bin/photo.ts search`) can still find rows via the human-recognized
 -- camera filename.
 
 ALTER TABLE photo ADD COLUMN original_filename TEXT;

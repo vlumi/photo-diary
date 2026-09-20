@@ -28,7 +28,7 @@
  *   original/<id>.jpg            (may have been cleaned up to save disk)
  *
  * Sidecars (`inbox/<id>.jpg.json`) are intentionally left alone — they're
- * an audit-trail artefact post-import, the system never looks at them by
+ * an audit-trail artifact post-import, the system never looks at them by
  * filename, and the operator may have other sidecars in inbox/ under
  * custom names that this script has no business touching.
  *

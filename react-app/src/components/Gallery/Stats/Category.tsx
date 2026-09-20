@@ -222,7 +222,7 @@ const Category = ({
 }: Props): React.ReactElement => {
   const { t } = useTranslation();
   const [modalOpen, setModalOpen] = React.useState(false);
-  // Three flavours of modal:
+  // Three flavors of modal:
   // - Chart + table categories use TableModal (full distribution).
   // - The summary category uses SummaryModal (period / peaks / variety
   //   / most-used overview).

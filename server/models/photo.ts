@@ -59,7 +59,7 @@ const queryFilteredGlobal = async (
 };
 
 // Filtered + paginated list. Loads every row and applies predicates in
-// memory — fine at current catalogue sizes; SQL-side optimisation is
+// memory — fine at current catalog sizes; SQL-side optimization is
 // deferred.
 export interface ListOptions {
   filter?: PhotoFilter;
@@ -138,7 +138,7 @@ const listPhotos = async (opts: ListOptions = {}): Promise<ListResult> => {
   };
 };
 
-// Per-predicate audit counts over the catalogue. Each key matches
+// Per-predicate audit counts over the catalog. Each key matches
 // the filter-chip URL param on the admin photos page (`orphan=1`,
 // `duplicates=1`, `countryMismatch=1`, `missing=<field>`), so a
 // dashboard tile can deep-link to `/m/photos?<key>=…` and the
@@ -276,7 +276,7 @@ const createPhoto = async (photo: { id: string } & Record<string, any>) => {
   logger.debug("Creating photo", { id: photo.id });
   await db.createPhoto(photo);
   // Fresh photo isn't linked to any gallery yet (gallery cache
-  // hits unchanged), but it IS in the cross-gallery catalogue —
+  // hits unchanged), but it IS in the cross-gallery catalog —
   // global stats must rebuild.
   invalidateGlobal();
 };

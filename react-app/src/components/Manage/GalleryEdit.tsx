@@ -313,8 +313,8 @@ const GalleryEdit = (): React.ReactElement => {
 
   // Saved-filter state for virtual galleries. Lives alongside the
   // gallery form so one Save button covers both surfaces in edit
-  // mode. Initialised from `gallery.savedFilter.definition` and
-  // serialised back through `savedFiltersService.update` when
+  // mode. Initialized from `gallery.savedFilter.definition` and
+  // serialized back through `savedFiltersService.update` when
   // anything changed. Real / hybrid galleries leave these at the
   // defaults; nothing reads them.
   const [filters, setFilters] = React.useState<FiltersT>({});

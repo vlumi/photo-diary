@@ -162,7 +162,7 @@ const ISOS = [100, 200, 400, 800, 1600];
 // Synthetic photos spread across non-July 2024 months with seasonal
 // weighting (heavier in spring + summer like a real photo diary).
 // Clusters some photos onto the same day so the year heat-map shows
-// real colour variation (single-photo days are pale, multi-photo days
+// real color variation (single-photo days are pale, multi-photo days
 // are progressively darker).
 const distributeAcrossMonth = (n) => {
   // Six fixed days per month; weighted so the first 2-3 land on the

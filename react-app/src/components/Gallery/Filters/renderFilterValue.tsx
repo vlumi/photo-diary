@@ -44,7 +44,7 @@ const renderFilterValue = (
   if (category === "city") {
     // `fallbackLabel` is the deduped display label built by
     // `format.buildCityLabels` in `buildUniqueValues` — no
-    // qualifier when the display is unique, localised region
+    // qualifier when the display is unique, localized region
     // (or country) qualifier when it isn't. Use it verbatim;
     // only prepend the country flag.
     const parsed = format.parseCityKey(rawKey);

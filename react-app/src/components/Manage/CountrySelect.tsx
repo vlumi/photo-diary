@@ -3,7 +3,7 @@
 // Reuses the lang store's `countryData` (the same
 // i18n-iso-countries instance the public viewer uses for flag
 // rendering) — no extra network call, no new dependency. Stores
-// the alpha-2 code on the form; the dropdown renders localised
+// the alpha-2 code on the form; the dropdown renders localized
 // names. Empty filter shows all countries alphabetised; typing
 // narrows by name or code. Pins a "No country" option (the
 // `xx` sentinel) at the top so an operator can mark photos

@@ -124,7 +124,7 @@ export const orientation = (
 // over the short side), so portrait + landscape map to the same
 // bucket. Returns undefined for missing dimensions; "" only as a
 // safety fallback if the walk somehow exhausts (kept to mirror the
-// client's behaviour).
+// client's behavior).
 export const aspectRatio = (
   width: number | undefined | null,
   height: number | undefined | null

@@ -47,7 +47,7 @@ import { isSpaRoute } from "./lib/spa-routes.js";
 
 export const app = Fastify({
   trustProxy: "loopback",
-  // Match the lenient trailing-slash behaviour the SPA's client URLs
+  // Match the lenient trailing-slash behavior the SPA's client URLs
   // were built against.
   routerOptions: { ignoreTrailingSlash: true },
   // Fastify defaults to `removeAdditional: 'all'`, which silently

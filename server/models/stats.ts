@@ -1,6 +1,6 @@
 // Stats orchestration. Loads photos from the DB and runs them
 // through the pure `computeStats` aggregator in
-// `lib/stats-compute.ts`. Two flavours:
+// `lib/stats-compute.ts`. Two flavors:
 //
 //   - `getGalleryStats(galleryId, filter?, lang?)` — gallery-scoped,
 //     drives `POST /api/v1/galleries/:id/stats`.
@@ -8,8 +8,8 @@
 //     `POST /api/v1/stats` (admin-only). Same compute logic; the
 //     only difference is which photos the DB layer hands us.
 //
-// Single-key cache per scope. The gallery flavour keys by gallery
-// id (plus lang for non-en); the global flavour keys by a
+// Single-key cache per scope. The gallery flavor keys by gallery
+// id (plus lang for non-en); the global flavor keys by a
 // dedicated `:global` namespace. Filtered combinations bypass
 // cache and compute on demand.
 
@@ -148,7 +148,7 @@ const getGalleryEvolution = async (
   return buildEvolution(photos, category, filter);
 };
 
-// Global filter pill universe — cross-gallery flavour of the
+// Global filter pill universe — cross-gallery flavor of the
 // gallery-scoped getGalleryFilterValues. Drives the
 // `<GlobalStats>` filter sidebar without that page having to load
 // the entire photo array client-side. Cached under the same

@@ -333,7 +333,7 @@ const Manage = (): React.ReactElement => {
 
   // Esc-up: Esc anywhere in /m/* navigates to the parent path,
   // matching the public Photo modal's "close this, return to the
-  // previous view" behaviour. Bubble phase on purpose — stacked
+  // previous view" behavior. Bubble phase on purpose — stacked
   // modals (FilterModal, the in-place PhotoDrawer, future
   // dirty-form prompts) already register capture-phase listeners
   // with `stopImmediatePropagation`, so they win and we never

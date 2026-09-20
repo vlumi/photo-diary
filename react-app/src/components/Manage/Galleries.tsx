@@ -33,7 +33,7 @@ import { useNotificationsStore, useUserStore } from "../../stores";
 
 // body has text-align: center globally; cancel it here so column
 // content (and the heading above the table) lines up with the
-// column header from the left. margin: 0 auto centres the bounded
+// column header from the left. margin: 0 auto centers the bounded
 // table on ultrawide screens instead of pinning it to the left.
 const Root = styled.div`
   padding: 24px 16px;
@@ -233,7 +233,7 @@ interface GalleryRow {
 
 // One row of the gallery list. Wraps with @dnd-kit/sortable so the
 // drag handle in the leftmost cell moves the row; the rest of the
-// row keeps the existing "click anywhere to open" behaviour. Drag-
+// row keeps the existing "click anywhere to open" behavior. Drag-
 // translate updates inline via the transform/transition styles
 // `useSortable` returns.
 interface SortableRowProps {

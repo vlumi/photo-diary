@@ -117,7 +117,7 @@ describe("aspectRatio", () => {
   test("6000 × 4000 → 3:2", () => {
     expect(aspectRatio(6000, 4000)).toBe("3:2");
   });
-  test("4000 × 6000 → 3:2 (long-over-short normalisation)", () => {
+  test("4000 × 6000 → 3:2 (long-over-short normalization)", () => {
     expect(aspectRatio(4000, 6000)).toBe("3:2");
   });
   test("1920 × 1080 → 16:9", () => {

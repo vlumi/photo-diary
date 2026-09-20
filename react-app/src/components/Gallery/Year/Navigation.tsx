@@ -23,8 +23,8 @@ const Group = styled.div`
 `;
 // Current year shown in the middle of the bar. The breadcrumb above
 // has it too, but the bar otherwise reads as empty between the
-// left and right control clusters — restore the visual centre.
-const Centre = styled.div`
+// left and right control clusters — restore the visual center.
+const Center = styled.div`
   flex: 0 1 auto;
   min-width: 0;
   font-size: 0.7em;
@@ -80,9 +80,9 @@ const Navigation = ({ gallery, year }: Props): React.ReactElement => {
           <BsCaretLeftFill />
         </NavLink>
       </Group>
-      <Centre>
+      <Center>
         <FormatDate year={year} />
-      </Centre>
+      </Center>
       <Group>
         <NavLink
           gallery={gallery}

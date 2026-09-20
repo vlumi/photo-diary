@@ -39,7 +39,7 @@ Read at startup from a `.env` file in the **current working directory** (which i
 | `NODE_ENV` | | `prod` | `dev` / `prod` / `test`. Set by the npm scripts; don't override unless you know why. |
 | `DEBUG` | | `false` | When truthy, enables verbose logger output. |
 | `STATIC_DIR` | | `<source>/build` | Path to the bundled frontend. Resolved relative to the server's source file by default; override if you build into a non-standard location. |
-| `REVERSE_GEOCODE` | | `false` | When set (any truthy value), the converter reverse-geocodes new photos with coords at intake. Opt-in by default — coordinates are sent to Nominatim. `photo-geocode.ts` honours this flag by default; pass `--force` to bypass for one-off backfills. |
+| `REVERSE_GEOCODE` | | `false` | When set (any truthy value), the converter reverse-geocodes new photos with coords at intake. Opt-in by default — coordinates are sent to Nominatim. `photo-geocode.ts` honors this flag by default; pass `--force` to bypass for one-off backfills. |
 | `REVERSE_GEOCODE_EXTRA_LANGS` | | — | Comma-separated extra languages to fetch on top of English (e.g. `ja,fi`). Each adds one 1 RPS Nominatim call per photo at intake. `photo-geocode.ts` uses the same default. |
 | `NOMINATIM_BASE_URL` | | `https://nominatim.openstreetmap.org` | Override to point at a self-hosted Nominatim. |
 | `GEOCODE_DIR` | | `<cwd>/.geocode` | Where the geocode lock file and per-`(lang, coord)` cache live. The cache key is `<lang>/<lat:.4f>:<lon:.4f>.json` (~11 m precision). |
@@ -81,7 +81,7 @@ cd /var/photo-diary/dailybw
 ./bin/<name>.ts [options]   # via the per-instance bin/ symlinks created by instance.ts
 ```
 
-The per-instance `bin/` directory (`<instance>/bin/{photo,photo-rename,photo-geocode,photo-rerender,gallery,user,group,meta}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognise them as TS source and apply the server's tsconfig via realpath.
+The per-instance `bin/` directory (`<instance>/bin/{photo,photo-rename,photo-geocode,photo-rerender,gallery,user,group,meta}.ts`) is populated by `bin/instance.ts` on init and refreshed on doctor / upgrade runs — each is a symlink into `<instance>/code/server/bin/`. `instance.ts` itself is deliberately not shortcut-symlinked here: bootstrap / upgrade always wants the specific code version (`/opt/photo-diary/<version>/bin/instance.ts <name>`), and the doctor re-run is rare enough that `./code/bin/instance.ts <name> --base <parent>` is fine. The `.ts` extension is kept on the symlinks (rather than bare names) so editors recognize them as TS source and apply the server's tsconfig via realpath.
 
 #### `instance.ts <name> [--base <dir>] [--fix] [--edit]`
 
@@ -153,7 +153,7 @@ Creates or updates a single gallery row. The ID is positional and required; ever
 | `--description <s>` | Long description shown on the gallery list page. |
 | `--epoch <YYYY-MM-DD>` | Anchor date for the gallery (e.g. a birthday for a "day in the life" project). |
 | `--epoch_type <type>` | One of the supported epoch types — see [models/GalleryModel.ts](../react-app/src/models/GalleryModel.ts). |
-| `--theme <name>` | Theme key — full list in [react-app/src/lib/theme.ts](../react-app/src/lib/theme.ts) (18 entries across the Coloured / Neutral / Dark / Showcase groups). |
+| `--theme <name>` | Theme key — full list in [react-app/src/lib/theme.ts](../react-app/src/lib/theme.ts) (18 entries across the Colored / Neutral / Dark / Showcase groups). |
 | `--initial_view <view>` | One of `year`, `month`, `day`, `photo` — where the gallery lands when entered. |
 | `--hostname <regex>` | Hostname regex (e.g. `^travel\.` ) that this gallery should be the default for. Lets a single instance serve multiple vhosts (see the nginx section in the top-level README). Also binds the **virtual-host scope** — requests reaching the server with a `Host` header matching this pattern are narrowed to this gallery (or to the set of galleries, if several match) for both reads and writes. Cross-gallery admin operations (user CRUD, gallery CRUD, instance meta) are unreachable. Off-scope reads collapse to the same empty placeholder shape that a non-existent gallery returns, so the hostname can't enumerate galleries beyond its scope. Instance meta (`GET /meta`) stays unscoped — it's SPA boot data. The SPA filters the breadcrumb dropdown to the matched set and redirects off-scope URLs. Global-admin work happens from the primary host (no `hostname` match). |
 
@@ -324,7 +324,7 @@ A bracketed `[unscoped]` suffix means the route is also rejected on hostname-bou
   - `DELETE ../:galleryId/:photoId` — Unlink **[gallery/editor]**
 - `/photos`
   - `GET` — Cross-gallery photo list (paginated, filterable) **[admin]**
-  - `POST ../query` — Cross-gallery filtered fetch (same body shape as the gallery-scoped flavour) **[admin]**
+  - `POST ../query` — Cross-gallery filtered fetch (same body shape as the gallery-scoped flavor) **[admin]**
   - `GET ../:photoId` — Read a single photo **[gallery/editor]** on any gallery it's linked to (orphans **[admin]**) — admin/edit-tier because the response carries write-context fields the view tier doesn't see
   - `PUT ../:photoId` — Update photo data (title, location, exposure, …) **[gallery/editor]** on any gallery it's linked to (orphans **[admin]**)
   - `POST ../:photoId/regeocode` — Clear `geocoded_*` columns and drop a coord sidecar for the converter daemon **[gallery/editor]** on any of the photo's galleries

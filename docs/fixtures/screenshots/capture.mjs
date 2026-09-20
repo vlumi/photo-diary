@@ -147,7 +147,7 @@ const main = async () => {
       throw new Error("no photos returned from /query");
     }
     // Pick a real (file-backed) photo — synthetic DB-only entries
-    // would render as a broken-image grey placeholder. The seed
+    // would render as a broken-image gray placeholder. The seed
     // prefixes synthesised ids with "synthetic-".
     const realPhotos = photos.filter((p) => !p.id.startsWith("synthetic-"));
     if (realPhotos.length === 0) {

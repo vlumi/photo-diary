@@ -13,7 +13,7 @@ interface CountryData {
 // Each per-photo Root is a flex sibling in the Month's wrap-flex. When
 // a day is highlighted (`/g/.../year/month/day` URL), every Root for
 // that day's photos gets `--header-background` as its background —
-// the same dark band colour the Navigation row and the day chip use.
+// the same dark band color the Navigation row and the day chip use.
 // The 1 px margins inside each Root (around the photo mat and around
 // the chip) expose that dark backdrop on all four sides, so the day
 // group reads as a single dark-matted frame with the chip seamlessly

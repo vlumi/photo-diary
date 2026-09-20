@@ -133,7 +133,7 @@ const applyOverrideOptions = (y: Argv) =>
     .group(["latitude", "longitude", "altitude"], "Coordinates")
     .option("latitude", { type: "number", describe: "Latitude (decimal degrees)" })
     .option("longitude", { type: "number", describe: "Longitude (decimal degrees)" })
-    .option("altitude", { type: "number", describe: "Altitude (metres)" })
+    .option("altitude", { type: "number", describe: "Altitude (meters)" })
     .group(
       [
         "author",
@@ -568,7 +568,7 @@ await yargs(hideBin(process.argv))
           type: "boolean",
           default: false,
           describe:
-            "Show row tables for every check (the pre-0.12 default behaviour)",
+            "Show row tables for every check (the pre-0.12 default behavior)",
         })
         .option("format", {
           choices: ["table", "ids"] as const,

@@ -30,7 +30,7 @@ const Group = styled.div`
   align-items: center;
   gap: 16px;
 `;
-const Centre = styled.div`
+const Center = styled.div`
   flex: 0 1 auto;
   min-width: 0;
   display: flex;
@@ -125,11 +125,11 @@ const Navigation = ({
           <BsCaretLeftFill />
         </NavLink>
       </Group>
-      <Centre>
+      <Center>
         <PositionLine aria-label={t("nav-photo-position")}>
           {positionLabel}
         </PositionLine>
-      </Centre>
+      </Center>
       <Group>
         <NavLink
           gallery={gallery}

@@ -40,7 +40,7 @@ const Root = styled.div`
 // extra horizontal padding gives thumbs room). 1.4em font-size makes the
 // icon glyph itself larger so it's easier to see and aim for. Hover and
 // keyboard-focus paint a `--header-sub-color` background instead of
-// shifting the icon colour — the previous `color: var(--primary-color)`
+// shifting the icon color — the previous `color: var(--primary-color)`
 // hover blended into the header background on most themes and the icon
 // effectively disappeared.
 const IconButton = styled.button`

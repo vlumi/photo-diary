@@ -246,7 +246,7 @@ const App = (): React.ReactElement => {
   // First-visit language pick: apply `meta.defaultLanguage` when
   // the visitor has no `lang` localStorage. Once they pick a
   // language via the UI, the persisted value wins on subsequent
-  // visits and meta is ignored. i18next was already initialised
+  // visits and meta is ignored. i18next was already initialized
   // with `config.DEFAULT_LANGUAGE` at module load, so the visible
   // effect is a brief flip from en → instance-default while the
   // visitor is on the initial Loading view (text is gated on

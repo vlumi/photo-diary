@@ -140,7 +140,7 @@ const InfoButton = styled(FloatingButton)`
   right: 16px;
 `;
 // In-place editor overlay. Centered modal stacked on top of the
-// Photo Frame so the photo stays visible underneath (greyed by the
+// Photo Frame so the photo stays visible underneath (grayed by the
 // scrim). Higher z-index than the photo modal's own Backdrop so
 // it lands above everything in the photo view.
 const EditorBackdrop = styled.div`
@@ -218,7 +218,7 @@ const AuthorOverlay = styled.div`
   white-space: nowrap;
 `;
 // 3-slide carousel (prev / current / next) dragged horizontally so
-// the user sees the neighbour peeking from the edge as they swipe.
+// the user sees the neighbor peeking from the edge as they swipe.
 // The Frame above clips overflow so slides extending past the Frame
 // are hidden until peeked into view. touch-action: none — the
 // carousel captures both axes (horizontal for nav, vertical for
@@ -309,7 +309,7 @@ const Photo = ({
   });
 
   // 3-slide carousel: track rests at -1/3 so the middle slide
-  // (current photo) is centred in the viewport. Sliding right exposes
+  // (current photo) is centered in the viewport. Sliding right exposes
   // slot 0 (prev); sliding left exposes slot 2 (next).
   //
   // Neighbors fetched per-photo from the server so the
@@ -389,7 +389,7 @@ const Photo = ({
   const TRACK_PREV = "0%";
   const TRACK_NEXT = "-66.6667%";
   const trackControls = useAnimationControls();
-  // useLayoutEffect: snap the track back to centre synchronously after
+  // useLayoutEffect: snap the track back to center synchronously after
   // the photo prop changes, so the new current slide is at viewport
   // x=0 before the browser paints the new frame. A regular useEffect
   // would let one frame paint with the track at its post-animation
@@ -637,7 +637,7 @@ const Photo = ({
               // Constraints are absolute pixel offsets from the
               // Track's translate origin. The Track rests at
               // motion.x = -window.innerWidth (the -33.3333% of its
-              // 300% width that centres slot 1). Range: TRACK_NEXT
+              // 300% width that centers slot 1). Range: TRACK_NEXT
               // (-2W) ↔ TRACK_PREV (0). At edges, lock at rest so
               // the empty slot can't be pulled into view.
               left: nextPhoto ? -2 * window.innerWidth : -window.innerWidth,

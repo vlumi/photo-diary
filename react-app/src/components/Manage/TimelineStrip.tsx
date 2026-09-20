@@ -186,7 +186,7 @@ const TimelineStrip = ({
   };
 
   // Sum counts by year for the collapsed-row badge, and remember
-  // which months actually have photos so the 12-cell grid greys
+  // which months actually have photos so the 12-cell grid grays
   // out empty months (still visible — gives the operator a
   // glance at coverage gaps).
   const yearSummaries = React.useMemo(() => {

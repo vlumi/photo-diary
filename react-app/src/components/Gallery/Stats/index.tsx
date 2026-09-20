@@ -46,7 +46,7 @@ interface Props {
   galleryId?: string;
   globalScope?: boolean;
   // Required for globalScope (legacy photo-walking path until the
-  // global flavour migrates). For gallery-scoped, optional — the
+  // global flavor migrates). For gallery-scoped, optional — the
   // map fetch goes via /query against the gallery instead.
   photos?: Photo[];
   // For globalScope: parent owns the photos fetch (lazy-loaded). Stats

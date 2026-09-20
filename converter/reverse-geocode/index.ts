@@ -171,7 +171,7 @@ export const geocode = async (
   url.searchParams.set("lat", String(lat));
   url.searchParams.set("lon", String(lon));
   url.searchParams.set("format", "json");
-  url.searchParams.set("zoom", "14"); // suburb / neighbourhood level
+  url.searchParams.set("zoom", "14"); // suburb / neighborhood level
   url.searchParams.set("addressdetails", "1");
 
   let response: Response;

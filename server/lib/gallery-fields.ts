@@ -1,5 +1,5 @@
 // Closed value sets for the configurable gallery fields. Mirrors the
-// frontend's behaviour (`react-app/src/lib/theme.ts` for themes,
+// frontend's behavior (`react-app/src/lib/theme.ts` for themes,
 // `GalleryModel.lastPath` for initial views, `Month/Content.tsx` for
 // epoch types). The API layer validates against these so junk values
 // can't slip into the DB via the mutation endpoints.

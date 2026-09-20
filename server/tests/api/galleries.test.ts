@@ -31,7 +31,7 @@ const getGallery = async (token: string | undefined, galleryId: string, status =
 // gallery, regardless of role) collapses to the same 200 with an empty
 // payload — the privacy rationale is that the difference between the two
 // otherwise lets an unauthenticated attacker enumerate gallery IDs. This
-// helper centralises the assertion so the tests stay readable.
+// helper centralizes the assertion so the tests stay readable.
 const expectGalleryUnavailable = async (
   token: string | undefined,
   galleryId: string

@@ -236,7 +236,7 @@ const authenticateUser = async (credentials: Credentials): Promise<void> => {
     // Make sure the secret is up-to-date
     secrets[user.id] = user.secret;
   } catch (error) {
-    // Log the underlying cause before normalising to LoginError —
+    // Log the underlying cause before normalizing to LoginError —
     // the public response intentionally hides whether the failure
     // was bad-password / unknown-user / DB outage (timing attacks),
     // but the operator needs to see DB issues in the log.
