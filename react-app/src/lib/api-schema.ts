@@ -1109,6 +1109,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         /** Update gallery properties (admin) */
@@ -1165,6 +1174,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         post?: never;
@@ -1191,6 +1209,15 @@ export interface paths {
                 };
                 /** @description The requester lacks the grant this needs. */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2279,6 +2306,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -2354,6 +2390,15 @@ export interface paths {
                 };
                 /** @description The requester lacks the grant this needs. */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2440,6 +2485,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -2518,6 +2572,15 @@ export interface paths {
                 };
                 /** @description The requester lacks the grant this needs. */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2614,6 +2677,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -2664,6 +2736,15 @@ export interface paths {
                 };
                 /** @description The requester lacks the grant this needs. */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2730,6 +2811,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         /** Link a photo to a gallery (admin) */
@@ -2756,6 +2846,15 @@ export interface paths {
                 };
                 /** @description The requester lacks the grant this needs. */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2790,6 +2889,15 @@ export interface paths {
                 };
                 /** @description The requester lacks the grant this needs. */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };

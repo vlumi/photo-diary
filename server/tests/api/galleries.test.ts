@@ -28,18 +28,22 @@ const getGallery = async (token: string | undefined, galleryId: string, status =
     .expect(status);
 
 // Every "the requester can't see this gallery" case (no access AND no such
-// gallery, regardless of role) collapses to the same 200 with an empty
-// payload — the privacy rationale is that the difference between the two
-// otherwise lets an unauthenticated attacker enumerate gallery IDs. This
-// helper centralizes the assertion so the tests stay readable.
+// gallery, regardless of role) collapses to the same 404 — the privacy
+// rationale is that the difference between the two otherwise lets an
+// unauthenticated attacker enumerate gallery IDs. This helper centralizes
+// the assertion so the tests stay readable.
 const expectGalleryUnavailable = async (
   token: string | undefined,
   galleryId: string
 ) => {
   const req = api.get(`/api/v1/galleries/${galleryId}`);
   if (token) req.set("Cookie", `pd_access=${token}`);
-  const result = await req.expect(200);
-  expect(result.body).toStrictEqual({ id: galleryId, hideMap: false });
+  const result = await req.expect(404);
+  expect(result.body).toStrictEqual({ error: expect.any(String) });
+  // Identical for a gallery that exists and one that doesn't.
+  const missing = api.get("/api/v1/galleries/no-such-gallery");
+  if (token) missing.set("Cookie", `pd_access=${token}`);
+  expect((await missing.expect(404)).body).toStrictEqual(result.body);
 };
 
 const expectGallery1 = (result: { body: Record<string, any> }) => {

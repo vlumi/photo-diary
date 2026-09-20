@@ -817,9 +817,10 @@ describe("POST /:galleryId/query (filtered + scoped fetch)", () => {
     await postQuery(token, "gallery1", { dateRange: { from: "2020/01/01" } }, 400);
   });
 
-  test("guest blocked from gallery1 → empty array (privacy collapse)", async () => {
-    const res = await postQuery(undefined, "gallery1");
-    expect(res.body).toEqual([]);
+  test("guest blocked from gallery1 → 404, same as no such gallery", async () => {
+    const blocked = await postQuery(undefined, "gallery1", {}, 404);
+    const missing = await postQuery(undefined, "no-such-gallery", {}, 404);
+    expect(blocked.body).toEqual(missing.body);
   });
 
   test(":guest grant on gallery3 → anon allowed", async () => {
@@ -865,9 +866,8 @@ describe("POST /:galleryId/counts (year heatmap)", () => {
     expect(res.body).toEqual({ "2018-05-04": 1 });
   });
 
-  test("guest blocked from gallery1 → empty object", async () => {
-    const res = await postCounts(undefined, "gallery1");
-    expect(res.body).toEqual({});
+  test("guest blocked from gallery1 → 404", async () => {
+    await postCounts(undefined, "gallery1", {}, 404);
   });
 });
 
@@ -942,11 +942,8 @@ describe("POST /:galleryId/neighbors (photo modal navigation)", () => {
     expect(res.body.total).toBe(1);
   });
 
-  test("guest blocked from gallery1 → total:0 (privacy collapse)", async () => {
-    const res = await postNeighbors(undefined, "gallery1", {
-      photoId: "gallery1photo.jpg",
-    });
-    expect(res.body).toEqual({ total: 0 });
+  test("guest blocked from gallery1 → 404", async () => {
+    await postNeighbors(undefined, "gallery1", { photoId: "gallery1photo.jpg" }, 404);
   });
 });
 
@@ -976,12 +973,7 @@ describe("POST /:galleryId/filter-values (filter pill universe)", () => {
     );
   });
 
-  test("guest blocked from gallery1 → empty universe (privacy collapse)", async () => {
-    const res = await getFilterValues(undefined, "gallery1");
-    expect(res.body).toEqual({
-      categoryValues: {},
-      categoryCounts: {},
-      byCityLocalized: {},
-    });
+  test("guest blocked from gallery1 → 404", async () => {
+    await getFilterValues(undefined, "gallery1", undefined, 404);
   });
 });

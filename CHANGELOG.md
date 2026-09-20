@@ -2,12 +2,15 @@
 
 ## [Unreleased]
 
+This release cleans up the API, with changes that are not backward compatible; the site's own front end and the iOS companion are updated in step, and nothing else is known to call it.
+
 ### Frontend
 
 - The English interface uses US spelling throughout: the theme picker has a "Colored" group, and the statistics and admin pages speak of the photo "catalog".
 
 ### Server
 
+- **Breaking:** the routes under a gallery answer 404 when the requester can't see it, instead of a success with an empty list, map or placeholder; "no access" and "no such gallery" still look the same, so ids can't be enumerated, but a client can now tell losing access from an empty gallery.
 - Photos sent to viewers no longer carry the raw intake EXIF, the camera's original filename or the body and lens serial numbers, which now go only to someone who can edit the photo; and where a gallery hides its map from the requester, the geocoder's address parts are removed along with the coordinates.
 - The API's additive-change rule is enforced: the release pins the spec as `server/openapi.released.json`, and a test fails when a later change removes a route, removes or retypes a response field, weakens a `required` promise, changes a success status, or makes a request stricter.
 - Gallery responses are described the same way, as a shared `Gallery` shape that promises `id` and `hideMap` as before and lists the rest as optional, with `type`, `theme` and the view names as plain strings so that new values don't break an older client.

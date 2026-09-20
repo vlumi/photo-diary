@@ -209,8 +209,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      // Same empty payload for "no access" and "no such gallery" so
-      // a walk of IDs can't enumerate which exist. On a scoped host
+      // The same 404 for "no access" and "no such gallery", so a walk
+      // of IDs can't enumerate which exist. On a scoped host
       // an off-scope id falls into the same bucket — the gallery is
       // unreachable from this hostname.
       try {
@@ -238,8 +238,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         await applyViewerPrivacy({ hideMap, isEditor }, gallery.photos ?? []);
         return { ...gallery, hideMap } as GalleryWire;
       } catch (error) {
-        if (error instanceof AccessError || error instanceof NotFoundError) {
-          return { id: request.params.galleryId, hideMap: false };
+        if (error instanceof AccessError) {
+          throw new NotFoundError();
         }
         throw error;
       }
