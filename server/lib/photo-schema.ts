@@ -1,5 +1,7 @@
 import { Type, type Static } from "typebox";
 
+import { withoutEmptyText } from "./wire-text.js";
+
 // The photo as it goes over the wire, for the OpenAPI document and the
 // response serializer. Mirrors `Photo` in db/sqlite3/schema.ts.
 //
@@ -185,6 +187,14 @@ const datedForWire = <T>(photo: T): T => {
   return { ...photo, taken: { ...taken, instant: { ...instant, ...parts } } };
 };
 
+// Everything a photo needs on its way out. Anything that isn't a
+// photo (a counts map, the filter universe) is returned untouched.
+const photoForWire = <T>(photo: T): T => {
+  const taken = (photo as Undated | null)?.taken;
+  if (!taken || typeof taken !== "object") return photo;
+  return withoutEmptyText(datedForWire(photo));
+};
+
 const PHOTO_SLOTS = ["previous", "next", "first", "last"] as const;
 
 /**
@@ -192,20 +202,20 @@ const PHOTO_SLOTS = ["previous", "next", "first", "last"] as const;
  * photo, a list, `{ photos }`, or the neighbors envelope.
  */
 export const photosForWire = <T>(payload: T): T => {
-  if (Array.isArray(payload)) return payload.map(datedForWire) as T;
+  if (Array.isArray(payload)) return payload.map(photoForWire) as T;
   if (!payload || typeof payload !== "object") return payload;
   const envelope = payload as Record<string, unknown>;
   if (Array.isArray(envelope.photos)) {
-    return { ...envelope, photos: envelope.photos.map(datedForWire) } as T;
+    return { ...envelope, photos: envelope.photos.map(photoForWire) } as T;
   }
   if (PHOTO_SLOTS.some((slot) => slot in envelope)) {
     const slots = Object.fromEntries(
       PHOTO_SLOTS.filter((slot) => slot in envelope).map((slot) => [
         slot,
-        datedForWire(envelope[slot]),
+        photoForWire(envelope[slot]),
       ])
     );
     return { ...envelope, ...slots } as T;
   }
-  return datedForWire(payload);
+  return photoForWire(payload);
 };

@@ -10,6 +10,7 @@ This release cleans up the API, with changes that are not backward compatible; t
 
 ### Server
 
+- **Breaking:** text that isn't there is absent from photo and gallery responses instead of being sent as `""` (a missing title, description, author, place, lens name, gallery icon or theme), the way a missing number already was.
 - **Breaking:** `GET /api/v1/galleries/{galleryId}` returns the gallery alone; it used to embed every photo of the gallery (4 MB for a few thousand photos), duplicating the photo routes, which is where the gallery edit form's icon picker now gets them, and only once the form is open.
 - **Breaking:** the grant lists (`GET /api/v1/user-gallery`, `GET /api/v1/group-gallery`) answer in the shape the upsert routes accept: `userId` / `groupId`, `galleryId`, `isEditor`, `hideMap` (true, false, or null to inherit) and `canSeePrivate`, as booleans, in place of the raw `user_id`, `is_editor = 0 | 1` database columns.
 - **Breaking:** the routes under a gallery answer 404 when the requester can't see it, instead of a success with an empty list, map or placeholder; "no access" and "no such gallery" still look the same, so ids can't be enumerated, but a client can now tell losing access from an empty gallery.

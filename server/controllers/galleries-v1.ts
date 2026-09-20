@@ -18,6 +18,7 @@ import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
 import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
 import { GalleryRef, type GalleryWire } from "../lib/gallery-schema.js";
+import { withoutEmptyText } from "../lib/wire-text.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -86,7 +87,7 @@ const annotateWithHideMap = async (
 ): Promise<Array<{ id: string; hideMap: boolean }>> =>
   Promise.all(
     galleries.map(async (gallery) => ({
-      ...gallery,
+      ...withoutEmptyText(gallery),
       hideMap: await shouldHideMap(userId, gallery.id),
     }))
   );
@@ -218,7 +219,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
-        return { ...gallery, hideMap } as GalleryWire;
+        return withoutEmptyText({ ...gallery, hideMap }) as GalleryWire;
       } catch (error) {
         if (error instanceof AccessError) {
           throw new NotFoundError();

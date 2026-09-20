@@ -112,7 +112,8 @@ await app.register(fastifySwagger, {
         "fields are not removed, renamed or retyped, and a field listed " +
         "as required stays present. Clients must ignore properties they " +
         "do not know, and must accept values they do not know for " +
-        "string fields whose value set may grow.",
+        "string fields whose value set may grow. A value that does not " +
+        "exist is absent: text is never sent as an empty string.",
       version: pkg.version,
     },
     tags: [

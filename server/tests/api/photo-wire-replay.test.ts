@@ -7,6 +7,7 @@ import { init } from "../../app.js";
 import galleryModel from "../../models/gallery.js";
 import galleryPhotoModel from "../../models/gallery-photo.js";
 import photoModel from "../../models/photo.js";
+import { withoutEmptyText } from "../../lib/wire-text.js";
 import { createApi, loginUser } from "./helper.js";
 
 const { api } = createApi();
@@ -19,8 +20,10 @@ beforeEach(async () => {
 // The photo routes serialize through a typed schema, which coerces
 // rather than fails. What a route sends must stay exactly what the
 // model produced, as plain JSON.stringify would have written it.
+// …except that text which isn't there is left out rather than sent
+// as "", which is the one thing the wire changes on purpose.
 const asJsonStringifyWould = (value: unknown): unknown =>
-  JSON.parse(JSON.stringify(value));
+  JSON.parse(JSON.stringify(withoutEmptyText(value)));
 
 describe("photo and gallery routes send what the model produced", () => {
   test.each(["gallery1", "gallery2"])("query of %s", async (galleryId) => {
