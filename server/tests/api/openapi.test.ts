@@ -84,8 +84,13 @@ describe("OpenAPI document", () => {
         Object.entries(operation.responses).every(
           ([status, response]) =>
             !/^[23]/.test(status) ||
-            (response as { description?: string }).description ===
-              "Default Response"
+            // The placeholder is that text with nothing behind it; a
+            // described body without a description of its own gets the
+            // same text and is fine.
+            ((response as { description?: string }).description ===
+              "Default Response" &&
+              !response.content &&
+              !response.headers)
         )
       )
       .map(({ name }) => name);
