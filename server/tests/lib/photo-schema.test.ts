@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import { Type } from "typebox";
 
 import { PhotoRef, PhotoSchema, photosForWire } from "../../lib/photo-schema.js";
+import { withoutEmptyText } from "../../lib/wire-text.js";
 
 // Fastify serializes a typed response through its schema and coerces
 // instead of failing: null under a plain number goes out as 0, null
@@ -83,8 +84,10 @@ const undated = {
   },
 };
 
+// What JSON.stringify used to produce, minus the one deliberate
+// difference: text that isn't there is left out instead of sent as "".
 const asJsonStringifyWould = (value: unknown): unknown =>
-  JSON.parse(JSON.stringify(value));
+  JSON.parse(JSON.stringify(withoutEmptyText(value)));
 
 const serve = async (schema: unknown, payload: unknown) => {
   const app = Fastify();
@@ -129,5 +132,38 @@ describe("photo wire schema", () => {
       last: Type.Optional(PhotoRef),
     });
     expect(await serve(Neighbors, neighbors)).toEqual(asJsonStringifyWould(neighbors));
+  });
+
+  test("text that isn't there is absent, not an empty string", async () => {
+    const sent = (await serve(PhotoRef, full)) as typeof full;
+    expect(sent).not.toHaveProperty("title");
+    expect(sent).not.toHaveProperty("description");
+    expect(sent.taken).not.toHaveProperty("author");
+    expect(sent.taken.location).not.toHaveProperty("place");
+    expect(sent.lens).toEqual({});
+    expect(sent.camera).toEqual({ make: "NIKON", model: "Z 6", serial: "123" });
+    // The record itself keeps its "" for the code that groups and filters.
+    expect(full.title).toBe("");
+    expect(full.lens.make).toBe("");
+  });
+
+  test("blobs pass through with their empty strings", () => {
+    const blobs = {
+      exifAtIntake: { Artist: "", nested: { Copyright: "" } },
+      geocoded: { address: { road: "" }, city: "" },
+      titleLocalized: { ja: "" },
+    };
+    expect(withoutEmptyText(blobs)).toEqual({
+      exifAtIntake: { Artist: "", nested: { Copyright: "" } },
+      geocoded: { address: { road: "" } },
+      titleLocalized: { ja: "" },
+    });
+  });
+
+  test("payloads that aren't photos are left alone", () => {
+    const counts = { "2024-06-01": 2 };
+    const universe = { categoryValues: { author: ["", "someone"] } };
+    expect(photosForWire(counts)).toBe(counts);
+    expect(photosForWire(universe)).toBe(universe);
   });
 });
