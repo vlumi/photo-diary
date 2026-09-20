@@ -101,6 +101,23 @@ describe("what a newer API document may not do to a released one", () => {
     ]);
   });
 
+  test("a described response is checked even under the generator's default description", () => {
+    const described = (properties: Json): Json => ({
+      responses: {
+        200: {
+          description: "Default Response",
+          content: { "application/json": { schema: thing(properties) } },
+        },
+      },
+    });
+    expect(
+      findBreakingChanges(
+        doc(described({ id: { type: "string" }, size: { type: "number" } })),
+        doc(described({ id: { type: "string" } }))
+      )
+    ).toEqual(["GET /things/{id} 200.size: removed"]);
+  });
+
   test("a success status may not change, but an undocumented placeholder is no promise", () => {
     const released = doc({
       responses: { 200: { description: "Default Response" }, 201: { description: "Created" } },

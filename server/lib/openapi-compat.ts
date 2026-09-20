@@ -146,8 +146,15 @@ export const findBreakingChanges = (released: Json, current: Json): string[] => 
       const nowResponses = asObject(now.responses) ?? {};
       for (const [status, response] of Object.entries(wasResponses)) {
         if (!status.startsWith("2") && !status.startsWith("3")) continue;
-        // The generator's stand-in for a route that documents nothing.
-        if (asObject(response)?.description === "Default Response") continue;
+        // The generator's stand-in for a route that documents nothing:
+        // that description AND no body. (Every response without a
+        // description of its own gets the same text, described or not.)
+        if (
+          asObject(response)?.description === "Default Response" &&
+          jsonSchemaOf(response) === undefined
+        ) {
+          continue;
+        }
         if (!(status in nowResponses)) {
           problems.push(`${name}: no longer answers ${status}`);
           continue;
