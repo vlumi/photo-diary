@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 
+import type { ApiPhoto } from "../lib/api-types";
 import format from "../lib/format";
 import cropFactors from "../lib/crop-factors.json";
 
@@ -8,78 +9,22 @@ interface Dimensions {
   height: number;
 }
 
-interface PhotoDataDimensions {
-  original: Dimensions;
-  thumbnail: Dimensions;
-}
+// Sizes are nullable columns. A photo without them still has a place in
+// the calendar, so it isn't rejected; its size reads as NaN, which is
+// what arithmetic on the missing value gave before and what the layout
+// code already copes with.
+const sizeOf = (size: Partial<Dimensions> | undefined): Dimensions => ({
+  width: size?.width ?? NaN,
+  height: size?.height ?? NaN,
+});
 
-interface Instant {
-  year: number;
-  month: number;
-  day: number;
-  hour?: number;
-  minute?: number;
-  second?: number;
-}
-
-interface Coordinates {
-  latitude?: number;
-  longitude?: number;
-}
-
-interface Location {
-  country?: string;
-  place?: string;
-  placeLocalized?: Record<string, string>;
-  coordinates?: Coordinates;
-}
-
-// Reverse-geocoded from coords; distinct from operator-set
-// `country` / `place` above. Server resolves `place` per-lang.
-interface Geocoded {
-  countryCode?: string;
-  stateCode?: string;
-  city?: string;
-  cityEn?: string;
-}
-
-interface Taken {
-  author?: string;
-  instant: Instant;
-  location?: Location;
-}
-
-interface Gear {
-  make?: string;
-  model?: string;
-}
-
-interface Exposure {
-  focalLength?: number;
-  focalLength35mmEquiv?: number;
-  aperture?: number;
-  exposureTime?: number;
-  iso?: number;
-}
-
-export interface PhotoData {
-  id: string;
-  index: number;
-  originalFilename?: string;
-  title?: string;
-  description?: string;
-  titleLocalized?: Record<string, string>;
-  descriptionLocalized?: Record<string, string>;
-  taken: Taken;
-  dimensions: PhotoDataDimensions;
-  camera?: Gear;
-  lens?: Gear;
-  exposure?: Exposure;
-  geocoded?: Geocoded;
-  galleries?: string[];
-  isPrivate?: boolean;
-  renditions?: number[];
-}
+// A photo that passed `importPhotoData`: the server's own shape, with
+// the one thing the model insists on made certain. The server sends
+// null date parts for a photo without a capture date; those are
+// turned away at the door, so inside the model a date is a date.
+export type PhotoData = ApiPhoto & {
+  taken: { instant: { year: number; month: number; day: number } };
+};
 
 interface CountryData {
   getName(code: string, lang: string): string | undefined;
@@ -121,6 +66,8 @@ const PhotoModel = (photoData: unknown) => {
     return undefined;
   }
 
+  const original = sizeOf(photo.dimensions.original);
+
   const round = (value: number): number => Math.round(value * 2) / 2;
 
   // Resolve a localized overlay map against the requested lang.
@@ -161,9 +108,9 @@ const PhotoModel = (photoData: unknown) => {
         photo.taken.instant.month - 1,
         photo.taken.instant.day
       ).getDay(),
-    hour: (): number | undefined => photo.taken.instant.hour,
-    minute: (): number | undefined => photo.taken.instant.minute,
-    second: (): number | undefined => photo.taken.instant.second,
+    hour: (): number | undefined => photo.taken.instant.hour ?? undefined,
+    minute: (): number | undefined => photo.taken.instant.minute ?? undefined,
+    second: (): number | undefined => photo.taken.instant.second ?? undefined,
     formatDate: (): string => {
       return format.date({
         year: photo.taken.instant.year,
@@ -178,24 +125,24 @@ const PhotoModel = (photoData: unknown) => {
         day: photo.taken.instant.day,
       });
       const hms = format.time({
-        hour: photo.taken.instant.hour,
-        minute: photo.taken.instant.minute,
-        second: photo.taken.instant.second,
+        hour: photo.taken.instant.hour ?? undefined,
+        minute: photo.taken.instant.minute ?? undefined,
+        second: photo.taken.instant.second ?? undefined,
       });
       return `${ymd} ${hms}`;
     },
 
     thumbnailDimensions: (): Dimensions => {
-      return { ...photo.dimensions.thumbnail };
+      return sizeOf(photo.dimensions.thumbnail);
     },
     // Aspect ratio is uniform across the original and any downscaled
     // rendition (sharp preserves it within rounding), so we read
     // from `original` — the smallest set of dimensions we keep. Used
     // for the Photo modal's fit math and `<img>` width/height attrs.
     ratio: (): number =>
-      photo.dimensions.original.width / photo.dimensions.original.height,
-    origWidth: (): number => photo.dimensions.original.width,
-    origHeight: (): number => photo.dimensions.original.height,
+      original.width / original.height,
+    origWidth: (): number => original.width,
+    origHeight: (): number => original.height,
 
     focalLength: (): number | undefined => photo.exposure?.focalLength,
     // EXIF `FocalLengthIn35mmFormat` when present; otherwise derived via
@@ -240,12 +187,12 @@ const PhotoModel = (photoData: unknown) => {
     },
     resolution: (): number =>
       Math.round(
-        (photo.dimensions.original.width * photo.dimensions.original.height) /
+        (original.width * original.height) /
           10 ** 6
       ),
     orientation: (): "square" | "portrait" | "landscape" => {
       const ratio =
-        photo.dimensions.original.width / photo.dimensions.original.height;
+        original.width / original.height;
       if (Math.abs(ratio - 1) < 0.01) {
         return "square";
       }
@@ -273,9 +220,9 @@ const PhotoModel = (photoData: unknown) => {
         { name: "3:1+", ratio: 3 / 1 },
       ];
       const ratio =
-        photo.dimensions.original.width > photo.dimensions.original.height
-          ? photo.dimensions.original.width / photo.dimensions.original.height
-          : photo.dimensions.original.height / photo.dimensions.original.width;
+        original.width > original.height
+          ? original.width / original.height
+          : original.height / original.width;
       if (isNaN(ratio)) {
         return undefined;
       }
