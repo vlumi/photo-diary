@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
+import type { Photo, PhotoInput } from "../db/sqlite3/schema.js";
 import { invalidateGallery, invalidateGlobal } from "../lib/stats-cache.js";
 import {
   applyFilter,
@@ -77,8 +77,11 @@ export interface ListOptions {
   photoIdFocus?: string;
 }
 
+/** A photo as the admin routes send it: with the galleries it is in. */
+export type CatalogPhoto = Photo & { galleries: string[] };
+
 export interface ListResult {
-  photos: any[];
+  photos: CatalogPhoto[];
   page: number;
   pageSize: number;
   total: number;
@@ -87,10 +90,6 @@ export interface ListResult {
 const DEFAULT_PAGE_SIZE = 100;
 const MAX_PAGE_SIZE = 500;
 
-const toArray = (photos: unknown): any[] =>
-  Array.isArray(photos)
-    ? (photos as any[])
-    : (Object.values(photos as Record<string, any>) as any[]);
 
 const listPhotos = async (opts: ListOptions = {}): Promise<ListResult> => {
   const filter = opts.filter ?? {};
@@ -101,7 +100,7 @@ const listPhotos = async (opts: ListOptions = {}): Promise<ListResult> => {
   );
   logger.debug("Listing photos", { filter, page, pageSize });
 
-  const photos = toArray(await db.loadPhotos());
+  const photos = await db.loadPhotos();
   const orphanIds = new Set<string>(await db.loadOrphanPhotoIds());
   const links = await db.loadAllGalleryPhotoLinks();
   const galleryMembers = new Map<string, Set<string>>();
@@ -165,7 +164,7 @@ const countAudits = async (opts: {
   restrictToIds?: Set<string>;
 } = {}): Promise<AuditCounts> => {
   logger.debug("Counting audits", { scoped: !!opts.restrictToIds });
-  const allPhotos = toArray(await db.loadPhotos());
+  const allPhotos = await db.loadPhotos();
   const orphanIds = new Set<string>(await db.loadOrphanPhotoIds());
   const photos = opts.restrictToIds
     ? allPhotos.filter((p) => opts.restrictToIds!.has(p.id))
@@ -174,12 +173,12 @@ const countAudits = async (opts: {
   // across scope boundaries shouldn't bleed into a scoped count.
   const dupeCounts = new Map<string, number>();
   for (const p of photos) {
-    const name = p.originalFilename as string | undefined;
+    const name = p.originalFilename;
     if (!name) continue;
     dupeCounts.set(name, (dupeCounts.get(name) ?? 0) + 1);
   }
-  const isDupe = (p: any): boolean => {
-    const name = p.originalFilename as string | undefined;
+  const isDupe = (p: Photo): boolean => {
+    const name = p.originalFilename;
     return !!name && (dupeCounts.get(name) ?? 0) > 1;
   };
   const missing = Object.fromEntries(
@@ -218,7 +217,7 @@ const countYearMonths = async (
   } = {}
 ): Promise<YearMonthBucket[]> => {
   logger.debug("Counting year-months", { scoped: !!opts.restrictToIds });
-  const photos = toArray(await db.loadPhotos());
+  const photos = await db.loadPhotos();
   const orphanIds = new Set<string>(await db.loadOrphanPhotoIds());
   const links = await db.loadAllGalleryPhotoLinks();
   const galleryMembers = new Map<string, Set<string>>();
@@ -256,10 +255,7 @@ const countYearMonths = async (
 // cache) because the link table can change between the lookup
 // and the actual write.
 const galleryIdsForPhoto = async (photoId: string): Promise<string[]> => {
-  const links = (await db.loadAllGalleryPhotoLinks()) as Array<{
-    photoId: string;
-    galleryId: string;
-  }>;
+  const links = await db.loadAllGalleryPhotoLinks();
   return links.filter((l) => l.photoId === photoId).map((l) => l.galleryId);
 };
 
@@ -272,7 +268,7 @@ const invalidateStatsForPhoto = async (photoId: string): Promise<void> => {
   invalidateGlobal();
 };
 
-const createPhoto = async (photo: { id: string } & Record<string, any>) => {
+const createPhoto = async (photo: PhotoInput & { id: string }) => {
   logger.debug("Creating photo", { id: photo.id });
   await db.createPhoto(photo);
   // Fresh photo isn't linked to any gallery yet (gallery cache
@@ -283,18 +279,12 @@ const createPhoto = async (photo: { id: string } & Record<string, any>) => {
 
 const getPhoto = async (photoId: string) => {
   logger.debug("Getting photo", photoId);
-  const row = (await db.loadPhoto(photoId)) as unknown as Record<
-    string,
-    unknown
-  >;
+  const row = await db.loadPhoto(photoId);
   // Decorate with the photo's gallery membership the same way
   // listPhotos does. The drawer renders these as jump-link chips
   // so the operator can navigate from a single-photo view to the
   // public gallery view without leaving the admin surface.
-  const links = (await db.loadAllGalleryPhotoLinks()) as Array<{
-    photoId: string;
-    galleryId: string;
-  }>;
+  const links = await db.loadAllGalleryPhotoLinks();
   const galleries = links
     .filter((l) => l.photoId === photoId)
     .map((l) => l.galleryId);
@@ -303,7 +293,7 @@ const getPhoto = async (photoId: string) => {
 
 const updatePhoto = async (
   photoId: string,
-  patch: Record<string, any>
+  patch: PhotoInput
 ) => {
   logger.debug("Updating photo", { id: photoId });
   await db.updatePhoto(photoId, patch);

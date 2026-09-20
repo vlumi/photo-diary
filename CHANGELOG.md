@@ -8,6 +8,7 @@ This release cleans up the API, with changes that are not backward compatible; t
 
 - Typing `1/0` as an exposure time in the admin photo drawer is refused instead of being stored as a one-second exposure.
 - The admin photo drawer, 1,861 lines in one file, is split into its styles, its form logic (now unit-tested), and its overview and read-only sections as components of their own, with a browser test of opening, editing and saving.
+- The statistics library's single 1,500-line function is split into a shared context and one module per topic, with identical output.
 - The admin pages and the service layer take the API's shapes from the schema the server generates instead of hand-written copies and casts, so a server change that affects them now fails the type check.
 - The English interface uses US spelling throughout: the theme picker has a "Colored" group, and the statistics and admin pages speak of the photo "catalog".
 
@@ -20,6 +21,8 @@ This release cleans up the API, with changes that are not backward compatible; t
 - **Breaking:** the grant lists (`GET /api/v1/user-gallery`, `GET /api/v1/group-gallery`) answer in the shape the upsert routes accept: `userId` / `groupId`, `galleryId`, `isEditor`, `hideMap` (true, false, or null to inherit) and `canSeePrivate`, as booleans, in place of the raw `user_id`, `is_editor = 0 | 1` database columns.
 - **Breaking:** the routes under a gallery answer 404 when the requester can't see it, instead of a success with an empty list, map or placeholder; "no access" and "no such gallery" still look the same, so ids can't be enumerated, but a client can now tell losing access from an empty gallery.
 - Photos sent to viewers no longer carry the raw intake EXIF, the camera's original filename or the body and lens serial numbers, which now go only to someone who can edit the photo; and where a gallery hides its map from the requester, the geocoder's address parts are removed along with the coordinates.
+- The 2,176-line SQLite driver is split into one module per entity around a shared connection module, every function moved verbatim.
+- The models and the admin photo filter use the driver's `Photo` and `Gallery` types instead of `any` and casts, so a route handler's return value is now checked against its response schema by the compiler.
 - Request logging is switched off through Fastify's `LogController` instead of the `disableRequestLogging` server option, which Fastify 6 removes; the custom per-response log line is unchanged.
 - Every operation in the OpenAPI document states the success status it really sends: 29 create, update and delete routes showed the generator's placeholder 200 while answering 201 or 204, and the regeocode route documents its own 400.
 - The API's additive-change rule is enforced: the release pins the spec as `server/openapi.released.json`, and a test fails when a later change removes a route, removes or retypes a response field, weakens a `required` promise, changes a success status, or makes a request stricter.

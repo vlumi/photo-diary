@@ -418,9 +418,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     async (request, reply) => {
       requireUnscoped(request);
       await authorizer.authorizeAdmin(request.user.id);
-      await model.createPhoto(
-        request.body as { id: string } & Record<string, unknown>
-      );
+      await model.createPhoto(request.body);
       reply.status(201).send();
     }
   );
@@ -460,7 +458,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         }
         const row = (await model
           .getPhoto(id)
-          .catch(() => null)) as PhotoWire | null;
+          .catch(() => null));
         if (row) photos.push(row);
       }
       return { photos };
@@ -524,7 +522,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.params.photoId
       );
       const photo = await model.getPhoto(request.params.photoId);
-      return photo as PhotoWire;
+      return photo;
     }
   );
 

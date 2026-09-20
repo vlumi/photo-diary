@@ -31,7 +31,7 @@ let reloadGeneration = 0;
 
 const loadSecrets = async (): Promise<void> => {
   logger.debug("Loading secrets");
-  const users = (await db.loadUsers()) as Array<{ id: string; secret: string }>;
+  const users = await db.loadUsers();
   // Clear before reloading: a `bin/user.ts delete` (or a test wiping the
   // user table) removes the row, but a stale in-memory entry would still
   // let tokens signed under the old secret verify until process restart.

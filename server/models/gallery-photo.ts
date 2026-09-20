@@ -236,10 +236,7 @@ const unlinkAllPhotos = async (galleryId: string) => {
 const unlinkAllGalleries = async (photoId: string) => {
   logger.debug("Unlinking photo", photoId, "from all galleries");
   // Resolve affected galleries BEFORE the cascade removes the links.
-  const links = (await db.loadAllGalleryPhotoLinks()) as Array<{
-    photoId: string;
-    galleryId: string;
-  }>;
+  const links = await db.loadAllGalleryPhotoLinks();
   const galleries = links
     .filter((l) => l.photoId === photoId)
     .map((l) => l.galleryId);
