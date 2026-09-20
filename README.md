@@ -171,7 +171,8 @@ Per-instance state — the SQLite DB, the `photos/` tree, `.env` — lives in a 
 
 Where the project is headed. Each bullet links the GitHub milestone for live status.
 
-- **1.0** — shipped 2026-07-19; latest patch `1.0.1` 2026-07-26 (see the [Version History](#version-history) entry below).
+- **1.0** — shipped 2026-07-19; patches through `1.0.9` (see the [Version History](#version-history) entry below).
+- **1.1** — the API cleanup that accompanies the iOS companion app; breaking for API clients, of which the front end and the companion are the only two.
 - [**2.0 — Thin server, cloud-native direction**](https://github.com/vlumi/photo-diary/milestone/18) *(direction-setting, far out)* — originals leave the server for client-side / cold storage, the converter's sharp pipeline becomes a bundled local uploader, all DB ops route through the API, storage backends behind a vendor-agnostic interface. Likely diverges from today's self-hosted-monolith shape enough that it may end up being a different product line.
 
 ## Backlog
@@ -202,4 +203,6 @@ Third structural take on a long-running personal photo-gallery side project — 
 - **0.18** (Jun 2026) — Cleanup + observability: `meta` table is the only source for SPA runtime defaults (no `.env` fallback); `/m/operations` admin page surfaces converter activity, pending queues, and failures; tidied `bin/photo.ts` surface; vitest coverage wired; frontend security audit pass; auth tokens move from localStorage to HttpOnly cookies.
 - **1.0** (Jul 2026) — Stable milestone. End of the JWT-cookie transition, CSP enable pass, cross-host SSO for the UserMenu virtual-host switcher (with federated login from non-main hosts), Playwright e2e suite, docs overhaul, session-state reconcile on boot + across tabs, session-hardening pass across six rcs. `1.0.1` (Jul 26) is a dependency-refresh patch (better-sqlite3 13, @fastify/static 10, jest-dom 7, c8 12, plus in-range bumps across the tree). From here, further work ships as patch releases or moves onto the 2.0 direction.
 
-See the [Roadmap](#roadmap) for what's in flight after 1.0.
+- **1.1** (Sep 2026) — An API fit for a second client, the [iOS companion](https://github.com/vlumi/photo-diary-ios): device pairing (from `1.0.7`); the OpenAPI document describes cookie auth, photos, galleries and meta instead of open objects, and a test holds each release to what the last one documented; viewers no longer receive raw EXIF, original filenames or serial numbers. Breaking cleanups: 404 instead of an empty success for a gallery out of reach, the single-gallery route without its embedded photos, camelCase grant lists, and absent rather than empty text.
+
+See the [Roadmap](#roadmap) for what's in flight after 1.1.
