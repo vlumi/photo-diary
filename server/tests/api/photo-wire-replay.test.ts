@@ -4,6 +4,7 @@ import { TEST_CONFIG, seedApiFixture } from "./fixture.js";
 vi.mock("../../lib/config/index.js", () => ({ default: TEST_CONFIG }));
 
 import { init } from "../../app.js";
+import galleryModel from "../../models/gallery.js";
 import galleryPhotoModel from "../../models/gallery-photo.js";
 import photoModel from "../../models/photo.js";
 import { createApi, loginUser } from "./helper.js";
@@ -21,7 +22,7 @@ beforeEach(async () => {
 const asJsonStringifyWould = (value: unknown): unknown =>
   JSON.parse(JSON.stringify(value));
 
-describe("photo routes send what the model produced", () => {
+describe("photo and gallery routes send what the model produced", () => {
   test.each(["gallery1", "gallery2"])("query of %s", async (galleryId) => {
     const token = await loginUser(api, "admin");
     const expected = await galleryPhotoModel().queryGalleryPhotos(galleryId, {
@@ -57,5 +58,29 @@ describe("photo routes send what the model produced", () => {
     expect(acrossGalleries.body).toEqual(
       asJsonStringifyWould(await photoModel().getPhoto(first!.id))
     );
+  });
+
+  test("gallery list and single gallery, with their photos", async () => {
+    const token = await loginUser(api, "admin");
+    const list = await api
+      .get("/api/v1/galleries")
+      .set("Cookie", `pd_access=${token}`)
+      .expect(200);
+    const expected = await galleryModel().getGalleries();
+    expect(list.body.length).toBe(expected.length);
+    for (const gallery of expected) {
+      const sent = (list.body as { id: string }[]).find((g) => g.id === gallery.id);
+      // The route adds `hideMap` for the requester; the rest is the model's.
+      expect(sent).toEqual({ ...asJsonStringifyWould(gallery) as object, hideMap: false });
+    }
+    const single = await api
+      .get("/api/v1/galleries/gallery1")
+      .set("Cookie", `pd_access=${token}`)
+      .expect(200);
+    const model = asJsonStringifyWould(await galleryModel().getGallery("gallery1", true)) as {
+      photos: unknown[];
+    };
+    expect(model.photos.length).toBeGreaterThan(0);
+    expect(single.body).toEqual({ ...model, hideMap: false });
   });
 });
