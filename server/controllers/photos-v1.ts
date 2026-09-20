@@ -20,6 +20,7 @@ import type {
   MissingField,
   PhotoFilter,
 } from "../lib/photo-filter.js";
+import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -290,7 +291,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           "List photos with optional filters; returns a paginated page of the matching set sorted newest-first by capture timestamp",
         querystring: PhotosQuery,
         response: { 200: PhotosListResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -334,7 +335,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Audit-predicate counts (admin)",
         response: { 200: AuditCountsResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -362,7 +363,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Photo counts grouped by year-month (admin)",
         querystring: YearMonthsQuery,
         response: { 200: YearMonthsResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -395,7 +396,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Create a photo (admin)",
         body: PhotoCreateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -425,7 +426,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Fetch many photos by id (admin / gallery-editor)",
         body: PhotosByIdsBody,
         response: { 200: PhotosByIdsResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -464,7 +465,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Filter-aware cross-gallery photo list (admin)",
         body: QueryBody,
         response: { 200: PhotosQueryResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -489,6 +490,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Get one photo by id (gallery-editor on any of the photo's galleries)",
         params: PhotoIdParam,
         response: { 200: PhotoItem },
@@ -521,7 +523,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Update one photo (admin)",
         params: PhotoIdParam,
         body: PhotoUpdateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -575,7 +577,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Clear and re-fetch geocoded data for one photo (admin)",
         params: PhotoIdParam,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -614,7 +616,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete one photo (admin)",
         params: PhotoIdParam,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {

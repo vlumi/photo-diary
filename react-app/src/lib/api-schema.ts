@@ -53,12 +53,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -118,12 +129,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -140,12 +162,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -184,6 +217,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -207,6 +258,8 @@ export interface paths {
                 /** @description Default Response */
                 200: {
                     headers: {
+                        /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
+                        "Set-Cookie"?: string;
                         [name: string]: unknown;
                     };
                     content: {
@@ -215,6 +268,15 @@ export interface paths {
                             isAdmin: boolean;
                             editorGalleries: string[];
                         };
+                    };
+                };
+                /** @description Wrong user id or password. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -229,9 +291,11 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description Logged out, whether or not a session existed. */
+                204: {
                     headers: {
+                        /** @description Two headers clearing `pd_access` and `pd_refresh`. */
+                        "Set-Cookie"?: string;
                         [name: string]: unknown;
                     };
                     content?: never;
@@ -265,6 +329,8 @@ export interface paths {
                 /** @description Default Response */
                 200: {
                     headers: {
+                        /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
+                        "Set-Cookie"?: string;
                         [name: string]: unknown;
                     };
                     content: {
@@ -273,6 +339,15 @@ export interface paths {
                             isAdmin: boolean;
                             editorGalleries: string[];
                         };
+                    };
+                };
+                /** @description No refresh cookie, or one that is unknown, expired or already rotated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -305,12 +380,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -354,6 +440,24 @@ export interface paths {
                         "application/json": {
                             redirectUrl: string;
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -403,6 +507,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -431,12 +553,24 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description Session started. Redirects to `redirect` when it is a same-origin path, else to `/`. */
+                302: {
                     headers: {
+                        /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
+                        "Set-Cookie"?: string;
+                        Location?: string;
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description The ticket is invalid, expired or already used. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -478,6 +612,24 @@ export interface paths {
                         }[];
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -500,12 +652,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -534,12 +697,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -563,12 +737,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -585,12 +770,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -627,10 +823,30 @@ export interface paths {
                 /** @description Default Response */
                 200: {
                     headers: {
+                        /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
+                        "Set-Cookie"?: string;
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": Record<string, never>;
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -673,6 +889,24 @@ export interface paths {
                         })[];
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -711,12 +945,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -751,12 +996,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -799,6 +1055,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         /** Update gallery properties (admin) */
@@ -837,12 +1111,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -859,12 +1144,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -915,6 +1211,24 @@ export interface paths {
                         "application/json": {
                             icon: string;
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -984,6 +1298,24 @@ export interface paths {
                         }[];
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -1032,12 +1364,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1106,6 +1449,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         /** Update a saved filter (partial) */
@@ -1153,12 +1514,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1176,12 +1548,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1233,6 +1616,24 @@ export interface paths {
                             pageSize: number;
                             total: number;
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -1293,12 +1694,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1346,6 +1758,24 @@ export interface paths {
                                 "state-code": number;
                             };
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -1396,6 +1826,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -1442,6 +1890,24 @@ export interface paths {
                                 [key: string]: unknown;
                             }[];
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -1500,6 +1966,24 @@ export interface paths {
                         }[];
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -1536,6 +2020,24 @@ export interface paths {
                         "application/json": {
                             [key: string]: unknown;
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -1596,12 +2098,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1618,12 +2131,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1653,12 +2177,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1698,6 +2233,24 @@ export interface paths {
                         "application/json": {
                             [key: string]: unknown;
                         }[];
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -1766,6 +2319,24 @@ export interface paths {
                         }[];
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -1825,6 +2396,24 @@ export interface paths {
                         "application/json": {
                             [key: string]: number;
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -1902,6 +2491,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -1973,6 +2580,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -2012,6 +2637,24 @@ export interface paths {
                         "application/json": {
                             [key: string]: unknown;
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -2057,6 +2700,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         /** Link a photo to a gallery (admin) */
@@ -2072,12 +2733,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2095,12 +2767,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2144,6 +2827,24 @@ export interface paths {
                         }[];
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -2183,12 +2884,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2206,12 +2918,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2250,6 +2973,24 @@ export interface paths {
                         }[];
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -2271,12 +3012,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2318,6 +3070,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         /** Update a group (admin) */
@@ -2339,12 +3109,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2361,12 +3142,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2403,6 +3195,24 @@ export interface paths {
                         "application/json": string[];
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -2434,12 +3244,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2457,12 +3278,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2506,6 +3338,24 @@ export interface paths {
                         }[];
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -2545,12 +3395,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2568,12 +3429,23 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2682,6 +3554,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -2748,6 +3638,24 @@ export interface paths {
                                 };
                             };
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -2856,6 +3764,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -2920,6 +3846,24 @@ export interface paths {
                                 };
                             };
                         };
+                    };
+                };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -2991,6 +3935,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -3046,6 +4008,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The requester lacks the grant this needs. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -3059,7 +4039,11 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        ErrorResponse: {
+            error: string;
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;

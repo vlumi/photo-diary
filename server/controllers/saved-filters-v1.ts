@@ -5,6 +5,7 @@ import authorizerFactory from "../lib/authorizer.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import modelFactory from "../models/saved-filter.js";
+import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -121,6 +122,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "List saved filters for a gallery",
         params: ParamsList,
         response: { 200: SavedFiltersListResponse },
@@ -141,6 +143,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Get one saved filter by id",
         params: ParamsOne,
         response: { 200: SavedFilterResponse },
@@ -169,7 +172,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Create a saved filter",
         params: ParamsList,
         body: CreateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -191,7 +194,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Update a saved filter (partial)",
         params: ParamsOne,
         body: UpdateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -216,7 +219,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete a saved filter",
         params: ParamsOne,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {

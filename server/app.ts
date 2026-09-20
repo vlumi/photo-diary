@@ -33,6 +33,12 @@ import operationsV1 from "./controllers/operations-v1.js";
 import filterValuesV1 from "./controllers/filter-values-v1.js";
 
 import middleware from "./lib/middleware/index.js";
+import {
+  ErrorResponseSchema,
+  documentAuthErrors,
+  dropBodiesOfEmptyResponses,
+  securitySchemes,
+} from "./lib/api-docs.js";
 import { NotFoundError } from "./lib/errors.js";
 import logger from "./lib/logger.js";
 import { isSpaRoute } from "./lib/spa-routes.js";
@@ -87,6 +93,8 @@ const pkg = JSON.parse(
   readFileSync(path.join(import.meta.dirname, "package.json"), "utf8")
 ) as { version: string };
 
+app.addSchema(ErrorResponseSchema);
+
 // Must register before the controller plugins so it captures every
 // route's schema as it's added.
 await app.register(fastifySwagger, {
@@ -115,18 +123,21 @@ await app.register(fastifySwagger, {
       },
       { name: "stats", description: "Aggregated gallery stats" },
     ],
-    components: {
-      securitySchemes: {
-        bearer: {
-          type: "http",
-          scheme: "bearer",
-          description:
-            "JWT issued by POST /api/v1/tokens. Send as " +
-            "`Authorization: Bearer <token>`.",
-        },
-      },
-    },
+    components: { securitySchemes },
   },
+  // Name shared schemas after their `$id` instead of `def-<n>`.
+  refResolver: {
+    buildLocalReference: (json, _baseUri, _fragment, i) =>
+      typeof json.$id === "string" ? json.$id : `def-${i}`,
+  },
+  transform: ({ schema, url, route }) => ({
+    schema: documentAuthErrors(schema, url, String(route.method)),
+    url,
+  }),
+  transformObject: (documentObject) =>
+    "openapiObject" in documentObject
+      ? dropBodiesOfEmptyResponses(documentObject.openapiObject)
+      : documentObject.swaggerObject,
 });
 
 // Swagger UI: always in dev, gated by `ENABLE_DOCS=true` elsewhere.

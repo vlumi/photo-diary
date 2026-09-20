@@ -5,6 +5,7 @@ import authorizerFactory from "../lib/authorizer.js";
 import { requireUnscoped } from "../lib/host-scope.js";
 import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import modelFactory from "../models/group.js";
+import { SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -58,7 +59,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "List all groups (admin)",
         response: { 200: GroupsListResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -74,7 +75,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Create a group (admin)",
         body: GroupCreateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -93,7 +94,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Get one group (admin)",
         params: GroupIdParam,
         response: { 200: GroupResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -110,7 +111,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Update a group (admin)",
         params: GroupIdParam,
         body: GroupUpdateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -128,7 +129,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete a group (admin). FK cascade clears memberships and grants.",
         params: GroupIdParam,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -147,7 +148,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "List user ids in a group (admin)",
         params: GroupIdParam,
         response: { 200: MemberListResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -163,7 +164,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Add a user to a group (admin)",
         params: MemberParams,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -181,7 +182,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Remove a user from a group (admin)",
         params: MemberParams,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Server
+
+- The OpenAPI document describes auth as it works: the `pd_access` and `pd_refresh` cookies instead of a bearer header the server stopped reading before 1.0, guest-readable routes marked as such, 401 and 403 on every route that can answer them (as a shared `ErrorResponse`), the `Set-Cookie` headers on login, refresh, SSO and password change, logout as the bodiless 204 it is, and a test that fails when the committed `server/openapi.json` drifts from the routes.
+
 ### Dependencies
 
 - `geo-coord` 0.2 → 1.0.0, its first stable release; the `GeoCoord` class the converter and the site use is unchanged, the rest is new API.

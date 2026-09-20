@@ -7,13 +7,32 @@
   },
   "components": {
     "securitySchemes": {
-      "bearer": {
-        "type": "http",
-        "scheme": "bearer",
-        "description": "JWT issued by POST /api/v1/tokens. Send as `Authorization: Bearer <token>`."
+      "accessCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "pd_access",
+        "description": "Short-lived JWT in an HttpOnly cookie, set by login, refresh and SSO consumption. A request without it runs as the guest user. A request carrying an invalid or expired one is refused with 401 on every endpoint that documents a 401, including those a guest may read: call POST /api/v1/tokens/refresh, then retry once."
+      },
+      "refreshCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "pd_refresh",
+        "description": "Long-lived opaque session handle in an HttpOnly cookie. Rotated on every refresh; presenting a handle that was already rotated away revokes the session."
       }
     },
-    "schemas": {}
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    }
   },
   "paths": {
     "/api/v1/meta": {
@@ -80,12 +99,29 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -184,12 +220,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -224,12 +277,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -239,6 +309,12 @@
         "summary": "Verify token + return current session identity",
         "tags": [
           "tokens"
+        ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
         ],
         "responses": {
           "200": {
@@ -266,6 +342,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -298,6 +394,14 @@
         "responses": {
           "200": {
             "description": "Default Response",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Two headers, `pd_access` and `pd_refresh`, both HttpOnly."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -324,6 +428,16 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Wrong user id or password.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -333,13 +447,22 @@
           "tokens"
         ],
         "security": [
+          {},
           {
-            "bearer": []
+            "refreshCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "204": {
+            "description": "Logged out, whether or not a session existed.",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Two headers clearing `pd_access` and `pd_refresh`."
+              }
+            }
           }
         }
       }
@@ -350,9 +473,22 @@
         "tags": [
           "tokens"
         ],
+        "security": [
+          {
+            "refreshCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Two headers, `pd_access` and `pd_refresh`, both HttpOnly."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -376,6 +512,16 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No refresh cookie, or one that is unknown, expired or already rotated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -401,12 +547,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -441,7 +604,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -459,6 +622,26 @@
                       "type": "string"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -490,7 +673,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -536,6 +719,26 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -566,8 +769,31 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "302": {
+            "description": "Session started. Redirects to `redirect` when it is a same-origin path, else to `/`.",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Two headers, `pd_access` and `pd_refresh`, both HttpOnly."
+              },
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The ticket is invalid, expired or already used.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -580,7 +806,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -609,6 +835,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -653,12 +899,29 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -681,12 +944,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -729,12 +1009,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -755,12 +1052,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -797,17 +1111,45 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
           "200": {
             "description": "Default Response",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Two headers, `pd_access` and `pd_refresh`, both HttpOnly."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -820,6 +1162,12 @@
         "summary": "List galleries visible to the requester",
         "tags": [
           "galleries"
+        ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
         ],
         "responses": {
           "200": {
@@ -844,6 +1192,26 @@
                     },
                     "additionalProperties": true
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -955,12 +1323,29 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -996,12 +1381,29 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1020,6 +1422,12 @@
             "in": "path",
             "name": "galleryId",
             "required": true
+          }
+        ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -1042,6 +1450,26 @@
                     }
                   },
                   "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1155,12 +1583,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -1181,12 +1626,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1261,7 +1723,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -1279,6 +1741,26 @@
                       "type": "string"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1300,6 +1782,12 @@
             "in": "path",
             "name": "galleryId",
             "required": true
+          }
+        ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -1407,6 +1895,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1530,12 +2038,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1562,6 +2087,12 @@
             "in": "path",
             "name": "filterId",
             "required": true
+          }
+        ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -1666,6 +2197,26 @@
                       "additionalProperties": true
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1788,12 +2339,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -1822,12 +2390,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2051,7 +2636,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -2086,6 +2671,26 @@
                       "type": "integer"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2248,12 +2853,29 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2266,7 +2888,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -2332,6 +2954,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2515,7 +3157,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -2548,6 +3190,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2588,7 +3250,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -2611,6 +3273,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2697,7 +3379,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -2712,6 +3394,26 @@
                     "properties": {},
                     "additionalProperties": true
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2735,6 +3437,12 @@
             "required": true
           }
         ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -2744,6 +3452,26 @@
                   "type": "object",
                   "properties": {},
                   "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2909,12 +3637,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -2935,12 +3680,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2963,12 +3725,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2997,6 +3776,12 @@
             "required": true
           }
         ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -3009,6 +3794,26 @@
                     "properties": {},
                     "additionalProperties": true
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3118,6 +3923,12 @@
             "required": true
           }
         ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -3130,6 +3941,26 @@
                     "properties": {},
                     "additionalProperties": true
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3224,6 +4055,12 @@
             "required": true
           }
         ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -3234,6 +4071,26 @@
                   "additionalProperties": {
                     "type": "number"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3335,6 +4192,12 @@
             "required": true
           }
         ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -3375,6 +4238,26 @@
                       "minimum": 0
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3469,6 +4352,12 @@
             "required": true
           }
         ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -3510,6 +4399,26 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3546,6 +4455,12 @@
             "required": true
           }
         ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -3555,6 +4470,26 @@
                   "type": "object",
                   "properties": {},
                   "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3594,6 +4529,12 @@
             "required": true
           }
         ],
+        "security": [
+          {},
+          {
+            "accessCookie": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -3603,6 +4544,26 @@
                   "type": "object",
                   "properties": {},
                   "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3634,12 +4595,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -3668,12 +4646,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3704,7 +4699,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -3748,6 +4743,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3815,12 +4830,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -3851,12 +4883,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3869,7 +4918,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -3898,6 +4947,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3938,12 +5007,29 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3968,7 +5054,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -3994,6 +5080,26 @@
                       "type": "string"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4038,12 +5144,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -4066,12 +5189,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4096,7 +5236,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -4109,6 +5249,26 @@
                   "items": {
                     "type": "string"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4145,12 +5305,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -4182,12 +5359,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4218,7 +5412,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -4262,6 +5456,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4329,12 +5543,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
@@ -4365,12 +5596,29 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4464,7 +5712,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -4601,6 +5849,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4704,7 +5972,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -4750,6 +6018,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4836,7 +6124,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -4976,6 +6264,26 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -5066,7 +6374,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -5112,6 +6420,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -5198,7 +6526,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -5242,6 +6570,26 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -5254,7 +6602,7 @@
         ],
         "security": [
           {
-            "bearer": []
+            "accessCookie": []
           }
         ],
         "responses": {
@@ -5420,6 +6768,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }

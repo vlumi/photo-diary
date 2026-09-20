@@ -9,6 +9,7 @@ import { requireUnscoped } from "../lib/host-scope.js";
 import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import modelFactory from "../models/user.js";
 import tokenFactory from "../models/token.js";
+import { SESSION, authCookieHeaders } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -61,7 +62,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "List all users (admin)",
         response: { 200: UsersListResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -90,7 +91,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Create a user (admin)",
         body: UserCreateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -111,7 +112,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Get a user by id (admin)",
         params: UserIdParam,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -131,7 +132,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Update a user by id (admin)",
         params: UserIdParam,
         body: UserUpdateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -152,7 +153,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete a user by id (admin)",
         params: UserIdParam,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -175,8 +176,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Change the caller's own password",
         body: ChangePasswordBody,
-        response: { 200: ChangePasswordResponse },
-        security: [{ bearer: [] }],
+        response: {
+          200: {
+            ...ChangePasswordResponse,
+            headers: authCookieHeaders("set"),
+          },
+        },
+        security: SESSION,
       },
     },
     async (request, reply) => {

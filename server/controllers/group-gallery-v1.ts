@@ -4,6 +4,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import authorizerFactory from "../lib/authorizer.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import modelFactory from "../models/group-gallery.js";
+import { SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -51,7 +52,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "List group_gallery ACL rows (admin)",
         querystring: FilterQuery,
         response: { 200: RowsResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -81,7 +82,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Upsert a group_gallery ACL row (admin)",
         params: RowParams,
         body: UpsertBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -107,7 +108,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete a group_gallery ACL row (admin)",
         params: RowParams,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
