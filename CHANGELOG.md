@@ -6,6 +6,7 @@ This release cleans up the API, with changes that are not backward compatible; t
 
 ### Frontend
 
+- The statistics library's single 1,500-line function is split into a shared context and one module per topic, with identical output.
 - The admin pages and the service layer take the API's shapes from the schema the server generates instead of hand-written copies and casts, so a server change that affects them now fails the type check.
 - The English interface uses US spelling throughout: the theme picker has a "Colored" group, and the statistics and admin pages speak of the photo "catalog".
 
