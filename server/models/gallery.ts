@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import logger from "../lib/logger.js";
 import db from "../db/index.js";
 import { ConflictError, NotFoundError, ValidationError } from "../lib/errors.js";
@@ -9,6 +8,7 @@ import {
 } from "../lib/gallery-icon.js";
 import { assertSlugId } from "../lib/id-shape.js";
 import { invalidateGallery, invalidateGlobal } from "../lib/stats-cache.js";
+import type { GalleryInput } from "../db/sqlite3/schema.js";
 
 export default () => {
   return {
@@ -101,7 +101,7 @@ const applyVirtualSources = async (
     await db.upsertVirtualGallery(galleryId, sources);
   }
 };
-const createGallery = async (gallery: { id: string } & Record<string, any>) => {
+const createGallery = async (gallery: GalleryInput & { id: string }) => {
   assertSlugId(gallery.id);
   logger.debug("Creating gallery", { id: gallery.id });
   // db.loadGallery throws NotFoundError when the row is missing; that's
@@ -130,7 +130,7 @@ const getGallery = async (galleryId: string) => {
 };
 const updateGallery = async (
   galleryId: string,
-  patch: Record<string, any>
+  patch: GalleryInput
 ) => {
   logger.debug("Updating gallery", { id: galleryId });
   // `defaultLanguage` changes just flip the column. No data is
@@ -156,10 +156,7 @@ const deleteGallery = async (galleryId: string) => {
   if (!(await db.isVirtualGallery(galleryId))) {
     await db.unlinkAllPhotos(galleryId);
   }
-  const accessRows = (await db.loadUserGalleryRows({ galleryId })) as Array<{
-    user_id: string;
-    gallery_id: string;
-  }>;
+  const accessRows = await db.loadUserGalleryRows({ galleryId });
   for (const row of accessRows) {
     await db.deleteUserGallery(row.user_id, row.gallery_id);
   }
@@ -206,7 +203,7 @@ const setGalleryIcon = async (
 // picked.
 const setGalleryOrder = async (ids: string[]): Promise<void> => {
   logger.debug("Reordering galleries", { count: ids.length });
-  const galleries = (await db.loadGalleries()) as Array<{ id: string }>;
+  const galleries = await db.loadGalleries();
   const existing = new Set(galleries.map((g) => g.id));
   const seen = new Set<string>();
   for (const id of ids) {

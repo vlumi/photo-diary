@@ -78,10 +78,7 @@ const updateUser = async (
 // Matches the `bin/user.ts delete` cleanup.
 const deleteUser = async (id: string) => {
   logger.debug("Deleting user", id);
-  const accessRows = (await db.loadUserGalleryRows({ userId: id })) as Array<{
-    user_id: string;
-    gallery_id: string;
-  }>;
+  const accessRows = await db.loadUserGalleryRows({ userId: id });
   for (const row of accessRows) {
     await db.deleteUserGallery(row.user_id, row.gallery_id);
   }

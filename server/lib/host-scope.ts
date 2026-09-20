@@ -21,10 +21,7 @@ import { NotFoundError } from "./errors.js";
 export const resolveHostScope = async (
   hostname: string
 ): Promise<string[]> => {
-  const galleries = (await dbFacade.loadGalleries()) as Array<{
-    id: string;
-    hostname?: string;
-  }>;
+  const galleries = await dbFacade.loadGalleries();
   const matches: string[] = [];
   for (const gallery of galleries) {
     if (!gallery.hostname) continue;
@@ -89,9 +86,7 @@ export const collectScopePhotoIds = async (
   if (!isScoped(request)) return null;
   const ids = new Set<string>();
   for (const galleryId of request.galleryScope!) {
-    const photos = (await dbFacade.loadGalleryPhotos(galleryId)) as Array<{
-      id: string;
-    }>;
+    const photos = await dbFacade.loadGalleryPhotos(galleryId);
     for (const photo of photos) ids.add(photo.id);
   }
   return ids;
