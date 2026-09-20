@@ -33,6 +33,8 @@ import {
   formatExposureTimeForInput,
   patchFrom,
 } from "./PhotoDrawer/form";
+import OverviewSection from "./PhotoDrawer/OverviewSection";
+import ReadonlySection from "./PhotoDrawer/ReadonlySection";
 import {
   CopyButton,
   renderGeocodedSummary,
@@ -453,164 +455,14 @@ const PhotoDrawer = ({
             <span>{t("manage-photo-unlock-exif")}</span>
           </UnlockRow>
         )}
-        <Section>
-          <SectionTitle>{t("manage-photo-section-overview")}</SectionTitle>
-          {(() => {
-            const renditions = (data?.renditions ?? []) as number[];
-            const sorted = [...renditions].sort((a, b) => a - b);
-            // Thumbnail URL doubles as the hero — it always exists
-            // (one-off per photo, not part of the rendition ladder),
-            // so the panel works even on instances that haven't run
-            // bin/photo-rerender.ts to populate the display ladder
-            // yet. Clicking opens the largest registered rendition.
-            const thumbUrl = `${config.PHOTO_ROOT_URL}thumbnail/${data.id}`;
-            const largest =
-              sorted.length > 0 ? sorted[sorted.length - 1] : null;
-            const heroHref =
-              largest !== null
-                ? `${config.PHOTO_ROOT_URL}display/${largest}/${data.id}`
-                : thumbUrl;
-            return (
-              <RenditionRowLayout>
-                <RenditionHero
-                  href={heroHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  title={largest !== null ? `${largest} px` : undefined}
-                >
-                  <RenditionHeroImg src={thumbUrl} alt={data.id} />
-                </RenditionHero>
-                <OverviewMeta>
-                  <OverviewMetaRow>
-                    <OverviewMetaLabel>
-                      {t("manage-photo-field-renditions")}
-                    </OverviewMetaLabel>
-                    <OverviewMetaValue>
-                      {sorted.length === 0 ? (
-                        <EmptyValue>
-                          {t("manage-photo-renditions-empty")}
-                        </EmptyValue>
-                      ) : (
-                        <RenditionChips>
-                          {sorted.map((dim) => {
-                            const url = `${config.PHOTO_ROOT_URL}display/${dim}/${data.id}`;
-                            return (
-                              <RenditionChip
-                                key={dim}
-                                href={url}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {dim} px
-                              </RenditionChip>
-                            );
-                          })}
-                        </RenditionChips>
-                      )}
-                    </OverviewMetaValue>
-                  </OverviewMetaRow>
-                  <OverviewMetaRow>
-                    <OverviewMetaLabel>
-                      {t("manage-photo-field-galleries")}
-                    </OverviewMetaLabel>
-                    <OverviewMetaValue>
-                      {data.galleries && data.galleries.length > 0 ? (
-                        <GalleryChipRow>
-                          {data.galleries.map((gid) => {
-                            const meta = galleryById.get(gid);
-                            const label = meta?.title || gid;
-                            const ts = data.taken?.instant?.timestamp;
-                            const ymd =
-                              ts && /^\d{4}-\d{2}-\d{2}/.test(ts)
-                                ? [
-                                    Number(ts.slice(0, 4)),
-                                    Number(ts.slice(5, 7)),
-                                    Number(ts.slice(8, 10)),
-                                  ]
-                                : null;
-                            const viewHref = ymd
-                              ? `/g/${gid}/${ymd[0]}/${ymd[1]}/${ymd[2]}/${data.id}`
-                              : `/g/${gid}`;
-                            const editHref = `/m/g/${gid}`;
-                            return (
-                              <GalleryChip key={gid}>
-                                <GalleryChipPrimary
-                                  href={viewHref}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    navigate(viewHref);
-                                  }}
-                                  title={String(
-                                    t("manage-photo-galleries-jump-view", {
-                                      label,
-                                    })
-                                  )}
-                                >
-                                  {label}
-                                </GalleryChipPrimary>
-                                <GalleryChipSecondary
-                                  href={editHref}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    navigate(editHref);
-                                  }}
-                                  title={String(
-                                    t("manage-photo-galleries-jump-edit", {
-                                      label,
-                                    })
-                                  )}
-                                  aria-label={String(
-                                    t("manage-photo-galleries-jump-edit", {
-                                      label,
-                                    })
-                                  )}
-                                >
-                                  <BsPencilSquare aria-hidden />
-                                </GalleryChipSecondary>
-                              </GalleryChip>
-                            );
-                          })}
-                        </GalleryChipRow>
-                      ) : (
-                        <EmptyValue>
-                          {t("manage-photo-galleries-orphan")}
-                        </EmptyValue>
-                      )}
-                    </OverviewMetaValue>
-                  </OverviewMetaRow>
-                  <OverviewMetaRow>
-                    <OverviewMetaLabel>
-                      {t("manage-photo-field-privacy")}
-                    </OverviewMetaLabel>
-                    <OverviewMetaValue>
-                      <label
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={form.isPrivate}
-                          onChange={(e) =>
-                            setForm((prev) => ({
-                              ...prev,
-                              isPrivate: e.target.checked,
-                            }))
-                          }
-                        />
-                        <BsEyeSlashFill aria-hidden />
-                        {t("manage-photo-privacy-toggle")}
-                      </label>
-                    </OverviewMetaValue>
-                  </OverviewMetaRow>
-                </OverviewMeta>
-              </RenditionRowLayout>
-            );
-          })()}
-        </Section>
+        <OverviewSection
+          data={data}
+          galleryById={galleryById}
+          isPrivate={form.isPrivate}
+          onPrivateChange={(isPrivate) =>
+            setForm((prev) => ({ ...prev, isPrivate }))
+          }
+        />
         <Section>
           <SectionTitle>{t("manage-photo-section-content")}</SectionTitle>
           <Field>
@@ -827,59 +679,11 @@ const PhotoDrawer = ({
             </Field>
           </FieldRow>
         </Section>
-        <Section>
-          <SectionTitle>{t("manage-photo-section-readonly")}</SectionTitle>
-          <MetaTable>
-            <MetaLabel>{t("manage-photo-field-id")}</MetaLabel>
-            <MetaValue>
-              {data.id}
-              <CopyButton
-                value={data.id}
-                label={String(t("manage-photo-field-copy-id"))}
-              />
-            </MetaValue>
-            {data.originalFilename && (
-              <>
-                <MetaLabel>{t("manage-photo-field-original-filename")}</MetaLabel>
-                <MetaValue>
-                  {data.originalFilename}
-                  <CopyButton
-                    value={data.originalFilename}
-                    label={String(t("manage-photo-field-copy-original-filename"))}
-                  />
-                </MetaValue>
-              </>
-            )}
-            {data.taken?.instant?.timestamp && (
-              <>
-                <MetaLabel>{t("manage-photo-field-taken")}</MetaLabel>
-                <MetaValue>{data.taken.instant.timestamp}</MetaValue>
-              </>
-            )}
-            {!!data.taken?.location?.coordinates?.latitude &&
-              !!data.taken?.location?.coordinates?.longitude && (
-                <>
-                  <MetaLabel>{t("manage-photo-field-geocoded")}</MetaLabel>
-                  <MetaValue>
-                    <MetaValueRow>
-                      <span>{renderGeocodedSummary(geocoded, t)}</span>
-                      <InlineActionButton
-                        type="button"
-                        onClick={() => regeocodeMutation.mutate()}
-                        disabled={regeocodeMutation.isPending}
-                        title={String(t("manage-photo-geocoded-refresh-hint"))}
-                      >
-                        <BsArrowClockwise aria-hidden />
-                        {regeocodeMutation.isPending
-                          ? t("manage-photo-geocoded-refreshing")
-                          : t("manage-photo-geocoded-refresh")}
-                      </InlineActionButton>
-                    </MetaValueRow>
-                  </MetaValue>
-                </>
-              )}
-          </MetaTable>
-        </Section>
+        <ReadonlySection
+          data={data}
+          onRegeocode={() => regeocodeMutation.mutate()}
+          isRegeocoding={regeocodeMutation.isPending}
+        />
       </Body>
     );
   };

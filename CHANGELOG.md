@@ -6,6 +6,8 @@ This release cleans up the API, with changes that are not backward compatible; t
 
 ### Frontend
 
+- Typing `1/0` as an exposure time in the admin photo drawer is refused instead of being stored as a one-second exposure.
+- The admin photo drawer, 1,861 lines in one file, is split into its styles, its form logic (now unit-tested), and its overview and read-only sections as components of their own, with a browser test of opening, editing and saving.
 - The admin pages and the service layer take the API's shapes from the schema the server generates instead of hand-written copies and casts, so a server change that affects them now fails the type check.
 - The English interface uses US spelling throughout: the theme picker has a "Colored" group, and the statistics and admin pages speak of the photo "catalog".
 
