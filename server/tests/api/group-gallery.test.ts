@@ -116,7 +116,7 @@ describe("As admin", () => {
       .query({ groupId: "family", galleryId: "gallery2" })
       .set("Cookie", auth)
       .expect(200);
-    expect(result.body[0].hide_map).toBe(1);
+    expect(result.body[0].hideMap).toBe(true);
     // Move back to inherit by sending hideMap=null.
     await api
       .put("/api/v1/group-gallery/family/gallery2")
@@ -128,7 +128,7 @@ describe("As admin", () => {
       .query({ groupId: "family", galleryId: "gallery2" })
       .set("Cookie", auth)
       .expect(200);
-    expect(result.body[0].hide_map).toBeNull();
+    expect(result.body[0].hideMap).toBeNull();
   });
 
   test("List filters by groupId / galleryId", async () => {
@@ -145,8 +145,8 @@ describe("As admin", () => {
       .set("Cookie", auth)
       .expect(200);
     expect(result.body.length).toBe(1);
-    expect(result.body[0].group_id).toBe("family");
-    expect(result.body[0].gallery_id).toBe("gallery2");
+    expect(result.body[0].groupId).toBe("family");
+    expect(result.body[0].galleryId).toBe("gallery2");
   });
 
   test("Removing the user from the group also removes their inherited access", async () => {

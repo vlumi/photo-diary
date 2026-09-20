@@ -5330,34 +5330,34 @@
                   "items": {
                     "type": "object",
                     "required": [
-                      "user_id",
-                      "gallery_id",
-                      "is_editor",
-                      "hide_map",
-                      "can_see_private"
+                      "userId",
+                      "galleryId",
+                      "isEditor",
+                      "hideMap",
+                      "canSeePrivate"
                     ],
                     "properties": {
-                      "user_id": {
+                      "userId": {
                         "type": "string"
                       },
-                      "gallery_id": {
+                      "galleryId": {
                         "type": "string"
                       },
-                      "is_editor": {
-                        "type": "number"
+                      "isEditor": {
+                        "type": "boolean"
                       },
-                      "hide_map": {
+                      "hideMap": {
                         "anyOf": [
                           {
-                            "type": "number"
+                            "type": "boolean"
                           },
                           {
                             "type": "null"
                           }
                         ]
                       },
-                      "can_see_private": {
-                        "type": "number"
+                      "canSeePrivate": {
+                        "type": "boolean"
                       }
                     }
                   }
@@ -6043,34 +6043,34 @@
                   "items": {
                     "type": "object",
                     "required": [
-                      "group_id",
-                      "gallery_id",
-                      "is_editor",
-                      "hide_map",
-                      "can_see_private"
+                      "groupId",
+                      "galleryId",
+                      "isEditor",
+                      "hideMap",
+                      "canSeePrivate"
                     ],
                     "properties": {
-                      "group_id": {
+                      "groupId": {
                         "type": "string"
                       },
-                      "gallery_id": {
+                      "galleryId": {
                         "type": "string"
                       },
-                      "is_editor": {
-                        "type": "number"
+                      "isEditor": {
+                        "type": "boolean"
                       },
-                      "hide_map": {
+                      "hideMap": {
                         "anyOf": [
                           {
-                            "type": "number"
+                            "type": "boolean"
                           },
                           {
                             "type": "null"
                           }
                         ]
                       },
-                      "can_see_private": {
-                        "type": "number"
+                      "canSeePrivate": {
+                        "type": "boolean"
                       }
                     }
                   }

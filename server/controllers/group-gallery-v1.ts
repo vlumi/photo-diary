@@ -5,6 +5,7 @@ import authorizerFactory from "../lib/authorizer.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import modelFactory from "../models/group-gallery.js";
 import { SESSION } from "../lib/api-docs.js";
+import { GroupGrant, grantFromRow } from "../lib/grant-schema.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -21,14 +22,7 @@ const RowParams = Type.Object({
   groupId: Type.String({ minLength: 1 }),
   galleryId: Type.String({ minLength: 1 }),
 });
-const RowResponse = Type.Object({
-  group_id: Type.String(),
-  gallery_id: Type.String(),
-  is_editor: Type.Number(),
-  hide_map: Type.Union([Type.Number(), Type.Null()]),
-  can_see_private: Type.Number(),
-});
-const RowsResponse = Type.Array(RowResponse);
+const RowsResponse = Type.Array(GroupGrant);
 // Mirror of /user-gallery body. Row presence grants view; isEditor
 // upgrades to gallery admin. `hideMap` is the privacy override at the
 // group layer. `canSeePrivate` extends view-only grants to the
@@ -68,9 +62,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         can_see_private: number;
       }>;
       const scope = request.galleryScope ?? [];
-      return scope.length > 0
-        ? rows.filter((row) => scope.includes(row.gallery_id))
-        : rows;
+      const visible =
+        scope.length > 0
+          ? rows.filter((row) => scope.includes(row.gallery_id))
+          : rows;
+      return visible.map((row) => ({
+        groupId: row.group_id,
+        ...grantFromRow(row),
+      }));
     }
   );
 

@@ -5,6 +5,7 @@ import authorizerFactory from "../lib/authorizer.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import modelFactory from "../models/user-gallery.js";
 import { SESSION } from "../lib/api-docs.js";
+import { UserGrant, grantFromRow } from "../lib/grant-schema.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -21,14 +22,7 @@ const RowParams = Type.Object({
   userId: Type.String({ minLength: 1 }),
   galleryId: Type.String({ minLength: 1 }),
 });
-const RowResponse = Type.Object({
-  user_id: Type.String(),
-  gallery_id: Type.String(),
-  is_editor: Type.Number(),
-  hide_map: Type.Union([Type.Number(), Type.Null()]),
-  can_see_private: Type.Number(),
-});
-const RowsResponse = Type.Array(RowResponse);
+const RowsResponse = Type.Array(UserGrant);
 // `isEditor = true` upgrades a row to gallery editor. `hideMap`
 // is the privacy override on this specific (user, gallery) pair —
 // `null` means "inherit from the next outer level." `canSeePrivate`
@@ -75,9 +69,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       // On a scoped host, narrow to the scoped galleries. Rows for any
       // other gallery are simply not visible from this hostname.
       const scope = request.galleryScope ?? [];
-      return scope.length > 0
-        ? rows.filter((row) => scope.includes(row.gallery_id))
-        : rows;
+      const visible =
+        scope.length > 0
+          ? rows.filter((row) => scope.includes(row.gallery_id))
+          : rows;
+      return visible.map((row) => ({
+        userId: row.user_id,
+        ...grantFromRow(row),
+      }));
     }
   );
 
