@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Photo } from "../db/sqlite3/schema.js";
+
 
 // Audit + filter predicates over loaded photo rows. The CLI (`bin/photo.ts
 // audit`) and the admin photos endpoint (`GET /api/v1/photos`) both walk
@@ -33,13 +34,13 @@ export const COUNTRY_SENTINEL = "xx";
 const isCountrySentinel = (c: unknown): boolean =>
   typeof c === "string" && c.toLowerCase() === COUNTRY_SENTINEL;
 
-const hasCoords = (p: any): boolean => {
+const hasCoords = (p: Photo): boolean => {
   const lat = p.taken?.location?.coordinates?.latitude;
   const lon = p.taken?.location?.coordinates?.longitude;
   return !isMissing(lat) && !isMissing(lon);
 };
 
-export const MISSING_PREDICATES: Record<MissingField, (p: any) => boolean> = {
+export const MISSING_PREDICATES: Record<MissingField, (p: Photo) => boolean> = {
   taken: (p) => isMissing(p.taken?.instant?.timestamp),
   coords: (p) => !hasCoords(p),
   place: (p) => isMissing(p.taken?.location?.place),
@@ -60,7 +61,7 @@ export const MISSING_PREDICATES: Record<MissingField, (p: any) => boolean> = {
 // problem. Operator-set sentinel (`xx` = no country) silences
 // the predicate entirely — it's a deliberate "this row is not
 // in any country" mark, not a mismatch.
-export const countryMismatch = (p: any): boolean => {
+export const countryMismatch = (p: Photo): boolean => {
   const geocoded = p.geocoded?.countryCode;
   if (isMissing(geocoded)) return false;
   const operator = p.taken?.location?.country;
@@ -84,14 +85,14 @@ const galleryMembershipPredicate = (
   filter: PhotoFilter,
   galleryMembers: Map<string, Set<string>>,
   orphanIds: Set<string>
-): ((p: any) => boolean) | undefined => {
+): ((p: Photo) => boolean) | undefined => {
   const wantGalleries =
     filter.galleryIds && filter.galleryIds.length > 0
       ? new Set(filter.galleryIds)
       : undefined;
   const wantOrphan = filter.orphan === true;
   if (!wantGalleries && !wantOrphan) return undefined;
-  return (p: any) => {
+  return (p: Photo) => {
     if (wantOrphan && orphanIds.has(p.id)) return true;
     if (!wantGalleries) return false;
     const memberOf = galleryMembers.get(p.id);
@@ -103,9 +104,9 @@ const galleryMembershipPredicate = (
 
 const dateRangePredicate = (
   filter: PhotoFilter
-): ((p: any) => boolean) | undefined => {
+): ((p: Photo) => boolean) | undefined => {
   if (!filter.dateFrom && !filter.dateTo) return undefined;
-  return (p: any) => {
+  return (p: Photo) => {
     const ts = p.taken?.instant?.timestamp as string | undefined;
     if (!ts) return false;
     if (filter.dateFrom && ts < filter.dateFrom) return false;
@@ -116,22 +117,22 @@ const dateRangePredicate = (
 
 const missingPredicate = (
   filter: PhotoFilter
-): ((p: any) => boolean) | undefined => {
+): ((p: Photo) => boolean) | undefined => {
   if (!filter.missing || filter.missing.length === 0) return undefined;
   const probes = filter.missing.map((m) => MISSING_PREDICATES[m]);
-  return (p: any) => probes.every((probe) => probe(p));
+  return (p: Photo) => probes.every((probe) => probe(p));
 };
 
 const duplicatesPredicate = (
-  photos: any[]
-): ((p: any) => boolean) => {
+  photos: Photo[]
+): ((p: Photo) => boolean) => {
   const counts = new Map<string, number>();
   for (const p of photos) {
     const name = p.originalFilename as string | undefined;
     if (!name) continue;
     counts.set(name, (counts.get(name) ?? 0) + 1);
   }
-  return (p: any) => {
+  return (p: Photo) => {
     const name = p.originalFilename as string | undefined;
     return !!name && (counts.get(name) ?? 0) > 1;
   };
@@ -139,10 +140,10 @@ const duplicatesPredicate = (
 
 const freeTextPredicate = (
   filter: PhotoFilter
-): ((p: any) => boolean) | undefined => {
+): ((p: Photo) => boolean) | undefined => {
   if (!filter.q) return undefined;
   const needle = filter.q.toLowerCase();
-  return (p: any) => {
+  return (p: Photo) => {
     const haystacks = [
       p.title,
       p.description,
@@ -164,11 +165,11 @@ interface FilterInputs {
 }
 
 export const applyFilter = (
-  photos: any[],
+  photos: Photo[],
   filter: PhotoFilter,
   inputs: FilterInputs
-): any[] => {
-  const predicates: Array<(p: any) => boolean> = [];
+): Photo[] => {
+  const predicates: Array<(p: Photo) => boolean> = [];
   const membership = galleryMembershipPredicate(
     filter,
     inputs.galleryMembers,
@@ -190,7 +191,7 @@ export const applyFilter = (
 
 // Newest-first by capture timestamp. Photos without a timestamp sort to
 // the end (treated as oldest), then by id for stable ordering.
-export const sortByTakenDesc = (photos: any[]): any[] =>
+export const sortByTakenDesc = (photos: Photo[]): Photo[] =>
   photos.slice().sort((a, b) => {
     const ta = a.taken?.instant?.timestamp as string | undefined;
     const tb = b.taken?.instant?.timestamp as string | undefined;

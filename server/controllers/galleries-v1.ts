@@ -17,7 +17,7 @@ import { shouldHideMap } from "../lib/privacy.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
 import { CREATED, GUEST_OR_SESSION, NO_CONTENT, SESSION } from "../lib/api-docs.js";
-import { GalleryRef, type GalleryWire } from "../lib/gallery-schema.js";
+import { GalleryRef } from "../lib/gallery-schema.js";
 import { withoutEmptyText } from "../lib/wire-text.js";
 
 const authorizer = authorizerFactory();
@@ -107,9 +107,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async (request) => {
-      const allGalleries = (await model.getGalleries()) as Array<{
-        id: string;
-      }>;
+      const allGalleries = await model.getGalleries();
       // On a scoped host the list is narrowed to galleries reachable
       // from that hostname before any access check — even cross-gallery
       // viewers shouldn't enumerate the rest of the instance via this
@@ -221,7 +219,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
-        return withoutEmptyText({ ...gallery, hideMap }) as GalleryWire;
+        return withoutEmptyText({ ...gallery, hideMap });
       } catch (error) {
         if (error instanceof AccessError) {
           throw new NotFoundError();
