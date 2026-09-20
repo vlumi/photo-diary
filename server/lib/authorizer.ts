@@ -7,6 +7,7 @@ export default () => {
     authorizeAdmin,
     authorizeGalleryView,
     authorizeGalleryEditor,
+    isGalleryEditor,
     authorizePhotoEditor,
     loadEditorGalleries,
     resolveCanSeePrivate,
@@ -111,6 +112,21 @@ const authorizeGalleryEditor = async (
     galleryId,
     required: "gallery-editor",
   });
+};
+
+// The same question without the throw, for routes that answer either
+// way and only vary what they include.
+const isGalleryEditor = async (
+  userId: string,
+  galleryId: string
+): Promise<boolean> => {
+  try {
+    await authorizeGalleryEditor(userId, galleryId);
+    return true;
+  } catch (error) {
+    if (error instanceof AccessError) return false;
+    throw error;
+  }
 };
 
 // Photo-level editor check: the user is allowed to edit the

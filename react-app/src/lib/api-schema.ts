@@ -4059,6 +4059,7 @@ export interface components {
             id: string;
             /** @description Position in the gallery's date order, from 0. */
             index: number;
+            /** @description Only for a requester who can edit the photo. */
             originalFilename?: string;
             title?: string;
             description?: string;
@@ -4107,6 +4108,7 @@ export interface components {
             camera?: {
                 make?: string;
                 model?: string;
+                /** @description Only for a requester who can edit the photo. */
                 serial?: string;
             } & {
                 [key: string]: unknown;
@@ -4114,6 +4116,7 @@ export interface components {
             lens?: {
                 make?: string;
                 model?: string;
+                /** @description Only for a requester who can edit the photo. */
                 serial?: string;
             } & {
                 [key: string]: unknown;
@@ -4150,6 +4153,7 @@ export interface components {
                 /** @description In the requested `lang` when known. */
                 city?: string;
                 cityEn?: string;
+                /** @description The geocoder's address parts. Absent when the gallery hides its map from the requester. */
                 address?: {
                     [key: string]: unknown;
                 };
@@ -4157,6 +4161,7 @@ export interface components {
             } & {
                 [key: string]: unknown;
             };
+            /** @description Raw EXIF as first read. Only for a requester who can edit the photo. */
             exifAtIntake?: {
                 [key: string]: unknown;
             };

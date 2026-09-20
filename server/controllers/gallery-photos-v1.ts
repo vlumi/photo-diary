@@ -4,7 +4,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import authorizerFactory from "../lib/authorizer.js";
 import { AccessError, NotFoundError } from "../lib/errors.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
-import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
+import { applyViewerPrivacy, shouldHideMap } from "../lib/privacy.js";
 import modelFactory from "../models/gallery-photo.js";
 import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
 import {
@@ -14,6 +14,14 @@ import {
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
+
+
+// What the requester may see of this gallery's photos beyond the
+// photos themselves: see `applyViewerPrivacy`.
+const viewerOf = async (userId: string, galleryId: string) => ({
+  hideMap: await shouldHideMap(userId, galleryId),
+  isEditor: await authorizer.isGalleryEditor(userId, galleryId),
+});
 
 const init = async () => {
   await model.init();
@@ -158,9 +166,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.query.lang,
           includePrivate
         );
-        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
-          maskCoordinates(photos as Parameters<typeof maskCoordinates>[0]);
-        }
+        await applyViewerPrivacy(
+          await viewerOf(request.user.id, request.params.galleryId),
+          photos
+        );
         return photos;
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
@@ -214,9 +223,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             includePrivate,
           }
         );
-        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
-          maskCoordinates(photos as Parameters<typeof maskCoordinates>[0]);
-        }
+        await applyViewerPrivacy(
+          await viewerOf(request.user.id, request.params.galleryId),
+          photos
+        );
         return photos;
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
@@ -312,14 +322,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             includePrivate,
           }
         );
-        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
-          maskCoordinates(
-            [result.previous, result.next, result.first, result.last]
-              .filter((p) => p !== undefined) as Parameters<
-              typeof maskCoordinates
-            >[0]
-          );
-        }
+        await applyViewerPrivacy(
+          await viewerOf(request.user.id, request.params.galleryId),
+          [result.previous, result.next, result.first, result.last]
+        );
         return result;
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
@@ -422,9 +428,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.query.lang,
           includePrivate
         );
-        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
-          maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
-        }
+        await applyViewerPrivacy(
+          await viewerOf(request.user.id, request.params.galleryId),
+          [photo]
+        );
         return photo;
       } catch (error) {
         if (error instanceof AccessError) {
@@ -469,9 +476,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.query.lang,
           includePrivate
         );
-        if (await shouldHideMap(request.user.id, request.params.galleryId)) {
-          maskCoordinates([photo] as Parameters<typeof maskCoordinates>[0]);
-        }
+        await applyViewerPrivacy(
+          await viewerOf(request.user.id, request.params.galleryId),
+          [photo]
+        );
         return photo;
       } catch (error) {
         if (error instanceof AccessError) {

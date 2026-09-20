@@ -13,6 +13,7 @@ import { Type, type Static } from "typebox";
 // (`galleries` on the admin lists, say) is dropped.
 
 const open = { additionalProperties: true } as const;
+const EDITORS_ONLY = "Only for a requester who can edit the photo.";
 const LocalizedText = Type.Record(Type.String(), Type.String());
 const NullableNumber = Type.Union([Type.Number(), Type.Null()]);
 const NullableInteger = Type.Union([Type.Integer(), Type.Null()]);
@@ -25,7 +26,7 @@ const Gear = Type.Object(
   {
     make: Type.Optional(Type.String()),
     model: Type.Optional(Type.String()),
-    serial: Type.Optional(Type.String()),
+    serial: Type.Optional(Type.String({ description: EDITORS_ONLY })),
   },
   open
 );
@@ -36,7 +37,7 @@ export const PhotoSchema = Type.Object(
     index: Type.Integer({
       description: "Position in the gallery's date order, from 0.",
     }),
-    originalFilename: Type.Optional(Type.String()),
+    originalFilename: Type.Optional(Type.String({ description: EDITORS_ONLY })),
     title: Type.Optional(Type.String()),
     description: Type.Optional(Type.String()),
     titleLocalized: Type.Optional(LocalizedText),
@@ -117,13 +118,28 @@ export const PhotoSchema = Type.Object(
             Type.String({ description: "In the requested `lang` when known." })
           ),
           cityEn: Type.Optional(Type.String()),
-          address: Type.Optional(Type.Object({}, open)),
+          address: Type.Optional(
+            Type.Object(
+              {},
+              {
+                ...open,
+                description:
+                  "The geocoder's address parts. Absent when the gallery " +
+                  "hides its map from the requester.",
+              }
+            )
+          ),
           noData: Type.Optional(Type.Boolean()),
         },
         open
       )
     ),
-    exifAtIntake: Type.Optional(Type.Object({}, open)),
+    exifAtIntake: Type.Optional(
+      Type.Object(
+        {},
+        { ...open, description: `Raw EXIF as first read. ${EDITORS_ONLY}` }
+      )
+    ),
     isPrivate: Type.Optional(Type.Boolean()),
     renditions: Type.Optional(
       Type.Array(Type.Number(), {
