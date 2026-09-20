@@ -4,6 +4,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import authorizerFactory from "../lib/authorizer.js";
 import { requireUnscoped } from "../lib/host-scope.js";
 import statsFactory from "../models/stats.js";
+import { SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const stats = statsFactory();
@@ -71,7 +72,7 @@ const globalPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Filter pill universe across all galleries (admin)",
         body: RequestBody,
         response: { 200: FilterValuesResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {

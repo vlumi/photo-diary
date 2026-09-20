@@ -9,6 +9,7 @@ import type {
   FilterShape,
   NumericRanges,
 } from "../lib/photo-filter-eval.js";
+import { SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = statsFactory();
@@ -114,7 +115,7 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
         params: GalleryIdParam,
         body: StatsBody,
         response: { 200: StatsResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -149,7 +150,7 @@ const galleryPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
         params: GalleryIdParam,
         body: EvolutionBody,
         response: { 200: EvolutionResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -187,7 +188,7 @@ const globalPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Aggregated stats across all galleries (admin)",
         body: StatsBody,
         response: { 200: StatsResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -211,7 +212,7 @@ const globalPlugin: FastifyPluginAsyncTypebox = async (fastify) => {
           "Per-bucket time-series for a trendable category across all galleries (admin)",
         body: EvolutionBody,
         response: { 200: EvolutionResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {

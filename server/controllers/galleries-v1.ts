@@ -16,6 +16,7 @@ import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
+import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -107,6 +108,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "List galleries visible to the requester",
         response: { 200: GalleryListResponse },
       },
@@ -162,7 +164,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           { ids: Type.Array(Type.String({ minLength: 1 })) },
           { additionalProperties: false }
         ),
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -183,7 +185,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Create a gallery (admin)",
         body: GalleryCreateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -202,6 +204,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Get one gallery (with photos)",
         params: GalleryIdParam,
         response: { 200: GalleryItemResponse },
@@ -256,7 +259,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Update gallery properties (admin)",
         params: GalleryIdParam,
         body: GalleryUpdateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -294,7 +297,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete a gallery (admin)",
         params: GalleryIdParam,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -319,7 +322,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         params: GalleryIdParam,
         body: GalleryIconBody,
         response: { 200: GalleryIconResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {

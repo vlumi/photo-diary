@@ -6,6 +6,7 @@ import { AccessError, NotFoundError } from "../lib/errors.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import modelFactory from "../models/gallery-photo.js";
+import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -124,6 +125,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "List photos in a gallery",
         params: GalleryIdParam,
         querystring: LangQuery,
@@ -174,6 +176,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Filtered + view-scoped photo fetch",
         params: GalleryIdParam,
         body: QueryBody,
@@ -227,6 +230,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Per-day photo counts (Year heatmap)",
         params: GalleryIdParam,
         body: CountsBody,
@@ -272,6 +276,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Adjacent + boundary photos within the filtered set",
         params: GalleryIdParam,
         body: NeighborsBody,
@@ -330,6 +335,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Filter pill universe (per-category value set)",
         params: GalleryIdParam,
         body: Type.Object({
@@ -385,6 +391,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Look up a photo by its original camera filename",
         params: GalleryOriginalFilenameParams,
         querystring: LangQuery,
@@ -429,6 +436,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Get one photo's metadata in a gallery's context",
         params: GalleryPhotoParams,
         querystring: LangQuery,
@@ -477,7 +485,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Link a photo to a gallery (admin)",
         params: GalleryPhotoParams,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -504,7 +512,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Unlink a photo from a gallery (gallery-editor)",
         params: GalleryPhotoParams,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {

@@ -19,7 +19,7 @@ const getToken = (request: FastifyRequest): string | undefined => {
 // state. Verifying would 401 before the controller runs and strand
 // the client with no way forward. Static/SPA routes are handled by a
 // separate short-circuit in `tokenFilter`.
-const isNoAuthEndpoint = (url: string, method: string): boolean => {
+export const isNoAuthEndpoint = (url: string, method: string): boolean => {
   const path = url.split("?")[0];
   // Login / refresh / logout: recovery paths.
   if (path === "/api/v1/tokens/refresh" && method === "POST") return true;

@@ -6,6 +6,7 @@ import { requireUnscoped } from "../lib/host-scope.js";
 import { KNOWN_META_KEYS_PUBLIC } from "../lib/meta-keys.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/meta.js";
+import { SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -95,7 +96,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Create a meta entry (admin)",
         body: MetaCreateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -140,7 +141,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Update one meta entry by key (admin)",
         params: KnownKeyParam,
         body: MetaUpdateBody,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -169,7 +170,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Delete one meta entry by key (admin)",
         params: KnownKeyParam,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {

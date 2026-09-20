@@ -24,6 +24,13 @@ import {
   PAIRING_TOKEN_TTL_MS,
   SSO_JTI_RETENTION_MS,
 } from "../lib/sso.js";
+import {
+  GUEST_OR_SESSION,
+  OPTIONAL_REFRESH_SESSION,
+  REFRESH_SESSION,
+  SESSION,
+  authCookieHeaders,
+} from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -100,6 +107,11 @@ const SessionResponse = Type.Object({
   isAdmin: Type.Boolean(),
   editorGalleries: Type.Array(Type.String()),
 });
+
+const SessionWithCookies = {
+  ...SessionResponse,
+  headers: authCookieHeaders("set"),
+};
 
 const UserIdParam = Type.Object({ userId: Type.String() });
 
@@ -217,6 +229,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        security: GUEST_OR_SESSION,
         summary: "Verify token + return current session identity",
         response: { 200: SessionResponse },
       },
@@ -252,7 +265,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Log in (sets HttpOnly auth cookies)",
         body: LoginBody,
-        response: { 200: SessionResponse },
+        response: { 200: SessionWithCookies },
       },
     },
     async (request, reply) => {
@@ -307,7 +320,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Rotate refresh token, mint a new access token (cookie-only)",
-        response: { 200: SessionResponse },
+        security: REFRESH_SESSION,
+        response: { 200: SessionWithCookies },
       },
     },
     async (request, reply) => {
@@ -334,7 +348,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         summary: "Log out (revoke this session, clear auth cookies)",
-        security: [{ bearer: [] }],
+        security: OPTIONAL_REFRESH_SESSION,
+        response: {
+          204: {
+            description: "Logged out, whether or not a session existed.",
+            headers: authCookieHeaders("cleared"),
+          },
+        },
       },
     },
     async (request, reply) => {
@@ -357,7 +377,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Revoke all sessions for another user (admin)",
         params: UserIdParam,
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request, reply) => {
@@ -383,7 +403,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Mint a one-shot SSO token for a sibling host",
         body: CrossHostBody,
         response: { 200: CrossHostResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -431,7 +451,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Mint a one-shot device-pairing ticket for this host",
         body: PairingBody,
         response: { 200: PairingResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
@@ -471,6 +491,18 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         tags: TAGS,
         summary: "Consume a cross-host SSO token + redirect",
         querystring: SsoConsumeQuery,
+        response: {
+          302: {
+            description:
+              "Session started. Redirects to `redirect` when it is a " +
+              "same-origin path, else to `/`.",
+            type: "null",
+            headers: {
+              ...authCookieHeaders("set"),
+              Location: { type: "string" },
+            },
+          },
+        },
       },
     },
     async (request, reply) => {

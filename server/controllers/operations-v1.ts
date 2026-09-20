@@ -6,6 +6,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import authorizerFactory from "../lib/authorizer.js";
 import { requireUnscoped } from "../lib/host-scope.js";
 import db from "../db/index.js";
+import { SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 
@@ -71,7 +72,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary:
           "Recent converter / operator-script activity, pending-queue counts, and recent failures",
         response: { 200: OperationsResponse },
-        security: [{ bearer: [] }],
+        security: SESSION,
       },
     },
     async (request) => {
