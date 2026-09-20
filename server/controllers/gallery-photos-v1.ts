@@ -6,7 +6,7 @@ import { AccessError, NotFoundError } from "../lib/errors.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import { applyViewerPrivacy, shouldHideMap } from "../lib/privacy.js";
 import modelFactory from "../models/gallery-photo.js";
-import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
+import { GUEST_OR_SESSION, NO_CONTENT, SESSION } from "../lib/api-docs.js";
 import {
   PhotoRef,
   photosForWire,
@@ -98,7 +98,9 @@ const CountsBody = Type.Object({
   numericRanges: Type.Optional(NumericRangesSchema),
   year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 9999 })),
 });
-const CountsResponse = Type.Record(Type.String(), Type.Number());
+const CountsResponse = Type.Record(Type.String(), Type.Number(), {
+  description: "Photos per day, keyed by date as YYYY-MM-DD. Days without photos are absent.",
+});
 const NeighborsBody = Type.Object({
   photoId: Type.String({ minLength: 1 }),
   filter: Type.Optional(FilterSchema),
@@ -494,6 +496,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Link a photo to a gallery (admin)",
         params: GalleryPhotoParams,
         security: SESSION,
@@ -521,6 +524,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Unlink a photo from a gallery (gallery-editor)",
         params: GalleryPhotoParams,
         security: SESSION,

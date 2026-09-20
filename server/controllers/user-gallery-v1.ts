@@ -4,7 +4,7 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import authorizerFactory from "../lib/authorizer.js";
 import { requireScopeMatches } from "../lib/host-scope.js";
 import modelFactory from "../models/user-gallery.js";
-import { SESSION } from "../lib/api-docs.js";
+import { NO_CONTENT, SESSION } from "../lib/api-docs.js";
 import { UserGrant, grantFromRow } from "../lib/grant-schema.js";
 
 const authorizer = authorizerFactory();
@@ -88,6 +88,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Upsert a user_gallery ACL row (admin)",
         params: RowParams,
         body: UpsertBody,
@@ -119,6 +120,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Delete a user_gallery ACL row (admin)",
         params: RowParams,
         security: SESSION,

@@ -25,11 +25,12 @@ import {
   SSO_JTI_RETENTION_MS,
 } from "../lib/sso.js";
 import {
+  authCookieHeaders,
   GUEST_OR_SESSION,
+  NO_CONTENT,
   OPTIONAL_REFRESH_SESSION,
   REFRESH_SESSION,
   SESSION,
-  authCookieHeaders,
 } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
@@ -375,6 +376,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Revoke all sessions for another user (admin)",
         params: UserIdParam,
         security: SESSION,
