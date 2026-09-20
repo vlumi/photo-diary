@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Photo Diary API",
-    "description": "Self-hosted photo-diary backend. Schema is generated from TypeBox-validated route handlers.",
-    "version": "1.0.9"
+    "description": "Self-hosted photo-diary backend. Schema is generated from TypeBox-validated route handlers.\n\nCompatibility: within a minor version, changes are additive. Response fields are not removed, renamed or retyped, and a field listed as required stays present. Clients must ignore properties they do not know, and must accept values they do not know for string fields whose value set may grow. A value that does not exist is absent: text is never sent as an empty string.",
+    "version": "1.1.0"
   },
   "components": {
     "securitySchemes": {
@@ -31,6 +31,429 @@
         "required": [
           "error"
         ]
+      },
+      "Photo": {
+        "type": "object",
+        "required": [
+          "id",
+          "index",
+          "taken",
+          "dimensions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer",
+            "description": "Position in the gallery's date order, from 0."
+          },
+          "originalFilename": {
+            "type": "string",
+            "description": "Only for a requester who can edit the photo."
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "titleLocalized": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "descriptionLocalized": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "taken": {
+            "type": "object",
+            "required": [
+              "instant"
+            ],
+            "properties": {
+              "instant": {
+                "type": "object",
+                "required": [
+                  "year",
+                  "month",
+                  "day"
+                ],
+                "properties": {
+                  "timestamp": {
+                    "type": "string",
+                    "description": "Local capture time, no zone."
+                  },
+                  "year": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "month": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "day": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "hour": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "minute": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "second": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": true,
+                "description": "Capture time in the photo's own local time. Every part is null for a photo without a capture date."
+              },
+              "author": {
+                "type": "string"
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "country": {
+                    "type": "string",
+                    "description": "ISO 3166-1 alpha-2, lower case."
+                  },
+                  "place": {
+                    "type": "string"
+                  },
+                  "placeLocalized": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "coordinates": {
+                    "type": "object",
+                    "properties": {
+                      "latitude": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "longitude": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "altitude": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": true,
+                    "description": "All null when the photo has no position, or when the gallery hides its map from the requester."
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          },
+          "camera": {
+            "type": "object",
+            "properties": {
+              "make": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "serial": {
+                "type": "string",
+                "description": "Only for a requester who can edit the photo."
+              }
+            },
+            "additionalProperties": true
+          },
+          "lens": {
+            "type": "object",
+            "properties": {
+              "make": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "serial": {
+                "type": "string",
+                "description": "Only for a requester who can edit the photo."
+              }
+            },
+            "additionalProperties": true
+          },
+          "exposure": {
+            "type": "object",
+            "properties": {
+              "focalLength": {
+                "type": "number"
+              },
+              "focalLength35mmEquiv": {
+                "type": "number"
+              },
+              "aperture": {
+                "type": "number"
+              },
+              "exposureTime": {
+                "type": "number",
+                "description": "Seconds."
+              },
+              "iso": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": true
+          },
+          "dimensions": {
+            "type": "object",
+            "required": [
+              "original",
+              "thumbnail"
+            ],
+            "properties": {
+              "original": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "thumbnail": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          },
+          "geocoded": {
+            "type": "object",
+            "properties": {
+              "countryCode": {
+                "type": "string"
+              },
+              "stateCode": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string",
+                "description": "In the requested `lang` when known."
+              },
+              "cityEn": {
+                "type": "string"
+              },
+              "address": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": true,
+                "description": "The geocoder's address parts. Absent when the gallery hides its map from the requester."
+              },
+              "noData": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
+          },
+          "exifAtIntake": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true,
+            "description": "Raw EXIF as first read. Only for a requester who can edit the photo."
+          },
+          "isPrivate": {
+            "type": "boolean"
+          },
+          "renditions": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "Longest-edge sizes with a display rendition at `display/<size>/<id>`. Absent or empty: assume 1500."
+          },
+          "galleries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Galleries holding the photo; cross-gallery routes only."
+          }
+        },
+        "additionalProperties": true
+      },
+      "Gallery": {
+        "type": "object",
+        "required": [
+          "id",
+          "hideMap"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "hideMap": {
+            "type": "boolean",
+            "description": "Whether the map is hidden from this requester; photo coordinates are then null."
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "titleLocalized": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "descriptionLocalized": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "defaultLanguage": {
+            "type": "string",
+            "description": "Language of `title` and `description`."
+          },
+          "icon": {
+            "type": "string"
+          },
+          "iconSource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "epoch": {
+            "type": "string",
+            "description": "YYYY-MM-DD, or empty."
+          },
+          "epochType": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "initialView": {
+            "type": "string"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "\"real\", \"hybrid\" or \"saved_filter\"."
+          },
+          "ordinal": {
+            "type": "number"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "savedFilter": {
+            "type": "object",
+            "required": [
+              "sourceGalleryId",
+              "definition"
+            ],
+            "properties": {
+              "sourceGalleryId": {
+                "type": "string"
+              },
+              "definition": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
       }
     }
   },
@@ -48,7 +471,68 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "cdn": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "defaultGallery": {
+                      "type": "string"
+                    },
+                    "defaultTheme": {
+                      "type": "string"
+                    },
+                    "defaultLanguage": {
+                      "type": "string"
+                    },
+                    "initialGalleryView": {
+                      "type": "string"
+                    },
+                    "firstWeekday": {
+                      "type": "string"
+                    },
+                    "betaFeatures": {
+                      "type": "object",
+                      "description": "Feature name to \"on\", \"off\" or \"user\".",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "renditions": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "description": "Display rendition sizes the converter generates, in pixels."
+                    },
+                    "knownHosts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "hostname"
+                        ],
+                        "properties": {
+                          "hostname": {
+                            "type": "string"
+                          },
+                          "isMain": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "description": "Hostnames this instance answers on; one may be the main host."
+                    }
+                  },
                   "additionalProperties": true
                 }
               }
@@ -103,6 +587,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -163,7 +650,68 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "cdn": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "defaultGallery": {
+                      "type": "string"
+                    },
+                    "defaultTheme": {
+                      "type": "string"
+                    },
+                    "defaultLanguage": {
+                      "type": "string"
+                    },
+                    "initialGalleryView": {
+                      "type": "string"
+                    },
+                    "firstWeekday": {
+                      "type": "string"
+                    },
+                    "betaFeatures": {
+                      "type": "object",
+                      "description": "Feature name to \"on\", \"off\" or \"user\".",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "renditions": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "description": "Display rendition sizes the converter generates, in pixels."
+                    },
+                    "knownHosts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "hostname"
+                        ],
+                        "properties": {
+                          "hostname": {
+                            "type": "string"
+                          },
+                          "isMain": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "description": "Hostnames this instance answers on; one may be the main host."
+                    }
+                  },
                   "additionalProperties": true
                 }
               }
@@ -224,6 +772,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -281,6 +832,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -551,6 +1105,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -903,6 +1460,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -948,6 +1508,32 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "isAdmin"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "isAdmin": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1013,6 +1599,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1056,6 +1645,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1115,22 +1707,14 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response",
+          "204": {
+            "description": "Changed; this device is signed in afresh.",
             "headers": {
               "Set-Cookie": {
                 "schema": {
                   "type": "string"
                 },
                 "description": "Two headers, `pd_access` and `pd_refresh`, both HttpOnly."
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
               }
             }
           },
@@ -1177,20 +1761,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "required": [
-                      "id",
-                      "hideMap"
-                    ],
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "hideMap": {
-                        "type": "boolean"
-                      }
-                    },
-                    "additionalProperties": true
+                    "$ref": "#/components/schemas/Gallery"
                   }
                 }
               }
@@ -1327,6 +1898,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1385,6 +1959,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1410,7 +1987,7 @@
     },
     "/api/v1/galleries/{galleryId}": {
       "get": {
-        "summary": "Get one gallery (with photos)",
+        "summary": "Get one gallery",
         "tags": [
           "galleries"
         ],
@@ -1436,20 +2013,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "id",
-                    "hideMap"
-                  ],
-                  "properties": {
-                    "id": {
-                      "type": "string"
-                    },
-                    "hideMap": {
-                      "type": "boolean"
-                    }
-                  },
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/Gallery"
                 }
               }
             }
@@ -1466,6 +2030,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1587,6 +2161,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1599,6 +2176,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1630,6 +2217,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -1642,6 +2232,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2042,6 +2642,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -2343,6 +2946,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -2394,6 +3000,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -2656,9 +3265,7 @@
                     "photos": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {},
-                        "additionalProperties": true
+                        "$ref": "#/components/schemas/Photo"
                       }
                     },
                     "page": {
@@ -2857,6 +3464,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -3267,9 +3877,7 @@
                     "photos": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {},
-                        "additionalProperties": true
+                        "$ref": "#/components/schemas/Photo"
                       }
                     }
                   }
@@ -3390,9 +3998,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {},
-                    "additionalProperties": true
+                    "$ref": "#/components/schemas/Photo"
                   }
                 }
               }
@@ -3449,9 +4055,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/Photo"
                 }
               }
             }
@@ -3641,6 +4245,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -3684,6 +4291,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -3729,6 +4339,19 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
+          "400": {
+            "description": "The photo has no coordinates to geocode from.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -3790,9 +4413,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {},
-                    "additionalProperties": true
+                    "$ref": "#/components/schemas/Photo"
                   }
                 }
               }
@@ -3810,6 +4431,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3937,9 +4568,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {},
-                    "additionalProperties": true
+                    "$ref": "#/components/schemas/Photo"
                   }
                 }
               }
@@ -3957,6 +4586,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4063,11 +4702,12 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Photos per day, keyed by date as YYYY-MM-DD. Days without photos are absent.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "description": "Photos per day, keyed by date as YYYY-MM-DD. Days without photos are absent.",
                   "additionalProperties": {
                     "type": "number"
                   }
@@ -4087,6 +4727,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4210,24 +4860,16 @@
                   ],
                   "properties": {
                     "previous": {
-                      "type": "object",
-                      "properties": {},
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/Photo"
                     },
                     "next": {
-                      "type": "object",
-                      "properties": {},
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/Photo"
                     },
                     "first": {
-                      "type": "object",
-                      "properties": {},
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/Photo"
                     },
                     "last": {
-                      "type": "object",
-                      "properties": {},
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/Photo"
                     },
                     "position": {
                       "type": "integer",
@@ -4254,6 +4896,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4419,6 +5071,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4467,9 +5129,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/Photo"
                 }
               }
             }
@@ -4486,6 +5146,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4541,9 +5211,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/Photo"
                 }
               }
             }
@@ -4560,6 +5228,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4599,6 +5277,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -4611,6 +5292,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4650,6 +5341,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -4662,6 +5356,16 @@
           },
           "403": {
             "description": "The requester lacks the grant this needs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such gallery or photo, or none the requester may see. The two are deliberately not told apart.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4712,34 +5416,34 @@
                   "items": {
                     "type": "object",
                     "required": [
-                      "user_id",
-                      "gallery_id",
-                      "is_editor",
-                      "hide_map",
-                      "can_see_private"
+                      "userId",
+                      "galleryId",
+                      "isEditor",
+                      "hideMap",
+                      "canSeePrivate"
                     ],
                     "properties": {
-                      "user_id": {
+                      "userId": {
                         "type": "string"
                       },
-                      "gallery_id": {
+                      "galleryId": {
                         "type": "string"
                       },
-                      "is_editor": {
-                        "type": "number"
+                      "isEditor": {
+                        "type": "boolean"
                       },
-                      "hide_map": {
+                      "hideMap": {
                         "anyOf": [
                           {
-                            "type": "number"
+                            "type": "boolean"
                           },
                           {
                             "type": "null"
                           }
                         ]
                       },
-                      "can_see_private": {
-                        "type": "number"
+                      "canSeePrivate": {
+                        "type": "boolean"
                       }
                     }
                   }
@@ -4834,6 +5538,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -4887,6 +5594,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5011,6 +5721,9 @@
           }
         ],
         "responses": {
+          "201": {
+            "description": "Created."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5148,6 +5861,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5193,6 +5909,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5309,6 +6028,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5363,6 +6085,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5425,34 +6150,34 @@
                   "items": {
                     "type": "object",
                     "required": [
-                      "group_id",
-                      "gallery_id",
-                      "is_editor",
-                      "hide_map",
-                      "can_see_private"
+                      "groupId",
+                      "galleryId",
+                      "isEditor",
+                      "hideMap",
+                      "canSeePrivate"
                     ],
                     "properties": {
-                      "group_id": {
+                      "groupId": {
                         "type": "string"
                       },
-                      "gallery_id": {
+                      "galleryId": {
                         "type": "string"
                       },
-                      "is_editor": {
-                        "type": "number"
+                      "isEditor": {
+                        "type": "boolean"
                       },
-                      "hide_map": {
+                      "hideMap": {
                         "anyOf": [
                           {
-                            "type": "number"
+                            "type": "boolean"
                           },
                           {
                             "type": "null"
                           }
                         ]
                       },
-                      "can_see_private": {
-                        "type": "number"
+                      "canSeePrivate": {
+                        "type": "boolean"
                       }
                     }
                   }
@@ -5547,6 +6272,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
@@ -5600,6 +6328,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Done."
+          },
           "401": {
             "description": "The `pd_access` cookie is invalid or expired. Refresh, then retry once.",
             "content": {
