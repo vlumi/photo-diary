@@ -255,7 +255,7 @@ const Gallery = ({
   const selectedGallery =
     galleries && galleries.find((gallery) => gallery.id() === galleryId);
 
-  // Recomputes on language change too — display values are localised.
+  // Recomputes on language change too — display values are localized.
   const uniqueValues = React.useMemo<UniqueValues | undefined>(() => {
     if (!filterValues || !countryData) return undefined;
     return buildUniqueValues(filterValues, lang, t, countryData);

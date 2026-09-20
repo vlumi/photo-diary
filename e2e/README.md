@@ -20,7 +20,7 @@ npm run coverage                  # server-side v8 coverage report (e2e-only); w
 
 1. Builds the SPA into `react-app/build/` (skip with `E2E_SKIP_BUILD=1`).
 2. Seeds a tight fixture (`e2e/.runtime/db.sqlite3`) — one admin user, one regular user, one gallery, one photo. Tables are wiped in place rather than the DB file replaced, so a reused server connection survives.
-3. Starts the server under `NODE_ENV=test` (the only config branch that honours `DB_OPTS`) against the seeded DB.
+3. Starts the server under `NODE_ENV=test` (the only config branch that honors `DB_OPTS`) against the seeded DB.
 4. Runs the six flow tests in `tests/` against the running stack.
 
 ## Layout
@@ -47,4 +47,4 @@ npm run coverage                  # server-side v8 coverage report (e2e-only); w
 
 ## Why a separate workspace
 
-The suite straddles `server` and `react-app`, so it doesn't naturally fit inside either. Putting it at the repo root as its own workspace also keeps Playwright + tsx out of the production dependency surface — the e2e suite is a developer tool, not part of any shipped artefact.
+The suite straddles `server` and `react-app`, so it doesn't naturally fit inside either. Putting it at the repo root as its own workspace also keeps Playwright + tsx out of the production dependency surface — the e2e suite is a developer tool, not part of any shipped artifact.

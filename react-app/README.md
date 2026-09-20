@@ -38,7 +38,7 @@ Per-instance runtime defaults are edited from `/m/instance` (admin UI) or `bin/m
 
 Per-gallery values (`theme`, `initial_view`, `hostname`, `default_language`) on each gallery row in the DB take precedence over the instance-level defaults above.
 
-Available themes are defined in [`src/lib/theme.ts`](src/lib/theme.ts) — currently 18 entries across the Coloured, Neutral, Dark, and Showcase groups. Supported languages: `en`, `fi`, `ja`.
+Available themes are defined in [`src/lib/theme.ts`](src/lib/theme.ts) — currently 18 entries across the Colored, Neutral, Dark, and Showcase groups. Supported languages: `en`, `fi`, `ja`.
 
 ## Internationalization (i18n)
 

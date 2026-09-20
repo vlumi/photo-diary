@@ -501,7 +501,7 @@ const Builder = ({
   };
 
   // Numeric range card: one row of clickable chips per
-  // category, labelled with the category's own formatter
+  // category, labeled with the category's own formatter
   // (`f/2.8`, `1/200`, `ISO 800`). Click semantics:
   //   - no range yet → anchor (min === max === clicked value)
   //   - anchor only → extend to a range bracketing the anchor and

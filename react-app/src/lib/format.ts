@@ -105,9 +105,9 @@ const dayOfWeek = (dow: number): string => {
 //
 // The "no country" sentinel (`xx`) isn't a real ISO code so
 // `getName` returns undefined; with `t` available, surface the
-// localised "No country" label. Callers without a `t` fall back
+// localized "No country" label. Callers without a `t` fall back
 // to the raw code, which keeps things readable but loses the
-// localisation — pass `t` whenever you have one.
+// localization — pass `t` whenever you have one.
 const countryName =
   (lang: string, countryData: CountryData, t?: TFunction) =>
   (countryCode: string): string => {
@@ -296,7 +296,7 @@ const buildCityLabels = (
       continue;
     }
     for (const p of group) {
-      // Render the qualifier as a localised subdivision name (or
+      // Render the qualifier as a localized subdivision name (or
       // country name when state is missing) rather than the raw
       // `JP-13` code that came off the photo row — the latter
       // leaks code-shaped strings into the UI.

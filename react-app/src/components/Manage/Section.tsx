@@ -13,7 +13,7 @@ export const Section = styled.section`
   border: 1px solid var(--inactive-color);
   border-radius: 6px;
   /* Section panels read as cards on the page background — use the
-     theme's tile colour (matches /g/'s calendar tiles) so /m/ looks
+     theme's tile color (matches /g/'s calendar tiles) so /m/ looks
      like a sibling to /g/, not a separate app. */
   background: var(--tile-background);
   /* App.css sets a global text-align: center; admin section bodies
@@ -26,7 +26,7 @@ export const Section = styled.section`
 `;
 
 export const SectionTitle = styled.h3`
-  /* Subtle gradient anchored on the foreground colour via color-mix,
+  /* Subtle gradient anchored on the foreground color via color-mix,
      so the strip reads the same on every theme. A flat tile-bg
      tint was too loud on themes where the panel itself is white. */
   margin: -14px -16px 8px;

@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    // Serialise test files: the API suite shares one in-memory
+    // Serialize test files: the API suite shares one in-memory
     // SQLite and one Fastify instance per worker, and every file
     // reseeds them.
     fileParallelism: false,

@@ -26,7 +26,7 @@ type ThemeName =
 //   header-sub-color     secondary text on header bands
 //   header-background    background of header bands
 //   tile-background      background of the Year view's month tiles (distinct from page bg so tiles read as cards)
-//   photo-frame-mat      matte colour around the photo (intentionally neutral, not theme-tinted)
+//   photo-frame-mat      matte color around the photo (intentionally neutral, not theme-tinted)
 //   photo-frame-border   thin border between matte and photo (neutral)
 //   monochrome-overlay   fill of the full-viewport saturation-blend overlay (MonochromeOverlay.tsx):
 //                        transparent = off, a neutral gray = the whole page renders monochrome
@@ -201,7 +201,7 @@ const THEMES: Record<ThemeName, Theme> = {
     ...FRAME_LIGHT,
     "monochrome-overlay": "transparent",
   },
-  // Warm orange / burnt gold, fills the warm gap in the coloured set
+  // Warm orange / burnt gold, fills the warm gap in the colored set
   // between `red` and the greens.
   amber: {
     "primary-color": "#4a2008",
@@ -226,7 +226,7 @@ const THEMES: Record<ThemeName, Theme> = {
     ...FRAME_LIGHT,
     "monochrome-overlay": "transparent",
   },
-  // Muted, dusty greyish-green — calmer than forest, less neutral than
+  // Muted, dusty grayish-green — calmer than forest, less neutral than
   // silver.
   sage: {
     "primary-color": "#34423a",
@@ -239,7 +239,7 @@ const THEMES: Record<ThemeName, Theme> = {
     ...FRAME_LIGHT,
     "monochrome-overlay": "transparent",
   },
-  // Darker neutral than silver; mid-grey background with a deep-slate
+  // Darker neutral than silver; mid-gray background with a deep-slate
   // header band. Light theme, no photo desaturation.
   slate: {
     "primary-color": "#1e2530",
@@ -253,7 +253,7 @@ const THEMES: Record<ThemeName, Theme> = {
     "monochrome-overlay": "transparent",
   },
   // Navy-tinted dark theme — adds chromatic warmth missing from `dark`
-  // (charcoal-grey) and `amoled` (pure black).
+  // (charcoal-gray) and `amoled` (pure black).
   midnight: {
     "primary-color": "#e0e8f0",
     "primary-background": "#0e1828",
@@ -279,10 +279,10 @@ const THEMES: Record<ThemeName, Theme> = {
   },
 };
 
-export type ThemeCategory = "coloured" | "neutral" | "dark" | "statement";
+export type ThemeCategory = "colored" | "neutral" | "dark" | "statement";
 
 export const THEME_CATEGORIES: ThemeCategory[] = [
-  "coloured",
+  "colored",
   "neutral",
   "dark",
   "statement",
@@ -298,13 +298,13 @@ interface ThemeManifestEntry {
 // displayName within each category. The picker renders one <optgroup>
 // per category in this order.
 const MANIFEST: ThemeManifestEntry[] = [
-  { id: "amber", displayName: "Amber", category: "coloured" },
-  { id: "blue", displayName: "Blue", category: "coloured" },
-  { id: "forest", displayName: "Forest", category: "coloured" },
-  { id: "lavender", displayName: "Lavender", category: "coloured" },
-  { id: "red", displayName: "Red", category: "coloured" },
-  { id: "sage", displayName: "Sage", category: "coloured" },
-  { id: "teal", displayName: "Teal", category: "coloured" },
+  { id: "amber", displayName: "Amber", category: "colored" },
+  { id: "blue", displayName: "Blue", category: "colored" },
+  { id: "forest", displayName: "Forest", category: "colored" },
+  { id: "lavender", displayName: "Lavender", category: "colored" },
+  { id: "red", displayName: "Red", category: "colored" },
+  { id: "sage", displayName: "Sage", category: "colored" },
+  { id: "teal", displayName: "Teal", category: "colored" },
   { id: "grayscale", displayName: "Grayscale", category: "neutral" },
   { id: "contrast", displayName: "High Contrast", category: "neutral" },
   { id: "paper", displayName: "Paper", category: "neutral" },

@@ -282,7 +282,7 @@ const knownHostsAreValid = (rows: KnownHostRow[]): boolean => {
   return mainCount <= 1;
 };
 
-const serialiseKnownHosts = (rows: KnownHostRow[]): string =>
+const serializeKnownHosts = (rows: KnownHostRow[]): string =>
   JSON.stringify(
     rows.map((r) => ({
       hostname: r.hostname.trim(),
@@ -303,7 +303,7 @@ const renditionRowsAreValid = (rows: string[]): boolean => {
   return true;
 };
 
-const serialiseRenditions = (rows: string[]): string =>
+const serializeRenditions = (rows: string[]): string =>
   JSON.stringify(rows.map((r) => Number(r)));
 
 // Stringified meta payloads for diffing — beta features collapse
@@ -372,8 +372,8 @@ const Instance = (): React.ReactElement => {
     )
       return true;
     if (
-      serialiseKnownHosts(form.knownHosts) !==
-      serialiseKnownHosts(original.knownHosts)
+      serializeKnownHosts(form.knownHosts) !==
+      serializeKnownHosts(original.knownHosts)
     )
       return true;
     return false;
@@ -449,21 +449,21 @@ const Instance = (): React.ReactElement => {
       if (renditionsChanged) {
         await metaService.set(
           "renditions",
-          serialiseRenditions(form.renditions)
+          serializeRenditions(form.renditions)
         );
       }
       // knownHosts: empty list clears the meta row (effectively
       // disables the UserMenu switcher); non-empty list overwrites.
       const knownHostsChanged =
-        serialiseKnownHosts(form.knownHosts) !==
-        serialiseKnownHosts(original.knownHosts);
+        serializeKnownHosts(form.knownHosts) !==
+        serializeKnownHosts(original.knownHosts);
       if (knownHostsChanged) {
         if (form.knownHosts.length === 0) {
           await metaService.remove("knownHosts");
         } else {
           await metaService.set(
             "knownHosts",
-            serialiseKnownHosts(form.knownHosts)
+            serializeKnownHosts(form.knownHosts)
           );
         }
       }

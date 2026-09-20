@@ -24,7 +24,7 @@ const getMeta = async (key: string) => {
 };
 // Any write to `instance_cdn` needs to reach the live CSP cache
 // so the img-src allowlist picks up the new origin without a pm2
-// restart. Centralised here so every write path (create / update /
+// restart. Centralized here so every write path (create / update /
 // upsert / delete) does the refresh consistently.
 const notifyCspOnCdnWrite = (key: string, value: string | undefined): void => {
   if (key !== "instance_cdn") return;

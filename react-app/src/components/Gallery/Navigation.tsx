@@ -33,7 +33,7 @@ const Root = styled.nav`
 // Up affordance for one-tap scope climbing on Month and Year. Sits as a
 // shaded pill at the left edge of the row — absolutely positioned so it
 // doesn't widen the leftmost prev/skip group and the prev/next clusters
-// stay symmetrical around the centre. Matches the Photo modal's
+// stay symmetrical around the center. Matches the Photo modal's
 // `FloatingButton` look (semi-transparent dark fill + white icon) so
 // "pop a level out" affordances feel uniform across the app.
 export const UpButton = styled(Link)`

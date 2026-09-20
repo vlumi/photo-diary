@@ -10,7 +10,7 @@ import {
 
 // A native <dialog> opened with showModal() so the picker renders in
 // the top layer. The swatches are the one place the page shows other
-// themes' colours, and on the grayscale theme they must paint above
+// themes' colors, and on the grayscale theme they must paint above
 // the MonochromeOverlay — the top layer is above every in-flow
 // z-index in every engine, so no ladder to climb.
 //

@@ -53,7 +53,7 @@ const PopupLink = styled(Link)`
 // near-identical mid-grays that blend into the OSM tile layer. Override every cluster bucket with the theme's
 // --primary-color + --header-color, plus a 2px --header-color
 // border so the cluster stays distinct against whatever the tile
-// layer paints behind it. The bucket-size colour coding is gone;
+// layer paints behind it. The bucket-size color coding is gone;
 // the inline count + cluster size still signal magnitude.
 const mapClusterStyles = css`
   .marker-cluster {
@@ -267,7 +267,7 @@ const MapContainer = ({
   );
   const resolvedMaxZoom = maxZoom ? maxZoom : 14;
   const singlePhoto = positions.length === 1;
-  // Single-photo: initialise with explicit center + zoom so the
+  // Single-photo: initialize with explicit center + zoom so the
   // map never goes through Leaflet's fitBounds path for a
   // zero-area bound. Multi-photo: use bounds to fit all
   // coordinates.

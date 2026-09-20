@@ -41,7 +41,7 @@ describe("translatePathForHost", () => {
     // Server-side validation rejects strings that don't start with /,
     // so the above leading-`//` case is harmless here — the server's
     // `path.startsWith("/")` check accepts it but the controller's
-    // safePath logic re-normalises. Documented to keep the unit
+    // safePath logic re-normalizes. Documented to keep the unit
     // test honest about what THIS helper does (vs the server).
   });
 });

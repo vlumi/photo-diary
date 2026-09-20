@@ -63,7 +63,7 @@ The live examples up top are the canonical "see it in action" — the calendar g
 - Arrow / swipe nav with prev/next prefetch; clickable breadcrumb (`🏠 › Gallery › 2024 › March › #1234`)
 - SPA UI in `en` / `fi` / `ja` (UserMenu language picker); per-photo metadata (title, description, place) in the same three locales
 - Reverse-geocoded country / state / city from Nominatim, in the visitor's locale
-- 18 themes (light / dark / neutral / coloured); per-gallery override or instance-wide default
+- 18 themes (light / dark / neutral / colored); per-gallery override or instance-wide default
 - Per-gallery `hide_map` privacy cascade — coordinates / map / location card can be suppressed per gallery, per user, or via the `:guest` baseline; same MAX-merge logic as the access grants
 
 ### Filtering

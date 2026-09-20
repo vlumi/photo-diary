@@ -9,8 +9,8 @@ import { SESSION } from "../lib/api-docs.js";
 const authorizer = authorizerFactory();
 const stats = statsFactory();
 
-// Global cross-gallery flavour of the filter pill universe — gallery
-// flavour lives at `/api/v1/gallery-photos/<id>/filter-values`. Same
+// Global cross-gallery flavor of the filter pill universe — gallery
+// flavor lives at `/api/v1/gallery-photos/<id>/filter-values`. Same
 // response shape: `categoryValues` (kebab-case to match the
 // FilterShape wire format) + `categoryCounts` + `byCityLocalized`.
 // Body carries the active filter so counts reflect the current pick

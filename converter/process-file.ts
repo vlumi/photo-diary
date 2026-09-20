@@ -83,7 +83,7 @@ const geocodeAtIntake = async (
     // English pass resolved one. Makes regeocode (single-photo or
     // bulk) double as a fix for `missing-country` and the
     // backfill-candidate side of `countryMismatch`. Imports gain
-    // the same behaviour: when EXIF has no country but Nominatim
+    // the same behavior: when EXIF has no country but Nominatim
     // resolves one, the photo's country slot is now populated.
     // Once the country sentinel lands, a row marked "no
     // country" with the sentinel value won't be empty and the

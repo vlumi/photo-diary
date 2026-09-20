@@ -53,7 +53,7 @@ test.describe("change password", () => {
 
     // Restore the fixture password so the next test / run starts
     // from a known baseline. The current session (rotated above) is
-    // authorised to roll alice back.
+    // authorized to roll alice back.
     await page.getByRole("button", { name: "alice" }).click();
     await page.getByRole("menuitem", { name: "Change password" }).click();
     const modal2 = page.getByRole("dialog");

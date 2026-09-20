@@ -187,7 +187,7 @@ const MetadataPanel = ({
     const code = photo.geocodedCountryCode() ?? photo.countryCode();
     if (!text && !code) return null;
     const flagAt = format.geocodedFlagPosition(lang);
-    // No country sentinel — render the localised label without a
+    // No country sentinel — render the localized label without a
     // flag (the sentinel isn't a real ISO code so FlagIcon would
     // fall back to a broken/empty image).
     const showFlag = code && !isCountrySentinel(code);

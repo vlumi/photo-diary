@@ -47,7 +47,7 @@ const authorizeAdmin = async (userId: string): Promise<void> => {
 // Equivalent to "is global admin" under the new model — there's no
 // "global view" tier. Kept as a separate verb because the existing
 // cross-gallery endpoints (`GET /photos`, `GET /photos/:id`) used it
-// to mean "user has visibility across the catalogue," and that role
+// to mean "user has visibility across the catalog," and that role
 // is now strictly admin.
 const authorizeView = authorizeAdmin;
 

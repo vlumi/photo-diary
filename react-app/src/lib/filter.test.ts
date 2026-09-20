@@ -187,7 +187,7 @@ describe("toServerFilters", () => {
       time: { year: ["2024"] },
     });
   });
-  test("'unknown' key serialises to null", () => {
+  test("'unknown' key serializes to null", () => {
     const filters = { general: { country: { unknown: noop, jp: noop } } };
     expect(filter.toServerFilters(filters)).toEqual({
       general: { country: [null, "jp"] },

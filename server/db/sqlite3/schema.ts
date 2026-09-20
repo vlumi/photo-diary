@@ -48,7 +48,7 @@ export interface GroupGalleryRow {
   hide_map: number | null;
   can_see_private: number;
 }
-// Three flavours of gallery row. `real` rows have photos linked via
+// Three flavors of gallery row. `real` rows have photos linked via
 // `gallery_photo`; `hybrid` rows have sources in `virtual_gallery_source`
 // and union those sources' photos; `saved_filter` rows have a single
 // source + a stored filter in `gallery_saved_filter`, presented to

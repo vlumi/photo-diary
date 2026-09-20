@@ -7,7 +7,7 @@
  *
  * Constructor takes `(message?, context?)`. The optional context is a plain
  * object stashed on the instance for diagnostics — useful for logging or
- * tests, never serialised into the HTTP response.
+ * tests, never serialized into the HTTP response.
  *
  * Usage:
  *   throw new NotFoundError();

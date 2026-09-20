@@ -26,17 +26,17 @@ interface Props {
 // bottom of the viewport on every surface so mounting it on first
 // selection doesn't reflow the grid. Two-row card on both surfaces:
 // Count (left) + Clear (right) anchor the top row; the action
-// buttons wrap into the second row. Desktop centres the card at
+// buttons wrap into the second row. Desktop centers the card at
 // 900px max; phone width spans edge-to-edge.
 const Bar = styled.div`
   position: fixed;
   bottom: 16px;
   /* Desktop: pin the bar's containing box to the Body section
-     only, so the centring math doesn't include the 360px filter
+     only, so the centering math doesn't include the 360px filter
      sidebar on the left. Numbers match Photos.tsx: 8px Root
      padding + 360px Sidebar + 16px gap = 384px. Right matches
      Root's 8px padding. margin: 0 auto then distributes the
-     slack inside that band so the card sits centred over the
+     slack inside that band so the card sits centered over the
      photo grid. */
   left: 384px;
   right: 8px;
@@ -426,24 +426,24 @@ const BulkActions = ({
   // Load the selection's current values whenever the edit modal opens.
   React.useEffect(() => {
     if (pending.kind !== "edit-fields") return;
-    let cancelled = false;
+    let canceled = false;
     setLoadingRows(true);
     setValues({});
     setRows(null);
     photosService
       .getByIds(selectedIds)
       .then((result) => {
-        if (cancelled) return;
+        if (canceled) return;
         setRows(result);
         setLoadingRows(false);
       })
       .catch((e) => {
-        if (cancelled) return;
+        if (canceled) return;
         setLoadingRows(false);
         setError(e instanceof Error ? e.message : String(e));
       });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [pending.kind, selectedIds]);
 

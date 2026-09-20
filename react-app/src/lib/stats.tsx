@@ -125,7 +125,7 @@ export interface StatsCategory {
 }
 // Expanded Summary view (SummaryModal). Four sub-trees:
 // period (when), peaks (how concentrated), variety (how varied),
-// mostUsed (which favourites).
+// mostUsed (which favorites).
 export interface PeakEntry {
   key: string | number;
   value: number;

@@ -92,7 +92,7 @@ const bumpSemver = (
   const stripped = current.replace(/[-+].*$/, "");
   const parts = stripped.split(".").map((n) => Number(n));
   if (parts.length !== 3 || parts.some(Number.isNaN)) {
-    throw new Error(`Unrecognised version "${current}"; expected X.Y.Z`);
+    throw new Error(`Unrecognized version "${current}"; expected X.Y.Z`);
   }
   const [major, minor, patch] = parts;
   if (kind === "major") return `${major + 1}.0.0`;

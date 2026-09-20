@@ -905,7 +905,7 @@ interface PhotoDrawerProps {
   // `routed`: already at /m/photos/<id>; header offers the
   // sibling "View on site" link instead.
   mode?: "inline" | "routed";
-  // Routed-mode prev/next neighbours from the cached photos list.
+  // Routed-mode prev/next neighbors from the cached photos list.
   // Drives the Header arrows + ← / → keyboard nav. Either may be
   // undefined when at the start/end of the result page.
   prevPhotoId?: string;
@@ -1863,7 +1863,7 @@ const RoutedPhotoDrawer = (): React.ReactElement => {
     filteredGalleries.length === 1 ? filteredGalleries[0] : undefined;
   const missingActive = activeMissing(searchParams);
 
-  // Mirror the table's query so prev/next neighbours come from
+  // Mirror the table's query so prev/next neighbors come from
   // exactly the photos list the operator sees behind the modal.
   // Same queryKey → TanStack returns the cached entry; no extra
   // fetch in the typical "click row → modal opens" flow.

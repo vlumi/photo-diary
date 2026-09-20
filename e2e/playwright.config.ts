@@ -62,7 +62,7 @@ export default defineConfig({
     stdout: "pipe",
     stderr: "pipe",
     env: {
-      // `test` is the only config branch that honours DB_OPTS — prod
+      // `test` is the only config branch that honors DB_OPTS — prod
       // hardcodes the DB path to `<cwd>/db.sqlite3`, which would
       // ignore our pre-seeded fixture file.
       NODE_ENV: "test",

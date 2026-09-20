@@ -54,7 +54,7 @@ interface SsoClaims {
   // consume side so a token minted for `photos.example.com` can't be
   // redirected through `dailybw.example.com` and consumed there.
   aud: string;
-  // Replay defence: each token's jti is single-use, dedup-tracked in
+  // Replay defense: each token's jti is single-use, dedup-tracked in
   // the `sso_consumed_token` table.
   jti: string;
   // `iat` / `exp` set by jose.

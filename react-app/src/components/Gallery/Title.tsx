@@ -88,7 +88,7 @@ const HomeLink = styled(Link)`
   display: inline-flex;
   align-items: center;
 `;
-// Theme-aware colour so the dropdown is readable on dark themes
+// Theme-aware color so the dropdown is readable on dark themes
 // (browser default is black) and option popup respects the theme.
 const TitleSelect = styled.select`
   font-size: 1em;
@@ -117,7 +117,7 @@ const TitleOption = styled.option``;
 // Two-pill segmented control for Gallery / Statistics. Both labels are
 // always visible so the alternate view is a one-click affordance rather
 // than a dropdown affordance. Active pill takes the header-background
-// colour; inactive sits in `inactive-color` and brightens to
+// color; inactive sits in `inactive-color` and brightens to
 // `primary-color` on hover. Mirrors the SortToggle in `Stats/TableModal`
 // so segmented controls feel uniform across the app.
 const ContextGroup = styled.div`

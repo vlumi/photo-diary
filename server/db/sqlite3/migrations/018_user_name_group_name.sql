@@ -3,7 +3,7 @@
 -- so user / group / gallery share consistent terms: gallery.title
 -- (curatorial) stays; user.name + group.name are identity labels.
 --
--- Existing rows backfill name = id so display behaviour matches
+-- Existing rows backfill name = id so display behavior matches
 -- pre-migration (the id was doing double duty as a label).
 
 ALTER TABLE user ADD COLUMN name TEXT NOT NULL DEFAULT '';

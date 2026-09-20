@@ -194,7 +194,7 @@ const PairingModal = (): React.ReactElement | null => {
 
   React.useEffect(() => {
     if (!url) return;
-    let cancelled = false;
+    let canceled = false;
     // The encoder is only needed here; a dynamic import keeps it out
     // of the main bundle.
     import("qrcode")
@@ -202,13 +202,13 @@ const PairingModal = (): React.ReactElement | null => {
         toDataURL(url, { margin: 2, width: 240, errorCorrectionLevel: "M" })
       )
       .then((dataUrl) => {
-        if (!cancelled) setQr(dataUrl);
+        if (!canceled) setQr(dataUrl);
       })
       .catch(() => {
-        if (!cancelled) setFailed(true);
+        if (!canceled) setFailed(true);
       });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [url]);
 
