@@ -927,12 +927,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": ({
-                            id: string;
-                            hideMap: boolean;
-                        } & {
-                            [key: string]: unknown;
-                        })[];
+                        "application/json": components["schemas"]["Gallery"][];
                     };
                 };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
@@ -1093,12 +1088,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            id: string;
-                            hideMap: boolean;
-                        } & {
-                            [key: string]: unknown;
-                        };
+                        "application/json": components["schemas"]["Gallery"];
                     };
                 };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
@@ -4175,6 +4165,45 @@ export interface components {
             renditions?: number[];
             /** @description Galleries holding the photo; cross-gallery routes only. */
             galleries?: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        Gallery: {
+            id: string;
+            /** @description Whether the map is hidden from this requester; photo coordinates are then null. */
+            hideMap: boolean;
+            title?: string;
+            description?: string;
+            titleLocalized?: {
+                [key: string]: string;
+            };
+            descriptionLocalized?: {
+                [key: string]: string;
+            };
+            /** @description Language of `title` and `description`. */
+            defaultLanguage?: string;
+            icon?: string;
+            iconSource?: string | null;
+            /** @description YYYY-MM-DD, or empty. */
+            epoch?: string;
+            epochType?: string;
+            theme?: string;
+            initialView?: string;
+            hostname?: string;
+            /** @description "real", "hybrid" or "saved_filter". */
+            type?: string;
+            ordinal?: number;
+            sources?: string[];
+            savedFilter?: {
+                sourceGalleryId?: string;
+                definition?: {
+                    [key: string]: unknown;
+                };
+            } & {
+                [key: string]: unknown;
+            };
+            /** @description Every photo of the gallery; the single-gallery route only. */
+            photos?: components["schemas"]["Photo"][];
         } & {
             [key: string]: unknown;
         };

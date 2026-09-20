@@ -350,6 +350,108 @@
           }
         },
         "additionalProperties": true
+      },
+      "Gallery": {
+        "type": "object",
+        "required": [
+          "id",
+          "hideMap"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "hideMap": {
+            "type": "boolean",
+            "description": "Whether the map is hidden from this requester; photo coordinates are then null."
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "titleLocalized": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "descriptionLocalized": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "defaultLanguage": {
+            "type": "string",
+            "description": "Language of `title` and `description`."
+          },
+          "icon": {
+            "type": "string"
+          },
+          "iconSource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "epoch": {
+            "type": "string",
+            "description": "YYYY-MM-DD, or empty."
+          },
+          "epochType": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "initialView": {
+            "type": "string"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "\"real\", \"hybrid\" or \"saved_filter\"."
+          },
+          "ordinal": {
+            "type": "number"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "savedFilter": {
+            "type": "object",
+            "properties": {
+              "sourceGalleryId": {
+                "type": "string"
+              },
+              "definition": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Photo"
+            },
+            "description": "Every photo of the gallery; the single-gallery route only."
+          }
+        },
+        "additionalProperties": true
       }
     }
   },
@@ -1618,20 +1720,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "required": [
-                      "id",
-                      "hideMap"
-                    ],
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "hideMap": {
-                        "type": "boolean"
-                      }
-                    },
-                    "additionalProperties": true
+                    "$ref": "#/components/schemas/Gallery"
                   }
                 }
               }
@@ -1877,20 +1966,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "id",
-                    "hideMap"
-                  ],
-                  "properties": {
-                    "id": {
-                      "type": "string"
-                    },
-                    "hideMap": {
-                      "type": "boolean"
-                    }
-                  },
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/Gallery"
                 }
               }
             }

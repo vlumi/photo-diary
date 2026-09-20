@@ -40,6 +40,7 @@ import {
   securitySchemes,
 } from "./lib/api-docs.js";
 import { NotFoundError } from "./lib/errors.js";
+import { GallerySchema } from "./lib/gallery-schema.js";
 import { PhotoSchema } from "./lib/photo-schema.js";
 import logger from "./lib/logger.js";
 import { isSpaRoute } from "./lib/spa-routes.js";
@@ -96,6 +97,7 @@ const pkg = JSON.parse(
 
 app.addSchema(ErrorResponseSchema);
 app.addSchema(PhotoSchema);
+app.addSchema(GallerySchema);
 
 // Must register before the controller plugins so it captures every
 // route's schema as it's added.

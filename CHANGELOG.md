@@ -4,6 +4,7 @@
 
 ### Server
 
+- Gallery responses are described the same way, as a shared `Gallery` shape that promises `id` and `hideMap` as before and lists the rest as optional, with `type`, `theme` and the view names as plain strings so that new values don't break an older client.
 - Photo responses are described in the OpenAPI document as one shared `Photo` shape instead of an open object, with nothing changed on the wire: every level stays open to fields a client doesn't know, only `id`, `index`, the capture date and the dimensions are promised, and a photo without a capture date still sends its date parts as `null`.
 - `GET /api/v1/meta` describes its known keys and their value shapes in the OpenAPI document while staying open to keys a client doesn't know; structured rows (`betaFeatures`, `renditions`, `knownHosts`) of the wrong shape are now dropped on read like unparseable ones, and the document states the API's additive-change rule for clients that don't ship with the server.
 

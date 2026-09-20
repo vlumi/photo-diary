@@ -17,6 +17,8 @@ import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
 import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
+import { GalleryRef, type GalleryWire } from "../lib/gallery-schema.js";
+import { photosForWire } from "../lib/photo-schema.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -37,17 +39,8 @@ const GalleryIconBody = Type.Object({
   }),
 });
 const GalleryIconResponse = Type.Object({ icon: Type.String() });
-// Schema pins the two fields we care about; extras (title, theme,
-// hostname, photos, …) pass through to the client.
-const GalleryListItem = Type.Object(
-  { id: Type.String(), hideMap: Type.Boolean() },
-  { additionalProperties: true }
-);
-const GalleryListResponse = Type.Array(GalleryListItem);
-const GalleryItemResponse = Type.Object(
-  { id: Type.String(), hideMap: Type.Boolean() },
-  { additionalProperties: true }
-);
+const GalleryListResponse = Type.Array(GalleryRef);
+const GalleryItemResponse = GalleryRef;
 // Per-language overlay map. Keyed by lang code, values are strings;
 // empty string clears the overlay row column.
 const LocalizedMap = Type.Record(Type.String(), Type.String());
@@ -100,6 +93,11 @@ const annotateWithHideMap = async (
   );
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
+  // The single-gallery route carries photos; see `photosForWire`.
+  fastify.addHook("preSerialization", async (_request, _reply, payload) =>
+    photosForWire(payload)
+  );
+
   /**
    * Get all galleries (admin sees all; guests/users see what they can view).
    */
@@ -238,7 +236,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             gallery.photos as Parameters<typeof maskCoordinates>[0]
           );
         }
-        return { ...gallery, hideMap };
+        return { ...gallery, hideMap } as GalleryWire;
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
           return { id: request.params.galleryId, hideMap: false };
