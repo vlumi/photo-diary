@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.9] - 2026-09-20
+
 ### Server
 
 - The OpenAPI document describes auth as it works: the `pd_access` and `pd_refresh` cookies instead of a bearer header the server stopped reading before 1.0, guest-readable routes marked as such, 401 and 403 on every route that can answer them (as a shared `ErrorResponse`), the `Set-Cookie` headers on login, refresh, SSO and password change, logout as the bodiless 204 it is, and a test that fails when the committed `server/openapi.json` drifts from the routes.
@@ -863,6 +865,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.0.9]: https://github.com/vlumi/photo-diary/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/vlumi/photo-diary/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/vlumi/photo-diary/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/vlumi/photo-diary/compare/v1.0.5...v1.0.6
