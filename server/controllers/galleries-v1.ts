@@ -13,12 +13,11 @@ import {
   requireUnscoped,
 } from "../lib/host-scope.js";
 import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
-import { applyViewerPrivacy, shouldHideMap } from "../lib/privacy.js";
+import { shouldHideMap } from "../lib/privacy.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
 import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
 import { GalleryRef, type GalleryWire } from "../lib/gallery-schema.js";
-import { photosForWire } from "../lib/photo-schema.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -93,11 +92,6 @@ const annotateWithHideMap = async (
   );
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
-  // The single-gallery route carries photos; see `photosForWire`.
-  fastify.addHook("preSerialization", async (_request, _reply, payload) =>
-    photosForWire(payload)
-  );
-
   /**
    * Get all galleries (admin sees all; guests/users see what they can view).
    */
@@ -203,7 +197,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       schema: {
         tags: TAGS,
         security: GUEST_OR_SESSION,
-        summary: "Get one gallery (with photos)",
+        summary: "Get one gallery",
         params: GalleryIdParam,
         response: { 200: GalleryItemResponse },
       },
@@ -219,23 +213,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
-        const includePrivate = await authorizer.resolveCanSeePrivate(
-          request.user.id,
-          request.params.galleryId
-        );
-        const gallery = (await model.getGallery(
-          request.params.galleryId,
-          includePrivate
-        )) as Record<string, unknown> & { id: string; photos?: unknown[] };
+        const gallery = await model.getGallery(request.params.galleryId);
         const hideMap = await shouldHideMap(
           request.user.id,
           request.params.galleryId
         );
-        const isEditor = await authorizer.isGalleryEditor(
-          request.user.id,
-          request.params.galleryId
-        );
-        await applyViewerPrivacy({ hideMap, isEditor }, gallery.photos ?? []);
         return { ...gallery, hideMap } as GalleryWire;
       } catch (error) {
         if (error instanceof AccessError) {

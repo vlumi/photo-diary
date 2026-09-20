@@ -48,7 +48,6 @@ const fetchEverywhere = async (cookie?: string): Promise<Wire[]> => {
   const byName = await as(
     api.get("/api/v1/gallery-photos/gallery1/by-original-filename/DSC_0001.NEF")
   ).expect(200);
-  const gallery = await as(api.get("/api/v1/galleries/gallery1")).expect(200);
   const neighbors = await as(api.post("/api/v1/gallery-photos/gallery1/neighbors"))
     .send({ photoId: PHOTO })
     .expect(200);
@@ -61,7 +60,6 @@ const fetchEverywhere = async (cookie?: string): Promise<Wire[]> => {
     pick(query.body),
     one.body,
     byName.body,
-    pick(gallery.body.photos),
     ...slots,
   ];
 };

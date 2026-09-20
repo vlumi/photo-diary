@@ -50,30 +50,22 @@ const expectGallery1 = (result: { body: Record<string, any> }) => {
   expect(result.body.id).toBe("gallery1");
   expect(result.body.title).toBe("gallery 1");
   expect(result.body.description).toBe("This is the first gallery");
-  const photos = result.body.photos;
-  expect(photos).toBeDefined();
-  expect(Object.keys(photos).length).toBe(2);
-  expect(photos[0].id).toBe("gallery1photo.jpg");
-  expect(photos[1].id).toBe("gallery12photo.jpg");
+  // The photos are the photo routes' business.
+  expect(result.body).not.toHaveProperty("photos");
 };
 const expectGallery2 = (result: { body: Record<string, any> }) => {
   expect(result.body.id).toBe("gallery2");
   expect(result.body.title).toBe("gallery 2");
   expect(result.body.description).toBe("This is the second gallery");
-  const photos = result.body.photos;
-  expect(photos).toBeDefined();
-  expect(Object.keys(photos).length).toBe(2);
-  expect(photos[0].id).toBe("gallery12photo.jpg");
-  expect(photos[1].id).toBe("gallery2photo.jpg");
+  // The photos are the photo routes' business.
+  expect(result.body).not.toHaveProperty("photos");
 };
 const expectGallery3 = (result: { body: Record<string, any> }) => {
   expect(result.body.id).toBe("gallery3");
   expect(result.body.title).toBe("gallery 3");
   expect(result.body.description).toBe("This is the third gallery");
-  const photos = result.body.photos;
-  expect(photos).toBeDefined();
-  expect(Object.keys(photos).length).toBe(1);
-  expect(photos[0].id).toBe("gallery3photo.jpg");
+  // The photos are the photo routes' business.
+  expect(result.body).not.toHaveProperty("photos");
 };
 describe("As guest", () => {
   test("List galleries", async () => {
@@ -461,28 +453,15 @@ describe("hide_map cascade applied to GET /galleries/:id", () => {
     spy.mockRestore();
   });
 
-  test("strips coordinates from the embedded photos array", async () => {
+  test("reports the map as hidden for this requester", async () => {
     const result = await getGallery(token, "gallery1");
     expect(result.body.hideMap).toBe(true);
-    // gallery1photo.jpg has explicit fixture coords; verify they're nulled.
-    const photo = result.body.photos.find(
-      (p: any) => p.id === "gallery1photo.jpg"
-    );
-    expect(photo).toBeDefined();
-    expect(photo.taken.location.coordinates.latitude).toBeNull();
-    expect(photo.taken.location.coordinates.longitude).toBeNull();
-    expect(photo.taken.location.coordinates.altitude).toBeNull();
   });
 
-  test("leaves coords untouched when hide_map is undefined", async () => {
+  test("reports it as shown when nothing in the cascade hides it", async () => {
     spy.mockResolvedValue(undefined);
     const result = await getGallery(token, "gallery1");
     expect(result.body.hideMap).toBe(false);
-    const photo = result.body.photos.find(
-      (p: any) => p.id === "gallery1photo.jpg"
-    );
-    expect(photo.taken.location.coordinates.latitude).toBe(35.6595);
-    expect(photo.taken.location.coordinates.longitude).toBe(139.7005);
   });
 });
 

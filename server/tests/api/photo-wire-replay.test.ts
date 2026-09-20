@@ -60,7 +60,7 @@ describe("photo and gallery routes send what the model produced", () => {
     );
   });
 
-  test("gallery list and single gallery, with their photos", async () => {
+  test("gallery list and single gallery", async () => {
     const token = await loginUser(api, "admin");
     const list = await api
       .get("/api/v1/galleries")
@@ -77,10 +77,9 @@ describe("photo and gallery routes send what the model produced", () => {
       .get("/api/v1/galleries/gallery1")
       .set("Cookie", `pd_access=${token}`)
       .expect(200);
-    const model = asJsonStringifyWould(await galleryModel().getGallery("gallery1", true)) as {
-      photos: unknown[];
-    };
-    expect(model.photos.length).toBeGreaterThan(0);
-    expect(single.body).toEqual({ ...model, hideMap: false });
+    expect(single.body).toEqual({
+      ...(asJsonStringifyWould(await galleryModel().getGallery("gallery1")) as object),
+      hideMap: false,
+    });
   });
 });

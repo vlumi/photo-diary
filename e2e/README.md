@@ -21,7 +21,7 @@ npm run coverage                  # server-side v8 coverage report (e2e-only); w
 1. Builds the SPA into `react-app/build/` (skip with `E2E_SKIP_BUILD=1`).
 2. Seeds a tight fixture (`e2e/.runtime/db.sqlite3`) — one admin user, one regular user, one gallery, one photo. Tables are wiped in place rather than the DB file replaced, so a reused server connection survives.
 3. Starts the server under `NODE_ENV=test` (the only config branch that honors `DB_OPTS`) against the seeded DB.
-4. Runs the six flow tests in `tests/` against the running stack.
+4. Runs the flow tests in `tests/` against the running stack.
 
 ## Layout
 
