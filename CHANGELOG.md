@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-This release cleans up the API, with changes that are not backward compatible; the site's own front end and the iOS companion are updated in step, and nothing else is known to call it.
+This release cleans up the API, with changes that are not backward compatible; the site's own front end and the iOS companion are updated in step, and nothing else is known to call it. It also closes two disclosures found along the way: an admin route that returned a user's password hash and token-signing secret, and photo responses that carried raw EXIF, original filenames and equipment serial numbers to every viewer. Upgrading needs no migration and no configuration change.
 
 ### Frontend
 
