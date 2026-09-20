@@ -3,24 +3,25 @@ import format from "../lib/format";
 import collection from "../lib/collection";
 import config from "../lib/config";
 
+import type { ApiGallery } from "../lib/api-types";
 import type { Photo } from "./PhotoModel";
 
-interface GalleryData {
+// The server's gallery, from its own schema, as the model holds it:
+// `epoch` parsed to a date, `hostname` compiled to the pattern it is,
+// and the photos the caller attaches (the server sends none with it).
+// Only `id` is needed up front: an empty model stands in for a gallery
+// the visitor can't see.
+type GalleryData = Partial<Omit<KnownGallery, "epoch" | "hostname">> & {
   id: string;
-  title?: string;
-  description?: string;
-  titleLocalized?: Record<string, string>;
-  descriptionLocalized?: Record<string, string>;
-  defaultLanguage?: string;
-  icon?: string;
   epoch?: Date | string;
-  epochType?: string;
-  theme?: string;
   hostname?: RegExp | string;
-  initialView?: string;
-  hideMap?: boolean;
   photos?: Photo[];
-}
+};
+
+// `ApiGallery` minus its index signature, so `Omit` keeps the fields.
+type KnownGallery = {
+  [Key in keyof ApiGallery as string extends Key ? never : Key]: ApiGallery[Key];
+};
 
 type Year = number;
 type Month = number;

@@ -56,16 +56,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const rows = (await model.getUserGalleryRows({
+      const rows = await model.getUserGalleryRows({
         userId: request.query.userId,
         galleryId: request.query.galleryId,
-      })) as Array<{
-        user_id: string;
-        gallery_id: string;
-        is_editor: number;
-        hide_map: number | null;
-        can_see_private: number;
-      }>;
+      });
       // On a scoped host, narrow to the scoped galleries. Rows for any
       // other gallery are simply not visible from this hostname.
       const scope = request.galleryScope ?? [];

@@ -1,18 +1,22 @@
 import { describe, expect, test } from "vitest";
 
+import type { Photo } from "../../db/sqlite3/schema.js";
 import { COUNTRY_SENTINEL, countryMismatch } from "../../lib/photo-filter.js";
 
+// Only the two fields the predicate reads; the rest of a photo is
+// irrelevant here.
 const mkPhoto = (opts: {
   operatorCountry?: string;
   geocodedCountry?: string;
-}) => ({
-  taken: opts.operatorCountry
-    ? { location: { country: opts.operatorCountry } }
-    : undefined,
-  geocoded: opts.geocodedCountry
-    ? { countryCode: opts.geocodedCountry }
-    : undefined,
-});
+}): Photo =>
+  ({
+    taken: opts.operatorCountry
+      ? { location: { country: opts.operatorCountry } }
+      : undefined,
+    geocoded: opts.geocodedCountry
+      ? { countryCode: opts.geocodedCountry }
+      : undefined,
+  }) as unknown as Photo;
 
 describe("countryMismatch", () => {
   test("matches when operator and geocoded differ", () => {
