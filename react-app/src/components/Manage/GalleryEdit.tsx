@@ -18,6 +18,7 @@ import GalleryModel from "../../models/GalleryModel";
 import config from "../../lib/config";
 import filter, { type Filters as FiltersT, type ServerFilters } from "../../lib/filter";
 import galleriesService from "../../services/galleries";
+import galleryPhotosService from "../../services/gallery-photos";
 import savedFiltersService, {
   type SavedFilterDefinition,
 } from "../../services/saved-filters";
@@ -249,7 +250,6 @@ interface GalleryData {
   hostname?: string;
   defaultLanguage?: string;
   type?: "real" | "hybrid" | "saved_filter";
-  photos?: Array<{ id: string }>;
   // Decorated by the server for `saved_filter` galleries: which
   // gallery owns the saved filter and its stored `{filter, dateRange}`
   // envelope. Used by `<VirtualGalleryFilterSection>` to surface the
@@ -386,6 +386,18 @@ const GalleryEdit = (): React.ReactElement => {
     { photoId: string } | null
   >(openIconParam ? { photoId: openIconParam } : null);
   const [editing, setEditing] = React.useState(!!openIconParam);
+  // The icon picker offers the gallery's photos. They come from the
+  // photo route, and only once the form is open: a large gallery's
+  // list runs to megabytes.
+  const iconPhotosQuery = useQuery({
+    queryKey: ["gallery-photos", galleryId, "icon-picker"],
+    queryFn: () => galleryPhotosService.get(galleryId),
+    enabled: editing && !!galleryId && (isAdmin || isEditor),
+  });
+  const iconPhotos = (iconPhotosQuery.data ?? []) as {
+    id: string;
+    renditions?: number[];
+  }[];
   React.useEffect(() => {
     if (openIconParam) {
       setSearchParams(
@@ -537,10 +549,7 @@ const GalleryEdit = (): React.ReactElement => {
   const todayY = today.getFullYear();
   const todayM = today.getMonth() + 1;
   const todayD = today.getDate();
-  // Strip photos before constructing the model — the admin endpoint
-  // returns raw photo POJOs, but GalleryModel expects already-built
-  // PhotoModel instances and chokes on `.year()` etc. We only need
-  // the model for its epoch math, so the empty array suffices.
+  // Only for its epoch math; the gallery route carries no photos.
   const galleryModel = GalleryModel({ ...gallery, photos: [] });
   const renderEpochNow = (): React.ReactNode => {
     if (!galleryModel || !gallery.epoch || !gallery.epochType) return null;
@@ -634,7 +643,7 @@ const GalleryEdit = (): React.ReactElement => {
             setField={setField}
             setLocalized={setLocalized}
             galleryId={galleryId}
-            photos={(data as GalleryData | undefined)?.photos ?? []}
+            photos={iconPhotos}
             iconSource={
               bootstrapIconSource ??
               parseIconSource(

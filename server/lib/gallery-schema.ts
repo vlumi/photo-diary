@@ -1,7 +1,5 @@
 import { Type, type Static } from "typebox";
 
-import { PhotoRef } from "./photo-schema.js";
-
 // The gallery as it goes over the wire. Mirrors `Gallery` in
 // db/sqlite3/schema.ts plus `hideMap`, which the routes resolve for
 // the requester. Same rules as the photo schema: exact nullability,
@@ -47,11 +45,6 @@ export const GallerySchema = Type.Object(
         },
         open
       )
-    ),
-    photos: Type.Optional(
-      Type.Array(PhotoRef, {
-        description: "Every photo of the gallery; the single-gallery route only.",
-      })
     ),
   },
   { ...open, $id: "Gallery" }

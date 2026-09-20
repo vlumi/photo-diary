@@ -1070,7 +1070,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get one gallery (with photos) */
+        /** Get one gallery */
         get: {
             parameters: {
                 query?: never;
@@ -4315,8 +4315,6 @@ export interface components {
             } & {
                 [key: string]: unknown;
             };
-            /** @description Every photo of the gallery; the single-gallery route only. */
-            photos?: components["schemas"]["Photo"][];
         } & {
             [key: string]: unknown;
         };

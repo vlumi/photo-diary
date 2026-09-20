@@ -10,6 +10,7 @@ This release cleans up the API, with changes that are not backward compatible; t
 
 ### Server
 
+- **Breaking:** `GET /api/v1/galleries/{galleryId}` returns the gallery alone; it used to embed every photo of the gallery (4 MB for a few thousand photos), duplicating the photo routes, which is where the gallery edit form's icon picker now gets them, and only once the form is open.
 - **Breaking:** the grant lists (`GET /api/v1/user-gallery`, `GET /api/v1/group-gallery`) answer in the shape the upsert routes accept: `userId` / `groupId`, `galleryId`, `isEditor`, `hideMap` (true, false, or null to inherit) and `canSeePrivate`, as booleans, in place of the raw `user_id`, `is_editor = 0 | 1` database columns.
 - **Breaking:** the routes under a gallery answer 404 when the requester can't see it, instead of a success with an empty list, map or placeholder; "no access" and "no such gallery" still look the same, so ids can't be enumerated, but a client can now tell losing access from an empty gallery.
 - Photos sent to viewers no longer carry the raw intake EXIF, the camera's original filename or the body and lens serial numbers, which now go only to someone who can edit the photo; and where a gallery hides its map from the requester, the geocoder's address parts are removed along with the coordinates.
