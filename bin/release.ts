@@ -18,7 +18,9 @@
  * What it does:
  *   1. git checkout main + pull
  *   2. Bump root/server/react-app/converter package.json versions
- *   3. Regenerate server/openapi.json + react-app/src/lib/api-schema.ts
+ *   3. Regenerate server/openapi.json + react-app/src/lib/api-schema.ts,
+ *      and pin the spec as server/openapi.released.json (the baseline the
+ *      next cycle's changes are checked against for compatibility)
  *   4. Promote CHANGELOG's [Unreleased] → [<new>] - <today> + add empty
  *      [Unreleased] + append diff-link at the footer
  *   5. Rewrite SETUP.md's install/upgrade/gc examples to the new version
@@ -33,7 +35,12 @@
  */
 
 import { execSync, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import path from "node:path";
@@ -232,6 +239,12 @@ const main = async (): Promise<void> => {
 
   console.log("\n→ Regenerating server/openapi.json");
   sh("npm run docs:dump", { cwd: path.join(ROOT, "server") });
+
+  console.log("\n→ Pinning server/openapi.released.json");
+  copyFileSync(
+    path.join(ROOT, "server", "openapi.json"),
+    path.join(ROOT, "server", "openapi.released.json")
+  );
 
   console.log("\n→ Regenerating react-app/src/lib/api-schema.ts");
   sh("npm run api:codegen", { cwd: path.join(ROOT, "react-app") });
