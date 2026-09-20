@@ -104,6 +104,9 @@ export const parseExposureTime = (raw: string): number | null => {
     if (Number.isFinite(num) && Number.isFinite(den) && den !== 0) {
       return num / den;
     }
+    // A fraction that can't be one. Falling through would read its
+    // numerator alone: "1/0" as a one-second exposure.
+    return null;
   }
   const direct = parseFloat(trimmed);
   return Number.isFinite(direct) ? direct : null;
