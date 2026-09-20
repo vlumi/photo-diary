@@ -51,16 +51,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async (request) => {
       await authorizer.authorizeAdmin(request.user.id);
-      const rows = (await model.getGroupGalleryRows({
+      const rows = await model.getGroupGalleryRows({
         groupId: request.query.groupId,
         galleryId: request.query.galleryId,
-      })) as Array<{
-        group_id: string;
-        gallery_id: string;
-        is_editor: number;
-        hide_map: number | null;
-        can_see_private: number;
-      }>;
+      });
       const scope = request.galleryScope ?? [];
       const visible =
         scope.length > 0

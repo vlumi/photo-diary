@@ -69,7 +69,7 @@ const tokenFilter: onRequestHookHandler = async (request) => {
   try {
     const user = await tokensModel.verifyToken(token);
     logger.debug("Verified token", user);
-    request.user = user as unknown as FastifyRequest["user"];
+    request.user = user;
     request.token = token;
   } catch (error) {
     // Throw 401 on any verification failure so the SPA's client-side

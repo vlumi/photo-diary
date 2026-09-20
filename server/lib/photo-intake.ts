@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import db from "../db/index.js";
+import type { Photo, PhotoInput } from "../db/sqlite3/schema.js";
 
 // Find the existing row to update for a photo whose `id` in the input
 // JSON may be the stable id, the legacy filename-id, or just the
@@ -19,9 +19,9 @@ import db from "../db/index.js";
 export type Lookup =
   | { kind: "update"; existingId: string }
   | { kind: "create" }
-  | { kind: "ambiguous"; candidates: any[] };
+  | { kind: "ambiguous"; candidates: Photo[] };
 
-export const lookup = async (photo: any): Promise<Lookup> => {
+export const lookup = async (photo: PhotoInput): Promise<Lookup> => {
   if (!photo.id) return { kind: "create" };
 
   try {
@@ -31,7 +31,7 @@ export const lookup = async (photo: any): Promise<Lookup> => {
     /* fall through */
   }
 
-  const candidates = (await db.loadPhotosByOriginalFilename(photo.id)) as any[];
+  const candidates = await db.loadPhotosByOriginalFilename(photo.id);
   if (candidates.length === 0) return { kind: "create" };
 
   const wantTaken = photo.taken?.instant?.timestamp;
@@ -40,7 +40,7 @@ export const lookup = async (photo: any): Promise<Lookup> => {
       (c) => c.taken?.instant?.timestamp === wantTaken
     );
     if (matches.length === 1) {
-      return { kind: "update", existingId: matches[0].id };
+      return { kind: "update", existingId: matches[0]!.id };
     }
   }
   return { kind: "ambiguous", candidates };

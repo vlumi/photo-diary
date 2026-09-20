@@ -138,10 +138,7 @@ const authorizePhotoEditor = async (
   photoId: string
 ): Promise<void> => {
   if (await isGlobalAdmin(userId)) return;
-  const links = (await db.loadAllGalleryPhotoLinks()) as Array<{
-    photoId: string;
-    galleryId: string;
-  }>;
+  const links = await db.loadAllGalleryPhotoLinks();
   const galleryIds = links
     .filter((l) => l.photoId === photoId)
     .map((l) => l.galleryId);
@@ -182,10 +179,10 @@ const resolveCanSeePrivate = async (
 // every request — the client list is purely a rendering hint.
 const loadEditorGalleries = async (userId: string): Promise<string[]> => {
   if (await isGlobalAdmin(userId)) {
-    const all = (await db.loadGalleries()) as Array<{ id: string }>;
+    const all = await db.loadGalleries();
     return all.map((g) => g.id);
   }
-  const galleries = (await db.loadGalleries()) as Array<{ id: string }>;
+  const galleries = await db.loadGalleries();
   const out: string[] = [];
   for (const g of galleries) {
     const { isEditor } = await resolve(userId, g.id);
