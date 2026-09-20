@@ -5,7 +5,7 @@ import authorizerFactory from "../lib/authorizer.js";
 import { requireUnscoped } from "../lib/host-scope.js";
 import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import modelFactory from "../models/group.js";
-import { SESSION } from "../lib/api-docs.js";
+import { CREATED, NO_CONTENT, SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -73,6 +73,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: CREATED,
         summary: "Create a group (admin)",
         body: GroupCreateBody,
         security: SESSION,
@@ -108,6 +109,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Update a group (admin)",
         params: GroupIdParam,
         body: GroupUpdateBody,
@@ -127,6 +129,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Delete a group (admin). FK cascade clears memberships and grants.",
         params: GroupIdParam,
         security: SESSION,
@@ -162,6 +165,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Add a user to a group (admin)",
         params: MemberParams,
         security: SESSION,
@@ -180,6 +184,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Remove a user from a group (admin)",
         params: MemberParams,
         security: SESSION,

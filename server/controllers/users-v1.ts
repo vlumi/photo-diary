@@ -9,7 +9,7 @@ import { requireUnscoped } from "../lib/host-scope.js";
 import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import modelFactory from "../models/user.js";
 import tokenFactory from "../models/token.js";
-import { SESSION, authCookieHeaders } from "../lib/api-docs.js";
+import { authCookieHeaders, CREATED, NO_CONTENT, SESSION } from "../lib/api-docs.js";
 
 const authorizer = authorizerFactory();
 const model = modelFactory();
@@ -55,9 +55,7 @@ const ChangePasswordBody = Type.Object({
 // Caller's existing session is killed (the user's `secret` rotates,
 // invalidating its access JWT, and existing refresh tokens get
 // cleared along with it). The response sets fresh auth cookies on
-// the same device so it stays signed in; nothing token-bearing
-// travels in the body.
-const ChangePasswordResponse = Type.Object({});
+// the same device so it stays signed in; there is no body.
 const TAGS = ["users"];
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -90,6 +88,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: CREATED,
         summary: "Create a user (admin)",
         body: UserCreateBody,
         security: SESSION,
@@ -135,6 +134,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Update a user by id (admin)",
         params: UserIdParam,
         body: UserUpdateBody,
@@ -157,6 +157,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Delete a user by id (admin)",
         params: UserIdParam,
         security: SESSION,
@@ -183,8 +184,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         summary: "Change the caller's own password",
         body: ChangePasswordBody,
         response: {
-          200: {
-            ...ChangePasswordResponse,
+          204: {
+            description: "Changed; this device is signed in afresh.",
             headers: authCookieHeaders("set"),
           },
         },
@@ -218,7 +219,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         !!request.user.isAdmin
       );
       setAuthCookies(request, reply, pair.accessToken, pair.refreshToken);
-      return {};
+      reply.status(204).send();
     }
   );
 };

@@ -16,7 +16,7 @@ import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
 import { shouldHideMap } from "../lib/privacy.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
-import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
+import { CREATED, GUEST_OR_SESSION, NO_CONTENT, SESSION } from "../lib/api-docs.js";
 import { GalleryRef, type GalleryWire } from "../lib/gallery-schema.js";
 import { withoutEmptyText } from "../lib/wire-text.js";
 
@@ -152,6 +152,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Reorder galleries (admin)",
         body: Type.Object(
           { ids: Type.Array(Type.String({ minLength: 1 })) },
@@ -176,6 +177,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: CREATED,
         summary: "Create a gallery (admin)",
         body: GalleryCreateBody,
         security: SESSION,
@@ -237,6 +239,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Update gallery properties (admin)",
         params: GalleryIdParam,
         body: GalleryUpdateBody,
@@ -276,6 +279,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     {
       schema: {
         tags: TAGS,
+        response: NO_CONTENT,
         summary: "Delete a gallery (admin)",
         params: GalleryIdParam,
         security: SESSION,

@@ -76,6 +76,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -175,6 +182,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -208,6 +222,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -426,6 +447,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -698,6 +726,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -796,6 +831,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -829,6 +871,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -879,16 +928,14 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
-                200: {
+                /** @description Changed; this device is signed in afresh. */
+                204: {
                     headers: {
                         /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
                         "Set-Cookie"?: string;
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": Record<string, never>;
-                    };
+                    content?: never;
                 };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
@@ -999,6 +1046,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -1050,6 +1104,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -1169,6 +1230,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -1211,6 +1279,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -1440,6 +1515,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -1590,6 +1672,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -1624,6 +1713,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -1768,6 +1864,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -2166,6 +2269,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -2199,6 +2309,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -2245,6 +2362,22 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The photo has no coordinates to geocode from. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -2469,7 +2602,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Default Response */
+                /** @description Photos per day, keyed by date as YYYY-MM-DD. Days without photos are absent. */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2848,6 +2981,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -2891,6 +3031,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -3017,6 +3164,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -3051,6 +3205,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -3145,6 +3306,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -3242,6 +3410,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -3275,6 +3450,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -3377,6 +3559,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -3411,6 +3600,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -3528,6 +3724,13 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {
@@ -3562,6 +3765,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Done. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
                 401: {
                     headers: {

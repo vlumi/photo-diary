@@ -1,4 +1,5 @@
 import type { FastifySchema } from "fastify";
+import { Type } from "typebox";
 
 import { isNoAuthEndpoint } from "./middleware/token-filter.js";
 
@@ -40,6 +41,14 @@ export const REFRESH_SESSION: Security = [{ refreshCookie: [] }];
 /** Works without cookies; revokes the session when the refresh cookie is there. */
 export const OPTIONAL_REFRESH_SESSION: Security = [{}, { refreshCookie: [] }];
 
+// Success answers without a body. No `type`, so the typed `reply`
+// still accepts a bare `.send()`; `dropBodiesOfEmptyResponses` removes
+// the JSON body the generator would otherwise report for them.
+/** The row now exists; nothing to say beyond that. */
+export const CREATED = { 201: { description: "Created." } } as const;
+/** Done, nothing to return: updates, deletes, reorderings. */
+export const NO_CONTENT = { 204: { description: "Done." } } as const;
+
 /**
  * `headers` for a response that sets (or clears) both auth cookies.
  * OpenAPI cannot list two headers of one name, so one entry stands for
@@ -67,6 +76,10 @@ const errorBody = (description: string) => ({
   description,
   $ref: "ErrorResponse#",
 });
+
+/** For a route that answers an error of its own, beyond the shared ones. */
+export const errorResponse = (description: string) =>
+  Type.Unsafe<{ error: string }>(errorBody(description));
 
 const VIEWER_GALLERY_ROUTE =
   /^\/api\/v1\/(gallery-photos\/[:{]galleryId|galleries\/[:{]galleryId\}?$)/;
@@ -116,6 +129,16 @@ export const documentAuthErrors = <S extends FastifySchema | undefined>(
 
 type Operations = Record<string, { responses?: Record<string, object> }>;
 
+// A schema that says nothing about a body: only a description.
+const isBodiless = (response: object): boolean => {
+  const content = (response as { content?: Record<string, { schema?: object }> })
+    .content;
+  const schema = content?.["application/json"]?.schema;
+  return (
+    !!schema && Object.keys(schema).every((key) => key === "description")
+  );
+};
+
 /**
  * A response with headers needs a schema object to hang them on, which
  * the generator then reports as a JSON body. 204 and redirects have none.
@@ -127,7 +150,7 @@ export const dropBodiesOfEmptyResponses = <D extends { paths?: object }>(
   for (const operations of Object.values(paths)) {
     for (const operation of Object.values(operations)) {
       for (const [status, response] of Object.entries(operation.responses ?? {})) {
-        if (status === "204" || status.startsWith("3")) {
+        if (status === "204" || status.startsWith("3") || isBodiless(response)) {
           delete (response as { content?: unknown }).content;
         }
       }

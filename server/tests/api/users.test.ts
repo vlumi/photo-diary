@@ -191,7 +191,7 @@ describe("As gallery12user", () => {
 const changePassword = async (
   token: string | undefined,
   body: Record<string, string>,
-  status = 200
+  status = 204
 ) =>
   api
     .put("/api/v1/users/self/password")

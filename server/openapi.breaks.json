@@ -8,5 +8,6 @@
   "GET /api/v1/group-gallery 200[].gallery_id: removed",
   "GET /api/v1/group-gallery 200[].is_editor: removed",
   "GET /api/v1/group-gallery 200[].hide_map: removed",
-  "GET /api/v1/group-gallery 200[].can_see_private: removed"
+  "GET /api/v1/group-gallery 200[].can_see_private: removed",
+  "PUT /api/v1/users/self/password: no longer answers 200"
 ]
