@@ -4,6 +4,7 @@
 
 ### Server
 
+- Photos sent to viewers no longer carry the raw intake EXIF, the camera's original filename or the body and lens serial numbers, which now go only to someone who can edit the photo; and where a gallery hides its map from the requester, the geocoder's address parts are removed along with the coordinates.
 - The API's additive-change rule is enforced: the release pins the spec as `server/openapi.released.json`, and a test fails when a later change removes a route, removes or retypes a response field, weakens a `required` promise, changes a success status, or makes a request stricter.
 - Gallery responses are described the same way, as a shared `Gallery` shape that promises `id` and `hideMap` as before and lists the rest as optional, with `type`, `theme` and the view names as plain strings so that new values don't break an older client.
 - Photo responses are described in the OpenAPI document as one shared `Photo` shape instead of an open object, with nothing changed on the wire: every level stays open to fields a client doesn't know, only `id`, `index`, the capture date and the dimensions are promised, and a photo without a capture date still sends its date parts as `null`.

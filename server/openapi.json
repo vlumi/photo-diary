@@ -49,7 +49,8 @@
             "description": "Position in the gallery's date order, from 0."
           },
           "originalFilename": {
-            "type": "string"
+            "type": "string",
+            "description": "Only for a requester who can edit the photo."
           },
           "title": {
             "type": "string"
@@ -223,7 +224,8 @@
                 "type": "string"
               },
               "serial": {
-                "type": "string"
+                "type": "string",
+                "description": "Only for a requester who can edit the photo."
               }
             },
             "additionalProperties": true
@@ -238,7 +240,8 @@
                 "type": "string"
               },
               "serial": {
-                "type": "string"
+                "type": "string",
+                "description": "Only for a requester who can edit the photo."
               }
             },
             "additionalProperties": true
@@ -318,7 +321,8 @@
               "address": {
                 "type": "object",
                 "properties": {},
-                "additionalProperties": true
+                "additionalProperties": true,
+                "description": "The geocoder's address parts. Absent when the gallery hides its map from the requester."
               },
               "noData": {
                 "type": "boolean"
@@ -329,7 +333,8 @@
           "exifAtIntake": {
             "type": "object",
             "properties": {},
-            "additionalProperties": true
+            "additionalProperties": true,
+            "description": "Raw EXIF as first read. Only for a requester who can edit the photo."
           },
           "isPrivate": {
             "type": "boolean"

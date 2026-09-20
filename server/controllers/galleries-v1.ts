@@ -13,7 +13,7 @@ import {
   requireUnscoped,
 } from "../lib/host-scope.js";
 import { ID_PATTERN_SOURCE } from "../lib/id-shape.js";
-import { shouldHideMap, maskCoordinates } from "../lib/privacy.js";
+import { applyViewerPrivacy, shouldHideMap } from "../lib/privacy.js";
 import { StringEnum } from "../lib/schema-utils.js";
 import modelFactory from "../models/gallery.js";
 import { GUEST_OR_SESSION, SESSION } from "../lib/api-docs.js";
@@ -231,11 +231,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           request.user.id,
           request.params.galleryId
         );
-        if (hideMap && gallery.photos) {
-          maskCoordinates(
-            gallery.photos as Parameters<typeof maskCoordinates>[0]
-          );
-        }
+        const isEditor = await authorizer.isGalleryEditor(
+          request.user.id,
+          request.params.galleryId
+        );
+        await applyViewerPrivacy({ hideMap, isEditor }, gallery.photos ?? []);
         return { ...gallery, hideMap } as GalleryWire;
       } catch (error) {
         if (error instanceof AccessError || error instanceof NotFoundError) {
