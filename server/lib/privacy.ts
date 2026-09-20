@@ -45,7 +45,7 @@ interface PhotoLike {
  * resolves to hide: coordinates become null (the frontend's
  * `photo.hasCoordinates()` then returns false and the map widget
  * self-suppresses), and the geocoder's address blob goes, since its
- * neighbourhood and postcode say nearly as much. The place name, city
+ * neighborhood and postcode say nearly as much. The place name, city
  * and country stay: they are what the gallery shows in words.
  */
 export const maskCoordinates = <T extends PhotoLike>(photos: T[]): void => {
