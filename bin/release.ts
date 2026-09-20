@@ -245,6 +245,9 @@ const main = async (): Promise<void> => {
     path.join(ROOT, "server", "openapi.json"),
     path.join(ROOT, "server", "openapi.released.json")
   );
+  // The breaks acknowledged during this cycle are part of the new
+  // baseline now.
+  writeFileSync(path.join(ROOT, "server", "openapi.breaks.json"), "[]\n");
 
   console.log("\n→ Regenerating react-app/src/lib/api-schema.ts");
   sh("npm run api:codegen", { cwd: path.join(ROOT, "react-app") });
