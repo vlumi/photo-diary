@@ -1,4 +1,5 @@
 import api, { unwrap } from "../lib/api";
+import type { ResponseOf } from "../lib/api-types";
 
 import type { ServerFilters } from "../lib/filter";
 import type { DateRange, NumericRanges } from "../stores/filters";
@@ -13,29 +14,24 @@ export interface SavedFilterDefinition {
   numericRanges?: NumericRanges;
   [key: string]: unknown;
 }
-export interface SavedFilter {
-  id: string;
-  sourceGalleryId: string;
-  title: string;
-  description: string;
-  titleLocalized: Record<string, string>;
-  descriptionLocalized: Record<string, string>;
-  definition: SavedFilterDefinition;
-}
+export type SavedFilter = ResponseOf<
+  "/api/v1/galleries/{galleryId}/filters",
+  "get"
+>[number];
 
 const list = async (galleryId: string): Promise<SavedFilter[]> =>
   unwrap(
     api.GET("/api/v1/galleries/{galleryId}/filters", {
       params: { path: { galleryId } },
     })
-  ) as Promise<SavedFilter[]>;
+  );
 
 const get = async (galleryId: string, filterId: string) =>
   unwrap(
     api.GET("/api/v1/galleries/{galleryId}/filters/{filterId}", {
       params: { path: { galleryId, filterId } },
     })
-  ) as Promise<SavedFilter>;
+  );
 
 export interface SavedFilterCreateBody {
   id: string;

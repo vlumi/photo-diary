@@ -7,7 +7,7 @@ import { BsPencilSquare, BsTrash } from "react-icons/bs";
 
 import ItemModal from "./ItemModal";
 import { Section, ModalHeader } from "./Section";
-import usersService, { type UserUpdatePatch } from "../../services/users";
+import usersService, { type UserRow, type UserUpdatePatch } from "../../services/users";
 import { useUserStore } from "../../stores";
 
 const Root = styled.div`
@@ -174,11 +174,7 @@ const Mono = styled.span`
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 `;
 
-interface UserData {
-  id: string;
-  name: string;
-  isAdmin: boolean;
-}
+type UserData = UserRow;
 
 const isAdminFlag = (data: UserData | undefined): boolean => !!data?.isAdmin;
 

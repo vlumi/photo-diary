@@ -436,6 +436,10 @@
           },
           "savedFilter": {
             "type": "object",
+            "required": [
+              "sourceGalleryId",
+              "definition"
+            ],
             "properties": {
               "sourceGalleryId": {
                 "type": "string"

@@ -1,12 +1,7 @@
 import api, { unwrap } from "../lib/api";
+import type { ResponseOf } from "../lib/api-types";
 
-export interface GroupGalleryRow {
-  groupId: string;
-  galleryId: string;
-  isEditor: boolean;
-  hideMap: boolean | null;
-  canSeePrivate: boolean;
-}
+export type GroupGalleryRow = ResponseOf<"/api/v1/group-gallery", "get">[number];
 
 export interface GroupGalleryUpsertBody {
   isEditor: boolean;
@@ -25,7 +20,7 @@ const list = async (filter: {
     api.GET("/api/v1/group-gallery", {
       params: { query },
     })
-  ) as Promise<GroupGalleryRow[]>;
+  );
 };
 
 const upsert = async (

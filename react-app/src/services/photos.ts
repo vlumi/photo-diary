@@ -1,4 +1,5 @@
 import api, { unwrap } from "../lib/api";
+import type { ApiPhoto, ResponseOf } from "../lib/api-types";
 
 import type { ServerFilters } from "../lib/filter";
 import type { DateRange } from "../stores/filters";
@@ -24,12 +25,7 @@ export interface PhotoFilter {
   q?: string;
 }
 
-export interface PhotosPage {
-  photos: Array<Record<string, unknown> & { id: string }>;
-  page: number;
-  pageSize: number;
-  total: number;
-}
+export type PhotosPage = ResponseOf<"/api/v1/photos", "get">;
 
 const toQuery = (
   filter: PhotoFilter,
@@ -63,34 +59,27 @@ const list = async (
     api.GET("/api/v1/photos", {
       params: { query: toQuery(filter, page, pageSize, photoIdFocus) },
     })
-  ) as Promise<PhotosPage>;
+  );
 
-// Wide-open photo type from the server — same shape the public
-// /gallery-photos uses. Operator-set fields are nested under
-// `taken.location`, `taken.author`, `camera`, `lens`, `exposure`.
-export type PhotoRow = Record<string, unknown> & { id: string };
+// The server's photo, the same shape the public /gallery-photos uses.
+export type PhotoRow = ApiPhoto;
 
 const get = async (id: string): Promise<PhotoRow> =>
   unwrap(
     api.GET("/api/v1/photos/{photoId}", {
       params: { path: { photoId: id } },
     })
-  ) as Promise<PhotoRow>;
+  );
 
-export interface AuditCounts {
-  orphan: number;
-  duplicates: number;
-  countryMismatch: number;
-  missing: Record<MissingField, number>;
-}
+export type AuditCounts = ResponseOf<"/api/v1/photos/audit-counts", "get">;
 
 const getAuditCounts = async (): Promise<AuditCounts> =>
-  unwrap(api.GET("/api/v1/photos/audit-counts", {})) as Promise<AuditCounts>;
+  unwrap(api.GET("/api/v1/photos/audit-counts", {}));
 
-export interface YearMonthBucket {
-  yearMonth: string;
-  count: number;
-}
+export type YearMonthBucket = ResponseOf<
+  "/api/v1/photos/year-months",
+  "get"
+>["buckets"][number];
 
 // Year-month bucket counts. The server endpoint takes the same
 // filter chips as `/photos` but rejects dateFrom / dateTo by

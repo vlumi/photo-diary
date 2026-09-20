@@ -4531,8 +4531,8 @@ export interface components {
             ordinal?: number;
             sources?: string[];
             savedFilter?: {
-                sourceGalleryId?: string;
-                definition?: {
+                sourceGalleryId: string;
+                definition: {
                     [key: string]: unknown;
                 };
             } & {
