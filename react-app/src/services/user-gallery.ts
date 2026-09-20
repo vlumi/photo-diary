@@ -1,11 +1,11 @@
 import api, { unwrap } from "../lib/api";
 
 export interface UserGalleryRow {
-  user_id: string;
-  gallery_id: string;
-  is_editor: number;
-  hide_map: number | null;
-  can_see_private: number;
+  userId: string;
+  galleryId: string;
+  isEditor: boolean;
+  hideMap: boolean | null;
+  canSeePrivate: boolean;
 }
 
 export interface UserGalleryUpsertBody {

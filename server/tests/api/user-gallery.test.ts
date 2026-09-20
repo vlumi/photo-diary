@@ -69,7 +69,7 @@ describe("As admin", () => {
       .expect(200);
     expect(
       result.body.every(
-        (row: { user_id: string }) => row.user_id === "gallery1admin"
+        (row: { userId: string }) => row.userId === "gallery1admin"
       )
     ).toBe(true);
   });
@@ -81,11 +81,11 @@ describe("As admin", () => {
       .expect(200);
     expect(
       result.body.every(
-        (row: { gallery_id: string }) => row.gallery_id === "gallery2"
+        (row: { galleryId: string }) => row.galleryId === "gallery2"
       )
     ).toBe(true);
   });
-  test("Upsert grants view (is_editor=false)", async () => {
+  test("Upsert grants view (isEditor=false)", async () => {
     await api
       .put("/api/v1/user-gallery/plainuser/gallery1")
       .set("Cookie", `pd_access=${token}`)
@@ -97,9 +97,9 @@ describe("As admin", () => {
       .set("Cookie", `pd_access=${token}`)
       .expect(200);
     expect(result.body.length).toBe(1);
-    expect(result.body[0].is_editor).toBe(0);
+    expect(result.body[0].isEditor).toBe(false);
   });
-  test("Upsert promotes to gallery admin (is_editor=true)", async () => {
+  test("Upsert promotes to gallery admin (isEditor=true)", async () => {
     await api
       .put("/api/v1/user-gallery/gallery1admin/gallery1")
       .set("Cookie", `pd_access=${token}`)
@@ -110,7 +110,7 @@ describe("As admin", () => {
       .query({ userId: "gallery1admin", galleryId: "gallery1" })
       .set("Cookie", `pd_access=${token}`)
       .expect(200);
-    expect(result.body[0].is_editor).toBe(1);
+    expect(result.body[0].isEditor).toBe(true);
   });
   test("Delete (revokes the row entirely)", async () => {
     await api
@@ -136,7 +136,7 @@ describe("As admin", () => {
       .query({ userId: "plainuser", galleryId: "gallery1" })
       .set("Cookie", `pd_access=${token}`)
       .expect(200);
-    expect(result.body[0].hide_map).toBe(1);
+    expect(result.body[0].hideMap).toBe(true);
     // Move back to inherit by sending hideMap=null.
     await api
       .put("/api/v1/user-gallery/plainuser/gallery1")
@@ -148,7 +148,7 @@ describe("As admin", () => {
       .query({ userId: "plainuser", galleryId: "gallery1" })
       .set("Cookie", `pd_access=${token}`)
       .expect(200);
-    expect(result.body[0].hide_map).toBeNull();
+    expect(result.body[0].hideMap).toBeNull();
   });
   test("Upsert with hideMap omitted persists NULL (default on insert)", async () => {
     await api
@@ -161,7 +161,7 @@ describe("As admin", () => {
       .query({ userId: "plainuser", galleryId: "gallery1" })
       .set("Cookie", `pd_access=${token}`)
       .expect(200);
-    expect(result.body[0].hide_map).toBeNull();
+    expect(result.body[0].hideMap).toBeNull();
   });
   test("Upsert with invalid isEditor → 400", () =>
     api

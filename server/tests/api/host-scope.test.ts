@@ -254,8 +254,8 @@ describe("scoped host (single match: gallery1.example.com → gallery1)", () => 
       .set("Cookie", auth)
       .expect(200);
     expect(
-      (result.body as Array<{ gallery_id: string }>).every(
-        (row) => row.gallery_id === "gallery1"
+      (result.body as Array<{ galleryId: string }>).every(
+        (row) => row.galleryId === "gallery1"
       )
     ).toBe(true);
   });

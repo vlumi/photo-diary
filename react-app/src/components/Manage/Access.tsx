@@ -257,8 +257,8 @@ const RemoveButton = styled.button`
 `;
 
 type HideMapValue = "hide" | "show" | "inherit";
-const hideMapFromDb = (n: number | null): HideMapValue =>
-  n === 1 ? "hide" : n === 0 ? "show" : "inherit";
+const hideMapFromWire = (hidden: boolean | null): HideMapValue =>
+  hidden === null ? "inherit" : hidden ? "hide" : "show";
 const hideMapToBody = (v: HideMapValue): boolean | null | undefined => {
   if (v === "hide") return true;
   if (v === "show") return false;
@@ -319,22 +319,22 @@ const Access = (): React.ReactElement => {
 
   const userRows = ((userGalleryQuery.data as UserGalleryRow[] | undefined) ?? []).map(
     (r): AccessRow => ({
-      galleryId: r.gallery_id,
-      subjectId: r.user_id,
+      galleryId: r.galleryId,
+      subjectId: r.userId,
       type: "user",
-      isEditor: !!r.is_editor,
-      canSeePrivate: !!r.can_see_private,
-      hideMap: hideMapFromDb(r.hide_map),
+      isEditor: r.isEditor,
+      canSeePrivate: r.canSeePrivate,
+      hideMap: hideMapFromWire(r.hideMap),
     })
   );
   const groupRows = ((groupGalleryQuery.data as GroupGalleryRow[] | undefined) ?? []).map(
     (r): AccessRow => ({
-      galleryId: r.gallery_id,
-      subjectId: r.group_id,
+      galleryId: r.galleryId,
+      subjectId: r.groupId,
       type: "group",
-      isEditor: !!r.is_editor,
-      canSeePrivate: !!r.can_see_private,
-      hideMap: hideMapFromDb(r.hide_map),
+      isEditor: r.isEditor,
+      canSeePrivate: r.canSeePrivate,
+      hideMap: hideMapFromWire(r.hideMap),
     })
   );
   const allRows = [...userRows, ...groupRows];

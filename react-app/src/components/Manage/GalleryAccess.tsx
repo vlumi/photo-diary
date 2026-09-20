@@ -201,10 +201,10 @@ const AddLabel = styled.label`
   color: var(--inactive-color);
 `;
 
-// hide_map column values: 1 = hide, 0 = show, null = inherit.
+// `hideMap` on a grant: true = hide, false = show, null = inherit.
 type HideMapValue = "hide" | "show" | "inherit";
-const hideMapFromDb = (n: number | null): HideMapValue =>
-  n === 1 ? "hide" : n === 0 ? "show" : "inherit";
+const hideMapFromWire = (hidden: boolean | null): HideMapValue =>
+  hidden === null ? "inherit" : hidden ? "hide" : "show";
 const hideMapToBody = (
   v: HideMapValue
 ): boolean | null | undefined => {
@@ -294,15 +294,15 @@ const GalleryAccess = (): React.ReactElement => {
 
   const userGrants = ((userGrantsQuery.data as UserGalleryRow[] | undefined) ?? [])
     .slice()
-    .sort((a, b) => a.user_id.localeCompare(b.user_id));
+    .sort((a, b) => a.userId.localeCompare(b.userId));
   const groupGrants = ((groupGrantsQuery.data as GroupGalleryRow[] | undefined) ?? [])
     .slice()
-    .sort((a, b) => a.group_id.localeCompare(b.group_id));
+    .sort((a, b) => a.groupId.localeCompare(b.groupId));
   const allUsers = (usersQuery.data as UserRow[] | undefined) ?? [];
   const allGroups = (groupsQuery.data as GroupRow[] | undefined) ?? [];
 
-  const userGrantedIds = new Set(userGrants.map((g) => g.user_id));
-  const groupGrantedIds = new Set(groupGrants.map((g) => g.group_id));
+  const userGrantedIds = new Set(userGrants.map((g) => g.userId));
+  const groupGrantedIds = new Set(groupGrants.map((g) => g.groupId));
   // `:guest` is a legitimate user_gallery grant target (it means
   // "anyone visiting"), so it's included here unlike in the Groups
   // member picker.
@@ -429,14 +429,14 @@ const UserGrantsTable = ({
       <tbody>
         {grants.map((g) => (
           <GrantRow
-            key={g.user_id}
-            id={g.user_id}
-            isEditor={!!g.is_editor}
-            hideMap={hideMapFromDb(g.hide_map)}
+            key={g.userId}
+            id={g.userId}
+            isEditor={g.isEditor}
+            hideMap={hideMapFromWire(g.hideMap)}
             onUpsert={(isEditor, hideMap) =>
-              onUpsert(g.user_id, isEditor, hideMap)
+              onUpsert(g.userId, isEditor, hideMap)
             }
-            onRemove={() => onRemove(g.user_id)}
+            onRemove={() => onRemove(g.userId)}
             mutating={mutating}
           />
         ))}
@@ -476,14 +476,14 @@ const GroupGrantsTable = ({
       <tbody>
         {grants.map((g) => (
           <GroupGrantRow
-            key={g.group_id}
-            groupId={g.group_id}
-            isEditor={!!g.is_editor}
-            hideMap={hideMapFromDb(g.hide_map)}
+            key={g.groupId}
+            groupId={g.groupId}
+            isEditor={g.isEditor}
+            hideMap={hideMapFromWire(g.hideMap)}
             onUpsert={(isEditor, hideMap) =>
-              onUpsert(g.group_id, isEditor, hideMap)
+              onUpsert(g.groupId, isEditor, hideMap)
             }
-            onRemove={() => onRemove(g.group_id)}
+            onRemove={() => onRemove(g.groupId)}
             mutating={mutating}
           />
         ))}
