@@ -21,7 +21,7 @@ const NullableNumber = Type.Union([Type.Number(), Type.Null()]);
 const NullableInteger = Type.Union([Type.Integer(), Type.Null()]);
 
 const Size = Type.Object(
-  { width: Type.Optional(Type.Number()), height: Type.Optional(Type.Number()) },
+  { width: Type.Optional(Type.Integer()), height: Type.Optional(Type.Integer()) },
   open
 );
 const Gear = Type.Object(
@@ -105,7 +105,7 @@ export const PhotoSchema = Type.Object(
           focalLength35mmEquiv: Type.Optional(Type.Number()),
           aperture: Type.Optional(Type.Number()),
           exposureTime: Type.Optional(Type.Number({ description: "Seconds." })),
-          iso: Type.Optional(Type.Number()),
+          iso: Type.Optional(Type.Integer()),
         },
         open
       )
@@ -144,7 +144,7 @@ export const PhotoSchema = Type.Object(
     ),
     isPrivate: Type.Optional(Type.Boolean()),
     renditions: Type.Optional(
-      Type.Array(Type.Number(), {
+      Type.Array(Type.Integer(), {
         description:
           "Longest-edge sizes with a display rendition at " +
           "`display/<size>/<id>`. Absent or empty: assume 1500.",

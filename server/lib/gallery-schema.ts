@@ -35,7 +35,7 @@ export const GallerySchema = Type.Object(
     type: Type.Optional(
       Type.String({ description: '"real", "hybrid" or "saved_filter".' })
     ),
-    ordinal: Type.Optional(Type.Number()),
+    ordinal: Type.Optional(Type.Integer()),
     sources: Type.Optional(Type.Array(Type.String())),
     savedFilter: Type.Optional(
       Type.Object(

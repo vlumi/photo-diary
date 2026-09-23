@@ -227,7 +227,7 @@
                 "description": "Seconds."
               },
               "iso": {
-                "type": "number"
+                "type": "integer"
               }
             },
             "additionalProperties": true
@@ -243,10 +243,10 @@
                 "type": "object",
                 "properties": {
                   "width": {
-                    "type": "number"
+                    "type": "integer"
                   },
                   "height": {
-                    "type": "number"
+                    "type": "integer"
                   }
                 },
                 "additionalProperties": true
@@ -255,10 +255,10 @@
                 "type": "object",
                 "properties": {
                   "width": {
-                    "type": "number"
+                    "type": "integer"
                   },
                   "height": {
-                    "type": "number"
+                    "type": "integer"
                   }
                 },
                 "additionalProperties": true
@@ -306,7 +306,7 @@
           "renditions": {
             "type": "array",
             "items": {
-              "type": "number"
+              "type": "integer"
             },
             "description": "Longest-edge sizes with a display rendition at `display/<size>/<id>`. Absent or empty: assume 1500."
           },
@@ -386,7 +386,7 @@
             "description": "\"real\", \"hybrid\" or \"saved_filter\"."
           },
           "ordinal": {
-            "type": "number"
+            "type": "integer"
           },
           "sources": {
             "type": "array",

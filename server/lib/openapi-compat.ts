@@ -59,7 +59,13 @@ const compareSchemas = (
   }
   const wasType = typeOf(was);
   const nowType = typeOf(now);
-  if (wasType !== "any" && wasType !== nowType) {
+  // Every integer is a number: a response may narrow one to the other,
+  // a request may widen it.
+  const narrowed = (from: string, to: string) =>
+    from.replace("number", "integer") === to && from !== to;
+  const compatible =
+    side === "response" ? narrowed(wasType, nowType) : narrowed(nowType, wasType);
+  if (wasType !== "any" && wasType !== nowType && !compatible) {
     problems.push(`${at}: type changed from ${wasType} to ${nowType}`);
     return;
   }
