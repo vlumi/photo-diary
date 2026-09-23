@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-23
+
 ### Server
 
 - The OpenAPI document declares 3.1, which its content already was, names every operation, and writes nullable values the 3.1 way, so that client generators accept it: Apple's Swift generator rejected it outright before, and dropped nullability once the version was fixed; ISO, rendition sizes, image dimensions and gallery order are declared as the integers they are.
@@ -899,6 +901,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.1.1]: https://github.com/vlumi/photo-diary/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/vlumi/photo-diary/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/vlumi/photo-diary/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/vlumi/photo-diary/compare/v1.0.7...v1.0.8
