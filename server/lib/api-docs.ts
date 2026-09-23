@@ -158,3 +158,44 @@ export const dropBodiesOfEmptyResponses = <D extends { paths?: object }>(
   }
   return doc;
 };
+
+type Node = Record<string, unknown>;
+
+/**
+ * TypeBox writes a nullable value as `anyOf: [X, { type: "null" }]`.
+ * That is valid 3.1, but generators handle the plain 3.1 form,
+ * `type: [X, "null"]`, and some drop the null half of the union (the
+ * Swift generator does, with a warning). The pass rewrites unions of
+ * bare scalar types that include null.
+ */
+export const nullableAsTypeArrays = <D extends object>(doc: D): D => {
+  const visit = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (!value || typeof value !== "object") return;
+    const node = value as Node;
+    const variants = node.anyOf;
+    // Only unions of bare scalar types, one of them null: anything
+    // with constraints or structure keeps its `anyOf`.
+    const bare = (v: unknown): v is Node =>
+      !!v &&
+      typeof (v as Node).type === "string" &&
+      Object.keys(v as Node).every((key) => key === "type" || key === "description");
+    if (
+      Array.isArray(variants) &&
+      variants.length > 1 &&
+      variants.every(bare) &&
+      variants.some((v) => v.type === "null")
+    ) {
+      delete node.anyOf;
+      node.type = variants.map((v) => v.type as string);
+      const described = variants.find((v) => v.description);
+      if (described && !node.description) node.description = described.description;
+    }
+    Object.values(node).forEach(visit);
+  };
+  visit(doc);
+  return doc;
+};

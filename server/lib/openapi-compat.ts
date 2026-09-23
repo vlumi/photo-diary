@@ -32,8 +32,13 @@ const typeOf = (schema: Json | undefined): string => {
       .sort()
       .join("|");
   }
-  const type = typeof schema.type === "string" ? schema.type : "any";
-  return schema.nullable === true ? `${type}|null` : type;
+  // One type, a 3.1 type array, or a 3.0 `nullable`: all end up as the
+  // same sorted "a|b" form, so rewriting one as another isn't a change.
+  const types = Array.isArray(schema.type)
+    ? [...(schema.type as string[])]
+    : [typeof schema.type === "string" ? schema.type : "any"];
+  if (schema.nullable === true) types.push("null");
+  return types.sort().join("|");
 };
 
 type Side = "response" | "request";
@@ -54,7 +59,13 @@ const compareSchemas = (
   }
   const wasType = typeOf(was);
   const nowType = typeOf(now);
-  if (wasType !== "any" && wasType !== nowType) {
+  // Every integer is a number: a response may narrow one to the other,
+  // a request may widen it.
+  const narrowed = (from: string, to: string) =>
+    from.replace("number", "integer") === to && from !== to;
+  const compatible =
+    side === "response" ? narrowed(wasType, nowType) : narrowed(nowType, wasType);
+  if (wasType !== "any" && wasType !== nowType && !compatible) {
     problems.push(`${at}: type changed from ${wasType} to ${nowType}`);
     return;
   }

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Server
+
+- The OpenAPI document declares 3.1, which its content already was, names every operation, and writes nullable values the 3.1 way, so that client generators accept it: Apple's Swift generator rejected it outright before, and dropped nullability once the version was fixed; ISO, rendition sizes, image dimensions and gallery order are declared as the integers they are.
+
 ## [1.1.0] - 2026-09-20
 
 This release cleans up the API, with changes that are not backward compatible; the site's own front end and the iOS companion are updated in step, and nothing else is known to call it. It also closes two disclosures found along the way: an admin route that returned a user's password hash and token-signing secret, and photo responses that carried raw EXIF, original filenames and equipment serial numbers to every viewer. Upgrading needs no migration and no configuration change.

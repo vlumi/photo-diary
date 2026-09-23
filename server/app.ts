@@ -37,10 +37,12 @@ import {
   ErrorResponseSchema,
   documentAuthErrors,
   dropBodiesOfEmptyResponses,
+  nullableAsTypeArrays,
   securitySchemes,
 } from "./lib/api-docs.js";
 import { NotFoundError } from "./lib/errors.js";
 import { GallerySchema } from "./lib/gallery-schema.js";
+import { operationIdFor } from "./lib/operation-ids.js";
 import { PhotoSchema } from "./lib/photo-schema.js";
 import logger from "./lib/logger.js";
 import { isSpaRoute } from "./lib/spa-routes.js";
@@ -103,6 +105,9 @@ app.addSchema(GallerySchema);
 // route's schema as it's added.
 await app.register(fastifySwagger, {
   openapi: {
+    // TypeBox writes JSON Schema 2020-12 (`type: "null"`, numeric
+    // `exclusiveMinimum`), which is what OpenAPI 3.1 uses and 3.0 does not.
+    openapi: "3.1.0",
     info: {
       title: "Photo Diary API",
       description:
@@ -140,13 +145,22 @@ await app.register(fastifySwagger, {
     buildLocalReference: (json, _baseUri, _fragment, i) =>
       typeof json.$id === "string" ? json.$id : `def-${i}`,
   },
-  transform: ({ schema, url, route }) => ({
-    schema: documentAuthErrors(schema, url, String(route.method)),
-    url,
-  }),
+  transform: ({ schema, url, route }) => {
+    const method = String(route.method);
+    const documented = documentAuthErrors(schema, url, method);
+    return {
+      schema: documented && {
+        operationId: operationIdFor(method, url),
+        ...documented,
+      },
+      url,
+    };
+  },
   transformObject: (documentObject) =>
     "openapiObject" in documentObject
-      ? dropBodiesOfEmptyResponses(documentObject.openapiObject)
+      ? nullableAsTypeArrays(
+        dropBodiesOfEmptyResponses(documentObject.openapiObject)
+      )
       : documentObject.swaggerObject,
 });
 

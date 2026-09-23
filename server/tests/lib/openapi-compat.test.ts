@@ -87,6 +87,20 @@ describe("what a newer API document may not do to a released one", () => {
     ]);
   });
 
+  test("a response may say integer where it said number, a request may not", () => {
+    const released = doc({
+      ...answering(thing({ size: { type: "number" } })),
+      ...accepting(thing({ size: { type: "number" } })),
+    });
+    const current = doc({
+      ...answering(thing({ size: { type: "integer" } })),
+      ...accepting(thing({ size: { type: "integer" } })),
+    });
+    expect(findBreakingChanges(released, current)).toEqual([
+      "GET /things/{id} body.size: type changed from number to integer",
+    ]);
+  });
+
   test("shared components and arrays are followed", () => {
     const released = doc(
       answering({ type: "array", items: { $ref: "#/components/schemas/Thing" } }),

@@ -41,7 +41,7 @@ const full = {
   exposure: { focalLength: 35.5, aperture: 1.8, exposureTime: 0.004, iso: 100 },
   dimensions: {
     original: { width: 6048, height: 4024 },
-    thumbnail: { width: 300, height: 199.6 },
+    thumbnail: { width: 300, height: 200 },
   },
   geocoded: {
     countryCode: "jp",
