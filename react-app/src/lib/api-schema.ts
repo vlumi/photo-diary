@@ -12,97 +12,10 @@ export interface paths {
             cookie?: never;
         };
         /** Get all per-instance meta */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            name?: string;
-                            description?: string;
-                            cdn?: string;
-                            image?: string;
-                            defaultGallery?: string;
-                            defaultTheme?: string;
-                            defaultLanguage?: string;
-                            initialGalleryView?: string;
-                            firstWeekday?: string;
-                            /** @description Feature name to "on", "off" or "user". */
-                            betaFeatures?: {
-                                [key: string]: string;
-                            };
-                            /** @description Display rendition sizes the converter generates, in pixels. */
-                            renditions?: number[];
-                            /** @description Hostnames this instance answers on; one may be the main host. */
-                            knownHosts?: ({
-                                hostname: string;
-                                isMain?: boolean;
-                            } & {
-                                [key: string]: unknown;
-                            })[];
-                        } & {
-                            [key: string]: unknown;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getMeta"];
         put?: never;
         /** Create a meta entry (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @enum {string} */
-                        key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
-                        value: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created. */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["createMetaEntry"];
         delete?: never;
         options?: never;
         head?: never;
@@ -117,138 +30,12 @@ export interface paths {
             cookie?: never;
         };
         /** Get one meta entry by key */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            name?: string;
-                            description?: string;
-                            cdn?: string;
-                            image?: string;
-                            defaultGallery?: string;
-                            defaultTheme?: string;
-                            defaultLanguage?: string;
-                            initialGalleryView?: string;
-                            firstWeekday?: string;
-                            /** @description Feature name to "on", "off" or "user". */
-                            betaFeatures?: {
-                                [key: string]: string;
-                            };
-                            /** @description Display rendition sizes the converter generates, in pixels. */
-                            renditions?: number[];
-                            /** @description Hostnames this instance answers on; one may be the main host. */
-                            knownHosts?: ({
-                                hostname: string;
-                                isMain?: boolean;
-                            } & {
-                                [key: string]: unknown;
-                            })[];
-                        } & {
-                            [key: string]: unknown;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getMetaEntry"];
         /** Update one meta entry by key (admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        value: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["setMetaEntry"];
         post?: never;
         /** Delete one meta entry by key (admin) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["deleteMetaEntry"];
         options?: never;
         head?: never;
         patch?: never;
@@ -262,113 +49,12 @@ export interface paths {
             cookie?: never;
         };
         /** Verify token + return current session identity */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            isAdmin: boolean;
-                            editorGalleries: string[];
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getSession"];
         put?: never;
         /** Log in (sets HttpOnly auth cookies) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        id?: string;
-                        password?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
-                        "Set-Cookie"?: string;
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            isAdmin: boolean;
-                            editorGalleries: string[];
-                        };
-                    };
-                };
-                /** @description Wrong user id or password. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["logIn"];
         /** Log out (revoke this session, clear auth cookies) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Logged out, whether or not a session existed. */
-                204: {
-                    headers: {
-                        /** @description Two headers clearing `pd_access` and `pd_refresh`. */
-                        "Set-Cookie"?: string;
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
+        delete: operations["logOut"];
         options?: never;
         head?: never;
         patch?: never;
@@ -384,41 +70,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Rotate refresh token, mint a new access token (cookie-only) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
-                        "Set-Cookie"?: string;
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            isAdmin: boolean;
-                            editorGalleries: string[];
-                        };
-                    };
-                };
-                /** @description No refresh cookie, or one that is unknown, expired or already rotated. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["refreshSession"];
         delete?: never;
         options?: never;
         head?: never;
@@ -436,44 +88,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Revoke all sessions for another user (admin) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["revokeUserSessions"];
         options?: never;
         head?: never;
         patch?: never;
@@ -489,53 +104,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Mint a one-shot SSO token for a sibling host */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        target: string;
-                        path?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            redirectUrl: string;
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["createCrossHostTicket"];
         delete?: never;
         options?: never;
         head?: never;
@@ -552,55 +121,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Mint a one-shot device-pairing ticket for this host */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        previous?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            token: string;
-                            host: string;
-                            scheme: "http" | "https";
-                            expiresAt: number;
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["createPairingTicket"];
         delete?: never;
         options?: never;
         head?: never;
@@ -615,39 +136,7 @@ export interface paths {
             cookie?: never;
         };
         /** Consume a cross-host SSO token + redirect */
-        get: {
-            parameters: {
-                query: {
-                    token: string;
-                    redirect?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Session started. Redirects to `redirect` when it is a same-origin path, else to `/`. */
-                302: {
-                    headers: {
-                        /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
-                        "Set-Cookie"?: string;
-                        Location?: string;
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The ticket is invalid, expired or already used. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["consumeTicket"];
         put?: never;
         post?: never;
         delete?: never;
@@ -664,95 +153,10 @@ export interface paths {
             cookie?: never;
         };
         /** List all users (admin) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            name: string;
-                            isAdmin: boolean;
-                        }[];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listUsers"];
         put?: never;
         /** Create a user (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        id: string;
-                        name?: string;
-                        password: string;
-                        isAdmin?: boolean;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created. */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["createUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -767,137 +171,12 @@ export interface paths {
             cookie?: never;
         };
         /** Get a user by id (admin) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            name: string;
-                            isAdmin: boolean;
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getUser"];
         /** Update a user by id (admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        name?: string;
-                        password?: string;
-                        isAdmin?: boolean;
-                    };
-                };
-            };
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["updateUser"];
         post?: never;
         /** Delete a user by id (admin) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["deleteUser"];
         options?: never;
         head?: never;
         patch?: never;
@@ -912,51 +191,7 @@ export interface paths {
         };
         get?: never;
         /** Change the caller's own password */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        currentPassword: string;
-                        newPassword: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Changed; this device is signed in afresh. */
-                204: {
-                    headers: {
-                        /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
-                        "Set-Cookie"?: string;
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["changeOwnPassword"];
         post?: never;
         delete?: never;
         options?: never;
@@ -972,107 +207,10 @@ export interface paths {
             cookie?: never;
         };
         /** List galleries visible to the requester */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Gallery"][];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listGalleries"];
         put?: never;
         /** Create a gallery (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        id: string;
-                        title?: string;
-                        description?: string;
-                        titleLocalized?: {
-                            [key: string]: string;
-                        };
-                        descriptionLocalized?: {
-                            [key: string]: string;
-                        };
-                        defaultLanguage?: string;
-                        icon?: string;
-                        epoch?: string;
-                        /** @enum {string} */
-                        epochType?: "birthday" | "1-index" | "0-index";
-                        /** @enum {string} */
-                        theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper" | "amber" | "lavender" | "sage" | "slate" | "midnight" | "espresso";
-                        /** @enum {string} */
-                        initialView?: "year" | "month" | "day" | "photo";
-                        hostname?: string;
-                        sources?: string[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Created. */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["createGallery"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1089,48 +227,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Reorder galleries (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        ids: string[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["reorderGalleries"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1145,176 +242,12 @@ export interface paths {
             cookie?: never;
         };
         /** Get one gallery */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Gallery"];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getGallery"];
         /** Update gallery properties (admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        title?: string;
-                        description?: string;
-                        titleLocalized?: {
-                            [key: string]: string;
-                        };
-                        descriptionLocalized?: {
-                            [key: string]: string;
-                        };
-                        defaultLanguage?: string;
-                        icon?: string;
-                        epoch?: string;
-                        /** @enum {string} */
-                        epochType?: "birthday" | "1-index" | "0-index";
-                        /** @enum {string} */
-                        theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper" | "amber" | "lavender" | "sage" | "slate" | "midnight" | "espresso";
-                        /** @enum {string} */
-                        initialView?: "year" | "month" | "day" | "photo";
-                        hostname?: string;
-                        sources?: string[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["updateGallery"];
         post?: never;
         /** Delete a gallery (admin) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["deleteGallery"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1329,61 +262,7 @@ export interface paths {
         };
         get?: never;
         /** Set gallery icon from a photo crop (gallery admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        sourcePhotoId: string;
-                        sourceMaxDim: number;
-                        crop: {
-                            x: number;
-                            y: number;
-                            width: number;
-                            height: number;
-                        };
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            icon: string;
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["setGalleryIcon"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1399,149 +278,10 @@ export interface paths {
             cookie?: never;
         };
         /** List saved filters for a gallery */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            sourceGalleryId: string;
-                            title: string;
-                            description: string;
-                            titleLocalized: {
-                                [key: string]: string;
-                            };
-                            descriptionLocalized: {
-                                [key: string]: string;
-                            };
-                            definition: {
-                                filter?: {
-                                    [key: string]: {
-                                        [key: string]: (string | number | boolean | null)[];
-                                    };
-                                };
-                                dateRange?: {
-                                    from?: string;
-                                    to?: string;
-                                };
-                                numericRanges?: {
-                                    [key: string]: {
-                                        min?: number;
-                                        max?: number;
-                                    };
-                                };
-                            } & {
-                                [key: string]: unknown;
-                            };
-                        }[];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listSavedFilters"];
         put?: never;
         /** Create a saved filter */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        id: string;
-                        title?: string;
-                        description?: string;
-                        titleLocalized?: {
-                            [key: string]: string;
-                        };
-                        descriptionLocalized?: {
-                            [key: string]: string;
-                        };
-                        definition: {
-                            filter?: {
-                                [key: string]: {
-                                    [key: string]: (string | number | boolean | null)[];
-                                };
-                            };
-                            dateRange?: {
-                                from?: string;
-                                to?: string;
-                            };
-                            numericRanges?: {
-                                [key: string]: {
-                                    min?: number;
-                                    max?: number;
-                                };
-                            };
-                        } & {
-                            [key: string]: unknown;
-                        };
-                    };
-                };
-            };
-            responses: {
-                /** @description Created. */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["createSavedFilter"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1556,190 +296,12 @@ export interface paths {
             cookie?: never;
         };
         /** Get one saved filter by id */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                    filterId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            sourceGalleryId: string;
-                            title: string;
-                            description: string;
-                            titleLocalized: {
-                                [key: string]: string;
-                            };
-                            descriptionLocalized: {
-                                [key: string]: string;
-                            };
-                            definition: {
-                                filter?: {
-                                    [key: string]: {
-                                        [key: string]: (string | number | boolean | null)[];
-                                    };
-                                };
-                                dateRange?: {
-                                    from?: string;
-                                    to?: string;
-                                };
-                                numericRanges?: {
-                                    [key: string]: {
-                                        min?: number;
-                                        max?: number;
-                                    };
-                                };
-                            } & {
-                                [key: string]: unknown;
-                            };
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getSavedFilter"];
         /** Update a saved filter (partial) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                    filterId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        title?: string;
-                        description?: string;
-                        titleLocalized?: {
-                            [key: string]: string;
-                        };
-                        descriptionLocalized?: {
-                            [key: string]: string;
-                        };
-                        definition?: {
-                            filter?: {
-                                [key: string]: {
-                                    [key: string]: (string | number | boolean | null)[];
-                                };
-                            };
-                            dateRange?: {
-                                from?: string;
-                                to?: string;
-                            };
-                            numericRanges?: {
-                                [key: string]: {
-                                    min?: number;
-                                    max?: number;
-                                };
-                            };
-                        } & {
-                            [key: string]: unknown;
-                        };
-                    };
-                };
-            };
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["updateSavedFilter"];
         post?: never;
         /** Delete a saved filter */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                    filterId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["deleteSavedFilter"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1753,144 +315,10 @@ export interface paths {
             cookie?: never;
         };
         /** List photos with optional filters; returns a paginated page of the matching set sorted newest-first by capture timestamp */
-        get: {
-            parameters: {
-                query?: {
-                    gallery?: string | string[];
-                    orphan?: boolean;
-                    dateFrom?: string;
-                    dateTo?: string;
-                    missing?: ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code") | ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code")[];
-                    duplicates?: boolean;
-                    countryMismatch?: boolean;
-                    q?: string;
-                    page?: number;
-                    pageSize?: number;
-                    photoIdFocus?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            photos: components["schemas"]["Photo"][];
-                            page: number;
-                            pageSize: number;
-                            total: number;
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listCatalogPhotos"];
         put?: never;
         /** Create a photo (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        id: string;
-                        title?: string;
-                        description?: string;
-                        titleLocalized?: {
-                            [key: string]: string;
-                        };
-                        descriptionLocalized?: {
-                            [key: string]: string;
-                        };
-                        taken?: {
-                            author?: string;
-                            location?: {
-                                country?: string;
-                                place?: string;
-                                placeLocalized?: {
-                                    [key: string]: string;
-                                };
-                                coordinates?: {
-                                    latitude?: number | null;
-                                    longitude?: number | null;
-                                    altitude?: number | null;
-                                };
-                            };
-                        };
-                        camera?: {
-                            make?: string;
-                            model?: string;
-                        };
-                        lens?: {
-                            make?: string;
-                            model?: string;
-                        };
-                        exposure?: {
-                            focalLength?: number;
-                            focalLength35mmEquiv?: number;
-                            aperture?: number;
-                            exposureTime?: number;
-                            iso?: number;
-                        };
-                        isPrivate?: boolean;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created. */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["createPhoto"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1905,58 +333,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit-predicate counts (admin) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            orphan: number;
-                            duplicates: number;
-                            countryMismatch: number;
-                            missing: {
-                                taken: number;
-                                coords: number;
-                                place: number;
-                                country: number;
-                                author: number;
-                                title: number;
-                                description: number;
-                                "state-code": number;
-                            };
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getPhotoAuditCounts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1973,56 +350,7 @@ export interface paths {
             cookie?: never;
         };
         /** Photo counts grouped by year-month (admin) */
-        get: {
-            parameters: {
-                query?: {
-                    gallery?: string | string[];
-                    orphan?: boolean;
-                    missing?: ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code") | ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code")[];
-                    duplicates?: boolean;
-                    countryMismatch?: boolean;
-                    q?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            buckets: {
-                                yearMonth: string;
-                                count: number;
-                            }[];
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getPhotoYearMonths"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2041,52 +369,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Fetch many photos by id (admin / gallery-editor) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        ids: string[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            photos: components["schemas"]["Photo"][];
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["getPhotosByIds"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2103,62 +386,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Filter-aware cross-gallery photo list (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        year?: number;
-                        month?: number;
-                        day?: number;
-                        lang?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Photo"][];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["queryCatalogPhotos"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2173,169 +401,12 @@ export interface paths {
             cookie?: never;
         };
         /** Get one photo by id (gallery-editor on any of the photo's galleries) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    photoId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Photo"];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getCatalogPhoto"];
         /** Update one photo (admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    photoId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        title?: string;
-                        description?: string;
-                        titleLocalized?: {
-                            [key: string]: string;
-                        };
-                        descriptionLocalized?: {
-                            [key: string]: string;
-                        };
-                        taken?: {
-                            author?: string;
-                            location?: {
-                                country?: string;
-                                place?: string;
-                                placeLocalized?: {
-                                    [key: string]: string;
-                                };
-                                coordinates?: {
-                                    latitude?: number | null;
-                                    longitude?: number | null;
-                                    altitude?: number | null;
-                                };
-                            };
-                        };
-                        camera?: {
-                            make?: string;
-                            model?: string;
-                        };
-                        lens?: {
-                            make?: string;
-                            model?: string;
-                        };
-                        exposure?: {
-                            focalLength?: number;
-                            focalLength35mmEquiv?: number;
-                            aperture?: number;
-                            exposureTime?: number;
-                            iso?: number;
-                        };
-                        isPrivate?: boolean;
-                    };
-                };
-            };
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["updatePhoto"];
         post?: never;
         /** Delete one photo (admin) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    photoId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["deletePhoto"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2351,53 +422,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Clear and re-fetch geocoded data for one photo (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    photoId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The photo has no coordinates to geocode from. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["regeocodePhoto"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2412,57 +437,7 @@ export interface paths {
             cookie?: never;
         };
         /** List photos in a gallery */
-        get: {
-            parameters: {
-                query?: {
-                    lang?: string;
-                };
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Photo"][];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listGalleryPhotos"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2481,79 +456,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Filtered + view-scoped photo fetch */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        numericRanges?: {
-                            [key: string]: {
-                                min?: number;
-                                max?: number;
-                            };
-                        };
-                        year?: number;
-                        month?: number;
-                        day?: number;
-                        lang?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Photo"][];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["queryGalleryPhotos"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2570,78 +473,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Per-day photo counts (Year heatmap) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        numericRanges?: {
-                            [key: string]: {
-                                min?: number;
-                                max?: number;
-                            };
-                        };
-                        year?: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description Photos per day, keyed by date as YYYY-MM-DD. Days without photos are absent. */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: number;
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["countGalleryPhotosByDay"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2658,84 +490,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Adjacent + boundary photos within the filtered set */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        photoId: string;
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        numericRanges?: {
-                            [key: string]: {
-                                min?: number;
-                                max?: number;
-                            };
-                        };
-                        lang?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            previous?: components["schemas"]["Photo"];
-                            next?: components["schemas"]["Photo"];
-                            first?: components["schemas"]["Photo"];
-                            last?: components["schemas"]["Photo"];
-                            position?: number;
-                            total: number;
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["getGalleryPhotoNeighbors"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2752,88 +507,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Filter pill universe (per-category value set) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        numericRanges?: {
-                            [key: string]: {
-                                min?: number;
-                                max?: number;
-                            };
-                        };
-                        lang?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            categoryValues: {
-                                [key: string]: string[];
-                            };
-                            categoryCounts: {
-                                [key: string]: {
-                                    [key: string]: number;
-                                };
-                            };
-                            byCityLocalized: {
-                                [key: string]: string;
-                            };
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["getGalleryFilterValues"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2848,58 +522,7 @@ export interface paths {
             cookie?: never;
         };
         /** Look up a photo by its original camera filename */
-        get: {
-            parameters: {
-                query?: {
-                    lang?: string;
-                };
-                header?: never;
-                path: {
-                    galleryId: string;
-                    originalFilename: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Photo"];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getGalleryPhotoByOriginalFilename"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2916,157 +539,12 @@ export interface paths {
             cookie?: never;
         };
         /** Get one photo's metadata in a gallery's context */
-        get: {
-            parameters: {
-                query?: {
-                    lang?: string;
-                };
-                header?: never;
-                path: {
-                    galleryId: string;
-                    photoId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Photo"];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getGalleryPhoto"];
         /** Link a photo to a gallery (admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                    photoId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["linkPhotoToGallery"];
         post?: never;
         /** Unlink a photo from a gallery (gallery-editor) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                    photoId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["unlinkPhotoFromGallery"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3080,53 +558,7 @@ export interface paths {
             cookie?: never;
         };
         /** List user_gallery ACL rows (admin) */
-        get: {
-            parameters: {
-                query?: {
-                    userId?: string;
-                    galleryId?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            userId: string;
-                            galleryId: string;
-                            isEditor: boolean;
-                            hideMap: boolean | null;
-                            canSeePrivate: boolean;
-                        }[];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listUserGrants"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3144,94 +576,10 @@ export interface paths {
         };
         get?: never;
         /** Upsert a user_gallery ACL row (admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        isEditor: boolean;
-                        hideMap?: boolean | null;
-                        canSeePrivate?: boolean;
-                    };
-                };
-            };
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["setUserGrant"];
         post?: never;
         /** Delete a user_gallery ACL row (admin) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["deleteUserGrant"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3245,94 +593,10 @@ export interface paths {
             cookie?: never;
         };
         /** List all groups (admin) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            name: string;
-                            description: string;
-                        }[];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listGroups"];
         put?: never;
         /** Create a group (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        id: string;
-                        name?: string;
-                        description?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created. */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["createGroup"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3347,136 +611,12 @@ export interface paths {
             cookie?: never;
         };
         /** Get one group (admin) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            name: string;
-                            description: string;
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getGroup"];
         /** Update a group (admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        name?: string;
-                        description?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["updateGroup"];
         post?: never;
         /** Delete a group (admin). FK cascade clears memberships and grants. */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["deleteGroup"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3490,46 +630,7 @@ export interface paths {
             cookie?: never;
         };
         /** List user ids in a group (admin) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": string[];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listGroupMembers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3547,86 +648,10 @@ export interface paths {
         };
         get?: never;
         /** Add a user to a group (admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["addGroupMember"];
         post?: never;
         /** Remove a user from a group (admin) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["removeGroupMember"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3640,53 +665,7 @@ export interface paths {
             cookie?: never;
         };
         /** List group_gallery ACL rows (admin) */
-        get: {
-            parameters: {
-                query?: {
-                    groupId?: string;
-                    galleryId?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            groupId: string;
-                            galleryId: string;
-                            isEditor: boolean;
-                            hideMap: boolean | null;
-                            canSeePrivate: boolean;
-                        }[];
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listGroupGrants"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3704,94 +683,10 @@ export interface paths {
         };
         get?: never;
         /** Upsert a group_gallery ACL row (admin) */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        isEditor: boolean;
-                        hideMap?: boolean | null;
-                        canSeePrivate?: boolean;
-                    };
-                };
-            };
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["setGroupGrant"];
         post?: never;
         /** Delete a group_gallery ACL row (admin) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Done. */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        delete: operations["deleteGroupGrant"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3807,116 +702,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Aggregated stats for a gallery (gallery view) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        numericRanges?: {
-                            [key: string]: {
-                                min?: number;
-                                max?: number;
-                            };
-                        };
-                        lang?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            total: number;
-                            geotaggedCount: number;
-                            byCategory: {
-                                [key: string]: {
-                                    [key: string]: number;
-                                };
-                            };
-                            byYearMonth: {
-                                [key: string]: {
-                                    [key: string]: number;
-                                };
-                            };
-                            summary: {
-                                first?: string;
-                                last?: string;
-                                spanDays: number;
-                                spanYears: number;
-                                spanMonths: number;
-                                peakShape: {
-                                    [key: string]: string;
-                                };
-                                variety: {
-                                    [key: string]: number;
-                                };
-                            };
-                            daysInYear: {
-                                [key: string]: number;
-                            };
-                            daysInYearMonth: {
-                                [key: string]: {
-                                    [key: string]: number;
-                                };
-                            };
-                            byStateCountry: {
-                                [key: string]: string;
-                            };
-                            byCityCountry: {
-                                [key: string]: string;
-                            };
-                            byCityLocalized: {
-                                [key: string]: string;
-                            };
-                            categoryValues: {
-                                [key: string]: string[];
-                            };
-                            byGallery: {
-                                [key: string]: number;
-                            };
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["getGalleryStats"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3933,76 +719,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Per-bucket time-series for a trendable category */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    galleryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        category: string;
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        numericRanges?: {
-                            [key: string]: {
-                                min?: number;
-                                max?: number;
-                            };
-                        };
-                        lang?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            yearMonths: string[];
-                            buckets: {
-                                [key: string]: {
-                                    counts: number[];
-                                    cumulative: number[];
-                                };
-                            };
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["getGalleryStatsEvolution"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4019,114 +736,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Aggregated stats across all galleries (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        numericRanges?: {
-                            [key: string]: {
-                                min?: number;
-                                max?: number;
-                            };
-                        };
-                        lang?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            total: number;
-                            geotaggedCount: number;
-                            byCategory: {
-                                [key: string]: {
-                                    [key: string]: number;
-                                };
-                            };
-                            byYearMonth: {
-                                [key: string]: {
-                                    [key: string]: number;
-                                };
-                            };
-                            summary: {
-                                first?: string;
-                                last?: string;
-                                spanDays: number;
-                                spanYears: number;
-                                spanMonths: number;
-                                peakShape: {
-                                    [key: string]: string;
-                                };
-                                variety: {
-                                    [key: string]: number;
-                                };
-                            };
-                            daysInYear: {
-                                [key: string]: number;
-                            };
-                            daysInYearMonth: {
-                                [key: string]: {
-                                    [key: string]: number;
-                                };
-                            };
-                            byStateCountry: {
-                                [key: string]: string;
-                            };
-                            byCityCountry: {
-                                [key: string]: string;
-                            };
-                            byCityLocalized: {
-                                [key: string]: string;
-                            };
-                            categoryValues: {
-                                [key: string]: string[];
-                            };
-                            byGallery: {
-                                [key: string]: number;
-                            };
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["getCatalogStats"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4143,74 +753,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Per-bucket time-series for a trendable category across all galleries (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        category: string;
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        numericRanges?: {
-                            [key: string]: {
-                                min?: number;
-                                max?: number;
-                            };
-                        };
-                        lang?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            yearMonths: string[];
-                            buckets: {
-                                [key: string]: {
-                                    counts: number[];
-                                    cumulative: number[];
-                                };
-                            };
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["getCatalogStatsEvolution"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4227,77 +770,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Filter pill universe across all galleries (admin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        filter?: {
-                            [key: string]: {
-                                [key: string]: (string | number | boolean | null)[];
-                            };
-                        };
-                        dateRange?: {
-                            from?: string;
-                            to?: string;
-                        };
-                        numericRanges?: {
-                            [key: string]: {
-                                min?: number;
-                                max?: number;
-                            };
-                        };
-                        lang?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            categoryValues: {
-                                [key: string]: string[];
-                            };
-                            categoryCounts: {
-                                [key: string]: {
-                                    [key: string]: number;
-                                };
-                            };
-                            byCityLocalized: {
-                                [key: string]: string;
-                            };
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["getCatalogFilterValues"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4312,65 +785,7 @@ export interface paths {
             cookie?: never;
         };
         /** Recent converter / operator-script activity, pending-queue counts, and recent failures */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            recent: {
-                                id: number;
-                                createdAt: string;
-                                photoId: string | null;
-                                action: string;
-                                status: "success" | "failure" | "skipped";
-                                detail: string | null;
-                            }[];
-                            failures: {
-                                id: number;
-                                createdAt: string;
-                                photoId: string | null;
-                                action: string;
-                                status: "success" | "failure" | "skipped";
-                                detail: string | null;
-                            }[];
-                            pending: {
-                                intake: number;
-                                geocode: number;
-                            };
-                        };
-                    };
-                };
-                /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description The requester lacks the grant this needs. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["listOperations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4549,4 +964,3660 @@ export interface components {
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    getMeta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        name?: string;
+                        description?: string;
+                        cdn?: string;
+                        image?: string;
+                        defaultGallery?: string;
+                        defaultTheme?: string;
+                        defaultLanguage?: string;
+                        initialGalleryView?: string;
+                        firstWeekday?: string;
+                        /** @description Feature name to "on", "off" or "user". */
+                        betaFeatures?: {
+                            [key: string]: string;
+                        };
+                        /** @description Display rendition sizes the converter generates, in pixels. */
+                        renditions?: number[];
+                        /** @description Hostnames this instance answers on; one may be the main host. */
+                        knownHosts?: ({
+                            hostname: string;
+                            isMain?: boolean;
+                        } & {
+                            [key: string]: unknown;
+                        })[];
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    createMetaEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
+                    value: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getMetaEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        name?: string;
+                        description?: string;
+                        cdn?: string;
+                        image?: string;
+                        defaultGallery?: string;
+                        defaultTheme?: string;
+                        defaultLanguage?: string;
+                        initialGalleryView?: string;
+                        firstWeekday?: string;
+                        /** @description Feature name to "on", "off" or "user". */
+                        betaFeatures?: {
+                            [key: string]: string;
+                        };
+                        /** @description Display rendition sizes the converter generates, in pixels. */
+                        renditions?: number[];
+                        /** @description Hostnames this instance answers on; one may be the main host. */
+                        knownHosts?: ({
+                            hostname: string;
+                            isMain?: boolean;
+                        } & {
+                            [key: string]: unknown;
+                        })[];
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    setMetaEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    value: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteMetaEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: "name" | "description" | "cdn" | "image" | "defaultGallery" | "defaultTheme" | "defaultLanguage" | "initialGalleryView" | "firstWeekday" | "betaFeatures" | "renditions" | "knownHosts";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        isAdmin: boolean;
+                        editorGalleries: string[];
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    logIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    id?: string;
+                    password?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        isAdmin: boolean;
+                        editorGalleries: string[];
+                    };
+                };
+            };
+            /** @description Wrong user id or password. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    logOut: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Logged out, whether or not a session existed. */
+            204: {
+                headers: {
+                    /** @description Two headers clearing `pd_access` and `pd_refresh`. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refreshSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        isAdmin: boolean;
+                        editorGalleries: string[];
+                    };
+                };
+            };
+            /** @description No refresh cookie, or one that is unknown, expired or already rotated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revokeUserSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createCrossHostTicket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    target: string;
+                    path?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        redirectUrl: string;
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createPairingTicket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    previous?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        token: string;
+                        host: string;
+                        scheme: "http" | "https";
+                        expiresAt: number;
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    consumeTicket: {
+        parameters: {
+            query: {
+                token: string;
+                redirect?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Session started. Redirects to `redirect` when it is a same-origin path, else to `/`. */
+            302: {
+                headers: {
+                    /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
+                    "Set-Cookie"?: string;
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The ticket is invalid, expired or already used. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        name: string;
+                        isAdmin: boolean;
+                    }[];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    id: string;
+                    name?: string;
+                    password: string;
+                    isAdmin?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        name: string;
+                        isAdmin: boolean;
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    password?: string;
+                    isAdmin?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    changeOwnPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    currentPassword: string;
+                    newPassword: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Changed; this device is signed in afresh. */
+            204: {
+                headers: {
+                    /** @description Two headers, `pd_access` and `pd_refresh`, both HttpOnly. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listGalleries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gallery"][];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createGallery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    id: string;
+                    title?: string;
+                    description?: string;
+                    titleLocalized?: {
+                        [key: string]: string;
+                    };
+                    descriptionLocalized?: {
+                        [key: string]: string;
+                    };
+                    defaultLanguage?: string;
+                    icon?: string;
+                    epoch?: string;
+                    /** @enum {string} */
+                    epochType?: "birthday" | "1-index" | "0-index";
+                    /** @enum {string} */
+                    theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper" | "amber" | "lavender" | "sage" | "slate" | "midnight" | "espresso";
+                    /** @enum {string} */
+                    initialView?: "year" | "month" | "day" | "photo";
+                    hostname?: string;
+                    sources?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reorderGalleries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getGallery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gallery"];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateGallery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string;
+                    description?: string;
+                    titleLocalized?: {
+                        [key: string]: string;
+                    };
+                    descriptionLocalized?: {
+                        [key: string]: string;
+                    };
+                    defaultLanguage?: string;
+                    icon?: string;
+                    epoch?: string;
+                    /** @enum {string} */
+                    epochType?: "birthday" | "1-index" | "0-index";
+                    /** @enum {string} */
+                    theme?: "blue" | "red" | "grayscale" | "contrast" | "alert" | "dark" | "amoled" | "forest" | "silver" | "showcase" | "teal" | "paper" | "amber" | "lavender" | "sage" | "slate" | "midnight" | "espresso";
+                    /** @enum {string} */
+                    initialView?: "year" | "month" | "day" | "photo";
+                    hostname?: string;
+                    sources?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteGallery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setGalleryIcon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    sourcePhotoId: string;
+                    sourceMaxDim: number;
+                    crop: {
+                        x: number;
+                        y: number;
+                        width: number;
+                        height: number;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        icon: string;
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listSavedFilters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        sourceGalleryId: string;
+                        title: string;
+                        description: string;
+                        titleLocalized: {
+                            [key: string]: string;
+                        };
+                        descriptionLocalized: {
+                            [key: string]: string;
+                        };
+                        definition: {
+                            filter?: {
+                                [key: string]: {
+                                    [key: string]: (string | number | boolean | null)[];
+                                };
+                            };
+                            dateRange?: {
+                                from?: string;
+                                to?: string;
+                            };
+                            numericRanges?: {
+                                [key: string]: {
+                                    min?: number;
+                                    max?: number;
+                                };
+                            };
+                        } & {
+                            [key: string]: unknown;
+                        };
+                    }[];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createSavedFilter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    id: string;
+                    title?: string;
+                    description?: string;
+                    titleLocalized?: {
+                        [key: string]: string;
+                    };
+                    descriptionLocalized?: {
+                        [key: string]: string;
+                    };
+                    definition: {
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
+                        };
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getSavedFilter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+                filterId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        sourceGalleryId: string;
+                        title: string;
+                        description: string;
+                        titleLocalized: {
+                            [key: string]: string;
+                        };
+                        descriptionLocalized: {
+                            [key: string]: string;
+                        };
+                        definition: {
+                            filter?: {
+                                [key: string]: {
+                                    [key: string]: (string | number | boolean | null)[];
+                                };
+                            };
+                            dateRange?: {
+                                from?: string;
+                                to?: string;
+                            };
+                            numericRanges?: {
+                                [key: string]: {
+                                    min?: number;
+                                    max?: number;
+                                };
+                            };
+                        } & {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateSavedFilter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+                filterId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string;
+                    description?: string;
+                    titleLocalized?: {
+                        [key: string]: string;
+                    };
+                    descriptionLocalized?: {
+                        [key: string]: string;
+                    };
+                    definition?: {
+                        filter?: {
+                            [key: string]: {
+                                [key: string]: (string | number | boolean | null)[];
+                            };
+                        };
+                        dateRange?: {
+                            from?: string;
+                            to?: string;
+                        };
+                        numericRanges?: {
+                            [key: string]: {
+                                min?: number;
+                                max?: number;
+                            };
+                        };
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteSavedFilter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+                filterId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listCatalogPhotos: {
+        parameters: {
+            query?: {
+                gallery?: string | string[];
+                orphan?: boolean;
+                dateFrom?: string;
+                dateTo?: string;
+                missing?: ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code") | ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code")[];
+                duplicates?: boolean;
+                countryMismatch?: boolean;
+                q?: string;
+                page?: number;
+                pageSize?: number;
+                photoIdFocus?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        photos: components["schemas"]["Photo"][];
+                        page: number;
+                        pageSize: number;
+                        total: number;
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    id: string;
+                    title?: string;
+                    description?: string;
+                    titleLocalized?: {
+                        [key: string]: string;
+                    };
+                    descriptionLocalized?: {
+                        [key: string]: string;
+                    };
+                    taken?: {
+                        author?: string;
+                        location?: {
+                            country?: string;
+                            place?: string;
+                            placeLocalized?: {
+                                [key: string]: string;
+                            };
+                            coordinates?: {
+                                latitude?: number | null;
+                                longitude?: number | null;
+                                altitude?: number | null;
+                            };
+                        };
+                    };
+                    camera?: {
+                        make?: string;
+                        model?: string;
+                    };
+                    lens?: {
+                        make?: string;
+                        model?: string;
+                    };
+                    exposure?: {
+                        focalLength?: number;
+                        focalLength35mmEquiv?: number;
+                        aperture?: number;
+                        exposureTime?: number;
+                        iso?: number;
+                    };
+                    isPrivate?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getPhotoAuditCounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        orphan: number;
+                        duplicates: number;
+                        countryMismatch: number;
+                        missing: {
+                            taken: number;
+                            coords: number;
+                            place: number;
+                            country: number;
+                            author: number;
+                            title: number;
+                            description: number;
+                            "state-code": number;
+                        };
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getPhotoYearMonths: {
+        parameters: {
+            query?: {
+                gallery?: string | string[];
+                orphan?: boolean;
+                missing?: ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code") | ("taken" | "coords" | "place" | "country" | "author" | "title" | "description" | "state-code")[];
+                duplicates?: boolean;
+                countryMismatch?: boolean;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        buckets: {
+                            yearMonth: string;
+                            count: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getPhotosByIds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        photos: components["schemas"]["Photo"][];
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    queryCatalogPhotos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    year?: number;
+                    month?: number;
+                    day?: number;
+                    lang?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Photo"][];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getCatalogPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                photoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Photo"];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updatePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                photoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string;
+                    description?: string;
+                    titleLocalized?: {
+                        [key: string]: string;
+                    };
+                    descriptionLocalized?: {
+                        [key: string]: string;
+                    };
+                    taken?: {
+                        author?: string;
+                        location?: {
+                            country?: string;
+                            place?: string;
+                            placeLocalized?: {
+                                [key: string]: string;
+                            };
+                            coordinates?: {
+                                latitude?: number | null;
+                                longitude?: number | null;
+                                altitude?: number | null;
+                            };
+                        };
+                    };
+                    camera?: {
+                        make?: string;
+                        model?: string;
+                    };
+                    lens?: {
+                        make?: string;
+                        model?: string;
+                    };
+                    exposure?: {
+                        focalLength?: number;
+                        focalLength35mmEquiv?: number;
+                        aperture?: number;
+                        exposureTime?: number;
+                        iso?: number;
+                    };
+                    isPrivate?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deletePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                photoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    regeocodePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                photoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The photo has no coordinates to geocode from. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listGalleryPhotos: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Photo"][];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    queryGalleryPhotos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    numericRanges?: {
+                        [key: string]: {
+                            min?: number;
+                            max?: number;
+                        };
+                    };
+                    year?: number;
+                    month?: number;
+                    day?: number;
+                    lang?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Photo"][];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    countGalleryPhotosByDay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    numericRanges?: {
+                        [key: string]: {
+                            min?: number;
+                            max?: number;
+                        };
+                    };
+                    year?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Photos per day, keyed by date as YYYY-MM-DD. Days without photos are absent. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getGalleryPhotoNeighbors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    photoId: string;
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    numericRanges?: {
+                        [key: string]: {
+                            min?: number;
+                            max?: number;
+                        };
+                    };
+                    lang?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        previous?: components["schemas"]["Photo"];
+                        next?: components["schemas"]["Photo"];
+                        first?: components["schemas"]["Photo"];
+                        last?: components["schemas"]["Photo"];
+                        position?: number;
+                        total: number;
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getGalleryFilterValues: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    numericRanges?: {
+                        [key: string]: {
+                            min?: number;
+                            max?: number;
+                        };
+                    };
+                    lang?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        categoryValues: {
+                            [key: string]: string[];
+                        };
+                        categoryCounts: {
+                            [key: string]: {
+                                [key: string]: number;
+                            };
+                        };
+                        byCityLocalized: {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getGalleryPhotoByOriginalFilename: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                galleryId: string;
+                originalFilename: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Photo"];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getGalleryPhoto: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                galleryId: string;
+                photoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Photo"];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    linkPhotoToGallery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+                photoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unlinkPhotoFromGallery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+                photoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such gallery or photo, or none the requester may see. The two are deliberately not told apart. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listUserGrants: {
+        parameters: {
+            query?: {
+                userId?: string;
+                galleryId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        userId: string;
+                        galleryId: string;
+                        isEditor: boolean;
+                        hideMap: boolean | null;
+                        canSeePrivate: boolean;
+                    }[];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setUserGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    isEditor: boolean;
+                    hideMap?: boolean | null;
+                    canSeePrivate?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteUserGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listGroups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        name: string;
+                        description: string;
+                    }[];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    id: string;
+                    name?: string;
+                    description?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        name: string;
+                        description: string;
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    description?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listGroupMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    addGroupMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    removeGroupMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listGroupGrants: {
+        parameters: {
+            query?: {
+                groupId?: string;
+                galleryId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        groupId: string;
+                        galleryId: string;
+                        isEditor: boolean;
+                        hideMap: boolean | null;
+                        canSeePrivate: boolean;
+                    }[];
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    setGroupGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    isEditor: boolean;
+                    hideMap?: boolean | null;
+                    canSeePrivate?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteGroupGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getGalleryStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    numericRanges?: {
+                        [key: string]: {
+                            min?: number;
+                            max?: number;
+                        };
+                    };
+                    lang?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        total: number;
+                        geotaggedCount: number;
+                        byCategory: {
+                            [key: string]: {
+                                [key: string]: number;
+                            };
+                        };
+                        byYearMonth: {
+                            [key: string]: {
+                                [key: string]: number;
+                            };
+                        };
+                        summary: {
+                            first?: string;
+                            last?: string;
+                            spanDays: number;
+                            spanYears: number;
+                            spanMonths: number;
+                            peakShape: {
+                                [key: string]: string;
+                            };
+                            variety: {
+                                [key: string]: number;
+                            };
+                        };
+                        daysInYear: {
+                            [key: string]: number;
+                        };
+                        daysInYearMonth: {
+                            [key: string]: {
+                                [key: string]: number;
+                            };
+                        };
+                        byStateCountry: {
+                            [key: string]: string;
+                        };
+                        byCityCountry: {
+                            [key: string]: string;
+                        };
+                        byCityLocalized: {
+                            [key: string]: string;
+                        };
+                        categoryValues: {
+                            [key: string]: string[];
+                        };
+                        byGallery: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getGalleryStatsEvolution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                galleryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    category: string;
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    numericRanges?: {
+                        [key: string]: {
+                            min?: number;
+                            max?: number;
+                        };
+                    };
+                    lang?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        yearMonths: string[];
+                        buckets: {
+                            [key: string]: {
+                                counts: number[];
+                                cumulative: number[];
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getCatalogStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    numericRanges?: {
+                        [key: string]: {
+                            min?: number;
+                            max?: number;
+                        };
+                    };
+                    lang?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        total: number;
+                        geotaggedCount: number;
+                        byCategory: {
+                            [key: string]: {
+                                [key: string]: number;
+                            };
+                        };
+                        byYearMonth: {
+                            [key: string]: {
+                                [key: string]: number;
+                            };
+                        };
+                        summary: {
+                            first?: string;
+                            last?: string;
+                            spanDays: number;
+                            spanYears: number;
+                            spanMonths: number;
+                            peakShape: {
+                                [key: string]: string;
+                            };
+                            variety: {
+                                [key: string]: number;
+                            };
+                        };
+                        daysInYear: {
+                            [key: string]: number;
+                        };
+                        daysInYearMonth: {
+                            [key: string]: {
+                                [key: string]: number;
+                            };
+                        };
+                        byStateCountry: {
+                            [key: string]: string;
+                        };
+                        byCityCountry: {
+                            [key: string]: string;
+                        };
+                        byCityLocalized: {
+                            [key: string]: string;
+                        };
+                        categoryValues: {
+                            [key: string]: string[];
+                        };
+                        byGallery: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getCatalogStatsEvolution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    category: string;
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    numericRanges?: {
+                        [key: string]: {
+                            min?: number;
+                            max?: number;
+                        };
+                    };
+                    lang?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        yearMonths: string[];
+                        buckets: {
+                            [key: string]: {
+                                counts: number[];
+                                cumulative: number[];
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getCatalogFilterValues: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    filter?: {
+                        [key: string]: {
+                            [key: string]: (string | number | boolean | null)[];
+                        };
+                    };
+                    dateRange?: {
+                        from?: string;
+                        to?: string;
+                    };
+                    numericRanges?: {
+                        [key: string]: {
+                            min?: number;
+                            max?: number;
+                        };
+                    };
+                    lang?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        categoryValues: {
+                            [key: string]: string[];
+                        };
+                        categoryCounts: {
+                            [key: string]: {
+                                [key: string]: number;
+                            };
+                        };
+                        byCityLocalized: {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listOperations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        recent: {
+                            id: number;
+                            createdAt: string;
+                            photoId: string | null;
+                            action: string;
+                            status: "success" | "failure" | "skipped";
+                            detail: string | null;
+                        }[];
+                        failures: {
+                            id: number;
+                            createdAt: string;
+                            photoId: string | null;
+                            action: string;
+                            status: "success" | "failure" | "skipped";
+                            detail: string | null;
+                        }[];
+                        pending: {
+                            intake: number;
+                            geocode: number;
+                        };
+                    };
+                };
+            };
+            /** @description The `pd_access` cookie is invalid or expired. Refresh, then retry once. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The requester lacks the grant this needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+}

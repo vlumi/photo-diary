@@ -32,8 +32,13 @@ const typeOf = (schema: Json | undefined): string => {
       .sort()
       .join("|");
   }
-  const type = typeof schema.type === "string" ? schema.type : "any";
-  return schema.nullable === true ? `${type}|null` : type;
+  // One type, a 3.1 type array, or a 3.0 `nullable`: all end up as the
+  // same sorted "a|b" form, so rewriting one as another isn't a change.
+  const types = Array.isArray(schema.type)
+    ? [...(schema.type as string[])]
+    : [typeof schema.type === "string" ? schema.type : "any"];
+  if (schema.nullable === true) types.push("null");
+  return types.sort().join("|");
 };
 
 type Side = "response" | "request";

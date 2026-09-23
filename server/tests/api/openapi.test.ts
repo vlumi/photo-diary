@@ -21,6 +21,7 @@ type Operation = {
   responses: Record<string, { headers?: object; content?: object }>;
 };
 type Spec = {
+  openapi: string;
   info: { version: string };
   paths: Record<string, Record<string, Operation>>;
   components: { securitySchemes: Record<string, { in?: string; name?: string }> };
@@ -95,6 +96,33 @@ describe("OpenAPI document", () => {
       )
       .map(({ name }) => name);
     expect(undocumented).toEqual([]);
+  });
+
+  test("every operation has a unique, deliberate name", () => {
+    const names = operations(spec()).map(({ name, operation }) => [
+      name,
+      (operation as { operationId?: string }).operationId,
+    ]);
+    expect(names.filter(([, id]) => !id).map(([name]) => name)).toEqual([]);
+    const ids = names.map(([, id]) => id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test("it is OpenAPI 3.1, and null is written the 3.1 way", () => {
+    expect(spec().openapi).toBe("3.1.0");
+    const nullUnions: string[] = [];
+    const visit = (value: unknown, path: string): void => {
+      if (Array.isArray(value)) return value.forEach((v, i) => visit(v, `${path}[${i}]`));
+      if (!value || typeof value !== "object") return;
+      const node = value as Record<string, unknown>;
+      if (node.type === "null") nullUnions.push(path);
+      Object.entries(node).forEach(([k, v]) => visit(v, `${path}/${k}`));
+    };
+    visit(spec(), "");
+    // A `{ type: "null" }` left inside an `anyOf` sits beside something
+    // with structure; generators may drop it. Say so here if one is
+    // ever deliberate.
+    expect(nullUnions).toEqual([]);
   });
 
   test("auth is described as the two cookies the server reads", () => {
