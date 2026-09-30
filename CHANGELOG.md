@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-09-30
+
 ### Dependencies
 
 - Security bumps, lockfile only: `fast-uri` 3.1.8 and 4.2.1 under Fastify's schema validation and serializer, and `brace-expansion` 1.1.21, 2.1.7 and 5.0.12 under eslint and the OpenAPI type generator (dev tools only).
@@ -905,6 +907,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.1.2]: https://github.com/vlumi/photo-diary/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/vlumi/photo-diary/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/vlumi/photo-diary/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/vlumi/photo-diary/compare/v1.0.8...v1.0.9
