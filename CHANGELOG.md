@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Dependencies
+
+- Security bumps, lockfile only: `fast-uri` 3.1.8 and 4.2.1 under Fastify's schema validation and serializer, and `brace-expansion` 1.1.21, 2.1.7 and 5.0.12 under eslint and the OpenAPI type generator (dev tools only).
+
 ## [1.1.1] - 2026-09-23
 
 ### Server
