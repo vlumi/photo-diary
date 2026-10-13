@@ -23,5 +23,10 @@
   "repository": {
     "type": "git",
     "url": "github:vlumi/photo-diary"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "^6.0.3"
+    }
   }
 }
