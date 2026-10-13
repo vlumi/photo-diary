@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-10-13
+
 ### Dependencies
 
 - Security bumps: `sharp` 0.35.5 for a CVE in its bundled librsvg, `fastify` 5.12.5 for a crash on HTTP/2 trailer responses, and `source-map-js` 1.2.2 (lockfile only, build tooling) for an event-loop denial of service.
@@ -917,6 +919,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.1.3]: https://github.com/vlumi/photo-diary/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/vlumi/photo-diary/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/vlumi/photo-diary/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/vlumi/photo-diary/compare/v1.0.9...v1.1.0
