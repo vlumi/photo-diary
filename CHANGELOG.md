@@ -10,6 +10,7 @@
 - `jsdom` 30 under the app's tests (dev only).
 - `framer-motion` 14 for the photo carousel.
 - `@types/better-sqlite3` 9 (dev only).
+- `dotenv` 18, which no longer prints its injected-env line at startup.
 
 ## [1.1.2] - 2026-09-30
 
