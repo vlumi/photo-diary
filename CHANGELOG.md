@@ -8,6 +8,7 @@
 - In-range refresh of the server, app and tooling dependencies (lockfile only), with an override letting `openapi-typescript` take TypeScript 6.
 - `vitest` and `@vitest/coverage-v8` 5 for the server and app test suites (dev only).
 - `jsdom` 30 under the app's tests (dev only).
+- `framer-motion` 14 for the photo carousel.
 
 ## [1.1.2] - 2026-09-30
 
