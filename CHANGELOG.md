@@ -6,6 +6,11 @@
 
 - Security bumps: `sharp` 0.35.5 for a CVE in its bundled librsvg, `fastify` 5.12.5 for a crash on HTTP/2 trailer responses, and `source-map-js` 1.2.2 (lockfile only, build tooling) for an event-loop denial of service.
 - In-range refresh of the server, app and tooling dependencies (lockfile only), with an override letting `openapi-typescript` take TypeScript 6.
+- `vitest` and `@vitest/coverage-v8` 5 for the server and app test suites (dev only).
+- `jsdom` 30 under the app's tests (dev only).
+- `framer-motion` 14 for the photo carousel.
+- `@types/better-sqlite3` 9 (dev only).
+- `dotenv` 18, which no longer prints its injected-env line at startup.
 
 ## [1.1.2] - 2026-09-30
 
