@@ -9,6 +9,7 @@
 - `vitest` and `@vitest/coverage-v8` 5 for the server and app test suites (dev only).
 - `jsdom` 30 under the app's tests (dev only).
 - `framer-motion` 14 for the photo carousel.
+- `@types/better-sqlite3` 9 (dev only).
 
 ## [1.1.2] - 2026-09-30
 
