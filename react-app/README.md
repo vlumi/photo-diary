@@ -64,7 +64,6 @@ Country names come from [`i18n-iso-countries`](https://www.npmjs.com/package/i18
   - `stats.tsx` is the largest module — aggregates photo statistics into chart-ready data and table rows
   - `api-schema.ts` is regenerated from the server's OpenAPI dump via `npm run api:codegen`; don't edit by hand
 - `src/stores/` — Zustand stores (filter, dateRange, numericRanges, etc.); `useWireNumericRanges` strips the client-only anchor field before wire submission
-- `src/setupTests.ts` — vitest setup (registers `@testing-library/jest-dom` matchers)
 
 ## Bundle shape
 

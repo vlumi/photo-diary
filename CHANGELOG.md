@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Dependencies
+
+- Dropped unused packages from the app: `jose`, `react-is` and `@react-leaflet/core` from its dependencies, and `@tanstack/react-query-devtools` (taking `solid-js` and `seroval` and their security alerts with it), `@testing-library/react`, `@testing-library/jest-dom` and `@testing-library/dom` from its dev tools.
+
 ## [1.1.5] - 2026-10-29
 
 ### Dependencies
