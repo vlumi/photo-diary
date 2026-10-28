@@ -50,7 +50,7 @@ export default [
     },
   },
   {
-    files: ["**/*.test.{js,jsx}", "src/setupTests.js"],
+    files: ["**/*.test.{js,jsx}"],
     languageOptions: {
       globals: {
         ...globals.vitest,
