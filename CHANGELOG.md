@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.4] - 2026-10-28
+
 ### Dependencies
 
 - Security bump: `fastify` 5.12.7, whose header-name normalization now reaches `propertyNames` constraints in request-header schemas (the server declares none).
@@ -923,6 +925,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.1.4]: https://github.com/vlumi/photo-diary/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/vlumi/photo-diary/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/vlumi/photo-diary/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/vlumi/photo-diary/compare/v1.1.0...v1.1.1
