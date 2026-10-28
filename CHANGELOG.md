@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Dependencies
+
+- Security bump: `fastify` 5.12.7, whose header-name normalization now reaches `propertyNames` constraints in request-header schemas (the server declares none).
+
 ## [1.1.3] - 2026-10-13
 
 ### Dependencies
