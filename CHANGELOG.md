@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Dependencies
+
+- Dropped the unused `@tanstack/react-query-devtools` (dev only), which takes `solid-js` and `seroval` out of the tree along with their security alerts.
+
 ## [1.1.5] - 2026-10-29
 
 ### Dependencies
