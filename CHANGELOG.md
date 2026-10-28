@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.5] - 2026-10-29
+
 ### Dependencies
 
 - Security bumps, lockfile only: `fast-uri` 3.1.9 and 4.2.3 under Fastify's schema validation and serializer, and `undici` 8.12.3 and `qs` 6.17.0 under the app's and server's test tooling (dev only).
@@ -929,6 +931,7 @@ Release candidate for 1.0. Cumulative 0.18 → 1.0 changes: end of the JWT-cooki
 
 ## Initial commit - 2020-07-04
 
+[1.1.5]: https://github.com/vlumi/photo-diary/compare/v1.1.4...v1.1.5
 [1.1.4]: https://github.com/vlumi/photo-diary/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/vlumi/photo-diary/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/vlumi/photo-diary/compare/v1.1.1...v1.1.2
