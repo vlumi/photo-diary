@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Dependencies
+
+- Security bumps, lockfile only: `fast-uri` 3.1.9 and 4.2.3 under Fastify's schema validation and serializer, and `undici` 8.12.3 and `qs` 6.17.0 under the app's and server's test tooling (dev only).
+
 ## [1.1.4] - 2026-10-28
 
 ### Dependencies
